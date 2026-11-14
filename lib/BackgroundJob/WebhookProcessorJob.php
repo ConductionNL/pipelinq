@@ -118,8 +118,26 @@ class WebhookProcessorJob extends TimedJob {
 			return;
 		}
 
+		$rows = $this->queuedRows(objectService: $objectService);
+		if (is_array($rows) === false || $rows === []) {
+			return;
+		}
+
+		foreach ($rows as $raw) {
+			$this->processRow(objectService: $objectService, raw: $raw);
+		}//end foreach
+	}//end drain()
+
+	/**
+	 * The queued webhook rows, or null (logged) when they cannot be read.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 *
+	 * @return mixed
+	 */
+	private function queuedRows(object $objectService): mixed {
 		try {
-			$rows = $objectService->findAll(
+			return $objectService->findAll(
 				config: [
 					'filters' => [
 						'status' => 'queued',
@@ -133,17 +151,9 @@ class WebhookProcessorJob extends TimedJob {
 				'WebhookProcessorJob.drain: findAll failed',
 				['exception' => $e->getMessage()]
 			);
-			return;
+			return null;
 		}
-
-		if (is_array($rows) === false || $rows === []) {
-			return;
-		}
-
-		foreach ($rows as $raw) {
-			$this->processRow(objectService: $objectService, raw: $raw);
-		}//end foreach
-	}//end drain()
+	}//end queuedRows()
 
 	/**
 	 * Process one queued webhook row: dispatch to the channel adapter and

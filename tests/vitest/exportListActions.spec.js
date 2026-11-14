@@ -29,6 +29,7 @@ vi.mock('vue', async (importOriginal) => ({ ...(await importOriginal()), inject:
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => 'object-store' }))
 vi.mock('../../src/services/exportApi.js', () => ({ exportApi: mocks.exportApi }))
 vi.mock('../../src/modals/ExportTestRunModal.vue', () => ({ default: {} }))
+vi.mock('../../src/components/FullExportSection.vue', () => ({ default: {} }))
 
 const pages = {}
 

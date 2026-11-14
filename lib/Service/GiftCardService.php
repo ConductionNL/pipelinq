@@ -518,6 +518,19 @@ class GiftCardService implements GiftCardServiceInterface {
 			throw new RuntimeException('Gift card not found.');
 		}
 
+		$card = $this->refundedCard(card: $card, amount: $amount);
+		return $this->saveRefund(card: $card, giftCardId: $giftCardId, amount: $amount, posTransactionId: $posTransactionId);
+	}//end refundGiftCard()
+
+	/**
+	 * The card with the refund added to its balance; a depleted card becomes active again.
+	 *
+	 * @param array<string, mixed> $card   The card.
+	 * @param float                $amount Amount to refund (positive).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function refundedCard(array $card, float $amount): array {
 		$balance = (float)($card['currentBalance'] ?? 0);
 		$after = round($balance + $amount, 2);
 		$card['currentBalance'] = $after;
@@ -526,19 +539,33 @@ class GiftCardService implements GiftCardServiceInterface {
 			$card['status'] = 'active';
 		}
 
+		return $card;
+	}//end refundedCard()
+
+	/**
+	 * Save the refunded card and log the refund transaction.
+	 *
+	 * @param array<string, mixed> $card             The refunded card.
+	 * @param string               $giftCardId       The card UUID.
+	 * @param float                $amount           Amount refunded.
+	 * @param string|null          $posTransactionId Optional POS transaction id.
+	 *
+	 * @return array<string, mixed> The updated card.
+	 */
+	private function saveRefund(array $card, string $giftCardId, float $amount, string|null $posTransactionId): array {
 		$saved = $this->persistCard(payload: $card, uuid: $giftCardId);
 
 		$this->logTransaction(
 			giftCardId: $giftCardId,
 			type: 'refund',
 			amount: $amount,
-			balanceAfter: $after,
+			balanceAfter: $card['currentBalance'],
 			posTransactionId: $posTransactionId,
 			processedBy: 'gift-card-service'
 		);
 
 		return $saved;
-	}//end refundGiftCard()
+	}//end saveRefund()
 
 	/**
 	 * Block a card (e.g. fraud / dispute).

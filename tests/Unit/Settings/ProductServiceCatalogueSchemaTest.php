@@ -98,9 +98,35 @@ class ProductServiceCatalogueSchemaTest extends TestCase {
 	public function testTheExistingCatalogueFieldsAndTheServiceTypeStay(): void {
 		$product = $this->product();
 
-		$this->assertSame('1.2.0', $product['version']);
+		$this->assertSame('1.2.1', $product['version']);
 		$this->assertContains('service', $product['properties']['type']['enum']);
 		$this->assertSame(['label', 'price', 'validFrom', 'note'], array_keys($product['properties']['tariffs']['items']['properties']));
 		$this->assertSame(['resident', 'business'], $product['properties']['audience']['items']['enum']);
 	}//end testTheExistingCatalogueFieldsAndTheServiceTypeStay()
+
+	/**
+	 * The UPL list is a lookup in the pipelinq register, and the product form picks
+	 * uplReference from it by URI, falling back to a free URI while the list is empty.
+	 *
+	 * @return void
+	 */
+	public function testTheUplReferenceIsPickedFromTheImportedList(): void {
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
+		$register = (new ConfigFileLoaderService($appManager))->loadConfigurationFile();
+
+		$this->assertContains('uplProduct', $register['components']['registers']['pipelinq']['schemas']);
+		$this->assertContains('product', $register['components']['registers']['pipelinq']['schemas']);
+
+		$lookup = $register['components']['schemas']['uplProduct'];
+		$this->assertSame(['name', 'uri'], $lookup['required']);
+		$this->assertSame(['resident', 'business'], $lookup['properties']['audience']['items']['enum']);
+		$this->assertArrayNotHasKey('authorization', $lookup, 'The lookup follows the register\'s staff read.');
+
+		$this->assertSame(
+			['register' => 'pipelinq', 'schema' => 'uplProduct', 'valueField' => 'uri', 'labelField' => 'name', 'hideWhenEmpty' => true],
+			$this->product()['properties']['uplReference']['x-options-from']
+		);
+		$this->assertSame('uri', $this->product()['properties']['uplReference']['format']);
+	}//end testTheUplReferenceIsPickedFromTheImportedList()
 }//end class

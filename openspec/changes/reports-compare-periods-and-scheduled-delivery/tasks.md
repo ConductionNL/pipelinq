@@ -8,9 +8,10 @@
 ## 2. Mail delivery for export jobs
 - [x] 2.1 `lib/Service/Export/ReportMailDelivery.php`: given a job and its formatted rows per recipient, send through `OCP\Mail\IMailer` with the file attached; subject and body from l10n; generic for any export job (V1)
 - [x] 2.2 `ExportDestinationService`: accept delivery type `mail` with `recipients: [{type: user|group, id}]`; validate that every recipient exists (V1)
-- [ ] 2.3 `ExportExecutionService`: for a `mail` job, resolve groups to users and extract once per recipient as that user, so OpenRegister's RBAC filters the rows (V1)
-- [ ] 2.4 Record each send through `ExportJobService::recordRun()` with outcome `delivered` or `failed` and the reason; notify the job owner through `OCP\Notification\IManager` on failure (V1)
-- [ ] 2.5 Unit tests for 2.1-2.4 with a fake mailer: one mail per recipient, RBAC-filtered rows, failure recorded and notified (V1)
+- [x] 2.3 `ExportExecutionService`: for a `mail` job, resolve groups to users and extract once per recipient as that user, so OpenRegister's RBAC filters the rows (V1)
+- [x] 2.4 Record each send through `ExportJobService::recordRun()` with outcome `delivered` or `failed` and the reason; notify the job owner through `OCP\Notification\IManager` on failure (V1)
+  - Status: each recipient's `delivered`/`failed` and reason is kept in the run's manifest under `mail`; the run itself takes the existing run statuses (`succeeded` all sent, `partial`, `failed` none sent) because the `exportRun` status enum has no `delivered`; the owner (the job's `createdBy`) gets the `export_mail_delivery_failed` notification.
+- [x] 2.5 Unit tests for 2.1-2.4 with a fake mailer: one mail per recipient, RBAC-filtered rows, failure recorded and notified (V1)
 
 ## 3. Schedule dialog
 - [ ] 3.1 The schedule dialog on the BI export page (PqBiExport): delivery choice Mail, a recipients picker (NcSelect over users and groups, with `inputLabel`), and the schedule in words from `ExportJobService::describeSchedule()` (V1)

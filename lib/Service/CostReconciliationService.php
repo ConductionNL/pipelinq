@@ -83,11 +83,6 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 	 * @return array{scanned: int, reconciled: int} Summary.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-row guard clauses
-	 *  over the pending-cost scan; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat per-row guards; path count is
-	 *  a product of independent skip conditions, not nesting.
 	 */
 	public function reconcile(): array {
 		$objectService = $this->getObjectService();
@@ -95,8 +90,88 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 			return ['scanned' => 0, 'reconciled' => 0];
 		}
 
+		$rows = $this->findCandidateRows(objectService: $objectService);
+		if ($rows === null) {
+			return ['scanned' => 0, 'reconciled' => 0];
+		}
+
+		return $this->reconcileRows(objectService: $objectService, rows: $rows);
+	}//end reconcile()
+
+	/**
+	 * Reconcile each pending-cost row and count the outcomes.
+	 *
+	 * @param object          $objectService The OpenRegister ObjectService.
+	 * @param iterable<mixed> $rows          The candidate rows.
+	 *
+	 * @return array{scanned: int, reconciled: int} Summary.
+	 */
+	private function reconcileRows(object $objectService, iterable $rows): array {
+		$scanned = 0;
+		$reconciled = 0;
+		foreach ($rows as $raw) {
+			$outcome = $this->reconcileRow(objectService: $objectService, raw: $raw);
+			if ($outcome !== null) {
+				$scanned++;
+			}
+
+			if ($outcome === 'reconciled') {
+				$reconciled++;
+			}
+		}
+
+		return ['scanned' => $scanned, 'reconciled' => $reconciled];
+	}//end reconcileRows()
+
+	/**
+	 * Reconcile one row when its cost is pending.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param mixed  $raw           The row.
+	 *
+	 * @return string|null 'reconciled', 'scanned' when it stays pending, null when it was not pending.
+	 */
+	private function reconcileRow(object $objectService, mixed $raw): string|null {
+		$arr = $this->toArray(value: $raw);
+		if ($this->isCostPending(row: $arr) === false) {
+			return null;
+		}
+
+		$converted = $this->convertedRow(row: $arr);
+		if ($converted === null) {
+			return 'scanned';
+		}
+
+		if ($this->saveReconciled(objectService: $objectService, row: $converted) === true) {
+			return 'reconciled';
+		}
+
+		return 'scanned';
+	}//end reconcileRow()
+
+	/**
+	 * Whether a message row's cost still waits for currency conversion.
+	 *
+	 * @param array<string, mixed> $row The message row.
+	 *
+	 * @return bool
+	 */
+	private function isCostPending(array $row): bool {
+		$meta = (array)($row['metadata'] ?? []);
+		return (bool)($meta['costCurrencyPending'] ?? false);
+	}//end isCostPending()
+
+	/**
+	 * The rows to reconcile: those flagged pending, or every message row
+	 * when the metadata filter cannot be queried.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 *
+	 * @return mixed The rows, or null when neither query succeeds.
+	 */
+	private function findCandidateRows(object $objectService): mixed {
 		try {
-			$rows = $objectService->findAll(
+			return $objectService->findAll(
 				config: [
 					'filters' => [
 						'metadata.costCurrencyPending' => true,
@@ -110,72 +185,81 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 				'CostReconciliationService.reconcile: findAll failed — falling back to full scan',
 				['exception' => $e->getMessage()]
 			);
+		}
 
-			try {
-				$rows = $objectService->findAll(
-					config: [
-						'filters' => [
-							'register' => $this->getRegisterSlug(),
-							'schema' => $this->getSchemaSlug(),
-						],
-					]
-				);
-			} catch (Throwable $e2) {
-				return ['scanned' => 0, 'reconciled' => 0];
+		try {
+			return $objectService->findAll(
+				config: [
+					'filters' => [
+						'register' => $this->getRegisterSlug(),
+						'schema' => $this->getSchemaSlug(),
+					],
+				]
+			);
+		} catch (Throwable $e2) {
+			return null;
+		}
+	}//end findCandidateRows()
+
+	/**
+	 * A pending row with its cost converted to EUR, or null when it cannot be.
+	 *
+	 * @param array<string, mixed> $row The pending message row.
+	 *
+	 * @return array<string, mixed>|null The reconciled row, or null without a currency, amount or rate.
+	 */
+	private function convertedRow(array $row): ?array {
+		$meta = (array)($row['metadata'] ?? []);
+		$currency = (string)($meta['costCurrency'] ?? '');
+		$amount = (float)($meta['costSourceAmount'] ?? 0.0);
+		if ($currency === '' || $amount <= 0.0) {
+			return null;
+		}
+
+		$eur = $this->exchangeRate->toEur(amount: $amount, currency: $currency);
+		if ($eur === null) {
+			return null;
+		}
+
+		$row['costEur'] = round($eur, 6);
+		$meta['costCurrencyPending'] = false;
+		$meta['costReconciledAt'] = $this->nowIso();
+		$row['metadata'] = $meta;
+
+		return $row;
+	}//end convertedRow()
+
+	/**
+	 * Save a reconciled row; a failed save is logged.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $row           The reconciled row.
+	 *
+	 * @return bool True when the row was saved.
+	 */
+	private function saveReconciled(object $objectService, array $row): bool {
+		$id = $this->extractId(payload: $row);
+		try {
+			$uuid = $id;
+			if ($id === '') {
+				$uuid = null;
 			}
-		}//end try
 
-		$scanned = 0;
-		$reconciled = 0;
-		foreach (($rows ?? []) as $raw) {
-			$arr = $this->toArray(value: $raw);
-			$meta = (array)($arr['metadata'] ?? []);
-			$pending = (bool)($meta['costCurrencyPending'] ?? false);
-			if ($pending === false) {
-				continue;
-			}
-
-			$scanned++;
-			$currency = (string)($meta['costCurrency'] ?? '');
-			$amount = (float)($meta['costSourceAmount'] ?? 0.0);
-			if ($currency === '' || $amount <= 0.0) {
-				continue;
-			}
-
-			$eur = $this->exchangeRate->toEur(amount: $amount, currency: $currency);
-			if ($eur === null) {
-				continue;
-			}
-
-			$arr['costEur'] = round($eur, 6);
-			$meta['costCurrencyPending'] = false;
-			$meta['costReconciledAt'] = $this->nowIso();
-			$arr['metadata'] = $meta;
-
-			$id = $this->extractId(payload: $arr);
-			try {
-				$uuid = $id;
-				if ($id === '') {
-					$uuid = null;
-				}
-
-				$objectService->saveObject(
-					object: $arr,
-					register: $this->getRegisterSlug(),
-					schema: $this->getSchemaSlug(),
-					uuid: $uuid,
-				);
-				$reconciled++;
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'CostReconciliationService.reconcile: save failed',
-					['id' => $id, 'exception' => $e->getMessage()]
-				);
-			}
-		}//end foreach
-
-		return ['scanned' => $scanned, 'reconciled' => $reconciled];
-	}//end reconcile()
+			$objectService->saveObject(
+				object: $row,
+				register: $this->getRegisterSlug(),
+				schema: $this->getSchemaSlug(),
+				uuid: $uuid,
+			);
+			return true;
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'CostReconciliationService.reconcile: save failed',
+				['id' => $id, 'exception' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end saveReconciled()
 
 	/**
 	 * Resolve OpenRegister ObjectService.

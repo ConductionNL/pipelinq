@@ -376,6 +376,20 @@ class TicketService implements TicketServiceInterface {
 			return;
 		}
 
+		$seen = $this->distinctCaseReferences(set: $set);
+		$this->assertPrimaryInCaseSet(payload: $payload, seen: $seen);
+	}//end assertCaseSet()
+
+	/**
+	 * The non-empty references of a case set, refusing a duplicate.
+	 *
+	 * @param array<mixed> $set The `caseReferences` set.
+	 *
+	 * @return array<int, string> The trimmed references.
+	 *
+	 * @throws InvalidArgumentException When the set holds a duplicate.
+	 */
+	private function distinctCaseReferences(array $set): array {
 		$seen = [];
 		foreach ($set as $reference) {
 			$reference = trim((string)$reference);
@@ -384,21 +398,33 @@ class TicketService implements TicketServiceInterface {
 			}
 
 			if (in_array($reference, $seen, true) === true) {
-				throw new InvalidArgumentException(
-					"caseReferences already holds {$reference}; a contact moment is filed on a case once."
-				);
+				throw new InvalidArgumentException("caseReferences already holds {$reference}; a contact moment is filed on a case once.");
 			}
 
 			$seen[] = $reference;
 		}
 
+		return $seen;
+	}//end distinctCaseReferences()
+
+	/**
+	 * Refuse a primary case reference that is not a member of the set.
+	 *
+	 * @param array<string, mixed> $payload The ticket fields.
+	 * @param array<int, string>   $seen    The trimmed references of the set.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the primary is not a member of the set.
+	 */
+	private function assertPrimaryInCaseSet(array $payload, array $seen): void {
 		$primary = trim((string)($payload['primaryCaseReference'] ?? ''));
 		if ($primary !== '' && in_array($primary, $seen, true) === false) {
 			throw new InvalidArgumentException(
 				"primaryCaseReference {$primary} is not one of the cases this contact moment is filed on."
 			);
 		}
-	}//end assertCaseSet()
+	}//end assertPrimaryInCaseSet()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.
@@ -484,38 +510,13 @@ class TicketService implements TicketServiceInterface {
 		?string $notes = null,
 	): array {
 		$client = trim($client);
-		if ($client === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument client is missing.');
-		}
-
 		$channel = trim($channel);
-		if ($channel === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument channel is missing.');
-		}
-
 		$title = trim($title);
-		if ($title === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
-		}
-
-		// Direction is required on a contactmoment (REQ-CMD-001) and is
-		// deliberately NOT defaulted: a tool that guessed `inbound` would
-		// assert who reached out to whom, silently and often wrongly. The
-		// parameter is optional in the SIGNATURE only, so an existing caller
-		// gets a named refusal instead of a TypeError.
 		$direction = trim($direction);
-		if ($direction === '') {
-			return $this->mcp->error(
-				code: 'invalid_arguments',
-				message: 'Required argument direction is missing.'
-			);
-		}
 
-		if (in_array($direction, self::DIRECTIONS, true) === false) {
-			return $this->mcp->error(
-				code: 'invalid_arguments',
-				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
-			);
+		$refusal = $this->contactmomentArgumentError(client: $client, channel: $channel, title: $title, direction: $direction);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		if ($this->isConfigured() === false) {
@@ -525,6 +526,92 @@ class TicketService implements TicketServiceInterface {
 			);
 		}
 
+		$payload = $this->contactmomentPayload(
+			client: $client,
+			channel: $channel,
+			title: $title,
+			direction: $direction,
+			outcome: $outcome,
+			notes: $notes
+		);
+
+		return $this->saveContactmoment(payload: $payload);
+	}//end logContactmoment()
+
+	/**
+	 * Save a contactmoment and answer with its id, or the MCP error.
+	 *
+	 * @param array<string, mixed> $payload The contactmoment fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function saveContactmoment(array $payload): array {
+		try {
+			$saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
+		} catch (\Exception $e) {
+			return $this->mcp->fromException(operation: 'log contactmoment', exception: $e);
+		}
+
+		$data = $this->mcp->toArray(item: $saved);
+
+		return [
+			'ticketId' => (string)($data['id'] ?? $data['uuid'] ?? ''),
+		];
+	}//end saveContactmoment()
+
+	/**
+	 * The refusal for the first missing or invalid logContactmoment() argument.
+	 *
+	 * Direction is required on a contactmoment (REQ-CMD-001) and is
+	 * deliberately NOT defaulted: a tool that guessed `inbound` would assert
+	 * who reached out to whom, silently and often wrongly. The parameter is
+	 * optional in the SIGNATURE only, so an existing caller gets a named
+	 * refusal instead of a TypeError.
+	 *
+	 * @param string $client    The trimmed client UUID.
+	 * @param string $channel   The trimmed channel.
+	 * @param string $title     The trimmed title.
+	 * @param string $direction The trimmed direction.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when every argument is valid.
+	 */
+	private function contactmomentArgumentError(string $client, string $channel, string $title, string $direction): ?array {
+		foreach (['client' => $client, 'channel' => $channel, 'title' => $title, 'direction' => $direction] as $name => $value) {
+			if ($value === '') {
+				return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument ' . $name . ' is missing.');
+			}
+		}
+
+		if (in_array($direction, self::DIRECTIONS, true) === false) {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
+			);
+		}
+
+		return null;
+	}//end contactmomentArgumentError()
+
+	/**
+	 * The contactmoment ticket payload; empty optional fields are left out.
+	 *
+	 * @param string      $client    The client UUID.
+	 * @param string      $channel   The channel.
+	 * @param string      $title     The title.
+	 * @param string      $direction The direction.
+	 * @param string|null $outcome   The optional outcome.
+	 * @param string|null $notes     The optional notes, stored as the description.
+	 *
+	 * @return array<string, mixed> The payload.
+	 */
+	private function contactmomentPayload(
+		string $client,
+		string $channel,
+		string $title,
+		string $direction,
+		?string $outcome,
+		?string $notes,
+	): array {
 		$payload = [
 			'client' => $client,
 			'channel' => $channel,
@@ -541,18 +628,7 @@ class TicketService implements TicketServiceInterface {
 			$payload['description'] = $notes;
 		}
 
-		try {
-			$saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
-		} catch (\Exception $e) {
-			return $this->mcp->fromException(operation: 'log contactmoment', exception: $e);
-		}
-
-		$data = $this->mcp->toArray(item: $saved);
-
-		return [
-			'ticketId' => (string)($data['id'] ?? $data['uuid'] ?? ''),
-		];
-
-	}//end logContactmoment()
+		return $payload;
+	}//end contactmomentPayload()
 
 }//end class

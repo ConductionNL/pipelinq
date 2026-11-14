@@ -11,6 +11,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 vi.mock('@conduction/nextcloud-vue', () => ({ CnIndexPage: {}, openRowTarget: vi.fn() }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('../../src/modals/ExportTestRunModal.vue', () => ({ default: {} }))
+vi.mock('../../src/components/FullExportSection.vue', () => ({ default: {} }))
 vi.mock('../../src/services/exportApi.js', () => ({ exportApi: {} }))
 
 let jobs
@@ -79,5 +80,16 @@ describe('ExportJobs.data', () => {
 		expect(typeof columns[3].secondary(row)).toBe('string')
 		expect(columns[3].secondary({})).toBe('')
 		expect(typeof columns[4].secondary({ lastRunStatus: 'failed' })).toBe('string')
+		expect(columns[4].secondary({ enabled: false, consecutiveFailures: 3, pausedReason: 'r' })).toBe('Switched off after 3 failed runs in a row')
+		expect(columns[4].secondary({ enabled: true, consecutiveFailures: 3, pausedReason: 'r' })).toBe('')
+	})
+})
+
+describe('ExportJobs.quickFilters', () => {
+	it('lists a job whose last run failed whether it is on or off', () => {
+		const { quickFilters } = jobs.data.call({ testRun: vi.fn(), setEnabled: vi.fn() })
+		const failed = quickFilters.find((view) => view.label === 'T:Last run failed')
+		expect(failed.filter).toEqual({ lastRunStatus: 'failed' })
+		expect(Object.keys(failed.filter)).not.toContain('enabled')
 	})
 })

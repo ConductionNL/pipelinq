@@ -84,7 +84,6 @@ describe('the admin page', () => {
 			'<PosRoleManager',
 			'<MarketingTrafficSettings',
 			'v-bind="sections.marketingIntel"',
-			'v-bind="sections.brpMonitor"',
 		]) {
 			at(tag)
 		}

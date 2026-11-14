@@ -365,12 +365,6 @@ class BlastService implements BlastServiceInterface {
 	 * @return int Number of deliveries dispatched.
 	 *
 	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential throttle/dispatch guard
-	 *  clauses over the delivery batch; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity) Measured 320, threshold 200. Same
-	 *  cause as the cyclomatic suppression above: the guards are INDEPENDENT, so
-	 *  NPath multiplies out even though no two of them nest.
 	 */
 	public function dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int {
 		$blast = $this->loadBlast(blastId: $blastId);
@@ -378,19 +372,28 @@ class BlastService implements BlastServiceInterface {
 			return 0;
 		}
 
-		$template = $this->loadTemplate(templateId: (string)($blast['templateId'] ?? ''));
-		if ($template === null) {
-			$this->logger->warning(
-				'BlastService.dispatchBlastDeliveries: template missing',
-				['blastId' => $blastId, 'templateId' => ($blast['templateId'] ?? null)]
-			);
+		$setup = $this->dispatchSetup(blast: $blast, blastId: $blastId);
+		if ($setup === null) {
 			return 0;
 		}
 
-		// Campaign parameters go on the template once per blast, BEFORE the
-		// per-delivery render and the click-redirect wrap, so the redirect
-		// target carries them (marketing-campaign-attribution).
-		$template['bodyHtml'] = $this->decorateCampaignLinks(blast: $blast, template: $template);
+		[$template, $transport] = $setup;
+		return $this->sendQueuedDeliveries(blastId: $blastId, template: $template, transport: $transport, maxPerSecond: $maxPerSecond);
+	}//end dispatchBlastDeliveries()
+
+	/**
+	 * The decorated template and resolved transport of a blast, or null when either is missing.
+	 *
+	 * @param array<string, mixed> $blast   The blast.
+	 * @param string               $blastId Blast UUID or slug.
+	 *
+	 * @return array{0: array<string, mixed>, 1: array<string, mixed>}|null
+	 */
+	private function dispatchSetup(array $blast, string $blastId): array|null {
+		$template = $this->dispatchTemplate(blast: $blast, blastId: $blastId);
+		if ($template === null) {
+			return null;
+		}
 
 		$transport = $this->mailTransportService->resolveTransport(blast: $blast);
 		if ($transport === null) {
@@ -398,9 +401,48 @@ class BlastService implements BlastServiceInterface {
 				'BlastService.dispatchBlastDeliveries: no mail transport resolved for blast',
 				['blastId' => $blastId]
 			);
-			return 0;
+			return null;
 		}
 
+		return [$template, $transport];
+	}//end dispatchSetup()
+
+	/**
+	 * The blast's template with its campaign links decorated, or null when it is missing.
+	 *
+	 * @param array<string, mixed> $blast   The blast.
+	 * @param string               $blastId Blast UUID or slug.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function dispatchTemplate(array $blast, string $blastId): array|null {
+		$template = $this->loadTemplate(templateId: (string)($blast['templateId'] ?? ''));
+		if ($template === null) {
+			$this->logger->warning(
+				'BlastService.dispatchBlastDeliveries: template missing',
+				['blastId' => $blastId, 'templateId' => ($blast['templateId'] ?? null)]
+			);
+			return null;
+		}
+
+		// Campaign parameters go on the template once per blast, BEFORE the
+		// per-delivery render and the click-redirect wrap, so the redirect
+		// target carries them (marketing-campaign-attribution).
+		$template['bodyHtml'] = $this->decorateCampaignLinks(blast: $blast, template: $template);
+		return $template;
+	}//end dispatchTemplate()
+
+	/**
+	 * Send the queued deliveries of a blast in rate-limited batches and update its totals.
+	 *
+	 * @param string               $blastId      Blast UUID or slug.
+	 * @param array<string, mixed> $template     The decorated template.
+	 * @param array<string, mixed> $transport    The resolved mail transport.
+	 * @param int                  $maxPerSecond Caller-supplied rate ceiling.
+	 *
+	 * @return int Number of deliveries dispatched.
+	 */
+	private function sendQueuedDeliveries(string $blastId, array $template, array $transport, int $maxPerSecond): int {
 		$rateLimit = $this->mailTransportService->resolveRateLimit(transport: $transport, callerRate: $maxPerSecond);
 		$batchSize = $this->resolveBatchSize();
 
@@ -409,37 +451,81 @@ class BlastService implements BlastServiceInterface {
 			return 0;
 		}
 
+		$dispatched = $this->sendBatches(batches: array_chunk($queued, $batchSize), template: $template, transport: $transport, rateLimit: $rateLimit);
+
+		$this->updateBlastTotals(blastId: $blastId);
+
+		return $dispatched;
+	}//end sendQueuedDeliveries()
+
+	/**
+	 * Send every batch, sleeping between batches to keep within the rate limit.
+	 *
+	 * @param array<int, array<int, array<string, mixed>>> $batches   The queued deliveries, chunked.
+	 * @param array<string, mixed>                         $template  The decorated template.
+	 * @param array<string, mixed>                         $transport The resolved mail transport.
+	 * @param int                                          $rateLimit Deliveries per second.
+	 *
+	 * @return int Number of deliveries dispatched.
+	 */
+	private function sendBatches(array $batches, array $template, array $transport, int $rateLimit): int {
 		$dispatched = 0;
-		$batches = array_chunk($queued, $batchSize);
 		foreach ($batches as $batchIndex => $batch) {
 			$start = microtime(true);
-			foreach ($batch as $delivery) {
-				$result = $this->mailTransportService->sendOneDelivery(
-					delivery: $delivery,
-					template: $template,
-					transport: $transport,
-				);
-				if ($result === false) {
-					continue;
-				}
-
-				$dispatched++;
-			}
+			$dispatched += $this->sendBatch(batch: $batch, template: $template, transport: $transport);
 
 			// Enforce rate limit BETWEEN batches — wait until the configured
 			// budget for this batch has elapsed.
-			$expectedDuration = (count($batch) / max($rateLimit, 1));
-			$elapsed = (microtime(true) - $start);
-			$remaining = ($expectedDuration - $elapsed);
+			$remaining = $this->remainingBatchBudget(batch: $batch, rateLimit: $rateLimit, start: $start);
 			if ($remaining > 0.0 && $batchIndex < (count($batches) - 1)) {
 				$this->throttle(seconds: $remaining);
 			}
 		}//end foreach
 
-		$this->updateBlastTotals(blastId: $blastId);
+		return $dispatched;
+	}//end sendBatches()
+
+	/**
+	 * Send one batch of deliveries.
+	 *
+	 * @param array<int, array<string, mixed>> $batch     The deliveries.
+	 * @param array<string, mixed>             $template  The decorated template.
+	 * @param array<string, mixed>             $transport The resolved mail transport.
+	 *
+	 * @return int Number of deliveries accepted.
+	 */
+	private function sendBatch(array $batch, array $template, array $transport): int {
+		$dispatched = 0;
+		foreach ($batch as $delivery) {
+			$result = $this->mailTransportService->sendOneDelivery(
+				delivery: $delivery,
+				template: $template,
+				transport: $transport,
+			);
+			if ($result === false) {
+				continue;
+			}
+
+			$dispatched++;
+		}
 
 		return $dispatched;
-	}//end dispatchBlastDeliveries()
+	}//end sendBatch()
+
+	/**
+	 * The seconds still left of a batch's rate budget.
+	 *
+	 * @param array<int, array<string, mixed>> $batch     The batch just sent.
+	 * @param int                              $rateLimit Deliveries per second.
+	 * @param float                            $start     When the batch started.
+	 *
+	 * @return float
+	 */
+	private function remainingBatchBudget(array $batch, int $rateLimit, float $start): float {
+		$expectedDuration = (count($batch) / max($rateLimit, 1));
+		$elapsed = (microtime(true) - $start);
+		return ($expectedDuration - $elapsed);
+	}//end remainingBatchBudget()
 
 	/**
 	 * Create a sibling variant-B Blast cloned from the parent.
@@ -1067,32 +1153,69 @@ class BlastService implements BlastServiceInterface {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
 	protected function resolveListAudience(string $listId): array {
-		try {
-			$service = $this->container->get('OCA\\Pipelinq\\Service\\Marketing\\SubscriptionQueryService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.resolveListAudience: SubscriptionQueryService unavailable — failing closed',
-				['listId' => $listId, 'exception' => $e->getMessage()]
-			);
+		$audience = $this->fetchListAudience(listId: $listId);
+		if (is_array($audience) === false) {
 			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
+		}
+
+		$members = $this->listAudienceMembers(rows: ($audience['members'] ?? []));
+		$skipped = $this->listAudienceSkipped(contactIds: ($audience['skipped'] ?? []));
+
+		return ['members' => $members, 'missingConsent' => $skipped, 'suppressed' => []];
+	}//end resolveListAudience()
+
+	/**
+	 * Ask SubscriptionQueryService for a list's audience; null when it cannot be asked.
+	 *
+	 * @param string $listId MailingList UUID or slug.
+	 *
+	 * @return mixed The service's answer, or null.
+	 */
+	private function fetchListAudience(string $listId): mixed {
+		$service = $this->subscriptionQueryService(listId: $listId);
+		if ($service === null) {
+			return null;
 		}
 
 		try {
 			$audience = $service->getBlastAudienceForList($listId);
 		} catch (Throwable $e) {
+			$this->logger->warning('BlastService.resolveListAudience: call failed — failing closed', ['listId' => $listId, 'exception' => $e->getMessage()]);
+			return null;
+		}
+
+		return $audience;
+	}//end fetchListAudience()
+
+	/**
+	 * Resolve SubscriptionQueryService, logging when it is unavailable.
+	 *
+	 * @param string $listId MailingList UUID or slug.
+	 *
+	 * @return mixed The service, or null.
+	 */
+	private function subscriptionQueryService(string $listId): mixed {
+		try {
+			return $this->container->get('OCA\\Pipelinq\\Service\\Marketing\\SubscriptionQueryService');
+		} catch (Throwable $e) {
 			$this->logger->warning(
-				'BlastService.resolveListAudience: call failed — failing closed',
+				'BlastService.resolveListAudience: SubscriptionQueryService unavailable — failing closed',
 				['listId' => $listId, 'exception' => $e->getMessage()]
 			);
-			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
+			return null;
 		}
+	}//end subscriptionQueryService()
 
-		if (is_array($audience) === false) {
-			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
-		}
-
+	/**
+	 * The queueable members of a list audience.
+	 *
+	 * @param mixed $rows The audience's `members`.
+	 *
+	 * @return array<int, array{contactId: string, email: string, unsubscribeUrl: string}>
+	 */
+	private function listAudienceMembers(mixed $rows): array {
 		$members = [];
-		foreach (($audience['members'] ?? []) as $row) {
+		foreach ($rows as $row) {
 			if (is_array($row) === false) {
 				continue;
 			}
@@ -1104,15 +1227,26 @@ class BlastService implements BlastServiceInterface {
 			];
 		}
 
+		return $members;
+	}//end listAudienceMembers()
+
+	/**
+	 * The contact ids a list audience did not queue.
+	 *
+	 * @param mixed $contactIds The audience's `skipped`.
+	 *
+	 * @return array<int, string>
+	 */
+	private function listAudienceSkipped(mixed $contactIds): array {
 		$skipped = [];
-		foreach (($audience['skipped'] ?? []) as $contactId) {
+		foreach ($contactIds as $contactId) {
 			if (is_scalar($contactId) === true) {
 				$skipped[] = (string)$contactId;
 			}
 		}
 
-		return ['members' => $members, 'missingConsent' => $skipped, 'suppressed' => []];
-	}//end resolveListAudience()
+		return $skipped;
+	}//end listAudienceSkipped()
 
 	/**
 	 * Wrap the ComplianceService call so this service compiles before
@@ -1132,27 +1266,70 @@ class BlastService implements BlastServiceInterface {
 		try {
 			$service = $this->container->get('OCA\\Pipelinq\\Service\\ComplianceService');
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'BlastService.checkSegmentCompliance: ComplianceService unavailable',
-				['exception' => $e->getMessage()]
-			);
-			$members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
-			$missingConsent = [];
-			foreach ($members as $member) {
-				$contactId = (string)($member['contactId'] ?? '');
-				if ($contactId !== '') {
-					$missingConsent[] = $contactId;
-				}
+			return $this->complianceUnavailable(segmentId: $segmentId, e: $e);
+		}
+
+		$result = $this->callComplianceService(service: $service, segmentId: $segmentId, channel: $channel);
+		if ($result === null) {
+			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
+		}
+
+		return $this->complianceAnswer(result: $result);
+	}//end checkSegmentCompliance()
+
+	/**
+	 * Fail closed without ComplianceService: every segment member counts as missing consent.
+	 *
+	 * @param string    $segmentId Segment UUID or slug.
+	 * @param Throwable $e         Why the service could not be resolved.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function complianceUnavailable(string $segmentId, Throwable $e): array {
+		$this->logger->info(
+			'BlastService.checkSegmentCompliance: ComplianceService unavailable',
+			['exception' => $e->getMessage()]
+		);
+		$members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
+		$missingConsent = $this->memberContactIds(members: $members);
+
+		return [
+			'compliant' => false,
+			'missingConsent' => $missingConsent,
+			'missingCount' => count($missingConsent),
+			'suppressed' => [],
+		];
+	}//end complianceUnavailable()
+
+	/**
+	 * The non-empty contact ids of segment members.
+	 *
+	 * @param iterable<array<string, mixed>> $members The segment members.
+	 *
+	 * @return array<int, string>
+	 */
+	private function memberContactIds(iterable $members): array {
+		$missingConsent = [];
+		foreach ($members as $member) {
+			$contactId = (string)($member['contactId'] ?? '');
+			if ($contactId !== '') {
+				$missingConsent[] = $contactId;
 			}
+		}
 
-			return [
-				'compliant' => false,
-				'missingConsent' => $missingConsent,
-				'missingCount' => count($missingConsent),
-				'suppressed' => [],
-			];
-		}//end try
+		return $missingConsent;
+	}//end memberContactIds()
 
+	/**
+	 * Run ComplianceService's segment check, or null to fail closed.
+	 *
+	 * @param mixed  $service   ComplianceService.
+	 * @param string $segmentId Segment UUID or slug.
+	 * @param string $channel   Channel ("email" / "sms").
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function callComplianceService(mixed $service, string $segmentId, string $channel): array|null {
 		try {
 			$result = $service->checkSegmentCompliance($segmentId, $channel);
 		} catch (Throwable $e) {
@@ -1160,22 +1337,27 @@ class BlastService implements BlastServiceInterface {
 				'BlastService.checkSegmentCompliance: call failed — failing closed',
 				['segmentId' => $segmentId, 'channel' => $channel, 'exception' => $e->getMessage()]
 			);
-			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
+			return null;
 		}
 
 		if (is_array($result) === false) {
-			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
+			return null;
 		}
 
+		return $result;
+	}//end callComplianceService()
+
+	/**
+	 * Shape ComplianceService's answer.
+	 *
+	 * @param array<string, mixed> $result The service's answer.
+	 *
+	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount, suppressed[], unsubscribe}`.
+	 */
+	private function complianceAnswer(array $result): array {
 		$missingScalars = $this->contactIdsOf(value: ($result['missingConsent'] ?? []));
 		$suppressedScalars = $this->contactIdsOf(value: ($result['suppressed'] ?? []));
-
-		$links = [];
-		foreach ((array)($result['unsubscribe'] ?? []) as $contactId => $url) {
-			if (is_string($url) === true && $url !== '') {
-				$links[(string)$contactId] = $url;
-			}
-		}
+		$links = $this->unsubscribeLinks(links: (array)($result['unsubscribe'] ?? []));
 
 		return [
 			'compliant' => (bool)($result['compliant'] ?? false),
@@ -1184,7 +1366,25 @@ class BlastService implements BlastServiceInterface {
 			'suppressed' => $suppressedScalars,
 			'unsubscribe' => $links,
 		];
-	}//end checkSegmentCompliance()
+	}//end complianceAnswer()
+
+	/**
+	 * The non-empty unsubscribe links, keyed by contact id.
+	 *
+	 * @param array<mixed, mixed> $links The service's `unsubscribe` map.
+	 *
+	 * @return array<string, string>
+	 */
+	private function unsubscribeLinks(array $links): array {
+		$out = [];
+		foreach ($links as $contactId => $url) {
+			if (is_string($url) === true && $url !== '') {
+				$out[(string)$contactId] = $url;
+			}
+		}
+
+		return $out;
+	}//end unsubscribeLinks()
 
 	/**
 	 * Reduce whatever the compliance gate returned to a list of contact ids.
@@ -1405,23 +1605,28 @@ class BlastService implements BlastServiceInterface {
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 */
 	private function saveObject(array $payload, string $schemaSlug, ?string $id = null): ?array {
-		$register = $this->getRegisterSlug();
-		if ($register === '' || $schemaSlug === '') {
+		$target = $this->objectTarget(schemaSlug: $schemaSlug);
+		if ($target === null) {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
+		return $this->persistObject(target: $target, payload: $payload, schemaSlug: $schemaSlug, id: $id);
+	}//end saveObject()
 
+	/**
+	 * Save a payload and return the saved row, logging a failed save.
+	 *
+	 * @param array{0: string, 1: mixed} $target     The register slug and ObjectService.
+	 * @param array<string, mixed>       $payload    Payload.
+	 * @param string                     $schemaSlug Schema slug.
+	 * @param string|null                $id         Existing object id or null.
+	 *
+	 * @return array<string, mixed>|null Saved row or null on failure.
+	 */
+	private function persistObject(array $target, array $payload, string $schemaSlug, string|null $id): array|null {
+		[$register, $objectService] = $target;
 		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $register,
-				schema: $schemaSlug,
-				uuid: $id,
-			);
+			$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schemaSlug, uuid: $id);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'BlastService.saveObject: save failed',
@@ -1431,7 +1636,7 @@ class BlastService implements BlastServiceInterface {
 		}
 
 		return $this->toArray(value: $saved);
-	}//end saveObject()
+	}//end persistObject()
 
 	/**
 	 * Load one Blast payload.
@@ -1468,6 +1673,22 @@ class BlastService implements BlastServiceInterface {
 	 * @return array<string, mixed>|null Payload or null.
 	 */
 	private function loadOne(string $id, string $schemaSlug): ?array {
+		$target = $this->objectTarget(schemaSlug: $schemaSlug);
+		if ($target === null) {
+			return null;
+		}
+
+		return $this->findOne(target: $target, id: $id, schemaSlug: $schemaSlug);
+	}//end loadOne()
+
+	/**
+	 * The register slug and ObjectService to read or write a schema through, or null when either is missing.
+	 *
+	 * @param string $schemaSlug Schema slug.
+	 *
+	 * @return array{0: string, 1: mixed}|null
+	 */
+	private function objectTarget(string $schemaSlug): array|null {
 		$register = $this->getRegisterSlug();
 		if ($register === '' || $schemaSlug === '') {
 			return null;
@@ -1478,17 +1699,24 @@ class BlastService implements BlastServiceInterface {
 			return null;
 		}
 
+		return [$register, $objectService];
+	}//end objectTarget()
+
+	/**
+	 * Find one object and return it as an array, logging a miss.
+	 *
+	 * @param array{0: string, 1: mixed} $target     The register slug and ObjectService.
+	 * @param string                     $id         Object UUID or slug.
+	 * @param string                     $schemaSlug Schema slug.
+	 *
+	 * @return array<string, mixed>|null Payload or null.
+	 */
+	private function findOne(array $target, string $id, string $schemaSlug): array|null {
+		[$register, $objectService] = $target;
 		try {
-			$entity = $objectService->find(
-				id: $id,
-				register: $register,
-				schema: $schemaSlug,
-			);
+			$entity = $objectService->find(id: $id, register: $register, schema: $schemaSlug);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'BlastService.loadOne: not found',
-				['id' => $id, 'schema' => $schemaSlug, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('BlastService.loadOne: not found', ['id' => $id, 'schema' => $schemaSlug, 'exception' => $e->getMessage()]);
 			return null;
 		}
 
@@ -1497,7 +1725,7 @@ class BlastService implements BlastServiceInterface {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end loadOne()
+	}//end findOne()
 
 	/**
 	 * Load every BlastDelivery row for a Blast.
@@ -1624,7 +1852,38 @@ class BlastService implements BlastServiceInterface {
 	}//end recordSkips()
 
 	/**
-	 * Update only the `status` field on a Blast.
+	 * Keep the subject and bodies a blast is sent with on the blast itself.
+	 *
+	 * Taken once, when the blast starts sending, from the template it uses, so
+	 * changing or deleting that template later never changes what the blast
+	 * shows it sent. A blast that already holds a snapshot keeps it.
+	 *
+	 * @param array<string, mixed> $blast The blast payload.
+	 *
+	 * @return array<string, mixed> The payload with `sentSubject`, `sentHtml` and `sentText`.
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 */
+	private function withSentContent(array $blast): array {
+		if (array_key_exists('sentSubject', $blast) === true || array_key_exists('sentHtml', $blast) === true) {
+			return $blast;
+		}
+
+		$template = $this->loadTemplate(templateId: (string)($blast['templateId'] ?? ''));
+		if ($template === null) {
+			return $blast;
+		}
+
+		$blast['sentSubject'] = (string)($template['subject'] ?? '');
+		$blast['sentHtml'] = (string)($template['bodyHtml'] ?? '');
+		$blast['sentText'] = (string)($template['bodyText'] ?? '');
+
+		return $blast;
+	}//end withSentContent()
+
+	/**
+	 * Update only the `status` field on a Blast (and, on `sending`, keep the
+	 * content it is sent with).
 	 *
 	 * @param string $blastId Blast UUID or slug.
 	 * @param string $newStatus New status.
@@ -1641,6 +1900,10 @@ class BlastService implements BlastServiceInterface {
 		$payload['status'] = $newStatus;
 		if ($newStatus === 'sending' && empty($blast['sentAt']) === true) {
 			$payload['sentAt'] = $this->nowIso();
+		}
+
+		if ($newStatus === 'sending') {
+			$payload = $this->withSentContent(blast: $payload);
 		}
 
 		$this->saveObject(

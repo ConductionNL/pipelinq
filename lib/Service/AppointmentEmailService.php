@@ -59,6 +59,8 @@ use Psr\Log\LoggerInterface;
  *  complexity; each method stays individually simple.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	use NullablePayloadToArray;
@@ -436,6 +438,31 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	 * @return bool True when accepted for delivery.
 	 */
 	private function dispatch(string $recipient, string $subject, string $body, ?string $icsContent, ?array $unsubscribe = null): bool {
+		if ($this->isValidRecipient(recipient: $recipient) === false) {
+			return false;
+		}
+
+		try {
+			$message = $this->composeMessage(recipient: $recipient, subject: $subject, body: $body, icsContent: $icsContent);
+			$this->applySender(message: $message);
+			$this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: $unsubscribe);
+
+			$failed = $this->mailer->send($message);
+			return empty($failed) === true;
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq appointment email: dispatch failed', ['exception' => $e->getMessage()]);
+			return false;
+		}//end try
+	}//end dispatch()
+
+	/**
+	 * Whether the recipient is a valid address, logging when it is not.
+	 *
+	 * @param string $recipient The recipient address.
+	 *
+	 * @return bool
+	 */
+	private function isValidRecipient(string $recipient): bool {
 		if ($recipient === '' || $this->mailer->validateMailAddress($recipient) === false) {
 			$this->logger->warning(
 				'Pipelinq appointment email: no valid recipient',
@@ -444,38 +471,61 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 			return false;
 		}
 
-		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$recipient]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
+		return true;
+	}//end isValidRecipient()
 
-			if ($icsContent !== null && $icsContent !== '') {
-				$attachment = $this->mailer->createAttachment(
-					$icsContent,
-					'appointment.ics',
-					'text/calendar; method=REQUEST; charset=UTF-8'
-				);
-				$message->attach($attachment);
-			}
+	/**
+	 * Build the message: recipient, subject, body and the optional `.ics` attachment.
+	 *
+	 * @param string      $recipient  The recipient address.
+	 * @param string      $subject    Subject line.
+	 * @param string      $body       Plain-text body.
+	 * @param string|null $icsContent Optional `.ics` attachment body.
+	 *
+	 * @return \OCP\Mail\IMessage
+	 */
+	private function composeMessage(string $recipient, string $subject, string $body, string|null $icsContent): \OCP\Mail\IMessage {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$recipient]);
+		$message->setSubject($subject);
+		$message->setPlainBody($body);
+		$this->attachIcs(message: $message, icsContent: $icsContent);
 
-			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'appointment_email_sender', '');
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender]);
-			}
+		return $message;
+	}//end composeMessage()
 
-			$this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: $unsubscribe);
-
-			$failed = $this->mailer->send($message);
-			return empty($failed) === true;
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq appointment email: dispatch failed',
-				['exception' => $e->getMessage()]
+	/**
+	 * Attach the `.ics` body to the message when there is one.
+	 *
+	 * @param \OCP\Mail\IMessage $message    The message.
+	 * @param string|null        $icsContent Optional `.ics` attachment body.
+	 *
+	 * @return void
+	 */
+	private function attachIcs(\OCP\Mail\IMessage $message, string|null $icsContent): void {
+		if ($icsContent !== null && $icsContent !== '') {
+			$attachment = $this->mailer->createAttachment(
+				$icsContent,
+				'appointment.ics',
+				'text/calendar; method=REQUEST; charset=UTF-8'
 			);
-			return false;
-		}//end try
-	}//end dispatch()
+			$message->attach($attachment);
+		}
+	}//end attachIcs()
+
+	/**
+	 * Set the configured sender on the message when it is a valid address.
+	 *
+	 * @param \OCP\Mail\IMessage $message The message.
+	 *
+	 * @return void
+	 */
+	private function applySender(\OCP\Mail\IMessage $message): void {
+		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'appointment_email_sender', '');
+		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
+			$message->setFrom([$sender]);
+		}
+	}//end applySender()
 
 	/**
 	 * Ask integriq whether this appointment mail may go, as `reminder`.
@@ -574,28 +624,65 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	 * @return void
 	 */
 	private function stamp(string $bookingId, string $field, array $extra = []): void {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::BOOKING_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
+		$scope = $this->bookingScope();
+		if ($scope === null) {
 			return;
 		}
 
-		try {
-			$found = $this->getObjectService()->find(
-				id: $bookingId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq appointment email: stamp lookup failed', ['booking' => $bookingId]);
-			return;
-		}
-
-		$data = $this->toArray(object: $found);
+		$data = $this->loadForStamp(scope: $scope, bookingId: $bookingId);
 		if ($data === null) {
 			return;
 		}
 
+		$data = $this->stamped(data: $data, field: $field, extra: $extra);
+		$this->saveStamped(scope: $scope, data: $data, bookingId: $bookingId, field: $field);
+	}//end stamp()
+
+	/**
+	 * The register and booking schema, or null when either is unconfigured.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function bookingScope(): array|null {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::BOOKING_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return [$register, $schema];
+	}//end bookingScope()
+
+	/**
+	 * Load the booking as an array, logging a failed lookup.
+	 *
+	 * @param array{0: string, 1: string} $scope     The register and booking schema.
+	 * @param string                      $bookingId The Booking UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function loadForStamp(array $scope, string $bookingId): array|null {
+		[$register, $schema] = $scope;
+		try {
+			$found = $this->getObjectService()->find(id: $bookingId, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq appointment email: stamp lookup failed', ['booking' => $bookingId]);
+			return null;
+		}
+
+		return $this->toArray(object: $found);
+	}//end loadForStamp()
+
+	/**
+	 * The booking with the timestamp and extra fields set and `@self` dropped.
+	 *
+	 * @param array<string, mixed>  $data  The booking.
+	 * @param string                $field The timestamp field.
+	 * @param array<string, string> $extra More fields to set with it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function stamped(array $data, string $field, array $extra): array {
 		$data[$field] = $this->nowIso();
 		foreach ($extra as $key => $value) {
 			$data[$key] = $value;
@@ -605,21 +692,30 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 			unset($data['@self']);
 		}
 
+		return $data;
+	}//end stamped()
+
+	/**
+	 * Save the stamped booking, logging a failed save.
+	 *
+	 * @param array{0: string, 1: string} $scope     The register and booking schema.
+	 * @param array<string, mixed>        $data      The stamped booking.
+	 * @param string                      $bookingId The Booking UUID.
+	 * @param string                      $field     The timestamp field.
+	 *
+	 * @return void
+	 */
+	private function saveStamped(array $scope, array $data, string $bookingId, string $field): void {
+		[$register, $schema] = $scope;
 		try {
-			$this->getObjectService()->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $bookingId
-			);
+			$this->getObjectService()->saveObject(object: $data, extend: [], register: $register, schema: $schema, uuid: $bookingId);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq appointment email: stamp save failed',
 				['booking' => $bookingId, 'field' => $field]
 			);
 		}
-	}//end stamp()
+	}//end saveStamped()
 
 	/**
 	 * Resolve a customer's email — from the OR mirror first, then the NC Contacts manager.
@@ -627,16 +723,28 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	 * @param array<string, mixed>|null $customer The customer mirror (or null).
 	 *
 	 * @return string
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback over candidate
-	 *  email fields then the Contacts manager; each branch is an independent early
-	 *  return.
 	 */
 	private function resolveCustomerEmail(?array $customer): string {
 		if ($customer === null) {
 			return '';
 		}
 
+		$value = $this->directCustomerEmail(customer: $customer);
+		if ($value !== '') {
+			return $value;
+		}
+
+		return $this->listedCustomerEmail(emails: ($customer['emails'] ?? null));
+	}//end resolveCustomerEmail()
+
+	/**
+	 * The first non-empty email field of the customer mirror.
+	 *
+	 * @param array<string, mixed> $customer The customer mirror.
+	 *
+	 * @return string
+	 */
+	private function directCustomerEmail(array $customer): string {
 		foreach (['email', 'emailAddress', 'mail'] as $key) {
 			$value = (string)($customer[$key] ?? '');
 			if ($value !== '') {
@@ -644,24 +752,47 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 			}
 		}
 
-		$emails = $customer['emails'] ?? null;
+		return '';
+	}//end directCustomerEmail()
+
+	/**
+	 * The first non-empty address in the customer's `emails` list.
+	 *
+	 * @param mixed $emails The customer's `emails`.
+	 *
+	 * @return string
+	 */
+	private function listedCustomerEmail(mixed $emails): string {
 		if (is_array($emails) === true) {
 			foreach ($emails as $entry) {
-				if (is_string($entry) === true && $entry !== '') {
-					return $entry;
-				}
-
-				if (is_array($entry) === true) {
-					$value = (string)($entry['value'] ?? $entry['address'] ?? '');
-					if ($value !== '') {
-						return $value;
-					}
+				$value = $this->emailEntryAddress(entry: $entry);
+				if ($value !== '') {
+					return $value;
 				}
 			}
 		}
 
 		return '';
-	}//end resolveCustomerEmail()
+	}//end listedCustomerEmail()
+
+	/**
+	 * The address of one `emails` entry: the string itself, or its `value` / `address`.
+	 *
+	 * @param mixed $entry The entry.
+	 *
+	 * @return string
+	 */
+	private function emailEntryAddress(mixed $entry): string {
+		if (is_string($entry) === true) {
+			return $entry;
+		}
+
+		if (is_array($entry) === true) {
+			return (string)($entry['value'] ?? $entry['address'] ?? '');
+		}
+
+		return '';
+	}//end emailEntryAddress()
 
 	/**
 	 * Resolve a customer's display name from the mirror.

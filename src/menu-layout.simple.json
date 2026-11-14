@@ -61,9 +61,11 @@
 		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
+		"RetentionReview",
 		"Services",
 		"Resources",
-		"SavedReplies"
+		"SavedReplies",
+		"BulkChanges"
 	],
 	"nav": {
 		"brand": {

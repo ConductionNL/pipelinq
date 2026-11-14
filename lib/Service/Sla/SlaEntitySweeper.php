@@ -226,6 +226,17 @@ class SlaEntitySweeper implements SlaEntitySweeperInterface {
 	 * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
 	 */
 	private function escalateEntity(SlaSweepSurface $surface, mixed $entity): bool {
+		// A locked (frozen) record refuses every write. Escalating it would
+		// notify, then fail to record the new level, and notify again on
+		// every later sweep; so it is skipped and left as it is.
+		if (self::isFrozen(entity: $entity) === true) {
+			$this->logger->info(
+				'SlaDeadlineSweepJob: skipped a locked record',
+				['schema' => $surface->schemaId]
+			);
+			return false;
+		}
+
 		$object = $this->sweptObject(entity: $entity);
 		if ($surface->type === 'complaint') {
 			$this->checkComplaintDeadline(object: $object, now: $surface->run->now);
@@ -233,6 +244,25 @@ class SlaEntitySweeper implements SlaEntitySweeperInterface {
 
 		return $this->applyPolicy(surface: $surface, object: $object);
 	}//end escalateEntity()
+
+	/**
+	 * Whether a swept row is a locked (frozen) record: an object whose
+	 * `isFrozen()` says so, or a row whose `@self.frozen` holds the lock.
+	 *
+	 * @param mixed $entity The swept row.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
+	 */
+	private static function isFrozen(mixed $entity): bool {
+		if (is_object($entity) === true && method_exists($entity, 'isFrozen') === true) {
+			return $entity->isFrozen() === true;
+		}
+
+		$frozen = ((array) $entity)['@self']['frozen'] ?? null;
+		return is_array($frozen) === true && $frozen !== [];
+	}//end isFrozen()
 
 	/**
 	 * Read an OpenRegister entity or array row.

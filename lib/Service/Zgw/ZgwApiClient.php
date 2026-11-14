@@ -56,6 +56,8 @@ use Throwable;
  * Base transport for all ZGW component calls.
  *
  * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ZgwApiClient implements ZgwApiClientInterface {
 	/**
@@ -320,14 +322,7 @@ class ZgwApiClient implements ZgwApiClientInterface {
 			['method' => $method, 'url' => $url, 'status' => $status, 'msg' => $message]
 		);
 
-		if ($status === 401 || $status === 403) {
-			if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
-				throw new ClockSkewException(
-					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
-					observedTime: time()
-				);
-			}
-		}
+		$this->throwIfClockSkew(status: $status, body: $body, message: $message, url: $url);
 
 		if ($status === 404) {
 			throw new ZgwResourceNotFoundException($url);
@@ -349,6 +344,29 @@ class ZgwApiClient implements ZgwApiClientInterface {
 			$error
 		);
 	}//end translateTransportError()
+
+	/**
+	 * Throw a ClockSkewException for a 401/403 whose body or message reads as a JWT clock-skew rejection.
+	 *
+	 * @param int $status The HTTP status.
+	 * @param string $body The response body.
+	 * @param string $message The transport error message.
+	 * @param string $url The request URL.
+	 *
+	 * @return void
+	 *
+	 * @throws ClockSkewException On a clock-skew rejection.
+	 */
+	private function throwIfClockSkew(int $status, string $body, string $message, string $url): void {
+		if ($status === 401 || $status === 403) {
+			if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
+				throw new ClockSkewException(
+					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
+					observedTime: time()
+				);
+			}
+		}
+	}//end throwIfClockSkew()
 
 	/**
 	 * Extract the HTTP status and response body from a transport exception.

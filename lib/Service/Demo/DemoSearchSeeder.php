@@ -125,26 +125,73 @@ class DemoSearchSeeder {
 
 		[$rowSchema, $targetSchema] = $this->schemas();
 
+		$counts['rows'] = $this->removeDemoRows(rowSchema: $rowSchema, property: $property, source: $source);
+		$counts['targets'] = $this->removeDemoTargets(targetSchema: $targetSchema, property: $property);
+
+		return $counts;
+	}//end remove()
+
+	/**
+	 * Delete the rows that carry both the demo property and the demo source.
+	 *
+	 * @param string $rowSchema The Search Console row schema.
+	 * @param string $property The demo property.
+	 * @param string $source The demo source.
+	 *
+	 * @return int The number of rows deleted.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeDemoRows(string $rowSchema, string $property, string $source): int {
+		$removed = 0;
 		foreach ($this->demoRows(schemaSlug: $rowSchema, property: $property, source: $source) as $row) {
 			if ($this->store->delete(schemaSlug: $rowSchema, id: $this->store->idOf(payload: $row)) === true) {
-				$counts['rows']++;
+				$removed++;
 			}
 		}
 
+		return $removed;
+	}//end removeDemoRows()
+
+	/**
+	 * Delete the keyword targets on the demo property whose note carries the demo marker.
+	 *
+	 * @param string $targetSchema The keyword target schema.
+	 * @param string $property The demo property.
+	 *
+	 * @return int The number of targets deleted.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeDemoTargets(string $targetSchema, string $property): int {
+		$removed = 0;
 		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
-			if ((string)($target['property'] ?? '') !== $property
-				|| str_starts_with((string)($target['notes'] ?? ''), DemoSeedValues::DEMO_PREFIX) === false
-			) {
+			if ($this->isDemoTarget(target: $target, property: $property) === false) {
 				continue;
 			}
 
 			if ($this->store->delete(schemaSlug: $targetSchema, id: $this->store->idOf(payload: $target)) === true) {
-				$counts['targets']++;
+				$removed++;
 			}
 		}
 
-		return $counts;
-	}//end remove()
+		return $removed;
+	}//end removeDemoTargets()
+
+	/**
+	 * Whether a keyword target is on the demo property and carries the demo marker.
+	 *
+	 * @param array<string, mixed> $target The keyword target.
+	 * @param string $property The demo property.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function isDemoTarget(array $target, string $property): bool {
+		return (string)($target['property'] ?? '') === $property
+			&& str_starts_with((string)($target['notes'] ?? ''), DemoSeedValues::DEMO_PREFIX) === true;
+	}//end isDemoTarget()
 
 	/**
 	 * One seed row as the import writes it, with its click rate derived.

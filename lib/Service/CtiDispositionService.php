@@ -236,11 +236,6 @@ class CtiDispositionService {
 	 * @param string|null $groupId The group the task is assigned to (escalation).
 	 *
 	 * @return string|null The created task UUID or null when creation failed.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Measured 10, threshold 10.
-	 *  Each branch is one optional field on the task payload (queue, notes,
-	 *  linked interaction, due date). Extracting them would scatter the payload
-	 *  shape across helpers without removing a single decision.
 	 */
 	private function createTask(
 		string $type,
@@ -249,6 +244,39 @@ class CtiDispositionService {
 		string $interactionId,
 		?string $groupId = null,
 	): ?string {
+		$target = $this->taskTarget();
+		if ($target === null) {
+			return null;
+		}
+
+		[$register, $taskSchema] = $target;
+
+		try {
+			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+			$saved = $objectService->saveObject(
+				$this->taskPayload(type: $type, subject: $subject, notes: $notes, interactionId: $interactionId, groupId: $groupId),
+				[],
+				$register,
+				$taskSchema,
+				null
+			);
+
+			return $this->savedTaskId(saved: $saved);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'CTI disposition: task save failed',
+				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
+			);
+			return null;
+		}//end try
+	}//end createTask()
+
+	/**
+	 * The register and task schema to create tasks in, or null when tasks cannot be created.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function taskTarget(): array|null {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($register === '' || $taskSchema === '') {
@@ -266,50 +294,59 @@ class CtiDispositionService {
 			return null;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$saved = $objectService->saveObject(
-				array_filter(
-					[
-						'type' => $type,
-						'subject' => $subject,
-						'description' => $notes,
-						'status' => 'open',
-						'assigneeGroupId' => $groupId,
-						'interaction' => $interactionId,
-					],
-					static fn ($value): bool => ($value !== null && $value !== '')
-				),
-				[],
-				$register,
-				$taskSchema,
-				null
-			);
+		return [$register, $taskSchema];
+	}//end taskTarget()
 
-			$id = null;
-			if (is_array($saved) === true) {
-				$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
-			} elseif (is_object($saved) === true) {
-				// SaveObject() returns an ObjectEntity whose getUuid() is served by
-				// Entity::__call — method_exists() is FALSE for it, so the follow-up
-				// task was written and its id thrown away (pipelinq#807).
-				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
-				if ($uuid !== '') {
-					$id = $uuid;
-				}
+	/**
+	 * The task payload; fields without a value (no group, empty notes) are left out.
+	 *
+	 * @param string      $type          Task type.
+	 * @param string      $subject       Task subject.
+	 * @param string      $notes         Task notes.
+	 * @param string      $interactionId Linked contactmoment UUID.
+	 * @param string|null $groupId       The group the task is assigned to.
+	 *
+	 * @return array<string, string> The payload.
+	 */
+	private function taskPayload(string $type, string $subject, string $notes, string $interactionId, ?string $groupId): array {
+		return array_filter(
+			[
+				'type' => $type,
+				'subject' => $subject,
+				'description' => $notes,
+				'status' => 'open',
+				'assigneeGroupId' => $groupId,
+				'interaction' => $interactionId,
+			],
+			static fn ($value): bool => ($value !== null && $value !== '')
+		);
+	}//end taskPayload()
+
+	/**
+	 * The id of a saved task, read from an array or an entity.
+	 *
+	 * @param mixed $saved What saveObject() returned.
+	 *
+	 * @return string|null The task id, or null when none can be read.
+	 */
+	private function savedTaskId(mixed $saved): ?string {
+		$id = null;
+		if (is_array($saved) === true) {
+			$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
+		} elseif (is_object($saved) === true) {
+			// SaveObject() returns an ObjectEntity whose getUuid() is served by
+			// Entity::__call — method_exists() is FALSE for it, so the follow-up
+			// task was written and its id thrown away (pipelinq#807).
+			$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+			if ($uuid !== '') {
+				$id = $uuid;
 			}
+		}
 
-			if ($id !== null) {
-				return (string)$id;
-			}
+		if ($id !== null) {
+			return (string)$id;
+		}
 
-			return null;
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'CTI disposition: task save failed',
-				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
-			);
-			return null;
-		}//end try
-	}//end createTask()
+		return null;
+	}//end savedTaskId()
 }//end class

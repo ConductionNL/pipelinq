@@ -457,40 +457,79 @@ class DemoSeedService implements DemoSeedServiceInterface {
 		$sections = array_reverse(self::SECTIONS, true);
 
 		foreach ($sections as $section => [$schemaKey, $lookupField, $ticketType]) {
-			$removed[$section] = 0;
-			$retained[$section] = 0;
-
-			// One scan per schema: value => [uuid, ...] index. Multiple uuids
-			// per value guard against duplicates from historic runs.
 			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
-			$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
-
-			foreach (($definitions[$section] ?? []) as $definition) {
-				$lookupValue = (string)($definition['data'][$lookupField] ?? '');
-				// Guard: only ever delete objects carrying the demo marker.
-				if (str_starts_with($lookupValue, self::DEMO_PREFIX) === false) {
-					continue;
-				}
-
-				foreach (($index[$lookupValue] ?? []) as $uuid) {
-					try {
-						$objectService->deleteObject($uuid, $registerId, $schemaIds[$schemaKey]);
-						$removed[$section]++;
-					} catch (\Throwable $e) {
-						if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === true) {
-							// Append-only schema: rows expire via retention cron.
-							$retained[$section]++;
-							break;
-						}
-
-						throw $e;
-					}
-				}
-			}//end foreach
-		}//end foreach
+			[$removed[$section], $retained[$section]] = $this->removeSection(
+				target: $target,
+				lookupField: $lookupField,
+				definitions: ($definitions[$section] ?? [])
+			);
+		}
 
 		return ['success' => true, 'removed' => $removed, 'retained' => $retained];
 	}//end remove()
+
+	/**
+	 * Delete one section's demo objects.
+	 *
+	 * One scan per schema: value => [uuid, ...] index. Multiple uuids per
+	 * value guard against duplicates from historic runs.
+	 *
+	 * @param DemoSeedTarget $target The section's register and schema.
+	 * @param string $lookupField The field carrying the demo marker.
+	 * @param array<int, array<string, mixed>> $definitions The section's demo definitions.
+	 *
+	 * @return array{0: int, 1: int} The removed and retained counts.
+	 */
+	private function removeSection(DemoSeedTarget $target, string $lookupField, array $definitions): array {
+		$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
+		$removed = 0;
+		$retained = 0;
+
+		foreach ($definitions as $definition) {
+			$lookupValue = (string)($definition['data'][$lookupField] ?? '');
+			// Guard: only ever delete objects carrying the demo marker.
+			if (str_starts_with($lookupValue, self::DEMO_PREFIX) === false) {
+				continue;
+			}
+
+			[$deleted, $kept] = $this->deleteDemoObjects(target: $target, uuids: ($index[$lookupValue] ?? []));
+			$removed += $deleted;
+			$retained += $kept;
+		}
+
+		return [$removed, $retained];
+	}//end removeSection()
+
+	/**
+	 * Delete the objects of one demo value; an append-only schema keeps them (counted as retained).
+	 *
+	 * @param DemoSeedTarget $target The section's register and schema.
+	 * @param array<int, string> $uuids The object uuids carrying the demo value.
+	 *
+	 * @return array{0: int, 1: int} The removed and retained counts.
+	 *
+	 * @throws \Throwable When a delete fails for another reason.
+	 */
+	private function deleteDemoObjects(DemoSeedTarget $target, array $uuids): array {
+		$removed = 0;
+		$retained = 0;
+		foreach ($uuids as $uuid) {
+			try {
+				$target->objectService->deleteObject($uuid, $target->registerId, $target->schemaId);
+				$removed++;
+			} catch (\Throwable $e) {
+				if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === true) {
+					// Append-only schema: rows expire via retention cron.
+					$retained++;
+					break;
+				}
+
+				throw $e;
+			}
+		}
+
+		return [$removed, $retained];
+	}//end deleteDemoObjects()
 
 	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.

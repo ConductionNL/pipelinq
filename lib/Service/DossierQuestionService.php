@@ -199,19 +199,9 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$replies = [];
-		if (is_array($ticket['portalReplies'] ?? null) === true) {
-			$replies = array_values($ticket['portalReplies']);
-		}
-
-		$replies[] = [
-			'message' => $message,
-			'createdAt' => $this->time->getDateTime()->format(DATE_ATOM),
-		];
+		$replies = $this->repliesWith(ticket: $ticket, message: $message);
 		$ticket['portalReplies'] = $replies;
-		if (($ticket['status'] ?? null) === self::STATUS_AWAITING_CUSTOMER) {
-			$ticket['status'] = self::STATUS_IN_PROGRESS;
-		}
+		$ticket = $this->resumeIfAwaiting(ticket: $ticket);
 
 		$saved = $this->tickets->save(schemaKey: self::TICKET, data: $ticket, id: $ticketId);
 
@@ -221,6 +211,47 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			'portalReplies' => $replies,
 		];
 	}//end reply()
+
+	/**
+	 * The ticket's portal replies with the resident's new reply appended.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 * @param string $message The reply text.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 */
+	private function repliesWith(array $ticket, string $message): array {
+		$replies = [];
+		if (is_array($ticket['portalReplies'] ?? null) === true) {
+			$replies = array_values($ticket['portalReplies']);
+		}
+
+		$replies[] = [
+			'message' => $message,
+			'createdAt' => $this->time->getDateTime()->format(DATE_ATOM),
+		];
+
+		return $replies;
+	}//end repliesWith()
+
+	/**
+	 * Move a ticket that awaited the customer back in progress.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 */
+	private function resumeIfAwaiting(array $ticket): array {
+		if (($ticket['status'] ?? null) === self::STATUS_AWAITING_CUSTOMER) {
+			$ticket['status'] = self::STATUS_IN_PROGRESS;
+		}
+
+		return $ticket;
+	}//end resumeIfAwaiting()
 
 	/**
 	 * The snapshot of a dossier as the resident sees it now (C4).

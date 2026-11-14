@@ -34,6 +34,8 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
+import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
@@ -84,6 +86,7 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import RecordMergesSection from './components/merge/RecordMergesSection.vue'
 import PartyContactStrip from './components/PartyContactStrip.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
@@ -168,6 +171,7 @@ import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from './dialogs/ContactCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
@@ -178,8 +182,12 @@ import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+// Paste or scan (clients-contact-capture): the header action on the Clients and
+//     Contacts index pages opens ContactCaptureModal. ---
+import ContactCaptureModal from './modals/ContactCaptureModal.vue'
 import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
@@ -199,6 +207,7 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import BulkChangesView from './views/bulk/BulkChanges.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
@@ -284,6 +293,7 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+import RetentionReviewView from './views/settings/RetentionReview.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
@@ -918,6 +928,11 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	RecordMergesSection: {
+		kind: 'section',
+		component: RecordMergesSection,
+		_note: 'Merges section on a client or contact (clients-reversible-merge REQ-CRM-002/003): the OpenRegister mergeOperation rows this record survived, with Undo through merge#reverse while the reversal window is open and the date the merge became final after it. Kept custom because no declarative widget offers a per-row action that posts to an endpoint and the open/final state is computed from mergedAt plus the window. Self-fetches by recordId (@objectId).',
+	},
 	ClientSatisfactionSection: {
 		kind: 'section',
 		component: ClientSatisfactionSection,
@@ -928,6 +943,16 @@ const registry = {
 		component: SurveyResponseRateWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
+	},
+	ClientRiskSection: {
+		kind: 'section',
+		component: ClientRiskSection,
+		_note: 'The client\'s churn risk (clients-history-summary-and-risk, D4): the level as a badge with every reason behind it, its points and links to the records it names. Reads `churnRisk` off the client (`@object.churnRisk`); ClientRiskService writes it.',
+	},
+	ClientHistorySummarySection: {
+		kind: 'section',
+		component: ClientHistorySummarySection,
+		_note: 'History summary card (clients-history-summary-and-risk, REQ-CIN-002): Summarise asks GET /api/clients/{id}/history-summary for a few generated sentences about the last 90 days the viewer may read, with the records read and the time. Without hermiq the card says summarising is not available and has no button. Nothing is stored.',
 	},
 	ClientBillingHandoffSection: {
 		kind: 'section',
@@ -1009,6 +1034,12 @@ const registry = {
 		component: ExportJobsView,
 		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
 	},
+	// --- Client retention review (platform-client-retention). ---
+	RetentionReviewView: {
+		kind: 'page',
+		component: RetentionReviewView,
+		_note: 'Destruction lists holding clients or contact persons, read from OpenRegister\'s archival API, with Approve and Reject on each list; the lists live in OpenRegister, not in a pipelinq schema, so no index page can render them.',
+	},
 	ExportJobFormView: {
 		kind: 'page',
 		component: ExportJobFormView,
@@ -1023,6 +1054,11 @@ const registry = {
 		kind: 'page',
 		component: ExportDestinationFormView,
 		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
+	},
+	BulkChangesView: {
+		kind: 'page',
+		component: BulkChangesView,
+		_note: 'The bulk changes this person made to clients and contacts, with Undo through the OpenRegister reversal while its window is open (clients-bulk-edit-and-undo D4).',
 	},
 	ExportRunsView: {
 		kind: 'page',
@@ -1354,6 +1390,19 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
+	ContactCreateDialog: {
+		kind: 'modal',
+		component: ContactCreateDialog,
+		propsSchema: null,
+		_note: 'New contact, contact-first via POST /api/contacts-sync/create (the same path as the Contacts index createOverride). Registered so Paste or scan can open it prefilled with `values`; then it opens the new contact after Save.',
+	},
+	ContactCaptureModal: {
+		kind: 'modal',
+		component: ContactCaptureModal,
+		propsSchema: null,
+		_note: 'Paste or scan (clients-contact-capture REQ-CCC-001/002). Target of the paste-or-scan header action on the Clients and Contacts index pages: pasted text or a card photo becomes proposed fields via POST /api/contact-capture/parse, and Use these fields opens the `createModal` (ClientCreateDialog or ContactCreateDialog) prefilled. Saves nothing itself.',
+	},
+
 	ContactImportDialog: {
 		kind: 'modal',
 		component: ContactImportDialog,
@@ -1365,6 +1414,12 @@ const registry = {
 		component: OrganisationEnrichDialog,
 		propsSchema: null,
 		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
+	},
+	BulkChangeFieldModal: {
+		kind: 'modal',
+		component: BulkChangeFieldModal,
+		propsSchema: null,
+		_note: 'Change one field on the selected clients or contacts through an OpenRegister bulk job (clients-bulk-edit-and-undo). Target of the Change a field bulk action on the Clients and Contacts lists; receives the selection as selectedIds and the register and schema slugs as props.',
 	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the

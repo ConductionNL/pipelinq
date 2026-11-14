@@ -34,6 +34,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyReferencesInterface;
 use OCP\EventDispatcher\Event;
@@ -58,6 +59,7 @@ class ClientMergeReferenceListener implements IEventListener {
 	 * @param PartyReferenceMoverInterface    $mover     Moves the references.
 	 * @param IAppConfig             $appConfig The client and contact schema ids.
 	 * @param LoggerInterface        $logger    Logs a failed move and every skipped row.
+	 * @param MergedAwayCardInterface $card     Keeps the merged-away record's address book card.
 	 *
 	 * @return void
 	 */
@@ -66,6 +68,7 @@ class ClientMergeReferenceListener implements IEventListener {
 		private readonly PartyReferenceMoverInterface $mover,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly MergedAwayCardInterface $card,
 	) {
 	}//end __construct()
 
@@ -112,15 +115,41 @@ class ClientMergeReferenceListener implements IEventListener {
 
 		$intoUuid = $event->getSurvivorUuid();
 		if ($event->isReversal() === false) {
-			$moved = $this->mover->move(partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
-			$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
+			$this->moveForward(record: $record, partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
 			return;
 		}
 
-		$ledger = $record->getObject()[PartyReferencesInterface::LEDGER_FIELD] ?? [];
-		if (is_array($ledger) === false) {
-			$ledger = [];
-		}
+		$this->moveBack(event: $event, record: $record, fromUuid: $fromUuid, intoUuid: $intoUuid);
+	}//end handleOne()
+
+	/**
+	 * Move the merged-away party's references onto the survivor and keep the ledger on the merged-away record.
+	 *
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 * @param string $partyType The party type.
+	 * @param string $fromUuid  The merged-away record.
+	 * @param string $intoUuid  The survivor.
+	 *
+	 * @return void
+	 */
+	private function moveForward(ObjectEntityInterface $record, string $partyType, string $fromUuid, string $intoUuid): void {
+		$moved = $this->mover->move(partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
+		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
+		$this->followCard(record: $record, intoUuid: $intoUuid, reversal: false);
+	}//end moveForward()
+
+	/**
+	 * Move the references in the merged-away record's ledger back, logging rows that changed since.
+	 *
+	 * @param ObjectsMergedEvent $event    The reversal.
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 * @param string             $fromUuid The merged-away record.
+	 * @param string             $intoUuid The survivor.
+	 *
+	 * @return void
+	 */
+	private function moveBack(ObjectsMergedEvent $event, ObjectEntityInterface $record, string $fromUuid, string $intoUuid): void {
+		$ledger = $this->mergeLedger(record: $record);
 
 		$result = $this->mover->restore(ledger: $ledger, fromUuid: $fromUuid, intoUuid: $intoUuid);
 		foreach ($result['skipped'] as $skipped) {
@@ -131,7 +160,77 @@ class ClientMergeReferenceListener implements IEventListener {
 		}
 
 		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => null], _rbac: false, _multitenancy: false);
-	}//end handleOne()
+		$this->followCard(record: $record, intoUuid: $intoUuid, reversal: true);
+	}//end moveBack()
+
+	/**
+	 * The merge ledger stored on the merged-away record.
+	 *
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 *
+	 * @return array<mixed>
+	 */
+	private function mergeLedger(ObjectEntityInterface $record): array {
+		$ledger = $record->getObject()[PartyReferencesInterface::LEDGER_FIELD] ?? [];
+		if (is_array($ledger) === false) {
+			$ledger = [];
+		}
+
+		return $ledger;
+	}//end mergeLedger()
+
+	/**
+	 * Keep the merged-away record's address book card with a note where it went, or take the note off.
+	 *
+	 * The card is never deleted during the reversal window, so a reversal links
+	 * the restored record to its own card again. A card that cannot be written
+	 * is logged; it never stops the merge.
+	 *
+	 * @param ObjectEntityInterface $record   The merged-away record.
+	 * @param string                $intoUuid The record that stays.
+	 * @param bool                  $reversal Whether the merge is being undone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-reversible-merge/tasks.md#2.3
+	 */
+	private function followCard(ObjectEntityInterface $record, string $intoUuid, bool $reversal): void {
+		$contactsUid = trim((string)($record->getObject()['contactsUid'] ?? ''));
+		if ($contactsUid === '') {
+			return;
+		}
+
+		try {
+			if ($reversal === true) {
+				$this->card->unmark(contactsUid: $contactsUid);
+				return;
+			}
+
+			$this->card->mark(contactsUid: $contactsUid, intoUuid: $intoUuid, intoName: $this->nameOf(uuid: $intoUuid));
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq merge: the address book card of a merged record could not be updated',
+				['uid' => $contactsUid, 'survivor' => $intoUuid, 'reversal' => $reversal, 'error' => $e->getMessage()]
+			);
+		}
+	}//end followCard()
+
+	/**
+	 * The name of a record, or its uuid when it has none.
+	 *
+	 * @param string $uuid The record.
+	 *
+	 * @return string
+	 */
+	private function nameOf(string $uuid): string {
+		$record = $this->objects->find(id: $uuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$name = trim((string)($record?->getObject()['name'] ?? ''));
+		if ($name === '') {
+			return $uuid;
+		}
+
+		return $name;
+	}//end nameOf()
 
 	/**
 	 * Whether a record is a client or a contact, by its schema.

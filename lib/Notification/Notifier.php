@@ -59,10 +59,21 @@ class Notifier implements INotifier {
 		'wip_sync_failed' => 'system',
 		'billing_handoff_failed' => 'system',
 		'export_job_switched_off' => 'system',
+		'export_mail_delivery_failed' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
+		'competitor_page_changed' => 'watch',
 		'full_export_ready' => 'export',
 		'full_export_failed' => 'export',
+	];
+
+	/**
+	 * Subjects that open a page of their own rather than the object they name.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SUBJECT_PAGES = [
+		'competitor_page_changed' => 'marketing/competitors',
 	];
 
 	/**
@@ -147,6 +158,11 @@ class Notifier implements INotifier {
 		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
 		$objectType = $notification->getObjectType();
 		$objectPath = '#/' . (self::OBJECT_PATHS[$objectType] ?? $objectType . 's') . '/' . $notification->getObjectId();
+		if (isset(self::SUBJECT_PAGES[$notification->getSubject()]) === true) {
+			$objectPath = self::SUBJECT_PAGES[$notification->getSubject()];
+			$baseUrl    = rtrim($baseUrl, '/') . '/';
+		}
+
 		$notification->setLink($baseUrl . $objectPath);
 
 		return $notification;
@@ -179,6 +195,7 @@ class Notifier implements INotifier {
 			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
 			'system' => $this->applySystemSubject(notification: $notification, context: $context),
 			'social' => $this->applySocialSubject(notification: $notification, context: $context),
+			'watch' => $this->applyWatchSubject(notification: $notification, context: $context),
 			'export' => $this->applyExportSubject(notification: $notification, context: $context),
 			default => throw new UnknownNotificationException(),
 		};
@@ -333,6 +350,11 @@ class Notifier implements INotifier {
 			return;
 		}
 
+		if ($subject === 'export_mail_delivery_failed') {
+			$this->applyExportMailFailedSubject(notification: $notification, context: $context);
+			return;
+		}
+
 		$batchId = (string)($params['batchId'] ?? '');
 		$notification->setParsedSubject($l->t('Billing handoff failed for %1$s', [$title]));
 		$notification->setParsedMessage(
@@ -371,6 +393,30 @@ class Notifier implements INotifier {
 	}//end applyExportSwitchOffSubject()
 
 	/**
+	 * A mailed report did not reach some of its recipients: the job, how many
+	 * and why (reports-compare-periods-and-scheduled-delivery, REQ-RPD-002).
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 */
+	private function applyExportMailFailedSubject(INotification $notification, array $context): void {
+		['l' => $l, 'params' => $params, 'title' => $title] = $context;
+		$failed = (string)(int)($params['failed'] ?? 0);
+		$notification->setParsedSubject(
+			$l->t('Report %1$s could not be mailed to %2$s recipients', [$title, $failed])
+		);
+		$notification->setRichSubject(
+			$l->t('Report {title} could not be mailed to %1$s recipients', [$failed]),
+			$context['richParams']
+		);
+		$notification->setParsedMessage(
+			$l->t('Reason: %1$s', [(string)($params['error'] ?? '')])
+		);
+	}//end applyExportMailFailedSubject()
+
+	/**
 	 * A social post to share by hand, or an account to reconnect.
 	 *
 	 * @param INotification $notification The notification.
@@ -402,6 +448,25 @@ class Notifier implements INotifier {
 			)
 		);
 	}//end applySocialSubject()
+
+	/**
+	 * A watched competitor page that changed.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/marketing-competitor-watches/spec.md#requirement-the-owner-of-a-watch-is-told-when-the-watched-page-changes
+	 */
+	private function applyWatchSubject(INotification $notification, array $context): void {
+		$l = $context['l'];
+		$competitor = (string)($context['params']['competitor'] ?? '');
+		$page = (string)($context['params']['page'] ?? '');
+		$notification->setParsedSubject($l->t('%1$s changed its page %2$s', [$competitor, $page]));
+		$notification->setParsedMessage($l->t('The Competitors page lists the change with its summary.'));
+	}//end applyWatchSubject()
+
 	/**
 	 * The full data export: the archive is ready, or it could not be built.
 	 *

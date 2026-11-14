@@ -189,6 +189,25 @@ class ConsentMigrationService implements ConsentMigrationServiceInterface {
 	 * @return array<int,array<string,mixed>> The records.
 	 */
 	private function consentRecords(): array {
+		[$register, $schema] = $this->consentTarget();
+
+		try {
+			$rows = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService')
+				->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
+		} catch (Throwable $e) {
+			$this->logger->warning('Pipelinq consent migration: consentRecords unreadable', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		return $this->plainRecords(rows: (array)$rows);
+	}//end consentRecords()
+
+	/**
+	 * The register and consentRecord schema, defaulting to pipelinq's own slugs.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private function consentTarget(): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
 		if ($register === '') {
@@ -199,16 +218,19 @@ class ConsentMigrationService implements ConsentMigrationServiceInterface {
 			$schema = 'consentRecord';
 		}
 
-		try {
-			$rows = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService')
-				->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
-		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq consent migration: consentRecords unreadable', ['exception' => $e->getMessage()]);
-			return [];
-		}
+		return [$register, $schema];
+	}//end consentTarget()
 
+	/**
+	 * Rows as plain arrays; a row with no array shape is dropped.
+	 *
+	 * @param array<mixed> $rows The rows OpenRegister returned.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function plainRecords(array $rows): array {
 		$out = [];
-		foreach ((array)$rows as $row) {
+		foreach ($rows as $row) {
 			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
 				$row = $row->jsonSerialize();
 			}
@@ -219,7 +241,7 @@ class ConsentMigrationService implements ConsentMigrationServiceInterface {
 		}
 
 		return $out;
-	}//end consentRecords()
+	}//end plainRecords()
 
 	/**
 	 * The UUID of a record.

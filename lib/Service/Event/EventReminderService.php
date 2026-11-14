@@ -160,6 +160,19 @@ class EventReminderService implements EventReminderServiceInterface
             ]
         );
 
+        return $this->registrationArrays(rows: $rows);
+
+    }//end confirmedRegistrations()
+
+    /**
+     * The registrations as arrays, serialising objects and dropping anything else.
+     *
+     * @param array<mixed> $rows The registrations found.
+     *
+     * @return list<array<string, mixed>> The registrations.
+     */
+    private function registrationArrays(array $rows): array
+    {
         $out = [];
         foreach ($rows as $row) {
             $data = $row;
@@ -174,7 +187,7 @@ class EventReminderService implements EventReminderServiceInterface
 
         return $out;
 
-    }//end confirmedRegistrations()
+    }//end registrationArrays()
 
     /**
      * Mail one registration.

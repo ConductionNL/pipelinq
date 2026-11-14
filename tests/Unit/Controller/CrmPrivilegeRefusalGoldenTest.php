@@ -97,6 +97,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 		'CtiEscalationQueueController' => ['index'],
 		'IncomingCallController' => ['show'],
 		'JourneyController' => ['index', 'show', 'compile', 'setStatus', 'runs', 'write'],
+		'KvkSearchController' => ['search'],
 		'LoyaltyController' => ['getAccount', 'getAccountHistory', 'getRedemptionOptions', 'initiateRedemption', 'lookupRedemptionCode', 'useRedemptionCode', 'lookupGiftCard', 'redeemGiftCard', 'activateGiftCard', 'issueGiftCard', 'activateProgramme'],
 		'LoyaltyPaymentController' => ['pay'],
 		'LoyaltyReportingController' => ['kpis', 'liability', 'tierDistribution', 'expiryForecast'],

@@ -154,15 +154,36 @@ class SchedulesController extends Controller {
 			'subject' => (string)$this->request->getParam('subject', ''),
 			'deadline' => (string)$this->request->getParam('deadline', ''),
 		];
-		if (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
-			|| $required['subject'] === ''
-			|| $required['deadline'] === ''
-		) {
+		if ($this->hasRequiredFields(required: $required) === false) {
 			return $this->invalidInput();
 		}
 
 		$data = $this->buildScheduledTaskData(required: $required, userId: $userId);
 
+		return $this->storeScheduledTask(data: $data);
+	}//end create()
+
+	/**
+	 * Whether the type is valid and the subject and deadline are given.
+	 *
+	 * @param array{type: string, subject: string, deadline: string} $required The required fields.
+	 *
+	 * @return bool True when the request can be stored.
+	 */
+	private function hasRequiredFields(array $required): bool {
+		return (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
+			|| $required['subject'] === ''
+			|| $required['deadline'] === '') === false;
+	}//end hasRequiredFields()
+
+	/**
+	 * Create the scheduled task and answer 201, or an invalid-input or failure response.
+	 *
+	 * @param array<string, mixed> $data The scheduled task data.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function storeScheduledTask(array $data): JSONResponse {
 		try {
 			return new JSONResponse($this->scheduledTaskService->createScheduledTask($data), Http::STATUS_CREATED);
 		} catch (\InvalidArgumentException $e) {
@@ -170,7 +191,7 @@ class SchedulesController extends Controller {
 		} catch (Throwable $e) {
 			return $this->failed(action: 'create', error: $e);
 		}
-	}//end create()
+	}//end storeScheduledTask()
 
 	/**
 	 * List tasks due within a window.

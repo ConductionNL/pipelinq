@@ -58,6 +58,8 @@ use Throwable;
  * Resolve a party's indicators, and answer whether one blocks an act.
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class PartyIndicatorService implements PartyIndicatorServiceInterface {
 	/**
@@ -147,36 +149,68 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			}
 
 			$code = (string)($value['indicator'] ?? '');
-			$declared = ($vocabulary[$code] ?? null);
-			if ($declared === null) {
-				// A value against a code nobody declares is reported rather
-				// than dropped: a dropped safety flag is silent, and silence
-				// is the failure this whole capability exists to prevent.
-				$this->logger->warning(
-					'PartyIndicatorService: an indicator value names an undeclared indicator',
-					['party' => $partyId, 'indicator' => $code]
-				);
-				$declared = ['code' => $code, 'label' => $code, 'severity' => 'warning'];
-			}
+			$declared = $this->declaredFor(code: $code, vocabulary: $vocabulary, partyId: $partyId);
 
-			$resolved[] = [
-				'id' => (string)($value['id'] ?? $value['uuid'] ?? ''),
-				'code' => $code,
-				'label' => (string)($declared['label'] ?? $code),
-				'severity' => (string)($declared['severity'] ?? 'warning'),
-				'blocksOutbound' => (bool)($declared['blocksOutbound'] ?? false),
-				'blocksAddressPublication' => (bool)($declared['blocksAddressPublication'] ?? false),
-				'requiresAcknowledgement' => (bool)($declared['requiresAcknowledgement'] ?? false),
-				'validFrom' => (string)($value['validFrom'] ?? ''),
-				'validUntil' => (string)($value['validUntil'] ?? ''),
-				'source' => (string)($value['source'] ?? ''),
-				'acknowledgedBy' => (string)($value['acknowledgedBy'] ?? ''),
-				'acknowledgedAt' => (string)($value['acknowledgedAt'] ?? ''),
-			];
+			$resolved[] = $this->indicatorRow(value: $value, code: $code, declared: $declared);
 		}
 
 		return $resolved;
 	}//end resolve()
+
+	/**
+	 * The declared indicator for a code; an undeclared code is logged and gets a warning stand-in.
+	 *
+	 * @param string                              $code       The indicator code.
+	 * @param array<string, array<string, mixed>> $vocabulary The declared indicators by code.
+	 * @param string                              $partyId    The party record's uuid (logged).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function declaredFor(string $code, array $vocabulary, string $partyId): array {
+		$declared = ($vocabulary[$code] ?? null);
+		if ($declared === null) {
+			// A value against a code nobody declares is reported rather
+			// than dropped: a dropped safety flag is silent, and silence
+			// is the failure this whole capability exists to prevent.
+			$this->logger->warning(
+				'PartyIndicatorService: an indicator value names an undeclared indicator',
+				['party' => $partyId, 'indicator' => $code]
+			);
+			$declared = ['code' => $code, 'label' => $code, 'severity' => 'warning'];
+		}
+
+		return $declared;
+	}//end declaredFor()
+
+	/**
+	 * One resolved indicator: its declaration's label, severity and effects plus the value's period and acknowledgement.
+	 *
+	 * @param array<string, mixed> $value    The stored indicator value.
+	 * @param string               $code     The indicator code.
+	 * @param array<string, mixed> $declared The declared indicator.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function indicatorRow(array $value, string $code, array $declared): array {
+		$row = [
+			'id' => (string)($value['id'] ?? $value['uuid'] ?? ''),
+			'code' => $code,
+			'label' => (string)($declared['label'] ?? $code),
+			'severity' => (string)($declared['severity'] ?? 'warning'),
+		];
+
+		$effects = [];
+		foreach (['blocksOutbound', 'blocksAddressPublication', 'requiresAcknowledgement'] as $effect) {
+			$effects[$effect] = (bool)($declared[$effect] ?? false);
+		}
+
+		$period = [];
+		foreach (['validFrom', 'validUntil', 'source', 'acknowledgedBy', 'acknowledgedAt'] as $field) {
+			$period[$field] = (string)($value[$field] ?? '');
+		}
+
+		return array_merge($row, $effects, $period);
+	}//end indicatorRow()
 
 	/**
 	 * Whether an act on a party is blocked, and by which indicator.
@@ -233,6 +267,24 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			return ['status' => 400, 'error' => 'An indicator value is required.'];
 		}
 
+		$data = $this->findValueData(valueId: $valueId);
+		if ($data === null) {
+			return ['status' => 404, 'error' => 'That indicator value could not be read.'];
+		}
+
+		$data = $this->withAcknowledgement(data: $data);
+
+		return $this->saveAcknowledgement(data: $data, schema: $schema, valueId: $valueId);
+	}//end acknowledge()
+
+	/**
+	 * Read an indicator value as an array, or null when it cannot be read.
+	 *
+	 * @param string $valueId The indicator value's uuid.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findValueData(string $valueId): array|null {
 		try {
 			$entity = $this->objectService->find(id: $valueId);
 		} catch (Throwable $e) {
@@ -244,17 +296,41 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 		}
 
 		if ($entity === null) {
-			return ['status' => 404, 'error' => 'That indicator value could not be read.'];
+			return null;
 		}
 
 		$data = $entity->jsonSerialize();
 		if (is_array($data) === false) {
-			return ['status' => 404, 'error' => 'That indicator value could not be read.'];
+			return null;
 		}
 
+		return $data;
+	}//end findValueData()
+
+	/**
+	 * Stamp who acknowledged the indicator value, and when.
+	 *
+	 * @param array<string, mixed> $data The indicator value.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withAcknowledgement(array $data): array {
 		$data['acknowledgedBy'] = ($this->userSession->getUser()?->getUID() ?? '');
 		$data['acknowledgedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
+		return $data;
+	}//end withAcknowledgement()
+
+	/**
+	 * Save the acknowledged value and answer 200, or 500 when the save fails.
+	 *
+	 * @param array<string, mixed> $data    The acknowledged value.
+	 * @param string               $schema  The indicator-value schema id.
+	 * @param string               $valueId The indicator value's uuid.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function saveAcknowledgement(array $data, string $schema, string $valueId): array {
 		try {
 			$this->objectService->saveObject(
 				object: $data,
@@ -272,7 +348,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 		}
 
 		return ['status' => 200, 'indicatorValue' => $data];
-	}//end acknowledge()
+	}//end saveAcknowledgement()
 
 	/**
 	 * The indicator values two merging parties end up with.
@@ -413,6 +489,17 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			return [];
 		}
 
+		return $this->plainRows(rows: $rows);
+	}//end read()
+
+	/**
+	 * Rows as plain arrays; a row with no array shape is dropped.
+	 *
+	 * @param iterable<mixed> $rows The rows OpenRegister returned.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function plainRows(iterable $rows): array {
 		$out = [];
 		foreach ($rows as $row) {
 			if (is_array($row) === true) {
@@ -429,7 +516,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 		}
 
 		return $out;
-	}//end read()
+	}//end plainRows()
 
 	/**
 	 * The pipelinq register id.

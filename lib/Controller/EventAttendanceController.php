@@ -120,6 +120,19 @@ class EventAttendanceController extends Controller {
 			return new JSONResponse(['message' => 'A valid email address is required'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->registerByHand(id: $id, name: $name, email: $email);
+	}//end add()
+
+	/**
+	 * Register a person on an existing event and confirm a new registration.
+	 *
+	 * @param string $id    The event id.
+	 * @param string $name  The person's name.
+	 * @param string $email The person's address.
+	 *
+	 * @return JSONResponse The outcome and registration; 409 when the event is closed.
+	 */
+	private function registerByHand(string $id, string $name, string $email): JSONResponse {
 		$event = ($this->registrations->event(eventId: $id) ?? []);
 		$outcome = $this->registrations->register(
 			event: $event,
@@ -129,13 +142,25 @@ class EventAttendanceController extends Controller {
 			return new JSONResponse(['message' => 'The event does not take registrations'], Http::STATUS_CONFLICT);
 		}
 
+		$this->confirmNewRegistration(event: $event, outcome: $outcome);
+
+		return new JSONResponse(['outcome' => $outcome->status, 'registration' => $outcome->registration]);
+	}//end registerByHand()
+
+	/**
+	 * Mail a new place or waiting-list registration its confirmation and stamp it.
+	 *
+	 * @param array<string, mixed>     $event   The event.
+	 * @param EventRegistrationOutcome $outcome The registration outcome.
+	 *
+	 * @return void
+	 */
+	private function confirmNewRegistration(array $event, EventRegistrationOutcome $outcome): void {
 		$isNew = in_array($outcome->status, [EventRegistrationOutcome::REGISTERED, EventRegistrationOutcome::WAITLISTED], true);
 		if ($isNew === true && $outcome->registration !== null
 			&& $this->mails->sendConfirmation(event: $event, registration: $outcome->registration) === true
 		) {
 			$this->registrations->stamp(registration: $outcome->registration, field: 'confirmationSentAt');
 		}
-
-		return new JSONResponse(['outcome' => $outcome->status, 'registration' => $outcome->registration]);
-	}//end add()
+	}//end confirmNewRegistration()
 }//end class

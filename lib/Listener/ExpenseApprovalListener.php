@@ -130,11 +130,6 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false
@@ -144,27 +139,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 		}
 
 		try {
-			$dispatchable = $this->resolveDispatchable(event: $event);
-			if ($dispatchable === null) {
-				return;
-			}
-
-			[$uuid] = $dispatchable;
-
-			// See the class docblock: our own persist() re-enters this listener
-			// with a payload that passes every check above.
-			if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
-				return;
-			}
-
-			$this->deferral->defer(
-				jobClass: DeferredObjectListenerJob::class,
-				entry: [
-					'handler' => self::HANDLER_KEY,
-					'uuid' => $uuid,
-				],
-				dedupeKey: self::HANDLER_KEY . '|' . $uuid
-			);
+			$this->queueApDispatch(event: $event);
 		} catch (Throwable $e) {
 			// CRITICAL: never throw — approval workflow must not be affected.
 			$this->logger->warning(
@@ -173,6 +148,39 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 			);
 		}//end try
 	}//end handle()
+
+	/**
+	 * Queue the AP dispatch of a dispatchable expense, unless this pass is the deferred one.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The event.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function queueApDispatch(ObjectCreatedEvent|ObjectUpdatedEvent $event): void {
+		$dispatchable = $this->resolveDispatchable(event: $event);
+		if ($dispatchable === null) {
+			return;
+		}
+
+		[$uuid] = $dispatchable;
+
+		// See the class docblock: our own persist() re-enters this listener
+		// with a payload that passes every check above.
+		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
+			return;
+		}
+
+		$this->deferral->defer(
+			jobClass: DeferredObjectListenerJob::class,
+			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid],
+			dedupeKey: self::HANDLER_KEY . '|' . $uuid
+		);
+	}//end queueApDispatch()
 
 	/**
 	 * Re-emit the approval event and dispatch the AP webhook, recording outcome.

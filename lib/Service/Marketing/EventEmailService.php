@@ -42,6 +42,7 @@ use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -172,6 +173,31 @@ class EventEmailService implements EventEmailServiceInterface {
 			ics: null
 		);
 	}//end sendClosed()
+
+	/**
+	 * Tell someone with a place, or on the waiting list, that the event is cancelled.
+	 *
+	 * No calendar file and no cancel link: there is nothing left to attend or cancel.
+	 *
+	 * @param array<string, mixed> $event        The cancelled event.
+	 * @param array<string, mixed> $registration The registration.
+	 *
+	 * @return bool True when the mail was accepted for delivery.
+	 *
+	 * @spec openspec/changes/marketing-events/tasks.md#3.1
+	 */
+	public function sendEventCancelled(array $event, array $registration): bool {
+		$title = $this->title(event: $event);
+		return $this->dispatch(
+			registration: $registration,
+			subject: $this->l10n->t('%s is cancelled', [$title]),
+			body: $this->l10n->t(
+				'We are sorry: %1$s on %2$s is cancelled. Your registration lapses; you do not need to do anything.',
+				[$title, $this->when(event: $event)]
+			),
+			ics: null
+		);
+	}//end sendEventCancelled()
 
 	/**
 	 * Remind a registered person the day before, with the join link of an online event.
@@ -371,19 +397,7 @@ class EventEmailService implements EventEmailServiceInterface {
 		}
 
 		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$address]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
-			$message->setHtmlBody(nl2br(htmlspecialchars($body, ENT_QUOTES, 'UTF-8')));
-			if ($ics !== null) {
-				$message->attach($this->mailer->createAttachment($ics, 'event.ics', 'text/calendar; method=REQUEST; charset=UTF-8'));
-			}
-
-			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SENDER_KEY, '');
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender]);
-			}
+			$message = $this->composeMessage(address: $address, subject: $subject, body: $body, ics: $ics);
 
 			return empty($this->mailer->send($message)) === true;
 		} catch (Throwable $e) {
@@ -394,6 +408,34 @@ class EventEmailService implements EventEmailServiceInterface {
 			return false;
 		}//end try
 	}//end dispatch()
+
+	/**
+	 * Compose an event mail, with the calendar file and the configured sender when there are any.
+	 *
+	 * @param string      $address The recipient.
+	 * @param string      $subject The subject.
+	 * @param string      $body    The plain-text body.
+	 * @param string|null $ics     The calendar file, or null.
+	 *
+	 * @return IMessage
+	 */
+	private function composeMessage(string $address, string $subject, string $body, string|null $ics): IMessage {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$address]);
+		$message->setSubject($subject);
+		$message->setPlainBody($body);
+		$message->setHtmlBody(nl2br(htmlspecialchars($body, ENT_QUOTES, 'UTF-8')));
+		if ($ics !== null) {
+			$message->attach($this->mailer->createAttachment($ics, 'event.ics', 'text/calendar; method=REQUEST; charset=UTF-8'));
+		}
+
+		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SENDER_KEY, '');
+		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
+			$message->setFrom([$sender]);
+		}
+
+		return $message;
+	}//end composeMessage()
 
 	/**
 	 * The signing secret, created on first use.

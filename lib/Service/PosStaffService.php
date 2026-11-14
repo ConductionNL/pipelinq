@@ -347,6 +347,25 @@ class PosStaffService implements PosStaffServiceInterface {
 
 		$staff = $this->fetchStaff(id: $staffId);
 
+		$this->assertCanLogIn(staff: $staff);
+		$this->assertPinMatches(staff: $staff, pin: $pin);
+
+		// Successful login: clear counters, update lastLoginAt.
+		$this->markLoginSuccess(staff: $staff);
+
+		return $this->loginSession(staff: $staff, staffId: $staffId);
+	}//end validatePin()
+
+	/**
+	 * Refuse a deactivated or still-locked account.
+	 *
+	 * @param array<string, mixed> $staff The staff member.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSForbiddenException When the account may not log in.
+	 */
+	private function assertCanLogIn(array $staff): void {
 		if ((bool)($staff['isActive'] ?? true) === false) {
 			throw new OCSForbiddenException('Account is gedeactiveerd.');
 		}
@@ -355,16 +374,35 @@ class PosStaffService implements PosStaffServiceInterface {
 		if ($lockedUntil !== '' && $this->isStillLocked(lockedUntil: $lockedUntil) === true) {
 			throw new OCSForbiddenException('Account is geblokkeerd. Probeer het later opnieuw.');
 		}
+	}//end assertCanLogIn()
 
+	/**
+	 * Refuse a wrong PIN, counting the failed attempt.
+	 *
+	 * @param array<string, mixed> $staff The staff member.
+	 * @param string $pin The submitted PIN.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSForbiddenException When the PIN does not match.
+	 */
+	private function assertPinMatches(array $staff, string $pin): void {
 		$hash = (string)($staff['pinHash'] ?? '');
 		if ($hash === '' || password_verify($pin, $hash) === false) {
 			$this->incrementFailedAttempts(staff: $staff);
 			throw new OCSForbiddenException('PIN onjuist.');
 		}
+	}//end assertPinMatches()
 
-		// Successful login: clear counters, update lastLoginAt.
-		$this->markLoginSuccess(staff: $staff);
-
+	/**
+	 * The POS session for a logged-in staff member.
+	 *
+	 * @param array<string, mixed> $staff The staff member.
+	 * @param string $staffId The requested staff id.
+	 *
+	 * @return array<string, mixed> The staff id, display name, permissions and expiry.
+	 */
+	private function loginSession(array $staff, string $staffId): array {
 		$permissions = $this->resolvePermissions(roleId: (string)($staff['posRole'] ?? ''));
 
 		return [
@@ -373,7 +411,7 @@ class PosStaffService implements PosStaffServiceInterface {
 			'permissions' => $permissions,
 			'expiresAt' => (new DateTimeImmutable('+8 hours'))->format(DateTimeInterface::ATOM),
 		];
-	}//end validatePin()
+	}//end loginSession()
 
 	/**
 	 * Get the role's permission matrix for a staff member without verifying the PIN.
