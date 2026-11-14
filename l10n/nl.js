@@ -9578,7 +9578,10 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "Een paar zinnen over waar het gesprek over ging. Geschreven uit de transcriptie; de medewerker kan ze corrigeren.",
         "Transcript": "Transcriptie",
         "Transcript status": "Status transcriptie",
-        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname."
+        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname.",
+        "Report %1$s could not be mailed to %2$s recipients": "Rapport %1$s kon niet naar %2$s ontvangers worden gemaild",
+        "Report {title} could not be mailed to %1$s recipients": "Rapport {title} kon niet naar %1$s ontvangers worden gemaild",
+        "Reason: %1$s": "Reden: %1$s"
     },
     "nplurals=2; plural=(n != 1);"
 )

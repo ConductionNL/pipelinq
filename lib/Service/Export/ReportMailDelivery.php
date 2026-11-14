@@ -83,6 +83,21 @@ class ReportMailDelivery {
 	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
 	 */
 	public function deliver(array $job, string $userId, array $file): array {
+		return $this->deliverFiles(job: $job, userId: $userId, files: [$file]);
+	}//end deliver()
+
+	/**
+	 * Mail the export files of one job to one user, all attached to one mail.
+	 *
+	 * @param array<string, mixed> $job The export job (its name titles the mail).
+	 * @param string $userId The recipient.
+	 * @param list<array{contents: string, filename: string, mimeType: string}> $files The formatted exports.
+	 *
+	 * @return array{userId: string, status: string, reason: string} The outcome; a failure says why.
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 */
+	public function deliverFiles(array $job, string $userId, array $files): array {
 		$user = $this->userManager->get($userId);
 		if ($user === null) {
 			return self::outcome(userId: $userId, status: self::FAILED, reason: 'The recipient does not exist.');
@@ -103,9 +118,12 @@ class ReportMailDelivery {
 			$message->setPlainBody(
 				$l->t('Attached is the report %1$s, as scheduled. You receive it because you are a recipient of this report in Pipelinq.', [$name])
 			);
-			$message->attach(
-				$this->mailer->createAttachment($file['contents'], $file['filename'], $file['mimeType'])
-			);
+			foreach ($files as $file) {
+				$message->attach(
+					$this->mailer->createAttachment($file['contents'], $file['filename'], $file['mimeType'])
+				);
+			}
+
 			$refused = $this->mailer->send($message);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -121,7 +139,7 @@ class ReportMailDelivery {
 		}
 
 		return self::outcome(userId: $userId, status: self::DELIVERED, reason: '');
-	}//end deliver()
+	}//end deliverFiles()
 
 	/**
 	 * A delivery outcome.

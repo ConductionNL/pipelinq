@@ -9564,7 +9564,10 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "Report %1$s could not be mailed to %2$s recipients": "Report %1$s could not be mailed to %2$s recipients",
+        "Report {title} could not be mailed to %1$s recipients": "Report {title} could not be mailed to %1$s recipients",
+        "Reason: %1$s": "Reason: %1$s"
     },
     "nplurals=2; plural=(n != 1);"
 )
