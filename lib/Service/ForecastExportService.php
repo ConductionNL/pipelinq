@@ -84,32 +84,51 @@ class ForecastExportService implements ForecastExportServiceInterface {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-01, REQ-FRC-010-05
 	 */
 	public function exportSnapshots(string $periodId, string $level, ?string $ownerId, int $limit, int $offset): array {
-		$filters = ['period_id' => $periodId, 'level' => $level];
+		$filters = ['period_id' => $periodId, 'level' => $level] + self::ownerFilter(ownerId: $ownerId);
+
+		return $this->snapshotPage(filters: $filters, window: ['limit' => $limit, 'offset' => $offset]);
+	}//end exportSnapshots()
+
+	/**
+	 * The owner filter, or none when no owner is given.
+	 *
+	 * @param string|null $ownerId Optional owner filter.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function ownerFilter(?string $ownerId): array {
 		if ($ownerId !== null && $ownerId !== '') {
-			$filters['owner_id'] = $ownerId;
+			return ['owner_id' => $ownerId];
 		}
 
+		return [];
+	}//end ownerFilter()
+
+	/**
+	 * One page of presented snapshots matching the filters, with the full count.
+	 *
+	 * @param array<string, string> $filters The period_id, level and optional owner_id filters.
+	 * @param array{limit: int, offset: int} $window The page size and offset.
+	 *
+	 * @return array{snapshots: array<int, array<string, mixed>>, total: int, limit: int, offset: int}
+	 */
+	private function snapshotPage(array $filters, array $window): array {
 		// Push the ascending sort and the page window down into OpenRegister,
 		// and count the full matching set separately, instead of fetching every
 		// snapshot and sorting/slicing in PHP.
 		$total = $this->countObjects(schemaKey: 'forecastSnapshot_schema', filters: $filters);
 		$page = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			query: ['filters' => $filters, 'sort' => ['as_of_date' => 'ASC'], 'limit' => $limit, 'offset' => $offset]
+			query: ['filters' => $filters, 'sort' => ['as_of_date' => 'ASC']] + $window
 		);
 
 		$snapshots = [];
 		foreach ($page as $row) {
-			$snapshots[] = $this->presentSnapshot(row: $row, periodId: $periodId);
+			$snapshots[] = $this->presentSnapshot(row: $row, periodId: $filters['period_id']);
 		}
 
-		return [
-			'snapshots' => $snapshots,
-			'total' => $total,
-			'limit' => $limit,
-			'offset' => $offset,
-		];
-	}//end exportSnapshots()
+		return ['snapshots' => $snapshots, 'total' => $total] + $window;
+	}//end snapshotPage()
 
 	/**
 	 * Render snapshots as injection-safe CSV.
