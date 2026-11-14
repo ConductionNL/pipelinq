@@ -9555,8 +9555,6 @@ OC.L10N.register(
         "Value typed by hand": "Value typed by hand",
         "The value differs from what the product lines add up to.": "The value differs from what the product lines add up to.",
         "The sale could not be priced. Try again.": "The sale could not be priced. Try again.",
-        "Deal room": "Deal room",
-        "Client room": "Client room",
         "Earlier contacts could not be loaded.": "Earlier contacts could not be loaded.",
         "Earlier contacts from this number": "Earlier contacts from this number",
         "Looking up earlier contacts…": "Looking up earlier contacts…",
@@ -9566,7 +9564,9 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "Deal room": "Deal room",
+        "Client room": "Client room"
     },
     "nplurals=2; plural=(n != 1);"
 )

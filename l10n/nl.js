@@ -9569,8 +9569,6 @@ OC.L10N.register(
         "Value typed by hand": "Waarde met de hand ingevuld",
         "The value differs from what the product lines add up to.": "De waarde wijkt af van wat de productregels optellen.",
         "The sale could not be priced. Try again.": "De bedragen van de verkoop konden niet worden berekend. Probeer het opnieuw.",
-        "Deal room": "Dealkamer",
-        "Client room": "Klantkamer",
         "Earlier contacts could not be loaded.": "Eerdere contacten konden niet worden geladen.",
         "Earlier contacts from this number": "Eerdere contacten van dit nummer",
         "Looking up earlier contacts…": "Eerdere contacten opzoeken…",
@@ -9580,7 +9578,9 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "Een paar zinnen over waar het gesprek over ging. Geschreven uit de transcriptie; de medewerker kan ze corrigeren.",
         "Transcript": "Transcriptie",
         "Transcript status": "Status transcriptie",
-        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname."
+        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname.",
+        "Deal room": "Dealkamer",
+        "Client room": "Klantkamer"
     },
     "nplurals=2; plural=(n != 1);"
 )
