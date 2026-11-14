@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ShillinqStockReader;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -47,19 +47,19 @@ class ProductStockController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ShillinqStockReader $reader Reads shillinq's stock as the user.
+	 * @param ShillinqStockReaderInterface $reader Reads shillinq's stock as the user.
 	 * @param ContainerInterface $container For the lazy OpenRegister object service.
 	 * @param IAppConfig $appConfig For the register and product schema slugs.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ShillinqStockReader $reader,
+		private ShillinqStockReaderInterface $reader,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -152,7 +152,7 @@ class ProductStockController extends Controller {
 	 * @return string The slug.
 	 */
 	private function slug(string $key, string $default): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value === '') {
 			return $default;
 		}

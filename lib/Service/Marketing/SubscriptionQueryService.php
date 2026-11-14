@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\SubscriptionService;
@@ -40,7 +41,7 @@ use OCA\Pipelinq\Service\SubscriptionService;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
  */
-class SubscriptionQueryService {
+class SubscriptionQueryService implements SubscriptionQueryServiceInterface {
 	/**
 	 * The channel a mailing list sends on.
 	 *

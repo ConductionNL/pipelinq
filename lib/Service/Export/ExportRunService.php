@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 
 /**
@@ -36,7 +37,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
  */
-class ExportRunService extends AbstractExportService {
+class ExportRunService extends AbstractExportService implements ExportRunServiceInterface {
 	/**
 	 * The exportRun schema config key.
 	 *

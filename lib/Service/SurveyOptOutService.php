@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Service;
 
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -85,8 +85,8 @@ class SurveyOptOutService {
 	 */
 	public function record(string $contactRef): void {
 		$contactRef = trim($contactRef);
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 		if ($contactRef === '' || $register === '' || $schema === '') {
 			return;
 		}

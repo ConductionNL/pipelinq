@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastExportService {
+class ForecastExportService implements ForecastExportServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -347,8 +348,8 @@ class ForecastExportService {
 	 * @return array<string, mixed>|null
 	 */
 	private function scopedFilters(string $schemaKey, array $filters): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}

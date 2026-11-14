@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IL10N;
 
@@ -447,11 +447,11 @@ class ReceiptService {
 	 */
 	public function companyDetails(): array {
 		return [
-			'name' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_name', 'Conduction B.V.'),
+			'name' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_name', 'Conduction B.V.'),
 			'address' => $this->companyAddress(),
-			'phone' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_phone', ''),
-			'vatId' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_vat', ''),
-			'kvk' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_kvk', ''),
+			'phone' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_phone', ''),
+			'vatId' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_vat', ''),
+			'kvk' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_kvk', ''),
 		];
 	}//end companyDetails()
 
@@ -464,12 +464,12 @@ class ReceiptService {
 	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	public function companyAddress(): string {
-		$oneLine = $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_address', '');
+		$oneLine = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_company_address', '');
 		if (trim($oneLine) !== '') {
 			return $oneLine;
 		}
 
-		$read = fn (string $key): string => trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		$read = fn (string $key): string => trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, ''));
 		$town = trim($read('receipt_company_postcode') . ' ' . $read('receipt_company_city'));
 		$parts = array_filter(
 			[$read('receipt_company_street'), $town, $read('receipt_company_country')],

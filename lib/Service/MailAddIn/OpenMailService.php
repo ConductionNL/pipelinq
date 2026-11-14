@@ -30,6 +30,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\OpenMailServiceInterface;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCA\Pipelinq\Service\EmailMatchService;
@@ -41,7 +42,7 @@ use OutOfBoundsException;
  *
  * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md
  */
-class OpenMailService {
+class OpenMailService implements OpenMailServiceInterface {
 	/**
 	 * How much of a mail's text is kept on the contact moment. A mail body
 	 * is personal data, so only the opening is stored.

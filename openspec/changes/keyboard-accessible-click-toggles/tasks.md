@@ -7,7 +7,7 @@
       !expanded"` + `@keydown.space.prevent="expanded = !expanded"` to the
       `.prospect-widget__header` div.
   Ticked on code (decision 399): `src/components/ProspectWidget.vue:3-11` header has `role="button"`, `tabindex="0"`, `:aria-expanded`, an `aria-label` and Enter/Space handlers.
-- [ ] 1.2 Verify the header's child elements (title, count, any icon/chevron) are not themselves
+- [x] 1.2 Verify the header's child elements (title, count, any icon/chevron) are not themselves
       independently focusable in a way that would create a nested/duplicate tab stop.
   Still open (decision 399): the header still wraps the Refresh `NcButton` (`src/components/ProspectWidget.vue:19-29`), a focusable control nested inside `role="button"`.
 
@@ -44,9 +44,9 @@
 - [ ] 5.1 Tab through the dashboard (Prospect widget, Complaints widget, Find Client widget) and
       the Project detail WBS tree using keyboard only; confirm each control receives visible focus
       and Enter/Space activates it identically to a mouse click.
-- [ ] 5.2 Run `npm run lint` (the `@nextcloud/eslint-config` `vuejs-accessibility` rules should now
+- [x] 5.2 Run `npm run lint` (the `@nextcloud/eslint-config` `vuejs-accessibility` rules should now
       pass clean on these four files) and fix any newly-surfaced pre-existing lint issues in the
       touched files per CLAUDE.md.
-- [ ] 5.3 Run the existing Vitest component suites for these four components (if any) and confirm
+- [x] 5.3 Run the existing Vitest component suites for these four components (if any) and confirm
       they still pass; add a minimal interaction test asserting keydown-Enter triggers the same
       state change as click, if the house pattern for this repo's component tests supports it.

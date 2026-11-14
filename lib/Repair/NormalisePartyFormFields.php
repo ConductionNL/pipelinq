@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -134,7 +134,7 @@ class NormalisePartyFormFields implements IRepairStep {
 	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->info('NormalisePartyFormFields: pipelinq register not configured, skipping');
 			return;
@@ -150,7 +150,7 @@ class NormalisePartyFormFields implements IRepairStep {
 		$actingAdmin = $this->actingAdmin();
 		$totals = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 		foreach (self::OBJECT_TYPES as $objectType) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 			if ($schema === '') {
 				continue;
 			}

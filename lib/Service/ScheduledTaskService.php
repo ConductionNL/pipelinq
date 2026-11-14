@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore;
@@ -57,17 +58,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
-class ScheduledTaskService {
-	/**
-	 * Valid task types.
-	 *
-	 * @var array<string>
-	 */
-	public const VALID_TYPES = [
-		'callbackRequest',
-		'followUpTask',
-		'informationRequest',
-	];
+class ScheduledTaskService implements ScheduledTaskServiceInterface {
 
 	/**
 	 * Task fields that any authenticated user may modify.

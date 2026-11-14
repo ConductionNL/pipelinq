@@ -28,7 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\XWikiServiceInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -47,7 +48,7 @@ use Throwable;
  *  API with discovery, caching, XML parsing and sanitisation kept together as one
  *  cohesive read path
  */
-class XWikiService {
+class XWikiService implements XWikiServiceInterface {
 	/**
 	 * Default cache TTL (seconds) when admin has not configured a value.
 	 *
@@ -566,7 +567,7 @@ class XWikiService {
 	 * @return int
 	 */
 	private function getCacheTtl(): int {
-		$raw = (int)$this->appConfig->getValueString(Application::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
+		$raw = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
 		if ($raw > 0) {
 			return $raw;
 		}

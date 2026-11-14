@@ -206,4 +206,52 @@ class PortalDelegationServiceTest extends TestCase {
 
 		$this->assertSame([], $audits);
 	}//end testGrantRecordsAndAuditsAndRefusesSelfInAnyCase()
+
+	/**
+	 * A grant whose window has not opened yet, or has already closed, gives
+	 * no scopes; a grant whose stored scopes are not a list is active but
+	 * carries no scopes.
+	 *
+	 * @return void
+	 */
+	public function testGetActiveScopesRespectsTheValidityWindow(): void {
+		$this->repository->seed('portalDelegation', 'future', [
+			'granterAccountId' => 'g-future',
+			'granteeAccountId' => 'grantee',
+			'scopes' => ['view-invoices'],
+			'validFrom' => '2030-01-01T00:00:00+00:00',
+		]);
+		$this->repository->seed('portalDelegation', 'expired', [
+			'granterAccountId' => 'g-expired',
+			'granteeAccountId' => 'grantee',
+			'scopes' => ['view-invoices'],
+			'validUntil' => '1970-01-01T00:00:00+00:00',
+		]);
+		$this->repository->seed('portalDelegation', 'open', [
+			'granterAccountId' => 'g-open',
+			'granteeAccountId' => 'grantee',
+			'scopes' => 'view-invoices',
+			'validFrom' => '1970-01-01T00:00:00+00:00',
+			'validUntil' => '2030-01-01T00:00:00+00:00',
+		]);
+
+		$this->assertSame(
+			[['grantorAccountId' => 'g-open', 'scopes' => []]],
+			$this->service->getActiveScopes('grantee')
+		);
+	}//end testGetActiveScopesRespectsTheValidityWindow()
+
+	/**
+	 * listGrantedBy answers only the granter's own delegations.
+	 *
+	 * @return void
+	 */
+	public function testListGrantedByAnswersOnlyOwnGrants(): void {
+		$this->repository->seed('portalDelegation', 'mine', ['granterAccountId' => 'granter', 'scopes' => []]);
+		$this->repository->seed('portalDelegation', 'theirs', ['granterAccountId' => 'someone-else', 'scopes' => []]);
+
+		$granted = $this->service->listGrantedBy('granter');
+		$this->assertCount(1, $granted);
+		$this->assertSame('granter', $granted[0]['granterAccountId']);
+	}//end testListGrantedByAnswersOnlyOwnGrants()
 }//end class

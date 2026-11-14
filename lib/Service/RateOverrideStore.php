@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 
@@ -72,7 +72,7 @@ class RateOverrideStore {
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-an-administrator-can-override-a-rate-on-purpose-req-dxr-003
 	 */
 	public function getOverrides(): array {
-		$table = json_decode($this->appConfig->getValueString(Application::APP_ID, self::OVERRIDES_KEY, ''), true);
+		$table = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::OVERRIDES_KEY, ''), true);
 		if (is_array($table) === false) {
 			return [];
 		}
@@ -198,7 +198,7 @@ class RateOverrideStore {
 	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
 	 */
 	public function getRateDates(): array {
-		$table = json_decode($this->appConfig->getValueString(Application::APP_ID, self::RATE_DATES_KEY, ''), true);
+		$table = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::RATE_DATES_KEY, ''), true);
 		if (is_array($table) === false) {
 			return [];
 		}

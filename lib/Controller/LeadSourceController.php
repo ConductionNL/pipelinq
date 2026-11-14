@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SystemTagService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,17 +45,17 @@ class LeadSourceController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SystemTagService $systemTagService The system tag service.
+	 * @param SystemTagServiceInterface $systemTagService The system tag service.
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private SystemTagService $systemTagService,
+		private SystemTagServiceInterface $systemTagService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -77,7 +77,7 @@ class LeadSourceController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function create(): JSONResponse {
 		return $this->tagActions()->create(name: $this->request->getParam('name', ''));
 	}//end create()
@@ -91,7 +91,7 @@ class LeadSourceController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function update(string $id): JSONResponse {
 		return $this->tagActions()->rename(id: $id, name: $this->request->getParam('name', ''));
 	}//end update()
@@ -105,7 +105,7 @@ class LeadSourceController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function destroy(string $id): JSONResponse {
 		return $this->tagActions()->delete(id: $id, logger: $this->logger);
 	}//end destroy()

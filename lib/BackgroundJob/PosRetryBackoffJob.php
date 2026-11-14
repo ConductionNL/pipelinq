@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\PosBookkeepingService;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -62,14 +62,14 @@ class PosRetryBackoffJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosBookkeepingService $service The bookkeeping service.
+	 * @param PosBookkeepingServiceInterface $service The bookkeeping service.
 	 * @param ContainerInterface $container The DI container (OR ObjectService).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
-		private PosBookkeepingService $service,
+		private PosBookkeepingServiceInterface $service,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {

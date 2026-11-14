@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\WalkInQueueService;
+use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -53,12 +53,12 @@ class WalkInQueueRebalanceJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory (parent contract).
-	 * @param WalkInQueueService $service The walk-in queue service.
+	 * @param WalkInQueueServiceInterface $service The walk-in queue service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private WalkInQueueService $service,
+		private WalkInQueueServiceInterface $service,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

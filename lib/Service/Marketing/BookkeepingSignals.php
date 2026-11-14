@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ShillinqInvoiceReader;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -201,7 +201,7 @@ class BookkeepingSignals {
 	 */
 	private function revenueOf(string $customerRef): float {
 		$now = $this->time->getTime();
-		$months = max(1, $this->appConfig->getValueInt(Application::APP_ID, 'marketing.signal_window_months', self::DEFAULT_WINDOW_MONTHS));
+		$months = max(1, $this->appConfig->getValueInt(AppIdentity::APP_ID, 'marketing.signal_window_months', self::DEFAULT_WINDOW_MONTHS));
 		$from = date('Y-m-d', (int)strtotime('-' . $months . ' months', $now));
 		$to = date('Y-m-d', $now);
 
@@ -336,7 +336,7 @@ class BookkeepingSignals {
 	 * @return float The threshold.
 	 */
 	private function threshold(string $key, float $default): float {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, ''));
 		if ($raw === '' || is_numeric($raw) === false) {
 			return $default;
 		}

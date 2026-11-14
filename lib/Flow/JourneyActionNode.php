@@ -39,7 +39,7 @@ namespace OCA\Pipelinq\Flow;
 
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
-use OCA\Pipelinq\Service\Marketing\JourneyStepRunner;
+use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCP\IURLGenerator;
 use UnexpectedValueException;
 
@@ -60,13 +60,13 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Constructor.
 	 *
-	 * @param JourneyStepRunner $runner The gate and the action.
+	 * @param JourneyStepRunnerInterface $runner The gate and the action.
 	 * @param IURLGenerator $urls URL generator, for the palette icon.
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function __construct(
-		private JourneyStepRunner $runner,
+		private JourneyStepRunnerInterface $runner,
 		private IURLGenerator $urls,
 	) {
 	}//end __construct()
