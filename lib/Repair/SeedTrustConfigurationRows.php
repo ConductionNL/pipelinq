@@ -145,57 +145,135 @@ class SeedTrustConfigurationRows implements IRepairStep {
 			return;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$output->warning('OpenRegister ObjectService unavailable — skipping trust-configuration seed.');
+		$resolved = $this->resolveObjectService(output: $output);
+		if ($resolved === []) {
 			return;
 		}
 
-		$seeded = 0;
-		$skipped = 0;
-		foreach (self::TRUST_ROWS as $row) {
-			try {
-				if ($this->rowExists(objectService: $objectService, row: $row) === true) {
-					$skipped++;
-					continue;
-				}
-
-				// A repair step runs from `occ` with no user session, so RBAC
-				// resolves the actor to 'Anonymous' and refuses the write. Seed
-				// rows are system data, not user data — run them in the system
-				// context, as the other repair/CLI writers do.
-				$objectService->saveObject(
-					object: $row,
-					extend: [],
-					register: self::OR_TRUST_REGISTER,
-					schema: self::OR_TRUST_SCHEMA,
-					uuid: null,
-					_rbac: false,
-					_multitenancy: false
-				);
-				$seeded++;
-			} catch (\Throwable $e) {
-				$output->warning(
-					sprintf(
-						'Trust-configuration seed failed for %s/%s/%s: %s',
-						$row['entityType'],
-						$row['attribute'],
-						$row['sourceSystem'],
-						$e->getMessage()
-					)
-				);
-				$this->logger->warning(
-					'Pipelinq MDM: trust-configuration seed row failed',
-					['row' => $row, 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+		$counts = $this->seedRows(objectService: $resolved[0], output: $output);
 
 		$output->info(
-			sprintf('Trust-configuration seed complete: %d seeded, %d already present.', $seeded, $skipped)
+			sprintf('Trust-configuration seed complete: %d seeded, %d already present.', $counts['seeded'], $counts['skipped'])
 		);
 	}//end run()
+
+	/**
+	 * Resolve OpenRegister's ObjectService, warning when it is unavailable.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return array<int, mixed> The service as a one-element list, or an empty list when unavailable.
+	 *
+	 * @spec openspec/specs/master-data-management/spec.md
+	 */
+	private function resolveObjectService(IOutput $output): array {
+		try {
+			return [$this->container->get('OCA\OpenRegister\Service\ObjectService')];
+		} catch (\Throwable $e) {
+			$output->warning('OpenRegister ObjectService unavailable — skipping trust-configuration seed.');
+			return [];
+		}
+	}//end resolveObjectService()
+
+	/**
+	 * Seed every trust row and count the outcomes.
+	 *
+	 * @param mixed $objectService The OR ObjectService.
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return array{seeded: int, skipped: int}
+	 *
+	 * @spec openspec/specs/master-data-management/spec.md
+	 */
+	private function seedRows(mixed $objectService, IOutput $output): array {
+		$counts = ['seeded' => 0, 'skipped' => 0];
+		foreach (self::TRUST_ROWS as $row) {
+			$outcome = $this->seedRow(objectService: $objectService, row: $row, output: $output);
+			if ($outcome !== null) {
+				$counts[$outcome]++;
+			}
+		}
+
+		return $counts;
+	}//end seedRows()
+
+	/**
+	 * Seed one trust row, reporting a failure.
+	 *
+	 * @param mixed $objectService The OR ObjectService.
+	 * @param array<string, mixed> $row The trust row.
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return 'seeded'|'skipped'|null The counter to raise, or null when the row failed.
+	 *
+	 * @spec openspec/specs/master-data-management/spec.md
+	 */
+	private function seedRow(mixed $objectService, array $row, IOutput $output): string|null {
+		try {
+			return $this->insertIfMissing(objectService: $objectService, row: $row);
+		} catch (\Throwable $e) {
+			$this->reportSeedFailure(output: $output, row: $row, e: $e);
+			return null;
+		}
+	}//end seedRow()
+
+	/**
+	 * Insert a trust row unless it already exists.
+	 *
+	 * @param mixed $objectService The OR ObjectService.
+	 * @param array<string, mixed> $row The trust row.
+	 *
+	 * @return 'seeded'|'skipped'
+	 *
+	 * @spec openspec/specs/master-data-management/spec.md
+	 */
+	private function insertIfMissing(mixed $objectService, array $row): string {
+		if ($this->rowExists(objectService: $objectService, row: $row) === true) {
+			return 'skipped';
+		}
+
+		// A repair step runs from `occ` with no user session, so RBAC
+		// resolves the actor to 'Anonymous' and refuses the write. Seed
+		// rows are system data, not user data — run them in the system
+		// context, as the other repair/CLI writers do.
+		$objectService->saveObject(
+			object: $row,
+			extend: [],
+			register: self::OR_TRUST_REGISTER,
+			schema: self::OR_TRUST_SCHEMA,
+			uuid: null,
+			_rbac: false,
+			_multitenancy: false
+		);
+		return 'seeded';
+	}//end insertIfMissing()
+
+	/**
+	 * Report a failed trust row on the output and in the log.
+	 *
+	 * @param IOutput $output The output interface.
+	 * @param array<string, mixed> $row The trust row.
+	 * @param \Throwable $e The failure.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/master-data-management/spec.md
+	 */
+	private function reportSeedFailure(IOutput $output, array $row, \Throwable $e): void {
+		$output->warning(
+			sprintf(
+				'Trust-configuration seed failed for %s/%s/%s: %s',
+				$row['entityType'],
+				$row['attribute'],
+				$row['sourceSystem'],
+				$e->getMessage()
+			)
+		);
+		$this->logger->warning(
+			'Pipelinq MDM: trust-configuration seed row failed',
+			['row' => $row, 'exception' => $e->getMessage()]
+		);
+	}//end reportSeedFailure()
 
 	/**
 	 * Whether a trust row for this (entityType, attribute, sourceSystem) already

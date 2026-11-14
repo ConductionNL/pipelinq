@@ -68,6 +68,8 @@ use Throwable;
  *  BookingService — leaf bridge orchestration is fundamentally orchestral.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class AppointmentCalendarLeafProvider {
 	use AnyPayloadToArray;
@@ -168,42 +170,61 @@ class AppointmentCalendarLeafProvider {
 			return [];
 		}
 
-		$resource = $this->loadResource(resourceId: $resourceId);
-		if ($resource === null) {
-			return [];
-		}
-
-		$calendarSyncId = (string)($resource['calendarSyncId'] ?? '');
+		$calendarSyncId = $this->calendarSyncIdOf(resourceId: $resourceId);
 		if ($calendarSyncId === '') {
 			return [];
 		}
 
-		$leaf = $this->resolveLeaf();
-		if ($leaf === null) {
-			return [];
-		}
-
-		if (method_exists($leaf, 'getEventsForObject') === false) {
-			return [];
-		}
-
-		try {
-			// @phpstan-ignore-next-line dynamic leaf seam (OR CalendarEventService).
-			$events = $leaf->getEventsForObject($calendarSyncId);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: calendar leaf getEventsForObject failed',
-				['resource' => $resourceId, 'date' => $date]
-			);
-			return [];
-		}
-
+		$events = $this->leafEventsFor(calendarSyncId: $calendarSyncId, resourceId: $resourceId, date: $date);
 		if (is_array($events) === false) {
 			return [];
 		}
 
 		return $this->eventsToBlocks(events: $events, date: $date);
 	}//end getBlockedTimes()
+
+	/**
+	 * A resource's calendarSyncId, or '' when the resource or the id is missing.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 *
+	 * @return string
+	 */
+	private function calendarSyncIdOf(string $resourceId): string {
+		$resource = $this->loadResource(resourceId: $resourceId);
+		if ($resource === null) {
+			return '';
+		}
+
+		return (string)($resource['calendarSyncId'] ?? '');
+	}//end calendarSyncIdOf()
+
+	/**
+	 * The leaf-synced events of a calendar, or null when the leaf cannot answer.
+	 *
+	 * @param string $calendarSyncId The resource's calendar link.
+	 * @param string $resourceId     Resource UUID/slug (logged).
+	 * @param string $date           ISO date (logged).
+	 *
+	 * @return mixed The leaf's answer, or null.
+	 */
+	private function leafEventsFor(string $calendarSyncId, string $resourceId, string $date): mixed {
+		$leaf = $this->resolveLeaf();
+		if ($leaf === null || method_exists($leaf, 'getEventsForObject') === false) {
+			return null;
+		}
+
+		try {
+			// @phpstan-ignore-next-line dynamic leaf seam (OR CalendarEventService).
+			return $leaf->getEventsForObject($calendarSyncId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: calendar leaf getEventsForObject failed',
+				['resource' => $resourceId, 'date' => $date]
+			);
+			return null;
+		}
+	}//end leafEventsFor()
 
 	/**
 	 * Create or move a VEVENT mirroring a confirmed Booking.
@@ -230,22 +251,50 @@ class AppointmentCalendarLeafProvider {
 			return;
 		}
 
-		$booking = $this->loadBooking(bookingId: $bookingId);
+		$booking = $this->loadConfirmedBooking(bookingId: $bookingId);
 		if ($booking === null) {
 			return;
 		}
 
-		$status = (string)($booking['status'] ?? '');
-		if ($status !== 'confirmed') {
-			return;
+		$this->pushEventsForBooking(leaf: $leaf, bookingId: $bookingId, booking: $booking);
+	}//end pushBookingEvent()
+
+	/**
+	 * Load a Booking when it is confirmed, else null.
+	 *
+	 * @param string $bookingId Booking UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function loadConfirmedBooking(string $bookingId): array|null {
+		$booking = $this->loadBooking(bookingId: $bookingId);
+		if ($booking === null) {
+			return null;
 		}
 
+		$status = (string)($booking['status'] ?? '');
+		if ($status !== 'confirmed') {
+			return null;
+		}
+
+		return $booking;
+	}//end loadConfirmedBooking()
+
+	/**
+	 * Replace a confirmed Booking's VEVENTs with one per staff resource.
+	 *
+	 * @param object               $leaf      The calendar leaf.
+	 * @param string               $bookingId Booking UUID.
+	 * @param array<string, mixed> $booking   The confirmed Booking.
+	 *
+	 * @return void
+	 */
+	private function pushEventsForBooking(object $leaf, string $bookingId, array $booking): void {
 		$service = $this->loadServiceQuiet(serviceId: (string)($booking['serviceId'] ?? ''));
 		$summary = $this->buildSummary(booking: $booking, service: $service);
 		$body = $this->buildDescription(booking: $booking, service: $service);
 
-		$registerId = $this->registerNumeric();
-		$schemaId = $this->schemaNumeric(key: self::BOOKING_SCHEMA_KEY);
+		$target = ['register' => $this->registerNumeric(), 'schema' => $this->schemaNumeric(key: self::BOOKING_SCHEMA_KEY), 'booking' => $bookingId];
 
 		// Reschedule contract: drop existing VEVENTs first so the move
 		// semantics hold (the leaf's `unlinkEventsForObject` removes the
@@ -253,36 +302,54 @@ class AppointmentCalendarLeafProvider {
 		$this->dropExistingEvents(leaf: $leaf, bookingUuid: $bookingId);
 
 		foreach ($this->resourcesFromBooking(booking: $booking) as $resourceId) {
-			$resource = $this->loadResource(resourceId: $resourceId);
-			if ($resource === null) {
-				continue;
-			}
-
-			$attendees = $this->attendeesFor(resource: $resource);
-			$payload = [
+			$base = [
 				'summary' => $summary,
 				'dtstart' => (string)($booking['startAt'] ?? ''),
 				'dtend' => (string)($booking['endAt'] ?? ''),
 				'description' => $body,
-				'attendees' => $attendees,
 			];
-
-			try {
-				if (method_exists($leaf, 'createEvent') === false) {
-					$this->logger->warning('Pipelinq: calendar leaf missing createEvent method');
-					return;
-				}
-
-				// @phpstan-ignore-next-line dynamic leaf seam (OR CalendarEventService).
-				$leaf->createEvent($registerId, $schemaId, $bookingId, $summary, $payload);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: calendar leaf createEvent failed',
-					['booking' => $bookingId, 'resource' => $resourceId]
-				);
+			if ($this->pushResourceEvent(leaf: $leaf, target: $target, base: $base, resourceId: $resourceId) === false) {
+				return;
 			}
-		}//end foreach
-	}//end pushBookingEvent()
+		}
+	}//end pushEventsForBooking()
+
+	/**
+	 * Push the VEVENT for one staff resource of a Booking.
+	 *
+	 * @param object               $leaf       The calendar leaf.
+	 * @param array<string, mixed> $target     Keys: register, schema (numeric ids), booking (UUID).
+	 * @param array<string, mixed> $base       The event payload without attendees.
+	 * @param string               $resourceId Resource UUID/slug.
+	 *
+	 * @return bool False when the leaf cannot create events, so the push stops.
+	 */
+	private function pushResourceEvent(object $leaf, array $target, array $base, string $resourceId): bool {
+		$resource = $this->loadResource(resourceId: $resourceId);
+		if ($resource === null) {
+			return true;
+		}
+
+		$payload = $base;
+		$payload['attendees'] = $this->attendeesFor(resource: $resource);
+
+		try {
+			if (method_exists($leaf, 'createEvent') === false) {
+				$this->logger->warning('Pipelinq: calendar leaf missing createEvent method');
+				return false;
+			}
+
+			// @phpstan-ignore-next-line dynamic leaf seam (OR CalendarEventService).
+			$leaf->createEvent($target['register'], $target['schema'], $target['booking'], $payload['summary'], $payload);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: calendar leaf createEvent failed',
+				['booking' => $target['booking'], 'resource' => $resourceId]
+			);
+		}
+
+		return true;
+	}//end pushResourceEvent()
 
 	/**
 	 * Render the VEVENT SUMMARY: "<customer> – <service>".
@@ -397,38 +464,57 @@ class AppointmentCalendarLeafProvider {
 			return '';
 		}
 
-		$register = $this->registerSlug();
-		$schema = $this->schemaSlug(key: self::CUSTOMER_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return $customerId;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $customerId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (Throwable $e) {
-			return $customerId;
-		}
-
-		$data = $this->toArray(object: $found);
+		$data = $this->findCustomerMirror(customerId: $customerId);
 		if ($data === null) {
 			return $customerId;
 		}
 
+		return $this->customerNameOr(data: $data, fallback: $customerId);
+	}//end customerLabel()
+
+	/**
+	 * The customer mirror record, or null when unconfigured or unreadable.
+	 *
+	 * @param string $customerId Customer UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findCustomerMirror(string $customerId): array|null {
+		$register = $this->registerSlug();
+		$schema = $this->schemaSlug(key: self::CUSTOMER_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		try {
+			$found = $this->getObjectService()->find(id: $customerId, register: $register, schema: $schema);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		return $this->toArray(object: $found);
+	}//end findCustomerMirror()
+
+	/**
+	 * The mirror's name, else its displayName, else the fallback.
+	 *
+	 * @param array<string, mixed> $data     The customer mirror.
+	 * @param string               $fallback The customer id.
+	 *
+	 * @return string
+	 */
+	private function customerNameOr(array $data, string $fallback): string {
 		$name = (string)($data['name'] ?? '');
 		if ($name === '') {
 			$name = (string)($data['displayName'] ?? '');
 		}
 
 		if ($name === '') {
-			return $customerId;
+			return $fallback;
 		}
 
 		return $name;
-	}//end customerLabel()
+	}//end customerNameOr()
 
 	/**
 	 * Extract staff email from Resource.userId → Nextcloud user email.

@@ -165,9 +165,22 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 
 		$zReportsById = $this->indexZReports(objectService: $objectService, register: $register);
 
-		$raised = 0;
-		$projected = 0;
-		$pending = 0;
+		$counts = $this->migrateAll(objectService: $objectService, register: $register, outbounds: $outbounds, zReportsById: $zReportsById);
+		$this->reportMigration(output: $output, counts: $counts);
+	}//end runInner()
+
+	/**
+	 * Migrate every outbound record, counting the outcomes.
+	 *
+	 * @param object                           $objectService OpenRegister's ObjectService.
+	 * @param string                           $register      The register slug.
+	 * @param array<int, array<string, mixed>> $outbounds     The outbound journal records.
+	 * @param array<string, mixed>             $zReportsById  The Z-reports, keyed by id.
+	 *
+	 * @return array{raised: int, projected: int, pending: int}
+	 */
+	private function migrateAll(object $objectService, string $register, array $outbounds, array $zReportsById): array {
+		$counts = ['raised' => 0, 'projected' => 0, 'pending' => 0];
 		foreach ($outbounds as $outbound) {
 			$result = $this->migrateOne(
 				objectService: $objectService,
@@ -175,30 +188,38 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 				outbound: $outbound,
 				zReportsById: $zReportsById
 			);
-			if ($result === 'raised') {
-				$raised++;
-			} elseif ($result === 'projected') {
-				$projected++;
-			} elseif ($result === 'pending') {
-				$pending++;
+			if (array_key_exists($result, $counts) === true) {
+				$counts[$result]++;
 			}
 		}
 
+		return $counts;
+	}//end migrateAll()
+
+	/**
+	 * Report the migration's outcome to the output and the log.
+	 *
+	 * @param IOutput                                         $output Progress reporting.
+	 * @param array{raised: int, projected: int, pending: int} $counts The outcome counts.
+	 *
+	 * @return void
+	 */
+	private function reportMigration(IOutput $output, array $counts): void {
 		$output->info(
 			sprintf(
 				'POS bookkeeping migration: %d re-raised, %d posted-projected, %d left pending for retry. '
 				. 'No glAccountMapping / posJournalEntryOutbound data was deleted. '
 				. 'One-off: export the glAccountMapping VAT->GL profiles into shillinq\'s GL configuration manually.',
-				$raised,
-				$projected,
-				$pending
+				$counts['raised'],
+				$counts['projected'],
+				$counts['pending']
 			)
 		);
 		$this->logger->info(
 			'POS bookkeeping migration completed',
-			['raised' => $raised, 'projected' => $projected, 'pending' => $pending]
+			['raised' => $counts['raised'], 'projected' => $counts['projected'], 'pending' => $counts['pending']]
 		);
-	}//end runInner()
+	}//end reportMigration()
 
 	/**
 	 * Migrate a single outbound record onto the Z-report projection / registry.

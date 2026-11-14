@@ -136,33 +136,64 @@ class LeadService {
 		?string $assignee = null,
 	): array {
 		$title = trim($title);
-		if ($title === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
-		}
-
-		$config = $this->resolveLeadContext();
+		$config = $this->leadContextFor(title: $title);
 		if (isset($config['error']) === true) {
 			return $config;
 		}
 
-		$payload = ['title' => $title];
+		$optional = ['client' => $client, 'value' => $value, 'source' => $source, 'assignee' => $assignee];
 
-		if ($client !== null && $client !== '') {
-			$payload['client'] = $client;
+		return $this->saveLead(payload: ['title' => $title] + $this->presentFields(fields: $optional), config: $config);
+	}//end createLead()
+
+	/**
+	 * The lead context for a trimmed title: an invalid_arguments error when the title is empty.
+	 *
+	 * @param string $title The trimmed title.
+	 *
+	 * @return array<string, mixed> The register and schema, or an MCP error envelope.
+	 *
+	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function leadContextFor(string $title): array {
+		if ($title === '') {
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
 		}
 
-		if ($value !== null) {
-			$payload['value'] = $value;
+		return $this->resolveLeadContext();
+	}//end leadContextFor()
+
+	/**
+	 * The fields that carry a value: neither null nor an empty string.
+	 *
+	 * @param array<string, string|float|null> $fields The optional lead fields.
+	 *
+	 * @return array<string, string|float>
+	 *
+	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function presentFields(array $fields): array {
+		$present = [];
+		foreach ($fields as $key => $field) {
+			if ($field !== null && $field !== '') {
+				$present[$key] = $field;
+			}
 		}
 
-		if ($source !== null && $source !== '') {
-			$payload['source'] = $source;
-		}
+		return $present;
+	}//end presentFields()
 
-		if ($assignee !== null && $assignee !== '') {
-			$payload['assignee'] = $assignee;
-		}
-
+	/**
+	 * Save the lead and wrap the result.
+	 *
+	 * @param array<string, mixed> $payload The lead payload.
+	 * @param array<string, mixed> $config The register and schema.
+	 *
+	 * @return array<string, mixed> The created lead, or an MCP error envelope.
+	 *
+	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function saveLead(array $payload, array $config): array {
 		try {
 			$objectService = $this->getObjectService();
 
@@ -177,7 +208,7 @@ class LeadService {
 		}//end try
 
 		return ['lead' => $this->mcp->toArray(item: $saved)];
-	}//end createLead()
+	}//end saveLead()
 
 	// The attribute sits ABOVE the docblock, which is the other way round
 	// from everywhere else in this app. A multi-line PHP attribute breaks the

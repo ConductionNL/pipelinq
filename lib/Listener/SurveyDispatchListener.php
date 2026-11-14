@@ -181,6 +181,24 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	 * @return array<string, string>|null The entry, or null when no rule applies.
 	 */
 	private function completionEntry(ObjectCreatedEvent|ObjectUpdatedEvent $event): ?array {
+		[$entity, $previousStatus] = $this->entityAndPreviousStatus(event: $event);
+
+		$schemaId = (string)$entity->getSchema();
+		if ($this->schemaMapService->resolveEntityType(schemaId: $schemaId) !== 'ticket') {
+			return null;
+		}
+
+		return $this->completionFor(entity: $entity, schemaId: $schemaId, previousStatus: $previousStatus);
+	}//end completionEntry()
+
+	/**
+	 * The event's (new) object and, for an update, the previous status.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The event.
+	 *
+	 * @return array{0: mixed, 1: string} The entity and the previous status ('' when none).
+	 */
+	private function entityAndPreviousStatus(ObjectCreatedEvent|ObjectUpdatedEvent $event): array {
 		$entity = $event->getObject();
 		$previousStatus = '';
 		if ($event instanceof ObjectUpdatedEvent) {
@@ -191,36 +209,48 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 			}
 		}
 
-		$schemaId = (string)$entity->getSchema();
-		if ($this->schemaMapService->resolveEntityType(schemaId: $schemaId) !== 'ticket') {
-			return null;
-		}
+		return [$entity, $previousStatus];
+	}//end entityAndPreviousStatus()
 
+	/**
+	 * The deferred-handler entry for a ticket that moved into a status with matching rules, else null.
+	 *
+	 * @param mixed $entity The ticket entity.
+	 * @param string $schemaId The ticket schema id.
+	 * @param string $previousStatus The status before the update ('' when none).
+	 *
+	 * @return array<string, string>|null The entry.
+	 */
+	private function completionFor($entity, string $schemaId, string $previousStatus): array|null {
 		$data = $entity->getObject();
 		$status = trim((string)($data['status'] ?? ''));
 		$entityType = (self::RULE_ENTITY_TYPES[(string)($data['ticketType'] ?? '')] ?? '');
 		$uuid = (string)$entity->getUuid();
-		if ($status === '' || $status === $previousStatus || $entityType === '' || $uuid === '') {
+		if ($this->isNewRuleStatus(status: $status, previousStatus: $previousStatus, entityType: $entityType, uuid: $uuid) === false) {
 			return null;
 		}
 
-		$rules = $this->dispatchService->matchingRules(
-			entityType: $entityType,
-			status: $status,
-			channel: trim((string)($data['channel'] ?? '')),
-		);
+		$rules = $this->dispatchService->matchingRules(entityType: $entityType, status: $status, channel: trim((string)($data['channel'] ?? '')));
 		if ($rules === []) {
 			return null;
 		}
 
-		return [
-			'handler' => self::HANDLER_KEY,
-			'uuid' => $uuid,
-			'schema' => $schemaId,
-			'entityType' => $entityType,
-			'status' => $status,
-		];
-	}//end completionEntry()
+		return ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'schema' => $schemaId, 'entityType' => $entityType, 'status' => $status];
+	}//end completionFor()
+
+	/**
+	 * Whether the ticket has a new, non-empty status, a rule entity type and a uuid.
+	 *
+	 * @param string $status The current status.
+	 * @param string $previousStatus The previous status.
+	 * @param string $entityType The rule entity type.
+	 * @param string $uuid The ticket uuid.
+	 *
+	 * @return bool True when the change can trigger survey rules.
+	 */
+	private function isNewRuleStatus(string $status, string $previousStatus, string $entityType, string $uuid): bool {
+		return ($status === '' || $status === $previousStatus || $entityType === '' || $uuid === '') === false;
+	}//end isNewRuleStatus()
 
 	/**
 	 * The ticket's contact, shaped as the dispatch service reads a recipient.

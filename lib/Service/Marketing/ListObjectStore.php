@@ -109,8 +109,28 @@ class ListObjectStore implements ListObjectStoreInterface {
 			return null;
 		}
 
+		$entity = $this->findEntity(context: $context, schemaSlug: $schemaSlug, id: $id);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end find()
+
+	/**
+	 * Find one entity, or null when it does not exist or OpenRegister is unreachable.
+	 *
+	 * @param array<string, mixed> $context The resolved service, register and schema.
+	 * @param string $schemaSlug The schema to read from, for the log.
+	 * @param string $id Object UUID or slug.
+	 *
+	 * @return mixed
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+	 */
+	private function findEntity(array $context, string $schemaSlug, string $id) {
 		try {
-			$entity = $context['service']->find(
+			return $context['service']->find(
 				id: $id,
 				register: $context['register'],
 				schema: $context['schema'],
@@ -118,19 +138,10 @@ class ListObjectStore implements ListObjectStoreInterface {
 				_multitenancy: false,
 			);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'ListObjectStore.find: not found',
-				['schema' => $schemaSlug, 'id' => $id, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('ListObjectStore.find: not found', ['schema' => $schemaSlug, 'id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
-	}//end find()
+	}//end findEntity()
 
 	/**
 	 * Fetch every object matching a filter set.
@@ -153,14 +164,26 @@ class ListObjectStore implements ListObjectStoreInterface {
 			return [];
 		}
 
+		$rows = $this->queryRows(context: $context, schemaSlug: $schemaSlug, filters: $filters);
+
+		return $this->matchingPayloads(rows: $rows, filters: $filters);
+	}//end findAll()
+
+	/**
+	 * Query the rows for a filter set, or none when the query fails.
+	 *
+	 * @param array<string, mixed> $context The resolved service, register and schema.
+	 * @param string $schemaSlug The schema to read from, for the log.
+	 * @param array<string, string> $filters Field-value pairs.
+	 *
+	 * @return mixed The findAll result.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+	 */
+	private function queryRows(array $context, string $schemaSlug, array $filters) {
 		try {
-			$rows = $context['service']->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						['register' => $context['register'], 'schema' => $context['schema']],
-					),
-				],
+			return $context['service']->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $context['register'], 'schema' => $context['schema']])],
 				_rbac: false,
 				_multitenancy: false,
 			);
@@ -171,7 +194,19 @@ class ListObjectStore implements ListObjectStoreInterface {
 			);
 			return [];
 		}
+	}//end queryRows()
 
+	/**
+	 * The non-empty payloads that match every filter.
+	 *
+	 * @param mixed $rows The rows found.
+	 * @param array<string, string> $filters Field-value pairs.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+	 */
+	private function matchingPayloads($rows, array $filters): array {
 		$out = [];
 		foreach (($rows ?? []) as $row) {
 			$payload = $this->toArray(value: $row);
@@ -183,7 +218,7 @@ class ListObjectStore implements ListObjectStoreInterface {
 		}
 
 		return $out;
-	}//end findAll()
+	}//end matchingPayloads()
 
 	/**
 	 * Persist an object, creating it when no id is given.
@@ -202,30 +237,58 @@ class ListObjectStore implements ListObjectStoreInterface {
 			return null;
 		}
 
-		$uuid = $id;
-		if ($uuid === '') {
-			$uuid = null;
+		$saved = $this->writeEntity(context: $context, schemaSlug: $schemaSlug, payload: $payload, id: $id);
+		if ($saved === []) {
+			return null;
 		}
 
+		return $this->toArray(value: $saved[0]);
+	}//end save()
+
+	/**
+	 * Write an object, creating it when the id is null or empty.
+	 *
+	 * @param array<string, mixed> $context The resolved service, register and schema.
+	 * @param string $schemaSlug The schema to write to, for the log.
+	 * @param array<string, mixed> $payload The payload to store.
+	 * @param string|null $id Existing id when updating.
+	 *
+	 * @return array<int, mixed> The saved object as a one-element list, or an empty list when the write fails.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+	 */
+	private function writeEntity(array $context, string $schemaSlug, array $payload, string|null $id): array {
 		try {
-			$saved = $context['service']->saveObject(
-				object: $payload,
-				register: $context['register'],
-				schema: $context['schema'],
-				uuid: $uuid,
-				_rbac: false,
-				_multitenancy: false,
-			);
+			return [$context['service']->saveObject(
+				object: $payload, register: $context['register'], schema: $context['schema'],
+				uuid: $this->uuidOrNull(id: $id), _rbac: false, _multitenancy: false,
+			)];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ListObjectStore.save: write failed',
 				['schema' => $schemaSlug, 'id' => $id, 'exception' => $e->getMessage()]
 			);
-			return null;
+			return [];
+		}
+	}//end writeEntity()
+
+	/**
+	 * The id to write under: null for an empty id.
+	 *
+	 * @param string|null $id Existing id when updating.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+	 */
+	private function uuidOrNull(string|null $id): string|null {
+		$uuid = $id;
+		if ($uuid === '') {
+			$uuid = null;
 		}
 
-		return $this->toArray(value: $saved);
-	}//end save()
+		return $uuid;
+	}//end uuidOrNull()
 
 	/**
 	 * Delete one object.

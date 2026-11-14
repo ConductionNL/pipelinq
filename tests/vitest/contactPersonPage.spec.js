@@ -42,7 +42,7 @@ describe('the contact page as the board', () => {
 	it('holds Overview as headed sections: details, deals, relationships, channels', () => {
 		const sections = widget('contact-overview').content.sections
 		expect(widget('contact-overview').type).toBe('sections')
-		expect(sections.map((s) => s.title)).toEqual(['Contact details', 'Deals', 'Relationships', 'Channels'])
+		expect(sections.map((s) => s.title)).toEqual(['Contact details', 'Deals', 'Relationships', 'Channels', 'How they found us', 'Web form submissions'])
 		expect(sections[2].widget.content.card).toBe(false)
 		expect(sections[3].widget.content.card).toBe(false)
 		expect(widget('contact-data').content.include).toHaveLength(widget('contact-data').content.collapsedFields)

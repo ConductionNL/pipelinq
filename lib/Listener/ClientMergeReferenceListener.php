@@ -115,16 +115,41 @@ class ClientMergeReferenceListener implements IEventListener {
 
 		$intoUuid = $event->getSurvivorUuid();
 		if ($event->isReversal() === false) {
-			$moved = $this->mover->move(partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
-			$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
-			$this->followCard(record: $record, intoUuid: $intoUuid, reversal: false);
+			$this->moveForward(record: $record, partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
 			return;
 		}
 
-		$ledger = $record->getObject()[PartyReferencesInterface::LEDGER_FIELD] ?? [];
-		if (is_array($ledger) === false) {
-			$ledger = [];
-		}
+		$this->moveBack(event: $event, record: $record, fromUuid: $fromUuid, intoUuid: $intoUuid);
+	}//end handleOne()
+
+	/**
+	 * Move the merged-away party's references onto the survivor and keep the ledger on the merged-away record.
+	 *
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 * @param string $partyType The party type.
+	 * @param string $fromUuid  The merged-away record.
+	 * @param string $intoUuid  The survivor.
+	 *
+	 * @return void
+	 */
+	private function moveForward(ObjectEntityInterface $record, string $partyType, string $fromUuid, string $intoUuid): void {
+		$moved = $this->mover->move(partyType: $partyType, fromUuid: $fromUuid, intoUuid: $intoUuid);
+		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => $moved], _rbac: false, _multitenancy: false);
+		$this->followCard(record: $record, intoUuid: $intoUuid, reversal: false);
+	}//end moveForward()
+
+	/**
+	 * Move the references in the merged-away record's ledger back, logging rows that changed since.
+	 *
+	 * @param ObjectsMergedEvent $event    The reversal.
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 * @param string             $fromUuid The merged-away record.
+	 * @param string             $intoUuid The survivor.
+	 *
+	 * @return void
+	 */
+	private function moveBack(ObjectsMergedEvent $event, ObjectEntityInterface $record, string $fromUuid, string $intoUuid): void {
+		$ledger = $this->mergeLedger(record: $record);
 
 		$result = $this->mover->restore(ledger: $ledger, fromUuid: $fromUuid, intoUuid: $intoUuid);
 		foreach ($result['skipped'] as $skipped) {
@@ -136,7 +161,23 @@ class ClientMergeReferenceListener implements IEventListener {
 
 		$this->objects->patchObject(objectId: $fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => null], _rbac: false, _multitenancy: false);
 		$this->followCard(record: $record, intoUuid: $intoUuid, reversal: true);
-	}//end handleOne()
+	}//end moveBack()
+
+	/**
+	 * The merge ledger stored on the merged-away record.
+	 *
+	 * @param ObjectEntityInterface $record The merged-away record.
+	 *
+	 * @return array<mixed>
+	 */
+	private function mergeLedger(ObjectEntityInterface $record): array {
+		$ledger = $record->getObject()[PartyReferencesInterface::LEDGER_FIELD] ?? [];
+		if (is_array($ledger) === false) {
+			$ledger = [];
+		}
+
+		return $ledger;
+	}//end mergeLedger()
 
 	/**
 	 * Keep the merged-away record's address book card with a note where it went, or take the note off.

@@ -137,33 +137,70 @@ class FeedWatchReader {
 			return null;
 		}
 
+		return $this->rssEntries(channel: $channel);
+	}//end rssItems()
+
+	/**
+	 * The channel's items that carry a link, up to MAX_ENTRIES.
+	 *
+	 * @param SimpleXMLElement $channel The `<channel>` element.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function rssEntries(SimpleXMLElement $channel): array {
 		$out = [];
 		foreach ($channel->item as $item) {
-			$link = trim((string)$item->link);
-			if ($link === '') {
+			$entry = $this->rssEntry(item: $item);
+			if ($entry === null) {
 				continue;
 			}
 
-			$guid = trim((string)$item->guid);
-			$stamp = $guid;
-			if ($stamp === '') {
-				$stamp = trim((string)$item->pubDate);
-			}
-
-			$out[] = [
-				'url' => $link,
-				'title' => trim((string)$item->title),
-				'summary' => $this->shorten(value: trim((string)$item->description)),
-				'stamp' => $stamp,
-				'publishedAt' => $this->instant(value: trim((string)$item->pubDate)),
-			];
+			$out[] = $entry;
 			if (count($out) >= self::MAX_ENTRIES) {
 				break;
 			}
 		}
 
 		return $out;
-	}//end rssItems()
+	}//end rssEntries()
+
+	/**
+	 * One RSS item as an entry, or null when it has no link.
+	 *
+	 * @param SimpleXMLElement $item The `<item>` element.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function rssEntry(SimpleXMLElement $item): array|null {
+		$link = trim((string)$item->link);
+		if ($link === '') {
+			return null;
+		}
+
+		return [
+			'url' => $link,
+			'title' => trim((string)$item->title),
+			'summary' => $this->shorten(value: trim((string)$item->description)),
+			'stamp' => $this->orElse(value: trim((string)$item->guid), fallback: trim((string)$item->pubDate)),
+			'publishedAt' => $this->instant(value: trim((string)$item->pubDate)),
+		];
+	}//end rssEntry()
+
+	/**
+	 * The value, or the fallback when the value is empty.
+	 *
+	 * @param string $value The preferred value.
+	 * @param string $fallback The value to use instead of an empty one.
+	 *
+	 * @return string
+	 */
+	private function orElse(string $value, string $fallback): string {
+		if ($value === '') {
+			return $fallback;
+		}
+
+		return $value;
+	}//end orElse()
 
 	/**
 	 * The `<entry>` children of an Atom feed, or null when this is not Atom.
@@ -201,31 +238,17 @@ class FeedWatchReader {
 	 * @return array<string, mixed>|null The entry, or null when it has neither link nor id.
 	 */
 	private function atomEntry(SimpleXMLElement $entry): ?array {
-		$link = trim((string)($entry->link['href'] ?? ''));
-		if ($link === '') {
-			$link = trim((string)$entry->id);
-		}
-
+		$link = $this->orElse(value: trim((string)($entry->link['href'] ?? '')), fallback: trim((string)$entry->id));
 		if ($link === '') {
 			return null;
-		}
-
-		$stamp = trim((string)$entry->id);
-		if ($stamp === '') {
-			$stamp = trim((string)$entry->updated);
-		}
-
-		$published = trim((string)$entry->published);
-		if ($published === '') {
-			$published = trim((string)$entry->updated);
 		}
 
 		return [
 			'url' => $link,
 			'title' => trim((string)$entry->title),
 			'summary' => $this->shorten(value: trim((string)$entry->summary)),
-			'stamp' => $stamp,
-			'publishedAt' => $this->instant(value: $published),
+			'stamp' => $this->orElse(value: trim((string)$entry->id), fallback: trim((string)$entry->updated)),
+			'publishedAt' => $this->instant(value: $this->orElse(value: trim((string)$entry->published), fallback: trim((string)$entry->updated))),
 		];
 	}//end atomEntry()
 

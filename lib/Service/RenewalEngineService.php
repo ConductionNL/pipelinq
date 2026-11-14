@@ -319,17 +319,29 @@ class RenewalEngineService implements RenewalEngineServiceInterface {
 				$leadSchema,
 				null
 			);
-			$arr = (array)$saved;
-			if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
-				$arr = $saved->jsonSerialize();
-			}
 
-			return (string)($arr['id'] ?? ($arr['uuid'] ?? ''));
+			return $this->savedLeadId(saved: $saved);
 		} catch (Throwable $e) {
 			$this->logger->error('RenewalEngineService: renewal-lead creation failed', ['error' => $e->getMessage()]);
 			return '';
 		}//end try
 	}//end createRenewalLead()
+
+	/**
+	 * The id (or uuid) of the saved lead, '' when it has none.
+	 *
+	 * @param mixed $saved The saved lead.
+	 *
+	 * @return string The lead id.
+	 */
+	private function savedLeadId($saved): string {
+		$arr = (array)$saved;
+		if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
+			$arr = $saved->jsonSerialize();
+		}
+
+		return (string)($arr['id'] ?? ($arr['uuid'] ?? ''));
+	}//end savedLeadId()
 
 	/**
 	 * Create the notice-deadline My Work (task) entry for the owner.

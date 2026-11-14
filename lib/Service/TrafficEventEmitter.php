@@ -228,19 +228,8 @@ class TrafficEventEmitter {
 	private function buildEvent(string $kind, array $delivery, array $blast, ?string $clickedUrl): array {
 		$blastId = (string)($delivery['blastId'] ?? '');
 		$contactId = (string)($delivery['contactId'] ?? '');
-		$pageLocation = ('mailto:blast/' . $blastId);
-		if ($clickedUrl !== null && $clickedUrl !== '') {
-			$pageLocation = $clickedUrl;
-		}
-
-		$campaign = (string)($blast['name'] ?? '');
-		if ($campaign === '') {
-			$campaign = (string)($blast['templateId'] ?? '');
-		}
-
-		if ($campaign === '') {
-			$campaign = $blastId;
-		}
+		$pageLocation = $this->pageLocationOf(blastId: $blastId, clickedUrl: $clickedUrl);
+		$campaign = $this->campaignOf(blast: $blast, blastId: $blastId);
 
 		return [
 			'name' => self::KINDS[$kind]['name'],
@@ -255,6 +244,44 @@ class TrafficEventEmitter {
 			'contactRef' => $contactId,
 		];
 	}//end buildEvent()
+
+	/**
+	 * The event's page location: the clicked URL, else the blast's mailto marker.
+	 *
+	 * @param string      $blastId    The blast id.
+	 * @param string|null $clickedUrl The decoded click target, or null.
+	 *
+	 * @return string
+	 */
+	private function pageLocationOf(string $blastId, string|null $clickedUrl): string {
+		$pageLocation = ('mailto:blast/' . $blastId);
+		if ($clickedUrl !== null && $clickedUrl !== '') {
+			$pageLocation = $clickedUrl;
+		}
+
+		return $pageLocation;
+	}//end pageLocationOf()
+
+	/**
+	 * The campaign label: the blast's name, else its template id, else the blast id.
+	 *
+	 * @param array<string, mixed> $blast   The parent blast row (may be empty).
+	 * @param string               $blastId The blast id.
+	 *
+	 * @return string
+	 */
+	private function campaignOf(array $blast, string $blastId): string {
+		$campaign = (string)($blast['name'] ?? '');
+		if ($campaign === '') {
+			$campaign = (string)($blast['templateId'] ?? '');
+		}
+
+		if ($campaign === '') {
+			$campaign = $blastId;
+		}
+
+		return $campaign;
+	}//end campaignOf()
 
 	/**
 	 * Log the ingest outcome: debug when accepted, info when refused.

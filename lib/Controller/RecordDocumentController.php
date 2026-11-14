@@ -156,12 +156,8 @@ class RecordDocumentController extends Controller
             return new JSONResponse(['message' => 'This record has no document'], Http::STATUS_NOT_FOUND);
         }
 
-        // Existence is not authorization: OpenRegister answers a read whatever
-        // `_rbac` says, so this app decides who may act on the record.
-        $record = $this->reader->readFromSchema(id: $id, schema: $schema);
-        if ($record === null
-            || $this->accessPolicy->mayAccess(uid: $user->getUID(), object: $record, ownerField: $config['ownerField']) === false
-        ) {
+        $record = $this->readAuthorisedRecord(uid: $user->getUID(), schema: $schema, id: $id, ownerField: $config['ownerField']);
+        if ($record === null) {
             return new JSONResponse(['message' => 'Record not found'], Http::STATUS_NOT_FOUND);
         }
 
@@ -171,14 +167,58 @@ class RecordDocumentController extends Controller
         }
 
         $filename = $this->filename(templateName: $template['name'], record: $record);
+
+        return $this->renderPdf(template: $template, filename: $filename, lists: $config['lists'], target: ['schema' => $schema, 'id' => $id]);
+
+    }//end document()
+
+
+    /**
+     * Read a record the caller may act on, or null when it is absent or not theirs.
+     *
+     * @param string $uid        The caller's uid.
+     * @param string $schema     The schema slug.
+     * @param string $id         The record id.
+     * @param mixed  $ownerField The configured owner field.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function readAuthorisedRecord(string $uid, string $schema, string $id, mixed $ownerField): array|null
+    {
+        // Existence is not authorization: OpenRegister answers a read whatever
+        // `_rbac` says, so this app decides who may act on the record.
+        $record = $this->reader->readFromSchema(id: $id, schema: $schema);
+        if ($record === null
+            || $this->accessPolicy->mayAccess(uid: $uid, object: $record, ownerField: $ownerField) === false
+        ) {
+            return null;
+        }
+
+        return $record;
+
+    }//end readAuthorisedRecord()
+
+
+    /**
+     * Make the PDF through filinq, or the 502 when filinq cannot.
+     *
+     * @param array<string, mixed>  $template The template.
+     * @param string                $filename The document filename, without extension.
+     * @param mixed                 $lists    The configured lists.
+     * @param array<string, string> $target   Keys: schema, id.
+     *
+     * @return DataDownloadResponse|JSONResponse
+     */
+    private function renderPdf(array $template, string $filename, mixed $lists, array $target): DataDownloadResponse|JSONResponse
+    {
         try {
             $register = $this->reader->register();
             $document = $this->documents->render(
                 templateId: $template['id'],
-                dataRefs: [['register' => $register, 'schema' => $schema, 'id' => $id]],
+                dataRefs: [['register' => $register, 'schema' => $target['schema'], 'id' => $target['id']]],
                 filename: $filename,
                 outputMode: 'return',
-                listRefs: $this->listRefs(lists: $config['lists'], register: $register, id: $id)
+                listRefs: $this->listRefs(lists: $lists, register: $register, id: $target['id'])
             );
         } catch (RuntimeException $e) {
             return new JSONResponse(['message' => 'filinq could not make the document.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
@@ -186,7 +226,7 @@ class RecordDocumentController extends Controller
 
         return new DataDownloadResponse($document['content'], $filename.'.pdf', 'application/pdf');
 
-    }//end document()
+    }//end renderPdf()
 
 
     /**

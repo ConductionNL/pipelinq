@@ -120,10 +120,35 @@ class PortalQuestionController extends Controller {
 
 		$collectionId = $this->text(name: 'collectionId');
 		$question = $this->text(name: 'question');
-		if ($collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT) {
+		if ($this->isInvalidQuestion(collectionId: $collectionId, question: $question) === true) {
 			return new JSONResponse(['error' => 'invalid_request'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->fileQuestion(subjectRef: $subjectRef, collectionId: $collectionId, question: $question);
+	}//end ask()
+
+	/**
+	 * Whether a question names no collection, is empty, or is too long.
+	 *
+	 * @param string $collectionId The dossier collection id.
+	 * @param string $question     The question text.
+	 *
+	 * @return bool
+	 */
+	private function isInvalidQuestion(string $collectionId, string $question): bool {
+		return $collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT;
+	}//end isInvalidQuestion()
+
+	/**
+	 * File the question: 201 with the ticket, 404 (throttled) for a dossier not theirs, 503 when it cannot be saved.
+	 *
+	 * @param string $subjectRef   The resident's subject reference.
+	 * @param string $collectionId The dossier collection id.
+	 * @param string $question     The question text.
+	 *
+	 * @return JSONResponse
+	 */
+	private function fileQuestion(string $subjectRef, string $collectionId, string $question): JSONResponse {
 		try {
 			$result = $this->questions->ask(
 				subjectRef: $subjectRef,
@@ -142,7 +167,7 @@ class PortalQuestionController extends Controller {
 		}
 
 		return new JSONResponse($result, Http::STATUS_CREATED);
-	}//end ask()
+	}//end fileQuestion()
 
 	/**
 	 * `replyToQuestion`: add the resident's reply to their own question.

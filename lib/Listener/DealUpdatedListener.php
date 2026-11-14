@@ -108,45 +108,84 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {
 			return;
 		}
 
+		$lead = $this->correctableLead(event: $event);
+		if ($lead === null) {
+			return;
+		}
+
+		[$uuid, $oldEntity, $newEntity] = $lead;
+		$oldData = $oldEntity->getObject();
+		$newData = $newEntity->getObject();
+
+		if ($this->needsCorrection(oldData: $oldData, newData: $newData) === true) {
+			$this->deferCorrection(uuid: $uuid, oldData: $oldData);
+		}
+	}//end handle()
+
+	/**
+	 * The uuid and old and new entities of an updated lead not already being corrected, else null.
+	 *
+	 * @param ObjectUpdatedEvent $event The update event.
+	 *
+	 * @return array{0: string, 1: mixed, 2: mixed}|null The uuid, old entity and new entity.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function correctableLead(ObjectUpdatedEvent $event): array|null {
 		$newEntity = $event->getNewObject();
 		$oldEntity = $event->getOldObject();
 		if ($this->isLead(entity: $newEntity) === false || $oldEntity === null) {
-			return;
+			return null;
 		}
 
 		$uuid = (string)$newEntity->getUuid();
 		if ($uuid === '') {
-			return;
+			return null;
 		}
 
 		// Our own deferred correction re-enters this listener. Deferring again
 		// would enqueue another job whose write re-enters again — a cron loop.
 		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
-			return;
+			return null;
 		}
 
-		$oldData = $oldEntity->getObject();
-		$newData = $newEntity->getObject();
+		return [$uuid, $oldEntity, $newEntity];
+	}//end correctableLead()
 
-		// Nothing to correct: skip the job row entirely rather than enqueue a
-		// no-op. Both decisions are re-taken against current state in the job.
-		if ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
-			&& $this->dealService->applyReopenReset(oldData: $oldData, newData: $newData) === null
-		) {
-			return;
-		}
+	/**
+	 * Whether the transition is invalid or a reopen needs a reset.
+	 *
+	 * Nothing to correct: skip the job row entirely rather than enqueue a
+	 * no-op. Both decisions are re-taken against current state in the job.
+	 *
+	 * @param array<string, mixed> $oldData The lead before the update.
+	 * @param array<string, mixed> $newData The lead after the update.
+	 *
+	 * @return bool True when a correction job is needed.
+	 */
+	private function needsCorrection(array $oldData, array $newData): bool {
+		return ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
+			&& $this->dealService->applyReopenReset(oldData: $oldData, newData: $newData) === null) === false;
+	}//end needsCorrection()
 
+	/**
+	 * Defer the lead correction to a background job, deduplicated per lead.
+	 *
+	 * @param string $uuid The lead uuid.
+	 * @param array<string, mixed> $oldData The lead before the update.
+	 *
+	 * @return void
+	 */
+	private function deferCorrection(string $uuid, array $oldData): void {
 		$this->deferral->defer(
 			jobClass: DeferredObjectListenerJob::class,
 			entry: [
@@ -156,7 +195,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 			],
 			dedupeKey: self::HANDLER_KEY . '|' . $uuid
 		);
-	}//end handle()
+	}//end deferCorrection()
 
 	/**
 	 * Re-decide and apply the forecast-category correction.

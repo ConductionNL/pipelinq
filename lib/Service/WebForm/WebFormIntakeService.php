@@ -95,10 +95,11 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param WebFormFinder        $finder    Finds the published form for a key.
-	 * @param ContainerInterface   $container Reaches OpenRegister's FormSubmitService.
-	 * @param SystemServiceAccount $account   The account every submit is written as.
-	 * @param LoggerInterface      $logger    Logger. Submitted personal data MUST NOT be written here.
+	 * @param WebFormFinder                $finder    Finds the published form for a key.
+	 * @param ContainerInterface           $container Reaches OpenRegister's FormSubmitService.
+	 * @param SystemServiceAccount         $account   The account every submit is written as.
+	 * @param LoggerInterface              $logger    Logger. Submitted personal data MUST NOT be written here.
+	 * @param SubmissionTouchRecorder|null $touches   Records the submit's campaign values as a touchpoint.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
@@ -107,6 +108,7 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 		private readonly ContainerInterface $container,
 		private readonly SystemServiceAccount $account,
 		private readonly LoggerInterface $logger,
+		private readonly ?SubmissionTouchRecorder $touches=null,
 	) {
 
 	}//end __construct()
@@ -157,6 +159,7 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	 * @throws WebFormSubmitException 400 refused, 422 payload refused, 503 try again later.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-the-website-enquiry-form-keeps-campaign-values-req-moc-003
 	 */
 	public function submit(array $form, array $payload, ?string $idempotencyKey = null): array {
 		$writes = $this->finder->writesOf(form: $form);
@@ -181,6 +184,9 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 		} catch (Throwable $e) {
 			throw $this->refusalFor(exception: $e, form: $form);
 		}
+
+		// The submit is stored; its campaign values become a touchpoint, best effort.
+		$this->touches?->record(form: $form, payload: $payload, idempotencyKey: $idempotencyKey);
 
 		return [
 			'reference' => (string)($answer['reference'] ?? ''),

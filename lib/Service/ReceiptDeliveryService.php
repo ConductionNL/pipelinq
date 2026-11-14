@@ -267,70 +267,96 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		$recipient = $this->resolveCustomerRecipient(transaction: $transaction, requested: $requestedRecipient);
 
 		$transaction = $this->ensureInvoiceNumber(transaction: $transaction);
+		return $this->deliverReceiptEmail(transaction: $transaction, template: $template, recipient: $recipient, userId: $userId);
+	}//end emailReceipt()
+
+	/**
+	 * Render the receipt, send it and log the outcome.
+	 *
+	 * @param array<string, mixed> $transaction The transaction with lines and invoice number.
+	 * @param array<string, mixed> $template The receipt template (empty for the default).
+	 * @param string $recipient The validated recipient address.
+	 * @param string $userId The acting user id.
+	 *
+	 * @return array<string, mixed> The status, recipient, log id and (on failure) error.
+	 */
+	private function deliverReceiptEmail(array $transaction, array $template, string $recipient, string $userId): array {
 		$subject = $this->l10n->t('Your receipt') . ' ' . (string)($transaction['reference'] ?? '');
 		$text = $this->receiptService->renderText(transaction: $transaction, template: $template);
 		$html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
 
 		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$recipient]);
-			$message->setSubject($subject);
-			$message->setPlainBody($text);
-			$message->setHtmlBody($html);
+			$this->sendReceiptMail(recipient: $recipient, subject: $subject, text: $text, html: $html);
 
-			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_email_sender', '');
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender]);
-			}
-
-			$failed = $this->mailer->send($message);
-			if (count($failed) > 0) {
-				throw new RuntimeException('Mailer reported failed recipients.');
-			}
-
-			$logId = $this->writeLog(
-				transaction: $transaction,
-				template: $template,
-				action: 'email',
-				status: 'success',
-				extra: [
-					'emailRecipient' => $recipient,
-					'renderedContent' => $text,
-					'errorMessage' => null,
-					'actor' => $userId,
-				]
-			);
+			$extra = ['emailRecipient' => $recipient, 'renderedContent' => $text, 'errorMessage' => null, 'actor' => $userId];
+			$logId = $this->writeLog(transaction: $transaction, template: $template, action: 'email', status: 'success', extra: $extra);
 
 			return ['status' => 'success', 'emailRecipient' => $recipient, 'logId' => $logId];
 		} catch (\Throwable $e) {
 			// Real send path; transport (SMTP) is environment-gated. Record the
 			// failure for audit without leaking internal error detail upstream.
-			$this->logger->warning(
-				'Pipelinq: receipt email send failed (SMTP may be disabled on this host)',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('Pipelinq: receipt email send failed (SMTP may be disabled on this host)', ['exception' => $e->getMessage()]);
 
-			$logId = $this->writeLog(
-				transaction: $transaction,
-				template: $template,
-				action: 'email',
-				status: 'failed',
-				extra: [
-					'emailRecipient' => $recipient,
-					'errorMessage' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
-					'renderedContent' => null,
-					'actor' => $userId,
-				]
-			);
-
-			return [
-				'status' => 'failed',
-				'emailRecipient' => $recipient,
-				'logId' => $logId,
-				'error' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
-			];
+			return $this->logEmailFailure(transaction: $transaction, template: $template, recipient: $recipient, userId: $userId);
 		}//end try
-	}//end emailReceipt()
+	}//end deliverReceiptEmail()
+
+	/**
+	 * Build and send the receipt mail, throwing when the mailer reports failed recipients.
+	 *
+	 * @param string $recipient The recipient address.
+	 * @param string $subject The mail subject.
+	 * @param string $text The plain-text body.
+	 * @param string $html The HTML body.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the mailer reports failed recipients.
+	 */
+	private function sendReceiptMail(string $recipient, string $subject, string $text, string $html): void {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$recipient]);
+		$message->setSubject($subject);
+		$message->setPlainBody($text);
+		$message->setHtmlBody($html);
+
+		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_email_sender', '');
+		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
+			$message->setFrom([$sender]);
+		}
+
+		$failed = $this->mailer->send($message);
+		if (count($failed) > 0) {
+			throw new RuntimeException('Mailer reported failed recipients.');
+		}
+	}//end sendReceiptMail()
+
+	/**
+	 * Log a failed receipt email and return the failed outcome.
+	 *
+	 * @param array<string, mixed> $transaction The transaction.
+	 * @param array<string, mixed> $template The receipt template.
+	 * @param string $recipient The recipient address.
+	 * @param string $userId The acting user id.
+	 *
+	 * @return array<string, mixed> The failed outcome.
+	 */
+	private function logEmailFailure(array $transaction, array $template, string $recipient, string $userId): array {
+		$extra = [
+			'emailRecipient' => $recipient,
+			'errorMessage' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
+			'renderedContent' => null,
+			'actor' => $userId,
+		];
+		$logId = $this->writeLog(transaction: $transaction, template: $template, action: 'email', status: 'failed', extra: $extra);
+
+		return [
+			'status' => 'failed',
+			'emailRecipient' => $recipient,
+			'logId' => $logId,
+			'error' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
+		];
+	}//end logEmailFailure()
 
 	/**
 	 * Produce the ESC/POS thermal byte stream for a transaction.

@@ -3499,6 +3499,105 @@
 						}
 					},
 					{
+						"id": "client-found-us",
+						"type": "facts",
+						"title": "How they found us",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-001): the first and last touch TouchpointService::recordSubmission() writes from a landing page or website form submission. Read only; the values are visitor-supplied text and render as text, never as links.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "firstTouch.campaign",
+									"label": "First campaign"
+								},
+								{
+									"path": "firstTouch.source",
+									"label": "First source"
+								},
+								{
+									"path": "firstTouch.medium",
+									"label": "First medium"
+								},
+								{
+									"path": "firstTouch.landingPage",
+									"label": "First landing page"
+								},
+								{
+									"path": "firstTouch.at",
+									"label": "First submitted on",
+									"format": "longdate"
+								},
+								{
+									"path": "lastTouch.campaign",
+									"label": "Latest campaign"
+								},
+								{
+									"path": "lastTouch.source",
+									"label": "Latest source"
+								},
+								{
+									"path": "lastTouch.medium",
+									"label": "Latest medium"
+								},
+								{
+									"path": "lastTouch.landingPage",
+									"label": "Latest landing page"
+								},
+								{
+									"path": "lastTouch.at",
+									"label": "Latest submitted on",
+									"format": "longdate"
+								}
+							],
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
+						"id": "client-touchpoints",
+						"type": "object-list",
+						"title": "Web form submissions",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-002): every touchpoint naming this record in clientId, newest first, read only (no create, no row route).",
+						"content": {
+							"register": "pipelinq",
+							"schema": "touchpoint",
+							"filter": {
+								"clientId": "@objectId"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "occurredAt",
+									"label": "Submitted on"
+								},
+								{
+									"key": "utm.campaign",
+									"label": "Campaign"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "utm.source",
+									"label": "Source"
+								},
+								{
+									"key": "utm.medium",
+									"label": "Campaign medium"
+								},
+								{
+									"key": "landingPage",
+									"label": "Landing page"
+								}
+							],
+							"limit": 25,
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
 						"id": "client-panels",
 						"type": "tabs",
 						"title": "Client",
@@ -3514,6 +3613,8 @@
 										"client-cases",
 										"client-tickets",
 										"client-latest-moments",
+										"client-found-us",
+										"client-touchpoints",
 										"client-activity"
 									],
 									"label": "Overview"
@@ -4873,6 +4974,14 @@
 											"compact": true
 										}
 									}
+								},
+								{
+									"widgetId": "contact-found-us",
+									"title": "How they found us"
+								},
+								{
+									"widgetId": "contact-touchpoints",
+									"title": "Web form submissions"
 								}
 							]
 						}
@@ -5211,6 +5320,105 @@
 							"auditTrail": true,
 							"order": "desc",
 							"limit": 3
+						}
+					},
+					{
+						"id": "contact-found-us",
+						"type": "facts",
+						"title": "How they found us",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-001): the first and last touch TouchpointService::recordSubmission() writes from a landing page or website form submission. Read only; the values are visitor-supplied text and render as text, never as links.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "firstTouch.campaign",
+									"label": "First campaign"
+								},
+								{
+									"path": "firstTouch.source",
+									"label": "First source"
+								},
+								{
+									"path": "firstTouch.medium",
+									"label": "First medium"
+								},
+								{
+									"path": "firstTouch.landingPage",
+									"label": "First landing page"
+								},
+								{
+									"path": "firstTouch.at",
+									"label": "First submitted on",
+									"format": "longdate"
+								},
+								{
+									"path": "lastTouch.campaign",
+									"label": "Latest campaign"
+								},
+								{
+									"path": "lastTouch.source",
+									"label": "Latest source"
+								},
+								{
+									"path": "lastTouch.medium",
+									"label": "Latest medium"
+								},
+								{
+									"path": "lastTouch.landingPage",
+									"label": "Latest landing page"
+								},
+								{
+									"path": "lastTouch.at",
+									"label": "Latest submitted on",
+									"format": "longdate"
+								}
+							],
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
+						"id": "contact-touchpoints",
+						"type": "object-list",
+						"title": "Web form submissions",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-002): every touchpoint naming this record in contactId, newest first, read only (no create, no row route).",
+						"content": {
+							"register": "pipelinq",
+							"schema": "touchpoint",
+							"filter": {
+								"contactId": "@objectId"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "occurredAt",
+									"label": "Submitted on"
+								},
+								{
+									"key": "utm.campaign",
+									"label": "Campaign"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "utm.source",
+									"label": "Source"
+								},
+								{
+									"key": "utm.medium",
+									"label": "Campaign medium"
+								},
+								{
+									"key": "landingPage",
+									"label": "Landing page"
+								}
+							],
+							"limit": 25,
+							"emptyText": "No web form submissions yet."
 						}
 					},
 					{

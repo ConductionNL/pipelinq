@@ -148,50 +148,101 @@ class UplListImporter {
 	 */
 	public function import(string $csv): array {
 		$rows = $this->parser->parse(csv: $csv);
-
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister is not available: ' . $e->getMessage(), 0, $e);
-		}
+		$objectService = $this->uplObjectService();
 
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER);
 		$schema = $this->appConfig->getValueString(Application::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
 		$stored = $this->storedByUri(objectService: $objectService, register: $register, schema: $schema);
+		$target = [$objectService, $register, $schema];
 
 		$result = ['read' => count($rows), 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'failed' => 0];
 		foreach ($rows as $row) {
 			$existing = ($stored[$row['uri']] ?? null);
-			if ($existing !== null && $existing['name'] === $row['name'] && $existing['audience'] === $row['audience']) {
-				$result['unchanged']++;
-				continue;
-			}
-
-			try {
-				$objectService->saveObject(
-					object: $row,
-					register: $register,
-					schema: $schema,
-					uuid: ($existing['id'] ?? null),
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning('UplListImporter: could not save ' . $row['uri'], ['exception' => $e->getMessage()]);
-				$result['failed']++;
-				continue;
-			}
-
-			$outcome = 'updated';
-			if ($existing === null) {
-				$outcome = 'created';
-			}
-
-			$result[$outcome]++;
-		}//end foreach
+			$result[$this->importRow(target: $target, row: $row, existing: $existing)]++;
+		}
 
 		return $result;
 	}//end import()
+
+	/**
+	 * Resolve OpenRegister's ObjectService.
+	 *
+	 * @return object
+	 *
+	 * @throws RuntimeException When OpenRegister is not available.
+	 */
+	private function uplObjectService(): object {
+		try {
+			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		} catch (Throwable $e) {
+			throw new RuntimeException('OpenRegister is not available: ' . $e->getMessage(), 0, $e);
+		}
+	}//end uplObjectService()
+
+	/**
+	 * Import one row of the list.
+	 *
+	 * @param array{0: object, 1: string, 2: string} $target   The ObjectService, register and schema.
+	 * @param array<string, mixed>                   $row      The parsed row.
+	 * @param array<string, mixed>|null              $existing The stored entry with the same URI, or null.
+	 *
+	 * @return string 'unchanged', 'failed', 'created' or 'updated'.
+	 */
+	private function importRow(array $target, array $row, array|null $existing): string {
+		if ($this->isUnchanged(existing: $existing, row: $row) === true) {
+			return 'unchanged';
+		}
+
+		if ($this->saveUplRow(target: $target, row: $row, existing: $existing) === false) {
+			return 'failed';
+		}
+
+		$outcome = 'updated';
+		if ($existing === null) {
+			$outcome = 'created';
+		}
+
+		return $outcome;
+	}//end importRow()
+
+	/**
+	 * Whether the stored entry already carries the row's name and audience.
+	 *
+	 * @param array<string, mixed>|null $existing The stored entry, or null.
+	 * @param array<string, mixed>      $row      The parsed row.
+	 *
+	 * @return bool
+	 */
+	private function isUnchanged(array|null $existing, array $row): bool {
+		return ($existing !== null && $existing['name'] === $row['name'] && $existing['audience'] === $row['audience']);
+	}//end isUnchanged()
+
+	/**
+	 * Save one row, logging a failed save.
+	 *
+	 * @param array{0: object, 1: string, 2: string} $target   The ObjectService, register and schema.
+	 * @param array<string, mixed>                   $row      The parsed row.
+	 * @param array<string, mixed>|null              $existing The stored entry with the same URI, or null.
+	 *
+	 * @return bool Whether the save landed.
+	 */
+	private function saveUplRow(array $target, array $row, array|null $existing): bool {
+		[$objectService, $register, $schema] = $target;
+		try {
+			$objectService->saveObject(
+				object: $row,
+				register: $register,
+				schema: $schema,
+				uuid: ($existing['id'] ?? null),
+				_rbac: false,
+				_multitenancy: false
+			);
+			return true;
+		} catch (Throwable $e) {
+			$this->logger->warning('UplListImporter: could not save ' . $row['uri'], ['exception' => $e->getMessage()]);
+			return false;
+		}
+	}//end saveUplRow()
 
 	/**
 	 * The stored entries by URI.

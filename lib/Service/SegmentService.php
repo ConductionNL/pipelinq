@@ -510,37 +510,96 @@ class SegmentService implements SegmentServiceInterface {
 			return ['error' => 'Segment not found'];
 		}
 
+		return $this->applySegmentUpdate(segmentId: $segmentId, existing: $existing, payload: $payload);
+	}//end updateSegment()
+
+	/**
+	 * Validate the edited fields and persist them.
+	 *
+	 * @param string               $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $existing  The Segment row before the edit.
+	 * @param array<string, mixed> $payload   Inbound Segment payload (partial).
+	 *
+	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+	 */
+	private function applySegmentUpdate(string $segmentId, array $existing, array $payload): array {
+		$fields = $this->segmentUpdateFields(payload: $payload, existing: $existing);
+		if (array_key_exists('error', $fields) === true) {
+			return $fields;
+		}
+
+		return $this->persistSegmentUpdate(
+			segmentId: $segmentId,
+			existing: $existing,
+			name: $fields['name'],
+			description: $fields['description'],
+			rules: $fields['rules'],
+			entityType: $fields['entityType'],
+		);
+	}//end applySegmentUpdate()
+
+	/**
+	 * The edited fields, each falling back to the stored value, or the first validation error.
+	 *
+	 * @param array<string, mixed> $payload  Inbound Segment payload (partial).
+	 * @param array<string, mixed> $existing The Segment row before the edit.
+	 *
+	 * @return array<string, mixed> `name`, `entityType`, `rules` and `description`, or `error`.
+	 */
+	private function segmentUpdateFields(array $payload, array $existing): array {
 		$name = (string)($payload['name'] ?? ($existing['name'] ?? ''));
 		if (trim($name) === '') {
 			return ['error' => 'Invalid name'];
 		}
 
-		$entityType = strtolower((string)($payload['entityType'] ?? $this->extractEntityType(segment: $existing) ?? ''));
+		$entityType = $this->updatedEntityType(payload: $payload, existing: $existing);
 		if (in_array($entityType, ['contact', 'customer'], true) === false) {
 			return ['error' => 'Invalid entityType'];
 		}
 
+		$rules = $this->updatedRules(payload: $payload, existing: $existing, entityType: $entityType);
+		if (is_string($rules) === true) {
+			return ['error' => $rules];
+		}
+
+		$description = (string)($payload['description'] ?? ($existing['description'] ?? ''));
+		return ['name' => $name, 'entityType' => $entityType, 'rules' => $rules, 'description' => $description];
+	}//end segmentUpdateFields()
+
+	/**
+	 * The edited entity type, lower-cased, falling back to the stored one.
+	 *
+	 * @param array<string, mixed> $payload  Inbound Segment payload (partial).
+	 * @param array<string, mixed> $existing The Segment row before the edit.
+	 *
+	 * @return string
+	 */
+	private function updatedEntityType(array $payload, array $existing): string {
+		return strtolower((string)($payload['entityType'] ?? $this->extractEntityType(segment: $existing) ?? ''));
+	}//end updatedEntityType()
+
+	/**
+	 * The edited rule tree, validated and normalised, or the error message.
+	 *
+	 * @param array<string, mixed> $payload    Inbound Segment payload (partial).
+	 * @param array<string, mixed> $existing   The Segment row before the edit.
+	 * @param string               $entityType "contact" or "customer".
+	 *
+	 * @return array<string, mixed>|string
+	 */
+	private function updatedRules(array $payload, array $existing, string $entityType): array|string {
 		$rules = ($payload['rules'] ?? $this->extractRules(segment: $existing));
 		if (is_array($rules) === false) {
-			return ['error' => 'Invalid rules'];
+			return 'Invalid rules';
 		}
 
 		$error = $this->validateRules(rules: $rules, entityType: $entityType);
 		if ($error !== null) {
-			return ['error' => 'Invalid rule tree: ' . $error];
+			return 'Invalid rule tree: ' . $error;
 		}
 
-		$rules = $this->ruleTree->normalise(rules: $rules);
-
-		return $this->persistSegmentUpdate(
-			segmentId: $segmentId,
-			existing: $existing,
-			name: $name,
-			description: (string)($payload['description'] ?? ($existing['description'] ?? '')),
-			rules: $rules,
-			entityType: $entityType,
-		);
-	}//end updateSegment()
+		return $this->ruleTree->normalise(rules: $rules);
+	}//end updatedRules()
 
 	/**
 	 * Persist a validated Segment update and return the saved row with a
@@ -728,6 +787,23 @@ class SegmentService implements SegmentServiceInterface {
 	private function saveSegmentObject(array $payload, ?string $id = null): ?array {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getSegmentSchemaSlug();
+		$target = $this->objectTarget(register: $register, schema: $schema);
+		if ($target === null) {
+			return null;
+		}
+
+		return $this->persistSegmentObject(target: $target, payload: $payload, id: $id);
+	}//end saveSegmentObject()
+
+	/**
+	 * The register, schema and ObjectService to read or write through, or null when one is missing.
+	 *
+	 * @param string $register The register slug.
+	 * @param string $schema   The schema slug.
+	 *
+	 * @return array{0: string, 1: string, 2: object}|null
+	 */
+	private function objectTarget(string $register, string $schema): array|null {
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -737,13 +813,22 @@ class SegmentService implements SegmentServiceInterface {
 			return null;
 		}
 
+		return [$register, $schema, $objectService];
+	}//end objectTarget()
+
+	/**
+	 * Save a Segment payload, logging a failed save.
+	 *
+	 * @param array{0: string, 1: string, 2: object} $target  The register, schema and ObjectService.
+	 * @param array<string, mixed>                   $payload Segment payload.
+	 * @param string|null                            $id      Existing id when patching.
+	 *
+	 * @return array<string, mixed>|null Saved row or null on failure.
+	 */
+	private function persistSegmentObject(array $target, array $payload, string|null $id): array|null {
+		[$register, $schema, $objectService] = $target;
 		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $id,
-			);
+			$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schema, uuid: $id);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SegmentService.saveSegmentObject: save failed',
@@ -753,7 +838,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		return $this->toArray(value: $saved);
-	}//end saveSegmentObject()
+	}//end persistSegmentObject()
 
 	/**
 	 * Load every object of the supplied schema (Segment list helper).
@@ -765,34 +850,12 @@ class SegmentService implements SegmentServiceInterface {
 	 */
 	private function loadEntities(string $schemaSlug, array $filters): array {
 		$register = $this->getRegisterSlug();
-		if ($register === '' || $schemaSlug === '') {
+		$target = $this->objectTarget(register: $register, schema: $schemaSlug);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $register,
-							'schema' => $schemaSlug,
-						]
-					),
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SegmentService.loadEntities: findAll failed',
-				['schema' => $schemaSlug, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
+		$rows = $this->findEntities(target: $target, filters: $filters);
 
 		$out = [];
 		foreach (($rows ?? []) as $row) {
@@ -801,6 +864,29 @@ class SegmentService implements SegmentServiceInterface {
 
 		return $out;
 	}//end loadEntities()
+
+	/**
+	 * Run the findAll for one schema, logging a failed read.
+	 *
+	 * @param array{0: string, 1: string, 2: object} $target  The register, schema and ObjectService.
+	 * @param array<string, mixed>                   $filters Filter map.
+	 *
+	 * @return mixed The rows, or an empty array when the read failed.
+	 */
+	private function findEntities(array $target, array $filters): mixed {
+		[$register, $schemaSlug, $objectService] = $target;
+		try {
+			return $objectService->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schemaSlug])]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'SegmentService.loadEntities: findAll failed',
+				['schema' => $schemaSlug, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end findEntities()
 
 	/**
 	 * Extract the id from a Segment payload (uuid > id > slug).
@@ -2340,26 +2426,28 @@ class SegmentService implements SegmentServiceInterface {
 	private function loadSegment(string $segmentId): ?array {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getSegmentSchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $register, schema: $schema);
+		if ($target === null) {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
+		return $this->findSegment(target: $target, segmentId: $segmentId);
+	}//end loadSegment()
 
+	/**
+	 * Find one Segment, logging a miss.
+	 *
+	 * @param array{0: string, 1: string, 2: object} $target    The register, schema and ObjectService.
+	 * @param string                                 $segmentId The Segment UUID or slug.
+	 *
+	 * @return array<string, mixed>|null The Segment as an array or null.
+	 */
+	private function findSegment(array $target, string $segmentId): array|null {
+		[$register, $schema, $objectService] = $target;
 		try {
-			$entity = $objectService->find(
-				id: $segmentId,
-				register: $register,
-				schema: $schema,
-			);
+			$entity = $objectService->find(id: $segmentId, register: $register, schema: $schema);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'SegmentService.loadSegment: not found',
-				['segmentId' => $segmentId, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('SegmentService.loadSegment: not found', ['segmentId' => $segmentId, 'exception' => $e->getMessage()]);
 			return null;
 		}
 
@@ -2375,7 +2463,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end loadSegment()
+	}//end findSegment()
 
 	/**
 	 * Load the entities of a type that the rules may match, for evaluation in PHP.
@@ -2397,28 +2485,69 @@ class SegmentService implements SegmentServiceInterface {
 	private function loadEntitiesForType(string $entityType, ?array $rules = null): array {
 		$register = $this->getRegisterSlug();
 		$schema = $this->resolveSchemaSlug(entityType: $entityType);
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $register, schema: $schema);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		return $this->readEntitiesForType(target: $target, entityType: $entityType, rules: $rules);
+	}//end loadEntitiesForType()
 
+	/**
+	 * Read the rows of one entity type, narrowed by the rules when they compile.
+	 *
+	 * @param array{0: string, 1: string, 2: object} $target     The register, schema and ObjectService.
+	 * @param string                                 $entityType "contact" or "customer".
+	 * @param array<string, mixed>|null              $rules      The rules the rows will be checked against, or null.
+	 *
+	 * @return array<int, array<string, mixed>> Entity payloads.
+	 */
+	private function readEntitiesForType(array $target, string $entityType, array|null $rules): array {
+		[$register, $schema, $objectService] = $target;
 		$config = ['filters' => ['register' => $register, 'schema' => $schema]];
 		$where = $this->narrowingWhere(rules: $rules, entityType: $entityType);
 		if ($where !== null) {
-			try {
-				return $this->entityRows(rows: $objectService->findAll(config: ($config + ['where' => $where])));
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'SegmentService.loadEntitiesForType: the narrowed read failed, loading every row',
-					['entityType' => $entityType, 'exception' => $e->getMessage()]
-				);
+			$narrowed = $this->narrowedEntities(objectService: $objectService, config: $config, where: $where, entityType: $entityType);
+			if ($narrowed !== null) {
+				return $narrowed;
 			}
 		}
 
+		return $this->allEntities(objectService: $objectService, config: $config, entityType: $entityType);
+	}//end readEntitiesForType()
+
+	/**
+	 * The rows the narrowed read returns, or null when it failed.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $config        The findAll config.
+	 * @param mixed                $where         The narrowing clause.
+	 * @param string               $entityType    "contact" or "customer".
+	 *
+	 * @return array<int, array<string, mixed>>|null
+	 */
+	private function narrowedEntities(object $objectService, array $config, mixed $where, string $entityType): array|null {
+		try {
+			return $this->entityRows(rows: $objectService->findAll(config: ($config + ['where' => $where])));
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'SegmentService.loadEntitiesForType: the narrowed read failed, loading every row',
+				['entityType' => $entityType, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end narrowedEntities()
+
+	/**
+	 * Every row of the schema, or none when the read failed.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $config        The findAll config.
+	 * @param string               $entityType    "contact" or "customer".
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function allEntities(object $objectService, array $config, string $entityType): array {
 		try {
 			$rows = $objectService->findAll(config: $config);
 		} catch (Throwable $e) {
@@ -2430,7 +2559,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		return $this->entityRows(rows: $rows);
-	}//end loadEntitiesForType()
+	}//end allEntities()
 
 	/**
 	 * The `_where` that narrows the rows read for these rules, or null to read every row.

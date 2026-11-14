@@ -124,9 +124,42 @@ class StageLimitGuard implements IEventListener {
 			return;
 		}
 
+		$stageName = $this->enteredStage(data: $data, old: $old, column: $column, pipelineId: $pipelineId);
+		$this->refuseWhenFull(event: $event, pipeline: $pipeline, pipelineId: $pipelineId, stageName: $stageName);
+	}//end judge()
+
+	/**
+	 * The stage the write moves the item into, or '' when it stays where it was.
+	 *
+	 * @param array<string, mixed> $data       The item as it will be saved.
+	 * @param array<string, mixed> $old        The item as it was (empty on create).
+	 * @param string               $column     The stage column.
+	 * @param string               $pipelineId The pipeline id.
+	 *
+	 * @return string
+	 */
+	private function enteredStage(array $data, array $old, string $column, string $pipelineId): string {
 		$stageName = (string)($data[$column] ?? '');
 		$samePipeline = (string)($old['pipeline'] ?? '') === $pipelineId;
 		if ($stageName === '' || ($samePipeline === true && (string)($old[$column] ?? '') === $stageName)) {
+			return '';
+		}
+
+		return $stageName;
+	}//end enteredStage()
+
+	/**
+	 * Stop the event when the item enters a stage that already holds its limit.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event      The event to stop.
+	 * @param array<string, mixed>                    $pipeline   The pipeline.
+	 * @param string                                  $pipelineId The pipeline id.
+	 * @param string                                  $stageName  The stage entered, or '' when none.
+	 *
+	 * @return void
+	 */
+	private function refuseWhenFull(ObjectCreatingEvent|ObjectUpdatingEvent $event, array $pipeline, string $pipelineId, string $stageName): void {
+		if ($stageName === '') {
 			return;
 		}
 
@@ -140,13 +173,9 @@ class StageLimitGuard implements IEventListener {
 			return;
 		}
 
-		$event->setErrors(
-			[
-				'message' => $this->l10n->t('Stage %1$s is full (%2$s of %3$s)', [$stageName, (string)$count, (string)$max]),
-			]
-		);
+		$event->setErrors(['message' => $this->l10n->t('Stage %1$s is full (%2$s of %3$s)', [$stageName, (string)$count, (string)$max])]);
 		$event->stopPropagation();
-	}//end judge()
+	}//end refuseWhenFull()
 
 	/**
 	 * The slug a pipeline mapping uses for this item: its object type, or the

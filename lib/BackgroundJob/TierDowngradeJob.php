@@ -94,29 +94,52 @@ class TierDowngradeJob extends TimedJob {
 				continue;
 			}
 
-			$accounts = $this->loyaltyService->listAccountsForProgramme(
-				programmeId: $programmeId,
-				limit: 10000
-			);
-
-			foreach ($accounts as $account) {
-				$accountId = (string)$this->extractUuid(object: $account);
-				$tierValidTo = (string)($account['tierValidTo'] ?? '');
-				if ($accountId === '' || $tierValidTo === '' || $tierValidTo > $now) {
-					continue;
-				}
-
-				try {
-					$this->tierService->updateTierIfNeeded(accountId: $accountId);
-				} catch (Throwable $e) {
-					$this->logger->warning(
-						'Pipelinq: tier downgrade processing failed for account',
-						['accountId' => $accountId, 'exception' => $e->getMessage()]
-					);
-				}
-			}
-		}//end foreach
+			$this->downgradeProgramme(programmeId: $programmeId, now: $now);
+		}
 	}//end run()
+
+	/**
+	 * Re-evaluate the tier of every programme account whose tier validity has passed.
+	 *
+	 * @param string $programmeId The programme uuid.
+	 * @param string $now The current time (ISO 8601).
+	 *
+	 * @return void
+	 */
+	private function downgradeProgramme(string $programmeId, string $now): void {
+		$accounts = $this->loyaltyService->listAccountsForProgramme(
+			programmeId: $programmeId,
+			limit: 10000
+		);
+
+		foreach ($accounts as $account) {
+			$accountId = (string)$this->extractUuid(object: $account);
+			$tierValidTo = (string)($account['tierValidTo'] ?? '');
+			if ($accountId === '' || $tierValidTo === '' || $tierValidTo > $now) {
+				continue;
+			}
+
+			$this->downgradeAccount(accountId: $accountId);
+		}
+	}//end downgradeProgramme()
+
+	/**
+	 * Update one account's tier; a failure is logged.
+	 *
+	 * @param string $accountId The account uuid.
+	 *
+	 * @return void
+	 */
+	private function downgradeAccount(string $accountId): void {
+		try {
+			$this->tierService->updateTierIfNeeded(accountId: $accountId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: tier downgrade processing failed for account',
+				['accountId' => $accountId, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end downgradeAccount()
 
 	/**
 	 * Get active programmes.

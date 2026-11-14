@@ -211,34 +211,66 @@ class ReportingService implements ReportingServiceInterface {
 	public function getChannelTrend(string $from, string $to, string $granularity = 'daily'): array {
 		try {
 			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-			$trend = [];
-
-			foreach ($contactmomenten as $moment) {
-				$channel = $moment['channel'] ?? 'unknown';
-				$contactedAt = $moment['contactedAt'] ?? null;
-				if ($contactedAt === null) {
-					continue;
-				}
-
-				try {
-					$dateTime = new DateTimeImmutable($contactedAt);
-					$key = $dateTime->format('Y-m-d');
-					if ($granularity === 'weekly') {
-						$key = $dateTime->format('o-W');
-					}
-				} catch (\Exception) {
-					continue;
-				}
-
-				$trend[$channel][$key] = ($trend[$channel][$key] ?? 0) + 1;
-			}
-
-			return $trend;
+			return $this->channelTrend(moments: $contactmomenten, granularity: $granularity);
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getChannelTrend failed', ['exception' => $e]);
 			return [];
 		}//end try
 	}//end getChannelTrend()
+
+	/**
+	 * Count the contact moments per channel per day or ISO week.
+	 *
+	 * @param array<array<string, mixed>> $moments The contact moments.
+	 * @param string $granularity 'daily' or 'weekly'.
+	 *
+	 * @return array<string, array<string, int>> Time-series data: channel => [date => count].
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
+	 */
+	private function channelTrend(array $moments, string $granularity): array {
+		$trend = [];
+
+		foreach ($moments as $moment) {
+			$channel = $moment['channel'] ?? 'unknown';
+			$key = $this->trendKey(contactedAt: ($moment['contactedAt'] ?? null), granularity: $granularity);
+			if ($key === null) {
+				continue;
+			}
+
+			$trend[$channel][$key] = ($trend[$channel][$key] ?? 0) + 1;
+		}
+
+		return $trend;
+	}//end channelTrend()
+
+	/**
+	 * The day (Y-m-d) or ISO week (o-W) of a contact moment, or null when it has no readable date.
+	 *
+	 * @param mixed $contactedAt The contactedAt value.
+	 * @param string $granularity 'daily' or 'weekly'.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
+	 */
+	private function trendKey($contactedAt, string $granularity): string|null {
+		if ($contactedAt === null) {
+			return null;
+		}
+
+		try {
+			$dateTime = new DateTimeImmutable($contactedAt);
+			$key = $dateTime->format('Y-m-d');
+			if ($granularity === 'weekly') {
+				$key = $dateTime->format('o-W');
+			}
+		} catch (\Exception) {
+			return null;
+		}
+
+		return $key;
+	}//end trendKey()
 
 	/**
 	 * Get per-agent performance metrics for the given date range.
@@ -682,20 +714,44 @@ class ReportingService implements ReportingServiceInterface {
 	 * @return int Count of contacts within SLA target.
 	 */
 	private function countWithinSla(string $channel, array $moments): int {
-		$within = 0;
+		$threshold = $this->slaThreshold(channel: $channel);
+
+		if ($threshold === 0) {
+			return count($moments);
+		}
+
+		return $this->countMeasuredWithin(channel: $channel, moments: $moments, threshold: $threshold);
+	}//end countWithinSla()
+
+	/**
+	 * The channel's SLA threshold in seconds; 0 for a channel without a target.
+	 *
+	 * @param string $channel The channel.
+	 *
+	 * @return int
+	 */
+	private function slaThreshold(string $channel): int {
 		$targets = self::DEFAULT_SLA_TARGETS[$channel] ?? [];
-		$threshold = match ($channel) {
+		return match ($channel) {
 			'telefoon' => (int)($targets['wait_seconds'] ?? 30),
 			'balie' => (int)($targets['wait_minutes'] ?? 5) * 60,
 			'chat' => (int)($targets['response_seconds'] ?? 30),
 			'email' => (int)($targets['response_hours'] ?? 8) * 3600,
 			default => 0,
 		};
+	}//end slaThreshold()
 
-		if ($threshold === 0) {
-			return count($moments);
-		}
-
+	/**
+	 * Count the contact moments whose measured wait or response time is within the threshold.
+	 *
+	 * @param string $channel The channel.
+	 * @param array<array<string, mixed>> $moments The contactmoment data for this channel.
+	 * @param int $threshold The SLA threshold in seconds.
+	 *
+	 * @return int
+	 */
+	private function countMeasuredWithin(string $channel, array $moments, int $threshold): int {
+		$within = 0;
 		foreach ($moments as $moment) {
 			$metadata = $moment['channelMetadata'] ?? [];
 			$measured = match ($channel) {
@@ -709,7 +765,7 @@ class ReportingService implements ReportingServiceInterface {
 		}
 
 		return $within;
-	}//end countWithinSla()
+	}//end countMeasuredWithin()
 
 	/**
 	 * Neutralize a CSV cell value to prevent formula injection.

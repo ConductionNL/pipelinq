@@ -184,6 +184,25 @@ class ContactImportService {
 			return null;
 		}
 
+		$rows = $this->findRowsByContactsUid(objectService: $objectService, registerId: $registerId, schemaId: $schemaId, contactsUid: $contactsUid);
+		if ($rows === null) {
+			return null;
+		}
+
+		return $this->firstRowUuid(rows: $rows);
+	}//end findExistingByContactsUid()
+
+	/**
+	 * Find at most one object carrying the contactsUid; null when the lookup fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $registerId The register id.
+	 * @param string $schemaId The schema id.
+	 * @param string $contactsUid The Contacts UID.
+	 *
+	 * @return array<int, mixed>|null The rows.
+	 */
+	private function findRowsByContactsUid(object $objectService, string $registerId, string $schemaId, string $contactsUid): array|null {
 		try {
 			// Register/schema go INSIDE `filters`: prepareFindAllConfig() reads
 			// them from there and nowhere else, and a top-level pair silently
@@ -207,12 +226,19 @@ class ContactImportService {
 			return null;
 		}
 
-		foreach ((array)$rows as $row) {
-			$array = $row;
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$array = $row->jsonSerialize();
-			}
+		return (array)$rows;
+	}//end findRowsByContactsUid()
 
+	/**
+	 * The uuid of the first row that has one.
+	 *
+	 * @param array<int, mixed> $rows The rows (arrays or serialisable entities).
+	 *
+	 * @return string|null The uuid, or null when no row has one.
+	 */
+	private function firstRowUuid(array $rows): string|null {
+		foreach ($rows as $row) {
+			$array = $this->serialisedRow(row: $row);
 			if (is_array($array) === false) {
 				continue;
 			}
@@ -224,7 +250,23 @@ class ContactImportService {
 		}
 
 		return null;
-	}//end findExistingByContactsUid()
+	}//end firstRowUuid()
+
+	/**
+	 * A row as returned, or its jsonSerialize() output for a serialisable entity.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return mixed The serialised row.
+	 */
+	private function serialisedRow(mixed $row): mixed {
+		$array = $row;
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			$array = $row->jsonSerialize();
+		}
+
+		return $array;
+	}//end serialisedRow()
 
 	/**
 	 * Get the OpenRegister ObjectService via the container.

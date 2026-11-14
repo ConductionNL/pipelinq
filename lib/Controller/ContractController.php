@@ -112,8 +112,39 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => 'title and clientRef are required'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->saveNewContract(body: $body, uid: $uid);
+	}//end create()
+
+	/**
+	 * Number, default and save a new contract.
+	 *
+	 * @param array<string,mixed> $body The validated request body.
+	 * @param string              $uid  The acting user.
+	 *
+	 * @return JSONResponse The created contract or an error.
+	 */
+	private function saveNewContract(array $body, string $uid): JSONResponse {
 		$existing = $this->contractService->loadAll();
 		$body['contractNumber'] = $this->contractService->generateContractNumber($existing);
+		$body = $this->withContractDefaults(body: $body, uid: $uid);
+
+		$saved = $this->contractService->save($body, null);
+		if ($saved === null) {
+			return new JSONResponse(['message' => 'Failed to save contract'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		return new JSONResponse($saved, Http::STATUS_CREATED);
+	}//end saveNewContract()
+
+	/**
+	 * Default the owner to the acting user and the status to draft.
+	 *
+	 * @param array<string,mixed> $body The request body.
+	 * @param string              $uid  The acting user.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function withContractDefaults(array $body, string $uid): array {
 		if (trim((string)($body['ownerId'] ?? '')) === '') {
 			$body['ownerId'] = $uid;
 		}
@@ -122,13 +153,8 @@ class ContractController extends Controller {
 			$body['status'] = 'draft';
 		}
 
-		$saved = $this->contractService->save($body, null);
-		if ($saved === null) {
-			return new JSONResponse(['message' => 'Failed to save contract'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}
-
-		return new JSONResponse($saved, Http::STATUS_CREATED);
-	}//end create()
+		return $body;
+	}//end withContractDefaults()
 
 	/**
 	 * Apply a guarded lifecycle transition to a contract.
@@ -150,9 +176,6 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$newStatus = (string)$this->request->getParam('status', '');
-		$reason = (string)$this->request->getParam('cancellationReason', '');
-
 		$contract = $this->loadContract(id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['message' => 'Contract not found'], Http::STATUS_NOT_FOUND);
@@ -161,6 +184,21 @@ class ContractController extends Controller {
 		if ($this->isAuthorized(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
+
+		return $this->applyTransition(id: $id, contract: $contract);
+	}//end transition()
+
+	/**
+	 * Validate and persist the requested transition on an authorised contract.
+	 *
+	 * @param string              $id       The contract UUID.
+	 * @param array<string,mixed> $contract The contract.
+	 *
+	 * @return JSONResponse The updated contract or an error.
+	 */
+	private function applyTransition(string $id, array $contract): JSONResponse {
+		$newStatus = (string)$this->request->getParam('status', '');
+		$reason = (string)$this->request->getParam('cancellationReason', '');
 
 		if ($reason !== '') {
 			$contract['cancellationReason'] = $reason;
@@ -172,6 +210,19 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		}
 
+		return $this->saveTransition(id: $id, contract: $contract, newStatus: $newStatus);
+	}//end applyTransition()
+
+	/**
+	 * Save the new status; a won renewal also drafts the successor.
+	 *
+	 * @param string              $id        The contract UUID.
+	 * @param array<string,mixed> $contract  The contract.
+	 * @param string              $newStatus The allowed new status.
+	 *
+	 * @return JSONResponse The updated contract or an error.
+	 */
+	private function saveTransition(string $id, array $contract, string $newStatus): JSONResponse {
 		$contract['status'] = $newStatus;
 		$saved = $this->contractService->save($contract, $id);
 		if ($saved === null) {
@@ -185,7 +236,7 @@ class ContractController extends Controller {
 		}
 
 		return new JSONResponse($saved);
-	}//end transition()
+	}//end saveTransition()
 
 	/**
 	 * The figures a contract's page shows: monthly and annual value, the
@@ -287,25 +338,32 @@ class ContractController extends Controller {
 			// positional form passed the register id into $_extend and raised a
 			// TypeError that the catch below swallowed into a 404 — for the owner
 			// as well as for a stranger. See #801.
-			$object = $objectService->find(
-				id: $id,
-				register: $registerId,
-				schema: $schemaId,
-			);
-			if ($object === null) {
-				return null;
-			}
-
-			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-				return $object->jsonSerialize();
-			}
-
-			return (array)$object;
+			$object = $objectService->find(id: $id, register: $registerId, schema: $schemaId);
+			return $this->contractPayload(object: $object);
 		} catch (Throwable $e) {
 			$this->logger->warning('ContractController: loadContract failed', ['error' => $e->getMessage()]);
 			return null;
 		}//end try
 	}//end loadContract()
+
+	/**
+	 * The found contract as an array, or null when nothing was found.
+	 *
+	 * @param mixed $object The find() answer.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function contractPayload(mixed $object): array|null {
+		if ($object === null) {
+			return null;
+		}
+
+		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+			return $object->jsonSerialize();
+		}
+
+		return (array)$object;
+	}//end contractPayload()
 
 	/**
 	 * Per-object authorization: the caller must own the contract or belong to a

@@ -114,10 +114,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function directionFor(array $data): ?string {
-		$existing = ($data['direction'] ?? null);
-		if (is_string($existing) === true
-			&& in_array($existing, TicketServiceInterface::DIRECTIONS, true) === true
-		) {
+		if ($this->hasKnownDirection(data: $data) === true) {
 			return null;
 		}
 
@@ -130,6 +127,30 @@ class MigrateContactMomentDirection implements IRepairStep {
 			return 'internal';
 		}
 
+		return $this->directionFromMetadata(metadata: $metadata);
+	}//end directionFor()
+
+	/**
+	 * Whether the row already carries one of the known directions.
+	 *
+	 * @param array<string, mixed> $data The contact moment data.
+	 *
+	 * @return bool True when the direction is already set to a known value.
+	 */
+	private function hasKnownDirection(array $data): bool {
+		$existing = ($data['direction'] ?? null);
+		return is_string($existing) === true
+			&& in_array($existing, TicketServiceInterface::DIRECTIONS, true) === true;
+	}//end hasKnownDirection()
+
+	/**
+	 * Map the first recognised `direction`/`richting` metadata value, else `internal`.
+	 *
+	 * @param array<string, mixed> $metadata The channel metadata.
+	 *
+	 * @return string The mapped direction.
+	 */
+	private function directionFromMetadata(array $metadata): string {
 		foreach (['direction', 'richting'] as $key) {
 			$value = ($metadata[$key] ?? null);
 			if (is_string($value) === false) {
@@ -143,7 +164,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 		}
 
 		return 'internal';
-	}//end directionFor()
+	}//end directionFromMetadata()
 
 	/**
 	 * Run the repair.
@@ -165,13 +186,29 @@ class MigrateContactMomentDirection implements IRepairStep {
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
-		$filled = 0;
-		$untouched = 0;
+		$rows = $this->readContactMoments(objectService: $objectService, register: $register, schema: $schema);
+		[$filled, $untouched] = $this->migrateRows(rows: $rows, target: [$objectService, $register, $schema, $actingAdmin]);
 
-		// Read with RBAC off for the same reason NormaliseTicketTitle does: a
-		// repair step has no session, so an RBAC-filtered read would migrate
-		// only the rows 'Anonymous' may see and call that a complete run.
-		$rows = $objectService->findAll(
+		$output->info(
+			sprintf('Contact moment directions: %d filled, %d already set.', $filled, $untouched)
+		);
+	}//end run()
+
+	/**
+	 * Read one batch of contact moments with RBAC and multitenancy off.
+	 *
+	 * Read with RBAC off for the same reason NormaliseTicketTitle does: a
+	 * repair step has no session, so an RBAC-filtered read would migrate
+	 * only the rows 'Anonymous' may see and call that a complete run.
+	 *
+	 * @param mixed $objectService The OpenRegister ObjectService.
+	 * @param mixed $register The ticket register id.
+	 * @param mixed $schema The ticket schema id.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function readContactMoments($objectService, $register, $schema): iterable {
+		return $objectService->findAll(
 			config: [
 				'filters' => [
 					'register' => $register,
@@ -183,7 +220,19 @@ class MigrateContactMomentDirection implements IRepairStep {
 			_rbac: false,
 			_multitenancy: false,
 		);
+	}//end readContactMoments()
 
+	/**
+	 * Fill the direction on every row that lacks one.
+	 *
+	 * @param iterable<mixed> $rows The contact moment rows.
+	 * @param array{0: mixed, 1: mixed, 2: mixed, 3: IUser|null} $target The ObjectService, register, schema and acting admin.
+	 *
+	 * @return array{0: int, 1: int} The filled and already-set counts.
+	 */
+	private function migrateRows(iterable $rows, array $target): array {
+		$filled = 0;
+		$untouched = 0;
 		foreach ($rows as $row) {
 			$data = $this->toArray(row: $row);
 			if ($data === null) {
@@ -198,31 +247,42 @@ class MigrateContactMomentDirection implements IRepairStep {
 
 			$data['direction'] = $direction;
 			$data = $this->ticketService->sanitizeForSave(payload: $data);
+			$filled += $this->saveMigrated(target: $target, data: $data);
+		}
 
-			try {
-				$objectService->saveObject(
-					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: (string)($data['id'] ?? ''),
-					_rbac: false,
-					_multitenancy: false,
-					currentUser: $actingAdmin,
-				);
-				$filled++;
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'MigrateContactMomentDirection: failed to save contact moment',
-					['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+		return [$filled, $untouched];
+	}//end migrateRows()
 
-		$output->info(
-			sprintf('Contact moment directions: %d filled, %d already set.', $filled, $untouched)
-		);
-	}//end run()
+	/**
+	 * Save one migrated contact moment as the acting admin; 1 when saved, 0 when it failed (logged).
+	 *
+	 * @param array{0: mixed, 1: mixed, 2: mixed, 3: IUser|null} $target The ObjectService, register, schema and acting admin.
+	 * @param array<string, mixed> $data The migrated contact moment.
+	 *
+	 * @return int The number saved.
+	 */
+	private function saveMigrated(array $target, array $data): int {
+		[$objectService, $register, $schema, $actingAdmin] = $target;
+		try {
+			$objectService->saveObject(
+				object: $data,
+				extend: [],
+				register: $register,
+				schema: $schema,
+				uuid: (string)($data['id'] ?? ''),
+				_rbac: false,
+				_multitenancy: false,
+				currentUser: $actingAdmin,
+			);
+			return 1;
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'MigrateContactMomentDirection: failed to save contact moment',
+				['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
+			);
+			return 0;
+		}//end try
+	}//end saveMigrated()
 
 	/**
 	 * Resolve an admin to act as while saving.
