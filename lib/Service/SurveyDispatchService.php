@@ -457,6 +457,19 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 
+		return $this->writeInvitations(rules: $rules, interaction: ['entity' => $entity, 'contact' => $contact]);
+	}//end onInteractionCompleted()
+
+	/**
+	 * Build and write the invitation each matching rule produces for the contact.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The matching rules.
+	 * @param array{entity: array<string, mixed>, contact: array<string, mixed>} $interaction The completed record and the recipient.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations written.
+	 */
+	private function writeInvitations(array $rules, array $interaction): array {
+		$contact = $interaction['contact'];
 		$recent = $this->invitationsForContact(
 			contactRef: trim((string)($contact['contactsUid'] ?? $contact['id'] ?? ''))
 		);
@@ -466,7 +479,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			$invitation = $this->buildInvitation(
 				rule: $rule,
 				contact: $contact,
-				entity: $entity,
+				entity: $interaction['entity'],
 				recentInvitations: $recent,
 			);
 
@@ -476,7 +489,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		}
 
 		return $written;
-	}//end onInteractionCompleted()
+	}//end writeInvitations()
 
 	/**
 	 * Every invitation already sent to one contact, whatever the survey.
