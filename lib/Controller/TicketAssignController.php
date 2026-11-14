@@ -139,8 +139,24 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
+		$oldest = $this->oldestUnassigned(rows: $this->queueRows());
+		if ($oldest === null) {
+			return new JSONResponse(['error' => 'Nothing is waiting in the queue'], Http::STATUS_NOT_FOUND);
+		}
+
+		return $this->assign(ticket: $oldest[0], id: $oldest[1], uid: $user->getUID());
+	}//end assignOldest()
+
+	/**
+	 * The queue's tickets, oldest first; none when the read fails.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @spec openspec/specs/my-work/spec.md
+	 */
+	private function queueRows(): array {
 		try {
-			$rows = $this->tickets->getObjectService()->findAll(
+			return $this->tickets->getObjectService()->findAll(
 				config: [
 					'filters' => ['register' => $this->tickets->getRegisterId(), 'schema' => $this->tickets->getSchemaId()],
 					'sort' => ['occurredAt' => 'asc'],
@@ -148,26 +164,51 @@ class TicketAssignController extends Controller {
 				]
 			);
 		} catch (Throwable) {
-			$rows = [];
+			return [];
 		}
+	}//end queueRows()
 
+	/**
+	 * The first open, unassigned ticket and its id.
+	 *
+	 * @param array<mixed> $rows The queue's tickets, oldest first.
+	 *
+	 * @return array{0: array<string, mixed>, 1: string}|null
+	 *
+	 * @spec openspec/specs/my-work/spec.md
+	 */
+	private function oldestUnassigned(array $rows): array|null {
 		foreach ($rows as $row) {
-			$data = $row;
-			if (is_array($row) === false) {
-				$data = $row->getObject();
-				$data['id'] = $data['id'] ?? $row->getUuid();
-			}
-
+			$data = $this->ticketData(row: $row);
 			$id = (string) ($data['id'] ?? '');
 			if ($id === '' || empty($data['assignee']) === false || in_array($data['status'] ?? '', self::CLOSED_STATUSES, true) === true) {
 				continue;
 			}
 
-			return $this->assign(ticket: $data, id: $id, uid: $user->getUID());
+			return [$data, $id];
 		}
 
-		return new JSONResponse(['error' => 'Nothing is waiting in the queue'], Http::STATUS_NOT_FOUND);
-	}//end assignOldest()
+		return null;
+	}//end oldestUnassigned()
+
+	/**
+	 * A queue row's ticket data, with its id.
+	 *
+	 * @param mixed $row The queue row.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/my-work/spec.md
+	 */
+	private function ticketData($row): array {
+		$data = $row;
+		if (is_array($row) === false) {
+			$data = $row->getObject();
+			$data['id'] = $data['id'] ?? $row->getUuid();
+		}
+
+		return $data;
+	}//end ticketData()
 
 	/**
 	 * Save a ticket with a new assignee.
