@@ -708,4 +708,57 @@ class WorklistServiceTest extends TestCase {
 			$this->buildService(['ticket_schema:request' => $tickets])->summary(userId: 'pieter')
 		);
 	}//end testSummaryWritesCountsAboveTwentyInDigits()
+
+	/**
+	 * The week figures read every work ticket type of the user, scoped to the
+	 * assignee, and count this week's answers (REQ-MW-090).
+	 *
+	 * @return void
+	 */
+	public function testWeekStatsCountTheUsersAnswersOfThisWeek(): void {
+		$answered = [
+			'status' => 'resolved',
+			'occurredAt' => self::iso('now'),
+			'resolvedAt' => self::iso('now'),
+			'slaDeadline' => self::iso('+1 day'),
+		];
+		$service = $this->buildService(byCollection: [
+			'ticket_schema:request' => [$answered, ['status' => 'in_progress']],
+			'ticket_schema:complaint' => [$answered + ['priority' => 'high']],
+			'ticket_schema:interaction' => [['status' => 'converted', 'resolvedAt' => self::iso('now')]],
+		]);
+
+		$stats = $service->getWeekStats(userId: 'pieter');
+
+		$this->assertSame(2, $stats['answered']);
+		$this->assertSame(2, $stats['answeredToday']);
+		$this->assertSame(100, $stats['withinDeadline']);
+		$this->assertSame(0.0, $stats['averageAnswerDays']);
+		$this->assertSame(1, $stats['converted']);
+		$this->assertSame('mine', $stats['scope']);
+		$this->assertSame(
+			['request', 'complaint', 'interaction', 'melding'],
+			array_column($this->ticketCalls, 'ticketType')
+		);
+		foreach ($this->ticketCalls as $call) {
+			$this->assertSame(['assignee' => 'pieter'], $call['filters']);
+		}
+	}//end testWeekStatsCountTheUsersAnswersOfThisWeek()
+
+	/**
+	 * A scope other than the user's own is refused until team scopes exist.
+	 *
+	 * @return void
+	 */
+	public function testWeekStatsRefuseAnotherScope(): void {
+		$service = $this->buildService();
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Unknown scope');
+		try {
+			$service->getWeekStats(userId: 'pieter', scope: 'team');
+		} finally {
+			$this->assertSame([], $this->ticketCalls);
+		}
+	}//end testWeekStatsRefuseAnotherScope()
 }
