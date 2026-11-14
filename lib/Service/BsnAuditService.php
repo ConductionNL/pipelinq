@@ -26,7 +26,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
@@ -34,7 +36,6 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -47,7 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-005
  */
-class BsnAuditService {
+class BsnAuditService implements BsnAuditServiceInterface {
 	use EntityAccessorTrait;
 
 	/**
@@ -133,7 +134,7 @@ class BsnAuditService {
 			'outcome' => $lookup->result->outcome,
 			'responseCode' => $lookup->result->responseCode,
 			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
-			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
+			'userAgent' => 'Pipelinq/' . (AppIdentity::APP_ID) . ' (Nextcloud)',
 			'haalcentraalCorrelationId' => $lookup->result->correlationId,
 			'linkedRequest' => $lookup->reason->linkedRequest,
 			'vogScreening' => $lookup->reason->vogScreening,
@@ -235,7 +236,7 @@ class BsnAuditService {
 			$oldHash = BsnValidationService::hash($rawBsn);
 			// Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
 			$secret = $this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'brp.pseudonym_secret',
 				''
 			);
@@ -344,8 +345,8 @@ class BsnAuditService {
 	 * @throws RuntimeException If configuration is missing.
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'bsnAuditRecord_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('bsnAuditRecord register/schema not configured.');
 		}

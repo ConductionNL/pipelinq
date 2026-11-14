@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -381,7 +381,7 @@ class HolidayCalendarService {
 	 */
 	private function lustrumOverrideEnabled(string $calendarName): bool {
 		unset($calendarName);
-		$value = $this->appConfig->getValueString(Application::APP_ID, 'sla_bevrijdingsdag_yearly', 'false');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_bevrijdingsdag_yearly', 'false');
 		return $value === 'true';
 	}//end lustrumOverrideEnabled()
 
@@ -391,7 +391,7 @@ class HolidayCalendarService {
 	 * @return array<string, array<int, array<string, mixed>>> Map of calendar → entries.
 	 */
 	private function loadTenantOverrides(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'sla_tenant_holiday_overrides', '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_tenant_holiday_overrides', '');
 		if ($raw === '') {
 			return [];
 		}

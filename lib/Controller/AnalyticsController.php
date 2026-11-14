@@ -28,10 +28,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\AnalyticsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,17 +51,17 @@ class AnalyticsController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param AnalyticsService $analyticsService Analytics summary service.
+	 * @param AnalyticsServiceInterface $analyticsService Analytics summary service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private AnalyticsService $analyticsService,
+		private AnalyticsServiceInterface $analyticsService,
 		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -88,7 +88,7 @@ class AnalyticsController extends Controller {
 			return $refusal;
 		}
 
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			return new JSONResponse($this->analyticsService->getOverview(period: $period));
@@ -128,7 +128,7 @@ class AnalyticsController extends Controller {
 			return $refusal;
 		}
 
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			$filter = $this->request->getParam('filter', []);
@@ -173,7 +173,7 @@ class AnalyticsController extends Controller {
 		}
 
 		$metric = (string)$this->request->getParam('metric', '');
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			return new JSONResponse($this->analyticsService->getTrends(metric: $metric, period: $period));

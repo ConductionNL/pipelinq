@@ -107,6 +107,7 @@ function channelRow(row) {
 		visits: count('visit'),
 		submissions: count('submit'),
 		replies: count('reply'),
+		attended: count('attend'),
 		leads: count('leads'),
 	}
 }

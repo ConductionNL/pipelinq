@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\BerichtenboxService;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Container\ContainerInterface;
@@ -80,7 +80,7 @@ class FallbackEmailJob extends TimedJob {
 		$pass = new BerichtenboxJobPass(container: $this->container, logger: $this->logger);
 		$pass->run(
 			job: 'FallbackEmailJob',
-			work: function (BerichtenboxService $service): void {
+			work: function (BerichtenboxServiceInterface $service): void {
 				$sent = $service->processFallbackQueue();
 				$this->logger->info(
 					'FallbackEmailJob: processed fallbacks.',

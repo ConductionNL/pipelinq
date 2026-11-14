@@ -30,12 +30,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 
 /**
  * Reads the summary of cash shifts.
  */
-class CashShiftSummaryService {
+class CashShiftSummaryService implements CashShiftSummaryServiceInterface {
 	/**
 	 * Constructor.
 	 *

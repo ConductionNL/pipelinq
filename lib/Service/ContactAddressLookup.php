@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -161,13 +161,13 @@ class ContactAddressLookup {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$register = 'pipelinq';
 		}
 
 		foreach (['contact_schema' => 'contact', 'client_schema' => 'client'] as $key => $default) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 			if ($schema === '') {
 				$schema = $default;
 			}

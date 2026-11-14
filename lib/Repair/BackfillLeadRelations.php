@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LeadStagePlacer;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -257,9 +257,9 @@ class BackfillLeadRelations implements IRepairStep {
 	 * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		$pipelineSchema = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
+		$pipelineSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 
 		if ($register === '' || $leadSchema === '') {
 			$output->info('BackfillLeadRelations: pipelinq register or lead schema not configured, skipping');

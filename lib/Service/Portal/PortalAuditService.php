@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAuditService {
+class PortalAuditService implements PortalAuditServiceInterface {
 	/**
 	 * Schema slug for audit events.
 	 *

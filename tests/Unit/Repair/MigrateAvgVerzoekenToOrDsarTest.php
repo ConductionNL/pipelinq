@@ -395,6 +395,36 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 	}//end testRedactionsResolveThroughBewijsItems()
 
 	/**
+	 * Redactions of several bewijsItems are collected in evidence order, and
+	 * an evidence item without an id or uuid contributes none; a uuid-only
+	 * item still resolves its redactions.
+	 *
+	 * @return void
+	 */
+	public function testRedactionsSkipEvidenceWithoutId(): void {
+		$this->store = [
+			'40' => [['id' => 'v9', 'artikel' => 'art-15-inzage', 'status' => 'ingediend', 'verzoekerBsn' => '999990019']],
+			'41' => [
+				['id' => 'b9', 'requestId' => 'v9', 'bronApp' => 'pipelinq-crm'],
+				['requestId' => 'v9', 'bronApp' => 'pipelinq-crm'],
+				['uuid' => 'b10', 'requestId' => 'v9', 'bronApp' => 'pipelinq-crm'],
+			],
+			'43' => [
+				['id' => 'r10', 'bewijsItemId' => 'b10', 'veldpad' => 'adres', 'grond' => 'bescherming-rechten-derden'],
+				['id' => 'r9', 'bewijsItemId' => 'b9', 'veldpad' => 'bsn', 'grond' => 'bescherming-rechten-derden'],
+				['id' => 'r0', 'bewijsItemId' => '', 'veldpad' => 'naam', 'grond' => 'bescherming-rechten-derden'],
+			],
+		];
+
+		$this->step->run($this->createStub(IOutput::class));
+
+		self::assertCount(1, $this->savedCases);
+		self::assertSame(['bsn', 'adres'], array_column($this->savedCases[0]['redactions'], 'field'));
+		self::assertSame('999990019', $this->savedCases[0]['subjectId']);
+		self::assertSame('natural-person', $this->savedCases[0]['subjectType']);
+	}//end testRedactionsSkipEvidenceWithoutId()
+
+	/**
 	 * The source write-back must not carry nulls.
 	 *
 	 * An object read out of OpenRegister carries its unset properties as null,

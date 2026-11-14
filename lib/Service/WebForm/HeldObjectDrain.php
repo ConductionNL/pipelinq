@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\WebForm;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\HeldObjectDrainInterface;
 use OCA\Pipelinq\Service\SystemServiceAccount;
 use Throwable;
 
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-held-website-messages-are-drained-into-the-destination-their-form-names
  */
-class HeldObjectDrain {
+class HeldObjectDrain implements HeldObjectDrainInterface {
 
 	/**
 	 * Rows read per page. Never "unlimited".

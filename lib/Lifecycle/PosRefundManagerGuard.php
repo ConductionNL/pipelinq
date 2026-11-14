@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Lifecycle;
 
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -156,8 +156,8 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function fetchTransaction(string $id): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -194,8 +194,8 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function sumCompletedRefunds(string $transactionId, string $excludeRefundId): float {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posRefund_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posRefund_schema', '');
 		if ($register === '' || $schema === '') {
 			return PHP_FLOAT_MAX;
 		}

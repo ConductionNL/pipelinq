@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Pipelinq\Kernel\Contracts\CampaignPerformanceServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -43,7 +44,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
-class CampaignPerformanceService {
+class CampaignPerformanceService implements CampaignPerformanceServiceInterface {
 	/**
 	 * Portaliq's register slug (contract section 3).
 	 *

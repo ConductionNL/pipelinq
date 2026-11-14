@@ -51,7 +51,7 @@ namespace OCA\Pipelinq\Flow;
 
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
-use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\IURLGenerator;
 use RuntimeException;
 use UnexpectedValueException;
@@ -76,11 +76,11 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContactVcardService $vcards The addressbook identity resolver.
+	 * @param ContactVcardServiceInterface $vcards The addressbook identity resolver.
 	 * @param IURLGenerator       $urls   Builds the palette icon URL.
 	 */
 	public function __construct(
-		private readonly ContactVcardService $vcards,
+		private readonly ContactVcardServiceInterface $vcards,
 		private readonly IURLGenerator $urls,
 	) {
 	}//end __construct()
