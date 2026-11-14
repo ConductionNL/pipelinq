@@ -57,7 +57,17 @@
           "afleidingswijze": "ander_datumkenmerk",
           "sourceDateProperty": "relationshipEndedAt",
           "defaultBewaartermijn": "P2Y",
-          "defaultNominatie": "vernietigen"
+          "defaultNominatie": "vernietigen",
+          "anonymisation": {
+            "name": {"treatment": "fixed", "value": "Anonymised client"},
+            "email": "remove",
+            "emails": "remove",
+            "phone": "remove",
+            "phones": "remove",
+            "address": "remove",
+            "website": "remove",
+            "notes": "remove"
+          }
         },
         "required": [
           "name",
