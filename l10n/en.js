@@ -9842,7 +9842,8 @@ OC.L10N.register(
         "Only the agent whose call was reviewed can agree a coaching point.": "Only the agent whose call was reviewed can agree a coaching point.",
         "The coaching point could not be agreed.": "The coaching point could not be agreed.",
         "%n criterion": ["%n criterion","%n criteria"],
-        "%n criteria": "%n criteria"
+        "%n criteria": "%n criteria",
+        "Recorded calls scored on a scorecard, with coaching points the agent agrees.": "Recorded calls scored on a scorecard, with coaching points the agent agrees."
     },
     "nplurals=2; plural=(n != 1);"
 )

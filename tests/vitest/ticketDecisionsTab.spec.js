@@ -50,10 +50,12 @@ describe('the ticket page declares a Decisions tab', () => {
 
 	it('has a tab strip with Overview first and Decisions beside it', () => {
 		expect(panels.type).toBe('tabs')
-		// History (ticket-handover-history) follows the Decisions tab.
+		// History (ticket-handover-history) follows the Decisions tab, after the
+		// Call tab of a recorded call (contact-moments-call-review).
 		expect(panels.content.tabs.map((tab) => tab.label)).toEqual([
 			'Overview',
 			'Decisions',
+			'Call',
 			'History',
 		])
 		expect(panels.content.tabs[0].widgetId).toBe('ticket-data')

@@ -59,6 +59,7 @@ vi.mock('../../src/views/settings/PosTenderTypeManager.vue', async () => ({ defa
 vi.mock('../../src/views/settings/ProductCategoryManager.vue', async () => ({ default: named('ProductCategoryManager', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/ProspectSettings.vue', async () => ({ default: named('ProspectSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/TagManager.vue', async () => ({ default: named('TagManager', (await import('vue')).h) }))
+vi.mock('../../src/views/settings/ScorecardManager.vue', async () => ({ default: named('ScorecardManager', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/VatRatesSettings.vue', async () => ({ default: named('VatRatesSettings', (await import('vue')).h) }))
 vi.mock('@conduction/nextcloud-vue', async () => {
 	const { h } = await import('vue')

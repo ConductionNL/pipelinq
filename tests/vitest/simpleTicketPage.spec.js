@@ -123,11 +123,14 @@ describe('the full structure', () => {
 		// (website-submissions-link-to-client, shown while the ticket has no
 		// client), Make a letter (work-letter-from-filinq-template, shown only
 		// with filinq) and Assign to me (detail-pages-read-at-a-glance), which
-		// sets the assignee and changes no status.
+		// sets the assignee and changes no status. Review this call
+		// (contact-moments-call-review) shows for the call review group on a
+		// ticket with a recording.
 		expect(full.config.headerActions.map((action) => action.id)).toEqual([
 			'link-to-client',
 			'make-letter',
 			'assign-to-me',
+			'review-call',
 		])
 		expect(full.config.sideColumn).toBeUndefined()
 	})
@@ -483,6 +486,7 @@ describe('the body', () => {
 			'Contact moments',
 			'Related',
 			'Decisions',
+			'Call',
 			'History',
 		])
 		expect(panels.content.tabs[1].widgetIds).toEqual([
