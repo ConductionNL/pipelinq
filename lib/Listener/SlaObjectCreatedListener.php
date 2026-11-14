@@ -121,15 +121,6 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Measured 10, threshold 10.
-	 *  A flat chain of independent preconditions — event type, schema, SLA policy
-	 *  presence, re-entrancy — each with its own early return. Extracting them
-	 *  would hide which condition refused the dispatch.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false) {
@@ -137,45 +128,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 		}
 
 		try {
-			$entity = $event->getObject();
-			$schemaId = (string)$entity->getSchema();
-			$data = $entity->getObject();
-			$type = $this->resolveSlaType(
-				entityType: (string)$this->schemaMapService->resolveEntityType($schemaId),
-				data: $data
-			);
-			if ($type === null) {
-				return;
-			}
-
-			// Already initialised? Don't recompute (REQ-001 immutability).
-			if (isset($data['slaStatus']) === true && is_array($data['slaStatus']) === true
-				&& ($data['slaStatus']['policyId'] ?? '') !== ''
-			) {
-				return;
-			}
-
-			$uuid = (string)$entity->getUuid();
-			if ($uuid === '' || $schemaId === '') {
-				return;
-			}
-
-			// Our own slaStatus write re-enters the SLA listeners; deferring
-			// again from inside the deferred pass would be a cron loop.
-			if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
-				return;
-			}
-
-			$this->deferral->defer(
-				jobClass: DeferredObjectListenerJob::class,
-				entry: [
-					'handler' => self::HANDLER_KEY,
-					'uuid' => $uuid,
-					'schema' => $schemaId,
-					'type' => (string)$type,
-				],
-				dedupeKey: self::HANDLER_KEY . '|' . $uuid
-			);
+			$this->queueSlaInit(event: $event);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaObjectCreatedListener: SLA init could not be queued (non-blocking)',
@@ -183,6 +136,74 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 			);
 		}//end try
 	}//end handle()
+
+	/**
+	 * Queue the SLA init for a new tracked object that carries no envelope yet.
+	 *
+	 * @param ObjectCreatedEvent $event The event.
+	 *
+	 * @return void
+	 */
+	private function queueSlaInit(ObjectCreatedEvent $event): void {
+		$entity = $event->getObject();
+		$schemaId = (string)$entity->getSchema();
+		$data = $entity->getObject();
+		$type = $this->resolveSlaType(entityType: (string)$this->schemaMapService->resolveEntityType($schemaId), data: $data);
+		if ($type === null) {
+			return;
+		}
+
+		// Already initialised? Don't recompute (REQ-001 immutability).
+		if ($this->hasSlaStatus(data: $data) === true) {
+			return;
+		}
+
+		$this->deferSlaInit(uuid: (string)$entity->getUuid(), schemaId: $schemaId, type: $type);
+	}//end queueSlaInit()
+
+	/**
+	 * Whether the object already carries an armed slaStatus envelope.
+	 *
+	 * @param array<string, mixed> $data Object data.
+	 *
+	 * @return bool
+	 */
+	private function hasSlaStatus(array $data): bool {
+		return (isset($data['slaStatus']) === true && is_array($data['slaStatus']) === true
+			&& ($data['slaStatus']['policyId'] ?? '') !== '');
+	}//end hasSlaStatus()
+
+	/**
+	 * Defer the SLA init of one object, unless this pass is the deferred one.
+	 *
+	 * @param string $uuid     Object uuid.
+	 * @param string $schemaId Schema id.
+	 * @param string $type     The SLA type.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function deferSlaInit(string $uuid, string $schemaId, string $type): void {
+		if ($uuid === '' || $schemaId === '') {
+			return;
+		}
+
+		// Our own slaStatus write re-enters the SLA listeners; deferring
+		// again from inside the deferred pass would be a cron loop.
+		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
+			return;
+		}
+
+		$this->deferral->defer(
+			jobClass: DeferredObjectListenerJob::class,
+			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'schema' => $schemaId, 'type' => (string)$type],
+			dedupeKey: self::HANDLER_KEY . '|' . $uuid
+		);
+	}//end deferSlaInit()
 
 	/**
 	 * Resolve the policy and write the initial slaStatus envelope.
@@ -194,13 +215,12 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function runDeferredWork(array $entry): void {
-		$uuid = (string)($entry['uuid'] ?? '');
-		$schemaId = (string)($entry['schema'] ?? '');
-		$matchType = (string)($entry['type'] ?? '');
-		if ($uuid === '' || $schemaId === '' || $matchType === '') {
+		$target = $this->deferredTarget(entry: $entry);
+		if ($target === null) {
 			return;
 		}
 
+		[$uuid, $schemaId, $matchType] = $target;
 		$data = $this->fetch(uuid: $uuid, schemaId: $schemaId);
 		if ($data === null) {
 			// Object gone since creation. Stale entry (ADR-078 Rule 7).
@@ -208,12 +228,42 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 		}
 
 		// Re-checked: another path may have armed the envelope in the interval.
-		if (isset($data['slaStatus']) === true && is_array($data['slaStatus']) === true
-			&& ($data['slaStatus']['policyId'] ?? '') !== ''
-		) {
+		if ($this->hasSlaStatus(data: $data) === true) {
 			return;
 		}
 
+		$this->armSlaStatus(uuid: $uuid, schemaId: $schemaId, matchType: $matchType, data: $data);
+	}//end runDeferredWork()
+
+	/**
+	 * The uuid, schema and SLA type a deferred entry names, or null when one is missing.
+	 *
+	 * @param array<string, mixed> $entry The entry captured at dispatch time.
+	 *
+	 * @return array{0: string, 1: string, 2: string}|null
+	 */
+	private function deferredTarget(array $entry): array|null {
+		$uuid = (string)($entry['uuid'] ?? '');
+		$schemaId = (string)($entry['schema'] ?? '');
+		$matchType = (string)($entry['type'] ?? '');
+		if ($uuid === '' || $schemaId === '' || $matchType === '') {
+			return null;
+		}
+
+		return [$uuid, $schemaId, $matchType];
+	}//end deferredTarget()
+
+	/**
+	 * Resolve the matching policy and write the initial slaStatus envelope.
+	 *
+	 * @param string               $uuid      Object uuid.
+	 * @param string               $schemaId  Schema id.
+	 * @param string               $matchType The SLA type.
+	 * @param array<string, mixed> $data      Object data.
+	 *
+	 * @return void
+	 */
+	private function armSlaStatus(string $uuid, string $schemaId, string $matchType, array $data): void {
 		$metadata = $this->extractMetadata(data: $data);
 		$policy = $this->engine->resolvePolicyForObject($matchType, $uuid, $metadata);
 		if ($policy === null) {
@@ -228,7 +278,7 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 		$data['slaStatus'] = $this->engine->initialiseStatus($policy, $now);
 
 		$this->persist(uuid: $uuid, schemaId: $schemaId, data: $data);
-	}//end runDeferredWork()
+	}//end armSlaStatus()
 
 	/**
 	 * Extract policy-resolution metadata from the object payload.
