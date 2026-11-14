@@ -53,7 +53,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
 import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
-import { exportSchedule, lastRunLine } from './exportRunText.js'
+import { exportSchedule, lastRunCell } from './exportRunText.js'
 
 /** A destination's type as its product name, under the destination's name. */
 const DESTINATION_TYPES = {
@@ -129,7 +129,7 @@ function runColumns() {
 			label: t('pipelinq', 'Last run'),
 			widget: 'badge',
 			widgetProps: { colorMap: { succeeded: 'success', partial: 'warning', failed: 'error' } },
-			secondary: (row) => lastRunLine(row),
+			secondary: (row) => lastRunCell(row),
 		},
 		{
 			key: 'nextRunAt',
