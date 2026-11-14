@@ -144,4 +144,112 @@ class TouchpointServiceTest extends TestCase {
 		$this->assertSame('direct', $service->channelForMedium(medium: ''));
 		$this->assertSame('beurs', $service->channelForMedium(medium: 'beurs'));
 	}//end testAMediumMapsToTheChannelTheReportGroupsBy()
+	/**
+	 * A submission of the given campaign values on a contact.
+	 *
+	 * @param string $contactId The contact.
+	 * @param string $source    The utm_source value.
+	 * @param string $at        When it was submitted.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function submission(string $contactId, string $source, string $at): array {
+		return [
+			'campaignId' => 'camp-1',
+			'contactId' => $contactId,
+			'kind' => 'submit',
+			'channel' => 'social',
+			'utm' => ['campaign' => 'voorjaar', 'source' => $source, 'medium' => 'social', 'term' => ' ', 'content' => ''],
+			'occurredAt' => $at,
+		];
+	}//end submission()
+
+	/**
+	 * The touch a submission leaves.
+	 *
+	 * @param string $source      The utm_source value.
+	 * @param string $landingPage The landing page.
+	 * @param string $at          When it was submitted.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function touch(string $source, string $landingPage, string $at): array {
+		return ['campaign' => 'voorjaar', 'source' => $source, 'medium' => 'social', 'term' => '', 'content' => '', 'campaignId' => 'camp-1', 'landingPage' => $landingPage, 'at' => $at];
+	}//end touch()
+
+	/**
+	 * The first submission sets both touches on the contact and its client; the
+	 * second replaces only the last touch; the touchpoint names client and page.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	public function testFirstTouchIsKeptAndLastTouchFollowsEverySubmission(): void {
+		$this->store = new InMemoryListObjectStore([
+			'contact' => [['uuid' => 'ct-1', 'name' => 'Jane', 'client' => 'cl-1']],
+			'client' => [['uuid' => 'cl-1', 'name' => 'Gemeente X']],
+		]);
+		$service = new TouchpointService($this->store);
+
+		$saved = $service->recordSubmission(touchpoint: self::submission(contactId: 'ct-1', source: 'linkedin', at: '2026-03-01T10:00:00+00:00'), landingPage: ' open-tilburg/webinar ');
+		$service->recordSubmission(touchpoint: self::submission(contactId: 'ct-1', source: 'nieuwsbrief', at: '2026-04-02T11:00:00+00:00'), landingPage: 'open-tilburg/demo');
+
+		self::assertSame('cl-1', $saved['clientId']);
+		self::assertSame('open-tilburg/webinar', $saved['landingPage']);
+		$first = self::touch(source: 'linkedin', landingPage: 'open-tilburg/webinar', at: '2026-03-01T10:00:00+00:00');
+		$last = self::touch(source: 'nieuwsbrief', landingPage: 'open-tilburg/demo', at: '2026-04-02T11:00:00+00:00');
+		foreach (['contact' => 'ct-1', 'client' => 'cl-1'] as $schema => $id) {
+			$row = $this->store->find($schema, $id);
+			self::assertSame($first, $row['firstTouch'], $schema);
+			self::assertSame($last, $row['lastTouch'], $schema);
+		}
+
+		self::assertSame('Jane', $this->store->find('contact', 'ct-1')['name']);
+		self::assertCount(2, $this->store->findAll('touchpoint', ['clientId' => 'cl-1']));
+	}//end testFirstTouchIsKeptAndLastTouchFollowsEverySubmission()
+
+	/**
+	 * A contact without a client updates only the contact; an expanded client reference is read by its id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	public function testAContactWithoutAClientWritesOnlyTheContact(): void {
+		$this->store = new InMemoryListObjectStore([
+			'contact' => [['uuid' => 'ct-1', 'name' => 'Jane'], ['uuid' => 'ct-2', 'name' => 'Piet', 'client' => ['id' => 'cl-2', 'name' => 'Bakker']]],
+			'client' => [['uuid' => 'cl-2', 'name' => 'Bakker']],
+		]);
+		$service = new TouchpointService($this->store);
+
+		$saved = $service->recordSubmission(touchpoint: self::submission(contactId: 'ct-1', source: 'google', at: '2026-03-01T10:00:00+00:00'), landingPage: 'p');
+		self::assertSame('', $saved['clientId']);
+		self::assertArrayNotHasKey('client', $this->store->writes);
+		self::assertSame('google', $this->store->find('contact', 'ct-1')['lastTouch']['source']);
+
+		$expanded = $service->recordSubmission(touchpoint: self::submission(contactId: 'ct-2', source: 'google', at: '2026-03-01T10:00:00+00:00'), landingPage: 'p');
+		self::assertSame('cl-2', $expanded['clientId']);
+		self::assertSame('google', $this->store->find('client', 'cl-2')['firstTouch']['source']);
+	}//end testAContactWithoutAClientWritesOnlyTheContact()
+
+	/**
+	 * A submission without a contact, or of an unknown kind, writes no touches.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	public function testNoContactOrNoTouchpointWritesNoTouches(): void {
+		$this->store = new InMemoryListObjectStore(['contact' => [['uuid' => 'ct-1', 'name' => 'Jane']]]);
+		$service = new TouchpointService($this->store);
+
+		$anonymous = $service->recordSubmission(touchpoint: self::submission(contactId: '', source: 'x', at: '2026-03-01T10:00:00+00:00'), landingPage: 'p');
+		self::assertSame('p', $anonymous['landingPage']);
+
+		$refused = $service->recordSubmission(touchpoint: ['contactId' => 'ct-1', 'kind' => 'shout'], landingPage: 'p');
+		self::assertNull($refused);
+		self::assertArrayNotHasKey('lastTouch', $this->store->find('contact', 'ct-1'));
+		self::assertArrayNotHasKey('contact', $this->store->writes);
+	}//end testNoContactOrNoTouchpointWritesNoTouches()
 }//end class

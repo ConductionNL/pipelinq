@@ -157,8 +157,9 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		);
 		$records = $this->recordsFor(submission: $submission);
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(submission: $submission, records: $records)
+		$this->touchpoints->recordSubmission(
+			touchpoint: $this->touchpointFor(submission: $submission, records: $records),
+			landingPage: $this->landingPageOf(event: $event)
 		);
 
 		if ($records->leadId !== '') {
@@ -475,6 +476,25 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			'nonce' => trim($event->getNonce()),
 		];
 	}//end touchpointFor()
+
+	/**
+	 * The page a submission came from: the portal and the page route.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return string `<portal>/<route>`, or whichever of the two is known.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		$portal = trim($event->getPortal(), " \t/");
+		$route = trim($event->getPageRoute(), " \t/");
+		if ($portal === '' || $route === '') {
+			return ($portal . $route);
+		}
+
+		return ($portal . '/' . $route);
+	}//end landingPageOf()
 
 	/**
 	 * Normalise a UTM block to the five keys the schemas declare.
