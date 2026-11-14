@@ -84,6 +84,8 @@ use Throwable;
  * the wrapper would earn itself.
  *
  * @spec openspec/specs/pipelinq-store-surface/spec.md
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class StoreController extends Controller {
 	/**
@@ -227,24 +229,51 @@ class StoreController extends Controller {
 	#[NoAdminRequired]
 	public function search(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['outcome' => 'unauthenticated', 'cards' => []],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return new JSONResponse(data: ['outcome' => 'unauthenticated', 'cards' => []], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		$query = $this->request->getParam('q');
-		if (is_string($query) === false) {
-			$query = null;
+		$query = $this->stringParam(name: 'q');
+		$kind = $this->stringParam(name: 'kind');
+
+		$result = $this->runSearch(query: $query, kind: $kind);
+		if ($result === null) {
+			return new JSONResponse(data: ['outcome' => GenericStoreService::OUTCOME_UNREACHABLE, 'cards' => []], statusCode: Http::STATUS_OK);
 		}
 
-		$kind = $this->request->getParam('kind');
-		if (is_string($kind) === false) {
-			$kind = null;
+		return $this->searchResponse(result: $result);
+	}//end search()
+
+	/**
+	 * A request parameter as a string, or null when it is absent or not a string.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
+	 */
+	private function stringParam(string $name): string|null {
+		$value = $this->request->getParam($name);
+		if (is_string($value) === false) {
+			$value = null;
 		}
 
+		return $value;
+	}//end stringParam()
+
+	/**
+	 * Search the registry, or null when the search failed.
+	 *
+	 * @param string|null $query The search text.
+	 * @param string|null $kind The kind filter.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
+	 */
+	private function runSearch(string|null $query, string|null $kind): array|null {
 		try {
-			$result = $this->storeService->search(
+			return $this->storeService->search(
 				descriptor: $this->descriptor(),
 				query: $query,
 				kind: $kind
@@ -253,12 +282,20 @@ class StoreController extends Controller {
 			// Detail to the log, generic outcome to the browser: a registry's
 			// internals are not the caller's business.
 			$this->logger->error('Pipelinq store: search failed: ' . $e->getMessage());
-			return new JSONResponse(
-				data: ['outcome' => GenericStoreService::OUTCOME_UNREACHABLE, 'cards' => []],
-				statusCode: Http::STATUS_OK
-			);
+			return null;
 		}
+	}//end runSearch()
 
+	/**
+	 * Mark a successful check and render the annotated search result.
+	 *
+	 * @param array<string, mixed> $result The registry search result.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
+	 */
+	private function searchResponse(array $result): JSONResponse {
 		if ($result['outcome'] === GenericStoreService::OUTCOME_OK) {
 			$this->installLedger->markChecked(when: new DateTimeImmutable());
 		}
@@ -271,7 +308,7 @@ class StoreController extends Controller {
 			],
 			statusCode: Http::STATUS_OK
 		);
-	}//end search()
+	}//end searchResponse()
 
 	/**
 	 * Install one store item into this instance.
@@ -444,75 +481,98 @@ class StoreController extends Controller {
 		$registerId = $this->registerResolver->resolve();
 
 		foreach ($components as $component) {
-			$slug = (string)($component['schema'] ?? '');
-			$object = ($component['object'] ?? null);
-
-			if (in_array($slug, self::INSTALLABLE_SLUGS, true) === false) {
+			$row = $this->installComponent(component: $component, registerId: $registerId);
+			if ($row['status'] !== 'installed') {
 				$failed = true;
-				$report[] = [
-					'schema' => $slug,
-					'status' => 'refused',
-					'message' => 'Only commercial configuration installs from the store; '
-						. 'this component names a record schema.',
-				];
-				continue;
 			}
 
-			if (is_array($object) === false) {
-				$failed = true;
-				$report[] = [
-					'schema' => $slug,
-					'status' => 'refused',
-					'message' => 'The component declares no object to install.',
-				];
-				continue;
-			}
-
-			// No null guard on the lookup, and none is needed: every entry in
-			// INSTALLABLE_SLUGS is a key of SLUG_TO_CONFIG_KEY, and phpstan
-			// PROVES it — a slug added to the allowlist with no mapping turns
-			// this back into a nullable read and fails analysis.
-			$schemaId = $this->appConfig->getValueString(
-				AppIdentity::APP_ID,
-				SchemaSlugMapInterface::SLUG_TO_CONFIG_KEY[$slug],
-				''
-			);
-
-			if ($registerId === '' || $schemaId === '') {
-				$failed = true;
-				$report[] = [
-					'schema' => $slug,
-					'status' => 'error',
-					'message' => 'This instance has no register or schema configured for that component.',
-				];
-				continue;
-			}
-
-			try {
-				$this->objectService->saveObject(
-					$this->asNewObject(object: $object),
-					[],
-					$registerId,
-					$schemaId,
-					null
-				);
-				$report[] = ['schema' => $slug, 'status' => 'installed', 'message' => ''];
-			} catch (Throwable $e) {
-				$failed = true;
-				$this->logger->error(
-					'Pipelinq store: installing {schema} failed: {error}',
-					['schema' => $slug, 'error' => $e->getMessage()]
-				);
-				$report[] = [
-					'schema' => $slug,
-					'status' => 'error',
-					'message' => 'The component could not be written.',
-				];
-			}//end try
-		}//end foreach
+			$report[] = $row;
+		}
 
 		return ['success' => ($failed === false && $report !== []), 'components' => $report];
 	}//end installComponents()
+
+	/**
+	 * Install one declared component and return its report row.
+	 *
+	 * @param array<string, mixed> $component The declared component.
+	 * @param string $registerId The resolved pipelinq register id.
+	 *
+	 * @return array<string, string> The report row; status `installed` on success.
+	 *
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
+	 */
+	private function installComponent(array $component, string $registerId): array {
+		$slug = (string)($component['schema'] ?? '');
+		$object = ($component['object'] ?? null);
+
+		$refusal = $this->componentRefusal(slug: $slug, object: $object);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		// No null guard on the lookup, and none is needed: every entry in
+		// INSTALLABLE_SLUGS is a key of SLUG_TO_CONFIG_KEY, and phpstan
+		// PROVES it — a slug added to the allowlist with no mapping turns
+		// this back into a nullable read and fails analysis.
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, SchemaSlugMapInterface::SLUG_TO_CONFIG_KEY[$slug], '');
+
+		if ($registerId === '' || $schemaId === '') {
+			$message = 'This instance has no register or schema configured for that component.';
+			return ['schema' => $slug, 'status' => 'error', 'message' => $message];
+		}
+
+		return $this->writeComponent(slug: $slug, object: $object, registerId: $registerId, schemaId: $schemaId);
+	}//end installComponent()
+
+	/**
+	 * The refusal row for a component that may not install, or null when it may.
+	 *
+	 * @param string $slug The component's schema slug.
+	 * @param mixed $object The component's declared object.
+	 *
+	 * @return array<string, string>|null
+	 *
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
+	 */
+	private function componentRefusal(string $slug, mixed $object): array|null {
+		if (in_array($slug, self::INSTALLABLE_SLUGS, true) === false) {
+			return [
+				'schema' => $slug,
+				'status' => 'refused',
+				'message' => 'Only commercial configuration installs from the store; '
+					. 'this component names a record schema.',
+			];
+		}
+
+		if (is_array($object) === false) {
+			return ['schema' => $slug, 'status' => 'refused', 'message' => 'The component declares no object to install.'];
+		}
+
+		return null;
+	}//end componentRefusal()
+
+	/**
+	 * Write one component's object and return its report row.
+	 *
+	 * @param string $slug The component's schema slug.
+	 * @param array<string, mixed> $object The component's object.
+	 * @param string $registerId The register id.
+	 * @param string $schemaId The schema id.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/specs/pipelinq-store-surface/spec.md
+	 */
+	private function writeComponent(string $slug, array $object, string $registerId, string $schemaId): array {
+		try {
+			$this->objectService->saveObject($this->asNewObject(object: $object), [], $registerId, $schemaId, null);
+			return ['schema' => $slug, 'status' => 'installed', 'message' => ''];
+		} catch (Throwable $e) {
+			$this->logger->error('Pipelinq store: installing {schema} failed: {error}', ['schema' => $slug, 'error' => $e->getMessage()]);
+			return ['schema' => $slug, 'status' => 'error', 'message' => 'The component could not be written.'];
+		}//end try
+	}//end writeComponent()
 
 	/**
 	 * Strip every identity the remote payload carries, so an install CREATES.

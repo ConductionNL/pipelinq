@@ -153,12 +153,43 @@ class PointsExpiryBatchJob extends TimedJob {
 			return;
 		}
 
-		$lastActivity = (string)($account['lastActivityDate'] ?? '');
-		$balance = (int)($account['currentBalance'] ?? 0);
-		if ($balance <= 0 || $lastActivity === '') {
+		$expiring = $this->expiringBalance(account: $account);
+		if ($expiring === null) {
 			return;
 		}
 
+		$this->expireOrWarn(account: $account, window: $window, accountId: $accountId, expiring: $expiring);
+	}//end processAccount()
+
+	/**
+	 * An account's last activity and balance, or null when it has no balance or no activity.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return array{0: string, 1: int}|null
+	 */
+	private function expiringBalance(array $account): array|null {
+		$lastActivity = (string)($account['lastActivityDate'] ?? '');
+		$balance = (int)($account['currentBalance'] ?? 0);
+		if ($balance <= 0 || $lastActivity === '') {
+			return null;
+		}
+
+		return [$lastActivity, $balance];
+	}//end expiringBalance()
+
+	/**
+	 * Expire an account's points past the cutoff, or warn its holder past the notice cutoff.
+	 *
+	 * @param array<string, mixed>  $account   The account.
+	 * @param ExpiryWindow          $window    The programme's cutoffs for this run.
+	 * @param string                $accountId The account id.
+	 * @param array{0: string, 1: int} $expiring  The last activity and the balance.
+	 *
+	 * @return void
+	 */
+	private function expireOrWarn(array $account, ExpiryWindow $window, string $accountId, array $expiring): void {
+		[$lastActivity, $balance] = $expiring;
 		if ($lastActivity < $window->cutoff->format('c')) {
 			$this->expire(account: $account, window: $window);
 			return;
@@ -174,7 +205,7 @@ class PointsExpiryBatchJob extends TimedJob {
 				]
 			);
 		}
-	}//end processAccount()
+	}//end expireOrWarn()
 
 	/**
 	 * Expire the whole balance of an inactive account.

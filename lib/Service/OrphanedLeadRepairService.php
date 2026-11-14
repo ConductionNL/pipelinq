@@ -96,35 +96,61 @@ class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 			return $counts;
 		}
 
-		foreach ($this->readAll(register: $register, schema: $leadSchema) as $lead) {
-			$patch = $this->placer->forOrphanedLead(lead: $lead, pipelines: $pipelines);
-			$uuid = (string)($lead['id'] ?? '');
-			if ($patch === [] || $uuid === '') {
-				continue;
-			}
+		return $this->moveOrphans(target: ['register' => $register, 'schema' => $leadSchema], pipelines: $pipelines);
+	}//end repairAsCaller()
 
-			$payload = $lead;
-			unset($payload['@self']);
-			try {
-				$this->objectService->saveObject(
-					object: array_merge($payload, $patch),
-					extend: [],
-					register: $register,
-					schema: $leadSchema,
-					uuid: $uuid,
-				);
-				$counts['moved']++;
-			} catch (Throwable $e) {
-				$counts['failed']++;
-				$this->logger->error(
-					'Pipelinq: could not move a lead off a deleted pipeline',
-					['uuid' => $uuid, 'exception' => $e->getMessage()]
-				);
+	/**
+	 * Move every lead that sits on a deleted pipeline, counting the outcomes.
+	 *
+	 * @param array<string, string>            $target    Keys: register, schema (the lead schema).
+	 * @param array<int, array<string, mixed>> $pipelines The stored pipelines.
+	 *
+	 * @return array{moved: int, failed: int} The counts.
+	 */
+	private function moveOrphans(array $target, array $pipelines): array {
+		$counts = ['moved' => 0, 'failed' => 0];
+		foreach ($this->readAll(register: $target['register'], schema: $target['schema']) as $lead) {
+			$outcome = $this->moveLead(lead: $lead, pipelines: $pipelines, target: $target);
+			if ($outcome !== null) {
+				$counts[$outcome]++;
 			}
-		}//end foreach
+		}
 
 		return $counts;
-	}//end repairAsCaller()
+	}//end moveOrphans()
+
+	/**
+	 * Move one lead off a deleted pipeline.
+	 *
+	 * @param array<string, mixed>             $lead      The lead.
+	 * @param array<int, array<string, mixed>> $pipelines The stored pipelines.
+	 * @param array<string, string>            $target    Keys: register, schema (the lead schema).
+	 *
+	 * @return string|null 'moved' or 'failed', null when the lead needs no move.
+	 */
+	private function moveLead(array $lead, array $pipelines, array $target): string|null {
+		$patch = $this->placer->forOrphanedLead(lead: $lead, pipelines: $pipelines);
+		$uuid = (string)($lead['id'] ?? '');
+		if ($patch === [] || $uuid === '') {
+			return null;
+		}
+
+		$payload = $lead;
+		unset($payload['@self']);
+		try {
+			$this->objectService->saveObject(
+				object: array_merge($payload, $patch),
+				extend: [],
+				register: $target['register'],
+				schema: $target['schema'],
+				uuid: $uuid,
+			);
+			return 'moved';
+		} catch (Throwable $e) {
+			$this->logger->error('Pipelinq: could not move a lead off a deleted pipeline', ['uuid' => $uuid, 'exception' => $e->getMessage()]);
+			return 'failed';
+		}
+	}//end moveLead()
 
 	/**
 	 * Read every object of a schema as plain arrays.
@@ -150,6 +176,17 @@ class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 			return [];
 		}
 
+		return $this->plainRows(rows: $rows);
+	}//end readAll()
+
+	/**
+	 * Rows as plain arrays; a row with no array shape is dropped.
+	 *
+	 * @param iterable<mixed> $rows The rows OpenRegister returned.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function plainRows(iterable $rows): array {
 		$out = [];
 		foreach ($rows as $row) {
 			if (is_array($row) === true) {
@@ -166,5 +203,5 @@ class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 		}
 
 		return $out;
-	}//end readAll()
+	}//end plainRows()
 }//end class

@@ -326,25 +326,51 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportForBelastingdienst(string $fromDate, string $toDate, string $format = 'xml'): array {
+		[$from, $to] = $this->exportRange(fromDate: $fromDate, toDate: $toDate);
+
+		$entries = $this->listEntries(filters: ['from' => $from->format(DateTimeInterface::ATOM), 'to' => $to->format(DateTimeInterface::ATOM)]);
+
+		$manifest = $this->exporter->buildManifest(entries: $entries, fromDate: $from->format('Y-m-d'), toDate: $to->format('Y-m-d'));
+
+		$rendered = $this->renderExport(entries: $entries, manifest: $manifest, format: $format);
+
+		$this->stampExported(entries: $entries);
+
+		$filename = sprintf('kassakoppeling-export-%s-to-%s.%s', $from->format('Y-m-d'), $to->format('Y-m-d'), $rendered['extension']);
+
+		return ['body' => $rendered['body'], 'contentType' => $rendered['contentType'], 'filename' => $filename, 'entryCount' => count($entries)];
+	}//end exportForBelastingdienst()
+
+	/**
+	 * Parse and check an export date range.
+	 *
+	 * @param string $fromDate ISO date YYYY-MM-DD or full ISO 8601.
+	 * @param string $toDate ISO date YYYY-MM-DD or full ISO 8601.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable} The inclusive bounds.
+	 *
+	 * @throws OCSBadRequestException When the date range is malformed.
+	 */
+	private function exportRange(string $fromDate, string $toDate): array {
 		$from = $this->parseDate(value: $fromDate, lower: true);
 		$to = $this->parseDate(value: $toDate, lower: false);
 		if ($from === null || $to === null || $from > $to) {
 			throw new OCSBadRequestException('Ongeldige datum range voor de Belastingdienst export.');
 		}
 
-		$entries = $this->listEntries(
-			filters: [
-				'from' => $from->format(DateTimeInterface::ATOM),
-				'to' => $to->format(DateTimeInterface::ATOM),
-			]
-		);
+		return [$from, $to];
+	}//end exportRange()
 
-		$manifest = $this->exporter->buildManifest(
-			entries: $entries,
-			fromDate: $from->format('Y-m-d'),
-			toDate: $to->format('Y-m-d')
-		);
-
+	/**
+	 * Render the export pack as XML, or JSON when asked.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The exported entries.
+	 * @param array<string, mixed> $manifest The export manifest.
+	 * @param string $format `xml` or `json`.
+	 *
+	 * @return array{body: string, contentType: string, extension: string}
+	 */
+	private function renderExport(array $entries, array $manifest, string $format): array {
 		$normalizedFormat = strtolower($format);
 		$body = $this->exporter->exportAsXml(entries: $entries, manifest: $manifest);
 		$contentType = 'application/xml';
@@ -355,6 +381,17 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 			$extension = 'json';
 		}
 
+		return ['body' => $body, 'contentType' => $contentType, 'extension' => $extension];
+	}//end renderExport()
+
+	/**
+	 * Stamp `exportedAt` on every exported entry that has none yet.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The exported entries.
+	 *
+	 * @return void
+	 */
+	private function stampExported(array $entries): void {
 		$stamp = $this->now();
 		foreach ($entries as $entry) {
 			if (($entry['exportedAt'] ?? null) !== null) {
@@ -362,35 +399,32 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 			}
 
 			$entry['exportedAt'] = $stamp;
-			$entryId = (string)($entry['id'] ?? $entry['uuid'] ?? '');
-			if ($entryId === '') {
-				continue;
-			}
+			$this->saveExportStamp(entry: $entry);
+		}
+	}//end stampExported()
 
-			try {
-				$this->saveEntry(id: $entryId, object: $entry);
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: kassakoppeling exportedAt stamp failed (export still served)',
-					['id' => $entryId, 'exception' => $e->getMessage()]
-				);
-			}
+	/**
+	 * Save one stamped entry; a failed save is logged and the export still served.
+	 *
+	 * @param array<string, mixed> $entry The stamped entry.
+	 *
+	 * @return void
+	 */
+	private function saveExportStamp(array $entry): void {
+		$entryId = (string)($entry['id'] ?? $entry['uuid'] ?? '');
+		if ($entryId === '') {
+			return;
 		}
 
-		$filename = sprintf(
-			'kassakoppeling-export-%s-to-%s.%s',
-			$from->format('Y-m-d'),
-			$to->format('Y-m-d'),
-			$extension
-		);
-
-		return [
-			'body' => $body,
-			'contentType' => $contentType,
-			'filename' => $filename,
-			'entryCount' => count($entries),
-		];
-	}//end exportForBelastingdienst()
+		try {
+			$this->saveEntry(id: $entryId, object: $entry);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: kassakoppeling exportedAt stamp failed (export still served)',
+				['id' => $entryId, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end saveExportStamp()
 
 	/**
 	 * Fetch the latest entry for a register (used to chain a new entry).
@@ -454,17 +488,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 	 * @return array<string, mixed> The sanitised entry.
 	 */
 	private function sanitiseInput(array $data): array {
-		$allowed = [
-			'operatorId',
-			'registerNumber',
-			'action',
-			'amount',
-			'itemCount',
-			'taxAmount',
-			'timestamp',
-			'transactionUuid',
-			'description',
-		];
+		$allowed = ['operatorId', 'registerNumber', 'action', 'amount', 'itemCount', 'taxAmount', 'timestamp', 'transactionUuid', 'description'];
 
 		$entry = [];
 		foreach ($allowed as $key) {
@@ -477,6 +501,17 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 			$entry['timestamp'] = $this->now();
 		}
 
+		return $this->castCounts(entry: $entry);
+	}//end sanitiseInput()
+
+	/**
+	 * Cast the present amount, itemCount and taxAmount fields to integers.
+	 *
+	 * @param array<string, mixed> $entry The sanitised entry.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function castCounts(array $entry): array {
 		if (isset($entry['amount']) === true) {
 			$entry['amount'] = (int)$entry['amount'];
 		}
@@ -490,7 +525,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 		}
 
 		return $entry;
-	}//end sanitiseInput()
+	}//end castCounts()
 
 	/**
 	 * Validate a sanitised entry before signing.
@@ -525,45 +560,82 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 	 * @param array<string, mixed> $filters The whitelisted filters.
 	 *
 	 * @return array<int, array<string, mixed>> The filtered entries.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat sequence of independent whitelist filters; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Flat sequence of independent whitelist filters; extraction adds no clarity.
 	 */
 	private function applyFilters(array $entries, array $filters): array {
-		$register = (string)($filters['registerNumber'] ?? '');
-		$operator = (string)($filters['operatorId'] ?? '');
-		$action = (string)($filters['action'] ?? '');
-		$from = (string)($filters['from'] ?? '');
-		$to = (string)($filters['to'] ?? '');
+		$criteria = [];
+		foreach (['registerNumber', 'operatorId', 'action', 'from', 'to'] as $key) {
+			$criteria[$key] = (string)($filters[$key] ?? '');
+		}
 
 		$kept = [];
 		foreach ($entries as $entry) {
-			if ($register !== '' && (string)($entry['registerNumber'] ?? '') !== $register) {
-				continue;
+			if ($this->matchesFilters(entry: $entry, criteria: $criteria) === true) {
+				$kept[] = $entry;
 			}
-
-			if ($operator !== '' && stripos((string)($entry['operatorId'] ?? ''), $operator) === false) {
-				continue;
-			}
-
-			if ($action !== '' && (string)($entry['action'] ?? '') !== $action) {
-				continue;
-			}
-
-			$timestamp = (string)($entry['timestamp'] ?? '');
-			if ($from !== '' && $timestamp !== '' && strcmp($timestamp, $from) < 0) {
-				continue;
-			}
-
-			if ($to !== '' && $timestamp !== '' && strcmp($timestamp, $to) > 0) {
-				continue;
-			}
-
-			$kept[] = $entry;
-		}//end foreach
+		}
 
 		return $kept;
 	}//end applyFilters()
+
+	/**
+	 * Whether an entry passes the register, operator, action and date filters.
+	 *
+	 * @param array<string, mixed> $entry The entry.
+	 * @param array<string, string> $criteria The filter values ('' = no filter).
+	 *
+	 * @return bool
+	 */
+	private function matchesFilters(array $entry, array $criteria): bool {
+		return $this->matchesExact(entry: $entry, criteria: $criteria, key: 'registerNumber') === true
+			&& $this->matchesOperator(entry: $entry, operator: $criteria['operatorId']) === true
+			&& $this->matchesExact(entry: $entry, criteria: $criteria, key: 'action') === true
+			&& $this->matchesWindow(timestamp: (string)($entry['timestamp'] ?? ''), criteria: $criteria) === true;
+	}//end matchesFilters()
+
+	/**
+	 * Whether an entry's field equals the filter value (or the filter is empty).
+	 *
+	 * @param array<string, mixed> $entry The entry.
+	 * @param array<string, string> $criteria The filter values.
+	 * @param string $key The field and filter key.
+	 *
+	 * @return bool
+	 */
+	private function matchesExact(array $entry, array $criteria, string $key): bool {
+		return $criteria[$key] === '' || (string)($entry[$key] ?? '') === $criteria[$key];
+	}//end matchesExact()
+
+	/**
+	 * Whether an entry's operator holds the operator filter (or the filter is empty).
+	 *
+	 * @param array<string, mixed> $entry The entry.
+	 * @param string $operator The operator filter.
+	 *
+	 * @return bool
+	 */
+	private function matchesOperator(array $entry, string $operator): bool {
+		return $operator === '' || stripos((string)($entry['operatorId'] ?? ''), $operator) !== false;
+	}//end matchesOperator()
+
+	/**
+	 * Whether a timestamp lies within the from/to filters (an empty timestamp always does).
+	 *
+	 * @param string $timestamp The entry timestamp.
+	 * @param array<string, string> $criteria The filter values.
+	 *
+	 * @return bool
+	 */
+	private function matchesWindow(string $timestamp, array $criteria): bool {
+		if ($timestamp === '') {
+			return true;
+		}
+
+		if ($criteria['from'] !== '' && strcmp($timestamp, $criteria['from']) < 0) {
+			return false;
+		}
+
+		return $criteria['to'] === '' || strcmp($timestamp, $criteria['to']) <= 0;
+	}//end matchesWindow()
 
 	/**
 	 * Whether an entry matches the verification, export and search filters.

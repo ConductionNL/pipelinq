@@ -244,22 +244,12 @@ class CtiDispositionService {
 		string $interactionId,
 		?string $groupId = null,
 	): ?string {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
-		if ($register === '' || $taskSchema === '') {
-			$this->logger->warning('CTI disposition: task register/schema not configured -- skipping task creation.');
+		$target = $this->taskTarget();
+		if ($target === null) {
 			return null;
 		}
 
-		// Availability established before the reach (ADR-083) — the lookup names
-		// OpenRegister only as a string, so without this the dependency is
-		// declared nowhere a reader or a gate can see it. This method already
-		// returns null when it cannot record a disposition, so the absent case
-		// takes that path. Converting to a typed constructor property is the
-		// ADR's preferred shape: pipelinq#1160.
-		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
-			return null;
-		}
+		[$register, $taskSchema] = $target;
 
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
@@ -280,6 +270,32 @@ class CtiDispositionService {
 			return null;
 		}//end try
 	}//end createTask()
+
+	/**
+	 * The register and task schema to create tasks in, or null when tasks cannot be created.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function taskTarget(): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
+		if ($register === '' || $taskSchema === '') {
+			$this->logger->warning('CTI disposition: task register/schema not configured -- skipping task creation.');
+			return null;
+		}
+
+		// Availability established before the reach (ADR-083) — the lookup names
+		// OpenRegister only as a string, so without this the dependency is
+		// declared nowhere a reader or a gate can see it. This method already
+		// returns null when it cannot record a disposition, so the absent case
+		// takes that path. Converting to a typed constructor property is the
+		// ADR's preferred shape: pipelinq#1160.
+		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
+			return null;
+		}
+
+		return [$register, $taskSchema];
+	}//end taskTarget()
 
 	/**
 	 * The task payload; fields without a value (no group, empty notes) are left out.

@@ -147,57 +147,95 @@ class MailboxResolver {
 	 * @return array|null The cached row or null when expired/absent.
 	 */
 	private function lookupCache(string $bsnHash): ?array {
-		[$register, $schema] = $this->config();
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'bsnHash' => $bsnHash,
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'MailboxResolver cache lookup failed.',
-				['exception' => $e->getMessage()]
-			);
+		$rows = $this->findCacheRows(bsnHash: $bsnHash);
+		if ($rows === null) {
 			return null;
 		}
 
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		foreach ($rows as $row) {
-			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
+			$hit = $this->freshCacheHit(row: $row, now: $now, bsnHash: $bsnHash);
+			if ($hit !== null) {
+				return $hit;
 			}
-
-			$expiresAt = $data['expiresAt'] ?? null;
-			if (is_string($expiresAt) === false) {
-				continue;
-			}
-
-			try {
-				$expires = new DateTimeImmutable($expiresAt);
-			} catch (\Throwable) {
-				continue;
-			}
-
-			if ($expires > $now) {
-				return [
-					'mailboxAvailable' => (bool)($data['mailboxAvailable'] ?? false),
-					'optedOut' => (bool)($data['optedOut'] ?? false),
-					'resolvedAt' => (string)($data['resolvedAt'] ?? $now->format(DATE_ATOM)),
-					'expiresAt' => $expiresAt,
-					'bsnHash' => $bsnHash,
-					'source' => 'cache',
-				];
-			}
-		}//end foreach
+		}
 
 		return null;
 	}//end lookupCache()
+
+	/**
+	 * Find the cached rows for a bsnHash, or null when the lookup fails.
+	 *
+	 * @param string $bsnHash The HMAC of the BSN.
+	 *
+	 * @return iterable<mixed>|null
+	 */
+	private function findCacheRows(string $bsnHash): iterable|null {
+		[$register, $schema] = $this->config();
+		try {
+			return $this->getObjectService()->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema, 'bsnHash' => $bsnHash]]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('MailboxResolver cache lookup failed.', ['exception' => $e->getMessage()]);
+			return null;
+		}
+	}//end findCacheRows()
+
+	/**
+	 * The resolution a cached row holds while it has not expired, else null.
+	 *
+	 * @param mixed             $row     The cached row.
+	 * @param DateTimeImmutable $now     The current time.
+	 * @param string            $bsnHash The HMAC of the BSN.
+	 *
+	 * @return array|null
+	 */
+	private function freshCacheHit(mixed $row, DateTimeImmutable $now, string $bsnHash): array|null {
+		$data = $this->toArray(object: $row);
+		if ($data === null) {
+			return null;
+		}
+
+		$expiresAt = $this->unexpiredAt(data: $data, now: $now);
+		if ($expiresAt === null) {
+			return null;
+		}
+
+		return [
+			'mailboxAvailable' => (bool)($data['mailboxAvailable'] ?? false),
+			'optedOut' => (bool)($data['optedOut'] ?? false),
+			'resolvedAt' => (string)($data['resolvedAt'] ?? $now->format(DATE_ATOM)),
+			'expiresAt' => $expiresAt,
+			'bsnHash' => $bsnHash,
+			'source' => 'cache',
+		];
+	}//end freshCacheHit()
+
+	/**
+	 * A cached row's expiresAt when it lies in the future, else null.
+	 *
+	 * @param array             $data The cached row.
+	 * @param DateTimeImmutable $now  The current time.
+	 *
+	 * @return string|null
+	 */
+	private function unexpiredAt(array $data, DateTimeImmutable $now): string|null {
+		$expiresAt = $data['expiresAt'] ?? null;
+		if (is_string($expiresAt) === false) {
+			return null;
+		}
+
+		try {
+			$expires = new DateTimeImmutable($expiresAt);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		if ($expires > $now) {
+			return $expiresAt;
+		}
+
+		return null;
+	}//end unexpiredAt()
 
 	/**
 	 * Persist (or upsert) a cache row.
