@@ -2007,6 +2007,10 @@
 						"route": "ClientDetail"
 					}
 				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "At risk", "filter": { "churnRisk.level": ["high", "medium"] }, "sort": { "key": "churnRisk.score", "order": "desc" } }
+				],
 				"columns": [
 					"name",
 					"type",
@@ -2029,6 +2033,12 @@
 							}
 						},
 						"widget": "badge"
+					},
+					{
+						"key": "churnRisk.level",
+						"label": "Risk",
+						"widget": "badge",
+						"widgetProps": { "colorMap": { "high": "error", "medium": "warning", "low": "success" } }
 					}
 				],
 				"sidebar": {
@@ -2059,6 +2069,7 @@
 				"recordLastChange": true,
 				"register": "pipelinq",
 				"schema": "client",
+				"_linkedTypesNote": "Every entry of the client schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Mounted as leaves: email, talk. Mounted another way: `xwiki` is the Knowledge base sidebar tab and `planninq-projects` is the client-projects list in the Sales tab. Not mounted on purpose: `flow` and `time-tracker` (as on every CRM page), `calendar` (the client page's calendar belongs to calendar-deepening) and `forms` (intake forms belong to the deal and are a tab of LeadDetail).",
 				"readOnlyWhen": { "field": "mergedInto", "op": "notEmpty" },
 				"fieldOverrides": {
 					"industry": {
@@ -2609,6 +2620,13 @@
 						"integrationId": "files",
 						"title": "Files",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "client-talk",
+						"type": "integration",
+						"integrationId": "talk",
+						"title": "Client room",
+						"icon": "Forum"
 					},
 					{
 						"id": "client-person-card",
@@ -3630,6 +3648,11 @@
 									"label": "Documents"
 								},
 								{
+									"widgetId": "client-talk",
+									"label": "Client room",
+									"countFrom": "widget"
+								},
+								{
 									"widgetId": "client-history",
 									"label": "History"
 								}
@@ -3682,6 +3705,28 @@
 						"props": {
 							"clientId": "@objectId",
 							"inline": true
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "client-risk",
+						"component": "ClientRiskSection",
+						"title": "Risk",
+						"placement": "end",
+						"props": {
+							"risk": "@object.churnRisk"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "client-history-summary",
+						"component": "ClientHistorySummarySection",
+						"title": "History summary",
+						"placement": "end",
+						"props": {
+							"clientId": "@objectId"
 						},
 						"colSpan": 6,
 						"card": true
@@ -4372,6 +4417,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "ticket",
+				"_linkedTypesNote": "Every entry of the ticket schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Deferred until the ticket board workflow is settled: `deck` and `forms`, and the comms leaves `email` and `calendar`, which this page does not mount either. Not mounted on purpose: `flow` and `time-tracker` (as on every CRM page) and `xwiki` (the knowledge base is mounted app-level on xwiki-knowledge).",
 				"headerActions": [
 					{
 						"id": "link-to-client",
@@ -5476,8 +5522,9 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"_linkedTypesNote": "Every entry of the lead schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Mounted as tabs: email, calendar, deck, talk, forms. Not mounted on purpose: `flow` (the flow runs show in the Overview list, not as a leaf), `time-tracker` (no time registration on a deal) and `xwiki` (the knowledge base is mounted app-level on the knowledge page, xwiki-knowledge).",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
+				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). The sidebar stays audit-only: the Talk, Deck and Forms leaves are tabs of the body strip (Deal room, Board, Intake forms; leaf-integration-broadening), and the leaves this page does not mount are named in _linkedTypesNote. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -5585,6 +5632,21 @@
 											"lead": "@objectId"
 										}
 									}
+								},
+								{
+									"label": "Deal room",
+									"widgetId": "lead-talk",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Board",
+									"widgetId": "lead-deck",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Intake forms",
+									"widgetId": "lead-forms",
+									"countFrom": "widget"
 								},
 								{
 									"label": "History",
@@ -5971,6 +6033,27 @@
 						"icon": "Gavel"
 					},
 					{
+						"id": "lead-talk",
+						"type": "integration",
+						"integrationId": "talk",
+						"title": "Deal room",
+						"icon": "Forum"
+					},
+					{
+						"id": "lead-deck",
+						"type": "integration",
+						"integrationId": "deck",
+						"title": "Board",
+						"icon": "BulletinBoard"
+					},
+					{
+						"id": "lead-forms",
+						"type": "integration",
+						"integrationId": "forms",
+						"title": "Intake forms",
+						"icon": "FormSelect"
+					},
+					{
 						"id": "lead-history",
 						"type": "audit-trail",
 						"title": "History",
@@ -6038,6 +6121,19 @@
 								}
 							},
 							"emptyText": "No client linked to this lead yet"
+						}
+					},
+					{
+						"id": "side-assignment",
+						"type": "facts",
+						"title": "Why this owner",
+						"icon": "AccountArrowRight",
+						"_note": "pipeline-lead-rotation (REQ-LRT-001/002): why lead rotation gave this lead its owner, or that it found nobody eligible. Only shown when rotation wrote a reason; the suggested colleagues below it help to pick someone by hand.",
+						"visibleWhen": { "field": "assignmentReason", "op": "notEmpty" },
+						"content": {
+							"fields": [
+								{ "as": "line", "template": "{assignmentReason}" }
+							]
 						}
 					},
 					{
@@ -6141,6 +6237,7 @@
 				],
 				"sideColumn": [
 					"side-client",
+					"side-assignment",
 					"side-suggested",
 					"side-win-chance",
 					"side-next-step",
@@ -10139,7 +10236,7 @@
 			"route": "/my-work",
 			"type": "dashboard",
 			"title": "My work",
-			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. The \"Your week so far\" tiles read GET /api/my-work/week-stats (REQ-MW-090). Not here: the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
 				"showWidgetActions": false,
@@ -10370,40 +10467,36 @@
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
+						"_note": "REQ-MW-090: the four figures of the user's own tickets this calendar week, computed server side (GET /api/my-work/week-stats). No visibleWhen: a lens describes the list, not the week, so the tiles stay when the list narrows. A figure without data reads as a dash, never 0. The team figure under Within the deadline comes with the team scope (REQ-MW-180).",
 						"content": {
 							"layout": "grid",
 							"columns": 2,
 							"stats": [
 								{
 									"label": "Answered",
-									"caption": "this week",
+									"caption": "{answeredToday} today",
 									"format": {
 										"style": "number",
 										"decimals": 0
 									},
-									"source": {
-										"register": "pipelinq",
-										"schema": "ticket",
-										"metric": "count",
-										"filter": {
-											"assignee": "@me",
-											"status": {
-												"in": [
-													"resolved",
-													"completed"
-												]
-											},
-											"resolvedAt[gte]": "@today-7d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "answered"
+								},
+								{
+									"label": "Within the deadline",
+									"caption": "of the answered tickets with a deadline",
+									"format": {
+										"style": "number",
+										"decimals": 0,
+										"suffix": "%"
+									},
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "withinDeadline",
+									"emptyText": "–"
 								},
 								{
 									"label": "Average answer time",
@@ -10413,42 +10506,23 @@
 										"decimals": 1,
 										"suffix": " days"
 									},
-									"source": {
-										"kind": "elapsed",
-										"register": "pipelinq",
-										"schema": "ticket",
-										"from": "occurredAt",
-										"to": "resolvedAt",
-										"unit": "days",
-										"filter": {
-											"assignee": "@me",
-											"status": {
-												"in": [
-													"resolved",
-													"completed"
-												]
-											},
-											"resolvedAt[gte]": "@today-30d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "averageAnswerDays",
+									"emptyText": "–"
 								},
 								{
-									"label": "Turned into a case",
-									"caption": "converted in 7 days",
+									"label": "Converted to a case",
+									"caption": "this week",
 									"format": {
 										"style": "number",
 										"decimals": 0
 									},
-									"source": {
-										"register": "pipelinq",
-										"schema": "ticket",
-										"metric": "count",
-										"filter": {
-											"assignee": "@me",
-											"status": "converted",
-											"resolvedAt[gte]": "@today-7d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "converted"
 								}
 							]
 						}

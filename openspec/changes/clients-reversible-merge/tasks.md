@@ -14,8 +14,9 @@
 - [x] 2.2 Guard test listing every property that references `client` or `contact` across `lib/Settings` and failing when the listener's list misses one
   - Verify: the test fails when a fixture adds `invoice.client`, passes on the real register
   - done: `tests/Unit/Service/Merge/PartyReferencesRegisterTest.php`, by property name and by `$ref`; it found `salesQuote.client`, `posTransaction.customer` and `relationship.from/toContact`, which the design's list lacked.
-- [ ] 2.3 Keep the merged-away Nextcloud contact during the window and relink it on reversal
+- [x] 2.3 Keep the merged-away Nextcloud contact during the window and relink it on reversal
   - Verify: PHPUnit on the contact handling
+  - done: `lib/Service/Merge/MergedAwayCard.php`, called by `ClientMergeReferenceListener`. Nothing deletes the card; on a merge one note line `[merged-into:<uuid>] Merged into <name>` is written to the card, on a reversal it is taken off again. OpenRegister keeps the merged-away record's data (only its status changes) and restores it on reversal, so its `contactsUid` still names that card. A card in a read-only address book, or one that cannot be written, is logged and never stops the merge. `tests/Unit/Service/Merge/MergedAwayCardTest.php`, `tests/Unit/Listener/ClientMergeReferenceListenerTest.php`.
 
 ## 3. Screens
 
