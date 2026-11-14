@@ -104,12 +104,6 @@
 			appId="pipelinq" />
 
 
-		<!-- BRP lookups and the mTLS certificate (bsn-validatie-en-brp-lookup). -->
-		<CnSettingsFieldsSection
-			v-if="isAdmin"
-			v-bind="sections.brpMonitor"
-			appId="pipelinq" />
-
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">

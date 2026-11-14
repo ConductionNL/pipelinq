@@ -48,7 +48,6 @@ use OCA\Pipelinq\Service\PersonLookup\PersonFetch;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
-use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
@@ -739,54 +738,6 @@ class BrpController extends Controller {
 			$status
 		);
 	}//end mutationWebhook()
-
-	/**
-	 * GET /api/brp/monitor — return the latest BrpMonitorJob report + cert health.
-	 *
-	 * Admin-only: regular users would learn sensitive operational metrics.
-	 *
-	 * @return JSONResponse
-	 *
-	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-010
-	 */
-	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
-	public function monitor(): JSONResponse {
-		// AuthorizedAdminSetting middleware already enforces admin membership;
-		// we still load the user for logging context.
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
-		return new JSONResponse(
-			[
-				'report' => $this->storedJsonObject(key: 'brp.monitor_report'),
-				'cert' => $this->storedJsonObject(key: 'brp.cert_health'),
-			],
-			Http::STATUS_OK
-		);
-	}//end monitor()
-
-	/**
-	 * A JSON object kept in app config; null when unset or not an object.
-	 *
-	 * @param string $key The app-config key.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function storedJsonObject(string $key): ?array {
-		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($raw === '') {
-			return null;
-		}
-
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return null;
-		}
-
-		return $decoded;
-	}//end storedJsonObject()
 
 	/**
 	 * Determine the actor's role for BRP lookups.

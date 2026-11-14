@@ -29,6 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
+use OCA\Pipelinq\Service\Marketing\ListQueryWhereCapability;
+use OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -159,6 +161,8 @@ class SegmentService implements SegmentServiceInterface {
 	 * @param LoggerInterface $logger Logger.
 	 * @param SegmentSignalService $signals The derived fields a rule may also use.
 	 * @param SegmentRuleTree $ruleTree Reads stored rules as one group tree and measures its depth.
+	 * @param ListQueryWhereCapability|null $whereCapability Whether OpenRegister takes `_where`; without it every row is loaded.
+	 * @param SegmentQueryCompiler $compiler Compiles the rules into the `_where` that narrows the rows loaded.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 */
@@ -170,6 +174,8 @@ class SegmentService implements SegmentServiceInterface {
 		private LoggerInterface $logger,
 		private SegmentSignalService $signals,
 		private SegmentRuleTree $ruleTree = new SegmentRuleTree(),
+		private ?ListQueryWhereCapability $whereCapability = null,
+		private SegmentQueryCompiler $compiler = new SegmentQueryCompiler(),
 	) {
 	}//end __construct()
 
@@ -303,18 +309,10 @@ class SegmentService implements SegmentServiceInterface {
 			];
 		}
 
-		$count = 0;
-		$entities = $this->loadEntitiesForType(entityType: $entityType);
-		foreach ($entities as $entity) {
-			if ($this->evaluateRules(rules: $rules, entity: $entity) === true) {
-				$count++;
-			}
-		}
-
 		return [
 			'valid' => true,
 			'error' => null,
-			'estimatedSize' => $count,
+			'estimatedSize' => $this->countMatchingEntities(rules: $rules, entityType: $entityType),
 		];
 	}//end previewRulePayload()
 
@@ -359,7 +357,7 @@ class SegmentService implements SegmentServiceInterface {
 	 */
 	private function matchingMembers(array $rules, string $entityType): array {
 		$members = [];
-		foreach ($this->loadEntitiesForType(entityType: $entityType) as $entity) {
+		foreach ($this->loadEntitiesForType(entityType: $entityType, rules: $rules) as $entity) {
 			if ($this->evaluateRules(rules: $rules, entity: $entity) !== true) {
 				continue;
 			}
@@ -1077,7 +1075,7 @@ class SegmentService implements SegmentServiceInterface {
 	 */
 	private function countMatchingEntities(array $rules, string $entityType): int {
 		$count = 0;
-		$entities = $this->loadEntitiesForType(entityType: $entityType);
+		$entities = $this->loadEntitiesForType(entityType: $entityType, rules: $rules);
 		foreach ($entities as $entity) {
 			if ($this->evaluateRules(rules: $rules, entity: $entity) === true) {
 				$count++;
@@ -2380,19 +2378,23 @@ class SegmentService implements SegmentServiceInterface {
 	}//end loadSegment()
 
 	/**
-	 * Load every entity of the given type for in-memory rule evaluation.
+	 * Load the entities of a type that the rules may match, for evaluation in PHP.
 	 *
-	 * Intentionally returns ALL matching objects (no filters) — the
-	 * SegmentService does the predicate evaluation in PHP since
-	 * OpenRegister's filter DSL does not natively express AND/OR rule
-	 * trees. Member-09 tests will pin the upper bound on the seed
-	 * dataset.
+	 * When OpenRegister takes `_where` (design D4), the rules are compiled
+	 * into a condition group that holds at least every matching row, and
+	 * only those rows are loaded; the caller still evaluates the whole tree,
+	 * so the result is the same as over every row. Otherwise, when nothing
+	 * compiles, or when the narrowed read fails, every row is loaded as
+	 * before.
 	 *
-	 * @param string $entityType "contact" or "customer".
+	 * @param string                    $entityType "contact" or "customer".
+	 * @param array<string, mixed>|null $rules      The rules the rows will be checked against, or null for all rows.
 	 *
 	 * @return array<int, array<string, mixed>> Entity payloads.
+	 *
+	 * @spec openspec/changes/segment-groups-its-rules/design.md
 	 */
-	private function loadEntitiesForType(string $entityType): array {
+	private function loadEntitiesForType(string $entityType, ?array $rules = null): array {
 		$register = $this->getRegisterSlug();
 		$schema = $this->resolveSchemaSlug(entityType: $entityType);
 		if ($register === '' || $schema === '') {
@@ -2404,15 +2406,21 @@ class SegmentService implements SegmentServiceInterface {
 			return [];
 		}
 
+		$config = ['filters' => ['register' => $register, 'schema' => $schema]];
+		$where = $this->narrowingWhere(rules: $rules, entityType: $entityType);
+		if ($where !== null) {
+			try {
+				return $this->entityRows(rows: $objectService->findAll(config: ($config + ['where' => $where])));
+			} catch (Throwable $e) {
+				$this->logger->warning(
+					'SegmentService.loadEntitiesForType: the narrowed read failed, loading every row',
+					['entityType' => $entityType, 'exception' => $e->getMessage()]
+				);
+			}
+		}
+
 		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$rows = $objectService->findAll(config: $config);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SegmentService.loadEntitiesForType: findAll failed',
@@ -2421,13 +2429,52 @@ class SegmentService implements SegmentServiceInterface {
 			return [];
 		}
 
+		return $this->entityRows(rows: $rows);
+	}//end loadEntitiesForType()
+
+	/**
+	 * The `_where` that narrows the rows read for these rules, or null to read every row.
+	 *
+	 * Only the schema's own string, integer and number properties are sent;
+	 * a derived signal is never a stored column.
+	 *
+	 * @param array<string, mixed>|null $rules      The rules.
+	 * @param string                    $entityType The entity type.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/segment-groups-its-rules/design.md
+	 */
+	private function narrowingWhere(?array $rules, string $entityType): ?array {
+		if ($rules === null || $this->whereCapability === null || $this->whereCapability->isAvailable() === false) {
+			return null;
+		}
+
+		$types = [];
+		foreach (($this->resolveSchemaProperties(entityType: $entityType) ?? []) as $name => $property) {
+			if (is_string($name) === true && $this->signals->isSignalField(field: $name) === false) {
+				$types[$name] = $this->propertyType(property: $property);
+			}
+		}
+
+		return $this->compiler->where(rules: $rules, types: $types);
+	}//end narrowingWhere()
+
+	/**
+	 * Rows from OpenRegister as plain payloads.
+	 *
+	 * @param mixed $rows What findAll() answered.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function entityRows(mixed $rows): array {
 		$entities = [];
 		foreach (($rows ?? []) as $row) {
 			$entities[] = $this->toArray(value: $row);
 		}
 
 		return $entities;
-	}//end loadEntitiesForType()
+	}//end entityRows()
 
 	/**
 	 * Resolve the Segment schema slug from app config.
