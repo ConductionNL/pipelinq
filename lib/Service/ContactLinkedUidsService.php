@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -58,7 +58,7 @@ class ContactLinkedUidsService {
 	public function getLinkedContactsUids(): array {
 		$uids = [];
 		$objectService = $this->getObjectService();
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
 		// Fail closed on an unconfigured register. getLinkedUidsForType() below
 		// already refuses on '', so this returns the same empty result; stating
@@ -93,7 +93,7 @@ class ContactLinkedUidsService {
 	 * @return array The linked UIDs for this type.
 	 */
 	private function getLinkedUidsForType(object $objectService, string $registerId, string $type): array {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$type}_schema", '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$type}_schema", '');
 		if ($registerId === '' || $schemaId === '') {
 			return [];
 		}

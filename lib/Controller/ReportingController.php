@@ -30,9 +30,9 @@ namespace OCA\Pipelinq\Controller;
 
 use DateInterval;
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ReportingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -55,15 +55,15 @@ class ReportingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ReportingService $reportingService The reporting service.
+	 * @param ReportingServiceInterface $reportingService The reporting service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ReportingService $reportingService,
+		private ReportingServiceInterface $reportingService,
 		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -182,7 +182,7 @@ class ReportingController extends Controller {
 	 *
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function updateSla(): JSONResponse {
 		try {
 			return $this->savedSlaTargets(targets: $this->request->getParam('targets', []));
@@ -258,13 +258,19 @@ class ReportingController extends Controller {
 	}//end rejectedChannelTargets()
 
 	/**
-	 * Export reporting data as CSV.
+	 * Export the reporting dashboard's figures as CSV.
+	 *
+	 * The same figures the dashboard shows for the period (the KPIs, the
+	 * contacts per channel and the per-agent metrics), one figure per row
+	 * under the header Section;Item;Metric;Value, semicolon-separated and
+	 * UTF-8 with a BOM so Excel opens it with its characters intact.
 	 *
 	 * @return DataDownloadResponse|JSONResponse The CSV download or error.
 	 *
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+	 * @spec openspec/changes/wire-rapportage-csv-export/tasks.md#2-build-the-export-table
 	 */
 	public function exportCsv(): DataDownloadResponse|JSONResponse {
 		// Reporting aggregates across the customer base — a CRM capability.
@@ -273,13 +279,65 @@ class ReportingController extends Controller {
 			return $refusal;
 		}
 
-		// CSV export requires OpenRegister data integration.
-		// Returning 501 until OR contactmoment retrieval is wired.
-		return new JSONResponse(
-			['message' => 'Export not yet implemented'],
-			Http::STATUS_NOT_IMPLEMENTED,
+		$period = $this->validatedPeriod();
+		if ($period instanceof JSONResponse) {
+			return $period;
+		}
+
+		[$from, $to] = $period;
+		try {
+			$csv = $this->reportingService->generateCsv(
+				headers: ['Section', 'Item', 'Metric', 'Value'],
+				rows: $this->exportRows(from: $from, to: $to)
+			);
+		} catch (\Throwable) {
+			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		return new DataDownloadResponse(
+			data: $csv,
+			filename: sprintf('rapportage-%s-%s.csv', $this->dayOf(date: $from), $this->dayOf(date: $to)),
+			contentType: 'text/csv; charset=UTF-8'
 		);
 	}//end exportCsv()
+
+	/**
+	 * The export's rows: the KPIs, then the contacts per channel, then each agent's metrics.
+	 *
+	 * @param string $from The period's start.
+	 * @param string $to   The period's end.
+	 *
+	 * @return array<int, array<int, string>> The rows: section, item, metric, value.
+	 */
+	private function exportRows(string $from, string $to): array {
+		$rows = [];
+		foreach ($this->reportingService->getKpis($from, $to) as $metric => $value) {
+			$rows[] = ['kpi', '', (string)$metric, (string)$value];
+		}
+
+		foreach ($this->reportingService->getChannelDistribution($from, $to) as $channel => $count) {
+			$rows[] = ['channel', (string)$channel, 'count', (string)$count];
+		}
+
+		foreach ($this->reportingService->getAgentPerformance($from, $to) as $agent => $metrics) {
+			foreach ($metrics as $metric => $value) {
+				$rows[] = ['agent', (string)$agent, (string)$metric, (string)$value];
+			}
+		}
+
+		return $rows;
+	}//end exportRows()
+
+	/**
+	 * The calendar day of a validated date, for the file name.
+	 *
+	 * @param string $date The date or datetime.
+	 *
+	 * @return string The day as YYYY-MM-DD.
+	 */
+	private function dayOf(string $date): string {
+		return (new DateTimeImmutable($date))->format('Y-m-d');
+	}//end dayOf()
 
 	/**
 	 * Resolve an explicit (from, to) pair, defaulting from a relative `period`

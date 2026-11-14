@@ -28,7 +28,8 @@ namespace OCA\Pipelinq\Service\SearchConsole;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SearchQueryReportServiceInterface;
 use OCA\Pipelinq\Service\ObjectPageReader;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -42,7 +43,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
-class SearchQueryReportService {
+class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	use SerialisedToArray;
 
 	/**
@@ -269,9 +270,9 @@ class SearchQueryReportService {
 			return [];
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'pipelinq');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq');
 		$schemaKey = (SearchConsoleImportService::SCHEMA . '_schema');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, SearchConsoleImportService::SCHEMA);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, SearchConsoleImportService::SCHEMA);
 		$dayAfter = (new DateTimeImmutable($to, new DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d');
 		$filters = ['register' => $register, 'schema' => $schema, 'date' => ['gte' => $from, 'lt' => $dayAfter]];
 		if ($property !== null && trim($property) !== '') {

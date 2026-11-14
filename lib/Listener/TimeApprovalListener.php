@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
-use OCA\Pipelinq\Service\ShillinqWipService;
-use OCA\Pipelinq\Service\WipSyncNotifier;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -49,15 +49,15 @@ class TimeApprovalListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ShillinqWipService $wipService The Shillinq WIP dispatch service.
-	 * @param WipSyncNotifier $notifier The admin failure notifier.
+	 * @param ShillinqWipServiceInterface $wipService The Shillinq WIP dispatch service.
+	 * @param WipSyncNotifierInterface $notifier The admin failure notifier.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ShillinqWipService $wipService,
-		private WipSyncNotifier $notifier,
+		private ShillinqWipServiceInterface $wipService,
+		private WipSyncNotifierInterface $notifier,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
@@ -129,8 +129,8 @@ class TimeApprovalListener implements IEventListener {
 	 * @return void
 	 */
 	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
 		if ($register === '' || $schema === '' || $uuid === '') {
 			return;
 		}

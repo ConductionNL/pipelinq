@@ -147,7 +147,7 @@
                 ]
             },
             {
-                "NotesService::deleteNote": [
+                "NotesServiceInterface::deleteNote": [
                     7
                 ]
             }

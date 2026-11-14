@@ -33,7 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Letter;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\FilinqLetterAdapterInterface;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -46,7 +47,7 @@ use Throwable;
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
-class FilinqLetterAdapter
+class FilinqLetterAdapter implements FilinqLetterAdapterInterface
 {
 
     /**
@@ -77,7 +78,6 @@ class FilinqLetterAdapter
      */
     private const SLUG_RESOLVER = 'Service\TemplateSlugResolver';
 
-
     /**
      * Constructor.
      *
@@ -92,7 +92,6 @@ class FilinqLetterAdapter
     ) {
 
     }//end __construct()
-
 
     /**
      * Why filinq cannot make a letter on this instance, or null when it can.
@@ -110,7 +109,6 @@ class FilinqLetterAdapter
         return null;
 
     }//end unavailableReason()
-
 
     /**
      * The letter templates that belong to pipelinq, as id, name and description.
@@ -130,7 +128,7 @@ class FilinqLetterAdapter
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused the letter template listing',
-                ['app' => Application::APP_ID, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'exception' => $e->getMessage()]
             );
             throw new RuntimeException('filinq_failed: '.$e->getMessage(), 0, $e);
         }
@@ -148,7 +146,6 @@ class FilinqLetterAdapter
         return $templates;
 
     }//end listTemplates()
-
 
     /**
      * One of pipelinq's templates by id, or null when filinq has none by that
@@ -184,7 +181,6 @@ class FilinqLetterAdapter
         return $this->summarise(row: $row);
 
     }//end findTemplate()
-
 
     /**
      * Have filinq fill a template and return the PDF; outputMode 'both' keeps a copy in the user's Files.
@@ -225,7 +221,7 @@ class FilinqLetterAdapter
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused a letter render',
-                ['app' => Application::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
             );
             throw new RuntimeException('filinq_render_failed: '.$e->getMessage(), 0, $e);
         }
@@ -255,7 +251,6 @@ class FilinqLetterAdapter
 
     }//end render()
 
-
     /**
      * Have filinq preview a template for these records and name the fields it fills.
      *
@@ -280,7 +275,7 @@ class FilinqLetterAdapter
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused a letter preview',
-                ['app' => Application::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'templateId' => $templateId, 'exception' => $e->getMessage()]
             );
             throw new RuntimeException('filinq_preview_failed: '.$e->getMessage(), 0, $e);
         }
@@ -304,7 +299,6 @@ class FilinqLetterAdapter
         ];
 
     }//end preview()
-
 
     /**
      * Reduce a filinq template object to what the dialog shows.
@@ -334,7 +328,6 @@ class FilinqLetterAdapter
 
     }//end summarise()
 
-
     /**
      * The `listRefs` render option, or none when there are no lists.
      *
@@ -351,7 +344,6 @@ class FilinqLetterAdapter
         return ['listRefs' => $listRefs];
 
     }//end listOptions()
-
 
     /**
      * One of pipelinq's templates by its slug, or null when filinq has none.
@@ -383,7 +375,6 @@ class FilinqLetterAdapter
 
     }//end findTemplateBySlug()
 
-
     /**
      * The service, or the named refusal when filinq did not resolve.
      *
@@ -403,7 +394,6 @@ class FilinqLetterAdapter
 
     }//end requireService()
 
-
     /**
      * filinq's TemplateService, or null.
      *
@@ -415,7 +405,6 @@ class FilinqLetterAdapter
 
     }//end templateService()
 
-
     /**
      * filinq's DocumentService, or null.
      *
@@ -426,6 +415,5 @@ class FilinqLetterAdapter
         return FleetAppId::getService(container: $this->container, canonical: 'filinq', relative: self::DOCUMENT_SERVICE);
 
     }//end documentService()
-
 
 }//end class

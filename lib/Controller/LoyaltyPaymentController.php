@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyPaymentServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\LoyaltyPaymentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,14 +45,14 @@ class LoyaltyPaymentController extends Controller {
 	 *
 	 * @param string                  $appName     The app name.
 	 * @param IRequest                $request     The request.
-	 * @param LoyaltyPaymentService   $service     The payment service.
+	 * @param LoyaltyPaymentServiceInterface   $service     The payment service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N                   $l10n        The translator.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private LoyaltyPaymentService $service,
+		private LoyaltyPaymentServiceInterface $service,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {

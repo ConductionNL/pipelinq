@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalProfileServiceInterface;
 use OCP\IL10N;
 
 /**
@@ -41,7 +42,7 @@ use OCP\IL10N;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalProfileService {
+class PortalProfileService implements PortalProfileServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *

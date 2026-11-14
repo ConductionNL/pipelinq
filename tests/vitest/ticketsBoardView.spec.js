@@ -27,6 +27,21 @@ const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.
 const tickets = manifest.pages.find((page) => page.id === 'Tickets')
 
 describe('the tickets board', () => {
+	it('declares its status columns in the boards\' order, the closed ones folded and the archived ones hidden', () => {
+		const states = tickets.config.board.states
+		expect(states.map((state) => state.key)).toEqual(['new', 'in_progress', 'awaiting_customer', 'completed', 'converted', 'rejected', 'resolved', 'closed'])
+		expect(states.filter((state) => state.closed === true).map((state) => state.key)).toEqual(['converted', 'rejected'])
+		expect(states.filter((state) => state.hidden === true).map((state) => state.key)).toEqual(['resolved', 'closed'])
+		expect(states.find((state) => state.key === 'awaiting_customer').label).toBe('Waiting for customer')
+		expect(tickets.config.board.statusField).toBe('status')
+	})
+
+	it('declares every status the ticket schema knows, and nothing else', () => {
+		const fragment = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/register.d/99-unify-ticket-supertype.json'), 'utf8'))
+		const statuses = fragment.components.schemas.ticket.properties.status.enum
+		expect(tickets.config.board.states.map((state) => state.key).sort()).toEqual([...statuses].sort())
+	})
+
 	it('offers the board view with columns from the status', () => {
 		expect(tickets.config.viewModes).toEqual(['table', 'cards', 'board'])
 		expect(tickets.config.board.statusField).toBe('status')

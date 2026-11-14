@@ -25,7 +25,8 @@ namespace OCA\Pipelinq\Service\LineTotals;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LineRollUpInterface;
 use OCP\IAppConfig;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
-class LineRollUp {
+class LineRollUp implements LineRollUpInterface {
 	/**
 	 * The property each line schema points at its parent with.
 	 */
@@ -162,7 +163,7 @@ class LineRollUp {
 	 */
 	private function linesOf(LineParent $parent): array {
 		$filters = [
-			'register'                        => $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+			'register'                        => $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
 			'schema'                          => $this->schemaId(slug: $parent->kind),
 			self::PARENT_FIELD[$parent->kind] => $parent->parentId,
 		];
@@ -221,6 +222,6 @@ class LineRollUp {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function schemaId(string $slug): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $slug.'_schema', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $slug.'_schema', '');
 	}//end schemaId()
 }//end class

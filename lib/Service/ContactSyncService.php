@@ -24,18 +24,19 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for searching and importing Nextcloud contacts into Pipelinq.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
-class ContactSyncService {
+class ContactSyncService implements ContactSyncServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -113,8 +114,8 @@ class ContactSyncService {
 			$payload['phone'] = $provision['phone'];
 		}
 
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 
 		if ($registerId === '' || $schemaId === '') {
 			throw new RuntimeException('Pipelinq register or schema is not configured');

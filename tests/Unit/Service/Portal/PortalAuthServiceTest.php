@@ -272,4 +272,13 @@ class PortalAuthServiceTest extends TestCase {
 			$this->assertSame('invalidMfaCode', $e->getErrorCode());
 		}
 	}//end testMfaWrongCodeRejected()
+
+	/**
+	 * A password is hashed by the injected hasher, never stored as given.
+	 *
+	 * @return void
+	 */
+	public function testHashPasswordUsesTheHasher(): void {
+		$this->assertSame('h:nieuwwachtwoord456', $this->auth->hashPassword('nieuwwachtwoord456'));
+	}//end testHashPasswordUsesTheHasher()
 }//end class

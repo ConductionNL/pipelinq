@@ -28,8 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Integration\TicketLeafProvider;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketLeafProviderInterface;
 use OCA\Pipelinq\Service\TicketReferenceSequence;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -77,14 +77,14 @@ class TicketReferenceCreatingListener implements IEventListener {
 			return;
 		}
 
-		$ticketSchema = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+		$ticketSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
 		$entity = $event->getObject();
 		if ($ticketSchema === '' || (string)$entity->getSchema() !== $ticketSchema) {
 			return;
 		}
 
 		$ticket = array_merge($entity->getObject(), $event->getModifiedData());
-		if (in_array((string)($ticket['ticketType'] ?? ''), TicketLeafProvider::TICKET_TYPES, true) === false
+		if (in_array((string)($ticket['ticketType'] ?? ''), TicketLeafProviderInterface::TICKET_TYPES, true) === false
 			|| trim((string)($ticket['reference'] ?? '')) !== ''
 		) {
 			return;

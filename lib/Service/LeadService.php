@@ -45,7 +45,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -308,8 +308,8 @@ class LeadService {
 	 * @return array<string, mixed> Either ['register' => ..., 'schema' => ...] or an error envelope.
 	 */
 	private function resolveLeadContext(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 
 		if ($register === '' || $schema === '') {
 			return $this->mcp->error(

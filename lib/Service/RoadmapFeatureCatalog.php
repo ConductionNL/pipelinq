@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\RoadmapFeatureCatalogInterface;
 use OCP\App\IAppManager;
 use OCP\ICacheFactory;
 
@@ -35,13 +36,7 @@ use OCP\ICacheFactory;
  *
  * @spec openspec/specs/features-roadmap/spec.md
  */
-class RoadmapFeatureCatalog {
-	/**
-	 * The curated feature list the page shows (board PqRoadmap).
-	 *
-	 * @var string
-	 */
-	public const CURATED_PATH = __DIR__ . '/../Settings/roadmap.json';
+class RoadmapFeatureCatalog implements RoadmapFeatureCatalogInterface {
 
 	/**
 	 * Constructor.

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
 use OCP\IGroupManager;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
  */
-class WipSyncNotifier {
+class WipSyncNotifier implements WipSyncNotifierInterface {
 	/**
 	 * Constructor.
 	 *

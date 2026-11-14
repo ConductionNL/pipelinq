@@ -44,7 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -54,7 +55,7 @@ use Throwable;
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
  */
-class PartyOrganisationTreeService {
+class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterface {
 	/**
 	 * The default depth cap, used when the instance has not set one.
 	 *
@@ -103,7 +104,7 @@ class PartyOrganisationTreeService {
 	 */
 	public function maxDepth(): int {
 		$configured = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'party_organisation_max_depth',
 			(string)self::DEFAULT_MAX_DEPTH
 		);
@@ -332,8 +333,8 @@ class PartyOrganisationTreeService {
 	 * @return array<int, array<string, mixed>> The descendants.
 	 */
 	public function descendantsOf(string $path): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '' || trim($path, self::PATH_SEPARATOR) === '') {
 			return [];
 		}
@@ -415,8 +416,8 @@ class PartyOrganisationTreeService {
 		try {
 			$this->objectService->saveObject(
 				object: $object,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
+				register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+				schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
 				uuid: $uuid,
 			);
 

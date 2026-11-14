@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Mdm;
 
+use OCA\Pipelinq\Kernel\Contracts\OpenRegisterSyncServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,7 +43,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
  */
-class OpenRegisterSyncService {
+class OpenRegisterSyncService implements OpenRegisterSyncServiceInterface {
 	/**
 	 * Map of master entityType to the Pipelinq OR schema slug it projects onto.
 	 *

@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\SocialPostService;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -50,14 +50,14 @@ class SocialPublishJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param SocialPostService $posts The publishing service.
+	 * @param SocialPostServiceInterface $posts The publishing service.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SocialPostService $posts,
+		private readonly SocialPostServiceInterface $posts,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

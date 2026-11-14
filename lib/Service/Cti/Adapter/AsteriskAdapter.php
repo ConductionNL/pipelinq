@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti\Adapter;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
@@ -181,9 +181,9 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
-		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_api_base_url', '');
+		$baseUrl = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_asterisk_api_base_url', '');
 		$auth = $this->ariAuth();
-		$context = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_context', 'from-internal');
+		$context = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_asterisk_context', 'from-internal');
 		if ($baseUrl === '') {
 			return $this->platform()->refused(error: 'Asterisk API base URL not configured.');
 		}
@@ -214,8 +214,8 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @return array{0:string,1:string}|null The user and password.
 	 */
 	private function ariAuth(): ?array {
-		$user = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_ari_user', '');
-		$pass = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_ari_pass', '');
+		$user = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_asterisk_ari_user', '');
+		$pass = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_asterisk_ari_pass', '');
 		if ($user === '') {
 			return null;
 		}
@@ -274,7 +274,7 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
-		$expected = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_webhook_secret', '');
+		$expected = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_asterisk_webhook_secret', '');
 		if ($expected === '' || $signature === '') {
 			return false;
 		}

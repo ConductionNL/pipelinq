@@ -26,7 +26,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCA\Pipelinq\Service\Forecast\SnapshotLevel;
 use OCA\Pipelinq\Service\Forecast\SnapshotNode;
 use OCA\Pipelinq\Service\Forecast\SnapshotRun;
@@ -35,7 +37,6 @@ use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Snapshot generation orchestration.
@@ -54,15 +55,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec exclude forecast snapshot generation; see the forecast gap above
  */
-class SnapshotGenerationService {
+class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 	use PayloadToArray;
-
-	/**
-	 * App-config key for the comma-separated list of forecast team group ids.
-	 *
-	 * @var string
-	 */
-	public const TEAMS_KEY = 'forecast_team_groups';
 
 	/**
 	 * App-config key for the JSON team=>division map.
@@ -383,7 +377,7 @@ class SnapshotGenerationService {
 	 * @return array<string, mixed> teams (team=>reps), divisions (division=>teams).
 	 */
 	private function resolveHierarchy(): array {
-		$teamsRaw = $this->appConfig->getValueString(Application::APP_ID, self::TEAMS_KEY, '');
+		$teamsRaw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::TEAMS_KEY, '');
 		$teamIds = array_values(array_filter(array_map('trim', explode(',', $teamsRaw)), static fn (string $t): bool => $t !== ''));
 
 		$teams = [];
@@ -400,7 +394,7 @@ class SnapshotGenerationService {
 		}
 
 		$divisions = [];
-		$mapRaw = $this->appConfig->getValueString(Application::APP_ID, self::DIVISION_MAP_KEY, '');
+		$mapRaw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DIVISION_MAP_KEY, '');
 		if ($mapRaw !== '') {
 			$decoded = json_decode($mapRaw, true);
 			if (is_array($decoded) === true) {
@@ -419,8 +413,8 @@ class SnapshotGenerationService {
 	 * @return array<string, array<int, array<string, mixed>>> Deals keyed by rep id.
 	 */
 	private function fetchDealsByRep(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -458,8 +452,8 @@ class SnapshotGenerationService {
 	 * @return void
 	 */
 	private function persistSnapshot(array $snapshot): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'forecastSnapshot_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'forecastSnapshot_schema', '');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('Forecast snapshot schema is not configured.');
 		}
