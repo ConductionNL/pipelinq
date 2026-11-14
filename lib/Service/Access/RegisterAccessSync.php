@@ -153,7 +153,7 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 			return -1;
 		}
 
-		$written = $this->syncRegisters(registers: $mappers[0], schemas: $mappers[1], groups: $groups);
+		$written = $this->syncRegisters(mappers: $mappers, groups: $groups);
 		$this->markApplied(groups: $groups);
 
 		return $written;
@@ -197,23 +197,26 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	/**
 	 * Write the groups into every pipelinq register that exists.
 	 *
-	 * @param object $registers OpenRegister's register mapper.
-	 * @param object $schemas OpenRegister's schema mapper.
+	 * The register never names the read group; a schema names it only when
+	 * it is one of READ_SCHEMAS, and loses a previous one either way.
+	 *
+	 * @param array<int, mixed> $mappers OpenRegister's register mapper and schema mapper.
 	 * @param array<string, string> $groups The configured and applied groups.
 	 *
 	 * @return int The number of registers and schemas written.
 	 *
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
-	private function syncRegisters(object $registers, object $schemas, array $groups): int {
+	private function syncRegisters(array $mappers, array $groups): int {
 		$written = 0;
 		foreach (self::REGISTERS as $slug) {
-			$found = $this->findRegister(registers: $registers, slug: $slug);
+			$found = $this->findRegister(registers: $mappers[0], slug: $slug);
 			if ($found === []) {
 				continue;
 			}
 
-			$written += $this->syncRegister(registers: $registers, schemas: $schemas, register: $found[0], groups: $groups);
+			$written += $this->rewrite(mapper: $mappers[0], entity: $found[0], groups: ['read' => '', 'readApplied' => ''] + $groups);
+			$written += $this->syncSchemas(schemas: $mappers[1], register: $found[0], groups: $groups);
 		}
 
 		return $written;
@@ -252,28 +255,16 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	}//end markApplied()
 
 	/**
-	 * Rewrite one register and its schemas.
+	 * Rewrite the schemas of one register.
 	 *
-	 * The register never names the read group; a schema names it only when
-	 * it is one of READ_SCHEMAS, and loses a previous one either way.
+	 * @param object                $schemas  The schema mapper.
+	 * @param object                $register The register.
+	 * @param array<string, string> $groups   read, readApplied, crm and crmApplied.
 	 *
-	 * @param object                $registers The register mapper.
-	 * @param object                $schemas   The schema mapper.
-	 * @param object                $register  The register.
-	 * @param array<string, string> $groups    read, readApplied, crm and crmApplied.
-	 *
-	 * @return int The number of entities written.
+	 * @return int The number of schemas written.
 	 */
-	private function syncRegister(object $registers, object $schemas, object $register, array $groups): int {
-		$written = $this->rewrite(
-			mapper: $registers,
-			entity: $register,
-			read: '',
-			readApplied: '',
-			crm: $groups['crm'],
-			crmApplied: $groups['crmApplied']
-		);
-
+	private function syncSchemas(object $schemas, object $register, array $groups): int {
+		$written = 0;
 		foreach ((array)$register->getSchemas() as $schemaId) {
 			try {
 				$schema = $schemas->find($schemaId, [], _rbac: false, _multitenancy: false);
@@ -286,18 +277,11 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 				$read = $groups['read'];
 			}
 
-			$written += $this->rewrite(
-				mapper: $schemas,
-				entity: $schema,
-				read: $read,
-				readApplied: $groups['readApplied'],
-				crm: $groups['crm'],
-				crmApplied: $groups['crmApplied']
-			);
+			$written += $this->rewrite(mapper: $schemas, entity: $schema, groups: ['read' => $read] + $groups);
 		}
 
 		return $written;
-	}//end syncRegister()
+	}//end syncSchemas()
 
 	/**
 	 * The block with the CRM group granted wherever the staff group is, and the group last applied gone.
@@ -394,23 +378,20 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * The CRM read group is applied first, so a group named in both settings
 	 * ends with the CRM group's grants.
 	 *
-	 * @param object $mapper      The entity's mapper.
-	 * @param object $entity      The register or schema.
-	 * @param string $read        The read group for this entity, or ''.
-	 * @param string $readApplied The read group last applied.
-	 * @param string $crm         The CRM group.
-	 * @param string $crmApplied  The CRM group last applied.
+	 * @param object                $mapper The entity's mapper.
+	 * @param object                $entity The register or schema.
+	 * @param array<string, string> $groups The read group for this entity (or ''), readApplied, crm and crmApplied.
 	 *
 	 * @return int 1 when written, else 0.
 	 */
-	private function rewrite(object $mapper, object $entity, string $read, string $readApplied, string $crm, string $crmApplied): int {
+	private function rewrite(object $mapper, object $entity, array $groups): int {
 		$current = $entity->getAuthorization();
 		if (is_array($current) === false || $current === []) {
 			return 0;
 		}
 
-		$next = self::grantRead(authorization: $current, group: $read, previous: $readApplied);
-		$next = self::grant(authorization: $next, group: $crm, previous: $crmApplied);
+		$next = self::grantRead(authorization: $current, group: $groups['read'], previous: $groups['readApplied']);
+		$next = self::grant(authorization: $next, group: $groups['crm'], previous: $groups['crmApplied']);
 		if ($next === $current) {
 			return 0;
 		}

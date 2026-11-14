@@ -565,14 +565,7 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return void
 	 */
 	private function storeSupplier(SupplierTarget $target, SourceRecordLink $link): void {
-		$this->upsertSupplier(
-			objectService: $target->objectService,
-			registerId: $target->registerId,
-			schemaId: $target->schemaId,
-			shillinqVendor: $link->rawAttributes,
-			contactsUid: $link->masterEntity,
-			existingSupplier: $this->existingSupplier(target: $target, contactsUid: $link->masterEntity),
-		);
+		$this->upsertSupplier(target: $target, link: $link);
 
 		$this->writeSourceRecord(objectService: $target->objectService, registerId: $target->registerId, link: $link);
 	}//end storeSupplier()
@@ -586,12 +579,23 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return array<string,mixed>|null
 	 */
 	private function existingSupplier(SupplierTarget $target, string $contactsUid): ?array {
-		return $this->findSupplierByContactsUid(
-			objectService: $target->objectService,
-			registerId: $target->registerId,
-			schemaId: $target->schemaId,
-			contactsUid: $contactsUid,
+		$results = $target->objectService->findAll(
+			config: [
+				'filters' => [
+					'contactsUid' => $contactsUid,
+					'register' => $target->registerId,
+					'schema' => $target->schemaId,
+				],
+				'limit' => 1,
+				'offset' => 0,
+			]
 		);
+
+		if (empty($results) === true) {
+			return null;
+		}
+
+		return self::rowArray(row: reset($results));
 	}//end existingSupplier()
 
 	/**
@@ -618,31 +622,23 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * When a supplier already exists it is filled only where fields are empty; otherwise a
 	 * new supplier commercial profile is created.
 	 *
-	 * @param object $objectService OR ObjectService.
-	 * @param string $registerId Register id.
-	 * @param string $schemaId Supplier schema id.
-	 * @param array<string,mixed> $shillinqVendor Incoming vendor record.
-	 * @param string $contactsUid Resolved NC contact UID.
-	 * @param array<string,mixed>|null $existingSupplier Existing supplier row, or null.
+	 * @param SupplierTarget   $target The supplier store.
+	 * @param SourceRecordLink $link   The incoming vendor record and its resolved NC contact UID.
 	 *
 	 * @return void
 	 */
-	private function upsertSupplier(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		array $shillinqVendor,
-		string $contactsUid,
-		?array $existingSupplier,
-	): void {
+	private function upsertSupplier(SupplierTarget $target, SourceRecordLink $link): void {
+		$objectService = $target->objectService;
+		$shillinqVendor = $link->rawAttributes;
+		$existingSupplier = $this->existingSupplier(target: $target, contactsUid: $link->masterEntity);
 		if ($existingSupplier !== null) {
 			// Fill-only: only write commercial fields that are currently empty.
 			$updates = $this->buildSupplierFillPayload(existing: $existingSupplier, shillinqSource: $shillinqVendor);
 			if (empty($updates) === false) {
 				$objectService->saveObject(
 					object: array_merge($existingSupplier, $updates),
-					register: $registerId,
-					schema: $schemaId,
+					register: $target->registerId,
+					schema: $target->schemaId,
 					uuid: $existingSupplier['id'] ?? null
 				);
 			}
@@ -652,8 +648,8 @@ class IngestProductVendorMaster implements IRepairStep {
 
 		// Create new supplier commercial profile.
 		$newSupplier = $this->mapShillinqVendorToSchema(shillinqVendor: $shillinqVendor);
-		$newSupplier['contactsUid'] = $contactsUid;
-		$objectService->saveObject(object: $newSupplier, register: $registerId, schema: $schemaId, uuid: null);
+		$newSupplier['contactsUid'] = $link->masterEntity;
+		$objectService->saveObject(object: $newSupplier, register: $target->registerId, schema: $target->schemaId, uuid: null);
 	}//end upsertSupplier()
 
 	/**
@@ -1030,44 +1026,4 @@ class IngestProductVendorMaster implements IRepairStep {
 
 		return (array)$row;
 	}//end rowArray()
-
-	/**
-	 * Find an existing pipelinq supplier by contactsUid.
-	 *
-	 * @param mixed $objectService The OR ObjectService.
-	 * @param string $registerId Register ID.
-	 * @param string $schemaId Schema ID.
-	 * @param string $contactsUid The Nextcloud contact UID.
-	 *
-	 * @return array<string,mixed>|null The supplier, or null.
-	 */
-	private function findSupplierByContactsUid(
-		mixed $objectService,
-		string $registerId,
-		string $schemaId,
-		string $contactsUid,
-	): ?array {
-		$results = $objectService->findAll(
-			config: [
-				'filters' => [
-					'contactsUid' => $contactsUid,
-					'register' => $registerId,
-					'schema' => $schemaId,
-				],
-				'limit' => 1,
-				'offset' => 0,
-			]
-		);
-
-		if (empty($results) === true) {
-			return null;
-		}
-
-		$first = reset($results);
-		if (is_object($first) === true && method_exists($first, 'jsonSerialize') === true) {
-			return $first->jsonSerialize();
-		}
-
-		return (array)$first;
-	}//end findSupplierByContactsUid()
 }//end class
