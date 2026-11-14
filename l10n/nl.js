@@ -9594,6 +9594,8 @@ OC.L10N.register(
         "Family": "Familie",
         "Professional": "Professioneel",
         "Partner of": "Partner van",
+        "Number {number} called.": "Nummer {number} opgeroepen.",
+        "The visitor's number in today's queue, starting at 1 each day.": "Het nummer van de bezoeker in de wachtrij van vandaag; elke dag begint het weer bij 1.",
         "Deal room": "Dealkamer",
         "Client room": "Klantkamer",
         "Parent of": "Ouder van",

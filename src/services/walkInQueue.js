@@ -46,7 +46,7 @@ export function ticketBody(ticket, values) {
  * @param {{get: (url: string, config?: object) => Promise<object>, put: (url: string, body: object) => Promise<object>}} deps.http An axios-like client.
  * @param {(msg: string) => void} deps.showSuccess Success toast.
  * @param {(msg: string) => void} deps.showError Error toast.
- * @param {(app: string, text: string) => string} deps.translate The `t()` function.
+ * @param {(app: string, text: string, vars?: object) => string} deps.translate The `t()` function.
  * @param {() => Date} [deps.now] The clock.
  * @return {Record<string, (scope?: {item?: object}) => Promise<boolean>>} The handlers.
  * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
@@ -102,7 +102,11 @@ export function createWalkInHandlers({ generateUrl, http, showSuccess, showError
 				showError(translate('pipelinq', 'Nobody is waiting.'))
 				return false
 			}
-			return update(next, { status: 'called' }, translate('pipelinq', 'Customer called.'))
+			const number = Number(next.queueNumber) || 0
+			const done = number > 0
+				? translate('pipelinq', 'Number {number} called.', { number })
+				: translate('pipelinq', 'Customer called.')
+			return update(next, { status: 'called' }, done)
 		},
 	}
 }
