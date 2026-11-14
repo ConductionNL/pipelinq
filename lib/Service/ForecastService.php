@@ -75,13 +75,10 @@ class ForecastService implements ForecastServiceInterface {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-03
 	 */
 	public function computeRollUp(string $ownerId, string $periodId, string $level): array {
-		$snapshot = $this->latestSnapshot(ownerId: $ownerId, periodId: $periodId, level: $level);
+		$scope = ['owner_id' => $ownerId, 'period_id' => $periodId, 'level' => $level];
+		$snapshot = $this->latestSnapshot(scope: $scope);
 
-		$result = [
-			'owner_id' => $ownerId,
-			'period_id' => $periodId,
-			'level' => $level,
-		] + $this->snapshotFigures(snapshot: $snapshot) + [
+		$result = $scope + $this->snapshotFigures(snapshot: $snapshot) + [
 			'quota' => $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level),
 			'deal_snapshot_ids' => ($snapshot['deal_snapshot_ids'] ?? []),
 			'partial' => (bool)($snapshot['partial'] ?? false),
@@ -92,7 +89,7 @@ class ForecastService implements ForecastServiceInterface {
 				rollUp: $result,
 				override: new CategoryOverride(
 					category: $category,
-					row: $this->latestOverride(ownerId: $ownerId, periodId: $periodId, level: $level, category: $category)
+					row: $this->latestOverride(scope: $scope, category: $category)
 				)
 			);
 		}
@@ -251,25 +248,17 @@ class ForecastService implements ForecastServiceInterface {
 	/**
 	 * Fetch the most recent snapshot for an owner/period/level.
 	 *
-	 * @param string $ownerId The owner identifier.
-	 * @param string $periodId The fiscal period identifier.
-	 * @param string $level The hierarchy level.
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The owner, fiscal period and hierarchy level.
 	 *
 	 * @return array<string, mixed> The latest snapshot, or an empty totals array.
 	 */
-	private function latestSnapshot(string $ownerId, string $periodId, string $level): array {
+	private function latestSnapshot(array $scope): array {
 		// Push the "most recent" selection down into OpenRegister: sort by
 		// as_of_date descending and take the first row, instead of fetching
 		// every matching snapshot and sorting in PHP.
 		$rows = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			filters: [
-				'owner_id' => $ownerId,
-				'period_id' => $periodId,
-				'level' => $level,
-			],
-			sort: ['as_of_date' => 'DESC'],
-			limit: 1
+			query: ['filters' => $scope, 'sort' => ['as_of_date' => 'DESC'], 'limit' => 1]
 		);
 
 		if ($rows === []) {
@@ -282,26 +271,23 @@ class ForecastService implements ForecastServiceInterface {
 	/**
 	 * Fetch the most recent override for an owner/period/level/category.
 	 *
-	 * @param string $ownerId The override_owner_id being overridden.
-	 * @param string $periodId The fiscal period identifier.
-	 * @param string $level The hierarchy level.
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The override_owner_id being overridden, fiscal period and level.
 	 * @param string $category The overridden category.
 	 *
 	 * @return array<string, mixed>|null The latest override, or null.
 	 */
-	private function latestOverride(string $ownerId, string $periodId, string $level, string $category): ?array {
+	private function latestOverride(array $scope, string $category): ?array {
 		// Push the "most recent" selection down into OpenRegister: sort by
 		// created_at descending and take the first row.
+		$filters = [
+			'override_owner_id' => $scope['owner_id'],
+			'period_id' => $scope['period_id'],
+			'level' => $scope['level'],
+			'category' => $category,
+		];
 		$rows = $this->findObjects(
 			schemaKey: 'forecastOverride_schema',
-			filters: [
-				'override_owner_id' => $ownerId,
-				'period_id' => $periodId,
-				'level' => $level,
-				'category' => $category,
-			],
-			sort: ['created_at' => 'DESC'],
-			limit: 1
+			query: ['filters' => $filters, 'sort' => ['created_at' => 'DESC'], 'limit' => 1]
 		);
 
 		if ($rows === []) {
@@ -312,48 +298,24 @@ class ForecastService implements ForecastServiceInterface {
 	}//end latestOverride()
 
 	/**
-	 * Query objects of a configured schema with equality filters.
+	 * Query objects of a configured schema with equality filters, a sort and a limit pushed to OR.
 	 *
 	 * @param string $schemaKey The app-config schema key.
-	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param array<string, string> $sort Optional sort map (field => ASC|DESC) pushed to OR.
-	 * @param int|null $limit Optional row limit pushed to OR.
+	 * @param array{filters: array<string, mixed>, sort: array<string, string>, limit: int} $query The equality filters, sort map and row limit.
 	 *
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
-	private function findObjects(string $schemaKey, array $filters, array $sort = [], ?int $limit = null): array {
+	private function findObjects(string $schemaKey, array $query): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
+		$config = ['filters' => array_merge(['register' => $register, 'schema' => $schema], $query['filters'])] + $query;
 
-		return $this->readObjects(config: $this->queryConfig(allFilters: $allFilters, sort: $sort, limit: $limit));
+		return $this->readObjects(config: $config);
 	}//end findObjects()
-
-	/**
-	 * The findAll config for the filters, with sort and limit when given.
-	 *
-	 * @param array<string, mixed> $allFilters The register, schema and caller filters.
-	 * @param array<string, string> $sort The sort, or [] for none.
-	 * @param int|null $limit The limit, or null for none.
-	 *
-	 * @return array<string, mixed> The config.
-	 */
-	private function queryConfig(array $allFilters, array $sort, int|null $limit): array {
-		$config = ['filters' => $allFilters];
-		if ($sort !== []) {
-			$config['sort'] = $sort;
-		}
-
-		if ($limit !== null) {
-			$config['limit'] = $limit;
-		}
-
-		return $config;
-	}//end queryConfig()
 
 	/**
 	 * Run the query and return the rows as arrays; none (logged) when it fails.
