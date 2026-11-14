@@ -104,6 +104,26 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 		$counts = ['status' => 'done', 'applied' => 0, 'skipped' => 0, 'failed' => 0];
 
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemas = $this->configuredSchemas(schemaKeys: $schemaKeys);
+
+		if ($register === '' || $schemas === []) {
+			$counts['status'] = 'not-configured';
+			return $counts;
+		}
+
+		return $this->backfillSchemas(register: $register, schemas: $schemas, counts: $counts);
+	}//end backfill()
+
+	/**
+	 * The schema ids configured under the keys, skipping unset ones.
+	 *
+	 * @param array<int, string> $schemaKeys App config keys holding schema ids.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
+	 */
+	private function configuredSchemas(array $schemaKeys): array {
 		$schemas = [];
 		foreach ($schemaKeys as $key) {
 			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
@@ -112,11 +132,21 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 			}
 		}
 
-		if ($register === '' || $schemas === []) {
-			$counts['status'] = 'not-configured';
-			return $counts;
-		}
+		return $schemas;
+	}//end configuredSchemas()
 
+	/**
+	 * Back-fill every schema, or report OpenRegister unavailable.
+	 *
+	 * @param string $register The register id.
+	 * @param list<string> $schemas The schema ids.
+	 * @param array{status: string, applied: int, skipped: int, failed: int} $counts The counts so far.
+	 *
+	 * @return array{status: string, applied: int, skipped: int, failed: int}
+	 *
+	 * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
+	 */
+	private function backfillSchemas(string $register, array $schemas, array $counts): array {
 		$services = $this->openRegisterServices();
 		if ($services === null) {
 			$counts['status'] = 'openregister-unavailable';
@@ -128,7 +158,7 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 		}
 
 		return $counts;
-	}//end backfill()
+	}//end backfillSchemas()
 
 	/**
 	 * Apply metadata to the records of one schema.
