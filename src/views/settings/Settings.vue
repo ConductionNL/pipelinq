@@ -240,6 +240,14 @@
 			<!-- Shillinq and XWiki, detected rather than typed. -->
 			<DetectedIntegrations v-if="isAdmin" />
 
+			<!-- Call transcription and the call review scorecards (contact-moments-call-review). -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.callReview"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
+			<ScorecardManager v-if="isAdmin && isConfigured" />
+
 			<!-- The CTI webhook log: not on the board, kept after its sections. -->
 			<CtiEventLog v-if="isAdmin && isConfigured" />
 		</template>
@@ -387,6 +395,7 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
@@ -514,6 +523,7 @@ export default {
 		PipelineManager,
 		ProductCategoryManager,
 		ProspectSettings,
+		ScorecardManager,
 		TagManager,
 		SkillSettings,
 		AgentProfileSettings,
