@@ -33,6 +33,7 @@ use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
+use OCA\Pipelinq\Service\Messaging\ConsentChange;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
@@ -268,7 +269,15 @@ class MessagingController extends Controller {
 
 		$uid = $this->privilege->actingUserId();
 
-		$invalid = $this->consentRequestError(channel: $channel, action: $action, evidence: $evidence, legalBasis: $legalBasis);
+		$change = new ConsentChange(
+			contactId: $contactId,
+			channel: $channel,
+			action: $action,
+			source: $source,
+			evidence: $evidence,
+			legalBasis: $legalBasis
+		);
+		$invalid = $this->consentRequestError(change: $change);
 		if ($invalid !== null) {
 			return $invalid;
 		}
@@ -279,15 +288,7 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		$attributedEvidence = sprintf('%s (recorded by %s)', $evidence, $uid);
-		$this->recordConsent(
-			action: $action,
-			contactId: $contactId,
-			channel: $channel,
-			source: $source,
-			evidence: $attributedEvidence,
-			legalBasis: $legalBasis
-		);
+		$this->recordConsent(change: $change->attributedTo(userId: $uid));
 
 		return new JSONResponse(['status' => 'recorded', 'state' => $this->consentService->latestState(contactId: $contactId, channel: $channel)]);
 	}//end consent()
@@ -295,23 +296,20 @@ class MessagingController extends Controller {
 	/**
 	 * The 400 response for an invalid consent request, or null when it is valid.
 	 *
-	 * @param string $channel The channel.
-	 * @param string $action The consent action.
-	 * @param string $evidence The evidence.
-	 * @param string $legalBasis The legal basis.
+	 * @param ConsentChange $change The requested change.
 	 *
 	 * @return JSONResponse|null The error response, or null.
 	 */
-	private function consentRequestError(string $channel, string $action, string $evidence, string $legalBasis): JSONResponse|null {
-		if ($this->isMessagingChannel(channel: $channel) === false) {
+	private function consentRequestError(ConsentChange $change): JSONResponse|null {
+		if ($this->isMessagingChannel(channel: $change->channel) === false) {
 			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($evidence === '' || $legalBasis === '') {
+		if ($change->evidence === '' || $change->legalBasis === '') {
 			return new JSONResponse(['status' => 'evidence-and-legal-basis-required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($this->isConsentAction(action: $action) === false) {
+		if ($this->isConsentAction(action: $change->action) === false) {
 			return new JSONResponse(['status' => 'invalid-action'], Http::STATUS_BAD_REQUEST);
 		}
 
@@ -343,42 +341,30 @@ class MessagingController extends Controller {
 	/**
 	 * Append the consent record for a validated opt-in / opt-out action.
 	 *
-	 * @param string $action `opt-in` or `opt-out` (already validated).
-	 * @param string $contactId Contact UUID.
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $source Source enum.
-	 * @param string $evidence Attributed audit evidence.
-	 * @param string $legalBasis GDPR legal basis.
+	 * @param ConsentChange $change The validated, attributed change.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
-	private function recordConsent(
-		string $action,
-		string $contactId,
-		string $channel,
-		string $source,
-		string $evidence,
-		string $legalBasis,
-	): void {
-		if ($action === 'opt-in') {
+	private function recordConsent(ConsentChange $change): void {
+		if ($change->action === 'opt-in') {
 			$this->consentService->recordOptIn(
-				contactId: $contactId,
-				channel: $channel,
-				source: $source,
-				evidence: $evidence,
-				legalBasis: $legalBasis
+				contactId: $change->contactId,
+				channel: $change->channel,
+				source: $change->source,
+				evidence: $change->evidence,
+				legalBasis: $change->legalBasis
 			);
 			return;
 		}
 
 		$this->consentService->recordOptOut(
-			contactId: $contactId,
-			channel: $channel,
-			source: $source,
-			evidence: $evidence,
-			legalBasis: $legalBasis
+			contactId: $change->contactId,
+			channel: $change->channel,
+			source: $change->source,
+			evidence: $change->evidence,
+			legalBasis: $change->legalBasis
 		);
 	}//end recordConsent()
 
