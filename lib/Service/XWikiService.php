@@ -47,6 +47,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) thin proxy over the xWiki REST
  *  API with discovery, caching, XML parsing and sanitisation kept together as one
  *  cohesive read path
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class XWikiService implements XWikiServiceInterface {
 	/**
@@ -275,9 +277,30 @@ class XWikiService implements XWikiServiceInterface {
 		$params = http_build_query(['q' => $request['query'], 'limit' => $request['limit'], 'offset' => $request['offset']]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/xwiki/search?' . $params);
 
+		$response = $this->fetchOpenRegisterSearch(url: $url);
+		if ($response === null || $this->isOkSearchResponse(response: $response) === false) {
+			return null;
+		}
+
+		$results = $this->searchResults(response: $response);
+		if ($results === null) {
+			return null;
+		}
+
+		return $this->mapOpenRegisterRows(rows: $results);
+	}//end searchViaOpenRegister()
+
+	/**
+	 * Ask OpenRegister's xWiki search, or null when it cannot be reached.
+	 *
+	 * @param string $url The absolute search URL.
+	 *
+	 * @return \OCP\Http\Client\IResponse|null
+	 */
+	private function fetchOpenRegisterSearch(string $url): \OCP\Http\Client\IResponse|null {
 		try {
 			$client = $this->clientService->newClient();
-			$response = $client->get(
+			return $client->get(
 				$url,
 				[
 					'timeout' => 10,
@@ -292,20 +315,40 @@ class XWikiService implements XWikiServiceInterface {
 			$this->logger->debug('xWiki OR search unavailable, falling back to direct path', ['exception' => $e]);
 			return null;
 		}
+	}//end fetchOpenRegisterSearch()
 
+	/**
+	 * Whether the search answered 200, logging when it did not.
+	 *
+	 * @param \OCP\Http\Client\IResponse $response The search response.
+	 *
+	 * @return bool
+	 */
+	private function isOkSearchResponse(\OCP\Http\Client\IResponse $response): bool {
 		$status = $response->getStatusCode();
 		if ($status !== 200) {
 			$this->logger->debug('xWiki OR search returned non-200, falling back', ['status' => $status]);
-			return null;
+			return false;
 		}
 
+		return true;
+	}//end isOkSearchResponse()
+
+	/**
+	 * The `results` list of a search response body, or null when it has none.
+	 *
+	 * @param \OCP\Http\Client\IResponse $response The search response.
+	 *
+	 * @return array<int|string, mixed>|null
+	 */
+	private function searchResults(\OCP\Http\Client\IResponse $response): array|null {
 		$decoded = json_decode((string)$response->getBody(), true);
 		if (is_array($decoded) === false || isset($decoded['results']) === false || is_array($decoded['results']) === false) {
 			return null;
 		}
 
-		return $this->mapOpenRegisterRows(rows: $decoded['results']);
-	}//end searchViaOpenRegister()
+		return $decoded['results'];
+	}//end searchResults()
 
 	/**
 	 * Map raw OpenRegister search result rows to the widget row shape.

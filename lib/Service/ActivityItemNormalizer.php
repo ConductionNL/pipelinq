@@ -371,10 +371,7 @@ class ActivityItemNormalizer {
 		}
 
 		$start = $this->stringOrNull(value: ($event['dtstart'] ?? null));
-		$status = 'scheduled';
-		if ($start !== null && strtotime($start) !== false && strtotime($start) < time()) {
-			$status = 'completed';
-		}
+		$status = $this->leafEventStatus(start: $start);
 
 		return [
 			'type' => 'calendar',
@@ -385,15 +382,44 @@ class ActivityItemNormalizer {
 			'user' => null,
 			'entityType' => $entityType,
 			'entityId' => $entityId,
-			'metadata' => [
-				'uid' => $uid,
-				'source' => 'calendar-leaf',
-				'status' => $status,
-				'endDate' => $this->stringOrNull(value: ($event['dtend'] ?? null)),
-				'location' => $this->stringOrNull(value: ($event['location'] ?? null)),
-			],
+			'metadata' => $this->leafEventMetadata(event: $event, uid: $uid, status: $status),
 		];
 	}//end normalizeLeafEvent()
+
+	/**
+	 * `completed` for an event that started in the past, else `scheduled`.
+	 *
+	 * @param string|null $start The event start.
+	 *
+	 * @return string The status.
+	 */
+	private function leafEventStatus(string|null $start): string {
+		$status = 'scheduled';
+		if ($start !== null && strtotime($start) !== false && strtotime($start) < time()) {
+			$status = 'completed';
+		}
+
+		return $status;
+	}//end leafEventStatus()
+
+	/**
+	 * The calendar-leaf metadata of an event.
+	 *
+	 * @param array<string, mixed> $event The leaf event.
+	 * @param string $uid The event uid.
+	 * @param string $status The event status.
+	 *
+	 * @return array<string, mixed> The metadata.
+	 */
+	private function leafEventMetadata(array $event, string $uid, string $status): array {
+		return [
+			'uid' => $uid,
+			'source' => 'calendar-leaf',
+			'status' => $status,
+			'endDate' => $this->stringOrNull(value: ($event['dtend'] ?? null)),
+			'location' => $this->stringOrNull(value: ($event['location'] ?? null)),
+		];
+	}//end leafEventMetadata()
 
 	/**
 	 * Normalise an email linked through OpenRegister's reader into an activity item.

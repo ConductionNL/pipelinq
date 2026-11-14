@@ -147,35 +147,46 @@ class BudgetService implements BudgetServiceInterface {
 
 		$newMessages = ((int)($budget['currentPeriodMessages'] ?? 0)) + 1;
 		$newCost = ((float)($budget['currentPeriodCostEur'] ?? 0)) + $costEur;
-		$maxMessages = (int)($budget['maxMessages'] ?? 0);
-		$maxCost = (float)($budget['maxCostEur'] ?? 0);
-		$thresholdPct = (float)($budget['alertThresholdPct'] ?? 0.8);
-		$alertedAt = (string)($budget['alertedAtPeriodStart'] ?? '');
 
 		$payload = $budget;
 		$payload['currentPeriodMessages'] = $newMessages;
 		$payload['currentPeriodCostEur'] = $newCost;
 
-		// Soft-alert: fire exactly once per period when crossing the
-		// threshold (either messages or cost).
-		$shouldAlert = false;
-		if ($alertedAt === '') {
-			if ($maxMessages > 0 && $newMessages >= (int)ceil($maxMessages * $thresholdPct)) {
-				$shouldAlert = true;
-			}
-
-			if ($maxCost > 0 && $newCost >= ($maxCost * $thresholdPct)) {
-				$shouldAlert = true;
-			}
-		}
-
-		if ($shouldAlert === true) {
+		if ($this->crossesAlertThreshold(budget: $budget, newMessages: $newMessages, newCost: $newCost) === true) {
 			$payload['alertedAtPeriodStart'] = $this->nowIso();
 			$this->fireAlert(tenantId: $tenantId, providerId: $providerId, budget: $payload);
 		}
 
 		$this->saveObject(payload: $payload, id: $this->extractId(payload: $budget));
 	}//end recordSend()
+
+	/**
+	 * Whether this send crosses the alert threshold (messages or cost) for the first time this period.
+	 *
+	 * Soft-alert: fire exactly once per period when crossing the
+	 * threshold (either messages or cost).
+	 *
+	 * @param array<string, mixed> $budget The budget before this send.
+	 * @param int $newMessages The message count including this send.
+	 * @param float $newCost The cost including this send.
+	 *
+	 * @return bool True when the alert should fire.
+	 */
+	private function crossesAlertThreshold(array $budget, int $newMessages, float $newCost): bool {
+		$maxMessages = (int)($budget['maxMessages'] ?? 0);
+		$maxCost = (float)($budget['maxCostEur'] ?? 0);
+		$thresholdPct = (float)($budget['alertThresholdPct'] ?? 0.8);
+		$alertedAt = (string)($budget['alertedAtPeriodStart'] ?? '');
+		if ($alertedAt !== '') {
+			return false;
+		}
+
+		if ($maxMessages > 0 && $newMessages >= (int)ceil($maxMessages * $thresholdPct)) {
+			return true;
+		}
+
+		return $maxCost > 0 && $newCost >= ($maxCost * $thresholdPct);
+	}//end crossesAlertThreshold()
 
 	/**
 	 * Roll every budget row whose period has passed.
@@ -236,8 +247,21 @@ class BudgetService implements BudgetServiceInterface {
 			return null;
 		}
 
+		return $this->firstBudget(rows: $this->findBudgetRows(objectService: $objectService, tenantId: $tenantId, providerId: $providerId));
+	}//end loadBudget()
+
+	/**
+	 * Read the budget rows of a tenant and provider; null (logged) when the read fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $tenantId The tenant id.
+	 * @param string $providerId The provider id.
+	 *
+	 * @return mixed The rows, or null.
+	 */
+	private function findBudgetRows(object $objectService, string $tenantId, string $providerId) {
 		try {
-			$rows = $objectService->findAll(
+			return $objectService->findAll(
 				config: [
 					'filters' => [
 						'tenantId' => $tenantId,
@@ -254,14 +278,23 @@ class BudgetService implements BudgetServiceInterface {
 			);
 			return null;
 		}
+	}//end findBudgetRows()
 
+	/**
+	 * The first budget row as an array, or null when there is none.
+	 *
+	 * @param mixed $rows The rows.
+	 *
+	 * @return array<string, mixed>|null The budget.
+	 */
+	private function firstBudget($rows): array|null {
 		if ($rows === null || $rows === []) {
 			return null;
 		}
 
 		$first = $rows[0];
 		return $this->toArray(value: $first);
-	}//end loadBudget()
+	}//end firstBudget()
 
 	/**
 	 * Load every budget row.

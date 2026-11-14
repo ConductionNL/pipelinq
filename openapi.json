@@ -3022,20 +3022,27 @@
                     "409": {
                         "description": "Photos cannot be read on this server: no provider serves `core:image2text:ocr`.",
                         "content": {
-                            "application/json": {
+                            "application/problem+json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Problem"
                                         },
-                                        "reason": {
-                                            "type": "string",
-                                            "enum": [
-                                                "unavailable"
-                                            ]
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "unavailable"
+                                                    ]
+                                                }
+                                            }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -3043,14 +3050,21 @@
                     "413": {
                         "description": "The text is longer than a signature or a card, or the photo is larger than 10 MB.",
                         "content": {
-                            "application/json": {
+                            "application/problem+json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Problem"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string"
+                                                }
+                                            }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -3058,14 +3072,21 @@
                     "415": {
                         "description": "The posted file is not an image.",
                         "content": {
-                            "application/json": {
+                            "application/problem+json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Problem"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string"
+                                                }
+                                            }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -3073,20 +3094,27 @@
                     "422": {
                         "description": "No text was found on the photo.",
                         "content": {
-                            "application/json": {
+                            "application/problem+json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Problem"
                                         },
-                                        "reason": {
-                                            "type": "string",
-                                            "enum": [
-                                                "empty"
-                                            ]
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "empty"
+                                                    ]
+                                                }
+                                            }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -3094,20 +3122,27 @@
                     "502": {
                         "description": "The recognition task failed.",
                         "content": {
-                            "application/json": {
+                            "application/problem+json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Problem"
                                         },
-                                        "reason": {
-                                            "type": "string",
-                                            "enum": [
-                                                "failed"
-                                            ]
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "failed"
+                                                    ]
+                                                }
+                                            }
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }

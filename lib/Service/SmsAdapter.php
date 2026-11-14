@@ -59,6 +59,8 @@ use Throwable;
  * surface with failover, persistence and webhook ingestion kept cohesive.
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class SmsAdapter implements SmsAdapterInterface {
 	use PayloadToArray;
@@ -188,18 +190,26 @@ class SmsAdapter implements SmsAdapterInterface {
 			return ['status' => self::STATUS_CONSENT_MISSING];
 		}
 
+		$message = new SmsMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context);
+		return $this->sendThroughProviders(message: $message, providerHint: $providerHint);
+	}//end send()
+
+	/**
+	 * Send a consented message through the ordered providers; persist a failure and alert when all fail.
+	 *
+	 * @param SmsMessage $message The message to send.
+	 * @param string|null $providerHint Provider to use without failover, or null for the ordered list.
+	 *
+	 * @return array<string, mixed> The send outcome.
+	 */
+	private function sendThroughProviders(SmsMessage $message, string|null $providerHint): array {
 		$tenantId = $this->getTenantId();
 		$ordered = $this->orderedProvidersForSend(providerHint: $providerHint);
 		if ($ordered === []) {
 			return ['status' => self::STATUS_NO_PROVIDER];
 		}
 
-		$run = new SmsSendRun(
-			message: new SmsMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context),
-			tenantId: $tenantId,
-			allowFailover: ($providerHint === null),
-		);
-
+		$run = new SmsSendRun(message: $message, tenantId: $tenantId, allowFailover: ($providerHint === null));
 		foreach ($ordered as $row) {
 			$outcome = $this->attemptProviderSend(row: $row, run: $run);
 			if ($outcome !== null) {
@@ -207,15 +217,10 @@ class SmsAdapter implements SmsAdapterInterface {
 			}
 		}
 
-		// Exhausted all providers transiently — persist failed row + alert.
 		return $this->persistFailureAndAlert(
-			failure: new SmsSendFailure(
-				message: $run->message,
-				providerId: '',
-				error: 'all SMS providers returned transient errors',
-			),
+			failure: new SmsSendFailure(message: $run->message, providerId: '', error: 'all SMS providers returned transient errors'),
 		);
-	}//end send()
+	}//end sendThroughProviders()
 
 	/**
 	 * Try sending via a single provider row.
@@ -842,27 +847,34 @@ class SmsAdapter implements SmsAdapterInterface {
 		}
 
 		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
+		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
+		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
+		if ($existingId !== null) {
+			return $existingId;
+		}
 
+		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
+	}//end findOrOpenConversation()
+
+	/**
+	 * The id of the first open conversation matching the identity, or null when there is none.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $conversation The contact, provider, channel and open status.
+	 * @param string $schema The conversation schema slug.
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup.
+	 *
+	 * @return string|null The conversation id, or null when none is open.
+	 */
+	private function findOpenConversation(object $objectService, array $conversation, string $schema, array $scope): string|null {
 		try {
 			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'contactId' => $contactId,
-						'providerId' => $providerId,
-						'channel' => $channel,
-						'status' => 'open',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $schema,
-					],
-				],
+				config: ['filters' => $conversation + ['register' => $this->getRegisterSlug(), 'schema' => $schema]],
 				_rbac: ($scope['_rbac'] ?? true),
 				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.findOrOpenConversation: findAll failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('SmsAdapter.findOrOpenConversation: findAll failed', ['exception' => $e->getMessage()]);
 			$rows = [];
 		}
 
@@ -870,29 +882,29 @@ class SmsAdapter implements SmsAdapterInterface {
 			return $this->extractId(payload: $this->toArray(value: $rows[0]));
 		}
 
+		return null;
+	}//end findOpenConversation()
+
+	/**
+	 * Open a new conversation stamped with the inbound time, returning its id or '' when the save fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $conversation The contact, provider, channel and open status.
+	 * @param string $schema The conversation schema slug.
+	 *
+	 * @return string The new conversation id.
+	 */
+	private function openConversation(object $objectService, array $conversation, string $schema): string {
 		try {
-			$saved = $objectService->saveObject(
-				object: [
-					'contactId' => $contactId,
-					'providerId' => $providerId,
-					'channel' => $channel,
-					'status' => 'open',
-					'lastInboundAt' => $this->nowIso(),
-				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
-			);
+			$object = $conversation + ['lastInboundAt' => $this->nowIso()];
+			$saved = $objectService->saveObject(object: $object, register: $this->getRegisterSlug(), schema: $schema, uuid: null);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.findOrOpenConversation: open failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('SmsAdapter.findOrOpenConversation: open failed', ['exception' => $e->getMessage()]);
 			return '';
 		}
 
 		return $this->extractId(payload: $this->toArray(value: $saved));
-	}//end findOrOpenConversation()
+	}//end openConversation()
 
 	/**
 	 * Decode an inbound webhook body — accepts JSON or form-encoded.

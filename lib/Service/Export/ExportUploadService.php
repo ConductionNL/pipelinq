@@ -392,14 +392,7 @@ class ExportUploadService extends AbstractExportService {
 		int $byteCount,
 		?string $lastAck,
 	): array {
-		$status = 'partial';
-		if ($total === 0 || $succeeded === $total) {
-			$status = 'all_succeeded';
-		}
-
-		if ($total > 0 && $succeeded === 0) {
-			$status = 'all_failed';
-		}
+		$status = $this->uploadStatus(total: $total, succeeded: $succeeded);
 
 		$error = null;
 		if ($failures !== []) {
@@ -415,6 +408,27 @@ class ExportUploadService extends AbstractExportService {
 			'error_message' => $error,
 		];
 	}//end buildResult()
+
+	/**
+	 * The UploadResult status: all_succeeded, all_failed or partial.
+	 *
+	 * @param int $total     Total files attempted.
+	 * @param int $succeeded Count of successful uploads.
+	 *
+	 * @return string
+	 */
+	private function uploadStatus(int $total, int $succeeded): string {
+		$status = 'partial';
+		if ($total === 0 || $succeeded === $total) {
+			$status = 'all_succeeded';
+		}
+
+		if ($total > 0 && $succeeded === 0) {
+			$status = 'all_failed';
+		}
+
+		return $status;
+	}//end uploadStatus()
 
 	/**
 	 * Build an all-failed result without attempting any upload.

@@ -248,37 +248,79 @@ class FediverseWatchReader {
 	private function fromBluesky(array $rows, string $handle): array {
 		$out = [];
 		foreach ($rows as $row) {
-			$post = null;
-			if (is_array($row) === true) {
-				$post = ($row['post'] ?? null);
+			$entry = $this->blueskyEntry(row: $row, handle: $handle);
+			if ($entry !== null) {
+				$out[] = $entry;
 			}
-
-			if (is_array($post) === false) {
-				continue;
-			}
-
-			$uri = trim((string)($post['uri'] ?? ''));
-			if ($uri === '') {
-				continue;
-			}
-
-			$record = ($post['record'] ?? []);
-			$text = '';
-			if (is_array($record) === true) {
-				$text = (string)($record['text'] ?? '');
-			}
-
-			$out[] = [
-				'url' => $this->blueskyPermalink(uri: $uri, handle: $handle),
-				'title' => ($handle . ' posted'),
-				'summary' => $this->shorten(value: $text),
-				'stamp' => trim((string)($post['cid'] ?? $uri)),
-				'publishedAt' => trim((string)($post['indexedAt'] ?? '')),
-			];
 		}
 
 		return $out;
 	}//end fromBluesky()
+
+	/**
+	 * One Bluesky feed entry as a watch row, or null when it carries no post uri.
+	 *
+	 * @param mixed  $row    The feed entry.
+	 * @param string $handle The handle, for the title.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function blueskyEntry(mixed $row, string $handle): array|null {
+		$post = $this->blueskyPost(row: $row);
+		if ($post === null) {
+			return null;
+		}
+
+		$uri = trim((string)($post['uri'] ?? ''));
+		if ($uri === '') {
+			return null;
+		}
+
+		return [
+			'url' => $this->blueskyPermalink(uri: $uri, handle: $handle),
+			'title' => ($handle . ' posted'),
+			'summary' => $this->shorten(value: $this->blueskyText(post: $post)),
+			'stamp' => trim((string)($post['cid'] ?? $uri)),
+			'publishedAt' => trim((string)($post['indexedAt'] ?? '')),
+		];
+	}//end blueskyEntry()
+
+	/**
+	 * The `post` of a feed entry, or null when it has none.
+	 *
+	 * @param mixed $row The feed entry.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function blueskyPost(mixed $row): array|null {
+		$post = null;
+		if (is_array($row) === true) {
+			$post = ($row['post'] ?? null);
+		}
+
+		if (is_array($post) === false) {
+			return null;
+		}
+
+		return $post;
+	}//end blueskyPost()
+
+	/**
+	 * The text of a post's record, or ''.
+	 *
+	 * @param array<string, mixed> $post The post.
+	 *
+	 * @return string
+	 */
+	private function blueskyText(array $post): string {
+		$record = ($post['record'] ?? []);
+		$text = '';
+		if (is_array($record) === true) {
+			$text = (string)($record['text'] ?? '');
+		}
+
+		return $text;
+	}//end blueskyText()
 
 	/**
 	 * A readable Bluesky permalink from an `at://` URI.

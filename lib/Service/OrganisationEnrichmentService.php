@@ -101,37 +101,84 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 		$proposals = [];
 		$notFound = [];
 		foreach (array_slice($clientIds, 0, self::MAX_ORGANISATIONS) as $clientId) {
-			$client = $this->readClient(clientId: (string)$clientId);
-			if ($client === null || ($client['type'] ?? '') !== 'organization') {
-				continue;
+			[$found, $missing] = $this->proposeForClient(clientId: (string)$clientId);
+			$proposals = array_merge($proposals, $found);
+			if ($missing !== null) {
+				$notFound[] = $missing;
 			}
-
-			$company = $this->lookUp(client: $client);
-			if ($company === null) {
-				$notFound[] = (string)($client['name'] ?? '');
-				continue;
-			}
-
-			foreach ($this->found(company: $company) as $field => $value) {
-				$current = (string)($client[$field] ?? '');
-				if ($value === '' || $current === $value) {
-					continue;
-				}
-
-				$proposals[] = [
-					'clientId' => (string)$clientId,
-					'name' => (string)($client['name'] ?? ''),
-					'field' => $field,
-					'current' => $current,
-					'found' => $value,
-					'source' => 'KVK',
-					'differs' => ($current !== ''),
-				];
-			}
-		}//end foreach
+		}
 
 		return ['proposals' => $proposals, 'notFound' => $notFound];
 	}//end propose()
+
+	/**
+	 * The proposals for one organisation, or its name when the company register does not know it.
+	 *
+	 * @param string $clientId The client id.
+	 *
+	 * @return array{0: list<array<string, mixed>>, 1: string|null} The proposals and the not-found name.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function proposeForClient(string $clientId): array {
+		$client = $this->organisationClient(clientId: $clientId);
+		if ($client === null) {
+			return [[], null];
+		}
+
+		$company = $this->lookUp(client: $client);
+		if ($company === null) {
+			return [[], (string)($client['name'] ?? '')];
+		}
+
+		return [$this->proposalsFor(clientId: $clientId, client: $client, company: $company), null];
+	}//end proposeForClient()
+
+	/**
+	 * The client, when it is an organisation.
+	 *
+	 * @param string $clientId The client id.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function organisationClient(string $clientId): array|null {
+		$client = $this->readClient(clientId: $clientId);
+		if ($client === null || ($client['type'] ?? '') !== 'organization') {
+			return null;
+		}
+
+		return $client;
+	}//end organisationClient()
+
+	/**
+	 * One proposal per found field that is filled and differs from the client's value.
+	 *
+	 * @param string $clientId The client id.
+	 * @param array<string, mixed> $client The client.
+	 * @param array<string, mixed> $company The company register's record.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function proposalsFor(string $clientId, array $client, array $company): array {
+		$proposals = [];
+		foreach ($this->found(company: $company) as $field => $value) {
+			$current = (string)($client[$field] ?? '');
+			if ($value === '' || $current === $value) {
+				continue;
+			}
+
+			$proposals[] = [
+				'clientId' => $clientId, 'name' => (string)($client['name'] ?? ''), 'field' => $field, 'current' => $current,
+				'found' => $value, 'source' => 'KVK', 'differs' => ($current !== ''),
+			];
+		}
+
+		return $proposals;
+	}//end proposalsFor()
 
 	/**
 	 * Write the accepted proposals onto their clients.
@@ -143,6 +190,24 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 	 * @spec openspec/specs/client-management/spec.md
 	 */
 	public function apply(array $changes): array {
+		$updated = 0;
+		foreach ($this->changesByClient(changes: $changes) as $clientId => $fields) {
+			$updated += $this->applyToClient(clientId: (string)$clientId, fields: $fields);
+		}
+
+		return ['updated' => $updated];
+	}//end apply()
+
+	/**
+	 * The accepted values of known fields, grouped by client.
+	 *
+	 * @param array<int, array{clientId?: string, field?: string, value?: string}> $changes The accepted proposals.
+	 *
+	 * @return array<string, array<string, string>>
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function changesByClient(array $changes): array {
 		$byClient = [];
 		foreach ($changes as $change) {
 			$field = (string)($change['field'] ?? '');
@@ -154,28 +219,32 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 			$byClient[$clientId][$field] = (string)($change['value'] ?? '');
 		}
 
-		$updated = 0;
-		foreach ($byClient as $clientId => $fields) {
-			$client = $this->readClient(clientId: (string)$clientId);
-			if ($client === null || ($client['type'] ?? '') !== 'organization') {
-				continue;
-			}
+		return $byClient;
+	}//end changesByClient()
 
-			$data = array_merge($client, $fields);
-			unset($data['@self']);
-
-			[$register, $schema] = $this->config();
-			$this->objectService->saveObject(
-				object: $data,
-				register: $register,
-				schema: $schema,
-				uuid: (string)$clientId
-			);
-			$updated += count($fields);
+	/**
+	 * Write the fields onto one organisation.
+	 *
+	 * @param string $clientId The client id.
+	 * @param array<string, string> $fields The values to write.
+	 *
+	 * @return int How many fields were written.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function applyToClient(string $clientId, array $fields): int {
+		$client = $this->organisationClient(clientId: $clientId);
+		if ($client === null) {
+			return 0;
 		}
 
-		return ['updated' => $updated];
-	}//end apply()
+		$data = array_merge($client, $fields);
+		unset($data['@self']);
+
+		[$register, $schema] = $this->config();
+		$this->objectService->saveObject(object: $data, register: $register, schema: $schema, uuid: $clientId);
+		return count($fields);
+	}//end applyToClient()
 
 	/**
 	 * The fields a KvK result fills, by client field.

@@ -113,13 +113,40 @@ class SearchWatchReader {
 			);
 		}
 
+		$answer = $this->search(client: $client, query: $trimmed, actingUserId: $actingUserId);
+		if ($answer instanceof WatchOutcome) {
+			return $answer;
+		}
+
+		return $this->outcomeOf(answer: $answer);
+	}//end read()
+
+	/**
+	 * Run the search, or answer with an unavailable outcome (logged) when it throws.
+	 *
+	 * @param object $client The Hermiq search client.
+	 * @param string $query The trimmed query.
+	 * @param string|null $actingUserId The acting user id, if any.
+	 *
+	 * @return mixed The search answer, or the failed outcome.
+	 */
+	private function search(object $client, string $query, string|null $actingUserId) {
 		try {
-			$answer = $client->search(query: $trimmed, actingUserId: $actingUserId);
+			return $client->search(query: $query, actingUserId: $actingUserId);
 		} catch (Throwable $e) {
 			$this->logger->info('SearchWatchReader: the search failed', ['exception' => $e->getMessage()]);
 			return WatchOutcome::failed(outcome: EgressResult::UNAVAILABLE, reason: 'The web search failed.');
 		}
+	}//end search()
 
+	/**
+	 * The watch outcome for a search answer.
+	 *
+	 * @param mixed $answer The search answer.
+	 *
+	 * @return WatchOutcome The outcome.
+	 */
+	private function outcomeOf($answer): WatchOutcome {
 		if (is_array($answer) === false) {
 			return WatchOutcome::failed(outcome: EgressResult::UNPARSABLE, reason: 'The web search answered nothing usable.');
 		}
@@ -132,7 +159,7 @@ class SearchWatchReader {
 		}
 
 		return WatchOutcome::seen(items: $this->normalise(results: (array)($answer['results'] ?? [])));
-	}//end read()
+	}//end outcomeOf()
 
 	/**
 	 * Normalise hermiq's results into watch items.

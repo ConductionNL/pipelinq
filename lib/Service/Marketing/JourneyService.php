@@ -203,12 +203,23 @@ class JourneyService implements JourneyServiceInterface {
 			return $this->record(journey: $journey, journeyId: $journeyId, status: 'engine_missing', error: '', flowUuid: '');
 		}
 
+		return $this->saveFlow(flowService: $flowService, journey: $journey, journeyId: $journeyId, runAs: $runAs);
+	}//end compile()
+
+	/**
+	 * Save the journey's flow document and record the outcome.
+	 *
+	 * @param object               $flowService The flow engine's service.
+	 * @param array<string, mixed> $journey     The journey.
+	 * @param string               $journeyId   Journey UUID or slug.
+	 * @param string               $runAs       The identity a scheduled journey runs as.
+	 *
+	 * @return array<string, mixed> The journey with its flow status.
+	 */
+	private function saveFlow(object $flowService, array $journey, string $journeyId, string $runAs): array {
 		$document = $this->compiler->documentFor(journey: $journey, journeyId: $journeyId, runAs: $runAs);
 		$existing = trim((string)($journey['flowUuid'] ?? ''));
-		$target = null;
-		if ($existing !== '') {
-			$target = $existing;
-		}
+		$target = $this->flowTarget(existing: $existing);
 
 		try {
 			$flow = $flowService->save($document, $target);
@@ -220,6 +231,35 @@ class JourneyService implements JourneyServiceInterface {
 			return $this->record(journey: $journey, journeyId: $journeyId, status: 'refused', error: $e->getMessage(), flowUuid: $existing);
 		}
 
+		return $this->recordCompiled(flow: $flow, journey: $journey, journeyId: $journeyId);
+	}//end saveFlow()
+
+	/**
+	 * The flow uuid to update, or null to create a new flow.
+	 *
+	 * @param string $existing The journey's stored flow uuid, or ''.
+	 *
+	 * @return string|null
+	 */
+	private function flowTarget(string $existing): string|null {
+		$target = null;
+		if ($existing !== '') {
+			$target = $existing;
+		}
+
+		return $target;
+	}//end flowTarget()
+
+	/**
+	 * Publish the saved flow and record the journey as compiled.
+	 *
+	 * @param mixed                $flow      The saved flow.
+	 * @param array<string, mixed> $journey   The journey.
+	 * @param string               $journeyId Journey UUID or slug.
+	 *
+	 * @return array<string, mixed> The journey with its flow status.
+	 */
+	private function recordCompiled(mixed $flow, array $journey, string $journeyId): array {
 		$flowUuid = $this->uuidOf(flow: $flow);
 		$this->publish(flow: $flow, journeyId: $journeyId);
 		if (trim((string)($journey['compiledAt'] ?? '')) === '') {
@@ -227,7 +267,7 @@ class JourneyService implements JourneyServiceInterface {
 		}
 
 		return $this->record(journey: $journey, journeyId: $journeyId, status: 'compiled', error: '', flowUuid: $flowUuid);
-	}//end compile()
+	}//end recordCompiled()
 
 	/**
 	 * Record one outcome of a journey run.

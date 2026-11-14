@@ -85,33 +85,68 @@ class ExportWorkerJob extends TimedJob {
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-02
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$pending = $this->runs->listRuns(filters: ['status' => 'pending']);
-		} catch (\Throwable $e) {
-			$this->logger->error('ExportWorkerJob: failed to list pending runs', ['error' => $e->getMessage()]);
+		$pending = $this->pendingRuns();
+		if ($pending === null) {
 			return;
 		}
 
+		$processed = $this->executeBatch(pending: $pending);
+
+		if ($processed > 0) {
+			$this->logger->info('ExportWorkerJob: processed pending export runs', ['count' => $processed]);
+		}
+	}//end run()
+
+	/**
+	 * The pending export runs; null (logged) when they cannot be listed.
+	 *
+	 * @return iterable<array<string, mixed>>|null The pending runs.
+	 */
+	private function pendingRuns(): iterable|null {
+		try {
+			return $this->runs->listRuns(filters: ['status' => 'pending']);
+		} catch (\Throwable $e) {
+			$this->logger->error('ExportWorkerJob: failed to list pending runs', ['error' => $e->getMessage()]);
+			return null;
+		}
+	}//end pendingRuns()
+
+	/**
+	 * Execute up to one batch of pending runs; a failed run is logged and still counted.
+	 *
+	 * @param iterable<array<string, mixed>> $pending The pending runs.
+	 *
+	 * @return int The number of runs processed.
+	 */
+	private function executeBatch(iterable $pending): int {
 		$processed = 0;
 		foreach ($pending as $run) {
 			if ($processed >= self::BATCH) {
 				break;
 			}
 
-			try {
-				$this->execution->executeRun(run: $run);
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'ExportWorkerJob: run execution failed',
-					['runId' => ($run['id'] ?? $run['uuid'] ?? ''), 'error' => $e->getMessage()]
-				);
-			}
-
+			$this->executeOne(run: $run);
 			$processed++;
-		}//end foreach
-
-		if ($processed > 0) {
-			$this->logger->info('ExportWorkerJob: processed pending export runs', ['count' => $processed]);
 		}
-	}//end run()
+
+		return $processed;
+	}//end executeBatch()
+
+	/**
+	 * Execute one run, logging a failure.
+	 *
+	 * @param array<string, mixed> $run The export run.
+	 *
+	 * @return void
+	 */
+	private function executeOne(array $run): void {
+		try {
+			$this->execution->executeRun(run: $run);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ExportWorkerJob: run execution failed',
+				['runId' => ($run['id'] ?? $run['uuid'] ?? ''), 'error' => $e->getMessage()]
+			);
+		}
+	}//end executeOne()
 }//end class

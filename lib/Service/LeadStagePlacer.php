@@ -209,23 +209,49 @@ final class LeadStagePlacer {
 
 		$stageName = trim((string)($lead['stage'] ?? ''));
 		if ($stageName === '') {
-			$first = $this->firstOpenStage(pipeline: $pipeline);
-			if ($first === null) {
-				return $patch;
-			}
+			return $this->withFirstOpenStage(patch: $patch, pipeline: $pipeline);
+		}
 
-			$patch['stage'] = $first['name'];
-			$patch['stageOrder'] = $first['order'];
+		return $this->withStageOrder(patch: $patch, lead: $lead, pipeline: $pipeline, stageName: $stageName);
+	}//end stagePatch()
+
+	/**
+	 * Place a stageless lead on the pipeline's first open stage, when it has one.
+	 *
+	 * @param array<string, mixed> $patch The patch so far.
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 *
+	 * @return array<string, mixed> The patch.
+	 */
+	private function withFirstOpenStage(array $patch, array $pipeline): array {
+		$first = $this->firstOpenStage(pipeline: $pipeline);
+		if ($first === null) {
 			return $patch;
 		}
 
+		$patch['stage'] = $first['name'];
+		$patch['stageOrder'] = $first['order'];
+		return $patch;
+	}//end withFirstOpenStage()
+
+	/**
+	 * Fill in the stage order of a lead whose stage is known but whose order is blank.
+	 *
+	 * @param array<string, mixed> $patch The patch so far.
+	 * @param array<string, mixed> $lead The lead.
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 * @param string $stageName The lead's stage name.
+	 *
+	 * @return array<string, mixed> The patch.
+	 */
+	private function withStageOrder(array $patch, array $lead, array $pipeline, string $stageName): array {
 		$order = $this->stageOrder(pipeline: $pipeline, stageName: $stageName);
 		if ($order !== null && $this->isBlank(value: $lead['stageOrder'] ?? null) === true) {
 			$patch['stageOrder'] = $order;
 		}
 
 		return $patch;
-	}//end stagePatch()
+	}//end withStageOrder()
 
 	/**
 	 * An ISO 8601 moment: the given one, or now.

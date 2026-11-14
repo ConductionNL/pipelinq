@@ -238,8 +238,35 @@ class EligibilityService implements EligibilityServiceInterface {
 	 * @return array<int, string>
 	 */
 	private function allServiceIds(): array {
+		$rows = $this->listRows(schemaKey: self::SERVICE_SCHEMA_KEY, failure: 'Pipelinq: service list failed for eligibility counts');
+
+		$ids = [];
+		foreach ($rows as $row) {
+			$service = $this->toArray(object: $row);
+			if ($service === null) {
+				continue;
+			}
+
+			$id = $this->serviceIdOf(service: $service);
+			if ($id !== '') {
+				$ids[] = $id;
+			}
+		}
+
+		return $ids;
+	}//end allServiceIds()
+
+	/**
+	 * Every row of a schema on the configured register ([] when unconfigured or unreadable).
+	 *
+	 * @param string $schemaKey The app-config key of the schema.
+	 * @param string $failure   The warning logged when the read fails.
+	 *
+	 * @return iterable<mixed>
+	 */
+	private function listRows(string $schemaKey, string $failure): iterable {
 		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
+		$schema = $this->schemaId(key: $schemaKey);
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -249,30 +276,28 @@ class EligibilityService implements EligibilityServiceInterface {
 				config: ['filters' => ['register' => $register, 'schema' => $schema]]
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: service list failed for eligibility counts');
+			$this->logger->warning($failure);
 			return [];
 		}
 
-		$ids = [];
-		foreach (($rows ?? []) as $row) {
-			$service = $this->toArray(object: $row);
-			if ($service === null) {
-				continue;
-			}
+		return ($rows ?? []);
+	}//end listRows()
 
-			$self = [];
-			if (is_array($service['@self'] ?? null) === true) {
-				$self = $service['@self'];
-			}
-
-			$id = (string)($self['id'] ?? ($service['id'] ?? ''));
-			if ($id !== '') {
-				$ids[] = $id;
-			}
+	/**
+	 * A Service's id: its @self id, else its own id.
+	 *
+	 * @param array<string, mixed> $service The Service entity.
+	 *
+	 * @return string
+	 */
+	private function serviceIdOf(array $service): string {
+		$self = [];
+		if (is_array($service['@self'] ?? null) === true) {
+			$self = $service['@self'];
 		}
 
-		return $ids;
-	}//end allServiceIds()
+		return (string)($self['id'] ?? ($service['id'] ?? ''));
+	}//end serviceIdOf()
 
 	/**
 	 * Return per-step eligibility for a multi-step Service.
@@ -302,39 +327,62 @@ class EligibilityService implements EligibilityServiceInterface {
 		}
 
 		$resources = $this->loadResources();
-		$steps = $this->normaliseSteps(
-			multiStep: ($service['multiStep'] ?? []),
-			fallbackSkills: $this->normaliseSkillList(value: ($service['requiredSkills'] ?? [])),
-			fallbackDuration: (int)($service['durationMinutes'] ?? 0)
-		);
+		$steps = $this->stepsOf(service: $service);
 
 		$out = [];
 		foreach ($steps as $index => $step) {
-			$required = [];
-			if ($step['skillRequired'] !== '') {
-				$required = [$step['skillRequired']];
-			}
-
-			$eligibleForStep = [];
-			if ($step['allowGap'] === false) {
-				foreach ($resources as $resource) {
-					if ($this->matchesSkillRequirements(resource: $resource, requiredSkills: $required) === true) {
-						$eligibleForStep[] = $resource;
-					}
-				}
-			}
-
 			$out[] = [
 				'stepIndex' => $index,
 				'durationMinutes' => $step['durationMinutes'],
 				'skillRequired' => $step['skillRequired'],
 				'allowGap' => $step['allowGap'],
-				'eligibleResources' => $eligibleForStep,
+				'eligibleResources' => $this->eligibleForStep(step: $step, resources: $resources),
 			];
-		}//end foreach
+		}
 
 		return $out;
 	}//end getEligibleResourcesPerStep()
+
+	/**
+	 * A Service's normalised steps.
+	 *
+	 * @param array<string, mixed> $service The Service entity.
+	 *
+	 * @return array<int, array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}>
+	 */
+	private function stepsOf(array $service): array {
+		return $this->normaliseSteps(
+			multiStep: ($service['multiStep'] ?? []),
+			fallbackSkills: $this->normaliseSkillList(value: ($service['requiredSkills'] ?? [])),
+			fallbackDuration: (int)($service['durationMinutes'] ?? 0)
+		);
+	}//end stepsOf()
+
+	/**
+	 * The resources qualified for a step (none for a gap step).
+	 *
+	 * @param array<string, mixed>             $step      The normalised step.
+	 * @param array<int, array<string, mixed>> $resources Every resource.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function eligibleForStep(array $step, array $resources): array {
+		$required = [];
+		if ($step['skillRequired'] !== '') {
+			$required = [$step['skillRequired']];
+		}
+
+		$eligibleForStep = [];
+		if ($step['allowGap'] === false) {
+			foreach ($resources as $resource) {
+				if ($this->matchesSkillRequirements(resource: $resource, requiredSkills: $required) === true) {
+					$eligibleForStep[] = $resource;
+				}
+			}
+		}
+
+		return $eligibleForStep;
+	}//end eligibleForStep()
 
 	/**
 	 * Return Resources eligible AND available for a Service on a given date/duration.
@@ -362,6 +410,19 @@ class EligibilityService implements EligibilityServiceInterface {
 			return [];
 		}
 
+		return $this->withFreeSlots(eligible: $eligible, date: $date, durationMinutes: $durationMinutes);
+	}//end getEligibleResourcesForSlot()
+
+	/**
+	 * The resources that have at least one free slot on a date.
+	 *
+	 * @param array<int, array<string, mixed>> $eligible        The skill-qualified resources.
+	 * @param string                           $date            ISO date `YYYY-MM-DD`.
+	 * @param int                              $durationMinutes Service duration in minutes.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function withFreeSlots(array $eligible, string $date, int $durationMinutes): array {
 		$withSlots = [];
 		foreach ($eligible as $resource) {
 			$resourceId = $this->idOf(object: $resource);
@@ -382,7 +443,7 @@ class EligibilityService implements EligibilityServiceInterface {
 		}
 
 		return $withSlots;
-	}//end getEligibleResourcesForSlot()
+	}//end withFreeSlots()
 
 	/**
 	 * Skill-match primitive — the booking domain's single ADR-012 seam.
@@ -458,28 +519,10 @@ class EligibilityService implements EligibilityServiceInterface {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function loadResources(): array {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::RESOURCE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: resource list failed for eligibility');
-			return [];
-		}
+		$rows = $this->listRows(schemaKey: self::RESOURCE_SCHEMA_KEY, failure: 'Pipelinq: resource list failed for eligibility');
 
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$resource = $this->toArray(object: $row);
 			if ($resource !== null) {
 				$out[] = $resource;
@@ -506,21 +549,7 @@ class EligibilityService implements EligibilityServiceInterface {
 	 */
 	private function normaliseSteps(mixed $multiStep, array $fallbackSkills, int $fallbackDuration): array {
 		if (is_array($multiStep) === true && $multiStep !== []) {
-			$out = [];
-			foreach ($multiStep as $step) {
-				if (is_array($step) === false) {
-					continue;
-				}
-
-				$out[] = [
-					'durationMinutes' => max(0, (int)($step['durationMinutes'] ?? 0)),
-					'skillRequired' => (string)($step['skillRequired'] ?? ''),
-					'resourceType' => (string)($step['resourceType'] ?? ''),
-					'allowGap' => (bool)($step['allowGap'] ?? false),
-				];
-			}
-
-			return $out;
+			return $this->normaliseStepList(multiStep: $multiStep);
 		}
 
 		$skill = '';
@@ -537,6 +566,42 @@ class EligibilityService implements EligibilityServiceInterface {
 			],
 		];
 	}//end normaliseSteps()
+
+	/**
+	 * Normalise each array entry of a multiStep list; other entries are dropped.
+	 *
+	 * @param array<mixed> $multiStep The raw `multiStep` list.
+	 *
+	 * @return array<int, array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}>
+	 */
+	private function normaliseStepList(array $multiStep): array {
+		$out = [];
+		foreach ($multiStep as $step) {
+			if (is_array($step) === false) {
+				continue;
+			}
+
+			$out[] = $this->normaliseStep(step: $step);
+		}
+
+		return $out;
+	}//end normaliseStepList()
+
+	/**
+	 * Normalise one multiStep entry.
+	 *
+	 * @param array<string, mixed> $step The raw step.
+	 *
+	 * @return array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}
+	 */
+	private function normaliseStep(array $step): array {
+		return [
+			'durationMinutes' => max(0, (int)($step['durationMinutes'] ?? 0)),
+			'skillRequired' => (string)($step['skillRequired'] ?? ''),
+			'resourceType' => (string)($step['resourceType'] ?? ''),
+			'allowGap' => (bool)($step['allowGap'] ?? false),
+		];
+	}//end normaliseStep()
 
 	/**
 	 * Coerce a raw `skills` / `requiredSkills` value into a list of strings.

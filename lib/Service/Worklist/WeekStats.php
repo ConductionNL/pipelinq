@@ -89,56 +89,161 @@ final class WeekStats {
 		$todayTs   = $today->getTimestamp();
 		$nowTs     = $now->getTimestamp();
 
-		$answered    = 0;
-		$todayCount  = 0;
-		$converted   = 0;
-		$withDue     = 0;
-		$inTime      = 0;
-		$answerTimes = [];
+		$tally = $this->tally(tickets: $tickets, from: $from, todayTs: $todayTs, nowTs: $nowTs);
+
+		return $this->figures(weekStart: $weekStart, tally: $tally);
+	}//end of()
+
+	/**
+	 * Count the week's tickets.
+	 *
+	 * @param array<int, array<string, mixed>> $tickets The tickets, as stored.
+	 * @param int                              $from    Monday 00:00 of this week.
+	 * @param int                              $todayTs Today 00:00.
+	 * @param int                              $nowTs   Now.
+	 *
+	 * @return array{answered: int, todayCount: int, converted: int, withDue: int, inTime: int, answerTimes: array<int, int>}
+	 */
+	private function tally(array $tickets, int $from, int $todayTs, int $nowTs): array {
+		$tally = ['answered' => 0, 'todayCount' => 0, 'converted' => 0, 'withDue' => 0, 'inTime' => 0, 'answerTimes' => []];
 		foreach ($tickets as $ticket) {
-			$resolved = $this->timestamp(value: ($ticket['resolvedAt'] ?? null));
-			if ($resolved === null || $resolved < $from || $resolved > $nowTs) {
+			$resolved = $this->resolvedInWindow(ticket: $ticket, from: $from, nowTs: $nowTs);
+			if ($resolved === null) {
 				continue;
 			}
 
-			$status = (string)($ticket['status'] ?? '');
-			if ($status === self::CONVERTED_STATUS) {
-				$converted++;
-				continue;
-			}
+			$tally = $this->countTicket(tally: $tally, ticket: $ticket, resolved: $resolved, todayTs: $todayTs);
+		}
 
-			if (in_array($status, self::ANSWERED_STATUSES, true) === false) {
-				continue;
-			}
+		return $tally;
+	}//end tally()
 
-			$answered++;
-			if ($resolved >= $todayTs) {
-				$todayCount++;
-			}
+	/**
+	 * A ticket's resolve time when it falls between the week's start and now, otherwise null.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 * @param int                  $from   Monday 00:00 of this week.
+	 * @param int                  $nowTs  Now.
+	 *
+	 * @return int|null
+	 */
+	private function resolvedInWindow(array $ticket, int $from, int $nowTs): int|null {
+		$resolved = $this->timestamp(value: ($ticket['resolvedAt'] ?? null));
+		if ($resolved === null || $resolved < $from || $resolved > $nowTs) {
+			return null;
+		}
 
-			$deadline = $this->timestamp(value: ($ticket['slaDeadline'] ?? null));
-			if ($deadline !== null) {
-				$withDue++;
-				if ($resolved <= $deadline) {
-					$inTime++;
-				}
-			}
+		return $resolved;
+	}//end resolvedInWindow()
 
-			$occurred = $this->timestamp(value: ($ticket['occurredAt'] ?? null));
-			if ($occurred !== null && $occurred <= $resolved) {
-				$answerTimes[] = ($resolved - $occurred);
-			}
-		}//end foreach
+	/**
+	 * Count one ticket resolved this week.
+	 *
+	 * @param array<string, mixed> $tally    The counts so far.
+	 * @param array<string, mixed> $ticket   The ticket.
+	 * @param int                  $resolved When it was resolved.
+	 * @param int                  $todayTs  Today 00:00.
+	 *
+	 * @return array<string, mixed> The counts.
+	 */
+	private function countTicket(array $tally, array $ticket, int $resolved, int $todayTs): array {
+		$status = (string)($ticket['status'] ?? '');
+		if ($status === self::CONVERTED_STATUS) {
+			$tally['converted']++;
+			return $tally;
+		}
 
+		if (in_array($status, self::ANSWERED_STATUSES, true) === false) {
+			return $tally;
+		}
+
+		$tally = $this->countAnswered(tally: $tally, resolved: $resolved, todayTs: $todayTs);
+		$tally = $this->countDeadline(tally: $tally, ticket: $ticket, resolved: $resolved);
+		return $this->countAnswerTime(tally: $tally, ticket: $ticket, resolved: $resolved);
+	}//end countTicket()
+
+	/**
+	 * Count an answered ticket, and whether it was answered today.
+	 *
+	 * @param array<string, mixed> $tally    The counts so far.
+	 * @param int                  $resolved When it was resolved.
+	 * @param int                  $todayTs  Today 00:00.
+	 *
+	 * @return array<string, mixed> The counts.
+	 */
+	private function countAnswered(array $tally, int $resolved, int $todayTs): array {
+		$tally['answered']++;
+		if ($resolved >= $todayTs) {
+			$tally['todayCount']++;
+		}
+
+		return $tally;
+	}//end countAnswered()
+
+	/**
+	 * Count an answered ticket against its deadline.
+	 *
+	 * @param array<string, mixed> $tally    The counts so far.
+	 * @param array<string, mixed> $ticket   The ticket.
+	 * @param int                  $resolved When it was resolved.
+	 *
+	 * @return array<string, mixed> The counts.
+	 */
+	private function countDeadline(array $tally, array $ticket, int $resolved): array {
+		$deadline = $this->timestamp(value: ($ticket['slaDeadline'] ?? null));
+		if ($deadline !== null) {
+			$tally['withDue']++;
+			if ($resolved <= $deadline) {
+				$tally['inTime']++;
+			}
+		}
+
+		return $tally;
+	}//end countDeadline()
+
+	/**
+	 * Record an answered ticket's answer time.
+	 *
+	 * @param array<string, mixed> $tally    The counts so far.
+	 * @param array<string, mixed> $ticket   The ticket.
+	 * @param int                  $resolved When it was resolved.
+	 *
+	 * @return array<string, mixed> The counts.
+	 */
+	private function countAnswerTime(array $tally, array $ticket, int $resolved): array {
+		$occurred = $this->timestamp(value: ($ticket['occurredAt'] ?? null));
+		if ($occurred !== null && $occurred <= $resolved) {
+			$tally['answerTimes'][] = ($resolved - $occurred);
+		}
+
+		return $tally;
+	}//end countAnswerTime()
+
+	/**
+	 * The week's figures from its counts.
+	 *
+	 * @param DateTimeImmutable    $weekStart Monday 00:00 of this week.
+	 * @param array<string, mixed> $tally     The counts.
+	 *
+	 * @return array{
+	 *   weekStart: string,
+	 *   answered: int,
+	 *   answeredToday: int,
+	 *   withinDeadline: int|null,
+	 *   averageAnswerDays: float|null,
+	 *   converted: int
+	 * }
+	 */
+	private function figures(DateTimeImmutable $weekStart, array $tally): array {
 		return [
 			'weekStart'         => $weekStart->format('Y-m-d'),
-			'answered'          => $answered,
-			'answeredToday'     => $todayCount,
-			'withinDeadline'    => $this->percentage(part: $inTime, whole: $withDue),
-			'averageAnswerDays' => $this->averageDays(seconds: $answerTimes),
-			'converted'         => $converted,
+			'answered'          => $tally['answered'],
+			'answeredToday'     => $tally['todayCount'],
+			'withinDeadline'    => $this->percentage(part: $tally['inTime'], whole: $tally['withDue']),
+			'averageAnswerDays' => $this->averageDays(seconds: $tally['answerTimes']),
+			'converted'         => $tally['converted'],
 		];
-	}//end of()
+	}//end figures()
 
 	/**
 	 * A rounded percentage, or null for an empty whole.

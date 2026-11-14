@@ -126,23 +126,25 @@ class ClientHistorySummaryController extends Controller {
 			return Http::STATUS_INTERNAL_SERVER_ERROR;
 		}
 
+		return $this->accessFor(clientId: $clientId, register: $register, schema: $schema);
+	}//end clientAccess()
+
+	/**
+	 * Read the client with RBAC on and map the outcome to an HTTP status.
+	 *
+	 * @param string $clientId The client's id.
+	 * @param string $register The register id.
+	 * @param string $schema The client schema id.
+	 *
+	 * @return int The HTTP status the access maps to.
+	 */
+	private function accessFor(string $clientId, string $register, string $schema): int {
 		try {
-			$object = $this->objectService->find(
-				id: $clientId,
-				register: $register,
-				schema: $schema,
-				_rbac: true,
-				_multitenancy: true,
-			);
+			$object = $this->objectService->find(id: $clientId, register: $register, schema: $schema, _rbac: true, _multitenancy: true);
 		} catch (NotAuthorizedException) {
 			return Http::STATUS_FORBIDDEN;
 		} catch (Throwable $e) {
-			if (str_ends_with(get_class($e), '\\DoesNotExistException') === true) {
-				return Http::STATUS_NOT_FOUND;
-			}
-
-			$this->logger->warning('ClientHistorySummaryController: client read guard failed', ['clientId' => $clientId, 'exception' => $e->getMessage()]);
-			return Http::STATUS_INTERNAL_SERVER_ERROR;
+			return $this->failureStatus(e: $e, clientId: $clientId);
 		}
 
 		if ($object === null) {
@@ -150,5 +152,22 @@ class ClientHistorySummaryController extends Controller {
 		}
 
 		return Http::STATUS_OK;
-	}//end clientAccess()
+	}//end accessFor()
+
+	/**
+	 * The status for a failed client read: 404 when it does not exist, else 500 (logged).
+	 *
+	 * @param Throwable $e The failure.
+	 * @param string $clientId The client's id, for the log.
+	 *
+	 * @return int
+	 */
+	private function failureStatus(Throwable $e, string $clientId): int {
+		if (str_ends_with(get_class($e), '\\DoesNotExistException') === true) {
+			return Http::STATUS_NOT_FOUND;
+		}
+
+		$this->logger->warning('ClientHistorySummaryController: client read guard failed', ['clientId' => $clientId, 'exception' => $e->getMessage()]);
+		return Http::STATUS_INTERNAL_SERVER_ERROR;
+	}//end failureStatus()
 }//end class

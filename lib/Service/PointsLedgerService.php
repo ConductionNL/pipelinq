@@ -320,33 +320,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function getLedgerHistory(string $accountId, ?string $from = null, ?string $to = null): array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '' || $accountId === '') {
-			return [];
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'accountId' => $accountId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 10000,
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->debug('Pipelinq: ledger findAll failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$rowsToMap = [];
-		if (is_array($rows) === true) {
-			$rowsToMap = array_values($rows);
-		}
-
-		$rows = array_map([$this, 'toArray'], $rowsToMap);
+		$rows = $this->accountEntries(accountId: $accountId);
 
 		$filtered = array_filter(
 			$rows,
@@ -362,6 +336,56 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 		// array_values() this replaces was a no-op.
 		return $filtered;
 	}//end getLedgerHistory()
+
+	/**
+	 * Every ledger entry of an account as an array; none when unconfigured, no account is given or the read fails.
+	 *
+	 * @param string $accountId The account UUID.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function accountEntries(string $accountId): array {
+		[$register, $schema] = $this->config();
+		if ($register === '' || $schema === '' || $accountId === '') {
+			return [];
+		}
+
+		$rows = $this->findAccountRows(accountId: $accountId, register: $register, schema: $schema);
+
+		$rowsToMap = [];
+		if (is_array($rows) === true) {
+			$rowsToMap = array_values($rows);
+		}
+
+		return array_map([$this, 'toArray'], $rowsToMap);
+	}//end accountEntries()
+
+	/**
+	 * Find an account's ledger rows, or none when the read fails.
+	 *
+	 * @param string $accountId The account UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The ledger schema id.
+	 *
+	 * @return mixed The findAll result.
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function findAccountRows(string $accountId, string $register, string $schema) {
+		try {
+			return $this->getObjectService()->findAll(
+				config: [
+					'filters' => ['accountId' => $accountId, 'register' => $register, 'schema' => $schema],
+					'limit' => 10000,
+				]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->debug('Pipelinq: ledger findAll failed', ['exception' => $e->getMessage()]);
+			return [];
+		}
+	}//end findAccountRows()
 
 	/**
 	 * Whether a ledger entry's timestamp falls within an optional [from, to] window.
@@ -490,38 +514,83 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 			return null;
 		}
 
+		$rows = $this->operationRows(movement: $movement);
+		if ($rows === []) {
+			return null;
+		}
+
+		return $this->matchingFirst(movement: $movement, rows: $rows);
+	}//end firstEntryOf()
+
+	/**
+	 * The stored entries of the account that carry the current operation id.
+	 *
+	 * @param LedgerMovement $movement The movement about to be written.
+	 *
+	 * @return mixed The findAll result.
+	 *
+	 * @throws RuntimeException When the schema is not configured or the ledger cannot be read.
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 */
+	private function operationRows(LedgerMovement $movement) {
 		[$register, $schema] = $this->config();
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('PointsLedgerEntry schema is not configured.');
 		}
 
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'accountId' => $movement->accountId,
-						'operationId' => $this->operationId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
+			return $this->getObjectService()->findAll(
+				config: $this->operationQuery(movement: $movement, register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			throw new RuntimeException('Operation '.$this->operationId.' could not be checked against the ledger.', 0, $e);
 		}
+	}//end operationRows()
 
-		if ($rows === []) {
-			return null;
-		}
+	/**
+	 * The query for the first entry of the account with the current operation id.
+	 *
+	 * @param LedgerMovement $movement The movement about to be written.
+	 * @param string $register The register id.
+	 * @param string $schema The ledger schema id.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 */
+	private function operationQuery(LedgerMovement $movement, string $register, string $schema): array {
+		return [
+			'filters' => [
+				'accountId' => $movement->accountId,
+				'operationId' => $this->operationId,
+				'register' => $register,
+				'schema' => $schema,
+			],
+			'limit' => 1,
+		];
+	}//end operationQuery()
 
+	/**
+	 * The first stored entry, when it is the same movement.
+	 *
+	 * @param LedgerMovement $movement The movement about to be written.
+	 * @param mixed $rows The stored entries with the operation id.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws RuntimeException When the id belongs to another movement.
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
+	 */
+	private function matchingFirst(LedgerMovement $movement, $rows): array {
 		$first = $this->toArray(value: reset($rows));
 		if (($first['type'] ?? null) !== $movement->type || (int)($first['count'] ?? 0) !== $movement->signedCount) {
 			throw new RuntimeException('Operation '.$this->operationId.' was already used for another movement.');
 		}
 
 		return $first;
-	}//end firstEntryOf()
+	}//end matchingFirst()
 
 	/**
 	 * Append a ledger entry and atomically update the account balance.
