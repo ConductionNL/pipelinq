@@ -69,6 +69,11 @@ describe('the declared admin sections', () => {
 		expect(exportFields['export.retention_days']).toMatchObject({ min: 1, default: 365 })
 		expect(exportFields['export.at_risk_warning_hours']).toMatchObject({ min: 1, default: 24 })
 		expect(exportFields['export.default_compression'].options).toEqual(['none', 'gzip', 'snappy', 'zstd'])
+		const threshold = exportFields.export_failure_threshold
+		expect(threshold).toMatchObject({ type: 'number', min: 1, max: 10, integer: true, required: true, default: 3, patternMessage: 'Enter a number from 1 to 10' })
+		const inRange = new RegExp(threshold.pattern)
+		expect(['1', '3', '10', String(1), String(10)].every((value) => inRange.test(value))).toBe(true)
+		expect(['0', '11', '-1', '2.5', '', 'three'].some((value) => inRange.test(value))).toBe(false)
 		const email = new RegExp(exportFields['export.failure_notification_email'].pattern)
 		expect(email.test('alerts@example.com')).toBe(true)
 		expect(email.test('alerts')).toBe(false)
