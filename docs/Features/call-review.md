@@ -10,7 +10,7 @@ agent agrees. From pipelinq matrix rows `cm-transcribe` and `cm-quality-review`.
 
 ## Switching transcription on
 
-Transcription is off until an administrator switches it on:
+Transcription is off until an administrator switches it on, with **Transcribe recorded calls** in the Call transcription section of the Pipelinq admin settings, or:
 
 ```
 occ config:app:set pipelinq call_transcription_enabled --value=true
@@ -48,6 +48,14 @@ A member of the group `pipelinq-call-review` writes a **call review** of a
 recorded call: a score and remark per criterion and coaching points. On every
 save pipelinq computes the review's total, the weighted mean of its scores,
 rounded to one decimal. A review starts as a draft and is shared with the agent.
+
+## Where to find it
+
+- **TicketDetail**, tab **Call**: the summary (the agent can correct it), the transcript, how long the recording is kept and a link to listen to it. A member of the call review group sees **Review this call** in the Actions menu.
+- **Call reviews**: the reviews, and the tab **Recorded calls** with the contact moments that have a recording.
+- **A review**: the reviewer scores each criterion of the scorecard, writes coaching points and presses **Share with agent**. The agent sees the scores and presses **Agree** on each coaching point.
+- **My Work**: the agent's card **Reviews of your calls**.
+- **Admin settings**: **Call scorecards**, where an administrator keeps the scorecards and their criteria.
 
 ## Who sees a review
 

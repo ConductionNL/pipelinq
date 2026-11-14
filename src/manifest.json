@@ -4470,6 +4470,34 @@
 						"method": "POST",
 						"successMessage": "Assigned to you. It is on your My Work now.",
 						"errorMessage": "Could not assign this ticket to you."
+					},
+					{
+						"id": "review-call",
+						"label": "Review this call",
+						"icon": "AccountStarOutline",
+						"type": "open-form",
+						"register": "pipelinq",
+						"schema": "callReview",
+						"formTitle": "Review this call",
+						"includeFields": [
+							"scorecard",
+							"scores",
+							"coachingPoints"
+						],
+						"props": {
+							"contactMoment": "@objectId",
+							"agent": "@object.assignee",
+							"reviewer": "@me",
+							"status": "draft"
+						},
+						"successMessage": "Review saved as a draft. Share it with the agent from Call reviews.",
+						"visibleWhen": {
+							"readerGroups": [
+								"pipelinq-call-review"
+							],
+							"field": "recording_url",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"hideEmpty": true,
@@ -4628,6 +4656,58 @@
 						}
 					},
 					{
+						"id": "ticket-call-summary",
+						"type": "record-notes",
+						"title": "Call summary",
+						"icon": "TextBoxOutline",
+						"_note": "contact-moments-call-review D2: the summary hermiq wrote from the transcript, which the agent corrects in place. A write is a PATCH of callSummary only.",
+						"content": {
+							"field": "callSummary",
+							"label": "Call summary",
+							"hideLabel": true,
+							"rows": 4,
+							"placeholder": "No summary yet. Write what the call was about."
+						}
+					},
+					{
+						"id": "ticket-call-transcript",
+						"type": "facts",
+						"title": "Transcript",
+						"icon": "Headset",
+						"_note": "contact-moments-call-review D1 and REQ-CRV-004: the transcript is read only and follows the contact moment's retention; the recording stays on the telephony platform and is linked while it is kept.",
+						"content": {
+							"columns": 1,
+							"fields": [
+								{
+									"as": "pill",
+									"path": "transcriptStatus",
+									"map": {
+										"pending": "Transcribing",
+										"done": "Transcribed",
+										"failed": "Transcription failed",
+										"unavailable": "No speech to text available",
+										"expired": "Recording no longer kept"
+									}
+								},
+								{
+									"path": "recording_retention_expires_at",
+									"label": "Recording kept until",
+									"format": "date"
+								},
+								{
+									"path": "transcript",
+									"label": "Transcript"
+								}
+							],
+							"link": {
+								"label": "Listen to the recording",
+								"href": "{recording_url}",
+								"target": "_blank"
+							},
+							"emptyText": "No transcript yet."
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -4649,6 +4729,17 @@
 									"label": "Decisions",
 									"visibleWhen": {
 										"appInstalled": "decidiq"
+									}
+								},
+								{
+									"widgetIds": [
+										"ticket-call-summary",
+										"ticket-call-transcript"
+									],
+									"label": "Call",
+									"visibleWhen": {
+										"field": "recording_url",
+										"op": "notEmpty"
 									}
 								},
 								{
@@ -10877,6 +10968,36 @@
 						}
 					},
 					{
+						"id": "my-call-reviews",
+						"viewport": "wide",
+						"titleTone": "side",
+						"type": "record-list",
+						"title": "Reviews of your calls",
+						"_note": "contact-moments-call-review task 2.4: the reviews a team lead shared with this agent. The agent opens one and agrees each coaching point there; OpenRegister's authorization block keeps another agent's reviews out of this list.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "callReview",
+							"filter": {
+								"agent": "@me",
+								"status": [
+									"shared",
+									"agreed"
+								]
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{reviewer|user}",
+							"meta": {
+								"parts": [
+									"{status}",
+									"{total}"
+								]
+							},
+							"rowRoute": "CallReviewDetail",
+							"emptyText": "No reviews of your calls yet."
+						}
+					},
+					{
 						"id": "my-saved-views",
 						"viewport": "wide",
 						"titleTone": "side",
@@ -11152,6 +11273,16 @@
 						"gridY": 12,
 						"gridWidth": 6,
 						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "9",
+						"widgetId": "my-call-reviews",
+						"gridX": 8,
+						"gridY": 9,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					}
 				]
