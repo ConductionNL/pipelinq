@@ -290,6 +290,33 @@ class ExportJobController extends Controller {
 	}//end disableJob()
 
 	/**
+	 * A cron expression in words, for the schedule dialog (`?expression=0 2 * * *`).
+	 *
+	 * Answers in the user's language when it is Dutch, else in English, with
+	 * `valid: false` when the expression is not a 5-field cron expression.
+	 *
+	 * @return JSONResponse `{expression, description, valid}`.
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	#[NoAdminRequired]
+	public function describeSchedule(): JSONResponse {
+		$expression = trim((string)$this->request->getParam('expression', ''));
+		$locale = 'en';
+		if (str_starts_with($this->l10n->getLanguageCode(), 'nl') === true) {
+			$locale = 'nl';
+		}
+
+		return $this->requireExportAdmin(
+			action: function () use ($expression, $locale): array {
+				$description = $this->jobs->describeSchedule(expression: $expression, locale: $locale);
+				return ['expression' => $expression, 'description' => $description, 'valid' => ($description !== '')];
+			},
+			label: 'describeSchedule'
+		);
+	}//end describeSchedule()
+
+	/**
 	 * The acting user UID (empty when no session).
 	 *
 	 * @return string The UID.
