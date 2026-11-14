@@ -127,6 +127,17 @@ class ListenerRegistrar {
 			event: ObjectCreatingEvent::class,
 			listener: TaskCreatedByCreatingListener::class
 		);
+		// A call review carries its weighted total and, once every coaching
+		// point is agreed, the agreed status, whoever saved it
+		// (contact-moments-call-review D3).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: CallReviewSaveListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatingEvent::class,
+			listener: CallReviewSaveListener::class
+		);
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class

@@ -15,16 +15,18 @@
 
 ## 2. Review
 
-- [ ] 2.1 Schemas `callScorecard` and `callReview` with the authorization block of D3 and a weighted `total`
+- [x] 2.1 Schemas `callScorecard` and `callReview` with the authorization block of D3 and a weighted `total`
   - Verify: PHPUnit on the total; an OpenRegister read as another agent is refused
+  - Status: schemas in `register.d/99-zzzzzzzzzzz-call-review.json`; `CallReviewSaveListener` sets `total` (and `agreed`, see 2.4) on every save; PHPUnit covers both. The live read as another agent is not run here.
 - [ ] 2.2 Scorecard admin section in pipelinq admin settings
   - Verify: Vitest on the criteria editor
 - [ ] 2.3 Call reviews page and the review form, for group `pipelinq-call-review`
   - Verify: Playwright: a reviewer scores a call on three criteria and shares it
 - [ ] 2.4 My Work shows shared reviews; Agree per coaching point sets `agreedAt`, all agreed sets status `agreed`
   - Verify: Playwright as the agent agrees both points and the review shows agreed to the reviewer
+  - Status: the server half is built (a shared review whose points all carry `agreedAt` is stored as `agreed`, and the agent may update the review); the My Work list and the Agree buttons are not.
 
 ## 3. Docs
 
-- [ ] 3.1 `docs/Features/call-review.md`: switching transcription on, where audio goes, who sees a review
+- [x] 3.1 `docs/Features/call-review.md`: switching transcription on, where audio goes, who sees a review
   - Verify: docs build exit 0; `npm run test:l10n` exit 0

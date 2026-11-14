@@ -9564,7 +9564,17 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "Agreed at": "Agreed at",
+        "Call review": "Call review",
+        "Call scorecard": "Call scorecard",
+        "Coaching point": "Coaching point",
+        "Coaching points": "Coaching points",
+        "Criteria": "Criteria",
+        "Remark": "Remark",
+        "Reviewer": "Reviewer",
+        "Scorecard": "Scorecard",
+        "Scores": "Scores"
     },
     "nplurals=2; plural=(n != 1);"
 )
