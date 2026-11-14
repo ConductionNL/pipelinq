@@ -9584,6 +9584,7 @@ OC.L10N.register(
         "for {assigneeUserId|user}": "voor {assigneeUserId|user}",
         "No open matters for this client.": "Geen openstaande zaken voor deze klant.",
         "No earlier contact with this client.": "Geen eerder contact met deze klant.",
+        "No earlier period to compare with": "Geen eerdere periode om mee te vergelijken",
         "Edit · {reference}": "Bewerken · {reference}",
         "{reference} · {ticketType}": "{reference} · {ticketType}",
         "Unsaved contact moment": "Niet opgeslagen contactmoment",

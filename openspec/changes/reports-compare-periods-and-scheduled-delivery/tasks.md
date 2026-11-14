@@ -3,7 +3,7 @@
 ## 1. Period comparison (built; tag and test)
 - [x] 1.1 Add `@spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001` to `AnalyticsService::getOverview()` and `aggregateOverviewWindow()` (V1)
 - [x] 1.2 `tests/Unit/Service/AnalyticsServiceTest.php`: the previous window has the same length as the current one and ends where it starts, for week, month, quarter and year (V1)
-- [ ] 1.3 Stat tiles with `previousField` in `src/manifest.json`: declare `goodDirection` on every KPI tile that has a previous value (resolution time `down`), and show "No earlier period to compare with" when the previous value is null or 0 (nextcloud-vue stat widget prop if it lacks one; build it there, not here) (V1)
+- [x] 1.3 Stat tiles with `previousField` in `src/manifest.json`: declare `goodDirection` on every KPI tile that has a previous value (resolution time `down`), and show "No earlier period to compare with" when the previous value is null or 0 (nextcloud-vue stat widget prop if it lacks one; build it there, not here) (V1)
   - Status: the four commercial tiles already declare `goodDirection: up`. The overview's three compared tiles (lead conversion, request turnaround, contacts) deliberately show the previous value as a "was ..." caption and no trend chip (`tests/vitest/operationalCardsBoard.spec.js` guards that), so they get no `previousField`. Left open: CnStatWidget has no text for a missing previous value; that prop belongs in nextcloud-vue, which this build could not reach.
 
 ## 2. Mail delivery for export jobs
