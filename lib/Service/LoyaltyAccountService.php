@@ -191,15 +191,33 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			return null;
 		}
 
+		$row = $this->firstAccountRow(
+			filters: [
+				'customerId' => $customerId,
+				'programmeId' => $programmeId,
+				'register' => $register,
+				'schema' => $schema,
+			]
+		);
+		if ($row === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $row['row']);
+	}//end findAccountByKlantAndProgramme()
+
+	/**
+	 * The first account row matching the filters, wrapped as `row`, or null when there is none.
+	 *
+	 * @param array<string, string> $filters The account filters.
+	 *
+	 * @return array{row: mixed}|null
+	 */
+	private function firstAccountRow(array $filters): array|null {
 		try {
 			$result = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'customerId' => $customerId,
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => $filters,
 					'limit' => 1,
 				]
 			);
@@ -212,8 +230,8 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			return null;
 		}
 
-		return $this->toArray(value: reset($result));
-	}//end findAccountByKlantAndProgramme()
+		return ['row' => reset($result)];
+	}//end firstAccountRow()
 
 	/**
 	 * Disable an account (e.g. fraud, dispute).

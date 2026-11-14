@@ -423,6 +423,35 @@ class PosTenderService implements PosTenderServiceInterface {
 	 */
 	public function addTender(string $transactionId, array $payload): array {
 		$transaction = $this->fetchTransaction(id: $transactionId);
+		[$tenderTypeId, $type, $amount, $reference] = $this->validateTenderInput(transaction: $transaction, payload: $payload);
+
+		$tender = [
+			'transaction' => $transactionId,
+			'tenderType' => $tenderTypeId,
+			'amount' => round($amount, 2),
+			'reference' => $reference,
+			'glAccount' => (string)($type['glAccount'] ?? ''),
+			'change' => round($this->tenderChange(type: $type, amount: $amount, transaction: $transaction), 2),
+			'notes' => (string)($payload['notes'] ?? ''),
+			'sortOrder' => (int)($payload['sortOrder'] ?? (count($this->getTendersForTransaction(transactionId: $transactionId)) + 1)),
+			'glPosted' => false,
+			'glPostAttempts' => 0,
+		];
+
+		return $this->saveTender(id: '', payload: $tender);
+	}//end addTender()
+
+	/**
+	 * Validate a new tender against its transaction and tender type.
+	 *
+	 * @param array<string, mixed> $transaction The transaction.
+	 * @param array<string, mixed> $payload The tender payload.
+	 *
+	 * @return array{0: string, 1: array<string, mixed>, 2: float, 3: string} Tender type id, type, amount and reference.
+	 *
+	 * @throws InvalidTenderException On a settled transaction or invalid tender input.
+	 */
+	private function validateTenderInput(array $transaction, array $payload): array {
 		$status = (string)($transaction['status'] ?? '');
 		if ($status === 'settled') {
 			throw new InvalidTenderException(
@@ -432,6 +461,23 @@ class PosTenderService implements PosTenderServiceInterface {
 		}
 
 		$tenderTypeId = (string)($payload['tenderType'] ?? '');
+		$type = $this->activeTenderType(tenderTypeId: $tenderTypeId);
+		$amount = $this->tenderAmount(payload: $payload);
+		$reference = $this->tenderReference(payload: $payload, type: $type);
+
+		return [$tenderTypeId, $type, $amount, $reference];
+	}//end validateTenderInput()
+
+	/**
+	 * Load the tender type, requiring an id and an active type.
+	 *
+	 * @param string $tenderTypeId The tender type id.
+	 *
+	 * @return array<string, mixed> The tender type.
+	 *
+	 * @throws InvalidTenderException When the id is missing or the type is inactive.
+	 */
+	private function activeTenderType(string $tenderTypeId): array {
 		if ($tenderTypeId === '') {
 			throw new InvalidTenderException('Tender type is required', statusCode: 400);
 		}
@@ -445,6 +491,19 @@ class PosTenderService implements PosTenderServiceInterface {
 			);
 		}
 
+		return $type;
+	}//end activeTenderType()
+
+	/**
+	 * The tender amount, at least €0.01.
+	 *
+	 * @param array<string, mixed> $payload The tender payload.
+	 *
+	 * @return float The amount.
+	 *
+	 * @throws InvalidTenderException When the amount is below €0.01.
+	 */
+	private function tenderAmount(array $payload): float {
 		$amount = (float)($payload['amount'] ?? 0);
 		if ($amount < 0.01) {
 			throw new InvalidTenderException(
@@ -453,6 +512,20 @@ class PosTenderService implements PosTenderServiceInterface {
 			);
 		}
 
+		return $amount;
+	}//end tenderAmount()
+
+	/**
+	 * The trimmed tender reference, required when the tender type says so.
+	 *
+	 * @param array<string, mixed> $payload The tender payload.
+	 * @param array<string, mixed> $type The tender type.
+	 *
+	 * @return string The reference.
+	 *
+	 * @throws InvalidTenderException When a required reference is missing.
+	 */
+	private function tenderReference(array $payload, array $type): string {
 		$requiresReference = (bool)($type['requiresReference'] ?? false);
 		$reference = trim((string)($payload['reference'] ?? ''));
 		if ($requiresReference === true && $reference === '') {
@@ -462,30 +535,31 @@ class PosTenderService implements PosTenderServiceInterface {
 			);
 		}
 
-		// Change calculation for CASH overpayment (REQ-PST-005). Other tenders
-		// record change = 0; an overpayment without an allowsChange tender
-		// is blocked at settle (validateTenderSum / REQ-PST-004).
+		return $reference;
+	}//end tenderReference()
+
+	/**
+	 * The change for a cash overpayment; 0 for tender types that do not give change.
+	 *
+	 * Change calculation for CASH overpayment (REQ-PST-005). Other tenders
+	 * record change = 0; an overpayment without an allowsChange tender
+	 * is blocked at settle (validateTenderSum / REQ-PST-004).
+	 *
+	 * @param array<string, mixed> $type The tender type.
+	 * @param float $amount The tendered amount.
+	 * @param array<string, mixed> $transaction The transaction.
+	 *
+	 * @return float The change.
+	 */
+	private function tenderChange(array $type, float $amount, array $transaction): float {
 		$total = (float)($transaction['total'] ?? 0);
 		$change = 0.0;
 		if (($type['allowsChange'] ?? false) === true) {
 			$change = $this->calculateChange(cashTenderedAmount: $amount, transactionTotal: $total);
 		}
 
-		$tender = [
-			'transaction' => $transactionId,
-			'tenderType' => $tenderTypeId,
-			'amount' => round($amount, 2),
-			'reference' => $reference,
-			'glAccount' => (string)($type['glAccount'] ?? ''),
-			'change' => round($change, 2),
-			'notes' => (string)($payload['notes'] ?? ''),
-			'sortOrder' => (int)($payload['sortOrder'] ?? (count($this->getTendersForTransaction(transactionId: $transactionId)) + 1)),
-			'glPosted' => false,
-			'glPostAttempts' => 0,
-		];
-
-		return $this->saveTender(id: '', payload: $tender);
-	}//end addTender()
+		return $change;
+	}//end tenderChange()
 
 	/**
 	 * Remove a tender from a transaction.
@@ -725,27 +799,54 @@ class PosTenderService implements PosTenderServiceInterface {
 			return '';
 		}
 
+		$attempts = $this->remainingPostAttempts(tender: $tender, tenderId: $tenderId);
+		if ($attempts === null) {
+			return '';
+		}
+
+		$event = $this->postedEvent(tender: $tender, tenderId: $tenderId, transactionUuid: $transactionUuid, transactionReference: $transactionReference);
+		$this->dispatchTenderPosted(event: $event, tenderId: $tenderId);
+		$this->recordPostAttempt(tender: $tender, tenderId: $tenderId, eventId: $event->getEventId(), attempts: $attempts);
+
+		return $event->getEventId();
+	}//end emitSingleTenderPosted()
+
+	/**
+	 * The tender's GL-post attempts so far, or null (logged) once the maximum is reached.
+	 *
+	 * @param array<string, mixed> $tender The tender.
+	 * @param string $tenderId The tender id.
+	 *
+	 * @return int|null The attempts, or null when no attempt is left.
+	 */
+	private function remainingPostAttempts(array $tender, string $tenderId): int|null {
 		$attempts = (int)($tender['glPostAttempts'] ?? 0);
 		if ($attempts >= self::MAX_GL_POST_ATTEMPTS) {
 			$this->logger->warning(
 				'Pipelinq POS tender: max GL-post attempts reached; soft-failing',
 				['tenderId' => $tenderId, 'attempts' => $attempts]
 			);
-			return '';
+			return null;
 		}
 
-		// Resolve the tender-type code (for the event payload).
-		$tenderTypeCode = '';
-		try {
-			$type = $this->getTenderTypeById(id: (string)($tender['tenderType'] ?? ''));
-			$tenderTypeCode = (string)($type['code'] ?? '');
-		} catch (Throwable $e) {
-			// Code is best-effort metadata; emit anyway with empty code.
-		}
+		return $attempts;
+	}//end remainingPostAttempts()
 
-		$eventId = $this->uuid();
-		$event = new TenderPostedEvent(
-			eventId: $eventId,
+	/**
+	 * Build the TenderPosted event for a tender.
+	 *
+	 * @param array<string, mixed> $tender The tender.
+	 * @param string $tenderId The tender id.
+	 * @param string $transactionUuid The transaction UUID.
+	 * @param string $transactionReference The transaction reference.
+	 *
+	 * @return TenderPostedEvent The event.
+	 */
+	private function postedEvent(array $tender, string $tenderId, string $transactionUuid, string $transactionReference): TenderPostedEvent {
+		$tenderTypeCode = $this->tenderTypeCodeOf(tender: $tender);
+
+		return new TenderPostedEvent(
+			eventId: $this->uuid(),
 			tenderUuid: $tenderId,
 			transactionUuid: $transactionUuid,
 			transactionReference: $transactionReference,
@@ -754,7 +855,36 @@ class PosTenderService implements PosTenderServiceInterface {
 			glAccount: (string)($tender['glAccount'] ?? ''),
 			emittedAt: $this->nowIso(),
 		);
+	}//end postedEvent()
 
+	/**
+	 * Resolve the tender-type code for the event payload; empty when it cannot be read.
+	 *
+	 * @param array<string, mixed> $tender The tender.
+	 *
+	 * @return string The tender-type code.
+	 */
+	private function tenderTypeCodeOf(array $tender): string {
+		$tenderTypeCode = '';
+		try {
+			$type = $this->getTenderTypeById(id: (string)($tender['tenderType'] ?? ''));
+			$tenderTypeCode = (string)($type['code'] ?? '');
+		} catch (Throwable $e) {
+			// Code is best-effort metadata; emit anyway with empty code.
+		}
+
+		return $tenderTypeCode;
+	}//end tenderTypeCodeOf()
+
+	/**
+	 * Dispatch the event typed (logging a failure) and to the OR webhook.
+	 *
+	 * @param TenderPostedEvent $event The event.
+	 * @param string $tenderId The tender id.
+	 *
+	 * @return void
+	 */
+	private function dispatchTenderPosted(TenderPostedEvent $event, string $tenderId): void {
 		try {
 			$this->eventDispatcher->dispatchTyped(event: $event);
 		} catch (Throwable $e) {
@@ -767,8 +897,19 @@ class PosTenderService implements PosTenderServiceInterface {
 		// Fire-and-forget to OR WebhookService so external subscribers (Shillinq)
 		// get the CloudEvent over their configured webhook URL.
 		$this->dispatchWebhook(event: $event);
+	}//end dispatchTenderPosted()
 
-		// Persist the event-id + attempt counter on the tender (idempotency).
+	/**
+	 * Persist the event id and the incremented attempt counter on the tender (idempotency).
+	 *
+	 * @param array<string, mixed> $tender The tender.
+	 * @param string $tenderId The tender id.
+	 * @param string $eventId The emitted event id.
+	 * @param int $attempts The attempts before this one.
+	 *
+	 * @return void
+	 */
+	private function recordPostAttempt(array $tender, string $tenderId, string $eventId, int $attempts): void {
 		$patched = $tender;
 		unset($patched['@self']);
 		$patched['cloudEventId'] = $eventId;
@@ -782,9 +923,7 @@ class PosTenderService implements PosTenderServiceInterface {
 				['tenderId' => $tenderId, 'exception' => $e->getMessage()]
 			);
 		}
-
-		return $eventId;
-	}//end emitSingleTenderPosted()
+	}//end recordPostAttempt()
 
 	/*
 	 * NO GL-POSTED CONFIRMATION WRITER HERE.
@@ -812,35 +951,52 @@ class PosTenderService implements PosTenderServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
 	 */
 	public function listUnpostedTenders(): array {
-		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
-
-		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [],
-					'register' => $register,
-					'schema' => $schema,
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq POS tender: failed to list unposted tenders',
-				['exception' => $e->getMessage()]
-			);
+		$results = $this->findAllTenders();
+		if ($results === null) {
 			return [];
 		}
 
 		$unposted = [];
 		foreach ($this->resultRows(result: $results) as $row) {
-			$posted = (bool)($row['glPosted'] ?? false);
-			$attempts = (int)($row['glPostAttempts'] ?? 0);
-			if ($posted === false && $attempts < self::MAX_GL_POST_ATTEMPTS && $attempts > 0) {
+			if ($this->isRetryableUnposted(row: $row) === true) {
 				$unposted[] = $row;
 			}
 		}
 
 		return $unposted;
 	}//end listUnpostedTenders()
+
+	/**
+	 * Read every tender, or null (logged) when the read fails.
+	 *
+	 * @return mixed The findAll result, or null on failure.
+	 */
+	private function findAllTenders(): mixed {
+		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
+
+		try {
+			return $this->getObjectService()->findAll(config: ['filters' => [], 'register' => $register, 'schema' => $schema]);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq POS tender: failed to list unposted tenders',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end findAllTenders()
+
+	/**
+	 * Whether a tender is unposted, was attempted before and has attempts left.
+	 *
+	 * @param array<string, mixed> $row The tender.
+	 *
+	 * @return bool True when the tender should be retried.
+	 */
+	private function isRetryableUnposted(array $row): bool {
+		$posted = (bool)($row['glPosted'] ?? false);
+		$attempts = (int)($row['glPostAttempts'] ?? 0);
+		return $posted === false && $attempts < self::MAX_GL_POST_ATTEMPTS && $attempts > 0;
+	}//end isRetryableUnposted()
 
 	// ---------------------------------------------------------------------
 	// Internals — validation helpers.
@@ -861,6 +1017,29 @@ class PosTenderService implements PosTenderServiceInterface {
 		$code = trim((string)($data['code'] ?? ''));
 		$glAccount = trim((string)($data['glAccount'] ?? ''));
 
+		$this->assertTenderTypeFields(name: $name, code: $code, glAccount: $glAccount, allowMissingCode: $allowMissingCode);
+
+		$resolvedCode = $code;
+		if ($code === '') {
+			$resolvedCode = (string)($data['code'] ?? '');
+		}
+
+		return $this->tenderTypeRecord(data: $data, name: $name, code: $resolvedCode, glAccount: $glAccount);
+	}//end validateTenderTypePayload()
+
+	/**
+	 * Require a name, a code (unless allowed missing) and a GL account.
+	 *
+	 * @param string $name The trimmed name.
+	 * @param string $code The trimmed code.
+	 * @param string $glAccount The trimmed GL account.
+	 * @param bool $allowMissingCode Whether an empty code is allowed.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSBadRequestException When a required field is empty.
+	 */
+	private function assertTenderTypeFields(string $name, string $code, string $glAccount, bool $allowMissingCode): void {
 		if ($name === '') {
 			throw new OCSBadRequestException('Name is required');
 		}
@@ -872,15 +1051,22 @@ class PosTenderService implements PosTenderServiceInterface {
 		if ($glAccount === '') {
 			throw new OCSBadRequestException('GL account is required');
 		}
+	}//end assertTenderTypeFields()
 
-		$resolvedCode = $code;
-		if ($code === '') {
-			$resolvedCode = (string)($data['code'] ?? '');
-		}
-
+	/**
+	 * The normalised tender-type record.
+	 *
+	 * @param array<string, mixed> $data The raw tender-type payload.
+	 * @param string $name The trimmed name.
+	 * @param string $code The resolved code.
+	 * @param string $glAccount The trimmed GL account.
+	 *
+	 * @return array<string, mixed> The tender-type record.
+	 */
+	private function tenderTypeRecord(array $data, string $name, string $code, string $glAccount): array {
 		return [
 			'name' => $name,
-			'code' => $resolvedCode,
+			'code' => $code,
 			'description' => (string)($data['description'] ?? ''),
 			'glAccount' => $glAccount,
 			'requiresReference' => (bool)($data['requiresReference'] ?? false),
@@ -889,7 +1075,7 @@ class PosTenderService implements PosTenderServiceInterface {
 			'isActive' => (bool)($data['isActive'] ?? true),
 			'sortOrder' => (int)($data['sortOrder'] ?? 0),
 		];
-	}//end validateTenderTypePayload()
+	}//end tenderTypeRecord()
 
 	/**
 	 * Count active tenders that reference a tender type.

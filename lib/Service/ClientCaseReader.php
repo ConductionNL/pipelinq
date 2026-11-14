@@ -125,6 +125,19 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
+		return $this->findClient(clientId: $clientId, register: $register, schema: $schema);
+	}//end client()
+
+	/**
+	 * Read the client with RBAC on: the client, or a 403/404/refusal status.
+	 *
+	 * @param string $clientId The client id.
+	 * @param string $register The register.
+	 * @param string $schema The client schema.
+	 *
+	 * @return array<string, mixed> `client`, or `status` and `message`.
+	 */
+	private function findClient(string $clientId, string $register, string $schema): array {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $clientId,
@@ -144,7 +157,7 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		}
 
 		return ['client' => $this->asArray(object: $object)];
-	}//end client()
+	}//end findClient()
 
 	/**
 	 * The answer for a client read that threw: 404 for a client that does

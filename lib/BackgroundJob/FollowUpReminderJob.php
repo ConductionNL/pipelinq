@@ -336,33 +336,65 @@ class FollowUpReminderJob extends TimedJob {
 	 */
 	private function remindTasks(object $objectService, string $register, int $now, int $windowEnd): void {
 		foreach ($this->rows(objectService: $objectService, register: $register, schemaKey: 'task_schema') as $task) {
-			$taskId = $this->objectId(row: $task);
-			$deadline = ($task['deadline'] ?? null);
-			if ($taskId === '' || $this->isOpenFollowUp(task: $task) === false
-				|| $this->inWindow(moment: $deadline, now: $now, windowEnd: $windowEnd) === false
-			) {
-				continue;
-			}
-
-			$occurrence = 'task|' . $taskId . '|' . (string)$deadline;
-			if ($this->wasRecentlyNotified(occurrence: $occurrence) === true) {
-				continue;
-			}
-
-			[$objectType, $objectId] = $this->taskLink(task: $task, taskId: $taskId);
-			foreach ($this->assignees(task: $task) as $userId) {
-				$this->notificationService->sendNotification(
-					userId: $userId,
-					subject: self::SUBJECT_TASK,
-					parameters: ['title' => (string)($task['subject'] ?? ''), 'deadline' => (string)$deadline],
-					objectType: $objectType,
-					objectId: $objectId
-				);
-			}
-
-			$this->markNotified(occurrence: $occurrence);
-		}//end foreach
+			$this->remindTask(task: $task, now: $now, windowEnd: $windowEnd);
+		}
 	}//end remindTasks()
+
+	/**
+	 * Remind a task's assignees when it is an open follow-up due inside the window and not yet reminded.
+	 *
+	 * @param array<string, mixed> $task      The task.
+	 * @param int                  $now       The current timestamp.
+	 * @param int                  $windowEnd The timestamp the window ends at.
+	 *
+	 * @return void
+	 */
+	private function remindTask(array $task, int $now, int $windowEnd): void {
+		$taskId = $this->objectId(row: $task);
+		$occurrence = $this->dueTaskOccurrence(task: $task, taskId: $taskId, window: [$now, $windowEnd]);
+		if ($occurrence === null) {
+			return;
+		}
+
+		$deadline = ($task['deadline'] ?? null);
+		[$objectType, $objectId] = $this->taskLink(task: $task, taskId: $taskId);
+		foreach ($this->assignees(task: $task) as $userId) {
+			$this->notificationService->sendNotification(
+				userId: $userId,
+				subject: self::SUBJECT_TASK,
+				parameters: ['title' => (string)($task['subject'] ?? ''), 'deadline' => (string)$deadline],
+				objectType: $objectType,
+				objectId: $objectId
+			);
+		}
+
+		$this->markNotified(occurrence: $occurrence);
+	}//end remindTask()
+
+	/**
+	 * The reminder occurrence key of a task due for a reminder, or null.
+	 *
+	 * @param array<string, mixed>  $task   The task.
+	 * @param string                $taskId The task id.
+	 * @param array{0: int, 1: int} $window The current timestamp and the timestamp the window ends at.
+	 *
+	 * @return string|null
+	 */
+	private function dueTaskOccurrence(array $task, string $taskId, array $window): string|null {
+		$deadline = ($task['deadline'] ?? null);
+		if ($taskId === '' || $this->isOpenFollowUp(task: $task) === false
+			|| $this->inWindow(moment: $deadline, now: $window[0], windowEnd: $window[1]) === false
+		) {
+			return null;
+		}
+
+		$occurrence = 'task|' . $taskId . '|' . (string)$deadline;
+		if ($this->wasRecentlyNotified(occurrence: $occurrence) === true) {
+			return null;
+		}
+
+		return $occurrence;
+	}//end dueTaskOccurrence()
 
 	/**
 	 * Whether a task is an open follow-up task.

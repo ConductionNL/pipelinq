@@ -509,30 +509,8 @@ class Application extends App implements IBootstrap {
 
 		$dependencyStatus = [];
 		foreach ($dependencies as $depId) {
-			$onDisk = false;
-			$category = 'organization';
-			try {
-				$appManager->getAppPath($depId);
-				$onDisk = true;
-				// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
-				// used here before no longer exists, so the category always fell
-				// through to the app-store lookup below.
-				$appInfo = $appManager->getAppInfo($depId);
-				if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
-					$category = (string)((array)$appInfo['category'])[0];
-				}
-			} catch (\Throwable) {
-				if (empty($appStoreLookup[$depId][0]) === false) {
-					$category = (string)$appStoreLookup[$depId][0];
-				}
-			}
-
-			$dependencyStatus[$depId] = [
-				'installed' => $onDisk,
-				'enabled' => $appManager->isEnabledForUser($depId),
-				'category' => $category,
-			];
-		}//end foreach
+			$dependencyStatus[$depId] = $this->dependencyStatus(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
+		}
 
 		// 5 minutes: an app being installed or enabled is a rare, operator-driven
 		// event, and the page shows install hints — a stale hint for a few
@@ -541,5 +519,55 @@ class Application extends App implements IBootstrap {
 
 		return $dependencyStatus;
 	}//end resolveDependencyStatuses()
+
+	/**
+	 * Whether a dependency is installed and enabled, and its category.
+	 *
+	 * @param IAppManager $appManager The app manager.
+	 * @param string $depId The dependency app id.
+	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
+	 *
+	 * @return array{installed: bool, enabled: bool, category: string} The dependency status.
+	 */
+	private function dependencyStatus(IAppManager $appManager, string $depId, array $appStoreLookup): array {
+		[$onDisk, $category] = $this->dependencyPresence(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
+
+		return [
+			'installed' => $onDisk,
+			'enabled' => $appManager->isEnabledForUser($depId),
+			'category' => $category,
+		];
+	}//end dependencyStatus()
+
+	/**
+	 * Whether the dependency is on disk, and its category from its info.xml or else the app store.
+	 *
+	 * @param IAppManager $appManager The app manager.
+	 * @param string $depId The dependency app id.
+	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
+	 *
+	 * @return array{0: bool, 1: string} On disk, and the category.
+	 */
+	private function dependencyPresence(IAppManager $appManager, string $depId, array $appStoreLookup): array {
+		$onDisk = false;
+		$category = 'organization';
+		try {
+			$appManager->getAppPath($depId);
+			$onDisk = true;
+			// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
+			// used here before no longer exists, so the category always fell
+			// through to the app-store lookup below.
+			$appInfo = $appManager->getAppInfo($depId);
+			if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
+				$category = (string)((array)$appInfo['category'])[0];
+			}
+		} catch (\Throwable) {
+			if (empty($appStoreLookup[$depId][0]) === false) {
+				$category = (string)$appStoreLookup[$depId][0];
+			}
+		}
+
+		return [$onDisk, $category];
+	}//end dependencyPresence()
 
 }//end class

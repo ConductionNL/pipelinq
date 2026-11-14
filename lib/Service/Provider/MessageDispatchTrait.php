@@ -79,10 +79,31 @@ trait MessageDispatchTrait {
 			throw new PermanentSmsProviderException('messaging source slug not configured');
 		}
 
+		$result = $this->callLeaf(source: $source, body: $body, path: $path, headers: $headers);
+
+		return $this->leafDispatchResponse(result: $result);
+	}//end dispatchViaLeaf()
+
+	/**
+	 * Call the OR messaging leaf, treating any unexpected throwable as transient.
+	 *
+	 * @param string $source OpenConnector source slug (e.g. `twilio-sms`).
+	 * @param array<string, mixed> $body Vendor-shaped request payload.
+	 * @param string $path Vendor send path, relative to the source base URL.
+	 * @param array<string, string> $headers Extra request headers.
+	 *
+	 * @return mixed The leaf's result.
+	 *
+	 * @throws TransientSmsProviderException On a transient degrade or an unexpected throwable.
+	 * @throws PermanentSmsProviderException On a permanent degrade / missing leaf.
+	 *
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
+	 */
+	private function callLeaf(string $source, array $body, string $path, array $headers) {
 		$provider = $this->resolveDispatchProvider();
 
 		try {
-			$result = $provider->dispatch(source: $source, body: $body, path: $path, headers: $headers);
+			return $provider->dispatch(source: $source, body: $body, path: $path, headers: $headers);
 		} catch (TransientSmsProviderException|PermanentSmsProviderException $e) {
 			throw $e;
 		} catch (Throwable $e) {
@@ -94,7 +115,21 @@ trait MessageDispatchTrait {
 			);
 			throw new TransientSmsProviderException($e->getMessage(), 0, $e);
 		}
+	}//end callLeaf()
 
+	/**
+	 * The upstream provider response in a leaf result, raising its unavailability cause.
+	 *
+	 * @param mixed $result The leaf's result.
+	 *
+	 * @return array<string, mixed> The raw upstream provider response.
+	 *
+	 * @throws TransientSmsProviderException On a transient degrade.
+	 * @throws PermanentSmsProviderException On a permanent degrade.
+	 *
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
+	 */
+	private function leafDispatchResponse($result): array {
 		if (is_array($result) === false) {
 			return [];
 		}
@@ -109,7 +144,7 @@ trait MessageDispatchTrait {
 		}
 
 		return [];
-	}//end dispatchViaLeaf()
+	}//end leafDispatchResponse()
 
 	/**
 	 * Resolve the OpenRegister MessageDispatchProvider from the container.

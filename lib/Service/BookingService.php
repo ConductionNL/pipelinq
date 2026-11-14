@@ -1163,8 +1163,28 @@ class BookingService implements BookingServiceInterface {
 			throw new RuntimeException('Booking register/schema not configured');
 		}
 
+		$data = $this->toArray(object: $this->findBooking(bookingId: $bookingId, register: $register, schema: $schema));
+		if ($data === null) {
+			throw new RuntimeException(sprintf('Booking %s not found', $bookingId));
+		}
+
+		return $data;
+	}//end loadBooking()
+
+	/**
+	 * Find a booking object.
+	 *
+	 * @param string $bookingId Booking UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The booking schema id.
+	 *
+	 * @return mixed The found object.
+	 *
+	 * @throws RuntimeException If the lookup fails.
+	 */
+	private function findBooking(string $bookingId, string $register, string $schema) {
 		try {
-			$found = $this->getObjectService()->find(
+			return $this->getObjectService()->find(
 				id: $bookingId,
 				register: $register,
 				schema: $schema
@@ -1173,14 +1193,7 @@ class BookingService implements BookingServiceInterface {
 			$this->logger->warning('Pipelinq: booking load failed', ['booking' => $bookingId]);
 			throw new RuntimeException('Booking lookup failed', 0, $e);
 		}
-
-		$data = $this->toArray(object: $found);
-		if ($data === null) {
-			throw new RuntimeException(sprintf('Booking %s not found', $bookingId));
-		}
-
-		return $data;
-	}//end loadBooking()
+	}//end findBooking()
 
 	/**
 	 * Load a Service by id (throwing).
@@ -1367,6 +1380,24 @@ class BookingService implements BookingServiceInterface {
 			return;
 		}
 
+		$data = $this->loadCustomerData(customerId: $customerId, register: $register, schema: $schema);
+		if ($data === null) {
+			return;
+		}
+
+		$this->saveNoShow(data: $data, customerId: $customerId, register: $register, schema: $schema);
+	}//end incrementCustomerNoShowCount()
+
+	/**
+	 * Load a customer's data for the no-show count.
+	 *
+	 * @param string $customerId Customer UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The customer schema id.
+	 *
+	 * @return array<string, mixed>|null The data, or null when the load fails or finds nothing.
+	 */
+	private function loadCustomerData(string $customerId, string $register, string $schema): array|null {
 		try {
 			$customer = $this->getObjectService()->find(
 				id: $customerId,
@@ -1375,24 +1406,29 @@ class BookingService implements BookingServiceInterface {
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: customer load for no-show failed', ['customer' => $customerId]);
-			return;
+			return null;
 		}
 
-		$data = $this->toArray(object: $customer);
-		if ($data === null) {
-			return;
-		}
+		return $this->toArray(object: $customer);
+	}//end loadCustomerData()
 
+	/**
+	 * Raise a customer's no-show count by one and save it, logging a failure.
+	 *
+	 * @param array<string, mixed> $data The customer data.
+	 * @param string $customerId Customer UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The customer schema id.
+	 *
+	 * @return void
+	 */
+	private function saveNoShow(array $data, string $customerId, string $register, string $schema): void {
 		$count = (int)($data['noShowCount'] ?? 0);
 		$data['noShowCount'] = ($count + 1);
 
 		try {
 			$this->getObjectService()->saveObject(
-				object: $this->stripSelf(payload: $data),
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $customerId
+				object: $this->stripSelf(payload: $data), extend: [], register: $register, schema: $schema, uuid: $customerId
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1400,7 +1436,7 @@ class BookingService implements BookingServiceInterface {
 				['customer' => $customerId]
 			);
 		}
-	}//end incrementCustomerNoShowCount()
+	}//end saveNoShow()
 
 	/**
 	 * Persist a Booking (create when uuid is null, update otherwise).

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -321,11 +322,7 @@ class ActivityService {
 		?string $affectedUser = null,
 	): void {
 		try {
-			$currentUser = $this->userSession->getUser();
-			$author = '';
-			if ($currentUser !== null) {
-				$author = $currentUser->getUID();
-			}
+			$author = $this->currentAuthor();
 
 			$event = $this->activityManager->generateEvent();
 			$event->setApp(AppIdentity::APP_ID)
@@ -335,22 +332,46 @@ class ActivityService {
 				->setSubject(subject: $subject, parameters: $parameters)
 				->setObject(objectType: $objectType, objectId: (int)$objectId, objectName: $parameters['title'] ?? '');
 
-			if ($affectedUser !== null && $affectedUser !== '') {
-				$event->setAffectedUser($affectedUser);
-			} elseif ($author !== '') {
-				$event->setAffectedUser($author);
-			}
+			$this->setAffectedUser(event: $event, affectedUser: $affectedUser, author: $author);
 
 			$this->activityManager->publish($event);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to publish Pipelinq activity',
-				[
-					'subject' => $subject,
-					'type' => $type,
-					'exception' => $e->getMessage(),
-				]
+				['subject' => $subject, 'type' => $type, 'exception' => $e->getMessage()]
 			);
 		}//end try
 	}//end publish()
+
+	/**
+	 * The signed-in user's UID, or an empty string when nobody is signed in.
+	 *
+	 * @return string
+	 */
+	private function currentAuthor(): string {
+		$currentUser = $this->userSession->getUser();
+		$author = '';
+		if ($currentUser !== null) {
+			$author = $currentUser->getUID();
+		}
+
+		return $author;
+	}//end currentAuthor()
+
+	/**
+	 * Address the event to the affected user, else to its author when there is one.
+	 *
+	 * @param IEvent $event The activity event.
+	 * @param string|null $affectedUser The affected user or null.
+	 * @param string $author The author's UID, or an empty string.
+	 *
+	 * @return void
+	 */
+	private function setAffectedUser(IEvent $event, string|null $affectedUser, string $author): void {
+		if ($affectedUser !== null && $affectedUser !== '') {
+			$event->setAffectedUser($affectedUser);
+		} elseif ($author !== '') {
+			$event->setAffectedUser($author);
+		}
+	}//end setAffectedUser()
 }//end class

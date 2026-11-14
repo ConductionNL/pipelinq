@@ -347,10 +347,6 @@ class PosRefundService implements PosRefundServiceInterface {
 	 *
 	 * @return \Throwable The mapped OCS exception (or the original on no match).
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch maps one distinct
-	 *  engine-error class (RBAC, manager deny, cap/invalid-state, missing object)
-	 *  to its HTTP status; collapsing them would lose the status fidelity.
-	 *
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
 	 */
 	private function mapTransitionError(\Throwable $e): \Throwable {
@@ -359,12 +355,7 @@ class PosRefundService implements PosRefundServiceInterface {
 
 		// Per-object RBAC denial → 403.
 		if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
-			$forbidden = 'Geen toegang tot deze retour.';
-			if ($message !== '') {
-				$forbidden = $message;
-			}
-
-			return new OCSForbiddenException($forbidden);
+			return $this->forbiddenFor(message: $message);
 		}
 
 		// Manager-authorization denial from PosRefundManagerGuard → 403.
@@ -372,13 +363,40 @@ class PosRefundService implements PosRefundServiceInterface {
 			return new OCSForbiddenException($message);
 		}
 
+		return $this->mapByMessage(e: $e, message: $message);
+	}//end mapTransitionError()
+
+	/**
+	 * The 403 for an RBAC denial, carrying the engine's message when it has one.
+	 *
+	 * @param string $message The engine's message.
+	 *
+	 * @return OCSForbiddenException
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function forbiddenFor(string $message): OCSForbiddenException {
+		$forbidden = 'Geen toegang tot deze retour.';
+		if ($message !== '') {
+			$forbidden = $message;
+		}
+
+		return new OCSForbiddenException($forbidden);
+	}//end forbiddenFor()
+
+	/**
+	 * Map a non-authorization transition failure by its message: 422, 404, or the original.
+	 *
+	 * @param \Throwable $e The original failure.
+	 * @param string $message Its message.
+	 *
+	 * @return \Throwable
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function mapByMessage(\Throwable $e, string $message): \Throwable {
 		// Over-refund cap, invalid-state, or other precondition → 422.
-		if (stripos($message, 'overschrijdt') !== false
-			|| stripos($message, 'not allowed from') !== false
-			|| stripos($message, 'not declared') !== false
-			|| stripos($message, 'ontbreekt') !== false
-			|| stripos($message, 'Originele kassabon niet gevonden') !== false
-		) {
+		if ($this->isPreconditionFailure(message: $message) === true) {
 			return new OCSBadRequestException($message);
 		}
 
@@ -387,7 +405,24 @@ class PosRefundService implements PosRefundServiceInterface {
 		}
 
 		return $e;
-	}//end mapTransitionError()
+	}//end mapByMessage()
+
+	/**
+	 * Whether a message reports an over-refund, an invalid-state transition or another precondition.
+	 *
+	 * @param string $message The engine's message.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
+	 */
+	private function isPreconditionFailure(string $message): bool {
+		return stripos($message, 'overschrijdt') !== false
+			|| stripos($message, 'not allowed from') !== false
+			|| stripos($message, 'not declared') !== false
+			|| stripos($message, 'ontbreekt') !== false
+			|| stripos($message, 'Originele kassabon niet gevonden') !== false;
+	}//end isPreconditionFailure()
 
 	/**
 	 * Emit the pipelinq.TransactionRefund.completed CloudEvent (fire-and-forget).

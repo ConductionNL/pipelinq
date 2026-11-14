@@ -309,6 +309,38 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		$objectService = $this->getObjectService();
 		$config = $this->getConfig();
 
+		$object = $this->loadContactmoment(objectService: $objectService, config: $config, id: $id);
+
+		$this->assertMayDelete(object: $object, currentUserId: $currentUserId);
+
+		$objectService
+			->setRegister($config['register'])
+			->setSchema($config['schema'])
+			->deleteObject(uuid: $id);
+
+		$this->logger->info(
+			'Contactmoment deleted',
+			[
+				'id' => $id,
+				'userId' => $currentUserId,
+			]
+		);
+
+		return true;
+	}//end delete()
+
+	/**
+	 * Load a contactmoment ticket; another ticket subtype counts as absent.
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $config        Keys: register, schema.
+	 * @param string               $id            The contactmoment ticket UUID.
+	 *
+	 * @return object The ticket entity.
+	 *
+	 * @throws DoesNotExistException If contactmoment not found.
+	 */
+	private function loadContactmoment(object $objectService, array $config, string $id): object {
 		// Fetch the object to check ownership.
 		$object = $objectService->find(
 			id: $id,
@@ -330,6 +362,20 @@ class ContactmomentService implements ContactmomentServiceInterface {
 			);
 		}
 
+		return $object;
+	}//end loadContactmoment()
+
+	/**
+	 * Refuse a delete by anyone but the creating agent or an admin.
+	 *
+	 * @param object $object        The contactmoment ticket entity.
+	 * @param string $currentUserId The ID of the user requesting deletion.
+	 *
+	 * @return void
+	 *
+	 * @throws NotPermittedException If user lacks permission.
+	 */
+	private function assertMayDelete(object $object, string $currentUserId): void {
 		// Use the OR-immutable createdBy field (set by the platform on every
 		// saveObject/createObject call) rather than the user-mutable `assignee`
 		// field. Any caller with OR write-access can stamp `assignee: victim_uid`;
@@ -351,22 +397,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 				'Only the creating agent or an admin can delete this contactmoment.'
 			);
 		}
-
-		$objectService
-			->setRegister($config['register'])
-			->setSchema($config['schema'])
-			->deleteObject(uuid: $id);
-
-		$this->logger->info(
-			'Contactmoment deleted',
-			[
-				'id' => $id,
-				'userId' => $currentUserId,
-			]
-		);
-
-		return true;
-	}//end delete()
+	}//end assertMayDelete()
 
 	/**
 	 * Normalise an OpenRegister entity (or already-rendered row) to an array.

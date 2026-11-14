@@ -84,57 +84,148 @@ class TimeEntryWipController extends Controller {
 			return new JSONResponse(['error' => 'Shillinq is not installed.'], 400);
 		}
 
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
+		$target = $this->wipTarget(uuid: $uuid);
+		if ($target === null) {
 			return new JSONResponse(['error' => 'Time entry configuration is incomplete.'], 400);
 		}
 
+		[$register, $schema] = $target;
 		$entry = $this->fetchEntry(register: $register, schema: $schema, uuid: $uuid);
 		if ($entry === null) {
 			return new JSONResponse(['error' => 'Time entry not found.'], 404);
 		}
 
+		return $this->redispatch(register: $register, schema: $schema, uuid: $uuid, entry: $entry);
+	}//end retry()
+
+	/**
+	 * The configured register and time entry schema, or null when the configuration or uuid is incomplete.
+	 *
+	 * @param string $uuid The time entry UUID.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 */
+	private function wipTarget(string $uuid): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
+		if ($register === '' || $schema === '' || $uuid === '') {
+			return null;
+		}
+
+		return [$register, $schema];
+	}//end wipTarget()
+
+	/**
+	 * Re-dispatch a loaded time entry and persist each status it passes through.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 * @param string $uuid The time entry UUID.
+	 * @param array<string, mixed> $entry The time entry data.
+	 *
+	 * @return JSONResponse The new WIP sync status.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 */
+	private function redispatch(string $register, string $schema, string $uuid, array $entry): JSONResponse {
 		// Idempotency: already synced entries are returned as-is without re-dispatch
 		// (REQ-WIP-001 idempotent scenario). The caller sees the current status,
 		// no duplicate event is emitted.
 		if (($entry['wipSyncStatus'] ?? null) === 'synced') {
-			return new JSONResponse(
-				[
-					'status' => 'synced',
-					'wipSyncStatus' => 'synced',
-					'wipSyncedAt' => (string)($entry['wipSyncedAt'] ?? ''),
-				]
-			);
+			return $this->alreadySynced(entry: $entry);
 		}
 
 		// Reset to pending before re-dispatch (REQ-WIP-003 manual retry).
 		$entry['wipSyncStatus'] = 'pending';
 		$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
 
+		if ($this->dispatchEntry(entry: $entry) === true) {
+			return $this->markSynced(register: $register, schema: $schema, uuid: $uuid, entry: $entry);
+		}
+
+		return $this->markFailed(register: $register, schema: $schema, uuid: $uuid, entry: $entry);
+	}//end redispatch()
+
+	/**
+	 * The response for an entry that is already synced.
+	 *
+	 * @param array<string, mixed> $entry The time entry data.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 */
+	private function alreadySynced(array $entry): JSONResponse {
+		return new JSONResponse(
+			[
+				'status' => 'synced',
+				'wipSyncStatus' => 'synced',
+				'wipSyncedAt' => (string)($entry['wipSyncedAt'] ?? ''),
+			]
+		);
+	}//end alreadySynced()
+
+	/**
+	 * Dispatch the WIP event for an entry with its approval details.
+	 *
+	 * @param array<string, mixed> $entry The time entry data.
+	 *
+	 * @return bool Whether the dispatch succeeded.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 */
+	private function dispatchEntry(array $entry): bool {
 		$approvedBy = (string)($entry['approvedBy'] ?? '');
 		$approvedAt = (string)($entry['approvedAt'] ?? '');
 
-		$success = $this->wipService->dispatchWipEvent(
+		return $this->wipService->dispatchWipEvent(
 			timeEntry: $entry,
 			approvedBy: $approvedBy,
 			approvedAt: $approvedAt
 		);
+	}//end dispatchEntry()
 
-		if ($success === true) {
-			$entry['wipSyncStatus'] = 'synced';
-			$entry['wipSyncedAt'] = $this->wipService->now();
-			$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
+	/**
+	 * Mark an entry synced, persist it and build the response.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 * @param string $uuid The time entry UUID.
+	 * @param array<string, mixed> $entry The time entry data.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 */
+	private function markSynced(string $register, string $schema, string $uuid, array $entry): JSONResponse {
+		$entry['wipSyncStatus'] = 'synced';
+		$entry['wipSyncedAt'] = $this->wipService->now();
+		$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
 
-			return new JSONResponse(
-				[
-					'status' => 'synced',
-					'wipSyncStatus' => 'synced',
-					'wipSyncedAt' => $entry['wipSyncedAt'],
-				]
-			);
-		}
+		return new JSONResponse(
+			[
+				'status' => 'synced',
+				'wipSyncStatus' => 'synced',
+				'wipSyncedAt' => $entry['wipSyncedAt'],
+			]
+		);
+	}//end markSynced()
 
+	/**
+	 * Mark an entry failed, persist it and build the 502 response.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 * @param string $uuid The time entry UUID.
+	 * @param array<string, mixed> $entry The time entry data.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 */
+	private function markFailed(string $register, string $schema, string $uuid, array $entry): JSONResponse {
 		$entry['wipSyncStatus'] = 'failed';
 		$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
 
@@ -146,7 +237,7 @@ class TimeEntryWipController extends Controller {
 			],
 			502
 		);
-	}//end retry()
+	}//end markFailed()
 
 	/**
 	 * Fetch a time entry's data by UUID.

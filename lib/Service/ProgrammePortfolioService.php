@@ -57,6 +57,8 @@ use Throwable;
  * Link work to a programme, and answer how far along it is.
  *
  * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 	/**
@@ -155,12 +157,22 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return ['allowed' => false, 'reason' => 'A programme, an object type and an object are required.'];
 		}
 
-		foreach ($existingLinks as $link) {
-			if ((string)($link['domainObjectType'] ?? '') !== $domainObjectType) {
-				continue;
-			}
+		return $this->existingLinkAnswer(existingLinks: $existingLinks, type: $domainObjectType, ref: $domainObjectRef, programmeId: $programmeId);
+	}//end mayLink()
 
-			if ((string)($link['domainObjectRef'] ?? '') !== $domainObjectRef) {
+	/**
+	 * Refuse a work item that is already linked to a programme, allow it otherwise.
+	 *
+	 * @param array<int, array<string, mixed>> $existingLinks Every work item already written.
+	 * @param string                           $type          The trimmed `<app>:<schema>` literal.
+	 * @param string                           $ref           The trimmed object uuid.
+	 * @param string                           $programmeId   The programme it would be linked to.
+	 *
+	 * @return array{allowed: bool, reason: string} The answer.
+	 */
+	private function existingLinkAnswer(array $existingLinks, string $type, string $ref, string $programmeId): array {
+		foreach ($existingLinks as $link) {
+			if ($this->linksSameWork(link: $link, type: $type, ref: $ref) === false) {
 				continue;
 			}
 
@@ -175,7 +187,20 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 		}
 
 		return ['allowed' => true, 'reason' => ''];
-	}//end mayLink()
+	}//end existingLinkAnswer()
+
+	/**
+	 * Whether an existing work item points at the same object.
+	 *
+	 * @param array<string, mixed> $link The existing work item.
+	 * @param string               $type The trimmed `<app>:<schema>` literal.
+	 * @param string               $ref  The trimmed object uuid.
+	 *
+	 * @return bool
+	 */
+	private function linksSameWork(array $link, string $type, string $ref): bool {
+		return ((string)($link['domainObjectType'] ?? '') === $type && (string)($link['domainObjectRef'] ?? '') === $ref);
+	}//end linksSameWork()
 
 	/**
 	 * Present a work item, resolved or not.
@@ -239,77 +264,102 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 		$mode = $this->modeFor(programme: $programme);
 
 		if ($mode === 'manual') {
-			$typed = ($programme['manualProgress'] ?? null);
-			$entered = is_numeric($typed);
-
-			$progress = null;
-			$reason = 'No progress has been entered.';
-			if ($entered === true) {
-				$progress = (int)$typed;
-				$reason = '';
-			}
-
-			return [
-				'mode' => 'manual',
-				'progress' => $progress,
-				'computable' => $entered,
-				'reason' => $reason,
-			];
+			return $this->manualProgress(programme: $programme);
 		}
 
 		if ($mode === 'fromTasks') {
-			$total = count($tasks);
-			if ($total === 0) {
-				return [
-					'mode' => 'fromTasks',
-					'progress' => null,
-					'computable' => false,
-					'reason' => 'This programme has no tasks to derive progress from.',
-				];
-			}
-
-			$closed = count(
-				array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed')
-			);
-
-			return [
-				'mode' => 'fromTasks',
-				'progress' => (int)round((($closed / $total) * 100)),
-				'computable' => true,
-				'reason' => '',
-			];
+			return $this->taskProgress(tasks: $tasks);
 		}
 
+		return $this->effortProgress(effort: $effort);
+	}//end progressFor()
+
+	/**
+	 * Progress in `manual` mode: the figure somebody typed, if any.
+	 *
+	 * @param array<string, mixed> $programme The programme.
+	 *
+	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
+	 */
+	private function manualProgress(array $programme): array {
+		$typed = ($programme['manualProgress'] ?? null);
+		$entered = is_numeric($typed);
+
+		$progress = null;
+		$reason = 'No progress has been entered.';
+		if ($entered === true) {
+			$progress = (int)$typed;
+			$reason = '';
+		}
+
+		return ['mode' => 'manual', 'progress' => $progress, 'computable' => $entered, 'reason' => $reason];
+	}//end manualProgress()
+
+	/**
+	 * Progress in `fromTasks` mode: the share of closed tasks.
+	 *
+	 * @param array<int, array<string, mixed>> $tasks The programme's tasks.
+	 *
+	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
+	 */
+	private function taskProgress(array $tasks): array {
+		$total = count($tasks);
+		if ($total === 0) {
+			return $this->uncomputableProgress(mode: 'fromTasks', reason: 'This programme has no tasks to derive progress from.');
+		}
+
+		$closed = count(
+			array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed')
+		);
+
+		return [
+			'mode' => 'fromTasks',
+			'progress' => (int)round((($closed / $total) * 100)),
+			'computable' => true,
+			'reason' => '',
+		];
+	}//end taskProgress()
+
+	/**
+	 * Progress in `fromEffort` mode: hours booked against hours estimated.
+	 *
+	 * @param array<string, mixed>|null $effort Hours booked and estimated, or null when humaniq cannot be resolved.
+	 *
+	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
+	 */
+	private function effortProgress(array|null $effort): array {
 		if ($effort === null) {
 			// NOT zero. Zero reads as "nothing has been done", which is a
 			// different and much worse sentence than "we cannot tell".
-			return [
-				'mode' => 'fromEffort',
-				'progress' => null,
-				'computable' => false,
-				'reason' => 'Hours cannot be read on this instance, so progress cannot be computed.',
-			];
+			return $this->uncomputableProgress(mode: 'fromEffort', reason: 'Hours cannot be read on this instance, so progress cannot be computed.');
 		}
 
 		$estimated = (float)($effort['estimated'] ?? 0);
 		if ($estimated <= 0.0) {
-			return [
-				'mode' => 'fromEffort',
-				'progress' => null,
-				'computable' => false,
-				'reason' => 'Nothing has been estimated, so progress cannot be computed.',
-			];
+			return $this->uncomputableProgress(mode: 'fromEffort', reason: 'Nothing has been estimated, so progress cannot be computed.');
 		}
 
 		$booked = (float)($effort['booked'] ?? 0);
 
+		return ['mode' => 'fromEffort', 'progress' => (int)round((($booked / $estimated) * 100)), 'computable' => true, 'reason' => ''];
+	}//end effortProgress()
+
+	/**
+	 * The progress answer for a mode that cannot produce a figure.
+	 *
+	 * @param string $mode   The progress mode.
+	 * @param string $reason Why no figure can be computed.
+	 *
+	 * @return array{mode: string, progress: null, computable: false, reason: string}
+	 */
+	private function uncomputableProgress(string $mode, string $reason): array {
 		return [
-			'mode' => 'fromEffort',
-			'progress' => (int)round((($booked / $estimated) * 100)),
-			'computable' => true,
-			'reason' => '',
+			'mode' => $mode,
+			'progress' => null,
+			'computable' => false,
+			'reason' => $reason,
 		];
-	}//end progressFor()
+	}//end uncomputableProgress()
 
 	/**
 	 * The work items of one programme.
@@ -423,13 +473,21 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return [];
 		}
 
+		$filters = array_merge(['register' => $register, 'schema' => $schema], $filters);
+		return $this->plainRows(rows: $this->findRows(schemaKey: $schemaKey, filters: $filters));
+	}//end read()
+
+	/**
+	 * Run the findAll for one schema, logging a failed read.
+	 *
+	 * @param string               $schemaKey The app-config key holding the schema id.
+	 * @param array<string, mixed> $filters   The full filter set, register and schema included.
+	 *
+	 * @return array<int, mixed> The raw rows, or none when the read failed.
+	 */
+	private function findRows(string $schemaKey, array $filters): array {
 		try {
-			$rows = $this->objectService->findAll(
-				[
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
-					'limit' => self::LIMIT,
-				]
-			);
+			return $this->objectService->findAll(['filters' => $filters, 'limit' => self::LIMIT]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ProgrammePortfolioService: the read failed',
@@ -438,24 +496,48 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 
 			return [];
 		}
+	}//end findRows()
 
+	/**
+	 * Keep the rows that are, or serialise to, plain arrays.
+	 *
+	 * @param iterable<mixed> $rows The raw rows.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 */
+	private function plainRows(iterable $rows): array {
 		$out = [];
 		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
+			$data = $this->plainRow(row: $row);
+			if ($data !== null) {
+				$out[] = $data;
 			}
 		}
 
 		return $out;
-	}//end read()
+	}//end plainRows()
+
+	/**
+	 * One row as a plain array: an array as is, a JsonSerializable serialised.
+	 *
+	 * @param mixed $row The raw row.
+	 *
+	 * @return array<string, mixed>|null Null when the row is neither.
+	 */
+	private function plainRow(mixed $row): array|null {
+		if (is_array($row) === true) {
+			return $row;
+		}
+
+		if (($row instanceof \JsonSerializable) === true) {
+			$data = $row->jsonSerialize();
+			if (is_array($data) === true) {
+				return $data;
+			}
+		}
+
+		return null;
+	}//end plainRow()
 
 	/**
 	 * Save one object of a programme schema.

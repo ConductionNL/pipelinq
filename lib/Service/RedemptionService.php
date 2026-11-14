@@ -262,28 +262,49 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function getValidRedemptionOptions(string $accountId, string $programmeId): array {
-		$account = $this->accountService->getAccount(accountId: $accountId);
-		$balance = 0;
-		if ($account !== null) {
-			$balance = (int)($account['currentBalance'] ?? 0);
-		}
+		$balance = $this->accountBalance(accountId: $accountId);
 
 		[$register, $schema] = $this->config(schemaKey: 'redemptionOption_schema');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
+		$rowList = $this->findRowList(
+			filters: ['programmeId' => $programmeId, 'register' => $register, 'schema' => $schema],
+			limit: 200
+		);
+
+		return $this->affordableOptions(rowList: $rowList, balance: $balance);
+	}//end getValidRedemptionOptions()
+
+	/**
+	 * The account's current points balance; 0 when the account is unknown.
+	 *
+	 * @param string $accountId The account UUID.
+	 *
+	 * @return int
+	 */
+	private function accountBalance(string $accountId): int {
+		$account = $this->accountService->getAccount(accountId: $accountId);
+		$balance = 0;
+		if ($account !== null) {
+			$balance = (int)($account['currentBalance'] ?? 0);
+		}
+
+		return $balance;
+	}//end accountBalance()
+
+	/**
+	 * Run a findAll and return its rows as a list; none when the read fails.
+	 *
+	 * @param array<string, mixed> $filters The filters, register and schema included.
+	 * @param int                  $limit   The row limit.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function findRowList(array $filters, int $limit): array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 200,
-				]
-			);
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => $limit]);
 		} catch (\Throwable $e) {
 			return [];
 		}
@@ -293,6 +314,18 @@ class RedemptionService implements RedemptionServiceInterface {
 			$rowList = array_values($rows);
 		}
 
+		return $rowList;
+	}//end findRowList()
+
+	/**
+	 * The valid options the balance can pay for.
+	 *
+	 * @param array<int, mixed> $rowList The option rows.
+	 * @param int               $balance The points balance.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function affordableOptions(array $rowList, int $balance): array {
 		$options = array_map([$this, 'toArray'], $rowList);
 
 		return array_values(
@@ -302,7 +335,7 @@ class RedemptionService implements RedemptionServiceInterface {
 					&& (int)($option['costInPoints'] ?? 0) <= $balance
 			)
 		);
-	}//end getValidRedemptionOptions()
+	}//end affordableOptions()
 
 	/**
 	 * Get a Redemption by UUID.
@@ -342,37 +375,32 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function findByCode(string $code): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '' || $code === '') {
-			return null;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'rewardCode' => $code,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1,
-				]
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		$rowList = [];
-		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
-		}
-
+		$rowList = $this->codeRows(code: $code);
 		if ($rowList === []) {
 			return null;
 		}
 
 		return $this->toArray(value: reset($rowList));
 	}//end findByCode()
+
+	/**
+	 * The Redemption rows carrying a code; none when unconfigured, empty or unreadable.
+	 *
+	 * @param string $code The code.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function codeRows(string $code): array {
+		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
+		if ($register === '' || $schema === '' || $code === '') {
+			return [];
+		}
+
+		return $this->findRowList(
+			filters: ['rewardCode' => $code, 'register' => $register, 'schema' => $schema],
+			limit: 1
+		);
+	}//end codeRows()
 
 	/**
 	 * Mark a Redemption as vervallen.

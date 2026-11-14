@@ -113,65 +113,112 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 		$asOfDate = $asOf->format('Y-m-d');
 
 		$hierarchy = $this->resolveHierarchy();
-		$dealsByRep = $this->fetchDealsByRep();
+		$snapshots = $this->buildSnapshots(periodId: $periodId, asOfDate: $asOfDate, hierarchy: $hierarchy, dealsByRep: $this->fetchDealsByRep());
+		$tally = $this->persistAll(periodId: $periodId, snapshots: $snapshots);
 
-		$snapshots = $this->buildSnapshots(
-			periodId: $periodId,
-			asOfDate: $asOfDate,
-			hierarchy: $hierarchy,
-			dealsByRep: $dealsByRep
-		);
+		return [
+			'period_id' => $periodId,
+			'as_of' => $asOfDate,
+			'generated' => $tally['persisted'],
+			'errors' => $tally['errors'],
+			'hierarchy_report' => $this->checkQuotaHierarchy(periodId: $periodId, hierarchy: $hierarchy),
+		];
+	}//end generate()
 
-		$errors = [];
-		$persisted = 0;
+	/**
+	 * Persist every snapshot, notifying the admins when any of them failed.
+	 *
+	 * @param string $periodId The fiscal period id.
+	 * @param array<int, array<string, mixed>> $snapshots The snapshots to persist.
+	 *
+	 * @return array{persisted: int, errors: array<int, string>}
+	 *
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
+	 */
+	private function persistAll(string $periodId, array $snapshots): array {
+		$tally = ['persisted' => 0, 'errors' => []];
 		foreach ($snapshots as $snapshot) {
-			try {
-				$this->persistSnapshot(snapshot: $snapshot);
-				$persisted++;
-			} catch (\Throwable $e) {
-				$errors[] = sprintf('%s/%s: %s', $snapshot['level'], $snapshot['owner_id'], $e->getMessage());
-				$this->logger->error(
-					'Pipelinq: failed to persist forecast snapshot',
-					[
-						'level' => $snapshot['level'],
-						'owner_id' => $snapshot['owner_id'],
-						'exception' => $e->getMessage(),
-					]
-				);
-			}
+			$tally = $this->persistOne(snapshot: $snapshot, tally: $tally);
 		}
 
-		if ($errors !== []) {
-			$this->notifyAdmin(periodId: $periodId, errors: $errors);
+		if ($tally['errors'] !== []) {
+			$this->notifyAdmin(periodId: $periodId, errors: $tally['errors']);
 		}
 
+		return $tally;
+	}//end persistAll()
+
+	/**
+	 * Persist one snapshot and record the outcome in the tally.
+	 *
+	 * @param array<string, mixed> $snapshot The snapshot record.
+	 * @param array{persisted: int, errors: array<int, string>} $tally The running tally.
+	 *
+	 * @return array{persisted: int, errors: array<int, string>}
+	 *
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
+	 */
+	private function persistOne(array $snapshot, array $tally): array {
+		try {
+			$this->persistSnapshot(snapshot: $snapshot);
+			$tally['persisted']++;
+		} catch (\Throwable $e) {
+			$tally['errors'][] = sprintf('%s/%s: %s', $snapshot['level'], $snapshot['owner_id'], $e->getMessage());
+			$this->logger->error(
+				'Pipelinq: failed to persist forecast snapshot',
+				['level' => $snapshot['level'], 'owner_id' => $snapshot['owner_id'], 'exception' => $e->getMessage()]
+			);
+		}
+
+		return $tally;
+	}//end persistOne()
+
+	/**
+	 * Validate the quota hierarchy and log every team with a variance.
+	 *
+	 * @param string $periodId The fiscal period id.
+	 * @param array<string, mixed> $hierarchy The resolved hierarchy.
+	 *
+	 * @return array<int, array<string, mixed>> The quota hierarchy report.
+	 *
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
+	 */
+	private function checkQuotaHierarchy(string $periodId, array $hierarchy): array {
 		$hierarchyReport = $this->quotaService->validateQuotaHierarchy(
 			periodId: $periodId,
 			teamMembers: ($hierarchy['teams'] ?? [])
 		);
 		foreach ($hierarchyReport as $row) {
 			if (abs((float)($row['variance_percent'] ?? 0.0)) > 0.0) {
-				$this->logger->info(
-					'Pipelinq: forecast quota hierarchy variance',
-					[
-						'period_id' => $periodId,
-						'team_id' => $row['team_id'],
-						'team_quota' => $row['team_quota'],
-						'rep_quotas_sum' => $row['rep_quotas_sum'],
-						'variance_percent' => $row['variance_percent'],
-					]
-				);
+				$this->logQuotaVariance(periodId: $periodId, row: $row);
 			}
 		}
 
-		return [
-			'period_id' => $periodId,
-			'as_of' => $asOfDate,
-			'generated' => $persisted,
-			'errors' => $errors,
-			'hierarchy_report' => $hierarchyReport,
-		];
-	}//end generate()
+		return $hierarchyReport;
+	}//end checkQuotaHierarchy()
+
+	/**
+	 * Log one team's quota hierarchy variance.
+	 *
+	 * @param string $periodId The fiscal period id.
+	 * @param array<string, mixed> $row The report row for the team.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-01
+	 */
+	private function logQuotaVariance(string $periodId, array $row): void {
+		$this->logger->info(
+			'Pipelinq: forecast quota hierarchy variance',
+			[
+				'period_id' => $periodId,
+				'team_id' => $row['team_id'],
+				'team_quota' => $row['team_quota'],
+				'rep_quotas_sum' => $row['rep_quotas_sum'],
+				'variance_percent' => $row['variance_percent'],
+			]
+		);
+	}//end logQuotaVariance()
 
 	/**
 	 * Build the full snapshot set (rep -> team -> division -> company).
@@ -377,22 +424,51 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 	 * @return array<string, mixed> teams (team=>reps), divisions (division=>teams).
 	 */
 	private function resolveHierarchy(): array {
+		return ['teams' => $this->resolveTeams(), 'divisions' => $this->resolveDivisions()];
+	}//end resolveHierarchy()
+
+	/**
+	 * Resolve the configured teams to their NC group members.
+	 *
+	 * @return array<string, array<int, string>> Rep ids keyed by team id.
+	 */
+	private function resolveTeams(): array {
 		$teamsRaw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::TEAMS_KEY, '');
 		$teamIds = array_values(array_filter(array_map('trim', explode(',', $teamsRaw)), static fn (string $t): bool => $t !== ''));
 
 		$teams = [];
 		foreach ($teamIds as $teamId) {
-			$group = $this->groupManager->get($teamId);
-			$members = [];
-			if ($group !== null) {
-				foreach ($group->getUsers() as $user) {
-					$members[] = $user->getUID();
-				}
-			}
-
-			$teams[$teamId] = $members;
+			$teams[$teamId] = $this->groupMembers(teamId: $teamId);
 		}
 
+		return $teams;
+	}//end resolveTeams()
+
+	/**
+	 * The user ids of a team's NC group; empty when the group does not exist.
+	 *
+	 * @param string $teamId The team (group) id.
+	 *
+	 * @return array<int, string>
+	 */
+	private function groupMembers(string $teamId): array {
+		$group = $this->groupManager->get($teamId);
+		$members = [];
+		if ($group !== null) {
+			foreach ($group->getUsers() as $user) {
+				$members[] = $user->getUID();
+			}
+		}
+
+		return $members;
+	}//end groupMembers()
+
+	/**
+	 * Resolve the configured team-to-division map into teams per division.
+	 *
+	 * @return array<string, array<int, string>> Team ids keyed by division id.
+	 */
+	private function resolveDivisions(): array {
 		$divisions = [];
 		$mapRaw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DIVISION_MAP_KEY, '');
 		if ($mapRaw !== '') {
@@ -404,8 +480,8 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 			}
 		}
 
-		return ['teams' => $teams, 'divisions' => $divisions];
-	}//end resolveHierarchy()
+		return $divisions;
+	}//end resolveDivisions()
 
 	/**
 	 * Fetch all open deals grouped by rep (assignee).
@@ -419,8 +495,20 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 			return [];
 		}
 
+		return $this->groupByRep(results: $this->findDeals(register: $register, schema: $schema));
+	}//end fetchDealsByRep()
+
+	/**
+	 * Find the deals of the lead schema.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The lead schema id.
+	 *
+	 * @return mixed The findAll result; an empty list when the fetch fails.
+	 */
+	private function findDeals(string $register, string $schema) {
 		try {
-			$results = $this->getObjectService()->findAll(
+			return $this->getObjectService()->findAll(
 				config: [
 					'filters' => ['register' => $register, 'schema' => $schema],
 				]
@@ -429,7 +517,16 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 			$this->logger->error('Pipelinq: snapshot deal fetch failed', ['exception' => $e->getMessage()]);
 			return [];
 		}
+	}//end findDeals()
 
+	/**
+	 * Group deals by their assignee, dropping unassigned deals.
+	 *
+	 * @param mixed $results The deals as returned by findAll.
+	 *
+	 * @return array<string, array<int, array<string, mixed>>> Deals keyed by rep id.
+	 */
+	private function groupByRep($results): array {
 		$byRep = [];
 		foreach (($results ?? []) as $result) {
 			$data = $this->toArray(value: $result);
@@ -442,7 +539,7 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 		}
 
 		return $byRep;
-	}//end fetchDealsByRep()
+	}//end groupByRep()
 
 	/**
 	 * Persist a snapshot record to OpenRegister.

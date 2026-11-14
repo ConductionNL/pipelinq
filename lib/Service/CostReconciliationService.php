@@ -95,29 +95,71 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 			return ['scanned' => 0, 'reconciled' => 0];
 		}
 
+		return $this->reconcileRows(objectService: $objectService, rows: $rows);
+	}//end reconcile()
+
+	/**
+	 * Reconcile each pending-cost row and count the outcomes.
+	 *
+	 * @param object          $objectService The OpenRegister ObjectService.
+	 * @param iterable<mixed> $rows          The candidate rows.
+	 *
+	 * @return array{scanned: int, reconciled: int} Summary.
+	 */
+	private function reconcileRows(object $objectService, iterable $rows): array {
 		$scanned = 0;
 		$reconciled = 0;
 		foreach ($rows as $raw) {
-			$arr = $this->toArray(value: $raw);
-			$meta = (array)($arr['metadata'] ?? []);
-			$pending = (bool)($meta['costCurrencyPending'] ?? false);
-			if ($pending === false) {
-				continue;
+			$outcome = $this->reconcileRow(objectService: $objectService, raw: $raw);
+			if ($outcome !== null) {
+				$scanned++;
 			}
 
-			$scanned++;
-			$converted = $this->convertedRow(row: $arr);
-			if ($converted === null) {
-				continue;
-			}
-
-			if ($this->saveReconciled(objectService: $objectService, row: $converted) === true) {
+			if ($outcome === 'reconciled') {
 				$reconciled++;
 			}
-		}//end foreach
+		}
 
 		return ['scanned' => $scanned, 'reconciled' => $reconciled];
-	}//end reconcile()
+	}//end reconcileRows()
+
+	/**
+	 * Reconcile one row when its cost is pending.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param mixed  $raw           The row.
+	 *
+	 * @return string|null 'reconciled', 'scanned' when it stays pending, null when it was not pending.
+	 */
+	private function reconcileRow(object $objectService, mixed $raw): string|null {
+		$arr = $this->toArray(value: $raw);
+		if ($this->isCostPending(row: $arr) === false) {
+			return null;
+		}
+
+		$converted = $this->convertedRow(row: $arr);
+		if ($converted === null) {
+			return 'scanned';
+		}
+
+		if ($this->saveReconciled(objectService: $objectService, row: $converted) === true) {
+			return 'reconciled';
+		}
+
+		return 'scanned';
+	}//end reconcileRow()
+
+	/**
+	 * Whether a message row's cost still waits for currency conversion.
+	 *
+	 * @param array<string, mixed> $row The message row.
+	 *
+	 * @return bool
+	 */
+	private function isCostPending(array $row): bool {
+		$meta = (array)($row['metadata'] ?? []);
+		return (bool)($meta['costCurrencyPending'] ?? false);
+	}//end isCostPending()
 
 	/**
 	 * The rows to reconcile: those flagged pending, or every message row

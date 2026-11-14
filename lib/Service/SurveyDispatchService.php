@@ -55,6 +55,8 @@ use Throwable;
 /**
  * Match dispatch rules, run the guards, and write the invitation.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
+ *
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
 class SurveyDispatchService implements SurveyDispatchServiceInterface {
@@ -148,33 +150,67 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		$matching = [];
 
 		foreach ($this->rules() as $rule) {
-			if (($rule['enabled'] ?? false) !== true) {
-				continue;
+			if ($this->ruleMatches(rule: $rule, entityType: $entityType, status: $status, channel: $channel) === true) {
+				$matching[] = $rule;
 			}
-
-			$trigger = ($rule['trigger'] ?? []);
-			if (is_array($trigger) === false) {
-				continue;
-			}
-
-			if (trim((string)($trigger['entityType'] ?? '')) !== $entityType) {
-				continue;
-			}
-
-			if (trim((string)($trigger['statusEquals'] ?? '')) !== $status) {
-				continue;
-			}
-
-			$channelFilter = trim((string)($trigger['channelEquals'] ?? ''));
-			if ($channelFilter !== '' && $channelFilter !== $channel) {
-				continue;
-			}
-
-			$matching[] = $rule;
 		}
 
 		return $matching;
 	}//end matchingRules()
+
+	/**
+	 * Whether a rule is enabled and its trigger matches the interaction.
+	 *
+	 * @param array<string, mixed> $rule The dispatch rule.
+	 * @param string $entityType The entity type.
+	 * @param string $status The status reached.
+	 * @param string $channel The interaction channel, or ''.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
+	 */
+	private function ruleMatches(array $rule, string $entityType, string $status, string $channel): bool {
+		if (($rule['enabled'] ?? false) !== true) {
+			return false;
+		}
+
+		$trigger = ($rule['trigger'] ?? []);
+		if (is_array($trigger) === false) {
+			return false;
+		}
+
+		return $this->triggerMatches(trigger: $trigger, entityType: $entityType, status: $status, channel: $channel);
+	}//end ruleMatches()
+
+	/**
+	 * Whether a rule trigger matches the entity type, status and channel.
+	 *
+	 * @param array<string, mixed> $trigger The rule trigger.
+	 * @param string $entityType The entity type.
+	 * @param string $status The status reached.
+	 * @param string $channel The interaction channel, or ''.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
+	 */
+	private function triggerMatches(array $trigger, string $entityType, string $status, string $channel): bool {
+		if (trim((string)($trigger['entityType'] ?? '')) !== $entityType) {
+			return false;
+		}
+
+		if (trim((string)($trigger['statusEquals'] ?? '')) !== $status) {
+			return false;
+		}
+
+		$channelFilter = trim((string)($trigger['channelEquals'] ?? ''));
+		if ($channelFilter !== '' && $channelFilter !== $channel) {
+			return false;
+		}
+
+		return true;
+	}//end triggerMatches()
 
 	/**
 	 * Why this dispatch must be suppressed, or null to go ahead.
@@ -201,6 +237,21 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	): ?string {
 		$now = ($now ?? new DateTimeImmutable());
 
+		return $this->contactSuppression(contact: $contact)
+			?? $this->cooldownSuppression(rule: $rule, recentInvitations: $recentInvitations, now: $now)
+			?? $this->channelSuppression(rule: $rule, contact: $contact);
+	}//end suppressionReason()
+
+	/**
+	 * Why the contact itself blocks a survey: no address at all, or an opt-out.
+	 *
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return string|null The reason, or null.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function contactSuppression(array $contact): string|null {
 		if (trim((string)($contact['contactsUid'] ?? $contact['id'] ?? '')) === '') {
 			return 'no-channel-address';
 		}
@@ -209,35 +260,82 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return 'opt-out';
 		}
 
+		return null;
+	}//end contactSuppression()
+
+	/**
+	 * 'cooldown' when the contact was invited, to any survey, within the rule's cooldown.
+	 *
+	 * @param array<string, mixed> $rule The dispatch rule.
+	 * @param array<int, array<string, mixed>> $recentInvitations The contact's recent invitations.
+	 * @param DateTimeImmutable $now The reference time.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function cooldownSuppression(array $rule, array $recentInvitations, DateTimeImmutable $now): string|null {
 		$cooldownDays = (int)($rule['cooldownDays'] ?? self::DEFAULT_COOLDOWN_DAYS);
 		if ($cooldownDays > 0) {
 			$since = $now->modify("-{$cooldownDays} days");
 			foreach ($recentInvitations as $invitation) {
-				// Counted ACROSS surveys: somebody asked about a permit last
-				// week is not fair game today because it is a different
-				// questionnaire.
-				$sentAt = trim((string)($invitation['sentAt'] ?? ''));
-				if ($sentAt === '') {
-					continue;
-				}
-
-				try {
-					if (new DateTimeImmutable($sentAt) >= $since) {
-						return 'cooldown';
-					}
-				} catch (Throwable $e) {
-					continue;
+				if ($this->sentSince(invitation: $invitation, since: $since) === true) {
+					return 'cooldown';
 				}
 			}
 		}
 
+		return null;
+	}//end cooldownSuppression()
+
+	/**
+	 * Whether an invitation was sent at or after a moment; false when it has no readable sentAt.
+	 *
+	 * @param mixed $invitation The invitation.
+	 * @param mixed $since The cooldown start.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function sentSince($invitation, $since): bool {
+		// Counted ACROSS surveys: somebody asked about a permit last
+		// week is not fair game today because it is a different
+		// questionnaire.
+		$sentAt = trim((string)($invitation['sentAt'] ?? ''));
+		if ($sentAt === '') {
+			return false;
+		}
+
+		try {
+			if (new DateTimeImmutable($sentAt) >= $since) {
+				return true;
+			}
+		} catch (Throwable $e) {
+			return false;
+		}
+
+		return false;
+	}//end sentSince()
+
+	/**
+	 * 'no-channel-address' when the contact has no address on the rule's channel.
+	 *
+	 * @param array<string, mixed> $rule The dispatch rule.
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function channelSuppression(array $rule, array $contact): string|null {
 		$channel = trim((string)($rule['channel'] ?? 'email'));
 		if ($this->addressFor(contact: $contact, channel: $channel) === '') {
 			return 'no-channel-address';
 		}
 
 		return null;
-	}//end suppressionReason()
+	}//end channelSuppression()
 
 	/**
 	 * The address a channel would deliver to, or '' when there is none.
@@ -387,6 +485,8 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 * @param array<string, mixed> $filters Extra filters.
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function read(array $filters): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
@@ -397,39 +497,73 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 
+		return $this->plainRows(rows: $this->findInvitations(register: $register, schema: $schema, filters: $filters));
+	}//end read()
+
+	/**
+	 * Find invitations matching the filters, or none when the read fails.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The invitation schema id.
+	 * @param array<string, mixed> $filters Extra filters.
+	 *
+	 * @return array<mixed>
+	 */
+	private function findInvitations(string $register, string $schema, array $filters): array {
 		try {
-			$rows = $this->objectService->findAll(
+			return $this->objectService->findAll(
 				[
 					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
 					'limit' => self::LIMIT,
 				]
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SurveyDispatchService: the invitation read failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('SurveyDispatchService: the invitation read failed', ['exception' => $e->getMessage()]);
 
 			return [];
 		}
+	}//end findInvitations()
 
+	/**
+	 * The rows as plain arrays, serialising objects and dropping anything else.
+	 *
+	 * @param array<mixed> $rows The rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function plainRows(array $rows): array {
 		$out = [];
 		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
+			$data = $this->plainRow(row: $row);
+			if ($data !== null) {
+				$out[] = $data;
 			}
 		}
 
 		return $out;
-	}//end read()
+	}//end plainRows()
+
+	/**
+	 * One row as a plain array, or null when it is neither an array nor serialises to one.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function plainRow($row): array|null {
+		if (is_array($row) === true) {
+			return $row;
+		}
+
+		if (($row instanceof \JsonSerializable) === true) {
+			$data = $row->jsonSerialize();
+			if (is_array($data) === true) {
+				return $data;
+			}
+		}
+
+		return null;
+	}//end plainRow()
 
 	/**
 	 * Persist one invitation.

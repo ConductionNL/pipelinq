@@ -156,28 +156,44 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 		$slaAtRisk = 0;
 
 		foreach (TicketService::TYPES as $ticketType) {
-			$tickets = $this->ticketService->findByType(
-				$ticketType,
-				['client' => $clientId, 'status' => self::OPEN_TICKET_STATUSES]
-			);
+			$tickets = $this->ticketService->findByType($ticketType, ['client' => $clientId, 'status' => self::OPEN_TICKET_STATUSES]);
 			$openTicketsByType[$ticketType] = count($tickets);
 
-			foreach ($tickets as $rawTicket) {
-				$ticket = $this->toArray(object: $rawTicket);
-
-				$deadline = $this->parseDeadline(raw: (string)($ticket['slaDeadline'] ?? ''));
-				if ($deadline !== null) {
-					if ($deadline < $now) {
-						$slaBreached++;
-					} elseif ($deadline <= $atRiskThreshold) {
-						$slaAtRisk++;
-					}
-				}
-			}
+			[$breached, $atRisk] = $this->slaCounts(tickets: $tickets, now: $now, atRiskThreshold: $atRiskThreshold);
+			$slaBreached += $breached;
+			$slaAtRisk += $atRisk;
 		}//end foreach
 
 		return [$openTicketsByType, $slaBreached, $slaAtRisk];
 	}//end collectOpenTickets()
+
+	/**
+	 * How many of the tickets breached their SLA deadline, and how many are at risk.
+	 *
+	 * @param iterable<mixed>   $tickets         The tickets.
+	 * @param DateTimeImmutable $now             Evaluation instant.
+	 * @param DateTimeImmutable $atRiskThreshold The end of the at-risk window.
+	 *
+	 * @return array{0: int, 1: int} [breached, atRisk].
+	 */
+	private function slaCounts(iterable $tickets, DateTimeImmutable $now, DateTimeImmutable $atRiskThreshold): array {
+		$slaBreached = 0;
+		$slaAtRisk = 0;
+		foreach ($tickets as $rawTicket) {
+			$ticket = $this->toArray(object: $rawTicket);
+
+			$deadline = $this->parseDeadline(raw: (string)($ticket['slaDeadline'] ?? ''));
+			if ($deadline !== null) {
+				if ($deadline < $now) {
+					$slaBreached++;
+				} elseif ($deadline <= $atRiskThreshold) {
+					$slaAtRisk++;
+				}
+			}
+		}
+
+		return [$slaBreached, $slaAtRisk];
+	}//end slaCounts()
 
 	/**
 	 * Parse a ticket's `slaDeadline` into an instant, or null when absent/unparsable.

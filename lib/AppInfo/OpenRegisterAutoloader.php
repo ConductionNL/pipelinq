@@ -103,37 +103,13 @@ final class OpenRegisterAutoloader {
 	 * service locator, and this runs at the composition root where no
 	 * container is available to inject from.
 	 *
+	 * @spec exclude composition-root autoloader prelude with no behavioural spec surface.
 	 */
 	public static function register(?\OCP\App\IAppManager $appManager = null): bool {
 		try {
 			$appManager ??= \OCP\Server::get(\OCP\App\IAppManager::class);
 
-			// Checked before the short-circuit: under a long-lived worker this
-			// static outlives the request, and an OpenRegister disabled since
-			// must not stay wired.
-			if ($appManager->isEnabledForAnyone(self::OPENREGISTER_APP_ID) === false) {
-				self::unregister();
-				return false;
-			}
-
-			if (self::$loader !== null) {
-				return true;
-			}
-
-			$path = rtrim($appManager->getAppPath(self::OPENREGISTER_APP_ID), '/');
-			if (is_dir($path.'/lib') === false) {
-				return false;
-			}
-
-			self::$loader = static function (string $class) use ($path): void {
-				$file = self::classFile(appPath: $path, class: $class);
-				if ($file !== null && is_file($file) === true) {
-					require_once $file;
-				}
-			};
-			spl_autoload_register(self::$loader);
-
-			return true;
+			return self::wire(appManager: $appManager);
 		} catch (\Throwable) {
 			// OpenRegister absent, or the server container is not up (unit
 			// tests). The caller's class_exists() guard then skips the AppHost
@@ -144,6 +120,55 @@ final class OpenRegisterAutoloader {
 		}//end try
 
 	}//end register()
+
+	/**
+	 * Register the prefix when OpenRegister is enabled and present, unwiring it when disabled.
+	 *
+	 * @param \OCP\App\IAppManager $appManager The app manager.
+	 *
+	 * @return bool True when the prefix is registered.
+	 */
+	private static function wire(\OCP\App\IAppManager $appManager): bool {
+		// Checked before the short-circuit: under a long-lived worker this
+		// static outlives the request, and an OpenRegister disabled since
+		// must not stay wired.
+		if ($appManager->isEnabledForAnyone(self::OPENREGISTER_APP_ID) === false) {
+			self::unregister();
+			return false;
+		}
+
+		if (self::$loader !== null) {
+			return true;
+		}
+
+		$path = rtrim($appManager->getAppPath(self::OPENREGISTER_APP_ID), '/');
+		if (is_dir($path.'/lib') === false) {
+			return false;
+		}
+
+		return self::install(path: $path);
+
+	}//end wire()
+
+	/**
+	 * Install the autoloader for OpenRegister's `lib/` at the given app path.
+	 *
+	 * @param string $path OpenRegister's app path, without a trailing slash.
+	 *
+	 * @return bool Always true.
+	 */
+	private static function install(string $path): bool {
+		self::$loader = static function (string $class) use ($path): void {
+			$file = self::classFile(appPath: $path, class: $class);
+			if ($file !== null && is_file($file) === true) {
+				require_once $file;
+			}
+		};
+		spl_autoload_register(self::$loader);
+
+		return true;
+
+	}//end install()
 
 	/**
 	 * Take the loader off the SPL chain (tests, and OpenRegister disabled).

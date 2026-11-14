@@ -239,12 +239,9 @@ class CampaignService implements CampaignServiceInterface {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function save(array $payload, ?string $id = null, string $uid = ''): array {
-		$existing = null;
-		if ($id !== null && trim($id) !== '') {
-			$existing = $this->find(id: $id);
-			if ($existing === null) {
-				return $this->failure(error: 'not_found', value: (string)$id, allowed: []);
-			}
+		[$existing, $failure] = $this->existingCampaign(id: $id);
+		if ($failure !== null) {
+			return $failure;
 		}
 
 		$name = trim((string)($payload['name'] ?? ($existing['name'] ?? '')));
@@ -257,6 +254,39 @@ class CampaignService implements CampaignServiceInterface {
 			return $check;
 		}
 
+		return $this->storeCampaign(record: $this->campaignRecord(existing: $existing, payload: $payload, name: $name, uid: $uid), id: $id, name: $name);
+	}//end save()
+
+	/**
+	 * The campaign being updated, or a not-found failure; [null, null] for a new campaign.
+	 *
+	 * @param string|null $id The campaign id, or null to create.
+	 *
+	 * @return array{0: array<string, mixed>|null, 1: array<string, mixed>|null} The existing campaign and the failure.
+	 */
+	private function existingCampaign(string|null $id): array {
+		$existing = null;
+		if ($id !== null && trim($id) !== '') {
+			$existing = $this->find(id: $id);
+			if ($existing === null) {
+				return [null, $this->failure(error: 'not_found', value: (string)$id, allowed: [])];
+			}
+		}
+
+		return [$existing, null];
+	}//end existingCampaign()
+
+	/**
+	 * The record to store: the existing campaign overlaid with the payload, the name and frozen slug.
+	 *
+	 * @param array<string, mixed>|null $existing The existing campaign, or null for a new one.
+	 * @param array<string, mixed> $payload The submitted payload.
+	 * @param string $name The trimmed name.
+	 * @param string $uid The acting user id.
+	 *
+	 * @return array<string, mixed> The record.
+	 */
+	private function campaignRecord(array|null $existing, array $payload, string $name, string $uid): array {
 		$record = array_merge(($existing ?? []), $payload);
 		$record['name'] = $name;
 		$record['utmCampaign'] = $this->frozenSlug(existing: $existing, name: $name);
@@ -267,13 +297,26 @@ class CampaignService implements CampaignServiceInterface {
 
 		unset($record['@self'], $record['id'], $record['uuid'], $record['slug']);
 
+		return $record;
+	}//end campaignRecord()
+
+	/**
+	 * Store the campaign and answer with it, or with a write failure.
+	 *
+	 * @param array<string, mixed> $record The record to store.
+	 * @param string|null $id The campaign id, or null to create.
+	 * @param string $name The campaign name.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 */
+	private function storeCampaign(array $record, string|null $id, string $name): array {
 		$saved = $this->store->save(schemaSlug: $this->schemaSlug(), payload: $record, id: $id);
 		if ($saved === null) {
 			return $this->failure(error: 'write_failed', value: $name, allowed: []);
 		}
 
 		return ['error' => '', 'value' => '', 'allowed' => [], 'campaign' => $saved];
-	}//end save()
+	}//end storeCampaign()
 
 	/**
 	 * Record what portaliq answered when this campaign asked for a page.
