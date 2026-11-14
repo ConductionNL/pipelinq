@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\Pipelinq\Service\CompletedInteraction;
 use OCA\Pipelinq\Service\ReceiptAction;
 use PHPUnit\Framework\TestCase;
 
