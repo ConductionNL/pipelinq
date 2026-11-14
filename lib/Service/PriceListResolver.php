@@ -68,34 +68,29 @@ class PriceListResolver {
 			return null;
 		}
 
-		$usable = array_values(
-			array_filter(
-				$lists,
-				fn (array $list): bool => $this->isUsable(list: $list, currency: $currency, day: $day)
-			)
-		);
-
-		return self::firstMatch(
-			lists: $this->candidates(lists: $usable, client: $client),
+		$line = new PriceListLine(
 			productId: $productId,
 			sku: trim((string) $variantSku),
-			quantity: $quantity
+			quantity: $quantity,
+			currency: $currency,
+			day: $day
 		);
+		$usable = array_values(array_filter($lists, fn (array $list): bool => $this->isUsable(list: $list, line: $line)));
+
+		return self::firstMatch(lists: $this->candidates(lists: $usable, client: $client), line: $line);
 	}//end select()
 
 	/**
 	 * The answer of the first list, in order, with an entry that prices the line.
 	 *
-	 * @param list<array<string, mixed>> $lists     The candidate lists, in order.
-	 * @param string                     $productId The product's id.
-	 * @param string                     $sku       The variant SKU; empty for none.
-	 * @param float                      $quantity  The quantity.
+	 * @param list<array<string, mixed>> $lists The candidate lists, in order.
+	 * @param PriceListLine              $line  The line to price.
 	 *
 	 * @return array{unitPrice: float, priceListId: string, priceListTitle: string, minQuantity: float}|null
 	 */
-	private static function firstMatch(array $lists, string $productId, string $sku, float $quantity): ?array {
+	private static function firstMatch(array $lists, PriceListLine $line): ?array {
 		foreach ($lists as $list) {
-			$entry = self::entryFor(list: $list, productId: $productId, sku: $sku, quantity: $quantity);
+			$entry = self::entryFor(list: $list, line: $line);
 			if ($entry !== []) {
 				return self::matchOf(list: $list, entry: $entry);
 			}
@@ -187,22 +182,21 @@ class PriceListResolver {
 	/**
 	 * Whether a list may price anything: active, in the currency and valid on the day.
 	 *
-	 * @param array<string, mixed> $list     The list.
-	 * @param string               $currency The quote's currency.
-	 * @param DateTimeImmutable    $day      The day.
+	 * @param array<string, mixed> $list The list.
+	 * @param PriceListLine        $line The line, with the quote's currency and the day.
 	 *
 	 * @return bool True when it may.
 	 */
-	private function isUsable(array $list, string $currency, DateTimeImmutable $day): bool {
+	private function isUsable(array $list, PriceListLine $line): bool {
 		if (($list['isActive'] ?? true) === false) {
 			return false;
 		}
 
-		if (strtoupper(trim((string) ($list['currency'] ?? 'EUR'))) !== strtoupper(trim($currency))) {
+		if (strtoupper(trim((string) ($list['currency'] ?? 'EUR'))) !== strtoupper(trim($line->currency))) {
 			return false;
 		}
 
-		return self::isValidOn(list: $list, day: $day);
+		return self::isValidOn(list: $list, day: $line->day);
 	}//end isUsable()
 
 	/**
@@ -228,21 +222,19 @@ class PriceListResolver {
 	 * The entry of a list that prices the product at the quantity: one for
 	 * the variant first, else one for the product itself; empty when none.
 	 *
-	 * @param array<string, mixed> $list      The list.
-	 * @param string               $productId The product's id.
-	 * @param string               $sku       The variant SKU; empty for none.
-	 * @param float                $quantity  The quantity.
+	 * @param array<string, mixed> $list The list.
+	 * @param PriceListLine        $line The line to price.
 	 *
 	 * @return array<string, mixed> The entry; empty when none.
 	 */
-	private static function entryFor(array $list, string $productId, string $sku, float $quantity): array {
+	private static function entryFor(array $list, PriceListLine $line): array {
 		$skus = [''];
-		if ($sku !== '') {
-			$skus = [$sku, ''];
+		if ($line->sku !== '') {
+			$skus = [$line->sku, ''];
 		}
 
 		foreach ($skus as $candidate) {
-			$best = self::bestEntry(list: $list, productId: $productId, sku: $candidate, quantity: $quantity);
+			$best = self::bestEntry(list: $list, line: $line->withSku(sku: $candidate));
 			if ($best !== []) {
 				return $best;
 			}
@@ -255,18 +247,16 @@ class PriceListResolver {
 	 * Among a list's entries for the product and exact SKU at the quantity,
 	 * the one with the highest minimum quantity; the first such on a tie.
 	 *
-	 * @param array<string, mixed> $list      The list.
-	 * @param string               $productId The product's id.
-	 * @param string               $sku       The variant SKU; empty for the product itself.
-	 * @param float                $quantity  The quantity.
+	 * @param array<string, mixed> $list The list.
+	 * @param PriceListLine        $line The line, its SKU empty for the product itself.
 	 *
 	 * @return array<string, mixed> The entry; empty when none.
 	 */
-	private static function bestEntry(array $list, string $productId, string $sku, float $quantity): array {
+	private static function bestEntry(array $list, PriceListLine $line): array {
 		$best = [];
 		foreach ((array) ($list['entries'] ?? []) as $entry) {
 			$entry = (array) $entry;
-			if (self::prices(entry: $entry, productId: $productId, sku: $sku, quantity: $quantity) === false) {
+			if (self::prices(entry: $entry, line: $line) === false) {
 				continue;
 			}
 
@@ -281,18 +271,16 @@ class PriceListResolver {
 	/**
 	 * Whether an entry prices the product and exact SKU at the quantity.
 	 *
-	 * @param array<string, mixed> $entry     The entry.
-	 * @param string               $productId The product's id.
-	 * @param string               $sku       The variant SKU; empty for the product itself.
-	 * @param float                $quantity  The quantity.
+	 * @param array<string, mixed> $entry The entry.
+	 * @param PriceListLine        $line  The line, its SKU empty for the product itself.
 	 *
 	 * @return bool True when it does.
 	 */
-	private static function prices(array $entry, string $productId, string $sku, float $quantity): bool {
-		return self::referenceId(value: ($entry['product'] ?? null)) === $productId
-			&& trim((string) ($entry['variantSku'] ?? '')) === $sku
+	private static function prices(array $entry, PriceListLine $line): bool {
+		return self::referenceId(value: ($entry['product'] ?? null)) === $line->productId
+			&& trim((string) ($entry['variantSku'] ?? '')) === $line->sku
 			&& is_numeric($entry['unitPrice'] ?? null) === true
-			&& self::minQuantity(entry: $entry) <= $quantity;
+			&& self::minQuantity(entry: $entry) <= $line->quantity;
 	}//end prices()
 
 	/**
