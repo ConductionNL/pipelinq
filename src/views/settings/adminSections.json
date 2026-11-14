@@ -243,5 +243,22 @@
 				}
 			}
 		]
+	},
+	"posRefunds": {
+		"name": "Refunds",
+		"description": "A refund at or below this amount can be completed by any till user who may act on the receipt. Above it, or with no amount set, a POS manager completes the refund.",
+		"saveLabel": "Save refund settings",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "pos.refund_limit",
+				"label": "Refund limit (euros)",
+				"type": "number",
+				"min": 0,
+				"required": false,
+				"placeholder": "25",
+				"hint": "Leave empty to have a manager complete every refund."
+			}
+		]
 	}
 }

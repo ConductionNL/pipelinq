@@ -2418,7 +2418,7 @@
         "slug": "posRefund",
         "title": "POS Refund",
         "icon": "CashRefund",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "A refund / return document for a previously settled or confirmed POS transaction",
         "description": "Represents a full or partial refund against a posTransaction. refundAmount and totalTax are server-computed by PosRefundService from the refund lines and the original transaction's persisted, server-authoritative tax data; client-supplied amounts are never trusted. Lifecycle: pending -> completed (manager confirm) or pending -> rejected. Completed and rejected refunds are immutable. Mapped to Schema.org Order (type=refund).",
         "x-schema-org": "schema:Order",
@@ -2436,10 +2436,7 @@
                   "pending"
                 ],
                 "to": "completed",
-                "description": "Confirm a pending refund (emits reversal + stock events). Authorization: a POS manager or admin only. The cumulative over-refund cap is enforced and amounts are recomputed server-side.",
-                "authorization": [
-                  "pos_managers"
-                ],
+                "description": "Confirm a pending refund (emits reversal + stock events). Authorization lives in PosRefundManagerGuard: a POS manager or admin, or a till user who may act on the original transaction when the refund is at or below the configured refund limit (pos-refund-limit). The cumulative over-refund cap is enforced and amounts are recomputed server-side.",
                 "requires": "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard"
               },
               "reject": {

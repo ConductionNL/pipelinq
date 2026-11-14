@@ -272,6 +272,13 @@
 			<VatRatesSettings v-if="isAdmin" :config="config" />
 			<PosRoleManager v-if="isAdmin && isConfigured" />
 			<PosStaffManager v-if="isAdmin && isConfigured" />
+			<!-- Board PqBeheerKassa: the refund limit below which a till user
+			     completes a refund without a manager (pos-refund-limit). -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.posRefunds"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
 
 			<!-- The till's customer lookup is a page of its own in the app. -->
 			<NcSettingsSection

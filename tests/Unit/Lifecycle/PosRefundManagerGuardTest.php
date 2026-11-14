@@ -381,4 +381,137 @@ class PosRefundManagerGuardTest extends TestCase {
 		$this->assertFalse($result->isAllowed());
 		$this->assertSame([], $this->objects->findAllCalls);
 	}//end testMissingRefundSchemaFailsClosed()
+
+	/**
+	 * A till user refunds 12 euros below a 25 euro limit on their own transaction.
+	 *
+	 * @return void
+	 */
+	public function testATillUserRefundsBelowTheLimit(): void {
+		$this->config['pos.refund_limit'] = '25';
+		$this->objects->transactions['tx-1']['cashier'] = 'clerk';
+
+		$result = $this->guard()->check(['id' => 'r1', 'originalTransaction' => 'tx-1', 'refundAmount' => 10, 'totalTax' => 2], 'complete', 'clerk');
+
+		$this->assertTrue($result->isAllowed());
+		$this->assertSame([['id' => 'tx-1', 'register' => 'reg', 'schema' => 'tx']], $this->objects->findCalls);
+		$this->assertCount(1, $this->objects->findAllCalls);
+	}//end testATillUserRefundsBelowTheLimit()
+
+	/**
+	 * A refund exactly at the limit needs no manager.
+	 *
+	 * @return void
+	 */
+	public function testARefundAtTheLimitNeedsNoManager(): void {
+		$this->config['pos.refund_limit'] = '25,50';
+		$this->objects->transactions['tx-1']['cashier'] = 'clerk';
+
+		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 21.07, 'totalTax' => 4.43], 'complete', 'clerk');
+
+		$this->assertTrue($result->isAllowed());
+	}//end testARefundAtTheLimitNeedsNoManager()
+
+	/**
+	 * Above the limit the till user is refused before any lookup, and a manager can complete it.
+	 *
+	 * @return void
+	 */
+	public function testAboveTheLimitAManagerApproves(): void {
+		$this->config['pos.refund_limit'] = '25';
+		$this->objects->transactions['tx-1']['cashier'] = 'clerk';
+		$refund = ['originalTransaction' => 'tx-1', 'refundAmount' => 33.06, 'totalTax' => 6.94];
+
+		$denied = $this->guard()->check($refund, 'complete', 'clerk');
+		$this->assertFalse($denied->isAllowed());
+		$this->assertSame('Een retour boven €25,00 moet een beheerder verwerken.', $denied->getMessage());
+		$this->assertSame([], $this->objects->findCalls);
+
+		$this->assertTrue($this->guard()->check($refund, 'complete', 'manager')->isAllowed());
+	}//end testAboveTheLimitAManagerApproves()
+
+	/**
+	 * With no limit, or one that is no amount, every refund needs a manager.
+	 *
+	 * @return void
+	 */
+	public function testNoUsableLimitKeepsEveryRefundWithAManager(): void {
+		$this->objects->transactions['tx-1']['cashier'] = 'clerk';
+		$refund = ['originalTransaction' => 'tx-1', 'refundAmount' => 2];
+
+		foreach (['', '  ', 'abc', '-5'] as $limit) {
+			$this->config['pos.refund_limit'] = $limit;
+			$result = $this->guard()->check($refund, 'complete', 'clerk');
+
+			$this->assertFalse($result->isAllowed(), "limit '{$limit}'");
+			$this->assertSame('Alleen een beheerder mag een retour verwerken.', $result->getMessage());
+			$this->assertNull($this->guard()->refundLimit());
+		}
+
+		$this->assertSame([], $this->objects->findCalls);
+	}//end testNoUsableLimitKeepsEveryRefundWithAManager()
+
+	/**
+	 * Rejecting a refund stays a manager's, whatever the limit.
+	 *
+	 * @return void
+	 */
+	public function testRejectStaysWithAManager(): void {
+		$this->config['pos.refund_limit'] = '25';
+		$this->objects->transactions['tx-1']['cashier'] = 'clerk';
+
+		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 2], 'reject', 'clerk');
+
+		$this->assertFalse($result->isAllowed());
+		$this->assertSame('Alleen een beheerder mag een retour verwerken.', $result->getMessage());
+	}//end testRejectStaysWithAManager()
+
+	/**
+	 * Within the limit the till user must still be allowed to act on the transaction.
+	 *
+	 * @return void
+	 */
+	public function testATillUserWithoutAccessToTheTransactionIsRefused(): void {
+		$this->config['pos.refund_limit'] = '25';
+		$this->objects->transactions['tx-1']['cashier'] = 'someone-else';
+
+		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 5], 'complete', 'clerk');
+
+		$this->assertFalse($result->isAllowed());
+		$this->assertSame('Je mag deze kassabon niet terugboeken.', $result->getMessage());
+		$this->assertSame([], $this->objects->findAllCalls);
+	}//end testATillUserWithoutAccessToTheTransactionIsRefused()
+
+	/**
+	 * Within the limit the till user needs an original transaction that exists.
+	 *
+	 * @return void
+	 */
+	public function testATillUserRefundWithoutItsTransactionIsRefused(): void {
+		$this->config['pos.refund_limit'] = '25';
+
+		$missing = $this->guard()->check(['refundAmount' => 5], 'complete', 'clerk');
+		$this->assertSame('Originele kassabon ontbreekt; retour kan niet worden bevestigd.', $missing->getMessage());
+
+		$unknown = $this->guard()->check(['originalTransaction' => 'tx-404', 'refundAmount' => 5], 'complete', 'clerk');
+		$this->assertFalse($unknown->isAllowed());
+		$this->assertSame('Originele kassabon niet gevonden. Kan retour niet verwerken.', $unknown->getMessage());
+	}//end testATillUserRefundWithoutItsTransactionIsRefused()
+
+	/**
+	 * The over-refund cap still applies to a till user's refund below the limit.
+	 *
+	 * @return void
+	 */
+	public function testTheCapStillAppliesBelowTheLimit(): void {
+		$this->config['pos.refund_limit'] = '25';
+		$this->objects->transactions['tx-1']['cashier'] = 'clerk';
+		$this->objects->refunds = [['id' => 'earlier', 'refundAmount' => 90, 'totalTax' => 0]];
+
+		$result = $this->guard()->check(['id' => 'r2', 'originalTransaction' => 'tx-1', 'refundAmount' => 12], 'complete', 'clerk');
+
+		$this->assertFalse($result->isAllowed());
+		$this->assertSame('Retourvolume (€102,00) overschrijdt originele totaal (€100,00).', $result->getMessage());
+		$this->assertCount(1, $this->objects->findCalls);
+	}//end testTheCapStillAppliesBelowTheLimit()
 }//end class
