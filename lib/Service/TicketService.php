@@ -376,6 +376,20 @@ class TicketService implements TicketServiceInterface {
 			return;
 		}
 
+		$seen = $this->distinctCaseReferences(set: $set);
+		$this->assertPrimaryInCaseSet(payload: $payload, seen: $seen);
+	}//end assertCaseSet()
+
+	/**
+	 * The non-empty references of a case set, refusing a duplicate.
+	 *
+	 * @param array<mixed> $set The `caseReferences` set.
+	 *
+	 * @return array<int, string> The trimmed references.
+	 *
+	 * @throws InvalidArgumentException When the set holds a duplicate.
+	 */
+	private function distinctCaseReferences(array $set): array {
 		$seen = [];
 		foreach ($set as $reference) {
 			$reference = trim((string)$reference);
@@ -384,21 +398,33 @@ class TicketService implements TicketServiceInterface {
 			}
 
 			if (in_array($reference, $seen, true) === true) {
-				throw new InvalidArgumentException(
-					"caseReferences already holds {$reference}; a contact moment is filed on a case once."
-				);
+				throw new InvalidArgumentException("caseReferences already holds {$reference}; a contact moment is filed on a case once.");
 			}
 
 			$seen[] = $reference;
 		}
 
+		return $seen;
+	}//end distinctCaseReferences()
+
+	/**
+	 * Refuse a primary case reference that is not a member of the set.
+	 *
+	 * @param array<string, mixed> $payload The ticket fields.
+	 * @param array<int, string>   $seen    The trimmed references of the set.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the primary is not a member of the set.
+	 */
+	private function assertPrimaryInCaseSet(array $payload, array $seen): void {
 		$primary = trim((string)($payload['primaryCaseReference'] ?? ''));
 		if ($primary !== '' && in_array($primary, $seen, true) === false) {
 			throw new InvalidArgumentException(
 				"primaryCaseReference {$primary} is not one of the cases this contact moment is filed on."
 			);
 		}
-	}//end assertCaseSet()
+	}//end assertPrimaryInCaseSet()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.
@@ -509,6 +535,17 @@ class TicketService implements TicketServiceInterface {
 			notes: $notes
 		);
 
+		return $this->saveContactmoment(payload: $payload);
+	}//end logContactmoment()
+
+	/**
+	 * Save a contactmoment and answer with its id, or the MCP error.
+	 *
+	 * @param array<string, mixed> $payload The contactmoment fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function saveContactmoment(array $payload): array {
 		try {
 			$saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
 		} catch (\Exception $e) {
@@ -520,8 +557,7 @@ class TicketService implements TicketServiceInterface {
 		return [
 			'ticketId' => (string)($data['id'] ?? $data['uuid'] ?? ''),
 		];
-
-	}//end logContactmoment()
+	}//end saveContactmoment()
 
 	/**
 	 * The refusal for the first missing or invalid logContactmoment() argument.
