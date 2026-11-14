@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\Portal\PortalCleanupService;
+use OCA\Pipelinq\Kernel\Contracts\PortalCleanupServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -44,10 +44,10 @@ class PortalCleanupCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param PortalCleanupService $cleanup The cleanup service.
+	 * @param PortalCleanupServiceInterface $cleanup The cleanup service.
 	 */
 	public function __construct(
-		private PortalCleanupService $cleanup,
+		private PortalCleanupServiceInterface $cleanup,
 	) {
 		parent::__construct();
 	}//end __construct()

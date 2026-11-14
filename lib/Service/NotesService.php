@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\NotesServiceInterface;
 use OCP\Comments\IComment;
 use OCP\Comments\ICommentsManager;
 use OCP\IUserManager;
@@ -34,13 +35,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
-class NotesService {
-	public const VALID_TYPES = [
-		'pipelinq_client',
-		'pipelinq_contact',
-		'pipelinq_lead',
-		'pipelinq_request',
-	];
+class NotesService implements NotesServiceInterface {
 
 	/**
 	 * Constructor.

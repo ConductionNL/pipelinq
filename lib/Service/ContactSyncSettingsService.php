@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
@@ -33,7 +34,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactSyncSettingsService {
+class ContactSyncSettingsService implements ContactSyncSettingsServiceInterface {
 
 	/**
 	 * The user setting that turns write-back on or off.
@@ -81,7 +82,7 @@ class ContactSyncSettingsService {
 	public function writesBack(string $userId): bool {
 		return $this->config->getUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_WRITE_BACK,
 			default: '1'
 		) !== '0';
@@ -105,7 +106,7 @@ class ContactSyncSettingsService {
 
 		$this->config->setUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_WRITE_BACK,
 			value: $value
 		);
@@ -166,7 +167,7 @@ class ContactSyncSettingsService {
 		$run = ['at' => $now, 'updated' => $updated, 'failed' => $failed];
 		$this->config->setUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_LAST_RUN,
 			value: (string)json_encode($run)
 		);
@@ -184,7 +185,7 @@ class ContactSyncSettingsService {
 	private function lastRun(string $userId): ?array {
 		$stored = $this->config->getUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_LAST_RUN,
 			default: ''
 		);

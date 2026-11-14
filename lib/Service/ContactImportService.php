@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -69,7 +69,7 @@ class ContactImportService {
 			ncContact: $ncContact,
 			uid: $uid
 		);
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($schemaId === '') {
 			throw new RuntimeException('Pipelinq: app-config "client_schema" is not configured.');
 		}
@@ -96,7 +96,7 @@ class ContactImportService {
 			uid: $uid,
 			clientId: $clientId
 		);
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 		if ($schemaId === '') {
 			throw new RuntimeException('Pipelinq: app-config "contact_schema" is not configured.');
 		}
@@ -124,7 +124,7 @@ class ContactImportService {
 	 */
 	private function saveAndSerialize(array $data, string $schemaId): array {
 		$objectService = $this->getObjectService();
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '' || $schemaId === '') {
 			throw new RuntimeException('Pipelinq: register or schema is not configured for the contact import.');
 		}

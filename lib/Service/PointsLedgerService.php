@@ -30,8 +30,11 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -40,8 +43,6 @@ use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Append-only points ledger.
@@ -57,7 +58,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  movement's request/result type once. Splitting by movement would duplicate
  *  the append-and-update core five times.
  */
-class PointsLedgerService {
+class PointsLedgerService implements PointsLedgerServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -455,7 +456,7 @@ class PointsLedgerService {
 	 * @throws RuntimeException When another movement on the account holds the lock.
 	 */
 	private function underAccountLock(string $accountId, callable $write): array {
-		$key = Application::APP_ID . '/loyalty-account/' . $accountId;
+		$key = AppIdentity::APP_ID . '/loyalty-account/' . $accountId;
 		try {
 			$this->locking->acquireLock($key, ILockingProvider::LOCK_EXCLUSIVE);
 		} catch (LockedException $e) {
@@ -625,8 +626,8 @@ class PointsLedgerService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'pointsLedgerEntry_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pointsLedgerEntry_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/pointsLedgerEntry_schema not configured; OpenRegister calls are refused, not run unscoped'

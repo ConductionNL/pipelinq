@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use OCP\IURLGenerator;
@@ -39,7 +40,7 @@ use OCP\IURLGenerator;
  *
  * @spec openspec/changes/archive/2026-10-07-pipelinq-setup-wizard-review/specs/first-time-setup/spec.md#requirement-req-setup-pip-006-detected-integrations
  */
-class IntegrationDetector {
+class IntegrationDetector implements IntegrationDetectorInterface {
 	/**
 	 * Constructor.
 	 *

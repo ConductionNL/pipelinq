@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
@@ -455,7 +455,7 @@ class MailTransportService {
 	 */
 	private function firstPartyTrackingEnabled(): bool {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'blast.first_party_tracking',
 			'false',
 		) === 'true';
@@ -689,13 +689,24 @@ class MailTransportService {
 	 * @param string $connectorSourceId The source id.
 	 *
 	 * @return int|null Rate limit (messages/second), or null when unset/unresolvable.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential resolve/parse guard
-	 *  clauses over the source lookup; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity) Same flat guard sequence; path count is a
-	 *  product of independent conditions, not nesting.
 	 */
 	private function readSourceRateLimit(string $connectorSourceId): ?int {
+		$source = $this->readConnectorSource(connectorSourceId: $connectorSourceId);
+		if ($source === null) {
+			return null;
+		}
+
+		return $this->rateLimitOf(source: $source);
+	}//end readSourceRateLimit()
+
+	/**
+	 * Read a `provider`-kind transport's OpenConnector source as an array.
+	 *
+	 * @param string $connectorSourceId The source id.
+	 *
+	 * @return array<string, mixed>|null The source, or null when it cannot be read.
+	 */
+	private function readConnectorSource(string $connectorSourceId): ?array {
 		if ($connectorSourceId === '') {
 			return null;
 		}
@@ -733,8 +744,21 @@ class MailTransportService {
 			return null;
 		}
 
-		$sourceArray = $this->toArray(value: $source);
-		$limitValue = ($sourceArray['rateLimitLimit'] ?? null);
+		return $this->toArray(value: $source);
+	}//end readConnectorSource()
+
+	/**
+	 * The per-second rate a source declares: its limit spread over its window.
+	 *
+	 * A non-positive or unreadable window counts as one second, and the rate
+	 * never drops below 1.
+	 *
+	 * @param array<string, mixed> $source The OpenConnector source.
+	 *
+	 * @return int|null Rate limit (messages/second), or null when no positive limit is declared.
+	 */
+	private function rateLimitOf(array $source): ?int {
+		$limitValue = ($source['rateLimitLimit'] ?? null);
 		if ($limitValue === null || is_numeric($limitValue) === false) {
 			return null;
 		}
@@ -744,7 +768,7 @@ class MailTransportService {
 			return null;
 		}
 
-		$windowValue = ($sourceArray['rateLimitWindow'] ?? null);
+		$windowValue = ($source['rateLimitWindow'] ?? null);
 		$window = 1;
 		if ($windowValue !== null && is_numeric($windowValue) === true) {
 			$window = (int)$windowValue;
@@ -755,7 +779,7 @@ class MailTransportService {
 		}
 
 		return max(1, (int)floor($limit / $window));
-	}//end readSourceRateLimit()
+	}//end rateLimitOf()
 
 	/**
 	 * Persist a `mailTransport` row.
@@ -829,7 +853,7 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -843,7 +867,7 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailTransport_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -857,7 +881,7 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

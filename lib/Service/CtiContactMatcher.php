@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CtiContactMatcherInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
  */
-class CtiContactMatcher {
+class CtiContactMatcher implements CtiContactMatcherInterface {
 	use PayloadToArray;
 
 	/**
@@ -93,15 +94,15 @@ class CtiContactMatcher {
 			return ['matches' => [], 'totalMatches' => 0];
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 
 		if ($register === '') {
 			return ['matches' => [], 'totalMatches' => 0];
 		}
 
-		$needles = $this->needles(e164: $e164Number);
+		$needles = PhoneNeedles::for(e164: $e164Number);
 
 		$matches = [];
 		if ($contactSchema !== '') {
@@ -124,27 +125,6 @@ class CtiContactMatcher {
 			'totalMatches' => $total,
 		];
 	}//end findByPhoneNumber()
-
-	/**
-	 * Build a list of phone-number fragments to test against stored records.
-	 *
-	 * @param string $e164 Normalised E.164 number.
-	 *
-	 * @return array<int,string>
-	 */
-	private function needles(string $e164): array {
-		$digitsOnly = preg_replace('/[^0-9]/', '', $e164) ?? '';
-		$needles = [$e164, $digitsOnly];
-		if (strlen($digitsOnly) >= 9) {
-			$needles[] = substr($digitsOnly, -9);
-		}
-
-		if (strlen($digitsOnly) >= 8) {
-			$needles[] = substr($digitsOnly, -8);
-		}
-
-		return array_values(array_unique(array_filter($needles)));
-	}//end needles()
 
 	/**
 	 * Search a single schema (contact or client) for any of the needles.
@@ -262,9 +242,9 @@ class CtiContactMatcher {
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
 	public function normaliseStoredPhoneNumbers(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '') {
 			return ['updated' => 0, 'skipped' => 0];
 		}

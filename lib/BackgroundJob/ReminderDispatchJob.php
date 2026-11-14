@@ -30,9 +30,9 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentEmailService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -109,8 +109,8 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	protected function run(mixed $argument): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, BookingService::BOOKING_SCHEMA_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, BookingServiceInterface::BOOKING_SCHEMA_KEY, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('ReminderDispatchJob: register/booking schema not configured, skipping');
 			return;
@@ -254,10 +254,10 @@ class ReminderDispatchJob extends TimedJob {
 	/**
 	 * Resolve the AppointmentEmailService via the DI container.
 	 *
-	 * @return AppointmentEmailService
+	 * @return AppointmentEmailServiceInterface
 	 */
-	private function emailService(): AppointmentEmailService {
-		return $this->container->get(AppointmentEmailService::class);
+	private function emailService(): AppointmentEmailServiceInterface {
+		return $this->container->get(AppointmentEmailServiceInterface::class);
 	}//end emailService()
 
 	/**

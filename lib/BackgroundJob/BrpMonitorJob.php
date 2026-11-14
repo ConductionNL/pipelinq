@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -75,7 +75,7 @@ class BrpMonitorJob extends TimedJob {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'brp.monitor_interval_seconds',
 				self::DEFAULT_INTERVAL_SECONDS
 			)
@@ -107,8 +107,8 @@ class BrpMonitorJob extends TimedJob {
 	 * @return void
 	 */
 	private function monitor(): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'bsnAuditRecord_schema', '');
 		if ($this->isAuditConfigured(register: $register, schema: $schema) === false) {
 			return;
 		}
@@ -118,7 +118,7 @@ class BrpMonitorJob extends TimedJob {
 
 		$audit = $this->aggregateAuditRecords(records: $this->auditRecords(register: $register, schema: $schema), window: $window);
 		// Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
-		$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
+		$requestSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brpLookupVerzoek_schema', '');
 		$request = $this->aggregateVerzoeken(verzoeken: $this->requestRecords(register: $register, requestSchema: $requestSchema), window: $window);
 
 		$report = ['windowStart' => $window->format(DATE_ATOM), 'windowEnd' => $now->format(DATE_ATOM)]
@@ -245,7 +245,7 @@ class BrpMonitorJob extends TimedJob {
 	 */
 	private function publishReport(array $report): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'brp.monitor_report',
 			json_encode($report, JSON_THROW_ON_ERROR)
 		);
@@ -389,7 +389,7 @@ class BrpMonitorJob extends TimedJob {
 	private function notifyAdmin(string $uid, array $report): void {
 		try {
 			$n = $this->notificationManager->createNotification();
-			$n->setApp(Application::APP_ID)
+			$n->setApp(AppIdentity::APP_ID)
 				->setUser($uid)
 				->setObject('brp-monitor', 'error-rate')
 				->setSubject('brp_error_rate', self::alertParameters(report: $report))

@@ -28,9 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -53,7 +53,7 @@ class ActivityTimelineController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ActivityTimelineService $service The activity timeline service.
+	 * @param ActivityTimelineServiceInterface $service The activity timeline service.
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ContainerInterface $container The DI container.
@@ -61,7 +61,7 @@ class ActivityTimelineController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private ActivityTimelineService $service,
+		private ActivityTimelineServiceInterface $service,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
@@ -71,7 +71,7 @@ class ActivityTimelineController extends Controller {
 		// posture for each endpoint lives on its own method attribute; this
 		// ctor is wired by the Nextcloud app framework and never serves a
 		// request.
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

@@ -621,3 +621,121 @@ describe('the new-contact form and the wrap-up as drawn', () => {
 	})
 })
 
+
+describe('the card when a step fails or is left', () => {
+	afterEach(() => {
+		window.history.replaceState({}, '', '/')
+	})
+
+	it('closes the screen pop and the new-contact form without opening anything', async () => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action: 'chooser', matches: [SANNE, HENK] })
+		const wrapper = await card()
+
+		await part(wrapper, 'incoming-call-choose').trigger('click')
+		await wrapper.findComponent(ScreenPopModal).vm.$emit('close')
+		expect(wrapper.findComponent(ScreenPopModal).exists()).toBe(false)
+
+		await part(wrapper, 'incoming-call-choose').trigger('click')
+		wrapper.findComponent(ScreenPopModal).vm.$emit('intake')
+		await flushPromises()
+		await wrapper.findComponent(NewContactIntakeModal).vm.$emit('close')
+		expect(wrapper.findComponent(NewContactIntakeModal).exists()).toBe(false)
+
+		expect(part(wrapper, 'incoming-call-card').exists()).toBe(true)
+		expect(store.saveObject).not.toHaveBeenCalled()
+		expect(push).not.toHaveBeenCalled()
+	})
+
+	it('says a wrap-up was not saved and keeps it open, and closes it when asked', async () => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action: 'navigate', matches: [SANNE] })
+		api.submitDisposition.mockReset().mockRejectedValue(new Error('500'))
+		const wrapper = await card()
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: null })
+		await wrapper.vm.refresh()
+		await flushPromises()
+
+		wrapper.findComponent(CtiDispositionModal).vm.$emit('submit', { subject: 'x', outcome: 'resolved', notes: '', queue: '' })
+		await flushPromises()
+
+		expect(dialogs.showError).toHaveBeenCalledWith('The call outcome is not saved. Try again.')
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(true)
+		expect(wrapper.findComponent(CtiDispositionModal).props('saving')).toBe(false)
+
+		await wrapper.findComponent(CtiDispositionModal).vm.$emit('close')
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(false)
+	})
+
+	it('leaves the queue choice out when the queues cannot be read', async () => {
+		window.history.replaceState({}, '', '/?callPreview=0786123341&callPreviewOpen=disposition')
+		api.screenPop.mockResolvedValue({ action: 'open', matches: [SANNE] })
+		api.escalationQueues.mockReset().mockRejectedValue(new Error('403'))
+
+		const wrapper = await card()
+		await flushPromises()
+
+		expect(api.escalationQueues).toHaveBeenCalledTimes(1)
+		expect(wrapper.findComponent(CtiDispositionModal).exists()).toBe(true)
+		expect(wrapper.findComponent(CtiDispositionModal).props('queueOptions')).toEqual([])
+	})
+
+	it('reads a contact store that fails as a contact not saved', async () => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action: 'intake', matches: [] })
+		store.saveObject.mockRejectedValue(new Error('500'))
+		const wrapper = await card()
+		await part(wrapper, 'incoming-call-new').trigger('click')
+
+		wrapper.findComponent(NewContactIntakeModal).vm.$emit('submit', { name: 'Ellen Visser', phone: '+31612345678', email: '' })
+		await flushPromises()
+
+		expect(dialogs.showError).toHaveBeenCalledWith('The contact is not saved. Try again.')
+		expect(wrapper.findComponent(NewContactIntakeModal).exists()).toBe(true)
+		expect(push).not.toHaveBeenCalled()
+	})
+
+	it('opens the client when the call record is gone, writing nothing to it', async () => {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action: 'navigate', matches: [SANNE] })
+		store.fetchObject.mockResolvedValue(null)
+		const wrapper = await card()
+
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		expect(store.fetchObject).toHaveBeenCalledWith('ticket', 'call-1')
+		expect(store.saveObject).not.toHaveBeenCalled()
+		expect(push).toHaveBeenCalledWith({ name: 'ClientDetail', params: { id: 'client-sanne' } })
+	})
+
+	it('only polls on a store without live updates', async () => {
+		const subscribe = store.subscribe
+		store.subscribe = undefined
+		try {
+			api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: null })
+			await card()
+			await vi.advanceTimersByTimeAsync(POLL_MS)
+
+			expect(api.incomingCall).toHaveBeenCalledTimes(2)
+		} finally {
+			store.subscribe = subscribe
+		}
+	})
+
+	it('releases a live watch that arrives after the card is gone', async () => {
+		let resolveHandle
+		store.subscribe.mockReturnValue(new Promise((resolve) => { resolveHandle = resolve }))
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: null })
+		const wrapper = await card()
+
+		wrapper.unmount()
+		resolveHandle('late-handle')
+		await flushPromises()
+
+		expect(store.unsubscribe).toHaveBeenCalledWith('late-handle')
+		expect(store.unsubscribe).toHaveBeenCalledTimes(1)
+	})
+})

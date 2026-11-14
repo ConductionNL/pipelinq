@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\EmailMatchService;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IUser;
@@ -58,13 +58,13 @@ class EmailMatchJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param EmailMatchService $emailMatchService Matching service.
+	 * @param EmailMatchServiceInterface $emailMatchService Matching service.
 	 * @param IUserManager $userManager User manager.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private EmailMatchService $emailMatchService,
+		private EmailMatchServiceInterface $emailMatchService,
 		private IUserManager $userManager,
 		private LoggerInterface $logger,
 	) {

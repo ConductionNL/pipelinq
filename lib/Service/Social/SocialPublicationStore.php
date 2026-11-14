@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
@@ -44,7 +45,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  *
  * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
-class SocialPublicationStore {
+class SocialPublicationStore implements SocialPublicationStoreInterface {
 	/**
 	 * The publication schema slug, matching the register fragment.
 	 *

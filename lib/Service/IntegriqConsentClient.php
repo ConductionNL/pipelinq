@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Service\Consent\ConsentQuestion;
 use OCA\Pipelinq\Support\FleetAppId;
@@ -189,7 +189,7 @@ class IntegriqConsentClient {
 	 */
 	public function isCutover(): bool {
 		try {
-			$store = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_STORE, self::STORE_PIPELINQ);
+			$store = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_STORE, self::STORE_PIPELINQ);
 		} catch (Throwable $e) {
 			return false;
 		}
@@ -574,7 +574,7 @@ class IntegriqConsentClient {
 		$this->logger->warning(
 			'Pipelinq: integriq could not say whether this person may be messaged; '.$outcome,
 			[
-				'app' => Application::APP_ID,
+				'app' => AppIdentity::APP_ID,
 				'channel' => $channel,
 				'category' => $category,
 				'code' => self::CODE_UNAVAILABLE,
@@ -601,7 +601,7 @@ class IntegriqConsentClient {
 	private function notRecorded(string $code, string $reason): array {
 		$this->logger->warning(
 			'Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it',
-			['app' => Application::APP_ID, 'code' => $code, 'reason' => $reason]
+			['app' => AppIdentity::APP_ID, 'code' => $code, 'reason' => $reason]
 		);
 
 		return ['recorded' => false, 'recordId' => null, 'code' => $code, 'reason' => $reason];

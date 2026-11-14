@@ -187,6 +187,14 @@
       "contact": {
         "x-schema-org": "schema:Person",
         "slug": "contact",
+        "archive": {
+          "enabled": true,
+          "afleidingswijze": "gerelateerde_zaak",
+          "sourceRelation": "client",
+          "sourceRelationProperty": "relationshipEndedAt",
+          "defaultBewaartermijn": "P2Y",
+          "defaultNominatie": "vernietigen"
+        },
         "x-openregister-notifications": {
           "newContact": {
             "trigger": {
@@ -1663,6 +1671,20 @@
             "$ref": "ticket",
             "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
+          },
+          "leadId": {
+            "type": "string",
+            "description": "The lead this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Lead"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "The contact person this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "Contact"
           },
           "contactMomentSummary": {
             "type": "string",

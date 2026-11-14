@@ -33,9 +33,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
-use OCA\Pipelinq\Service\ContactMomentFilingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,15 +73,15 @@ class ContactMomentLeafController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContactMomentLeafProvider $provider The leaf's data provider.
-	 * @param ContactMomentFilingService $filingService The two filing acts.
+	 * @param ContactMomentLeafProviderInterface $provider The leaf's data provider.
+	 * @param ContactMomentFilingServiceInterface $filingService The two filing acts.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContactMomentLeafProvider $provider,
-		private readonly ContactMomentFilingService $filingService,
+		private readonly ContactMomentLeafProviderInterface $provider,
+		private readonly ContactMomentFilingServiceInterface $filingService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -103,7 +103,7 @@ class ContactMomentLeafController extends Controller {
 	#[NoAdminRequired]
 	public function index(
 		string $hostId,
-		int $limit = ContactMomentLeafProvider::DEFAULT_LIMIT,
+		int $limit = ContactMomentLeafProviderInterface::DEFAULT_LIMIT,
 		string $partyId = '',
 	): JSONResponse {
 		$result = $this->provider->list(hostId: $hostId, limit: $limit, partyId: $partyId);

@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -172,7 +172,7 @@ class PosCartObjects {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function registerId(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerId()
 
 	/**
@@ -183,6 +183,6 @@ class PosCartObjects {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function schemaId(string $slug): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $slug.'_schema', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $slug.'_schema', '');
 	}//end schemaId()
 }//end class

@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\SubmittedLeadIntakeInterface;
 use OCA\Pipelinq\Service\TouchpointService;
 
 /**
@@ -46,7 +47,7 @@ use OCA\Pipelinq\Service\TouchpointService;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
  */
-class SubmittedLeadIntake {
+class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 
 	/**
 	 * The contact schema slug.

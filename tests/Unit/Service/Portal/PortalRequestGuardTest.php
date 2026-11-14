@@ -151,4 +151,24 @@ class PortalRequestGuardTest extends TestCase {
 		$this->assertSame('default', $this->guard->resolveTenant($request));
 
 	}//end testFirstPartyModeSkipsOriginCheck()
+	/**
+	 * A tenant id in the query string or the body is never read: the tenant
+	 * comes from the host and the widget header only (portal-tenants-on-one-admin-tab T6/T7).
+	 *
+	 * @return void
+	 */
+	public function testATenantIdInTheQueryOrBodyIsIgnored(): void {
+		$this->tenant->expects($this->once())
+			->method('resolveTenantId')
+			->with('tenant-a.portal.example', null)
+			->willReturn('tenant-a');
+		$this->tenant->expects($this->never())->method('isWidgetOriginAllowed');
+
+		$request = $this->request([], host: 'tenant-a.portal.example');
+		$request->expects($this->never())->method('getParam');
+		$request->expects($this->never())->method('getParams');
+
+		$this->assertSame('tenant-a', $this->guard->resolveTenant($request));
+
+	}//end testATenantIdInTheQueryOrBodyIsIgnored()
 }//end class

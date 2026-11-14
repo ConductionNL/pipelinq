@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
@@ -59,27 +60,13 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  *  path and the preview to share) rather than one tangled method; each
  *  method stays individually readable.
  */
-class ArticleService {
+class ArticleService implements ArticleServiceInterface {
 	/**
 	 * The marker a template body carries where its articles are rendered.
 	 *
 	 * @var string
 	 */
 	public const ARTICLES_MARKER = '{{articles}}';
-
-	/**
-	 * Rendering format for an HTML mail body.
-	 *
-	 * @var string
-	 */
-	public const FORMAT_HTML = 'html';
-
-	/**
-	 * Rendering format for a plain-text mail body.
-	 *
-	 * @var string
-	 */
-	public const FORMAT_TEXT = 'text';
 
 	/**
 	 * The read-more label per language the block can render.

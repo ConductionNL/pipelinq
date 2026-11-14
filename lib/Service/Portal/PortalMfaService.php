@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalMfaServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
@@ -42,7 +43,7 @@ use OCP\Security\ISecureRandom;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalMfaService {
+class PortalMfaService implements PortalMfaServiceInterface {
 	/**
 	 * Base32 alphabet (RFC 4648) for secret encoding.
 	 *

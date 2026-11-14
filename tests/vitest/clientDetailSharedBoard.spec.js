@@ -73,9 +73,9 @@ describe('ClientDetail parts both client boards share', () => {
 })
 
 describe('ClientDetail side column order', () => {
-	it('ends as the boards do: history, e-mails, notes, the knowledge base, then related', () => {
+	it('ends as the boards do: history, e-mails, meetings, notes, the knowledge base, then related', () => {
 		expect(config.sideColumnOrder).toBe('declared')
 		const ids = config.sideColumn.map((entry) => (typeof entry === 'string' ? entry : entry.id))
-		expect(ids.slice(-5)).toEqual(['side-history', 'client-email', 'client-notes', 'side-knowledge', 'client-related'])
+		expect(ids.slice(-6)).toEqual(['side-history', 'client-email', 'client-calendar', 'client-notes', 'side-knowledge', 'client-related'])
 	})
 })
