@@ -160,7 +160,9 @@ class PortaliqArticleStore {
 		}
 
 		foreach ($this->findAll() as $article) {
+			$self = ($article['@self'] ?? []);
 			if ((string)($article['slug'] ?? '') === $identity
+				|| (is_array($self) === true && (string)($self['slug'] ?? '') === $identity)
 				|| (string)($article['legacyRef'] ?? '') === $identity
 				|| (string)($article['legacyRef'] ?? '') === 'pipelinq:'.$identity
 			) {

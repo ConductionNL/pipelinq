@@ -24,7 +24,7 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
   - spec_ref: `specs/marketing-articles/spec.md#requirement-existing-pipelinq-articles-move-to-portaliq-once`
   - files: `lib/Repair/MoveMarketingArticlesToPortaliq.php`, `appinfo/info.xml`, its test
   - test: run twice on a seeded instance, second run reports `alreadyMoved` for all three demo articles
-- [ ] 3.2 Move the three demo articles from `lib/Settings/pipelinq_example_register.json` to portaliq's example data (portaliq PR).
+- [x] 3.2 Move the three demo articles from `lib/Settings/pipelinq_example_register.json` to portaliq's example data (portaliq PR).
 
 ## 4. Remove the pages and the write path
 
