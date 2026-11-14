@@ -679,14 +679,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		$nowIso = $this->nowIso();
 
 		if ($entry !== null) {
-			$expiresAt = (string)($entry['expiresAt'] ?? '');
-			$isStale = ($expiresAt === '' || strtotime($expiresAt) < strtotime($nowIso));
-			return [
-				'freeBlocks' => $this->normaliseFreeBlocks(blocks: ($entry['freeBlocks'] ?? [])),
-				'generatedAt' => (string)($entry['generatedAt'] ?? ''),
-				'expiresAt' => $expiresAt,
-				'stale' => $isStale,
-			];
+			return $this->cachedSnapshot(entry: $entry, nowIso: $nowIso);
 		}
 
 		$free = $this->computeAvailability(
@@ -694,17 +687,47 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			date: $date,
 			serviceDurationMinutes: $duration
 		);
-		$entry = [
-			'resourceId' => $resourceId,
-			'date' => $date,
-			'freeBlocks' => $free,
-			'generatedAt' => $nowIso,
-			'expiresAt' => $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS),
+
+		return $this->storedSnapshot(
+			entry: ['resourceId' => $resourceId, 'date' => $date, 'freeBlocks' => $free],
+			nowIso: $nowIso
+		);
+	}//end getOrComputeCache()
+
+	/**
+	 * The snapshot of a cached entry, flagged stale once past its `expiresAt`.
+	 *
+	 * @param array<string, mixed> $entry  The cache entry.
+	 * @param string               $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function cachedSnapshot(array $entry, string $nowIso): array {
+		$expiresAt = (string)($entry['expiresAt'] ?? '');
+		$isStale = ($expiresAt === '' || strtotime($expiresAt) < strtotime($nowIso));
+		return [
+			'freeBlocks' => $this->normaliseFreeBlocks(blocks: ($entry['freeBlocks'] ?? [])),
+			'generatedAt' => (string)($entry['generatedAt'] ?? ''),
+			'expiresAt' => $expiresAt,
+			'stale' => $isStale,
 		];
+	}//end cachedSnapshot()
+
+	/**
+	 * Persist a freshly computed entry, stamped now with its expiry, and answer its snapshot.
+	 *
+	 * @param array{resourceId: string, date: string, freeBlocks: mixed} $entry  The computed entry.
+	 * @param string                                                     $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function storedSnapshot(array $entry, string $nowIso): array {
+		$entry['generatedAt'] = $nowIso;
+		$entry['expiresAt'] = $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS);
 		$this->persistCacheEntry(entry: $entry);
 
 		return array_diff_key($entry, ['resourceId' => true, 'date' => true]) + ['stale' => false];
-	}//end getOrComputeCache()
+	}//end storedSnapshot()
 
 	/**
 	 * Load a Resource by id/slug, scoped to the pipelinq register/schema.

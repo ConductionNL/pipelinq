@@ -192,21 +192,33 @@ class SubscriptionService implements SubscriptionServiceInterface {
 			return ['status' => 'invalid'];
 		}
 
+		$run->list = (array)$list;
+		$run->contactId = $contactId;
+		$this->acceptSignup(run: $run, honeypot: $honeypot);
+		return ['status' => 'accepted'];
+	}//end subscribe()
+
+	/**
+	 * Start the confirmation of a public signup, or discard it when the honeypot is filled.
+	 *
+	 * @param ListSignupRun $run      The signup, its list and contact set.
+	 * @param string        $honeypot The decoy field; a non-empty value is a bot.
+	 *
+	 * @return void
+	 */
+	private function acceptSignup(ListSignupRun $run, string $honeypot): void {
 		if (trim($honeypot) !== '') {
 			$this->logger->info(
 				'SubscriptionService.subscribe: honeypot filled, discarding',
-				['listId' => $listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
+				['listId' => $run->listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
 			);
-			return ['status' => 'accepted'];
+			return;
 		}
 
-		$run->existing = $this->findSubscription(listId: $listId, email: $run->email);
-		$run->list = (array)$list;
-		$run->contactId = $contactId;
+		$run->existing = $this->findSubscription(listId: $run->listId, email: $run->email);
 		$run->source = 'public-signup';
 		$this->startConfirmation(run: $run);
-		return ['status' => 'accepted'];
-	}//end subscribe()
+	}//end acceptSignup()
 
 	/**
 	 * Confirm a membership from its signed link.
@@ -447,16 +459,28 @@ class SubscriptionService implements SubscriptionServiceInterface {
 			return ['status' => 'refused', 'error' => $refusal];
 		}
 
-		$run->existing = $this->findSubscription(listId: $listId, email: $run->email);
 		$run->contactId = $contactId;
+		return $this->storeSoftOptIn(run: $run, evidence: $evidence);
+	}//end importSoftOptIn()
+
+	/**
+	 * Save an accepted soft opt-in and record its consent ground.
+	 *
+	 * @param ListSignupRun        $run      The import, its contact set.
+	 * @param array<string, mixed> $evidence The objection evidence.
+	 *
+	 * @return array{status: string, error?: string} `imported`, or `refused` when it could not be saved.
+	 */
+	private function storeSoftOptIn(ListSignupRun $run, array $evidence): array {
+		$run->existing = $this->findSubscription(listId: $run->listId, email: $run->email);
 		$record = (new SubscriptionRecords())->softOptIn(run: $run);
 		if ($this->save(payload: $record, id: $this->idOf(payload: $run->existing)) === null) {
 			return ['status' => 'refused', 'error' => 'The subscription could not be saved'];
 		}
 
 		$this->compliance->recordListConsent(
-			contactId: $contactId,
-			listId: $listId,
+			contactId: (string)$run->contactId,
+			listId: $run->listId,
 			channel: self::CHANNEL,
 			lawfulBasis: 'soft-opt-in',
 			consentSource: 'soft-opt-in-import',
@@ -464,7 +488,7 @@ class SubscriptionService implements SubscriptionServiceInterface {
 		);
 
 		return ['status' => 'imported'];
-	}//end importSoftOptIn()
+	}//end storeSoftOptIn()
 
 	/**
 	 * Confirm one contact onto one list without a confirmation link.
@@ -498,23 +522,35 @@ class SubscriptionService implements SubscriptionServiceInterface {
 		$run = new ListSignupRun(listId: $listId, email: $email);
 		$run->contactId = $contactId;
 		$run->source = $source;
-		$run->existing = (array_values($this->loadSubscriptions(filters: ['listId' => $listId, 'contactId' => $contactId]))[0] ?? null);
+		return $this->confirmRun(run: $run);
+	}//end confirmForContact()
+
+	/**
+	 * Confirm or create the contact's membership and record its consent.
+	 *
+	 * @param ListSignupRun $run The confirmation, its contact and source set.
+	 *
+	 * @return bool True when a membership was confirmed or created.
+	 */
+	private function confirmRun(ListSignupRun $run): bool {
+		$filters = ['listId' => $run->listId, 'contactId' => $run->contactId];
+		$run->existing = (array_values($this->loadSubscriptions(filters: $filters))[0] ?? null);
 		$record = (new SubscriptionRecords())->forContact(run: $run);
 		if ($record === null || $this->save(payload: $record, id: $this->idOf(payload: $run->existing)) === null) {
 			return false;
 		}
 
 		$this->compliance->recordListConsent(
-			contactId: $contactId,
-			listId: $listId,
+			contactId: (string)$run->contactId,
+			listId: $run->listId,
 			channel: self::CHANNEL,
 			lawfulBasis: 'consent',
-			consentSource: $source,
+			consentSource: $run->source,
 			evidence: (new SubscriptionRecords())->contactEvidence(confirmed: $record),
 		);
 
 		return true;
-	}//end confirmForContact()
+	}//end confirmRun()
 
 	/**
 	 * Resolve the Subscription schema slug from app config.
