@@ -75,8 +75,26 @@ class TicketPhoneE164Listener implements IEventListener {
 	 * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.2
 	 */
 	public function handle(Event $event): void {
-		$entity = $this->entityOf(event: $event);
-		if ($entity === null || $this->isTicket(entity: $entity) === false) {
+		if ($event instanceof ObjectCreatingEvent) {
+			$this->normaliseTicketPhone(event: $event, entity: $event->getObject());
+			return;
+		}
+
+		if ($event instanceof ObjectUpdatingEvent) {
+			$this->normaliseTicketPhone(event: $event, entity: $event->getNewObject());
+		}
+	}//end handle()
+
+	/**
+	 * Store the ticket's phone number in E.164 on the event when it changed.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The creating or updating event.
+	 * @param mixed $entity The object being created, or the new object being updated.
+	 *
+	 * @return void
+	 */
+	private function normaliseTicketPhone(ObjectCreatingEvent|ObjectUpdatingEvent $event, $entity): void {
+		if ($this->isTicket(entity: $entity) === false) {
 			return;
 		}
 
@@ -89,26 +107,7 @@ class TicketPhoneE164Listener implements IEventListener {
 
 		// Merge, never replace: another listener may already have modified the data.
 		$event->setModifiedData(array_merge($event->getModifiedData(), [TicketPhoneNumberInterface::FIELD => $e164]));
-	}//end handle()
-
-	/**
-	 * The object being created, or the new object being updated; null for any other event.
-	 *
-	 * @param Event $event The event.
-	 *
-	 * @return mixed The entity, or null.
-	 */
-	private function entityOf(Event $event) {
-		if ($event instanceof ObjectCreatingEvent) {
-			return $event->getObject();
-		}
-
-		if ($event instanceof ObjectUpdatingEvent) {
-			return $event->getNewObject();
-		}
-
-		return null;
-	}//end entityOf()
+	}//end normaliseTicketPhone()
 
 	/**
 	 * Whether the entity is a ticket of the configured ticket schema.

@@ -357,7 +357,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	 *
 	 * @param array<int, array<string, mixed>> $transactions The transactions.
 	 *
-	 * @return array<string, array<string, mixed>> Buckets keyed by rate.
+	 * @return array<int|string, array<string, float|int>> Buckets keyed by rate.
 	 */
 	private function taxRateBuckets(array $transactions): array {
 		$byRate = [];
