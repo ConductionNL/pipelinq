@@ -29,44 +29,13 @@ use OCA\Pipelinq\Service\ContactmomentService;
 use Throwable;
 
 /**
- * Conversation lookup, contact-moment service, phone, tenant and schema-slug
- * reads of a channel adapter. The host class provides IAppConfig `$appConfig`
- * and ContainerInterface `$container` properties, a
- * DEFAULT_CONVERSATION_SCHEMA_SLUG constant and the getObjectService(),
- * findOpenConversation() and openConversation() steps.
+ * Contact-moment service, phone, tenant and schema-slug reads of a channel
+ * adapter. The host class provides IAppConfig `$appConfig` and
+ * ContainerInterface `$container` properties.
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait ChannelAdapterLookups {
-
-	/**
-	 * Find or open a conversation row for (contact, provider, channel).
-	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $channel Channel.
-	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
-	 *
-	 * @return string Conversation UUID.
-	 *
-	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
-	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return '';
-		}
-
-		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
-		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
-
-		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
-		if ($existingId !== null) {
-			return $existingId;
-		}
-
-		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
-	}//end findOrOpenConversation()
 
 	/**
 	 * The contact moment service, resolved lazily; null when it is absent.

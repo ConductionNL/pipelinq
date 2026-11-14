@@ -1398,6 +1398,33 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	}//end extractMetaMessage()
 
 	/**
+	 * Find or open a conversation row for (contact, provider, channel).
+	 *
+	 * @param string $contactId Contact UUID.
+	 * @param string $providerId Provider UUID.
+	 * @param string $channel Channel.
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
+	 *
+	 * @return string Conversation UUID.
+	 */
+	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return '';
+		}
+
+		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
+		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
+
+		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
+		if ($existingId !== null) {
+			return $existingId;
+		}
+
+		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
+	}//end findOrOpenConversation()
+
+	/**
 	 * The id of the first open conversation matching the identity, or null when there is none.
 	 *
 	 * @param object $objectService The OpenRegister ObjectService.

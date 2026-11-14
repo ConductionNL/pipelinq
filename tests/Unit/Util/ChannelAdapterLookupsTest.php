@@ -29,7 +29,7 @@ use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 /**
- * Phone, tenant and slug reads, and the find-or-open conversation flow.
+ * Contact-moment, phone, tenant and slug reads.
  *
  * @covers \OCA\Pipelinq\Util\ChannelAdapterLookups
  */
@@ -39,11 +39,10 @@ class ChannelAdapterLookupsTest extends TestCase {
 	 * Build a host over the given config values.
 	 *
 	 * @param array<string, string> $values Config values by key.
-	 * @param object|null           $os     The object service the host hands out.
 	 *
 	 * @return ChannelAdapterLookupsHost The host.
 	 */
-	private function host(array $values, ?object $os = null): ChannelAdapterLookupsHost {
+	private function host(array $values): ChannelAdapterLookupsHost {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default): string => ($values[$key] ?? $default)
@@ -51,7 +50,7 @@ class ChannelAdapterLookupsTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willThrowException(new RuntimeException('absent'));
 
-		return new ChannelAdapterLookupsHost($appConfig, $container, $os);
+		return new ChannelAdapterLookupsHost($appConfig, $container);
 	}//end host()
 
 	/**
@@ -67,48 +66,19 @@ class ChannelAdapterLookupsTest extends TestCase {
 		$this->assertSame('', $host->call('extractPhone', ['phoneNumber' => '']));
 		$this->assertNull($host->call('contactmoments'));
 	}//end testScalarReads()
-
-	/**
-	 * @return void
-	 */
-	public function testFindOrOpenConversation(): void {
-		$this->assertSame('', $this->host([])->call('findOrOpenConversation', 'c', 'p', 'sms'));
-
-		$found = $this->host([], new \stdClass());
-		$found->existing = 'conv-1';
-		$this->assertSame('conv-1', $found->call('findOrOpenConversation', 'c', 'p', 'sms'));
-		$this->assertSame('channelConversation', $found->seenSchema);
-		$this->assertSame(['contactId' => 'c', 'providerId' => 'p', 'channel' => 'sms', 'status' => 'open'], $found->seenConversation);
-
-		$opened = $this->host(['conversation_schema' => 'cs'], new \stdClass());
-		$this->assertSame('new-1', $opened->call('findOrOpenConversation', 'c', 'p', 'whatsapp', ['_rbac' => false]));
-		$this->assertSame('cs', $opened->seenSchema);
-	}//end testFindOrOpenConversation()
 }//end class
 
 /**
- * A host with recording conversation steps.
+ * A host exposing the trait's private reads.
  */
 final class ChannelAdapterLookupsHost {
 	use ChannelAdapterLookups;
 
-	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'channelConversation';
-
-	public ?string $existing = null;
-
-	public ?string $seenSchema = null;
-
-	/**
-	 * @var array<string, string>|null
-	 */
-	public ?array $seenConversation = null;
-
 	/**
 	 * @param IAppConfig         $appConfig The app config.
 	 * @param ContainerInterface $container The container.
-	 * @param object|null        $os        The object service.
 	 */
-	public function __construct(private IAppConfig $appConfig, private ContainerInterface $container, private ?object $os) {
+	public function __construct(private IAppConfig $appConfig, private ContainerInterface $container) {
 	}
 
 	/**
@@ -118,35 +88,5 @@ final class ChannelAdapterLookupsHost {
 	 */
 	public function call(string $method, mixed ...$args): mixed {
 		return $this->$method(...$args);
-	}
-
-	/**
-	 * @return object|null
-	 */
-	private function getObjectService(): ?object {
-		return $this->os;
-	}
-
-	/**
-	 * @param object                $objectService The object service.
-	 * @param array<string, string> $conversation  The conversation identity.
-	 * @param string                $schema        The schema.
-	 * @param array<string, bool>   $scope         The scope.
-	 * @return string|null
-	 */
-	private function findOpenConversation(object $objectService, array $conversation, string $schema, array $scope): ?string {
-		$this->seenSchema = $schema;
-		$this->seenConversation = $conversation;
-		return $this->existing;
-	}
-
-	/**
-	 * @param object                $objectService The object service.
-	 * @param array<string, string> $conversation  The conversation identity.
-	 * @param string                $schema        The schema.
-	 * @return string
-	 */
-	private function openConversation(object $objectService, array $conversation, string $schema): string {
-		return 'new-1';
 	}
 }//end class
