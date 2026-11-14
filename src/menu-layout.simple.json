@@ -742,6 +742,48 @@
 							]
 						},
 						"group": "Finish"
+					},
+					{
+						"id": "lock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this ticket?",
+						"confirmMessage": "Nobody can change this ticket while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Ticket locked.",
+						"errorMessage": "Could not lock this ticket.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"id": "unlock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"successMessage": "Ticket unlocked.",
+						"errorMessage": "Could not unlock this ticket.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"primaryActionByStage": {
@@ -1387,10 +1429,20 @@
 				],
 				"layout": [
 					{
+						"id": "lock",
+						"widgetId": "ticket-locked",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"sizeToContent": true,
+						"showTitle": false
+					},
+					{
 						"id": "1",
 						"widgetId": "ticket-panels",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 8
 					}
