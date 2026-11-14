@@ -33,6 +33,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Action Widgets | Dashboard widgets for quick request, lead, and client actions | Implemented | GEMMA Callcenter; TEC 1.1, 3.1; Nextcloud IWidget | [action-widgets.md](action-widgets.md) |
 | My Work | Personal work queue aggregating all assigned items | Implemented | TEC 1.5 | [my-work.md](my-work.md) |
 | Contacts Sync | Two-way sync with Nextcloud Contacts via IManager | Implemented | vCard RFC 6350 | [contacts-sync.md](contacts-sync.md) |
+| Contact Capture | Paste a signature or scan a business card into a prefilled create form | Implemented | Nextcloud TaskProcessing (OCR) | [contact-capture.md](contact-capture.md) |
 | Entity Notes | Internal notes and comments on all CRM entities | Implemented | TEC 5.3 | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | Nextcloud activity events and push notifications on CRM changes | Implemented | Nextcloud Activity API | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | Chronological event timeline on entity detail views | Implemented | TEC 1.5 | [activity-timeline.md](activity-timeline.md) |
@@ -79,6 +80,7 @@ The foundational sales and relationship management layer. These features are liv
 | Action Widgets | [action-widgets.md](action-widgets.md) |
 | My Work | [my-work.md](my-work.md) |
 | Contacts Sync | [contacts-sync.md](contacts-sync.md) |
+| Contact Capture | [contact-capture.md](contact-capture.md) |
 | Entity Notes | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | [activity-timeline.md](activity-timeline.md) |
@@ -141,6 +143,7 @@ Used by `/opsx:archive` to determine the correct feature doc when archiving a ch
 ```
 client-management       → client-management.md
 contacts-sync           → contacts-sync.md
+client-contact-capture  → contact-capture.md
 lead-management         → lead-management.md
 lead-product-link       → lead-product-link.md
 prospect-discovery      → prospect-discovery.md

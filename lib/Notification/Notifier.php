@@ -61,8 +61,18 @@ class Notifier implements INotifier {
 		'export_job_switched_off' => 'system',
 		'social_share_requested' => 'social',
 		'social_relink_needed' => 'social',
+		'competitor_page_changed' => 'watch',
 		'full_export_ready' => 'export',
 		'full_export_failed' => 'export',
+	];
+
+	/**
+	 * Subjects that open a page of their own rather than the object they name.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SUBJECT_PAGES = [
+		'competitor_page_changed' => 'marketing/competitors',
 	];
 
 	/**
@@ -147,6 +157,11 @@ class Notifier implements INotifier {
 		$baseUrl = $this->urlGenerator->linkToRouteAbsolute('pipelinq.dashboard.page');
 		$objectType = $notification->getObjectType();
 		$objectPath = '#/' . (self::OBJECT_PATHS[$objectType] ?? $objectType . 's') . '/' . $notification->getObjectId();
+		if (isset(self::SUBJECT_PAGES[$notification->getSubject()]) === true) {
+			$objectPath = self::SUBJECT_PAGES[$notification->getSubject()];
+			$baseUrl    = rtrim($baseUrl, '/') . '/';
+		}
+
 		$notification->setLink($baseUrl . $objectPath);
 
 		return $notification;
@@ -179,6 +194,7 @@ class Notifier implements INotifier {
 			'change' => $this->applyChangeSubject(notification: $notification, context: $context),
 			'system' => $this->applySystemSubject(notification: $notification, context: $context),
 			'social' => $this->applySocialSubject(notification: $notification, context: $context),
+			'watch' => $this->applyWatchSubject(notification: $notification, context: $context),
 			'export' => $this->applyExportSubject(notification: $notification, context: $context),
 			default => throw new UnknownNotificationException(),
 		};
@@ -402,6 +418,25 @@ class Notifier implements INotifier {
 			)
 		);
 	}//end applySocialSubject()
+
+	/**
+	 * A watched competitor page that changed.
+	 *
+	 * @param INotification $notification The notification.
+	 * @param array<string, mixed> $context The translator (`l`), the parameters, the title and the rich parameters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/marketing-competitor-watches/spec.md#requirement-the-owner-of-a-watch-is-told-when-the-watched-page-changes
+	 */
+	private function applyWatchSubject(INotification $notification, array $context): void {
+		$l = $context['l'];
+		$competitor = (string)($context['params']['competitor'] ?? '');
+		$page = (string)($context['params']['page'] ?? '');
+		$notification->setParsedSubject($l->t('%1$s changed its page %2$s', [$competitor, $page]));
+		$notification->setParsedMessage($l->t('The Competitors page lists the change with its summary.'));
+	}//end applyWatchSubject()
+
 	/**
 	 * The full data export: the archive is ready, or it could not be built.
 	 *

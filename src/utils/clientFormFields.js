@@ -93,6 +93,29 @@ export function emptyClientForm() {
 }
 
 /**
+ * The values a new client form starts with, from a prefill such as the fields
+ * Paste or scan proposed: only the form's own fields, only non-empty strings,
+ * so the form keeps its defaults (owner, language) for the rest.
+ *
+ * @param {object|null} values The prefill.
+ * @return {object} The fields to put over the empty form.
+ * @spec openspec/changes/clients-contact-capture/specs/client-contact-capture/spec.md#scenario-a-sales-rep-scans-a-card-at-a-fair
+ */
+export function prefilledClientFields(values) {
+	const fields = {}
+	if (!values || typeof values !== 'object') {
+		return fields
+	}
+	for (const field of Object.keys(CLIENT_FORM_DEFAULTS)) {
+		const value = values[field]
+		if (typeof value === 'string' && value.trim() !== '') {
+			fields[field] = value
+		}
+	}
+	return fields
+}
+
+/**
  * The client form filled from a stored client: a missing value becomes the
  * field's empty value, the industry becomes a list and the labels a copy.
  *
