@@ -57,184 +57,12 @@ class ListenerRegistrar {
 		$context->registerServiceAlias(BrpMutationWebhookListenerInterface::class, BrpMutationWebhookListener::class);
 		$context->registerServiceAlias(NrcNotificationListenerInterface::class, NrcNotificationListener::class);
 
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ObjectEventListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ObjectEventListener::class
-		);
-		// A contract status change or a detractor answer recomputes the
-		// client's risk at once (clients-history-summary-and-risk D2).
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ClientRiskChangeListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ClientRiskChangeListener::class
-		);
-		// A saved answer on a resident's portal question tells them, with
-		// pipelinq's own message (portal-questions-in-dutch).
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: QuestionAnsweredListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: DealCreatedListener::class
-		);
-		// Every new lead sits in a pipeline stage (pipeline-numbers-tell-the-truth).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: LeadStageCreatingListener::class
-		);
+		$this->registerRecordListeners(context: $context);
 		$this->registerNumberListeners(context: $context);
-		// A lead a form created gets its contact and client before it is stored
-		// and its submit touchpoint once it is (decision 179: the submit creates
-		// the lead itself, so nothing relays it afterwards).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: SubmittedLeadListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: SubmittedLeadListener::class
-		);
-		// A published website form is checked against its destination on every
-		// save, and refused on any finding (website-forms-submit-into-tickets,
-		// decisions 179 and 181 Q9).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: WebFormBindingListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatingEvent::class,
-			listener: WebFormBindingListener::class
-		);
-		// A pipeline stage with a limit refuses one item more, from any screen
-		// (pipeline-stage-limit).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: StageLimitGuard::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatingEvent::class,
-			listener: StageLimitGuard::class
-		);
-		// A Nextcloud Forms answer creates the object its binding names (Q6).
-		// Forms is optional; a `::class` string does not autoload, and the guard
-		// keeps an instance without Forms from registering anything.
-		if (class_exists(FormsSubmissionListener::EVENT) === true) {
-			$context->registerEventListener(
-				event: FormsSubmissionListener::EVENT,
-				listener: FormsSubmissionListener::class
-			);
-		}
-		// A new task records who created it (round3-review-points).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: TaskCreatedByCreatingListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: DealUpdatedListener::class
-		);
-		// A cancelled campaign event tells everyone with a place or on the
-		// waiting list, in the deferred job (marketing-events, task 3.1).
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: EventCancelledListener::class
-		);
-		// A changed resource or service expires the cached availability it
-		// made wrong, for every writer (appointment-booking, REQ-APT-015).
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: AvailabilityCacheInvalidationListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: AvailabilityCacheInvalidationListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectDeletedEvent::class,
-			listener: AvailabilityCacheInvalidationListener::class
-		);
-		// Burgerportaal / MijnOverheid Berichtenbox bridge:
-		// listen for zaak status transitions and queue an outbound
-		// Berichtenbox message via BerichtenboxService
-		// (burgerportaal-mijnoverheid-bridge / REQ-OUTBOUND-001).
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: BerichtenboxZaakStatusListener::class
-		);
-
-		// Shillinq WIP integration: time-entry approval dispatches a CloudEvent
-		// to Shillinq (pipelinq-time-to-shillinq-wip / REQ-WIP-001). The listener
-		// is idempotent and a no-op when the Shillinq app is not installed.
-		$context->registerEventListener(
-			event: TimeEntryApprovedEvent::class,
-			listener: TimeApprovalListener::class
-		);
-
-		// Loyalty program: POS transaction completion fires the loyalty engine
-		// (loyalty-program / REQ-LOY-002). The listener filters to posTransaction
-		// entities + completed/settled/paid statuses, catches all errors, and never
-		// throws so the POS flow is unaffected (REQ-LOY-002-05).
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: PosTransactionCompletedListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: PosTransactionCompletedListener::class
-		);
-
-		// Expense → Shillinq AP voucher dispatch on status=approved transitions
-		// (pipelinq-expense-to-shillinq-ap / REQ-AP-002). Listener is filtered
-		// to the expense schema and idempotent on apSyncStatus=synced so a
-		// re-fired update event cannot create a duplicate AP voucher.
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ExpenseApprovalListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ExpenseApprovalListener::class
-		);
-
-		// SLA engine (sla-engine-and-escalation / REQ-001, REQ-003, REQ-007):
-		// initialise slaStatus on tracked-object create, re-evaluate /
-		// pause / resume / escalate on update. Listener exceptions are
-		// swallowed (REQ-007 fail-safe).
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: SlaObjectCreatedListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: SlaObjectUpdatedListener::class
-		);
-
-		// Satisfaction surveys (customer-satisfaction-closed-loop): a ticket
-		// that reaches a status an enabled survey rule names gets its
-		// invitations written, in the deferred job (pipelinq#2072). Created as
-		// well as updated, because a ticket can be logged already closed.
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: SurveyDispatchListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: SurveyDispatchListener::class
-		);
-
-		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
-		// An API delete is a soft delete, which OpenRegister reports as an update
-		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
-		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: ContactErasedListener::class);
-		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ContactErasedListener::class);
+		$this->registerIntakeListeners(context: $context);
+		$this->registerFollowUpListeners(context: $context);
+		$this->registerIntegrationListeners(context: $context);
+		$this->registerSurveyAndErasureListeners(context: $context);
 
 		// Marketing: portaliq relays a landing-page form submission by
 		// dispatching PIPELINQ'S OWN event class, which it resolves by the
@@ -242,16 +70,145 @@ class ListenerRegistrar {
 		// landing-page-provisioning). The event is ours, so this is an
 		// ordinary same-app registration: nothing here needs portaliq to be
 		// installed, and with portaliq absent the listener simply never fires.
-		$context->registerEventListener(
-			event: LandingPageFormSubmittedEvent::class,
-			listener: LandingPageFormSubmittedListener::class
-		);
+		$context->registerEventListener(event: LandingPageFormSubmittedEvent::class, listener: LandingPageFormSubmittedListener::class);
 		$this->registerMergeListeners(context: $context);
-		$context->registerEventListener(
-			event: SchemaUpdatedEvent::class,
-			listener: SchemaChangeListener::class
-		);
+		$context->registerEventListener(event: SchemaUpdatedEvent::class, listener: SchemaChangeListener::class);
 	}//end register()
+
+	/**
+	 * Register the listeners that react to a saved record: object events, client risk, portal answers, new deals and lead stages.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerRecordListeners(IRegistrationContext $context): void {
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: ObjectEventListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ObjectEventListener::class);
+		// A contract status change or a detractor answer recomputes the
+		// client's risk at once (clients-history-summary-and-risk D2).
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: ClientRiskChangeListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ClientRiskChangeListener::class);
+		// A saved answer on a resident's portal question tells them, with
+		// pipelinq's own message (portal-questions-in-dutch).
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: QuestionAnsweredListener::class);
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: DealCreatedListener::class);
+		// Every new lead sits in a pipeline stage (pipeline-numbers-tell-the-truth).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: LeadStageCreatingListener::class);
+	}//end registerRecordListeners()
+
+	/**
+	 * Register the listeners on what comes in: form-created leads, website form bindings, stage limits, Forms answers, task creators and deal updates.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerIntakeListeners(IRegistrationContext $context): void {
+		// A lead a form created gets its contact and client before it is stored
+		// and its submit touchpoint once it is (decision 179: the submit creates
+		// the lead itself, so nothing relays it afterwards).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: SubmittedLeadListener::class);
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: SubmittedLeadListener::class);
+		// A published website form is checked against its destination on every
+		// save, and refused on any finding (website-forms-submit-into-tickets,
+		// decisions 179 and 181 Q9).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: WebFormBindingListener::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: WebFormBindingListener::class);
+		// A pipeline stage with a limit refuses one item more, from any screen
+		// (pipeline-stage-limit).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: StageLimitGuard::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: StageLimitGuard::class);
+		// A Nextcloud Forms answer creates the object its binding names (Q6).
+		// Forms is optional; a `::class` string does not autoload, and the guard
+		// keeps an instance without Forms from registering anything.
+		if (class_exists(FormsSubmissionListener::EVENT) === true) {
+			$context->registerEventListener(event: FormsSubmissionListener::EVENT, listener: FormsSubmissionListener::class);
+		}
+		// A new task records who created it (round3-review-points).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TaskCreatedByCreatingListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: DealUpdatedListener::class);
+	}//end registerIntakeListeners()
+
+	/**
+	 * Register the listeners that follow up a change: cancelled events, availability cache expiry and the Berichtenbox bridge.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerFollowUpListeners(IRegistrationContext $context): void {
+		// A cancelled campaign event tells everyone with a place or on the
+		// waiting list, in the deferred job (marketing-events, task 3.1).
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: EventCancelledListener::class);
+		// A changed resource or service expires the cached availability it
+		// made wrong, for every writer (appointment-booking, REQ-APT-015).
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: AvailabilityCacheInvalidationListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: AvailabilityCacheInvalidationListener::class);
+		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: AvailabilityCacheInvalidationListener::class);
+		// Burgerportaal / MijnOverheid Berichtenbox bridge:
+		// listen for zaak status transitions and queue an outbound
+		// Berichtenbox message via BerichtenboxService
+		// (burgerportaal-mijnoverheid-bridge / REQ-OUTBOUND-001).
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: BerichtenboxZaakStatusListener::class);
+	}//end registerFollowUpListeners()
+
+	/**
+	 * Register the listeners that hand work to other engines: Shillinq WIP and AP, loyalty and the SLA engine.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerIntegrationListeners(IRegistrationContext $context): void {
+		// Shillinq WIP integration: time-entry approval dispatches a CloudEvent
+		// to Shillinq (pipelinq-time-to-shillinq-wip / REQ-WIP-001). The listener
+		// is idempotent and a no-op when the Shillinq app is not installed.
+		$context->registerEventListener(event: TimeEntryApprovedEvent::class, listener: TimeApprovalListener::class);
+
+		// Loyalty program: POS transaction completion fires the loyalty engine
+		// (loyalty-program / REQ-LOY-002). The listener filters to posTransaction
+		// entities + completed/settled/paid statuses, catches all errors, and never
+		// throws so the POS flow is unaffected (REQ-LOY-002-05).
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: PosTransactionCompletedListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: PosTransactionCompletedListener::class);
+
+		// Expense → Shillinq AP voucher dispatch on status=approved transitions
+		// (pipelinq-expense-to-shillinq-ap / REQ-AP-002). Listener is filtered
+		// to the expense schema and idempotent on apSyncStatus=synced so a
+		// re-fired update event cannot create a duplicate AP voucher.
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: ExpenseApprovalListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ExpenseApprovalListener::class);
+
+		// SLA engine (sla-engine-and-escalation / REQ-001, REQ-003, REQ-007):
+		// initialise slaStatus on tracked-object create, re-evaluate /
+		// pause / resume / escalate on update. Listener exceptions are
+		// swallowed (REQ-007 fail-safe).
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: SlaObjectCreatedListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: SlaObjectUpdatedListener::class);
+	}//end registerIntegrationListeners()
+
+	/**
+	 * Register the satisfaction survey and contact erasure listeners.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerSurveyAndErasureListeners(IRegistrationContext $context): void {
+		// Satisfaction surveys (customer-satisfaction-closed-loop): a ticket
+		// that reaches a status an enabled survey rule names gets its
+		// invitations written, in the deferred job (pipelinq#2072). Created as
+		// well as updated, because a ticket can be logged already closed.
+		$context->registerEventListener(event: ObjectCreatedEvent::class, listener: SurveyDispatchListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: SurveyDispatchListener::class);
+
+		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
+		// An API delete is a soft delete, which OpenRegister reports as an update
+		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
+		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: ContactErasedListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ContactErasedListener::class);
+	}//end registerSurveyAndErasureListeners()
 
 	/**
 	 * Register the listeners that stamp a number on a new record: a request or
@@ -263,24 +220,12 @@ class ListenerRegistrar {
 	 * @return void
 	 */
 	private function registerNumberListeners(IRegistrationContext $context): void {
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: TicketReferenceCreatingListener::class
-		);
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketReferenceCreatingListener::class);
 		// A ticket carries the number it is about in E.164, whoever wrote it
 		// (contact-moments-phone-lookup D2).
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: TicketPhoneE164Listener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatingEvent::class,
-			listener: TicketPhoneE164Listener::class
-		);
-		$context->registerEventListener(
-			event: ObjectCreatingEvent::class,
-			listener: QuoteNumberCreatingListener::class
-		);
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketPhoneE164Listener::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: TicketPhoneE164Listener::class);
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: QuoteNumberCreatingListener::class);
 		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
 		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);
@@ -303,22 +248,10 @@ class ListenerRegistrar {
 	 * @return void
 	 */
 	private function registerMergeListeners(IRegistrationContext $context): void {
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: ObjectsMergedSyncListener::class
-		);
+		$context->registerEventListener(event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class, listener: ObjectsMergedSyncListener::class);
 		// Before the stamp listener: a reversal reads the moved rows before the stamp is cleared.
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: ClientMergeReferenceListener::class
-		);
-		$context->registerEventListener(
-			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
-			listener: MergedAwayRecordListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatingEvent::class,
-			listener: MergedAwayRecordGuard::class
-		);
+		$context->registerEventListener(event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class, listener: ClientMergeReferenceListener::class);
+		$context->registerEventListener(event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class, listener: MergedAwayRecordListener::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: MergedAwayRecordGuard::class);
 	}//end registerMergeListeners()
 }//end class
