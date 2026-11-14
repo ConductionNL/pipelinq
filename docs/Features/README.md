@@ -49,6 +49,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Contactmomenten | Core CRUD and lifecycle for registered client interaction records | Planned | GEMMA Callcenter; VNG Klantinteracties | [contactmomenten.md](contactmomenten.md) |
 | Contactmomenten Rapportage | Management dashboards and KPI reporting on contact moments | Planned | GEMMA Callcenter; TEC 4.1–4.2 | [contactmomenten-rapportage.md](contactmomenten-rapportage.md) |
 | Customer 360 | Unified 360-degree citizen/client profile view | Planned | GEMMA CRM; TEC 1.4 | [customer-360.md](customer-360.md) |
+| Client risk and history summary | Churn risk level with reasons per client, and a generated summary of recent history | Implemented | n/a | [client-risk-and-summary.md](client-risk-and-summary.md) |
 | Kennisbank | Searchable knowledge base for KCC agents with article lifecycle | Planned | GEMMA Callcenter; TEC 3.5 | [kennisbank.md](kennisbank.md) |
 | Terugbel- & Taakbeheer | Callback requests and follow-up task assignment with deadline tracking | Planned | GEMMA Callcenter; TEC 3.2–3.3 | [terugbel-taakbeheer.md](terugbel-taakbeheer.md) |
 | Skill-based routing | Route a ticket to the best-matched, least-loaded agent | Planned | GEMMA Klantgeleiding; TEC 3.2 | [skill-routing.md](skill-routing.md) |

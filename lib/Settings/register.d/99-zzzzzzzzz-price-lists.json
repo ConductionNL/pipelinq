@@ -1,0 +1,149 @@
+{
+  "_note": "products-price-lists (D1, D2): a price list per customer segment, country or client, and a client's country and own price list. New schema priceList; client gains two optional fields and moves to 1.7.0.",
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "priceList"
+        ]
+      }
+    },
+    "schemas": {
+      "priceList": {
+        "slug": "priceList",
+        "title": "Price list",
+        "icon": "CashMultiple",
+        "summary": "Prices for a customer segment, a country or one client",
+        "description": "A price list: the prices of products for the clients in its segments or countries, or for a client that has it as its own list, in one currency and for a period.",
+        "@type": "object",
+        "type": "object",
+        "required": [
+          "title",
+          "currency"
+        ],
+        "x-notes": "products-price-lists D1: the entries live inside the list, so a list is copied, archived and audited as one thing. The resolver reads active lists valid today in the requested currency: the client's own list first, then lists for its segment, then for its country, highest priority first.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Name",
+            "description": "The list's name, shown on a quote line it priced.",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the list is for."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "The ISO 4217 currency of the list's prices; a quote in another currency does not use it.",
+            "pattern": "^[A-Z]{3}$",
+            "default": "EUR",
+            "facetable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid from",
+            "description": "The first day the list applies; empty means from the start."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid until",
+            "description": "The last day the list applies; empty means without end."
+          },
+          "segments": {
+            "type": "array",
+            "title": "Customer segments",
+            "description": "The client segments the list applies to, such as public-sector.",
+            "items": {
+              "type": "string"
+            },
+            "facetable": true
+          },
+          "countries": {
+            "type": "array",
+            "title": "Countries",
+            "description": "The ISO 3166-1 alpha-2 countries of the clients the list applies to.",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "facetable": true
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority",
+            "description": "When several lists match, the highest priority prices the line.",
+            "default": 0
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "An inactive list prices nothing.",
+            "default": true,
+            "facetable": true
+          },
+          "entries": {
+            "type": "array",
+            "title": "Prices",
+            "description": "The price of a product, optionally for one variant and from a minimum quantity.",
+            "items": {
+              "type": "object",
+              "required": [
+                "product",
+                "unitPrice"
+              ],
+              "properties": {
+                "product": {
+                  "type": "string",
+                  "title": "Product",
+                  "format": "uuid",
+                  "$ref": "product"
+                },
+                "variantSku": {
+                  "type": "string",
+                  "title": "Variant SKU",
+                  "description": "Empty prices the product itself."
+                },
+                "minQuantity": {
+                  "type": "number",
+                  "title": "From quantity",
+                  "minimum": 0,
+                  "default": 1
+                },
+                "unitPrice": {
+                  "type": "number",
+                  "title": "Unit price",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "version": "1.7.0",
+        "properties": {
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "The ISO 3166-1 alpha-2 country of the client, such as NL; price lists for that country apply to it.",
+            "pattern": "^[A-Z]{2}$",
+            "facetable": true
+          },
+          "priceList": {
+            "type": "string",
+            "title": "Price list",
+            "description": "The client's own price list; it goes before any list for its segment or country.",
+            "format": "uuid",
+            "$ref": "priceList"
+          }
+        }
+      }
+    }
+  }
+}
