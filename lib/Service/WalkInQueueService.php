@@ -169,6 +169,28 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			throw new InvalidArgumentException('displayName is required');
 		}
 
+		$payload = $this->ticketPayload(data: $data, displayName: $displayName);
+
+		$saved = $this->saveTicket(payload: $payload, uuid: null);
+		$uuid = $this->idOf(object: $saved);
+		if ($uuid === '') {
+			throw new RuntimeException('WalkInTicket save returned no id');
+		}
+
+		return $uuid;
+	}//end createTicket()
+
+	/**
+	 * The payload of a new waiting ticket.
+	 *
+	 * @param array<string, mixed> $data The intake data.
+	 * @param string $displayName The trimmed, non-empty display name.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	private function ticketPayload(array $data, string $displayName): array {
 		$serviceId = trim((string)($data['serviceId'] ?? ''));
 		$customerId = trim((string)($data['customerId'] ?? ''));
 		$phone = trim((string)($data['phone'] ?? ''));
@@ -179,16 +201,45 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			'displayName' => $this->truncate(value: $displayName, max: 255),
 			'arrivedAt' => $nowIso,
 			'status' => 'waiting',
-		];
+		] + $this->contactFields(customerId: $customerId, phone: $phone);
 
+		return $this->withService(payload: $payload, serviceId: $serviceId);
+	}//end ticketPayload()
+
+	/**
+	 * The customer id and phone fields that carry a value.
+	 *
+	 * @param string $customerId The trimmed customer id.
+	 * @param string $phone The trimmed phone number.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	private function contactFields(string $customerId, string $phone): array {
+		$fields = [];
 		if ($customerId !== '') {
-			$payload['customerId'] = $customerId;
+			$fields['customerId'] = $customerId;
 		}
 
 		if ($phone !== '') {
-			$payload['phone'] = $this->truncate(value: $phone, max: 32);
+			$fields['phone'] = $this->truncate(value: $phone, max: 32);
 		}
 
+		return $fields;
+	}//end contactFields()
+
+	/**
+	 * Link the ticket to its service and add the estimated ready time, when known.
+	 *
+	 * @param array<string, mixed> $payload The ticket payload.
+	 * @param string $serviceId The trimmed service id.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	private function withService(array $payload, string $serviceId): array {
 		if ($serviceId !== '') {
 			$payload['serviceId'] = $serviceId;
 			$eta = $this->computeEstimatedReadyAt(serviceId: $serviceId);
@@ -197,14 +248,8 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			}
 		}
 
-		$saved = $this->saveTicket(payload: $payload, uuid: null);
-		$uuid = $this->idOf(object: $saved);
-		if ($uuid === '') {
-			throw new RuntimeException('WalkInTicket save returned no id');
-		}
-
-		return $uuid;
-	}//end createTicket()
+		return $payload;
+	}//end withService()
 
 	/**
 	 * Call the first waiting ticket in the queue (oldest arrivedAt).
@@ -361,36 +406,50 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	private function rebalanceTicket(array|object $row): bool {
 		$ticket = $this->ticketAsArray(value: $row);
 		$uuid = $this->idOf(object: $row);
-		if ($uuid === '') {
-			return false;
-		}
-
 		$serviceId = (string)($ticket['serviceId'] ?? '');
-		if ($serviceId === '') {
-			// No service link — no schedule-derived ETA possible.
+		if ($uuid === '' || $serviceId === '') {
+			// No id, or no service link — no schedule-derived ETA possible.
 			return false;
 		}
 
+		$eta = $this->rebalanceEta(uuid: $uuid, serviceId: $serviceId);
+		if ($eta === '' || (string)($ticket['estimatedReadyAt'] ?? '') === $eta) {
+			return false;
+		}
+
+		$ticket['estimatedReadyAt'] = $eta;
+		return $this->saveRebalanced(ticket: $ticket, uuid: $uuid);
+	}//end rebalanceTicket()
+
+	/**
+	 * The recomputed ETA of a ticket, or an empty string when it cannot be computed.
+	 *
+	 * @param string $uuid The ticket UUID, for the log.
+	 * @param string $serviceId The ticket's service id.
+	 *
+	 * @return string
+	 */
+	private function rebalanceEta(string $uuid, string $serviceId): string {
 		try {
-			$eta = $this->computeEstimatedReadyAt(serviceId: $serviceId);
+			return $this->computeEstimatedReadyAt(serviceId: $serviceId);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: walk-in rebalance ETA failed',
 				['ticket' => $uuid, 'service' => $serviceId]
 			);
-			return false;
+			return '';
 		}
+	}//end rebalanceEta()
 
-		if ($eta === '') {
-			return false;
-		}
-
-		if ((string)($ticket['estimatedReadyAt'] ?? '') === $eta) {
-			return false;
-		}
-
-		$ticket['estimatedReadyAt'] = $eta;
-
+	/**
+	 * Save a ticket with its new ETA, logging a failure.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 * @param string $uuid The ticket UUID.
+	 *
+	 * @return bool Whether the ticket was saved.
+	 */
+	private function saveRebalanced(array $ticket, string $uuid): bool {
 		try {
 			$this->saveTicket(payload: $this->stripSelf(payload: $ticket), uuid: $uuid);
 		} catch (\Throwable $e) {
@@ -402,7 +461,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 		}
 
 		return true;
-	}//end rebalanceTicket()
+	}//end saveRebalanced()
 
 	/**
 	 * Assert that a ticket status transition is permitted.
@@ -479,25 +538,33 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			return '';
 		}
 
+		return $this->etaForService(service: $service, serviceId: $serviceId, duration: $duration);
+	}//end computeEstimatedReadyAt()
+
+	/**
+	 * The ETA from today's earliest free slot on any resource that can run the service.
+	 *
+	 * @param array<string, mixed> $service The service.
+	 * @param string $serviceId The service id.
+	 * @param int $duration The service duration in minutes, above zero.
+	 *
+	 * @return string ISO-8601 UTC timestamp, or an empty string when no slot is free.
+	 */
+	private function etaForService(array $service, string $serviceId, int $duration): string {
 		$candidates = $this->loadCandidateResources(service: $service);
 		if ($candidates === []) {
 			return '';
 		}
 
 		$date = $this->todayLocalDate();
-		$earliest = $this->findEarliestSlotStart(
-			candidates: $candidates,
-			date: $date,
-			duration: $duration,
-			serviceId: $serviceId
-		);
+		$earliest = $this->findEarliestSlotStart(candidates: $candidates, date: $date, duration: $duration, serviceId: $serviceId);
 
 		if ($earliest === null) {
 			return '';
 		}
 
 		return $this->localTimeToUtcIso(date: $date, hhmm: $earliest);
-	}//end computeEstimatedReadyAt()
+	}//end etaForService()
 
 	/**
 	 * Find the earliest free-slot start time across a set of candidate resources.
@@ -512,34 +579,61 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	private function findEarliestSlotStart(array $candidates, string $date, int $duration, string $serviceId): ?string {
 		$earliest = null;
 		foreach ($candidates as $resourceId) {
-			try {
-				$slots = $this->availabilityService->computeAvailability(
-					resourceId: $resourceId,
-					date: $date,
-					serviceDurationMinutes: $duration
-				);
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: walk-in ETA availability lookup failed',
-					['service' => $serviceId, 'resource' => $resourceId]
-				);
-				continue;
-			}
-
-			foreach ($slots as $slot) {
-				$startTime = $slot['startTime'];
-				if ($startTime === '') {
-					continue;
-				}
-
-				if ($earliest === null || strcmp($startTime, $earliest) < 0) {
-					$earliest = $startTime;
-				}
-			}
-		}//end foreach
+			$slots = $this->resourceSlots(resourceId: $resourceId, date: $date, duration: $duration, serviceId: $serviceId);
+			$earliest = $this->earliestStart(slots: $slots, earliest: $earliest);
+		}
 
 		return $earliest;
 	}//end findEarliestSlotStart()
+
+	/**
+	 * A resource's free slots on a date, or none when the lookup fails.
+	 *
+	 * @param string $resourceId The resource id.
+	 * @param string $date YYYY-MM-DD to check.
+	 * @param int $duration Required service duration in minutes.
+	 * @param string $serviceId Service id (for warning-log context only).
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function resourceSlots(string $resourceId, string $date, int $duration, string $serviceId): array {
+		try {
+			return $this->availabilityService->computeAvailability(
+				resourceId: $resourceId,
+				date: $date,
+				serviceDurationMinutes: $duration
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: walk-in ETA availability lookup failed',
+				['service' => $serviceId, 'resource' => $resourceId]
+			);
+			return [];
+		}
+	}//end resourceSlots()
+
+	/**
+	 * The earliest non-empty slot start, given the earliest found so far.
+	 *
+	 * @param array<int, array<string, mixed>> $slots The free slots.
+	 * @param string|null $earliest The earliest HH:MM start so far, or null.
+	 *
+	 * @return string|null
+	 */
+	private function earliestStart(array $slots, string|null $earliest): string|null {
+		foreach ($slots as $slot) {
+			$startTime = $slot['startTime'];
+			if ($startTime === '') {
+				continue;
+			}
+
+			if ($earliest === null || strcmp($startTime, $earliest) < 0) {
+				$earliest = $startTime;
+			}
+		}
+
+		return $earliest;
+	}//end earliestStart()
 
 	/**
 	 * Read all tickets with a given status (best-effort, capped by QUEUE_PAGE_SIZE).
@@ -555,20 +649,25 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			return [];
 		}
 
+		return $this->ticketArrays(rows: $this->statusRows(register: $register, schema: $schema, status: $status));
+	}//end listByStatus()
+
+	/**
+	 * The ticket rows with a status, or an empty list when the lookup fails.
+	 *
+	 * @param string $register The register id.
+	 * @param string $schema The ticket schema id.
+	 * @param string $status The status to match.
+	 *
+	 * @return array<mixed>
+	 */
+	private function statusRows(string $register, string $schema, string $status): array {
 		try {
 			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => ['status' => $status],
-					'register' => $register,
-					'schema' => $schema,
-					'limit' => self::QUEUE_PAGE_SIZE,
-				]
+				config: ['filters' => ['status' => $status], 'register' => $register, 'schema' => $schema, 'limit' => self::QUEUE_PAGE_SIZE]
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: walk-in queue lookup failed',
-				['status' => $status]
-			);
+			$this->logger->warning('Pipelinq: walk-in queue lookup failed', ['status' => $status]);
 			return [];
 		}
 
@@ -576,6 +675,17 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			return [];
 		}
 
+		return $rows;
+	}//end statusRows()
+
+	/**
+	 * The rows as ticket arrays, dropping rows that are not one.
+	 *
+	 * @param array<mixed> $rows The ticket rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function ticketArrays(array $rows): array {
 		$out = [];
 		foreach (array_values($rows) as $row) {
 			$arr = $this->toArray(object: $row);
@@ -585,7 +695,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 		}
 
 		return $out;
-	}//end listByStatus()
+	}//end ticketArrays()
 
 	/**
 	 * Load a WalkInTicket by id, throwing when not found.
@@ -608,8 +718,28 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			throw new RuntimeException('WalkInTicket register/schema not configured');
 		}
 
+		$data = $this->toArray(object: $this->findTicket(ticketId: $ticketId, register: $register, schema: $schema));
+		if ($data === null) {
+			throw new RuntimeException(sprintf('WalkInTicket %s not found', $ticketId));
+		}
+
+		return $data;
+	}//end loadTicket()
+
+	/**
+	 * Find a ticket object.
+	 *
+	 * @param string $ticketId Ticket UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The ticket schema id.
+	 *
+	 * @return mixed The found object.
+	 *
+	 * @throws RuntimeException If the lookup fails.
+	 */
+	private function findTicket(string $ticketId, string $register, string $schema) {
 		try {
-			$found = $this->getObjectService()->find(
+			return $this->getObjectService()->find(
 				id: $ticketId,
 				register: $register,
 				schema: $schema
@@ -618,14 +748,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			$this->logger->warning('Pipelinq: walk-in ticket load failed', ['ticket' => $ticketId]);
 			throw new RuntimeException('WalkInTicket lookup failed', 0, $e);
 		}
-
-		$data = $this->toArray(object: $found);
-		if ($data === null) {
-			throw new RuntimeException(sprintf('WalkInTicket %s not found', $ticketId));
-		}
-
-		return $data;
-	}//end loadTicket()
+	}//end findTicket()
 
 	/**
 	 * Load a Service by id without throwing.
