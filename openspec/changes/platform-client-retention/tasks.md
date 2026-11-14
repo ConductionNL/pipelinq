@@ -16,7 +16,7 @@
 
 ## 3. Review and back-fill
 
-- [ ] 3.1 Add the custom page RetentionReview (`/retention-review`) and place it in the settings section in `src/menu-layout.json`; list destruction lists holding clients or contact persons, with the number of tickets and leads that reference each client
+- [x] 3.1 Add the custom page RetentionReview (`/retention-review`) and place it in the settings section in `src/menu-layout.json`; list destruction lists holding clients or contact persons, with the number of tickets and leads that reference each client
   - Verify: `npm run check:manifest` exit 0; Vitest mounts the page with a mocked list and shows only client and contact entries
 - [ ] 3.2 Approve and Reject call `POST /apps/openregister/api/archival/destruction-lists/{id}/approve` and `.../reject`, with a confirm dialog in `src/modals/`
   - Verify: Playwright `tests/e2e/client-retention.spec.ts` approves a seeded list and the client is gone after OpenRegister's execution job runs
@@ -30,7 +30,7 @@
 
 ## 5. Text and docs
 
-- [ ] 5.1 English strings and Dutch translations for the review page and the new property, sentence case, no em-dashes
+- [x] 5.1 English strings and Dutch translations for the review page and the new property, sentence case, no em-dashes
   - Verify: `npm run test:l10n` exit 0
 - [x] 5.2 Admin doc `docs/Features/client-retention.md`: when the clock starts, who approves, and what happens to contact persons
   - Verify: docs build exit 0
