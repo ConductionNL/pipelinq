@@ -7684,6 +7684,13 @@ OC.L10N.register(
         "Create a lead": "Create a lead",
         "The pipeline": "The pipeline",
         "Quote the lead": "Quote the lead",
+        "Municipality": "Municipality",
+        "Municipality code": "Municipality code",
+        "The OpenRegister organisation of this municipality, when each municipality has its own.": "The OpenRegister organisation of this municipality, when each municipality has its own.",
+        "The four digit CBS municipality code, such as 0664.": "The four digit CBS municipality code, such as 0664.",
+        "The municipality this record belongs to, when one desk serves several.": "The municipality this record belongs to, when one desk serves several.",
+        "The municipality's name, such as Goes.": "The municipality's name, such as Goes.",
+        "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.": "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.",
         "Add contact person": "Add contact person",
         "This service has one step.": "This service has one step.",
         "Prospect": "Prospect",
@@ -9564,7 +9571,10 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "A few sentences on what the call was about. Written from the transcript; the agent can correct it.",
         "Transcript": "Transcript",
         "Transcript status": "Transcript status",
-        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording."
+        "What was said on the call, transcribed from its recording.": "What was said on the call, transcribed from its recording.",
+        "Municipalities": "Municipalities",
+        "New municipality": "New municipality",
+        "{total} municipalities served by this desk": "{total} municipalities served by this desk"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -2029,6 +2029,13 @@
 							}
 						},
 						"widget": "badge"
+					},
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
 					}
 				],
 				"sidebar": {
@@ -4254,7 +4261,14 @@
 					"priority",
 					"channel",
 					"direction",
-					"occurredAt"
+					"occurredAt",
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
+					}
 				],
 				"sidebar": {
 					"enabled": true,
@@ -4618,6 +4632,13 @@
 						"key": "client.name",
 						"label": "Client",
 						"sortable": false
+					},
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
 					}
 				],
 				"sidebar": {
@@ -9844,7 +9865,14 @@
 					"ticketType",
 					"priority",
 					"channel",
-					"status"
+					"status",
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
+					}
 				],
 				"emptyText": "Nothing is waiting. Every open ticket has someone on it.",
 				"sidebar": {

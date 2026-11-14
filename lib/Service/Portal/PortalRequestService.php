@@ -67,6 +67,13 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	private const SCHEMA = 'ticket';
 
 	/**
+	 * The schema of the municipalities the desk serves (requests-municipality-per-contact).
+	 *
+	 * @var string
+	 */
+	private const MUNICIPALITY_SCHEMA = 'servedMunicipality';
+
+	/**
 	 * The ticketType a portal request carries.
 	 *
 	 * @var string
@@ -256,7 +263,8 @@ class PortalRequestService implements PortalRequestServiceInterface {
 
 		$record = $this->ticketHead(message: $message, account: $account)
 			+ ['category' => $categoryId, 'status' => 'new', 'channel' => 'portal', 'reporterAccountId' => $accountId]
-			+ $this->receivedFields(attachments: $attachments);
+			+ $this->receivedFields(attachments: $attachments)
+			+ $this->municipalityOf(tenantId: $tenantId);
 		$saved = $this->reader->save(self::SCHEMA, $record);
 		$requestId = (string)$this->idOf(object: $saved);
 
@@ -264,6 +272,38 @@ class PortalRequestService implements PortalRequestServiceInterface {
 		$this->auditSubmitted(actor: new PortalActor(accountId: $accountId, tenantId: $tenantId), requestId: $requestId);
 		return $this->submissionReceipt(saved: $saved, record: $record);
 	}//end submit()
+
+	/**
+	 * The municipality whose portal the request came in through, as a record
+	 * field; nothing when the tenant has no municipality, so a portal without
+	 * one behaves as before.
+	 *
+	 * @param string $tenantId The resolved portal tenant.
+	 *
+	 * @return array{municipality?: string} The field, or none.
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	private function municipalityOf(string $tenantId): array {
+		if (trim($tenantId) === '') {
+			return [];
+		}
+
+		foreach ($this->reader->findAll(self::MUNICIPALITY_SCHEMA, ['portalTenantId' => $tenantId]) as $municipality) {
+			// The filter narrows; the comparison decides, so a store that
+			// ignores the filter can never stamp another tenant's municipality.
+			if ((string)($municipality['portalTenantId'] ?? '') !== $tenantId) {
+				continue;
+			}
+
+			$id = (string)$this->idOf(object: $municipality);
+			if ($id !== '') {
+				return ['municipality' => $id];
+			}
+		}
+
+		return [];
+	}//end municipalityOf()
 
 	/**
 	 * The trimmed subject and body; both are required.

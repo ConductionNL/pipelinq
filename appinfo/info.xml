@@ -217,6 +217,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
             <!--
+                requests-municipality-per-contact: existing tickets take their
+                client's municipality, silently; a ticket that has one keeps it.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketMunicipality</step>
+            <!--
                 After InitializeSettings, which imports the client and contact
                 `archive` blocks: OpenRegister writes retention metadata on
                 create only, so clients and contact persons made before then

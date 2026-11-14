@@ -200,6 +200,44 @@ class PortalRequestServiceTest extends TestCase {
 	}//end testSubmitCreatesRequestTicket()
 
 	/**
+	 * A request through a municipality's portal carries that municipality.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	public function testSubmitStampsTheTenantsMunicipality(): void {
+		$this->reader->seed('servedMunicipality', 'mun-goes', ['name' => 'Goes', 'code' => '0664', 'portalTenantId' => 'tenant-a']);
+		$this->reader->seed('servedMunicipality', 'mun-borsele', ['name' => 'Borsele', 'code' => '0654', 'portalTenantId' => 'tenant-b']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+
+		$this->assertSame('mun-goes', $this->reader->find('ticket', $result['requestId'])['municipality']);
+	}//end testSubmitStampsTheTenantsMunicipality()
+
+	/**
+	 * A tenant without a municipality, or without the schema set up, leaves the field out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	public function testSubmitLeavesTheMunicipalityOutWithoutOne(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+		$this->assertArrayNotHasKey('municipality', $this->reader->find('ticket', $result['requestId']));
+
+		$this->reader->seed('servedMunicipality', 'mun-borsele', ['name' => 'Borsele', 'portalTenantId' => 'tenant-b']);
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+		$this->assertArrayNotHasKey('municipality', $this->reader->find('ticket', $result['requestId']));
+
+		$result = $this->service->submit($account, '', 'Subject', 'Body', [], 'cat-1');
+		$this->assertArrayNotHasKey('municipality', $this->reader->find('ticket', $result['requestId']));
+	}//end testSubmitLeavesTheMunicipalityOutWithoutOne()
+
+	/**
 	 * The 6th submission within the hour is rate-limited (429).
 	 *
 	 * @return void

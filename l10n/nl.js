@@ -7684,6 +7684,13 @@ OC.L10N.register(
         "Link (https://)": "Link (https://)",
         "Link (optional)": "Link (optioneel)",
         "Move {block} down": "{block} omlaag verplaatsen",
+        "Municipality": "Gemeente",
+        "Municipality code": "Gemeentecode",
+        "The OpenRegister organisation of this municipality, when each municipality has its own.": "De OpenRegister-organisatie van deze gemeente, als elke gemeente een eigen organisatie heeft.",
+        "The four digit CBS municipality code, such as 0664.": "De viercijferige CBS-gemeentecode, zoals 0664.",
+        "The municipality this record belongs to, when one desk serves several.": "De gemeente waar dit record bij hoort, als één balie meerdere gemeenten bedient.",
+        "The municipality's name, such as Goes.": "De naam van de gemeente, zoals Goes.",
+        "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own.": "De portaalomgeving waarvan de aanvragen bij deze gemeente horen; leeg als de gemeente geen eigen portaal heeft.",
         "Move {block} up": "{block} omhoog verplaatsen",
         "Preview width": "Breedte van het voorbeeld",
         "Remove {block}": "{block} verwijderen",
@@ -9578,7 +9585,10 @@ OC.L10N.register(
         "A few sentences on what the call was about. Written from the transcript; the agent can correct it.": "Een paar zinnen over waar het gesprek over ging. Geschreven uit de transcriptie; de medewerker kan ze corrigeren.",
         "Transcript": "Transcriptie",
         "Transcript status": "Status transcriptie",
-        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname."
+        "What was said on the call, transcribed from its recording.": "Wat er in het gesprek gezegd is, uitgeschreven uit de opname.",
+        "Municipalities": "Gemeenten",
+        "New municipality": "Nieuwe gemeente",
+        "{total} municipalities served by this desk": "{total} gemeenten die deze balie bedient"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -304,6 +304,9 @@ class TicketService implements TicketServiceInterface {
 		$this->assertFacetFields(ticketType: $ticketType, payload: $payload);
 
 		$payload['ticketType'] = $ticketType;
+		if ($uuid === null) {
+			$payload = $this->withClientMunicipality(payload: $payload);
+		}
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
@@ -312,6 +315,55 @@ class TicketService implements TicketServiceInterface {
 			uuid: $uuid,
 		);
 	}//end save()
+
+	/**
+	 * A new ticket without a municipality takes its client's. A municipality
+	 * given in the payload is kept, and without a client, a client without a
+	 * municipality or a client that cannot be read the payload is unchanged.
+	 *
+	 * @param array<string, mixed> $payload The new ticket's fields.
+	 *
+	 * @return array<string, mixed> The fields, with the client's municipality when it applies.
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	private function withClientMunicipality(array $payload): array {
+		$given = ($payload['municipality'] ?? null);
+		if (is_string($given) === true && trim($given) !== '') {
+			return $payload;
+		}
+
+		$clientId = ($payload['client'] ?? null);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
+		if (is_string($clientId) === false || trim($clientId) === '' || $schema === '') {
+			return $payload;
+		}
+
+		try {
+			$client = $this->getObjectService()->find(id: $clientId, register: $this->getRegisterId(), schema: $schema);
+		} catch (\Throwable $e) {
+			$this->logger->info(
+				'Pipelinq: the client of a new ticket could not be read; its municipality is not copied',
+				['client' => $clientId, 'exception' => $e->getMessage()]
+			);
+			return $payload;
+		}
+
+		if ($client === null) {
+			return $payload;
+		}
+
+		$municipality = ($client->getObject()['municipality'] ?? null);
+		if (is_array($municipality) === true) {
+			$municipality = ($municipality['id'] ?? ($municipality['@self']['id'] ?? null));
+		}
+
+		if (is_string($municipality) === true && trim($municipality) !== '') {
+			$payload['municipality'] = $municipality;
+		}
+
+		return $payload;
+	}//end withClientMunicipality()
 
 	/**
 	 * Refuse a write that omits a property its facet requires.
