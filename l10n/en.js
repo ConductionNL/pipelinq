@@ -9666,7 +9666,10 @@ OC.L10N.register(
         "What this signal adds to the score.": "What this signal adds to the score.",
         "The schema of the records behind this signal.": "The schema of the records behind this signal.",
         "The records behind this signal.": "The records behind this signal.",
-        "When the risk was last computed.": "When the risk was last computed."
+        "When the risk was last computed.": "When the risk was last computed.",
+        "A published PortaliQ article this post promotes": "A published PortaliQ article this post promotes",
+        "Articles are written in PortaliQ. Install PortaliQ to embed articles in a template.": "Articles are written in PortaliQ. Install PortaliQ to embed articles in a template.",
+        "Articles are written in PortaliQ. Install PortaliQ to link a post to an article.": "Articles are written in PortaliQ. Install PortaliQ to link a post to an article."
     },
     "nplurals=2; plural=(n != 1);"
 )

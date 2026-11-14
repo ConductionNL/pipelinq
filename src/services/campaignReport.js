@@ -4,7 +4,7 @@
 /**
  * The campaign report, as the page reads it.
  *
- * Pure and dependency-free, the way `articleStatus.js` and
+ * Pure and dependency-free, the way `templateArticlePicker.js` and
  * `subscriptionState.js` are, so the shaping the report page does can be
  * unit-tested offline. Three jobs:
  *

@@ -29,8 +29,9 @@ vi.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => '/index.php' + path,
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showSuccess: vi.fn() }))
-vi.mock('../../src/services/articlesApi.js', () => ({
-	fetchArticles: () => Promise.resolve([]),
+vi.mock('../../src/services/portaliqArticles.js', () => ({
+	fetchPortaliqArticles: () => Promise.resolve({ available: true, data: [] }),
+	portaliqArticleUrl: (id) => '/index.php/apps/portaliq/articles/' + id,
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDialog: {

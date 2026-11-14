@@ -238,7 +238,15 @@
 					<h3 class="template-form__heading">
 						{{ t('pipelinq', 'Articles') }}
 					</h3>
+					<NcNoteCard
+						v-if="!articlesAvailable"
+						type="info"
+						class="template-form__note"
+						data-testid="template-form-articles-unavailable">
+						{{ t('pipelinq', 'Articles are written in PortaliQ. Install PortaliQ to embed articles in a template.') }}
+					</NcNoteCard>
 					<NcSelect
+						v-else
 						v-model="selectedArticles"
 						:options="publishedArticles"
 						:inputLabel="t('pipelinq', 'Articles')"
@@ -259,6 +267,16 @@
 						class="template-form__note">
 						{{ markerWarningText }}
 					</NcNoteCard>
+					<ul
+						v-if="articlesAvailable && selectedArticles.length > 0"
+						class="template-form__article-links"
+						data-testid="template-form-article-links">
+						<li v-for="article in selectedArticles" :key="articleLinkKey(article)">
+							<a :href="articleLink(article)" target="_blank" rel="noopener">
+								{{ article.title || articleLinkKey(article) }}
+							</a>
+						</li>
+					</ul>
 				</section>
 
 				<NcNoteCard
@@ -307,9 +325,10 @@ import {
 import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import MailBlockEditor from '../components/templates/MailBlockEditor.vue'
-import { fetchArticles } from '../services/articlesApi.js'
 import { starterBlocks, withFooterLast } from '../services/mailBlocks.js'
+import { fetchPortaliqArticles, portaliqArticleUrl } from '../services/portaliqArticles.js'
 import {
+	articleId,
 	orderedArticleIds,
 	publishedOnly,
 	resolveSelectedArticles,
@@ -402,6 +421,7 @@ export default {
 			// places it on the field it is about.
 			fieldErrors: {},
 			articles: [],
+			articlesAvailable: true,
 			articlesLoading: false,
 			previewing: false,
 			previewWidth: 600,
@@ -840,12 +860,32 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @param {object} article A picked portaliq article.
+		 * @return {string} Its id.
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
+		articleLinkKey(article) {
+			return articleId(article)
+		},
+
+		/**
+		 * @param {object} article A picked portaliq article.
+		 * @return {string} Where it opens in portaliq.
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
+		articleLink(article) {
+			return portaliqArticleUrl(articleId(article))
+		},
+
+		/**
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		async loadArticles() {
 			this.articlesLoading = true
 			try {
-				this.articles = await fetchArticles()
+				const answer = await fetchPortaliqArticles()
+				this.articlesAvailable = answer.available
+				this.articles = answer.data
 			} catch {
 				this.articles = []
 			} finally {
@@ -1059,6 +1099,12 @@ export default {
 	margin: 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
+}
+
+.template-form__article-links {
+	margin: 4px 0 0;
+	padding-inline-start: 20px;
+	color: var(--color-text-maxcontrast);
 }
 
 .template-form__note {

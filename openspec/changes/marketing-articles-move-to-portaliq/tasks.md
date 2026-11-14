@@ -8,7 +8,7 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
   - spec_ref: `specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq`
   - files: `lib/Service/ArticleService.php`, `tests/Unit/Service/ArticleServiceTest.php`
   - test: `vendor/bin/phpunit --no-coverage --filter ArticleServiceTest`
-- [ ] 1.2 The template article picker and the social post form list portaliq's published articles.
+- [x] 1.2 The template article picker and the social post form list portaliq's published articles.
   - spec_ref: `specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles`
   - files: `src/services/templateArticlePicker.js`, `src/dialogs/TemplateFormDialog.vue`, `src/views/social/SocialPostFormView.vue`
 
@@ -28,7 +28,7 @@ Spec only in this PR. Build after portaliq ships `marketing-articles-from-pipeli
 
 ## 4. Remove the pages and the write path
 
-- [ ] 4.1 Delete `src/manifest.d/77-marketing-articles.json`, the `Articles` Modules card, `ArticleFormView`, `ArticleEditModal`, `ArticleDetailFormDialog`, `ArticleContentSection`, `ArticleUsageSection`, `articlesApi.js`, `articleStatus.js`; add redirects for the old routes.
+- [x] 4.1 Delete `src/manifest.d/77-marketing-articles.json`, the `Articles` Modules card, `ArticleFormView`, `ArticleEditModal`, `ArticleDetailFormDialog`, `ArticleContentSection`, `ArticleUsageSection`, `articlesApi.js`, `articleStatus.js`; add redirects for the old routes.
   - spec_ref: `specs/marketing-ui/spec.md#requirement-the-marketing-menu-no-longer-carries-articles`
   - acceptance: `tests/vitest/modulesPage.spec.js` counts one card fewer; `git grep -n "ArticleEditModal\|articlesApi" src/` is empty
 - [ ] 4.2 Remove `ArticleController` and the `/api/articles` routes; drop the `article` schema fragment only after the repair step reported zero failures on the release instances.

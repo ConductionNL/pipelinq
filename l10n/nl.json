@@ -9794,6 +9794,9 @@
         "What this signal adds to the score.": "Wat dit signaal aan de score toevoegt.",
         "The schema of the records behind this signal.": "Het schema van de records achter dit signaal.",
         "The records behind this signal.": "De records achter dit signaal.",
-        "When the risk was last computed.": "Wanneer het risico voor het laatst is berekend."
+        "When the risk was last computed.": "Wanneer het risico voor het laatst is berekend.",
+        "A published PortaliQ article this post promotes": "Een gepubliceerd PortaliQ-artikel dat dit bericht onder de aandacht brengt",
+        "Articles are written in PortaliQ. Install PortaliQ to embed articles in a template.": "Artikelen schrijft u in PortaliQ. Installeer PortaliQ om artikelen in een sjabloon op te nemen.",
+        "Articles are written in PortaliQ. Install PortaliQ to link a post to an article.": "Artikelen schrijft u in PortaliQ. Installeer PortaliQ om een bericht aan een artikel te koppelen."
     }
 }

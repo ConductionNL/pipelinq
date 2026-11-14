@@ -68,7 +68,7 @@ describe('the Modules page as board PqModules', () => {
 
 	it('declares the six modules in the board order, each with its pages', () => {
 		expect(page.config.modules.map((module) => module.id)).toEqual(['sales', 'marketing', 'products', 'pos', 'contracts', 'loyalty'])
-		expect(page.config.modules.find((module) => module.id === 'marketing').pages).toHaveLength(15)
+		expect(page.config.modules.find((module) => module.id === 'marketing').pages).toHaveLength(14)
 		expect(page.config.modules.find((module) => module.id === 'pos').pages).toHaveLength(4)
 	})
 

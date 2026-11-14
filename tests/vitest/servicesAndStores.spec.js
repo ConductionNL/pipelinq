@@ -35,7 +35,8 @@ vi.mock('../../src/store/store.js', () => ({ initializeStores: async () => ({ ob
 vi.mock('../../src/services/objectFetch.js', () => ({ fetchRegisteredObjects: vi.fn(async (registry, { type }) => [{ type }]) }))
 
 const { useStaffPermissions } = await import('../../src/composables/useStaffPermissions.js')
-const articles = await import('../../src/services/articlesApi.js')
+const portaliqArticles = await import('../../src/services/portaliqArticles.js')
+const templatePreview = await import('../../src/services/templatePreviewApi.js')
 const cti = await import('../../src/services/ctiApi.js')
 const forecast = await import('../../src/services/forecastApi.js')
 const journeys = await import('../../src/services/journeysApi.js')
@@ -93,18 +94,14 @@ describe('POS staff permissions', () => {
 })
 
 describe('API services', () => {
-	it('reaches the article endpoints and unwraps the article', async () => {
-		http.get.mockResolvedValueOnce({ data: { data: [{ id: 1 }] } })
-		expect(await articles.fetchArticles(5)).toEqual([{ id: 1 }])
-		expect(http.get).toHaveBeenLastCalledWith(`${P}/api/articles?limit=5`)
-		expect(await articles.fetchArticles()).toEqual([])
-		http.post.mockResolvedValueOnce({ data: { article: { id: 2 } } })
-		expect(await articles.createArticle({ t: 1 })).toEqual({ id: 2 })
-		expect([await articles.updateArticle(3, {}), await articles.publishArticle(3), await articles.archiveArticle(3), await articles.transitionArticle(3, 'review')]).toEqual([null, null, null, null])
-		expect(http.post).toHaveBeenLastCalledWith(`${P}/api/articles/3/transition`, { transition: 'review' })
-		await articles.fetchArticleUsages(4)
-		await articles.previewTemplate(5)
-		expect(http.get.mock.calls.slice(-2).map((c) => c[0])).toEqual([`${P}/api/articles/4/usages`, `${P}/api/templates/5/preview`])
+	it('reads the portaliq articles through pipelinq and previews a template', async () => {
+		http.get.mockResolvedValueOnce({ data: { available: true, data: [{ id: 1 }] } })
+		expect(await portaliqArticles.fetchPortaliqArticles()).toEqual({ available: true, data: [{ id: 1 }] })
+		expect(http.get).toHaveBeenLastCalledWith(`${P}/api/templates/articles`)
+		http.get.mockResolvedValueOnce({ data: { available: false } })
+		expect(await portaliqArticles.fetchPortaliqArticles()).toEqual({ available: false, data: [] })
+		await templatePreview.previewTemplate(5)
+		expect(http.get).toHaveBeenLastCalledWith(`${P}/api/templates/5/preview`)
 	})
 
 	it('sends a queue with a disposition only when the call is escalated', async () => {

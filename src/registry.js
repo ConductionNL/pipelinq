@@ -60,16 +60,6 @@ import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LeadContactRoles from './components/LeadContactRoles.vue'
 import LeadExchangeRate from './components/leads/LeadExchangeRate.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
-// --- Articles — the content hub for a mailing and a post (marketing-article-hub).
-//     ArticleDetail is a declarative type:"detail" page; the rendered body, the
-//     hero image, the agent-authored mark, the Edit action and the lifecycle
-//     moves live in ArticleContentSection (no declarative widget resolves
-//     @object.<field> the way a bodyWidget prop does — see that file's header),
-//     and ArticleUsageSection answers where the article has been used, joined
-//     server-side from two schemas no single-schema object-list widget can
-//     express. ---
-import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
-import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
 import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
@@ -162,10 +152,9 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     `config.createOverride` string to one of these and forwards it to
 //     CnIndexPage's createOverride prop, so the GENERIC Add button on the
 //     declarative Clients/Contacts index pages is contact-aware too. ---
-// --- Form-dialog slot replacements (page.slots): the ArticleDetail edit
-//     form, the new-blast wizard, and segment / template create and edit
+// --- Form-dialog slot replacements (page.slots): the new-blast wizard,
+//     and segment / template create and edit
 //     (marketing-segments-ui-repair) on their index pages. ---
-import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
@@ -242,9 +231,6 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
-// --- Articles new/edit route wrapper (marketing-article-hub): thin host for
-//     ArticleEditModal, the one editing surface the change owns. ---
-import ArticleFormView from './views/marketing/ArticleFormView.vue'
 import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
@@ -602,11 +588,6 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
-	ArticleContentSection: {
-		kind: 'section',
-		component: ArticleContentSection,
-		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
-	},
 	JourneyRunsSection: {
 		kind: 'section',
 		component: JourneyRunsSection,
@@ -616,11 +597,6 @@ const registry = {
 		kind: 'section',
 		component: CampaignLandingPageSection,
 		_note: 'In-body section for the declarative type:"detail" CampaignDetail page (marketing-campaigns, placement end). Hosts the Create landing page action, which dispatches portaliq\'s LandingPageRequestedEvent through POST /api/campaigns/{id}/landing-page and shows portaliq\'s own typed error code verbatim. Not a declarative action: the grammar has no cross-app command, and a generic write dialog would collapse five distinct failure codes into one save error. Self-fetches by campaignId (@objectId).',
-	},
-	ArticleUsageSection: {
-		kind: 'section',
-		component: ArticleUsageSection,
-		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement end). Answers where the article has been used by self-fetching GET /api/articles/{id}/usages, a read-time join of TWO schemas (campaignTemplate, blast) the declarative object-list widget (one schema per instance) cannot express. Nothing is written here.',
 	},
 	SocialPostVariantsSection: {
 		kind: 'section',
@@ -1074,11 +1050,6 @@ const registry = {
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
 	},
-	ArticleFormView: {
-		kind: 'page',
-		component: ArticleFormView,
-		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
-	},
 	SocialAccountsView: {
 		kind: 'page',
 		component: SocialAccountsView,
@@ -1393,12 +1364,6 @@ const registry = {
 		component: BlastWizardDialog,
 		propsSchema: null,
 		_note: "New-blast wizard in the Blasts index page's form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast's monitor.",
-	},
-	ArticleDetailFormDialog: {
-		kind: 'modal',
-		component: ArticleDetailFormDialog,
-		propsSchema: null,
-		_note: "The ArticleDetail page's Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.",
 	},
 	SegmentFormDialog: {
 		kind: 'modal',
