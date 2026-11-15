@@ -28,6 +28,8 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
+ * @uses   \OCA\Pipelinq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Pipelinq\Middleware\Support\StandardProtocolPaths
  */
 class IncomingCallControllerTest extends TestCase {
 	/**
