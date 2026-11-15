@@ -114,26 +114,39 @@ class JourneyStepRunner implements JourneyStepRunnerInterface {
 		}
 
 		$step = new JourneyStep(journeyId: $journeyId, journey: $journey);
+
+		return $this->runStep(step: $step, trigger: ['subject' => $subject, 'flowRunUuid' => $flowRunUuid]);
+	}//end run()
+
+	/**
+	 * Act for every contact of a journey step and record each outcome.
+	 *
+	 * @param JourneyStep $step The journey's step.
+	 * @param array{subject: array<string, mixed>, flowRunUuid: string} $trigger The triggering object and the flow run.
+	 *
+	 * @return array<int, array{contactId: string, state: string, reason: string}> One entry per contact.
+	 */
+	private function runStep(JourneyStep $step, array $trigger): array {
 		$action = $step->action();
 		$outcomes = [];
-		foreach ($this->contactsFor(journey: $journey, subject: $subject) as $contactId) {
+		foreach ($this->contactsFor(journey: $step->journey, subject: $trigger['subject']) as $contactId) {
 			$outcome = $this->act(step: $step, contactId: $contactId);
 			$outcome['contactId'] = $contactId;
 			$outcomes[] = $outcome;
 
 			$this->journeys->recordRun(run: [
-				'journeyId' => $journeyId,
+				'journeyId' => $step->journeyId,
 				'contactId' => $contactId,
 				'clientId' => $this->clientOf(contactId: $contactId),
 				'state' => $outcome['state'],
 				'reason' => $outcome['reason'],
 				'actionKind' => (string)($action['kind'] ?? ''),
-				'flowRunUuid' => $flowRunUuid,
+				'flowRunUuid' => $trigger['flowRunUuid'],
 			]);
 		}
 
 		return $outcomes;
-	}//end run()
+	}//end runStep()
 
 	/**
 	 * Perform one action for one contact, gate first.

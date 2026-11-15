@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service\Competitor;
 
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
-use OCA\Pipelinq\Util\ShortPlainText;
+use OCA\Pipelinq\Service\Support\ShortPlainText;
 
 /**
  * Public Mastodon and Bluesky timelines.

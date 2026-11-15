@@ -74,15 +74,25 @@ final class CoachingPointAgreement {
 			return self::REFUSED_NOT_SHARED;
 		}
 
-		$points = $review['coachingPoints'] ?? [];
-		if (is_array($points) === false || array_is_list($points) === false
-			|| $index < 0 || isset($points[$index]) === false || is_array($points[$index]) === false
-		) {
+		if (self::hasPoint(points: ($review['coachingPoints'] ?? []), index: $index) === false) {
 			return self::REFUSED_NO_SUCH_POINT;
 		}
 
 		return null;
 	}//end refusal()
+
+	/**
+	 * Whether the coaching points are a list holding a point at the position.
+	 *
+	 * @param mixed $points The review's coaching points.
+	 * @param int   $index  The point's position, from 0.
+	 *
+	 * @return bool
+	 */
+	private static function hasPoint(mixed $points, int $index): bool {
+		return is_array($points) === true && array_is_list($points) === true
+			&& $index >= 0 && isset($points[$index]) === true && is_array($points[$index]) === true;
+	}//end hasPoint()
 
 	/**
 	 * The coaching points with the one at `$index` agreed at `$now`. A point

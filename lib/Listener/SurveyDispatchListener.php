@@ -188,7 +188,7 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 			return null;
 		}
 
-		return $this->completionFor(entity: $entity, schemaId: $schemaId, previousStatus: $previousStatus);
+		return $this->completionFor(entity: $entity, previousStatus: $previousStatus);
 	}//end completionEntry()
 
 	/**
@@ -215,13 +215,12 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 	/**
 	 * The deferred-handler entry for a ticket that moved into a status with matching rules, else null.
 	 *
-	 * @param mixed $entity The ticket entity.
-	 * @param string $schemaId The ticket schema id.
+	 * @param mixed  $entity         The ticket entity.
 	 * @param string $previousStatus The status before the update ('' when none).
 	 *
 	 * @return array<string, string>|null The entry.
 	 */
-	private function completionFor($entity, string $schemaId, string $previousStatus): array|null {
+	private function completionFor($entity, string $previousStatus): array|null {
 		$data = $entity->getObject();
 		$status = trim((string)($data['status'] ?? ''));
 		$entityType = (self::RULE_ENTITY_TYPES[(string)($data['ticketType'] ?? '')] ?? '');
@@ -235,7 +234,13 @@ class SurveyDispatchListener implements IEventListener, DeferredObjectWork {
 			return null;
 		}
 
-		return ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'schema' => $schemaId, 'entityType' => $entityType, 'status' => $status];
+		return [
+			'handler' => self::HANDLER_KEY,
+			'uuid' => $uuid,
+			'schema' => (string)$entity->getSchema(),
+			'entityType' => $entityType,
+			'status' => $status,
+		];
 	}//end completionFor()
 
 	/**

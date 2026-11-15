@@ -269,8 +269,9 @@ class BsnAuditService implements BsnAuditServiceInterface {
 
 		$newHash = hash_hmac('sha256', $rawBsn, $secret);
 
-		$records = $this->recordsWithHash(hash: $oldHash, register: $register, schema: $schema);
-		return $this->rewriteRecords(records: $records, newHash: $newHash, register: $register, schema: $schema);
+		$scope = ['register' => $register, 'schema' => $schema];
+		$records = $this->recordsWithHash(hash: $oldHash, scope: $scope);
+		return $this->rewriteRecords(records: $records, target: ['bsnHash' => $newHash] + $scope);
 	}//end pseudonymiseRecords()
 
 	/**
@@ -299,22 +300,17 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	/**
 	 * Find the audit records that carry a given bsnHash.
 	 *
-	 * @param string $hash The bsnHash to match.
-	 * @param string $register The register id.
-	 * @param string $schema The audit record schema id.
+	 * @param string                $hash  The bsnHash to match.
+	 * @param array<string, string> $scope The register id and the audit record schema id.
 	 *
 	 * @return mixed The findAll result.
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
 	 */
-	private function recordsWithHash(string $hash, string $register, string $schema) {
+	private function recordsWithHash(string $hash, array $scope) {
 		return $this->getObjectService()->findAll(
 			config: [
-				'filters' => [
-					'bsnHash' => $hash,
-					'register' => $register,
-					'schema' => $schema,
-				],
+				'filters' => ['bsnHash' => $hash] + $scope,
 			]
 		);
 	}//end recordsWithHash()
@@ -322,19 +318,17 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	/**
 	 * Rewrite each record to the new hash and count the records saved.
 	 *
-	 * @param mixed $records The records found for the old hash.
-	 * @param string $newHash The pseudonym hash.
-	 * @param string $register The register id.
-	 * @param string $schema The audit record schema id.
+	 * @param mixed                 $records The records found for the old hash.
+	 * @param array<string, string> $target  The pseudonym hash (`bsnHash`), the register id and the audit record schema id.
 	 *
 	 * @return int Number of records saved.
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
 	 */
-	private function rewriteRecords($records, string $newHash, string $register, string $schema): int {
+	private function rewriteRecords($records, array $target): int {
 		$count = 0;
 		foreach (($records ?? []) as $record) {
-			if ($this->rewriteRecord(record: $record, newHash: $newHash, register: $register, schema: $schema) === true) {
+			if ($this->rewriteRecord(record: $record, target: $target) === true) {
 				$count++;
 			}
 		}
@@ -345,16 +339,14 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	/**
 	 * Save one record under the new hash.
 	 *
-	 * @param mixed $record The record as returned by OpenRegister.
-	 * @param string $newHash The pseudonym hash.
-	 * @param string $register The register id.
-	 * @param string $schema The audit record schema id.
+	 * @param mixed                 $record The record as returned by OpenRegister.
+	 * @param array<string, string> $target The pseudonym hash (`bsnHash`), the register id and the audit record schema id.
 	 *
 	 * @return bool Whether the record was saved; false when it has no id.
 	 *
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
 	 */
-	private function rewriteRecord($record, string $newHash, string $register, string $schema): bool {
+	private function rewriteRecord($record, array $target): bool {
 		$arr = $this->recordArray(record: $record);
 
 		$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
@@ -363,10 +355,10 @@ class BsnAuditService implements BsnAuditServiceInterface {
 		}
 
 		// Immutable schema: callers MUST go through the system pseudonym path.
-		$arr['bsnHash'] = $newHash;
+		$arr['bsnHash'] = $target['bsnHash'];
 		$arr['action'] = 'brp-rtbf-pseudonymised';
 		$arr['outcome'] = 'pseudonymised';
-		$this->getObjectService()->saveObject(object: $arr, extend: [], register: $register, schema: $schema, uuid: $uuid);
+		$this->getObjectService()->saveObject(object: $arr, extend: [], register: $target['register'], schema: $target['schema'], uuid: $uuid);
 		return true;
 	}//end rewriteRecord()
 

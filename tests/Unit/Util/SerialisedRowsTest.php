@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Util;
 
+use OCA\Pipelinq\Tests\Unit\Service\Support\JsonSerializableRowsTest;
 use OCA\Pipelinq\Util\SerialisedRows;
 use PHPUnit\Framework\TestCase;
 

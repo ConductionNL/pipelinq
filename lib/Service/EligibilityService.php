@@ -349,16 +349,37 @@ class EligibilityService implements EligibilityServiceInterface {
 	/**
 	 * A Service's normalised steps.
 	 *
+	 * Empty `multiStep` produces a single synthetic step using the Service's
+	 * top-level `requiredSkills` (joined into one synthetic step that requires
+	 * the full skill set; we collapse to one skill key for the step view by
+	 * stringifying the first required skill — callers that need the full set
+	 * should call {@see getEligibleResources()} instead) and its duration.
+	 *
 	 * @param array<string, mixed> $service The Service entity.
 	 *
 	 * @return array<int, array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}>
 	 */
 	private function stepsOf(array $service): array {
-		return $this->normaliseSteps(
-			multiStep: ($service['multiStep'] ?? []),
-			fallbackSkills: $this->normaliseSkillList(value: ($service['requiredSkills'] ?? [])),
-			fallbackDuration: (int)($service['durationMinutes'] ?? 0)
-		);
+		$multiStep = ($service['multiStep'] ?? []);
+		$fallbackSkills = $this->normaliseSkillList(value: ($service['requiredSkills'] ?? []));
+		$fallbackDuration = (int)($service['durationMinutes'] ?? 0);
+		if (is_array($multiStep) === true && $multiStep !== []) {
+			return $this->normaliseStepList(multiStep: $multiStep);
+		}
+
+		$skill = '';
+		if ($fallbackSkills !== []) {
+			$skill = (string)$fallbackSkills[0];
+		}
+
+		return [
+			[
+				'durationMinutes' => max(0, $fallbackDuration),
+				'skillRequired' => $skill,
+				'resourceType' => '',
+				'allowGap' => false,
+			],
+		];
 	}//end stepsOf()
 
 	/**
@@ -413,19 +434,18 @@ class EligibilityService implements EligibilityServiceInterface {
 			return [];
 		}
 
-		return $this->withFreeSlots(eligible: $eligible, date: $date, durationMinutes: $durationMinutes);
+		return $this->withFreeSlots(eligible: $eligible, slot: ['date' => $date, 'durationMinutes' => $durationMinutes]);
 	}//end getEligibleResourcesForSlot()
 
 	/**
 	 * The resources that have at least one free slot on a date.
 	 *
-	 * @param array<int, array<string, mixed>> $eligible        The skill-qualified resources.
-	 * @param string                           $date            ISO date `YYYY-MM-DD`.
-	 * @param int                              $durationMinutes Service duration in minutes.
+	 * @param array<int, array<string, mixed>>       $eligible The skill-qualified resources.
+	 * @param array{date: string, durationMinutes: int} $slot     ISO date `YYYY-MM-DD` and service duration in minutes.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function withFreeSlots(array $eligible, string $date, int $durationMinutes): array {
+	private function withFreeSlots(array $eligible, array $slot): array {
 		$withSlots = [];
 		foreach ($eligible as $resource) {
 			$resourceId = $this->idOf(object: $resource);
@@ -435,8 +455,8 @@ class EligibilityService implements EligibilityServiceInterface {
 
 			$slots = $this->availabilityService->computeAvailability(
 				resourceId: $resourceId,
-				date: $date,
-				serviceDurationMinutes: $durationMinutes
+				date: $slot['date'],
+				serviceDurationMinutes: $slot['durationMinutes']
 			);
 			if ($slots === []) {
 				continue;
@@ -534,41 +554,6 @@ class EligibilityService implements EligibilityServiceInterface {
 
 		return $out;
 	}//end loadResources()
-
-	/**
-	 * Normalise a multiStep payload into a uniform list.
-	 *
-	 * Empty `$multiStep` produces a single synthetic step using the Service's
-	 * top-level `requiredSkills` (joined into one synthetic step that requires
-	 * the full skill set; we collapse to one skill key for the step view by
-	 * stringifying the first required skill — callers that need the full set
-	 * should call {@see getEligibleResources()} instead).
-	 *
-	 * @param mixed $multiStep The raw `multiStep` value.
-	 * @param array<int, string> $fallbackSkills Service-level required skills (for the synthetic step).
-	 * @param int $fallbackDuration Service duration to use for the synthetic step.
-	 *
-	 * @return array<int, array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}>
-	 */
-	private function normaliseSteps(mixed $multiStep, array $fallbackSkills, int $fallbackDuration): array {
-		if (is_array($multiStep) === true && $multiStep !== []) {
-			return $this->normaliseStepList(multiStep: $multiStep);
-		}
-
-		$skill = '';
-		if ($fallbackSkills !== []) {
-			$skill = (string)$fallbackSkills[0];
-		}
-
-		return [
-			[
-				'durationMinutes' => max(0, $fallbackDuration),
-				'skillRequired' => $skill,
-				'resourceType' => '',
-				'allowGap' => false,
-			],
-		];
-	}//end normaliseSteps()
 
 	/**
 	 * Normalise each array entry of a multiStep list; other entries are dropped.

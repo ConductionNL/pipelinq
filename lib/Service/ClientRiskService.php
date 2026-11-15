@@ -155,7 +155,7 @@ class ClientRiskService {
 			$this->detractorReasons(clientId: $clientId, now: $now),
 			$this->complaintReasons(open: $open),
 			$this->slaReasons(open: $open, now: $now),
-			$this->quietReasons(tickets: $tickets, client: $client, now: $now)
+			$this->quietReasons(latest: $this->latestContact(tickets: $tickets, client: $client), now: $now)
 		);
 
 		$score = array_sum(array_column($reasons, 'points'));
@@ -255,21 +255,16 @@ class ClientRiskService {
 			return false;
 		}
 
-		$uuid = $this->clientUuid(client: $client);
-		if ($uuid === '') {
-			return false;
-		}
-
 		// A locked client refuses every write: skip it rather than log a
 		// refusal for it on every daily run (platform-record-lock 1.3).
-		if (LockedRecord::isLocked(record: $client) === true) {
+		if ($this->clientUuid(client: $client) === '' || LockedRecord::isLocked(record: $client) === true) {
 			return false;
 		}
 
 		$client['churnRisk'] = $risk;
 		unset($client['@self']);
 
-		return $this->saveRisk(client: $client, register: $register, schema: $schema, uuid: $uuid);
+		return $this->saveRisk(client: $client, location: new RegisterSchema(register: $register, schema: $schema));
 	}//end store()
 
 	/**
@@ -303,19 +298,18 @@ class ClientRiskService {
 	/**
 	 * Save the client with its risk as the system; a failure is logged.
 	 *
-	 * @param array<string,mixed> $client   The client with its new risk.
-	 * @param string              $register The register id.
-	 * @param string              $schema   The client schema id.
-	 * @param string              $uuid     The client id.
+	 * @param array<string,mixed> $client   The client with its new risk, carrying its id.
+	 * @param RegisterSchema      $location The register and client schema ids.
 	 *
 	 * @return bool Whether the client was written.
 	 */
-	private function saveRisk(array $client, string $register, string $schema, string $uuid): bool {
+	private function saveRisk(array $client, RegisterSchema $location): bool {
+		$uuid = $this->clientUuid(client: $client);
 		try {
 			$this->objectService->saveObject(
 				object: $client,
-				register: $register,
-				schema: $schema,
+				register: $location->register,
+				schema: $location->schema,
 				uuid: $uuid,
 				_rbac: false,
 				_multitenancy: false,
@@ -457,13 +451,29 @@ class ClientRiskService {
 	 * No contact for more than 90 days: the newest ticket of any kind, or the
 	 * client's own creation when it has none. A client with neither is not judged.
 	 *
-	 * @param array<int,array<string,mixed>> $tickets The client's tickets.
-	 * @param array<string,mixed>            $client  The client.
-	 * @param DateTimeImmutable              $now     The moment to judge at.
+	 * @param array{0: DateTimeImmutable|null, 1: string} $latest The latest contact and its ticket ('' for none).
+	 * @param DateTimeImmutable                           $now    The moment to judge at.
 	 *
 	 * @return array<int,array{signal:string, points:int, schema:string, records:array<int,string>}>
 	 */
-	private function quietReasons(array $tickets, array $client, DateTimeImmutable $now): array {
+	private function quietReasons(array $latest, DateTimeImmutable $now): array {
+		[$when, $record] = $latest;
+		if ($when === null || $when >= $now->modify('-'.self::QUIET_AFTER_DAYS.' days')) {
+			return [];
+		}
+
+		return $this->once(signal: 'no-recent-contact', schema: 'ticket', records: array_filter([$record]), always: true);
+	}//end quietReasons()
+
+	/**
+	 * The moment of the newest ticket and its id, else the client's creation and ''.
+	 *
+	 * @param array<int,array<string,mixed>> $tickets The client's tickets.
+	 * @param array<string,mixed>            $client  The client.
+	 *
+	 * @return array{0: DateTimeImmutable|null, 1: string} The latest contact and its ticket.
+	 */
+	private function latestContact(array $tickets, array $client): array {
 		$latest = $this->created(row: $client);
 		$record = '';
 		foreach ($tickets as $ticket) {
@@ -474,12 +484,8 @@ class ClientRiskService {
 			}
 		}
 
-		if ($latest === null || $latest >= $now->modify('-'.self::QUIET_AFTER_DAYS.' days')) {
-			return [];
-		}
-
-		return $this->once(signal: 'no-recent-contact', schema: 'ticket', records: array_filter([$record]), always: true);
-	}//end quietReasons()
+		return [$latest, $record];
+	}//end latestContact()
 
 	/**
 	 * One reason worth the signal's weight once, when it has records.

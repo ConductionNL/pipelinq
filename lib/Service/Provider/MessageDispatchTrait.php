@@ -79,7 +79,10 @@ trait MessageDispatchTrait {
 			throw new PermanentSmsProviderException('messaging source slug not configured');
 		}
 
-		$result = $this->callLeaf(source: $source, body: $body, path: $path, headers: $headers);
+		$provider = $this->resolveDispatchProvider();
+		$result = $this->callLeaf(
+			call: static fn () => $provider->dispatch(source: $source, body: $body, path: $path, headers: $headers)
+		);
 
 		return $this->leafDispatchResponse(result: $result);
 	}//end dispatchViaLeaf()
@@ -87,10 +90,7 @@ trait MessageDispatchTrait {
 	/**
 	 * Call the OR messaging leaf, treating any unexpected throwable as transient.
 	 *
-	 * @param string $source OpenConnector source slug (e.g. `twilio-sms`).
-	 * @param array<string, mixed> $body Vendor-shaped request payload.
-	 * @param string $path Vendor send path, relative to the source base URL.
-	 * @param array<string, string> $headers Extra request headers.
+	 * @param callable(): mixed $call The leaf's dispatch call.
 	 *
 	 * @return mixed The leaf's result.
 	 *
@@ -99,11 +99,9 @@ trait MessageDispatchTrait {
 	 *
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
 	 */
-	private function callLeaf(string $source, array $body, string $path, array $headers) {
-		$provider = $this->resolveDispatchProvider();
-
+	private function callLeaf(callable $call) {
 		try {
-			return $provider->dispatch(source: $source, body: $body, path: $path, headers: $headers);
+			return $call();
 		} catch (TransientSmsProviderException|PermanentSmsProviderException $e) {
 			throw $e;
 		} catch (Throwable $e) {

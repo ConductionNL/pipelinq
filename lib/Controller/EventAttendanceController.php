@@ -120,23 +120,22 @@ class EventAttendanceController extends Controller {
 			return new JSONResponse(['message' => 'A valid email address is required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		return $this->registerByHand(id: $id, name: $name, email: $email);
+		return $this->registerByHand(id: $id, person: ['name' => $name, 'email' => $email]);
 	}//end add()
 
 	/**
 	 * Register a person on an existing event and confirm a new registration.
 	 *
-	 * @param string $id    The event id.
-	 * @param string $name  The person's name.
-	 * @param string $email The person's address.
+	 * @param string                             $id     The event id.
+	 * @param array{name: string, email: string} $person The person's name and address.
 	 *
 	 * @return JSONResponse The outcome and registration; 409 when the event is closed.
 	 */
-	private function registerByHand(string $id, string $name, string $email): JSONResponse {
+	private function registerByHand(string $id, array $person): JSONResponse {
 		$event = ($this->registrations->event(eventId: $id) ?? []);
 		$outcome = $this->registrations->register(
 			event: $event,
-			person: ['name' => $name, 'email' => $email, 'source' => 'colleague']
+			person: $person + ['source' => 'colleague']
 		);
 		if ($outcome->status === EventRegistrationOutcome::CLOSED) {
 			return new JSONResponse(['message' => 'The event does not take registrations'], Http::STATUS_CONFLICT);

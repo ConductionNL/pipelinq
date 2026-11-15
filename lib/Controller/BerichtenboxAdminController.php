@@ -153,7 +153,7 @@ class BerichtenboxAdminController extends Controller {
 		}
 
 		try {
-			$result = $this->tallyPaged(register: $register, schema: $schema, counters: $counters);
+			$result = $this->tallyPaged(filters: ['register' => $register, 'schema' => $schema], counters: $counters);
 		} catch (Throwable $e) {
 			return new JSONResponse(
 				['error' => 'Stats query failed: ' . $e->getMessage()],
@@ -171,29 +171,25 @@ class BerichtenboxAdminController extends Controller {
 	 * Each read carries an explicit limit; the walk stops at the first page
 	 * holding fewer rows than the limit.
 	 *
-	 * @param string $register Register id.
-	 * @param string $schema   Message schema id.
-	 * @param array  $counters Zero-initialised counter map.
+	 * @param array{register: string, schema: string} $filters  Register and message schema ids.
+	 * @param array                                   $counters Zero-initialised counter map.
 	 *
 	 * @return array{counters: array, unread: int}
 	 *
 	 * @spec openspec/changes/berichtenbox-admin-stats-pagination-and-tests/specs/berichtenbox-integration/spec.md
 	 */
-	private function tallyPaged(string $register, string $schema, array $counters): array {
+	private function tallyPaged(array $filters, array $counters): array {
 		$result = ['counters' => $counters, 'unread' => 0];
 		$offset = 0;
 		do {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => $filters,
 					'limit' => self::STATS_PAGE_SIZE,
 					'offset' => $offset,
 				]
 			);
-			$result = $this->tally(rows: $rows, counters: $result['counters'], unread: $result['unread']);
+			$result = $this->tally(rows: $rows, totals: $result);
 			$offset += self::STATS_PAGE_SIZE;
 			$fullPage = count($rows) === self::STATS_PAGE_SIZE;
 		} while ($fullPage === true);
@@ -206,15 +202,15 @@ class BerichtenboxAdminController extends Controller {
 	 *
 	 * A message is unread when it was sent and carries no readAt.
 	 *
-	 * @param iterable $rows     OR result rows.
-	 * @param array    $counters Counter map so far.
-	 * @param int      $unread   Unread total so far.
+	 * @param iterable                            $rows   OR result rows.
+	 * @param array{counters: array, unread: int} $totals Counter map and unread total so far.
 	 *
 	 * @return array{counters: array, unread: int} The totals including this page.
 	 *
 	 * @spec openspec/changes/berichtenbox-admin-stats-pagination-and-tests/specs/berichtenbox-integration/spec.md
 	 */
-	private function tally(iterable $rows, array $counters, int $unread): array {
+	private function tally(iterable $rows, array $totals): array {
+		['counters' => $counters, 'unread' => $unread] = $totals;
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
 			if ($data === null) {

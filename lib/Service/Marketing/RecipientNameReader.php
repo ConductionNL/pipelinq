@@ -129,7 +129,7 @@ class RecipientNameReader {
 				continue;
 			}
 
-			$record = $this->read(id: $recipientId, register: $register, schema: $schema);
+			$record = $this->read(id: $recipientId, scope: ['register' => $register, 'schema' => $schema]);
 			if ($record !== null) {
 				return $record;
 			}
@@ -141,20 +141,19 @@ class RecipientNameReader {
 	/**
 	 * One object's data, or null when it is not there or cannot be read.
 	 *
-	 * @param string $id The object id.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param string                $id    The object id.
+	 * @param array<string, string> $scope The register id and the schema id.
 	 *
 	 * @return array<string, mixed>|null The object's data.
 	 */
-	private function read(string $id, string $register, string $schema): ?array {
+	private function read(string $id, array $scope): ?array {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $id, register: $register, schema: $schema);
+			$object = $objectService->find(id: $id, register: $scope['register'], schema: $scope['schema']);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'RecipientNameReader: recipient not read',
-				['id' => $id, 'schema' => $schema, 'exception' => $e->getMessage()]
+				['id' => $id, 'schema' => $scope['schema'], 'exception' => $e->getMessage()]
 			);
 			return null;
 		}

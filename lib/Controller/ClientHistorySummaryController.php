@@ -30,6 +30,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ClientHistorySummaryService;
+use OCA\Pipelinq\Service\RegisterSchema;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -126,21 +127,26 @@ class ClientHistorySummaryController extends Controller {
 			return Http::STATUS_INTERNAL_SERVER_ERROR;
 		}
 
-		return $this->accessFor(clientId: $clientId, register: $register, schema: $schema);
+		return $this->accessFor(clientId: $clientId, location: new RegisterSchema(register: $register, schema: $schema));
 	}//end clientAccess()
 
 	/**
 	 * Read the client with RBAC on and map the outcome to an HTTP status.
 	 *
-	 * @param string $clientId The client's id.
-	 * @param string $register The register id.
-	 * @param string $schema The client schema id.
+	 * @param string         $clientId The client's id.
+	 * @param RegisterSchema $location The register and client schema ids.
 	 *
 	 * @return int The HTTP status the access maps to.
 	 */
-	private function accessFor(string $clientId, string $register, string $schema): int {
+	private function accessFor(string $clientId, RegisterSchema $location): int {
 		try {
-			$object = $this->objectService->find(id: $clientId, register: $register, schema: $schema, _rbac: true, _multitenancy: true);
+			$object = $this->objectService->find(
+				id: $clientId,
+				register: $location->register,
+				schema: $location->schema,
+				_rbac: true,
+				_multitenancy: true
+			);
 		} catch (NotAuthorizedException) {
 			return Http::STATUS_FORBIDDEN;
 		} catch (Throwable $e) {

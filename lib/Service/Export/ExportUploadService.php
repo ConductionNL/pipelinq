@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service\Export;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
-use OCA\Pipelinq\Util\ExportSourceCredentials;
+use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

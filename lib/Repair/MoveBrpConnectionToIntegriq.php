@@ -128,8 +128,9 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 			return;
 		}
 
-		$this->report(event: $event, values: $values, problems: $problems, output: $output);
-		$this->clearWhenConfirmed(event: $event, values: $values, problems: $problems, output: $output);
+		$handover = new BrpHandover(event: $event, values: $values, problems: $problems);
+		$this->report(handover: $handover, output: $output);
+		$this->clearWhenConfirmed(handover: $handover, output: $output);
 	}//end run()
 
 	/**
@@ -177,20 +178,18 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 	/**
 	 * Clear the keys once integriq confirmed every part; keep them otherwise.
 	 *
-	 * @param BrpConnectionHandoverEvent $event    The answered handover.
-	 * @param array<string, string>      $values   The stored values, by key.
-	 * @param array<string, string>      $problems Why a key could not be handed over, by key.
-	 * @param IOutput                    $output   The output.
+	 * @param BrpHandover $handover The answered handover, the stored values and the problems.
+	 * @param IOutput     $output   The output.
 	 *
 	 * @return void
 	 */
-	private function clearWhenConfirmed(BrpConnectionHandoverEvent $event, array $values, array $problems, IOutput $output): void {
-		if ($problems !== [] || $event->isConfirmed() === false) {
+	private function clearWhenConfirmed(BrpHandover $handover, IOutput $output): void {
+		if ($handover->problems !== [] || $handover->event->isConfirmed() === false) {
 			$output->warning('The BRP connection keys stay in pipelinq until integriq confirms every part.');
 			return;
 		}
 
-		foreach (array_keys($values) as $key) {
+		foreach (array_keys($handover->values) as $key) {
 			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 		}
 
@@ -290,21 +289,19 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 	/**
 	 * Report the outcome per key that is set, naming parts but never values.
 	 *
-	 * @param BrpConnectionHandoverEvent $event    The answered handover.
-	 * @param array<string, string>      $values   The stored values, by key.
-	 * @param array<string, string>      $problems Why a key could not be handed over, by key.
-	 * @param IOutput                    $output   The output.
+	 * @param BrpHandover $handover The answered handover, the stored values and the problems.
+	 * @param IOutput     $output   The output.
 	 *
 	 * @return void
 	 */
-	private function report(BrpConnectionHandoverEvent $event, array $values, array $problems, IOutput $output): void {
+	private function report(BrpHandover $handover, IOutput $output): void {
 		$parts = array_merge(self::SETTING_KEYS, [self::SECRET_KEY => 'clientSecret'], self::FILE_KEYS);
 		foreach ($parts as $key => $part) {
-			if ($values[$key] === '') {
+			if ($handover->values[$key] === '') {
 				continue;
 			}
 
-			$outcome = $this->partOutcome(event: $event, key: $key, part: $part, problems: $problems);
+			$outcome = $this->partOutcome(event: $handover->event, key: $key, part: $part, problems: $handover->problems);
 			if ($outcome['warning'] === true) {
 				$output->warning($outcome['line']);
 				continue;

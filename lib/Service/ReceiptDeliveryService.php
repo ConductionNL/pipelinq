@@ -121,6 +121,18 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		$this->assertCanAccess(transaction: $transaction, userId: $userId);
 		$template = $this->loadTemplate(id: $templateId);
 
+		return $this->previewOf(transaction: $transaction, template: $template);
+	}//end preview()
+
+	/**
+	 * The preview of a loaded transaction rendered with a template.
+	 *
+	 * @param array<string, mixed> $transaction The transaction with lines.
+	 * @param array<string, mixed> $template The receipt template (empty for the default).
+	 *
+	 * @return array<string, mixed> The preview.
+	 */
+	private function previewOf(array $transaction, array $template): array {
 		$text = $this->receiptService->renderText(transaction: $transaction, template: $template);
 		$html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
 
@@ -131,7 +143,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			'reference' => (string)($transaction['reference'] ?? $transaction['id'] ?? ''),
 			'customerEmail' => $this->customerEmail(transaction: $transaction),
 		];
-	}//end preview()
+	}//end previewOf()
 
 	/**
 	 * What the receipt card on a transaction page shows: the newest print and
@@ -269,29 +281,30 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		$recipient = $this->resolveCustomerRecipient(transaction: $transaction, requested: $requestedRecipient);
 
 		$transaction = $this->ensureInvoiceNumber(transaction: $transaction);
-		return $this->deliverReceiptEmail(transaction: $transaction, template: $template, recipient: $recipient, userId: $userId);
+		$action = new ReceiptAction(transaction: $transaction, template: $template, action: 'email', userId: $userId);
+		return $this->deliverReceiptEmail(action: $action, recipient: $recipient);
 	}//end emailReceipt()
 
 	/**
 	 * Render the receipt, send it and log the outcome.
 	 *
-	 * @param array<string, mixed> $transaction The transaction with lines and invoice number.
-	 * @param array<string, mixed> $template The receipt template (empty for the default).
+	 * @param ReceiptAction $action The email action.
 	 * @param string $recipient The validated recipient address.
-	 * @param string $userId The acting user id.
 	 *
 	 * @return array<string, mixed> The status, recipient, log id and (on failure) error.
 	 */
-	private function deliverReceiptEmail(array $transaction, array $template, string $recipient, string $userId): array {
+	private function deliverReceiptEmail(ReceiptAction $action, string $recipient): array {
+		$transaction = $action->transaction;
+		$template = $action->template;
 		$subject = $this->l10n->t('Your receipt') . ' ' . (string)($transaction['reference'] ?? '');
 		$text = $this->receiptService->renderText(transaction: $transaction, template: $template);
 		$html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
 
 		try {
-			$this->sendReceiptMail(recipient: $recipient, subject: $subject, text: $text, html: $html);
+			$this->sendReceiptMail(recipient: $recipient, mail: ['subject' => $subject, 'text' => $text, 'html' => $html]);
 
-			$extra = ['emailRecipient' => $recipient, 'renderedContent' => $text, 'errorMessage' => null, 'actor' => $userId];
-			$logId = $this->writeLog(transaction: $transaction, template: $template, action: 'email', status: 'success', extra: $extra);
+			$fields = ['status' => 'success', 'emailRecipient' => $recipient, 'renderedContent' => $text, 'errorMessage' => null];
+			$logId = $this->writeLog(action: $action, fields: $fields);
 
 			return ['status' => 'success', 'emailRecipient' => $recipient, 'logId' => $logId];
 		} catch (\Throwable $e) {
@@ -299,7 +312,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			// failure for audit without leaking internal error detail upstream.
 			$this->logger->warning('Pipelinq: receipt email send failed (SMTP may be disabled on this host)', ['exception' => $e->getMessage()]);
 
-			return $this->logEmailFailure(transaction: $transaction, template: $template, recipient: $recipient, userId: $userId);
+			return $this->logEmailFailure(action: $action, recipient: $recipient);
 		}//end try
 	}//end deliverReceiptEmail()
 
@@ -307,20 +320,18 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	 * Build and send the receipt mail, throwing when the mailer reports failed recipients.
 	 *
 	 * @param string $recipient The recipient address.
-	 * @param string $subject The mail subject.
-	 * @param string $text The plain-text body.
-	 * @param string $html The HTML body.
+	 * @param array{subject: string, text: string, html: string} $mail The subject, plain-text body and HTML body.
 	 *
 	 * @return void
 	 *
 	 * @throws RuntimeException When the mailer reports failed recipients.
 	 */
-	private function sendReceiptMail(string $recipient, string $subject, string $text, string $html): void {
+	private function sendReceiptMail(string $recipient, array $mail): void {
 		$message = $this->mailer->createMessage();
 		$message->setTo([$recipient]);
-		$message->setSubject($subject);
-		$message->setPlainBody($text);
-		$message->setHtmlBody($html);
+		$message->setSubject($mail['subject']);
+		$message->setPlainBody($mail['text']);
+		$message->setHtmlBody($mail['html']);
 
 		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_email_sender', '');
 		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
@@ -336,21 +347,19 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	/**
 	 * Log a failed receipt email and return the failed outcome.
 	 *
-	 * @param array<string, mixed> $transaction The transaction.
-	 * @param array<string, mixed> $template The receipt template.
+	 * @param ReceiptAction $action The email action.
 	 * @param string $recipient The recipient address.
-	 * @param string $userId The acting user id.
 	 *
 	 * @return array<string, mixed> The failed outcome.
 	 */
-	private function logEmailFailure(array $transaction, array $template, string $recipient, string $userId): array {
-		$extra = [
+	private function logEmailFailure(ReceiptAction $action, string $recipient): array {
+		$fields = [
+			'status' => 'failed',
 			'emailRecipient' => $recipient,
 			'errorMessage' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
 			'renderedContent' => null,
-			'actor' => $userId,
 		];
-		$logId = $this->writeLog(transaction: $transaction, template: $template, action: 'email', status: 'failed', extra: $extra);
+		$logId = $this->writeLog(action: $action, fields: $fields);
 
 		return [
 			'status' => 'failed',
@@ -385,6 +394,19 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		$template = $this->loadTemplate(id: $templateId);
 		$transaction = $this->ensureInvoiceNumber(transaction: $transaction);
 
+		return $this->printFor(action: new ReceiptAction(transaction: $transaction, template: $template, action: 'print', userId: $userId));
+	}//end printReceipt()
+
+	/**
+	 * Render the ESC/POS stream of a print action and log it.
+	 *
+	 * @param ReceiptAction $action The print action.
+	 *
+	 * @return array<string, mixed> The result: status, escposBase64, byteLength, logId.
+	 */
+	private function printFor(ReceiptAction $action): array {
+		$transaction = $action->transaction;
+		$template = $action->template;
 		$bytes = $this->receiptService->renderEscPos(transaction: $transaction, template: $template);
 		$device = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_printer_host', '');
 		$port = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_printer_port', '9100');
@@ -394,15 +416,12 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		}
 
 		$logId = $this->writeLog(
-			transaction: $transaction,
-			template: $template,
-			action: 'print',
-			status: 'success',
-			extra: [
+			action: $action,
+			fields: [
+				'status' => 'success',
 				'printerDevice' => $target,
 				'renderedContent' => $this->receiptService->renderText(transaction: $transaction, template: $template),
 				'errorMessage' => null,
-				'actor' => $userId,
 			]
 		);
 
@@ -413,7 +432,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			'printerDevice' => $target,
 			'logId' => $logId,
 		];
-	}//end printReceipt()
+	}//end printFor()
 
 	/**
 	 * Resolve and validate the customer recipient for an email receipt.
@@ -589,27 +608,31 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	 * Each call creates a NEW log object (append-only); entries are never
 	 * updated, so the audit trail is immutable (REQ-PRE-005 / task 13.5).
 	 *
-	 * @param array<string, mixed> $transaction The transaction.
-	 * @param array<string, mixed> $template The template used (may be empty).
-	 * @param string $action 'print' or 'email'.
-	 * @param string $status 'success', 'failed' or 'pending'.
-	 * @param array<string, mixed> $extra Action-specific fields.
+	 * The actor is written after the action-specific fields.
+	 *
+	 * @param ReceiptAction $action The action: transaction, template used (may be empty), 'print' or 'email', actor.
+	 * @param array<string, mixed> $fields The status ('success', 'failed' or 'pending') then the action-specific fields.
 	 *
 	 * @return string The created log id (or '' on failure).
 	 *
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
-	private function writeLog(array $transaction, array $template, string $action, string $status, array $extra): string {
+	private function writeLog(ReceiptAction $action, array $fields): string {
+		$transaction = $action->transaction;
+		$template = $action->template;
+		$status = $fields['status'];
+		unset($fields['status']);
 		$log = array_merge(
 			[
 				'transaction' => (string)($transaction['id'] ?? $transaction['uuid'] ?? ''),
 				'template' => (string)($template['id'] ?? $template['uuid'] ?? ''),
-				'action' => $action,
+				'action' => $action->action,
 				'status' => $status,
 				'invoiceNumber' => (string)($transaction['invoiceNumber'] ?? ''),
 				'printedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 			],
-			$extra
+			$fields,
+			['actor' => $action->userId]
 		);
 
 		try {

@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
-use OCA\Pipelinq\Util\AdminNotice;
+use OCA\Pipelinq\Service\Support\AdminNotice;
 use OCP\IGroupManager;
 
 /**

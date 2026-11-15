@@ -57,7 +57,7 @@ use OCA\Pipelinq\Service\Social\SocialGatewayResult;
 use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Util\ConfiguredTenantId;
-use OCA\Pipelinq\Util\SocialSpendBudget;
+use OCA\Pipelinq\Service\Support\SocialSpendBudget;
 use OCP\IAppConfig;
 
 /**
@@ -160,7 +160,14 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 			return $this->rejectPull(result: $result, accountId: $accountId);
 		}
 
-		return $this->storeMetrics(publication: $publication, adapter: $read->adapter, result: $result, externalId: $externalId);
+		return $this->storeMetrics(
+			publication: $publication,
+			reading: [
+				'metrics' => $read->adapter->normaliseMetrics(payload: $result->body, externalId: $externalId),
+				'rawMetrics' => $result->body,
+				'cost' => $read->adapter->costPerRead(),
+			]
+		);
 	}//end pullOne()
 
 	/**
@@ -210,17 +217,15 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 	 * Store the normalised and raw metrics and the read cost on the publication.
 	 *
 	 * @param array<string, mixed> $publication The publication.
-	 * @param SocialNetworkAdapter $adapter The network adapter.
-	 * @param SocialGatewayResult $result The accepted result.
-	 * @param string $externalId The publication's external id.
+	 * @param array{metrics: array<string, mixed>, rawMetrics: array<string, mixed>, cost: float} $reading Metrics, raw metrics, cost.
 	 *
 	 * @return bool True when the publication was saved.
 	 */
-	private function storeMetrics(array $publication, SocialNetworkAdapter $adapter, SocialGatewayResult $result, string $externalId): bool {
-		$publication['metrics'] = $adapter->normaliseMetrics(payload: $result->body, externalId: $externalId);
-		$publication['rawMetrics'] = $result->body;
+	private function storeMetrics(array $publication, array $reading): bool {
+		$publication['metrics'] = $reading['metrics'];
+		$publication['rawMetrics'] = $reading['rawMetrics'];
 		$publication['metricsAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $adapter->costPerRead());
+		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $reading['cost']);
 
 		return ($this->publications->save(publication: $publication) !== null);
 	}//end storeMetrics()

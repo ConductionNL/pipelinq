@@ -244,10 +244,9 @@ class FormDestinationBackfill implements FormDestinationBackfillInterface {
 		$campaignId = $this->campaignIdFor(form: $form);
 		$campaign = $this->campaignFor(campaignId: $campaignId);
 
-		$data = $form['data'];
-		$data['destination'] = $this->destinations->forCampaign(campaignId: $campaignId, campaign: $campaign);
+		$form['data']['destination'] = $this->destinations->forCampaign(campaignId: $campaignId, campaign: $campaign);
 
-		return $this->saveNamedForm(objects: $objects, data: $data, formId: $form['id']);
+		return $this->saveNamedForm(objects: $objects, form: $form);
 	}//end name()
 
 	/**
@@ -281,16 +280,16 @@ class FormDestinationBackfill implements FormDestinationBackfillInterface {
 	/**
 	 * Save the form with its destination; `named`, or `failed` (logged) when the save fails.
 	 *
-	 * @param object $objects The OpenRegister ObjectService.
-	 * @param array<string, mixed> $data The form data with its destination.
-	 * @param mixed $formId The form id.
+	 * @param object                                        $objects The OpenRegister ObjectService.
+	 * @param array{id: string, data: array<string, mixed>} $form    The form, its data with its destination.
 	 *
 	 * @return string The outcome.
 	 */
-	private function saveNamedForm(object $objects, array $data, $formId): string {
+	private function saveNamedForm(object $objects, array $form): string {
+		$formId = $form['id'];
 		try {
 			$objects->saveObject(
-				object: $data,
+				object: $form['data'],
 				register: self::FORM_REGISTER,
 				schema: self::FORM_SCHEMA,
 				uuid: $formId,

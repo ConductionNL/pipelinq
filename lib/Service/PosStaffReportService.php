@@ -31,7 +31,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
-use OCA\Pipelinq\Util\PosRegisterSchemaIds;
+use OCA\Pipelinq\Service\Support\PosRegisterSchemaIds;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;

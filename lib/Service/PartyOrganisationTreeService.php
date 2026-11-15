@@ -206,7 +206,8 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 			return $resolved;
 		}
 
-		return $this->applyMove(move: $this->buildMove(node: $node, nodeId: $nodeId, parentId: $parentId, parentPath: (string)$resolved['path']));
+		$placement = ['nodeId' => $nodeId, 'parentId' => $parentId, 'parentPath' => (string)$resolved['path']];
+		return $this->applyMove(move: $this->buildMove(node: $node, placement: $placement));
 	}//end setParent()
 
 	/**
@@ -233,15 +234,15 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 	 * Describe a move: the node, its old and new path and its current descendants.
 	 *
 	 * @param array<string, mixed> $node The organisation.
-	 * @param string $nodeId The organisation id.
-	 * @param string $parentId The new parent id ('' for a root).
-	 * @param string $parentPath The new parent's path.
+	 * @param array{nodeId: string, parentId: string, parentPath: string} $placement The organisation id,
+	 *        the new parent id ('' for a root) and the new parent's path.
 	 *
 	 * @return array<string, mixed> The move.
 	 *
 	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
-	private function buildMove(array $node, string $nodeId, string $parentId, string $parentPath): array {
+	private function buildMove(array $node, array $placement): array {
+		['nodeId' => $nodeId, 'parentId' => $parentId, 'parentPath' => $parentPath] = $placement;
 		$oldPath = (string)($node['organisationPath'] ?? $this->pathUnder(nodeId: $nodeId, parentPath: ''));
 		return [
 			'node' => $node,
@@ -392,7 +393,7 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 			return [];
 		}
 
-		$rows = $this->readSubtreeRows(register: $register, schema: $schema, path: $path);
+		$rows = $this->readSubtreeRows(filters: ['register' => $register, 'schema' => $schema], path: $path);
 		if ($rows === null) {
 			return [];
 		}
@@ -403,17 +404,16 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 	/**
 	 * Read the organisation rows for a subtree scan; null (logged) when the read fails.
 	 *
-	 * @param string $register The register.
-	 * @param string $schema The client schema.
+	 * @param array{register: string, schema: string} $filters The register and client schema.
 	 * @param string $path The subtree root path (for the log).
 	 *
 	 * @return iterable<mixed>|null The rows.
 	 */
-	private function readSubtreeRows(string $register, string $schema, string $path): iterable|null {
+	private function readSubtreeRows(array $filters, string $path): iterable|null {
 		try {
 			return $this->objectService->findAll(
 				[
-					'filters' => ['register' => $register, 'schema' => $schema],
+					'filters' => $filters,
 					'limit' => self::SUBTREE_LIMIT,
 				]
 			);

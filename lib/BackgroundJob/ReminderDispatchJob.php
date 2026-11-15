@@ -202,23 +202,25 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function isDueForReminder(array $booking, string $windowStartIso, string $windowEndIso): bool {
-		$status = (string)($booking['status'] ?? '');
-		if ($status !== 'confirmed') {
-			return false;
-		}
-
-		$reminderAt = (string)($booking['reminderSentAt'] ?? '');
-		if ($reminderAt !== '') {
-			return false;
-		}
-
 		$startAt = (string)($booking['startAt'] ?? '');
-		if ($startAt === '') {
+		if (self::awaitsReminder(booking: $booking) === false || $startAt === '') {
 			return false;
 		}
 
 		return ($startAt >= $windowStartIso && $startAt <= $windowEndIso);
 	}//end isDueForReminder()
+
+	/**
+	 * Whether a booking is confirmed and has had no reminder yet.
+	 *
+	 * @param array<string, mixed> $booking The booking entity.
+	 *
+	 * @return bool
+	 */
+	private static function awaitsReminder(array $booking): bool {
+		return (string)($booking['status'] ?? '') === 'confirmed'
+			&& (string)($booking['reminderSentAt'] ?? '') === '';
+	}//end awaitsReminder()
 
 	/**
 	 * Load candidate bookings (confirmed + reminderSentAt unset) for the cycle.

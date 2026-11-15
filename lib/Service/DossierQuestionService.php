@@ -155,16 +155,11 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 		}
 
 		$snapshot = $this->snapshot(collectionId: $collectionId, collection: $collection);
-		$subject = trim($title);
-		if ($subject === '') {
-			$subject = $snapshot['title'];
-		}
-
 		$saved = $this->tickets->save(
 			schemaKey: self::TICKET,
 			data: [
 				'ticketType' => TicketService::TYPE_REQUEST,
-				'title' => $subject,
+				'title' => $this->subjectLine(title: $title, snapshot: $snapshot),
 				'description' => $question,
 				'channel' => self::CHANNEL_PORTAL,
 				'status' => 'new',
@@ -179,6 +174,23 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			'status' => (string)($saved['status'] ?? 'new'),
 		];
 	}//end ask()
+
+	/**
+	 * The subject line of a question: the resident's own, else the dossier title.
+	 *
+	 * @param string               $title    The optional subject line.
+	 * @param array<string, mixed> $snapshot The dossier snapshot.
+	 *
+	 * @return string
+	 */
+	private function subjectLine(string $title, array $snapshot): string {
+		$subject = trim($title);
+		if ($subject === '') {
+			$subject = $snapshot['title'];
+		}
+
+		return $subject;
+	}//end subjectLine()
 
 	/**
 	 * Add the resident's reply to their own question.

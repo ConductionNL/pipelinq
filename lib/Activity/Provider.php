@@ -88,6 +88,18 @@ class Provider implements IProvider {
 			throw new UnknownActivityException();
 		}
 
+		return $this->render(event: $event, language: $language);
+	}//end parse()
+
+	/**
+	 * Set a Pipelinq event's subject text and icon in the language.
+	 *
+	 * @param IEvent $event    The event to parse.
+	 * @param string $language The language code.
+	 *
+	 * @return IEvent The parsed event.
+	 */
+	private function render(IEvent $event, $language): IEvent {
 		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $language);
 		$params = $event->getSubjectParameters();
 
@@ -104,5 +116,5 @@ class Provider implements IProvider {
 		);
 
 		return $event;
-	}//end parse()
+	}//end render()
 }//end class

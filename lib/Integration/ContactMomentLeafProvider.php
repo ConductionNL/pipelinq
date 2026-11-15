@@ -114,8 +114,43 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 			return $refusal;
 		}
 
-		$limit = max(1, min($limit, self::MAX_LIMIT));
+		$moments = $this->newestMoments(hostId: $hostId, limit: max(1, min($limit, self::MAX_LIMIT)));
 
+		return [
+			'status' => 200,
+			'contactMoments' => $moments,
+			'indicators' => $this->indicatorsOf(partyId: $partyId),
+		];
+	}//end list()
+
+	/**
+	 * The party's standing indicators; none when no party is named.
+	 *
+	 * The party's indicators travel with the panel, resolved live, so a KCC
+	 * agent taking a call reads "agressie-registratie" BEFORE they speak.
+	 * Nothing is copied onto a contact moment: this is a read.
+	 *
+	 * @param string $partyId The party, or an empty string.
+	 *
+	 * @return array<mixed> The indicators.
+	 */
+	private function indicatorsOf(string $partyId): array {
+		if ($partyId === '') {
+			return [];
+		}
+
+		return $this->indicatorService->resolve(partyId: trim($partyId));
+	}//end indicatorsOf()
+
+	/**
+	 * The contact moments filed on a host, newest first, at most the limit.
+	 *
+	 * @param string $hostId The trimmed host object uuid.
+	 * @param int    $limit  The capped page size.
+	 *
+	 * @return array<int, array<string, mixed>> The presented moments.
+	 */
+	private function newestMoments(string $hostId, int $limit): array {
 		// MEMBERSHIP, not equality: one contact moment filed on three cases is
 		// one record, and each of the three has to see it. Filtering on the
 		// single `caseReference` would show it only on the primary, and an
@@ -137,20 +172,8 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 			static fn (array $a, array $b): int => strcmp((string)$b['occurredAt'], (string)$a['occurredAt'])
 		);
 
-		// The party's indicators travel with the panel, resolved live, so a KCC
-		// agent taking a call reads "agressie-registratie" BEFORE they speak.
-		// Nothing is copied onto a contact moment: this is a read.
-		$indicators = [];
-		if ($partyId !== '') {
-			$indicators = $this->indicatorService->resolve(partyId: trim($partyId));
-		}
-
-		return [
-			'status' => 200,
-			'contactMoments' => $moments,
-			'indicators' => $indicators,
-		];
-	}//end list()
+		return $moments;
+	}//end newestMoments()
 
 	/**
 	 * Append one contact moment to a host object.
@@ -296,14 +319,7 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 			'primaryCaseReference' => $hostId,
 			'assignee' => $this->actingUserId(),
 			'occurredAt' => $this->occurredAt(payload: $payload),
-		];
-
-		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
-			$value = trim((string)($payload[$from] ?? ''));
-			if ($value !== '') {
-				$ticket[$to] = $value;
-			}
-		}
+		] + self::describedFields(payload: $payload);
 
 		if ($partyId !== '') {
 			// Only when named: an empty string on a uuid property fails the
@@ -313,6 +329,25 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 
 		return $ticket;
 	}//end ticketFrom()
+
+	/**
+	 * The outcome and description an append payload names; a later non-empty source wins the description.
+	 *
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return array<string, string> The trimmed, non-empty fields.
+	 */
+	private static function describedFields(array $payload): array {
+		$fields = [];
+		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
+			$value = trim((string)($payload[$from] ?? ''));
+			if ($value !== '') {
+				$fields[$to] = $value;
+			}
+		}
+
+		return $fields;
+	}//end describedFields()
 
 	/**
 	 * Whether the acting user may read the host object.

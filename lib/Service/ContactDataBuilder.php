@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Util\FirstValue;
+use OCA\Pipelinq\Service\Support\FirstValue;
 
 /**
  * Service for building import data arrays from Nextcloud contact data.
@@ -86,7 +86,6 @@ class ContactDataBuilder {
 
 		$clientType = $this->determineClientType(name: $name, org: $org);
 		$name = $this->displayName(name: $name, org: $org);
-		$industry = $this->industryFor(clientType: $clientType, org: $org);
 
 		$data = ['name' => $name, 'type' => $clientType]
 			+ $this->clientChannels(ncContact: $ncContact)
@@ -101,7 +100,7 @@ class ContactDataBuilder {
 		$data['name'] = $name;
 		$data['type'] = $clientType;
 
-		return $this->withClientExtras(data: $data, industry: $industry, clientType: $clientType, ncContact: $ncContact);
+		return $this->withClientExtras(data: $data, ncContact: $ncContact);
 	}//end buildClientImportData()
 
 	/**
@@ -144,16 +143,16 @@ class ContactDataBuilder {
 	/**
 	 * Add the industry when there is one, and a person's preferred name.
 	 *
-	 * @param array $data The client data.
-	 * @param string $industry The industry, or ''.
-	 * @param string $clientType The client type.
+	 * @param array $data The client data, with its `type`.
 	 * @param array $ncContact The Nextcloud contact data.
 	 *
 	 * @return array
 	 *
 	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
-	private function withClientExtras(array $data, string $industry, string $clientType, array $ncContact): array {
+	private function withClientExtras(array $data, array $ncContact): array {
+		$clientType = $data['type'];
+		$industry = $this->industryFor(clientType: $clientType, org: $this->extractFirstValue(value: ($ncContact['ORG'] ?? '')));
 		// `industry` is a list of sectors (pipelinq-forms-review); written only
 		// when there is one, like the scalars above.
 		if ($industry !== '') {
@@ -203,19 +202,12 @@ class ContactDataBuilder {
 	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
 		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
 
-		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
-		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
-
-		$data = [
-			'name' => $name,
-			'email' => $emails[0]['value'] ?? '',
-			'phone' => $phones[0]['value'] ?? '',
-			'emails' => $emails,
-			'phones' => $phones,
-			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
-			'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
-			'contactsUid' => $uid,
-		];
+		$data = ['name' => $name]
+			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
+			+ [
+				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
+				'contactsUid' => $uid,
+			];
 
 		if ($clientId !== null && $clientId !== '') {
 			$data['client'] = $clientId;

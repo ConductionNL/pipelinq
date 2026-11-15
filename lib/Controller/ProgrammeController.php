@@ -37,7 +37,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammeEstimationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
 use OCA\Pipelinq\Util\SerialisedEntity;
-use OCA\Pipelinq\Util\ServiceResultResponse;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

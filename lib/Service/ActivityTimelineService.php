@@ -42,7 +42,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
-use OCA\Pipelinq\Util\NonEmptyString;
+use OCA\Pipelinq\Service\Support\NonEmptyString;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -660,26 +660,37 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 			throw new RuntimeException('Contactmoment register or schema not configured.');
 		}
 
-		$payload = $this->worklogPayload(data: $data);
-
-		if ($entityType === 'client') {
-			$payload['client'] = $entityId;
-		} elseif ($entityType === 'request') {
-			$payload['parentTicket'] = $entityId;
-		}
-
+		$payload = $this->linkedWorklog(payload: $this->worklogPayload(data: $data), origin: [$entityType, $entityId]);
 		$saved = $this->ticketService->save(TicketService::TYPE_CONTACTMOMENT, $payload);
 
-		$savedArray = $this->extractObjectArray(saved: $saved);
 		$normalized = $this->normalizeActivity(
 			sourceType: 'interaction',
-			object: $savedArray,
+			object: $this->extractObjectArray(saved: $saved),
 			entityType: $entityType,
 			entityId: $entityId
 		);
 
 		return $normalized ?? [];
 	}//end createWorklog()
+
+	/**
+	 * The worklog payload linked to its client, or to its parent request.
+	 *
+	 * @param array<string,mixed>         $payload The worklog payload.
+	 * @param array{0: string, 1: string} $origin  The entity type (client|request) and UUID.
+	 *
+	 * @return array<string,mixed> The linked payload.
+	 */
+	private function linkedWorklog(array $payload, array $origin): array {
+		[$entityType, $entityId] = $origin;
+		if ($entityType === 'client') {
+			$payload['client'] = $entityId;
+		} elseif ($entityType === 'request') {
+			$payload['parentTicket'] = $entityId;
+		}
+
+		return $payload;
+	}//end linkedWorklog()
 
 	/**
 	 * The contact moment a worklog becomes, before it is tied to its entity.

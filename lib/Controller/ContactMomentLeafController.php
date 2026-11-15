@@ -37,7 +37,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
-use OCA\Pipelinq\Util\ServiceResultResponse;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

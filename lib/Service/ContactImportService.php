@@ -144,9 +144,11 @@ class ContactImportService {
 		// is found by. Found => UPDATE that object; not found => create.
 		$existingUuid = $this->findExistingByContactsUid(
 			objectService: $objectService,
-			registerId: $registerId,
-			schemaId: $schemaId,
-			contactsUid: (string)($data['contactsUid'] ?? '')
+			filters: [
+				'register' => $registerId,
+				'schema' => $schemaId,
+				'contactsUid' => (string)($data['contactsUid'] ?? ''),
+			]
 		);
 
 		$created = $objectService->saveObject(
@@ -169,24 +171,17 @@ class ContactImportService {
 	 * cost of that is the duplicate this method exists to avoid, which is
 	 * better than losing the import outright.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
-	 * @param string $contactsUid The addressbook contact UID.
+	 * @param object                                                      $objectService The OpenRegister object service.
+	 * @param array{register: string, schema: string, contactsUid: string} $filters       The register id, schema id and addressbook contact UID.
 	 *
 	 * @return string|null The existing uuid, or null to create.
 	 */
-	private function findExistingByContactsUid(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		string $contactsUid,
-	): ?string {
-		if ($contactsUid === '') {
+	private function findExistingByContactsUid(object $objectService, array $filters): ?string {
+		if ($filters['contactsUid'] === '') {
 			return null;
 		}
 
-		$rows = $this->findRowsByContactsUid(objectService: $objectService, registerId: $registerId, schemaId: $schemaId, contactsUid: $contactsUid);
+		$rows = $this->findRowsByContactsUid(objectService: $objectService, filters: $filters);
 		if ($rows === null) {
 			return null;
 		}
@@ -197,28 +192,17 @@ class ContactImportService {
 	/**
 	 * Find at most one object carrying the contactsUid; null when the lookup fails.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
-	 * @param string $contactsUid The Contacts UID.
+	 * @param object                                                      $objectService The OpenRegister ObjectService.
+	 * @param array{register: string, schema: string, contactsUid: string} $filters       The register id, schema id and Contacts UID.
 	 *
 	 * @return array<int, mixed>|null The rows.
 	 */
-	private function findRowsByContactsUid(object $objectService, string $registerId, string $schemaId, string $contactsUid): array|null {
+	private function findRowsByContactsUid(object $objectService, array $filters): array|null {
 		try {
 			// Register/schema go INSIDE `filters`: prepareFindAllConfig() reads
 			// them from there and nowhere else, and a top-level pair silently
 			// resolves no context and answers [].
-			$rows = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $schemaId,
-						'contactsUid' => $contactsUid,
-					],
-					'limit' => 1,
-				]
-			);
+			$rows = $objectService->findAll(['filters' => $filters, 'limit' => 1]);
 		} catch (Throwable $e) {
 			// No logger on this class, and adding one for a swallowed lookup is
 			// not worth the constructor change: the caller creates, which is the

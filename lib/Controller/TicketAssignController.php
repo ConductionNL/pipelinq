@@ -113,7 +113,7 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->assign(ticket: $ticket->getObject(), id: $id, uid: $user->getUID());
+		return $this->assign(ticket: array_replace($ticket->getObject(), ['assignee' => $user->getUID()]), id: $id);
 	}//end assignToMe()
 
 	/**
@@ -144,7 +144,7 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Nothing is waiting in the queue'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->assign(ticket: $oldest[0], id: $oldest[1], uid: $user->getUID());
+		return $this->assign(ticket: array_replace($oldest[0], ['assignee' => $user->getUID()]), id: $oldest[1]);
 	}//end assignOldest()
 
 	/**
@@ -213,15 +213,13 @@ class TicketAssignController extends Controller {
 	/**
 	 * Save a ticket with a new assignee.
 	 *
-	 * @param array<string, mixed> $ticket The ticket's data.
+	 * @param array<string, mixed> $ticket The ticket's data, carrying its new `assignee`.
 	 * @param string               $id     The ticket id.
-	 * @param string               $uid    The new assignee.
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, or 403 when the write is refused.
 	 */
-	private function assign(array $ticket, string $id, string $uid): JSONResponse {
+	private function assign(array $ticket, string $id): JSONResponse {
 		unset($ticket['@self']);
-		$ticket['assignee'] = $uid;
 
 		try {
 			$this->tickets->getObjectService()->saveObject(
@@ -234,6 +232,6 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'You cannot change this ticket'], Http::STATUS_FORBIDDEN);
 		}
 
-		return new JSONResponse(['id' => $id, 'assignee' => $uid]);
+		return new JSONResponse(['id' => $id, 'assignee' => $ticket['assignee']]);
 	}//end assign()
 }//end class

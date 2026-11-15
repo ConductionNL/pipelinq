@@ -63,15 +63,8 @@ final class OrphanedLeadPlacer {
 	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function forOrphanedLead(array $lead, array $pipelines, ?string $now = null): array {
-		$pipelineId = trim((string)($lead['pipeline'] ?? ''));
-		if ($pipelineId === '') {
+		if (self::isOrphaned(pipelineId: trim((string)($lead['pipeline'] ?? '')), pipelines: $pipelines) === false) {
 			return [];
-		}
-
-		foreach ($pipelines as $pipeline) {
-			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
-				return [];
-			}
 		}
 
 		$target = $this->placer->defaultPipeline(pipelines: $pipelines);
@@ -91,6 +84,28 @@ final class OrphanedLeadPlacer {
 
 		return $patch;
 	}//end forOrphanedLead()
+
+	/**
+	 * Whether a lead's pipeline id names a pipeline that is not stored; a lead without one is not orphaned.
+	 *
+	 * @param string                           $pipelineId The lead's trimmed pipeline id.
+	 * @param array<int, array<string, mixed>> $pipelines  Stored pipelines.
+	 *
+	 * @return bool
+	 */
+	private static function isOrphaned(string $pipelineId, array $pipelines): bool {
+		if ($pipelineId === '') {
+			return false;
+		}
+
+		foreach ($pipelines as $pipeline) {
+			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isOrphaned()
 
 	/**
 	 * The closed stage a won or lost lead belongs in, by stage order.

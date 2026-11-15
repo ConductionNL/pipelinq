@@ -99,7 +99,7 @@ class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	 */
 	public function topQueries(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): array {
 		[$from, $to] = $this->window(from: $from, to: $to);
-		$rows = $this->loadRows(from: $from, to: $to, property: $property);
+		$rows = $this->loadRows(window: [$from, $to], property: $property);
 		$aggregated = $this->aggregate(rows: $rows);
 
 		return [
@@ -132,7 +132,7 @@ class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	public function rows(?string $from = null, ?string $to = null, ?string $property = null): array {
 		[$from, $to] = $this->window(from: $from, to: $to);
 
-		return ['from' => $from, 'to' => $to, 'rows' => $this->loadRows(from: $from, to: $to, property: $property)];
+		return ['from' => $from, 'to' => $to, 'rows' => $this->loadRows(window: [$from, $to], property: $property)];
 	}//end rows()
 
 	/**
@@ -256,13 +256,13 @@ class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	/**
 	 * Read the rows in the window from OpenRegister, paged.
 	 *
-	 * @param string $from Window start.
-	 * @param string $to Window end, inclusive.
-	 * @param string|null $property Optional property filter.
+	 * @param array{0: string, 1: string} $window   Window start and end, inclusive.
+	 * @param string|null                 $property Optional property filter.
 	 *
 	 * @return array<int, array<string, mixed>> Plain rows.
 	 */
-	private function loadRows(string $from, string $to, ?string $property): array {
+	private function loadRows(array $window, ?string $property): array {
+		[$from, $to] = $window;
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (Throwable $e) {

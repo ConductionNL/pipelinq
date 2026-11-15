@@ -35,7 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\SubscriptionService;
-use OCA\Pipelinq\Util\SubscriptionContactKey;
+use OCA\Pipelinq\Service\Support\SubscriptionContactKey;
 
 /**
  * SubscriptionQueryService — counts, listings and the blast audience.
@@ -233,7 +233,19 @@ class SubscriptionQueryService implements SubscriptionQueryServiceInterface {
 	public function listSubscriptionsForList(string $listId, int $page, int $limit): array {
 		$page = max(1, $page);
 		$limit = min(100, max(1, $limit));
-		$all = $this->rowsForList(listId: $listId);
+		return $this->pageOf(all: $this->rowsForList(listId: $listId), window: ['page' => $page, 'limit' => $limit]);
+	}//end listSubscriptionsForList()
+
+	/**
+	 * One page of memberships, each with its name, and the pagination envelope.
+	 *
+	 * @param array<int, array<string, mixed>> $all    Every membership of the list.
+	 * @param array{page: int, limit: int}     $window The 1-based page and the clamped page size.
+	 *
+	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+	 */
+	private function pageOf(array $all, array $window): array {
+		['page' => $page, 'limit' => $limit] = $window;
 		$total = count($all);
 
 		$pages = 0;
@@ -255,7 +267,7 @@ class SubscriptionQueryService implements SubscriptionQueryServiceInterface {
 				'pages' => $pages,
 			],
 		];
-	}//end listSubscriptionsForList()
+	}//end pageOf()
 
 	/**
 	 * Every membership one contact holds.

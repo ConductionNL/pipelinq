@@ -39,7 +39,7 @@ use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
-use OCA\Pipelinq\Util\ChannelAdapterLookups;
+use OCA\Pipelinq\Service\Support\ChannelAdapterLookups;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;

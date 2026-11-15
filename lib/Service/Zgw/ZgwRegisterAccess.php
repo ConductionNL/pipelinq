@@ -126,7 +126,7 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 			return [];
 		}
 
-		$rows = $this->findRows(objectService: $objectService, schema: $schema, filters: $filters);
+		$rows = $this->findRows(objectService: $objectService, filters: array_merge($filters, ['register' => self::REGISTER, 'schema' => $schema]));
 		if ($rows === null) {
 			return [];
 		}
@@ -138,31 +138,20 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 	 * Read the schema's rows merged with the caller's filters; null (logged) when the read fails.
 	 *
 	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $schema The schema slug.
-	 * @param array<string, mixed> $filters The data-property filters.
+	 * @param array<string, mixed> $filters The data-property filters with the register and schema.
 	 *
 	 * @return array{rows: mixed}|null The raw findAll result.
 	 */
-	private function findRows(object $objectService, string $schema, array $filters): array|null {
+	private function findRows(object $objectService, array $filters): array|null {
 		try {
 			// OpenRegister's ObjectService::findAll() takes a single $config array;
 			// register/schema travel INSIDE $config['filters'] (see prepareFindAllConfig()).
 			// The old findAll(register:, schema:, filters:) named-argument form no longer
 			// exists and threw "Unknown named parameter $register" at runtime. The caller's
-			// data-property $filters are merged with the register/schema context here.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => self::REGISTER,
-							'schema' => $schema,
-						]
-					),
-				]
-			);
+			// data-property $filters arrive merged with the register/schema context.
+			$rows = $objectService->findAll(config: ['filters' => $filters]);
 		} catch (Throwable $e) {
-			$this->logger->info('ZGW: findAll failed', ['schema' => $schema, 'err' => $e->getMessage()]);
+			$this->logger->info('ZGW: findAll failed', ['schema' => $filters['schema'], 'err' => $e->getMessage()]);
 			return null;
 		}//end try
 

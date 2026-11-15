@@ -198,22 +198,21 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 */
 	public function register(array $event, array $person): EventRegistrationOutcome {
 		$eventId = $this->store->idOf(payload: $event);
-		$email = strtolower(trim((string)($person['email'] ?? '')));
-		$refusal = $this->closedOrDuplicate(event: $event, eventId: $eventId, email: $email);
+		$refusal = $this->closedOrDuplicate(event: $event, email: $this->emailOf(person: $person));
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
 		$size = $this->sizeOf(registration: $person);
-		$hasPlace = $this->hasPlaceFor(event: $event, eventId: $eventId, size: $size);
+		$hasPlace = $this->hasPlaceFor(event: $event, size: $size);
 
-		$row = $this->newRegistration(eventId: $eventId, email: $email, person: $person, size: $size);
+		$row = $this->newRegistration(eventId: $eventId, person: $person);
 		$row['status'] = 'confirmed';
 		if ($hasPlace === false) {
 			$row = $this->waitlisted(row: $row, eventId: $eventId);
 		}
 
-		$saved = $this->saveRegistration(event: $event, row: $row, hasPlace: $hasPlace);
+		$saved = $this->saveRegistration(event: $event, row: $row);
 		if ($saved === null) {
 			return new EventRegistrationOutcome(status: EventRegistrationOutcome::NONE);
 		}
@@ -224,15 +223,26 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	}//end register()
 
 	/**
+	 * A person's email address, trimmed and lower-cased.
+	 *
+	 * @param array<string, mixed> $person The person.
+	 *
+	 * @return string The normalised email.
+	 */
+	private function emailOf(array $person): string {
+		return strtolower(trim((string)($person['email'] ?? '')));
+	}//end emailOf()
+
+	/**
 	 * The outcome for an event that takes no registrations or a person already registered, else null.
 	 *
-	 * @param array<string, mixed> $event   The event.
-	 * @param string               $eventId The event id.
-	 * @param string               $email   The normalised email.
+	 * @param array<string, mixed> $event The event.
+	 * @param string               $email The normalised email.
 	 *
 	 * @return EventRegistrationOutcome|null
 	 */
-	private function closedOrDuplicate(array $event, string $eventId, string $email): EventRegistrationOutcome|null {
+	private function closedOrDuplicate(array $event, string $email): EventRegistrationOutcome|null {
+		$eventId = $this->store->idOf(payload: $event);
 		if ($eventId === '' || $this->isTaking(event: $event) === false) {
 			return new EventRegistrationOutcome(status: EventRegistrationOutcome::CLOSED);
 		}
@@ -248,27 +258,26 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	/**
 	 * Whether a party of this size still fits (an event without capacity always fits).
 	 *
-	 * @param array<string, mixed> $event   The event.
-	 * @param string               $eventId The event id.
-	 * @param int                  $size    The party size.
+	 * @param array<string, mixed> $event The event.
+	 * @param int                  $size  The party size.
 	 *
 	 * @return bool
 	 */
-	private function hasPlaceFor(array $event, string $eventId, int $size): bool {
+	private function hasPlaceFor(array $event, int $size): bool {
 		$capacity = (int)($event['capacity'] ?? 0);
-		return $capacity <= 0 || ($this->placesTaken(eventId: $eventId) + $size) <= $capacity;
+		return $capacity <= 0 || ($this->placesTaken(eventId: $this->store->idOf(payload: $event)) + $size) <= $capacity;
 	}//end hasPlaceFor()
 
 	/**
 	 * Save a new registration; a confirmed place on a capped event updates the count.
 	 *
-	 * @param array<string, mixed> $event    The event.
-	 * @param array<string, mixed> $row      The registration.
-	 * @param bool                 $hasPlace Whether the registration got a place.
+	 * @param array<string, mixed> $event The event.
+	 * @param array<string, mixed> $row   The registration; `confirmed` when it got a place.
 	 *
 	 * @return array<string, mixed>|null The saved registration, or null when the save failed.
 	 */
-	private function saveRegistration(array $event, array $row, bool $hasPlace): array|null {
+	private function saveRegistration(array $event, array $row): array|null {
+		$hasPlace = ($row['status'] === 'confirmed');
 		$saved = $this->store->save(schemaSlug: $this->registrationSlug(), payload: $row);
 		if ($saved === null) {
 			return null;
@@ -465,18 +474,17 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 * The registration row to write.
 	 *
 	 * @param string               $eventId The event id.
-	 * @param string               $email   The lower-cased address.
 	 * @param array<string, mixed> $person  The person.
-	 * @param int                  $size    How many people come.
 	 *
 	 * @return array<string, mixed> The row.
 	 */
-	private function newRegistration(string $eventId, string $email, array $person, int $size): array {
+	private function newRegistration(string $eventId, array $person): array {
+		$email = $this->emailOf(person: $person);
 		$row = [
 			'event' => $eventId,
 			'name' => trim((string)($person['name'] ?? '')),
 			'email' => $email,
-			'partySize' => $size,
+			'partySize' => $this->sizeOf(registration: $person),
 			'source' => (string)($person['source'] ?? 'web-form'),
 			'registeredAt' => $this->now(),
 		];

@@ -219,7 +219,7 @@ class ExportExecutionService implements ExportExecutionServiceInterface {
 		);
 
 		self::addFile(extraction: $extraction, file: $file);
-		$this->snapshotSchema(runId: $pending->runId(), jobId: $pending->jobId(), slug: $slug, file: $file);
+		$this->snapshotSchema(pending: $pending, schema: ['slug' => $slug, 'columns' => ($file['column_definitions'] ?? [])]);
 	}//end extractSource()
 
 	/**
@@ -312,18 +312,16 @@ class ExportExecutionService implements ExportExecutionServiceInterface {
 	/**
 	 * Capture the structure snapshot + drift for one schema of a run.
 	 *
-	 * @param string $runId The run UUID.
-	 * @param string $jobId The job UUID.
-	 * @param string $slug The schema slug.
-	 * @param array<string, mixed> $file The extracted file descriptor.
+	 * @param PendingExportRun                    $pending The run being executed.
+	 * @param array{slug: string, columns: mixed} $schema  The schema slug and the extracted column definitions.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
-	private function snapshotSchema(string $runId, string $jobId, string $slug, array $file): void {
-		$columns = ($file['column_definitions'] ?? []);
-		$previous = $this->runs->findPreviousSnapshot(jobId: $jobId, schemaName: $slug);
+	private function snapshotSchema(PendingExportRun $pending, array $schema): void {
+		['slug' => $slug, 'columns' => $columns] = $schema;
+		$previous = $this->runs->findPreviousSnapshot(jobId: $pending->jobId(), schemaName: $slug);
 		$changes = $this->evolution->compareToSnapshot(current: $columns, previous: $previous);
 
 		if ($changes !== []) {
@@ -331,7 +329,7 @@ class ExportExecutionService implements ExportExecutionServiceInterface {
 		}
 
 		$this->runs->createSnapshot(
-			runId: $runId,
+			runId: $pending->runId(),
 			schemaName: $slug,
 			columnDefinitions: $columns,
 			comparedToPrevious: $changes

@@ -243,18 +243,29 @@ class LogiusConnector implements LogiusConnectorInterface {
 	public function sendMessage(array $message, string $tenantPkiCert, string $tenantPkiKey): array {
 		$this->validateOutboundPayload(message: $message);
 		$body = $this->outboundBody(message: $message);
-
-		$baseUrl = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			self::CONFIG_BASE_URL,
-			self::DEFAULT_BASE_URL
-		);
-		$post = new LogiusPost(endpoint: rtrim($baseUrl, '/') . '/messages', body: $body);
+		$post = $this->messagePost(body: $body);
 
 		$signature = $this->signRequest(body: $body, pkiCertPem: $tenantPkiCert, pkiKeyPem: $tenantPkiKey);
 		$response = $this->postMessage(post: $post, headers: $this->messageHeaders(body: $body, signature: $signature));
 		return $this->receiptOf(raw: $this->decodeJson(response: $response));
 	}//end sendMessage()
+
+	/**
+	 * The POST of a message body to the configured Logius messages endpoint.
+	 *
+	 * @param array<string, mixed> $body The message body.
+	 *
+	 * @return LogiusPost
+	 */
+	private function messagePost(array $body): LogiusPost {
+		$baseUrl = $this->appConfig->getValueString(
+			AppIdentity::APP_ID,
+			self::CONFIG_BASE_URL,
+			self::DEFAULT_BASE_URL
+		);
+
+		return new LogiusPost(endpoint: rtrim($baseUrl, '/') . '/messages', body: $body);
+	}//end messagePost()
 
 	/**
 	 * The BBK 1.7 message body of a validated message.

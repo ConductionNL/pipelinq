@@ -42,7 +42,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
-use OCA\Pipelinq\Util\WinChanceWeightedValue;
+use OCA\Pipelinq\Service\Support\WinChanceWeightedValue;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -489,7 +489,7 @@ class AnalyticsService implements AnalyticsServiceInterface {
 		$buckets = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			$key = $this->bucketKey(timestamp: $timestamp, startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			$key = $this->bucketKey(timestamp: $timestamp, window: [$startTs, $nowTs, $bucketSize]);
 			if ($key === null) {
 				continue;
 			}
@@ -1069,13 +1069,12 @@ class AnalyticsService implements AnalyticsServiceInterface {
 	 * @return array<string, float> The buckets.
 	 */
 	private function addPosRevenue(array $buckets, array $pos, array $window): array {
-		[$startTs, $nowTs, $bucketSize] = $window;
 		foreach ($pos as $txn) {
 			if ($this->isRevenueTransaction(txn: $txn) === false) {
 				continue;
 			}
 
-			$key = $this->bucketKey(timestamp: $this->posRevenueTimestamp(txn: $txn), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			$key = $this->bucketKey(timestamp: $this->posRevenueTimestamp(txn: $txn), window: $window);
 			if ($key !== null) {
 				$buckets[$key] = (($buckets[$key] ?? 0.0) + (float)($txn['total'] ?? 0));
 			}
@@ -1094,13 +1093,12 @@ class AnalyticsService implements AnalyticsServiceInterface {
 	 * @return array<string, float> The buckets.
 	 */
 	private function addWonLeadRevenue(array $buckets, array $leads, array $window): array {
-		[$startTs, $nowTs, $bucketSize] = $window;
 		foreach ($leads as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'won') {
 				continue;
 			}
 
-			$key = $this->bucketKey(timestamp: $this->leadCloseTimestamp(lead: $lead), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			$key = $this->bucketKey(timestamp: $this->leadCloseTimestamp(lead: $lead), window: $window);
 			if ($key !== null) {
 				$buckets[$key] = (($buckets[$key] ?? 0.0) + (float)($lead['value'] ?? 0));
 			}
@@ -1425,13 +1423,12 @@ class AnalyticsService implements AnalyticsServiceInterface {
 	 * Bucket key (`Y-m-d`) for a timestamp, or null when out of range.
 	 *
 	 * @param int|null $timestamp Unix timestamp.
-	 * @param int $startTs Window start.
-	 * @param int $nowTs Window end.
-	 * @param int $bucketSize Bucket width in seconds.
+	 * @param array{0: int, 1: int, 2: int} $window The window start, window end and bucket width in seconds.
 	 *
 	 * @return string|null
 	 */
-	private function bucketKey(?int $timestamp, int $startTs, int $nowTs, int $bucketSize): ?string {
+	private function bucketKey(?int $timestamp, array $window): ?string {
+		[$startTs, $nowTs, $bucketSize] = $window;
 		if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
 			return null;
 		}

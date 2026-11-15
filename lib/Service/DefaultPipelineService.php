@@ -127,13 +127,12 @@ class DefaultPipelineService {
 			return;
 		}
 
-		$this->saveDefaultPipelines(objectService: $objectService, registerId: $registerId, schemaId: $schemaId);
+		$this->saveDefaultPipelines(registerId: $registerId, schemaId: $schemaId);
 	}//end createWhenEmpty()
 
 	/**
 	 * Save the sales pipeline and the service requests pipeline.
 	 *
-	 * @param object $objectService The object service.
 	 * @param string $registerId The register ID.
 	 * @param string $schemaId The pipeline schema ID.
 	 *
@@ -141,15 +140,16 @@ class DefaultPipelineService {
 	 *
 	 * @spec openspec/specs/pipeline/spec.md
 	 */
-	private function saveDefaultPipelines(object $objectService, string $registerId, string $schemaId): void {
+	private function saveDefaultPipelines(string $registerId, string $schemaId): void {
+		$target = [$registerId, $schemaId];
 		$viewId = $this->defaultViewId();
 		$currency = $this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR');
 
 		$sales = $this->stageData->getSalesPipelineData(viewId: $viewId, currency: $currency);
-		$this->savePipeline(objectService: $objectService, registerId: $registerId, schemaId: $schemaId, data: $sales);
+		$this->savePipeline(target: $target, data: $sales);
 
 		$serviceRequests = $this->stageData->getServiceRequestsPipelineData(viewId: $viewId);
-		$this->savePipeline(objectService: $objectService, registerId: $registerId, schemaId: $schemaId, data: $serviceRequests);
+		$this->savePipeline(target: $target, data: $serviceRequests);
 	}//end saveDefaultPipelines()
 
 	/**
@@ -173,19 +173,17 @@ class DefaultPipelineService {
 	/**
 	 * Save a pipeline object.
 	 *
-	 * @param object $objectService The object service.
-	 * @param string $registerId The register ID.
-	 * @param string $schemaId The pipeline schema ID.
-	 * @param array $data The pipeline data.
+	 * @param array{0: string, 1: string} $target The register ID and the pipeline schema ID.
+	 * @param array                       $data   The pipeline data.
 	 *
 	 * @return void
 	 */
-	private function savePipeline(object $objectService, string $registerId, string $schemaId, array $data): void {
-		$objectService->saveObject(
+	private function savePipeline(array $target, array $data): void {
+		$this->getObjectService()->saveObject(
 			$data,
 			[],
-			$registerId,
-			$schemaId,
+			$target[0],
+			$target[1],
 			null
 		);
 

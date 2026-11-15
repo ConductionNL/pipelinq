@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Merge;
 
 use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
-use OCA\Pipelinq\Util\WritableAddressBook;
+use OCA\Pipelinq\Service\Support\WritableAddressBook;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IL10N;
@@ -170,35 +170,39 @@ class MergedAwayCard implements MergedAwayCardInterface {
 			return false;
 		}
 
-		return $this->writeNote(book: $book, card: $card, contactsUid: $contactsUid, rewrite: $rewrite);
-	}//end rewriteNoteIn()
-
-	/**
-	 * Write the rewritten note on a writable card, unless it is unchanged.
-	 *
-	 * @param IAddressBook         $book        The address book.
-	 * @param array<string, mixed> $card        The card.
-	 * @param string               $contactsUid The card's UID.
-	 * @param \Closure             $rewrite     Maps the current note to the new one.
-	 *
-	 * @return bool True when the card holds the new note.
-	 */
-	private function writeNote(IAddressBook $book, array $card, string $contactsUid, \Closure $rewrite): bool {
 		$note = self::firstValue(value: ($card['NOTE'] ?? ''));
 		$newNote = $rewrite($note);
 		if ($newNote === $note) {
 			return true;
 		}
 
+		return $this->writeCard(
+			book: $book,
+			properties: ['URI' => (string)$card['URI'], 'UID' => $contactsUid, 'NOTE' => $newNote]
+		);
+	}//end rewriteNoteIn()
+
+	/**
+	 * Write a card's URI, UID and new note on a writable address book.
+	 *
+	 * @param IAddressBook          $book       The address book.
+	 * @param array<string, string> $properties The card's URI, UID and NOTE.
+	 *
+	 * @return bool True when the card holds the new note.
+	 */
+	private function writeCard(IAddressBook $book, array $properties): bool {
 		try {
-			$book->createOrUpdate(['URI' => (string)$card['URI'], 'UID' => $contactsUid, 'NOTE' => $newNote]);
+			$book->createOrUpdate($properties);
 		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq merge: the card of a merged record could not be written', ['uid' => $contactsUid, 'error' => $e->getMessage()]);
+			$this->logger->warning(
+				'Pipelinq merge: the card of a merged record could not be written',
+				['uid' => $properties['UID'], 'error' => $e->getMessage()]
+			);
 			return false;
 		}
 
 		return true;
-	}//end writeNote()
+	}//end writeCard()
 
 	/**
 	 * The card with exactly this UID in an address book.
