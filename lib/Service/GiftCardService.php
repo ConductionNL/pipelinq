@@ -96,50 +96,41 @@ class GiftCardService implements GiftCardServiceInterface {
 			throw new RuntimeException('Initial balance must be positive.');
 		}
 
-		$issue = new GiftCardIssue(
-			programmeId: $programmeId, initialBalance: $initialBalance, expiryDays: $expiryDays, channel: $channel, issuedIn: $issuedIn
-		);
-		[$card, $pin] = $this->newCard(issue: $issue);
-		$saved = $this->persistCard(payload: $card, uuid: null);
-		$giftCardId = (string)$this->extractUuid(object: $saved);
-		$entry = new GiftCardLedgerEntry(giftCardId: $giftCardId, type: 'issue', amount: $initialBalance, balanceAfter: $initialBalance);
-		$this->logTransaction(entry: $entry, posTransactionId: null);
-
-		return ['card' => $saved, 'pin' => $pin];
-	}//end issueGiftCard()
-
-	/**
-	 * Build the payload of a new card with a unique serial and a hashed PIN.
-	 *
-	 * @param GiftCardIssue $issue The issuance request.
-	 *
-	 * @return array{0: array<string, mixed>, 1: string} The card payload and its plaintext PIN.
-	 */
-	private function newCard(GiftCardIssue $issue): array {
 		$serial = $this->generateUniqueSerial();
 		$pin = $this->generatePin();
 		$hash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => 10]);
 
 		$tz = new DateTimeZone('UTC');
 		$now = (new DateTimeImmutable('now', $tz))->format('c');
-		$exp = (new DateTimeImmutable("+{$issue->expiryDays} days", $tz))->format('c');
+		$exp = (new DateTimeImmutable("+{$expiryDays} days", $tz))->format('c');
 
 		$card = [
-			'programmeId' => $issue->programmeId,
+			'programmeId' => $programmeId,
 			'serial' => $serial,
 			'pin' => $hash,
-			'initialBalance' => $issue->initialBalance,
-			'currentBalance' => $issue->initialBalance,
+			'initialBalance' => $initialBalance,
+			'currentBalance' => $initialBalance,
 			'currency' => 'EUR',
 			'status' => 'issued',
 			'issuedOn' => $now,
-			'issuedIn' => $issue->issuedIn,
+			'issuedIn' => $issuedIn,
 			'expiresOn' => $exp,
-			'channel' => $issue->channel,
+			'channel' => $channel,
 		];
 
-		return [$card, $pin];
-	}//end newCard()
+		$saved = $this->persistCard(payload: $card, uuid: null);
+
+		$this->logTransaction(
+			giftCardId: (string)$this->extractUuid(object: $saved),
+			type: 'issue',
+			amount: $initialBalance,
+			balanceAfter: $initialBalance,
+			posTransactionId: null,
+			processedBy: 'gift-card-service'
+		);
+
+		return ['card' => $saved, 'pin' => $pin];
+	}//end issueGiftCard()
 
 	/**
 	 * Activate a card (issued → active) after the issuing POS transaction completes.
@@ -389,10 +380,12 @@ class GiftCardService implements GiftCardServiceInterface {
 	 */
 	private function recordDebit(GiftCardRedemption $redemption, GiftCardDebit $debit): void {
 		$this->logTransaction(
-			entry: new GiftCardLedgerEntry(
-				giftCardId: $redemption->giftCardId, type: $debit->type, amount: $debit->applied, balanceAfter: $debit->balanceAfter
-			),
-			posTransactionId: $redemption->posTransactionId
+			giftCardId: $redemption->giftCardId,
+			type: $debit->type,
+			amount: $debit->applied,
+			balanceAfter: $debit->balanceAfter,
+			posTransactionId: $redemption->posTransactionId,
+			processedBy: 'gift-card-service'
 		);
 	}//end recordDebit()
 
@@ -553,8 +546,12 @@ class GiftCardService implements GiftCardServiceInterface {
 		$saved = $this->persistCard(payload: $card, uuid: $giftCardId);
 
 		$this->logTransaction(
-			entry: new GiftCardLedgerEntry(giftCardId: $giftCardId, type: 'refund', amount: $amount, balanceAfter: $card['currentBalance']),
-			posTransactionId: $posTransactionId
+			giftCardId: $giftCardId,
+			type: 'refund',
+			amount: $amount,
+			balanceAfter: $card['currentBalance'],
+			posTransactionId: $posTransactionId,
+			processedBy: 'gift-card-service'
 		);
 
 		return $saved;
@@ -579,8 +576,12 @@ class GiftCardService implements GiftCardServiceInterface {
 		$saved = $this->persistCard(payload: $card, uuid: $giftCardId);
 
 		$this->logTransaction(
-			entry: new GiftCardLedgerEntry(giftCardId: $giftCardId, type: 'block', amount: 0.0, balanceAfter: (float)($card['currentBalance'] ?? 0)),
-			posTransactionId: null
+			giftCardId: $giftCardId,
+			type: 'block',
+			amount: 0.0,
+			balanceAfter: (float)($card['currentBalance'] ?? 0),
+			posTransactionId: null,
+			processedBy: 'gift-card-service'
 		);
 
 		$this->logger->info(
@@ -849,25 +850,36 @@ class GiftCardService implements GiftCardServiceInterface {
 	/**
 	 * Append a GiftCardTransaction ledger entry (immutable).
 	 *
-	 * @param GiftCardLedgerEntry $entry            The card movement.
-	 * @param ?string             $posTransactionId The POS transaction id.
+	 * @param string $giftCardId The card UUID.
+	 * @param string $type The transaction type.
+	 * @param float $amount The movement amount.
+	 * @param float $balanceAfter The balance after the movement.
+	 * @param ?string $posTransactionId The POS transaction id.
+	 * @param string $processedBy Processor identifier.
 	 *
 	 * @return void
 	 */
-	private function logTransaction(GiftCardLedgerEntry $entry, ?string $posTransactionId): void {
+	private function logTransaction(
+		string $giftCardId,
+		string $type,
+		float $amount,
+		float $balanceAfter,
+		?string $posTransactionId,
+		string $processedBy,
+	): void {
 		[$register, $schema] = $this->config(schemaKey: 'giftCardTransaction_schema');
 		if ($register === '' || $schema === '') {
 			return;
 		}
 
 		$payload = [
-			'giftCardId' => $entry->giftCardId,
-			'type' => $entry->type,
-			'amount' => $entry->amount,
-			'balanceAfter' => $entry->balanceAfter,
+			'giftCardId' => $giftCardId,
+			'type' => $type,
+			'amount' => $amount,
+			'balanceAfter' => $balanceAfter,
 			'timestamp' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c'),
 			'posTransactionId' => $posTransactionId,
-			'processedBy' => 'gift-card-service',
+			'processedBy' => $processedBy,
 		];
 
 		try {
@@ -878,7 +890,7 @@ class GiftCardService implements GiftCardServiceInterface {
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: gift card transaction log failed',
-				['giftCardId' => $entry->giftCardId, 'type' => $entry->type, 'exception' => $e->getMessage()]
+				['giftCardId' => $giftCardId, 'type' => $type, 'exception' => $e->getMessage()]
 			);
 		}
 	}//end logTransaction()
