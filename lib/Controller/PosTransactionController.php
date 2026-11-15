@@ -85,13 +85,8 @@ class PosTransactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function confirm(string $id): JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		return $this->run(
-			action: fn (): array => $this->service->confirmTransaction(id: $id, userId: $uid),
+		return $this->runAsUser(
+			action: fn (string $uid): array => $this->service->confirmTransaction(id: $id, userId: $uid),
 			label: 'confirm'
 		);
 	}//end confirm()
@@ -107,13 +102,8 @@ class PosTransactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function settle(string $id): JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		return $this->run(
-			action: fn (): array => $this->service->settleTransaction(id: $id, userId: $uid),
+		return $this->runAsUser(
+			action: fn (string $uid): array => $this->service->settleTransaction(id: $id, userId: $uid),
 			label: 'settle'
 		);
 	}//end settle()
@@ -152,13 +142,8 @@ class PosTransactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function park(string $id): JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		return $this->run(
-			action: fn (): array => $this->service->parkTransaction(id: $id, userId: $uid),
+		return $this->runAsUser(
+			action: fn (string $uid): array => $this->service->parkTransaction(id: $id, userId: $uid),
 			label: 'park'
 		);
 	}//end park()
@@ -174,13 +159,8 @@ class PosTransactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function resume(string $id): JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		return $this->run(
-			action: fn (): array => $this->service->resumeTransaction(id: $id, userId: $uid),
+		return $this->runAsUser(
+			action: fn (string $uid): array => $this->service->resumeTransaction(id: $id, userId: $uid),
 			label: 'resume'
 		);
 	}//end resume()
