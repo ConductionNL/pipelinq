@@ -1780,16 +1780,13 @@ class BlastService implements BlastServiceInterface {
 	 * @return array<int, array<string, mixed>> Matching rows.
 	 */
 	private function loadDeliveries(array $filters, ?ListPage $page = null): array {
-		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(schemaSlug: $schema);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $objectService] = $target;
 
 		$config = ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)] + ($page?->window() ?? []);
 		$query = new ObjectQuery(config: $config, failure: 'BlastService.loadDeliveries: findAll failed', logContext: ['filters' => $filters]);
@@ -1806,16 +1803,13 @@ class BlastService implements BlastServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-1/tasks.md#task-5
 	 */
 	private function countDeliveries(array $filters): int {
-		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(schemaSlug: $schema);
+		if ($target === null) {
 			return 0;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return 0;
-		}
+		[$register, $objectService] = $target;
 
 		try {
 			return $objectService->count(
