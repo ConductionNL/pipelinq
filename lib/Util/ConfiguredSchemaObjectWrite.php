@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Util;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use Throwable;
 
 /**
  * Saves one object through the container's ObjectService against the
@@ -37,6 +36,7 @@ use Throwable;
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait ConfiguredSchemaObjectWrite {
+	use ContainerObjectSave;
 
 	/**
 	 * Persist the mutated object data back to OpenRegister.
@@ -55,20 +55,6 @@ trait ConfiguredSchemaObjectWrite {
 			return;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				self::PERSIST_FAILURE_MESSAGE,
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
+		$this->saveObjectData(register: $register, schema: $schema, uuid: $uuid, data: $data);
 	}//end persist()
 }//end trait

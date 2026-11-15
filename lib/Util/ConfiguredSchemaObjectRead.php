@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Util;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use Throwable;
 
 /**
  * Reads one object from the container's ObjectService against the configured
@@ -36,6 +35,7 @@ use Throwable;
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait ConfiguredSchemaObjectRead {
+	use ContainerObjectFind;
 
 	/**
 	 * Re-read an object's current data.
@@ -53,20 +53,6 @@ trait ConfiguredSchemaObjectRead {
 			return null;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				self::FETCH_FAILURE_MESSAGE,
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
+		return $this->findObjectData(register: $register, schema: $schema, uuid: $uuid);
 	}//end fetch()
 }//end trait

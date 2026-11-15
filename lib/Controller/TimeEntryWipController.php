@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectFind;
+use OCA\Pipelinq\Util\ContainerObjectSave;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -46,6 +48,23 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
  */
 class TimeEntryWipController extends Controller {
+	use ContainerObjectFind;
+	use ContainerObjectSave;
+
+	/**
+	 * Log line when reading the object fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to load time entry for WIP retry';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist time entry WIP retry status';
+
 	/**
 	 * Constructor.
 	 *
@@ -90,7 +109,7 @@ class TimeEntryWipController extends Controller {
 		}
 
 		[$register, $schema] = $target;
-		$entry = $this->fetchEntry(register: $register, schema: $schema, uuid: $uuid);
+		$entry = $this->findObjectData(register: $register, schema: $schema, uuid: $uuid);
 		if ($entry === null) {
 			return new JSONResponse(['error' => 'Time entry not found.'], 404);
 		}
@@ -139,7 +158,7 @@ class TimeEntryWipController extends Controller {
 
 		// Reset to pending before re-dispatch (REQ-WIP-003 manual retry).
 		$entry['wipSyncStatus'] = 'pending';
-		$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
+		$this->saveObjectData(register: $register, schema: $schema, uuid: $uuid, data: $entry);
 
 		if ($this->dispatchEntry(entry: $entry) === true) {
 			return $this->markSynced(register: $register, schema: $schema, uuid: $uuid, entry: $entry);
@@ -202,7 +221,7 @@ class TimeEntryWipController extends Controller {
 	private function markSynced(string $register, string $schema, string $uuid, array $entry): JSONResponse {
 		$entry['wipSyncStatus'] = 'synced';
 		$entry['wipSyncedAt'] = $this->wipService->now();
-		$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
+		$this->saveObjectData(register: $register, schema: $schema, uuid: $uuid, data: $entry);
 
 		return new JSONResponse(
 			[
@@ -227,7 +246,7 @@ class TimeEntryWipController extends Controller {
 	 */
 	private function markFailed(string $register, string $schema, string $uuid, array $entry): JSONResponse {
 		$entry['wipSyncStatus'] = 'failed';
-		$this->persist(register: $register, schema: $schema, uuid: $uuid, data: $entry);
+		$this->saveObjectData(register: $register, schema: $schema, uuid: $uuid, data: $entry);
 
 		return new JSONResponse(
 			[
@@ -238,59 +257,4 @@ class TimeEntryWipController extends Controller {
 			502
 		);
 	}//end markFailed()
-
-	/**
-	 * Fetch a time entry's data by UUID.
-	 *
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param string $uuid The time entry UUID.
-	 *
-	 * @return array<string, mixed>|null The time entry data, or null when not found.
-	 */
-	private function fetchEntry(string $register, string $schema, string $uuid): ?array {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to load time entry for WIP retry',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetchEntry()
-
-	/**
-	 * Persist the mutated time entry data back to OpenRegister.
-	 *
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param string $uuid The time entry UUID.
-	 * @param array<string, mixed> $data The mutated time entry data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $register, string $schema, string $uuid, array $data): void {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist time entry WIP retry status',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class
