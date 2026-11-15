@@ -236,7 +236,7 @@ class LeadRotationService implements LeadRotationServiceInterface {
 			return [0, ''];
 		}
 
-		$leads = $this->findAssignedLeads(userId: $userId, register: $register, schema: $schema);
+		$leads = $this->findAssignedLeads(filters: ['register' => $register, 'schema' => $schema, 'assignee' => $userId]);
 		if ($leads === null) {
 			return [0, ''];
 		}
@@ -247,24 +247,22 @@ class LeadRotationService implements LeadRotationServiceInterface {
 	/**
 	 * The leads assigned to a colleague, or null (logged) when they cannot be read.
 	 *
-	 * @param string $userId   The colleague.
-	 * @param string $register The register.
-	 * @param string $schema   The lead schema.
+	 * @param array<string, string> $filters The register, the lead schema and the colleague as `assignee`.
 	 *
 	 * @return iterable<mixed>|null
 	 */
-	private function findAssignedLeads(string $userId, string $register, string $schema): iterable|null {
+	private function findAssignedLeads(array $filters): iterable|null {
 		try {
 			return $this->objectService->findAll(
 				[
-					'filters' => ['register' => $register, 'schema' => $schema, 'assignee' => $userId],
+					'filters' => $filters,
 					'limit' => self::LEAD_LIMIT,
 				]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'LeadRotationService: failed to count recent leads',
-				['exception' => $e->getMessage(), 'userId' => $userId]
+				['exception' => $e->getMessage(), 'userId' => $filters['assignee']]
 			);
 			return null;
 		}
