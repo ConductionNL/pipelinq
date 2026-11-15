@@ -52,14 +52,29 @@ trait AdminNotice {
 			return;
 		}
 
-		foreach ($adminGroup->getUsers() as $user) {
+		$this->noticeEach(users: $adminGroup->getUsers(), notice: ['subject' => $subject, 'parameters' => $parameters, 'about' => $about]);
+	}//end notifyAdmins()
+
+	/**
+	 * Send one notification to each user.
+	 *
+	 * @param array<int, \OCP\IUser>                                                       $users  The users.
+	 * @param array{subject: string, parameters: array<string, mixed>, about: NoticedObject} $notice The subject, its parameters and
+	 *   the object the notice is about.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function noticeEach(array $users, array $notice): void {
+		foreach ($users as $user) {
 			$this->notificationService->sendNotification(
 				userId: $user->getUID(),
-				subject: $subject,
-				parameters: $parameters,
-				objectType: $about->objectType,
-				objectId: $about->objectId
+				subject: $notice['subject'],
+				parameters: $notice['parameters'],
+				objectType: $notice['about']->objectType,
+				objectId: $notice['about']->objectId
 			);
 		}
-	}//end notifyAdmins()
+	}//end noticeEach()
 }//end trait
