@@ -200,7 +200,18 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 */
 	public function execute(array $items, array $config, array $context): array {
 		unset($context);
+		return $this->provisionAll(items: $items, config: $config);
+	}//end execute()
 
+	/**
+	 * Validate the configuration, then provision every item.
+	 *
+	 * @param array<int, array<string, mixed>> $items  The flow items.
+	 * @param array<string, mixed>             $config The node configuration.
+	 *
+	 * @return array<int, array<string, mixed>> The provisioned items.
+	 */
+	private function provisionAll(array $items, array $config): array {
 		// `validateConfig()` only runs on SAVE. A flow imported from an
 		// `x-openregister-flows` declaration reaches execute() unvalidated, so
 		// the configuration is checked again here rather than assumed.
@@ -212,7 +223,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 		}
 
 		return $out;
-	}//end execute()
+	}//end provisionAll()
 
 	/**
 	 * Provision the identity of one item and write its UID to the output field.

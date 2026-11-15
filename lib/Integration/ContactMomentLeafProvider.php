@@ -108,20 +108,31 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
-		$hostId = trim($hostId);
+		return $this->listed(hostId: trim($hostId), page: ['limit' => max(1, min($limit, self::MAX_LIMIT)), 'partyId' => $partyId]);
+	}//end list()
+
+	/**
+	 * The newest contact moments on a host, with the party's indicators.
+	 *
+	 * @param string                              $hostId The trimmed host id.
+	 * @param array{limit: int, partyId: string} $page   The capped page size and the party whose indicators to add.
+	 *
+	 * @return array<string, mixed> `status` plus either the moments and indicators, or `error`.
+	 */
+	private function listed(string $hostId, array $page): array {
 		$refusal = $this->hostRefusal(hostId: $hostId);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$moments = $this->newestMoments(hostId: $hostId, limit: max(1, min($limit, self::MAX_LIMIT)));
+		$moments = $this->newestMoments(hostId: $hostId, limit: $page['limit']);
 
 		return [
 			'status' => 200,
 			'contactMoments' => $moments,
-			'indicators' => $this->indicatorsOf(partyId: $partyId),
+			'indicators' => $this->indicatorsOf(partyId: $page['partyId']),
 		];
-	}//end list()
+	}//end listed()
 
 	/**
 	 * The party's standing indicators; none when no party is named.
