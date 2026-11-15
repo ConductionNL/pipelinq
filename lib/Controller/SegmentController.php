@@ -324,13 +324,7 @@ class SegmentController extends Controller {
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectSegmentBody(): array {
-		$rules = $this->request->getParam('rules');
-		if (is_string($rules) === true) {
-			$decoded = json_decode($rules, true);
-			if (is_array($decoded) === true) {
-				$rules = $decoded;
-			}
-		}
+		$rules = $this->requestedRules();
 
 		return [
 			'name' => (string)$this->request->getParam('name', ''),
@@ -348,6 +342,22 @@ class SegmentController extends Controller {
 	 * @return array<string, mixed> The rule tree, or an empty array when absent/malformed.
 	 */
 	private function collectRulesBody(): array {
+		$rules = $this->requestedRules();
+
+		if (is_array($rules) === true) {
+			return $rules;
+		}
+
+		return [];
+	}//end collectRulesBody()
+
+	/**
+	 * The `rules` param, decoded when it arrives as a JSON-encoded string
+	 * that holds an object or array; otherwise as sent.
+	 *
+	 * @return mixed
+	 */
+	private function requestedRules(): mixed {
 		$rules = $this->request->getParam('rules');
 		if (is_string($rules) === true) {
 			$decoded = json_decode($rules, true);
@@ -356,12 +366,8 @@ class SegmentController extends Controller {
 			}
 		}
 
-		if (is_array($rules) === true) {
-			return $rules;
-		}
-
-		return [];
-	}//end collectRulesBody()
+		return $rules;
+	}//end requestedRules()
 
 	/**
 	 * Render the update result.

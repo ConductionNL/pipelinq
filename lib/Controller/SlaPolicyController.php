@@ -86,19 +86,12 @@ class SlaPolicyController extends Controller {
 		$payload = $this->request->getParams();
 		unset($payload['_route']);
 
-		$justification = (string)($payload['justification'] ?? '');
-		if (trim($justification) === '') {
-			return new JSONResponse(
-				['error' => 'justificationRequired', 'message' => 'Justification is required to modify SLA policies'],
-				Http::STATUS_BAD_REQUEST
-			);
+		$target = $this->changeTarget(payload: $payload);
+		if ($target instanceof JSONResponse) {
+			return $target;
 		}
 
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
-		if ($register === '' || $schema === '') {
-			return new JSONResponse(['error' => 'slaRegisterNotConfigured'], Http::STATUS_SERVICE_UNAVAILABLE);
-		}
+		[$register, $schema] = $target;
 
 		try {
 			$objectService = $this->container->get(ObjectService::class);
@@ -133,6 +126,24 @@ class SlaPolicyController extends Controller {
 		$payload = $this->request->getParams();
 		unset($payload['_route'], $payload['id']);
 
+		$target = $this->changeTarget(payload: $payload);
+		if ($target instanceof JSONResponse) {
+			return $target;
+		}
+
+		return $this->savePolicy(change: new SlaPolicyChange(payload: $payload, register: $target[0], schema: $target[1], id: $id));
+	}//end update()
+
+	/**
+	 * The configured register and schema for a justified change, or the 400
+	 * for a change without a justification or the 503 when SLA storage is not
+	 * configured.
+	 *
+	 * @param array<string, mixed> $payload The request payload.
+	 *
+	 * @return array{0: string, 1: string}|JSONResponse
+	 */
+	private function changeTarget(array $payload): array|JSONResponse {
 		$justification = (string)($payload['justification'] ?? '');
 		if (trim($justification) === '') {
 			return new JSONResponse(
@@ -146,8 +157,8 @@ class SlaPolicyController extends Controller {
 			return new JSONResponse(['error' => 'slaRegisterNotConfigured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		return $this->savePolicy(change: new SlaPolicyChange(payload: $payload, register: $target[0], schema: $target[1], id: $id));
-	}//end update()
+		return $target;
+	}//end changeTarget()
 
 	/**
 	 * The configured SLA register and policy schema, or null when either is missing.
