@@ -979,20 +979,26 @@ class PortalController extends Controller {
 	 */
 	public function signLink(string $bookingId, string $action, string $customerId = ''): string {
 		$issuedAt = $this->time->getTime();
-		$expiresAt = ($issuedAt + (self::LINK_TTL_DAYS * 24 * 3600));
 
-		$payload = [
-			'bookingId' => $bookingId,
-			'action' => $action,
-			'customerId' => $customerId,
-			'issuedAt' => $issuedAt,
-			'expiresAt' => $expiresAt,
-		];
+		return $this->signedToken(
+			payload: ['bookingId' => $bookingId, 'action' => $action, 'customerId' => $customerId, 'issuedAt' => $issuedAt]
+		);
+	}//end signLink()
+
+	/**
+	 * A payload, stamped with its expiry after the configured TTL, as a signed dotted token.
+	 *
+	 * @param array{bookingId: string, action: string, customerId: string, issuedAt: int} $payload The link payload.
+	 *
+	 * @return string The dotted `<payload>.<signature>` token.
+	 */
+	private function signedToken(array $payload): string {
+		$payload['expiresAt'] = ($payload['issuedAt'] + (self::LINK_TTL_DAYS * 24 * 3600));
 
 		$encoded = $this->base64UrlEncode(data: (string)json_encode($payload));
 		$signature = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
 		return ($encoded . '.' . $signature);
-	}//end signLink()
+	}//end signedToken()
 
 	/**
 	 * Validate a signed link issued by {@see signLink()}.
