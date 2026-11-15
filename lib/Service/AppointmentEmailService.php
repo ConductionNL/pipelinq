@@ -174,11 +174,7 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function sendConfirmation(string $bookingId): bool {
-		if ($bookingId === '') {
-			return false;
-		}
-
-		$context = $this->loadContext(bookingId: $bookingId);
+		$context = $this->contextIfNamed(bookingId: $bookingId);
 		if ($context === null) {
 			return false;
 		}
@@ -221,11 +217,7 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function sendReminder(string $bookingId): bool {
-		if ($bookingId === '') {
-			return false;
-		}
-
-		$context = $this->loadContext(bookingId: $bookingId);
+		$context = $this->contextIfNamed(bookingId: $bookingId);
 		if ($context === null) {
 			return false;
 		}
@@ -584,6 +576,21 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 		$this->stamp(bookingId: (string)$context['bookingId'], field: 'mailNotSentAt', extra: ['mailNotSentReason' => $decision['code']]);
 		return $decision;
 	}//end askIntegriq()
+
+	/**
+	 * The composition context of a booking, or null when the id is empty or the context cannot be loaded.
+	 *
+	 * @param string $bookingId The Booking UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function contextIfNamed(string $bookingId): ?array {
+		if ($bookingId === '') {
+			return null;
+		}
+
+		return $this->loadContext(bookingId: $bookingId);
+	}//end contextIfNamed()
 
 	/**
 	 * Load the composition context (booking + service + customer + links).
