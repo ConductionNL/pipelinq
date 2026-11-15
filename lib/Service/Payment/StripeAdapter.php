@@ -111,6 +111,17 @@ class StripeAdapter extends AbstractPaymentAdapter {
 			return $this->failedInitiate(message: 'Invalid amount');
 		}
 
+		return $this->createIntent(payment: $payment);
+	}//end initiate()
+
+	/**
+	 * Create the PaymentIntent for a valid payment and answer pending, or failed with Stripe's error.
+	 *
+	 * @param PspPayment $payment The payment.
+	 *
+	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
+	 */
+	private function createIntent(PspPayment $payment): array {
 		$body = http_build_query($this->intentForm(payment: $payment));
 		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/payment_intents', context: 'initiate failed'), body: $body);
 		$error = $this->replyError(response: $response);
@@ -119,7 +130,7 @@ class StripeAdapter extends AbstractPaymentAdapter {
 		}
 
 		return $this->pending(sessionId: $this->intentId(body: $response['body']), redirectUrl: null);
-	}//end initiate()
+	}//end createIntent()
 
 	/**
 	 * The PaymentIntent create form.
