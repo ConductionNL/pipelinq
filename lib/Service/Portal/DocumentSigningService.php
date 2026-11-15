@@ -85,19 +85,29 @@ class DocumentSigningService implements DocumentSigningServiceInterface {
 		string $accountId,
 		int $ttlMinutes = self::DEFAULT_TTL_MINUTES,
 	): array {
-		$issuedAt = $this->time->getTime();
-		$expiresAt = ($issuedAt + (max(1, $ttlMinutes) * 60));
-
-		$payload = [
-			'objectId' => $objectId,
-			'objectType' => $objectType,
-			'accountId' => $accountId,
-			'issuedAt' => $issuedAt,
-			'expiresAt' => $expiresAt,
-		];
-
-		return $this->signedUrl(payload: $payload);
+		return $this->signedUrl(
+			payload: $this->stamped(
+				subject: ['objectId' => $objectId, 'objectType' => $objectType, 'accountId' => $accountId],
+				ttlMinutes: $ttlMinutes
+			)
+		);
 	}//end generateUrl()
+
+	/**
+	 * The token payload: the object and account, issued now and expiring after the TTL.
+	 *
+	 * @param array{objectId: string, objectType: string, accountId: string} $subject    The object and the account.
+	 * @param int                                                            $ttlMinutes The TTL in minutes.
+	 *
+	 * @return array{objectId: string, objectType: string, accountId: string, issuedAt: int, expiresAt: int}
+	 */
+	private function stamped(array $subject, int $ttlMinutes): array {
+		$issuedAt = $this->time->getTime();
+		$subject['issuedAt'] = $issuedAt;
+		$subject['expiresAt'] = ($issuedAt + (max(1, $ttlMinutes) * 60));
+
+		return $subject;
+	}//end stamped()
 
 	/**
 	 * The signed token for a payload and its download path.

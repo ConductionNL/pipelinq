@@ -163,19 +163,10 @@ class WebhookProcessorJob extends TimedJob {
 	 */
 	private function processRow(object $objectService, mixed $raw): void {
 		$arr = $this->toArray(value: $raw);
-		$channel = (string)($arr['channel'] ?? '');
-		$providerId = (string)($arr['providerId'] ?? '');
-		$signature = (string)($arr['signature'] ?? '');
-		$body = (string)($arr['rawBody'] ?? '');
 		$id = $this->extractId(payload: $arr);
 
 		try {
-			$result = $this->dispatchChannel(
-				channel: $channel,
-				body: $body,
-				signature: $signature,
-				providerId: $providerId
-			);
+			$result = $this->dispatchChannel(row: $arr);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'WebhookProcessorJob.drain: processing failed',
@@ -211,14 +202,16 @@ class WebhookProcessorJob extends TimedJob {
 	/**
 	 * Dispatch a webhook to the adapter matching its channel.
 	 *
-	 * @param string $channel Channel identifier.
-	 * @param string $body Raw request body.
-	 * @param string $signature Provider signature header.
-	 * @param string $providerId Provider message identifier.
+	 * @param array<string, mixed> $row The queued webhook: `channel`, `rawBody`, `signature` and `providerId`.
 	 *
 	 * @return array<string, mixed> Adapter result (unknownChannel when unmatched).
 	 */
-	private function dispatchChannel(string $channel, string $body, string $signature, string $providerId): array {
+	private function dispatchChannel(array $row): array {
+		$channel = (string)($row['channel'] ?? '');
+		$providerId = (string)($row['providerId'] ?? '');
+		$signature = (string)($row['signature'] ?? '');
+		$body = (string)($row['rawBody'] ?? '');
+
 		if ($channel === 'whatsapp') {
 			return $this->whatsAppAdapter->handleInboundWebhook(
 				rawBody: $body,
