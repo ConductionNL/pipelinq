@@ -107,7 +107,7 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 		}
 
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(value: $row);
 			// Defence in depth — schema filter "active=true" should already
 			// remove inactive rows, but some OR backends don't honour

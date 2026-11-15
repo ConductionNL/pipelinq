@@ -335,7 +335,7 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 		}
 
 		$index = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(value: $row);
 			$externalId = (string)($arr['externalId'] ?? '');
 			$language = (string)($arr['language'] ?? 'nl');
