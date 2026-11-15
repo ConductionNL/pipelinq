@@ -36,6 +36,7 @@ use RuntimeException;
  * Error paths and edge cases of the party indicator service.
  *
  * @covers \OCA\Pipelinq\Service\PartyIndicatorService
+ * @uses \OCA\Pipelinq\Util\SerialisedEntity
  */
 class PartyIndicatorServiceCoverageTest extends TestCase {
 	/**

@@ -31,6 +31,7 @@ use Psr\Log\LoggerInterface;
  * Rows are read without RBAC up to the batch limit; a failed read logs and is [].
  *
  * @covers \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
+ * @uses \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
  */
 class ReadsSchemaRowsTest extends TestCase {
 
