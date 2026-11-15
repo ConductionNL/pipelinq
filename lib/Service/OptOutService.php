@@ -29,6 +29,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
+use OCA\Pipelinq\Util\BsnHashRows;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
@@ -48,6 +49,7 @@ use Throwable;
 class OptOutService implements OptOutServiceInterface {
 	use SerialisedToArray;
 	use InjectedObjectService;
+	use BsnHashRows;
 
 	/**
 	 * Constructor.
@@ -93,17 +95,7 @@ class OptOutService implements OptOutServiceInterface {
 		string $rawBsn,
 	): ?array {
 		try {
-			[$register, $schema] = $this->config();
-			$hash = BsnValidationService::hash($rawBsn);
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $hash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->rowsForBsn(rawBsn: $rawBsn);
 
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			foreach (($results ?? []) as $object) {

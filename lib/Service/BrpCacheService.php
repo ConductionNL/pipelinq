@@ -30,6 +30,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Util\BsnHashRows;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
@@ -45,6 +46,7 @@ use Throwable;
 class BrpCacheService implements BrpCacheServiceInterface {
 	use SerialisedToArray;
 	use InjectedObjectService;
+	use BsnHashRows;
 
 	/**
 	 * Default TTL in hours (24h per design.md).
@@ -80,7 +82,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 		string $rawBsn,
 	): ?array {
 		try {
-			return $this->latestUnexpired(results: $this->cachedRows(rawBsn: $rawBsn));
+			return $this->latestUnexpired(results: $this->rowsForBsn(rawBsn: $rawBsn));
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'BRP cache lookup failed',
@@ -89,29 +91,6 @@ class BrpCacheService implements BrpCacheServiceInterface {
 			return null;
 		}//end try
 	}//end get()
-
-	/**
-	 * The cached BrpPersoon rows for a raw BSN, looked up by its hash.
-	 *
-	 * @param string $rawBsn Raw BSN — hashed in-process only.
-	 *
-	 * @return mixed The findAll answer.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
-	 */
-	private function cachedRows(#[\SensitiveParameter] string $rawBsn): mixed {
-		[$register, $schema] = $this->config();
-		$hash = BsnValidationService::hash($rawBsn);
-		return $this->getObjectService()->findAll(
-			config: [
-				'filters' => [
-					'bsnHash' => $hash,
-					'register' => $register,
-					'schema' => $schema,
-				],
-			]
-		);
-	}//end cachedRows()
 
 	/**
 	 * The most recently fetched row whose retention has not passed, or null.
@@ -228,16 +207,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	): int {
 		try {
 			[$register, $schema] = $this->config();
-			$hash = BsnValidationService::hash($rawBsn);
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $hash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->rowsForBsn(rawBsn: $rawBsn);
 
 			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$expired = $now->modify('-1 second')->format(DATE_ATOM);
