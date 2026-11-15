@@ -56,14 +56,29 @@ trait ConfiguredObjectSave {
 			throw new RuntimeException($label.' schema is not configured.');
 		}
 
+		return $this->savedConfigured(ids: $ids, write: ['payload' => $payload, 'uuid' => $uuid]);
+	}//end saveConfigured()
+
+	/**
+	 * Save a payload into a configured register and schema.
+	 *
+	 * @param array{0: string, 1: string}                           $ids   The [register, schema] ids, both set.
+	 * @param array{payload: array<string, mixed>, uuid: ?string} $write The payload, and the object id or null to create.
+	 *
+	 * @return array<string, mixed> The saved row.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function savedConfigured(array $ids, array $write): array {
+		[$register, $schema] = $ids;
 		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
+			object: $write['payload'],
 			extend: [],
 			register: $register,
 			schema: $schema,
-			uuid: $uuid
+			uuid: $write['uuid']
 		);
 
 		return $this->toArray(value: $saved);
-	}//end saveConfigured()
+	}//end savedConfigured()
 }//end trait
