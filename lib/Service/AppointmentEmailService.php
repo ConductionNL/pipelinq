@@ -291,21 +291,10 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 		$notes = (string)($context['booking']['notes'] ?? '');
 		$price = $this->formatPrice(context: $context);
 
-		$greetingName = $customerName;
-		if ($greetingName === '') {
-			$greetingName = $this->l10n->t('klant');
-		}
-
-		$lines = [];
-		$lines[] = $this->l10n->t('Beste %s,', [$greetingName]);
-		$lines[] = '';
+		$lines = $this->greetingLines(customerName: $customerName);
 		$lines[] = $this->l10n->t('Uw afspraak is bevestigd.');
 		$lines[] = '';
-		$lines[] = $this->l10n->t('Dienst: %s', [$serviceName]);
-		if ($resourceName !== '') {
-			$lines[] = $this->l10n->t('Medewerker/locatie: %s', [$resourceName]);
-		}
-
+		array_push($lines, ...$this->serviceLines(serviceName: $serviceName, resourceName: $resourceName));
 		$lines[] = $this->l10n->t('Datum en tijd: %1$s tot %2$s', [$startLocal, $endLocal]);
 		if ($price !== '') {
 			$lines[] = $this->l10n->t('Prijs: %s', [$price]);
@@ -317,11 +306,7 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 			$lines[] = $notes;
 		}
 
-		$lines[] = '';
-		$lines[] = $this->l10n->t('Wilt u uw afspraak verplaatsen of annuleren?');
-		$lines[] = $this->l10n->t('Afspraak verplaatsen: %s', [(string)($context['rescheduleLink'] ?? '')]);
-		$lines[] = $this->l10n->t('Afspraak annuleren: %s', [(string)($context['cancelLink'] ?? '')]);
-		$lines[] = '';
+		array_push($lines, ...$this->changeLinkLines(context: $context));
 		$lines[] = $this->l10n->t('Tot ziens!');
 
 		return implode("\n", $lines);
@@ -341,35 +326,70 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 		$startLocal = $this->formatLocal(iso: (string)($context['booking']['startAt'] ?? ''), pattern: 'd-m-Y H:i');
 		$price = $this->formatPrice(context: $context);
 
-		$greetingName = $customerName;
-		if ($greetingName === '') {
-			$greetingName = $this->l10n->t('klant');
-		}
-
-		$lines = [];
-		$lines[] = $this->l10n->t('Beste %s,', [$greetingName]);
-		$lines[] = '';
+		$lines = $this->greetingLines(customerName: $customerName);
 		$lines[] = $this->l10n->t('Een vriendelijke herinnering: uw afspraak is morgen.');
 		$lines[] = '';
-		$lines[] = $this->l10n->t('Dienst: %s', [$serviceName]);
-		if ($resourceName !== '') {
-			$lines[] = $this->l10n->t('Medewerker/locatie: %s', [$resourceName]);
-		}
-
+		array_push($lines, ...$this->serviceLines(serviceName: $serviceName, resourceName: $resourceName));
 		$lines[] = $this->l10n->t('Tijd: %s', [$startLocal]);
 		if ($price !== '') {
 			$lines[] = $this->l10n->t('Prijs: %s', [$price]);
 		}
 
-		$lines[] = '';
-		$lines[] = $this->l10n->t('Wilt u uw afspraak verplaatsen of annuleren?');
-		$lines[] = $this->l10n->t('Afspraak verplaatsen: %s', [(string)($context['rescheduleLink'] ?? '')]);
-		$lines[] = $this->l10n->t('Afspraak annuleren: %s', [(string)($context['cancelLink'] ?? '')]);
-		$lines[] = '';
+		array_push($lines, ...$this->changeLinkLines(context: $context));
 		$lines[] = $this->l10n->t('Tot morgen!');
 
 		return implode("\n", $lines);
 	}//end composeReminderBody()
+
+	/**
+	 * The salutation and the blank line after it; the customer is 'klant' when unnamed.
+	 *
+	 * @param string $customerName The customer's name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function greetingLines(string $customerName): array {
+		$greetingName = $customerName;
+		if ($greetingName === '') {
+			$greetingName = $this->l10n->t('klant');
+		}
+
+		return [$this->l10n->t('Beste %s,', [$greetingName]), ''];
+	}//end greetingLines()
+
+	/**
+	 * The service line, followed by the employee/location line when there is one.
+	 *
+	 * @param string $serviceName The service name.
+	 * @param string $resourceName The employee or location name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function serviceLines(string $serviceName, string $resourceName): array {
+		$lines = [$this->l10n->t('Dienst: %s', [$serviceName])];
+		if ($resourceName !== '') {
+			$lines[] = $this->l10n->t('Medewerker/locatie: %s', [$resourceName]);
+		}
+
+		return $lines;
+	}//end serviceLines()
+
+	/**
+	 * The reschedule and cancel links, between blank lines.
+	 *
+	 * @param array<string, mixed> $context Email composition context.
+	 *
+	 * @return array<int, string>
+	 */
+	private function changeLinkLines(array $context): array {
+		return [
+			'',
+			$this->l10n->t('Wilt u uw afspraak verplaatsen of annuleren?'),
+			$this->l10n->t('Afspraak verplaatsen: %s', [(string)($context['rescheduleLink'] ?? '')]),
+			$this->l10n->t('Afspraak annuleren: %s', [(string)($context['cancelLink'] ?? '')]),
+			'',
+		];
+	}//end changeLinkLines()
 
 	/**
 	 * Build a RFC-5545 iCalendar attachment body.
