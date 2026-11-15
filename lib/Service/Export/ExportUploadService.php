@@ -155,13 +155,9 @@ class ExportUploadService extends AbstractExportService {
 
 		$sink = $this->sinks->get(type: $type);
 		$credentials = $this->resolveCredentials(destination: $destination);
+		$target = new ExportUploadTarget(sink: $sink, credentials: $credentials, destination: $destination);
 
-		$manifest = [];
-		$byteCount = 0;
-		$lastAck = null;
-		$failures = [];
-		$succeeded = 0;
-
+		$tally = new ExportUploadTally();
 		foreach ($files as $file) {
 			$remotePath = $this->resolvePath(destination: $destination, file: $file, context: $context);
 			$entry = [
@@ -173,46 +169,22 @@ class ExportUploadService extends AbstractExportService {
 			];
 
 			try {
-				$ack = $this->uploadWithRetry(
-					sink: $sink,
-					credentials: $credentials,
-					destination: $destination,
-					remotePath: $remotePath,
-					contents: (string)($file['contents'] ?? '')
-				);
-
-				$entry['upload_status'] = 'success';
-				$entry['destination_ack'] = $ack;
-				$byteCount += $entry['size_bytes'];
-				$lastAck = $ack;
-				$succeeded++;
+				$ack = $this->uploadWithRetry(target: $target, remotePath: $remotePath, contents: (string)($file['contents'] ?? ''));
+				$tally->uploaded(entry: $entry, ack: $ack);
 			} catch (\Throwable $e) {
-				$entry['upload_status'] = 'failed';
-				$entry['error'] = $e->getMessage();
-				$failures[] = $remotePath . ': ' . $e->getMessage();
-			}//end try
+				$tally->failed(entry: $entry, error: $e->getMessage());
+			}
+		}
 
-			$manifest[] = $entry;
-		}//end foreach
-
-		return $this->buildResult(
-			manifest: $manifest,
-			total: count($files),
-			succeeded: $succeeded,
-			failures: $failures,
-			byteCount: $byteCount,
-			lastAck: $lastAck
-		);
+		return $tally->result(total: count($files));
 	}//end uploadFiles()
 
 	/**
 	 * Attempt one upload with exponential backoff (5 attempts).
 	 *
-	 * @param object $sink The sink adapter.
-	 * @param array<string, mixed> $credentials The resolved credentials.
-	 * @param array<string, mixed> $destination The destination configuration.
-	 * @param string $remotePath The resolved remote path.
-	 * @param string $contents The file bytes.
+	 * @param ExportUploadTarget $target     The sink, credentials and destination.
+	 * @param string             $remotePath The resolved remote path.
+	 * @param string             $contents   The file bytes.
 	 *
 	 * @return string The destination acknowledgement.
 	 *
@@ -220,19 +192,13 @@ class ExportUploadService extends AbstractExportService {
 	 *
 	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
-	private function uploadWithRetry(
-		object $sink,
-		array $credentials,
-		array $destination,
-		string $remotePath,
-		string $contents,
-	): string {
+	private function uploadWithRetry(ExportUploadTarget $target, string $remotePath, string $contents): string {
 		$attempts = count(self::BACKOFF_SECONDS);
 		$lastError = 'unknown error';
 
 		for ($attempt = 0; $attempt < $attempts; $attempt++) {
 			try {
-				return $sink->upload($credentials, $destination, $remotePath, $contents);
+				return $target->sink->upload($target->credentials, $target->destination, $remotePath, $contents);
 			} catch (\Throwable $e) {
 				$lastError = $e->getMessage();
 				$this->logger->warning(
@@ -289,64 +255,6 @@ class ExportUploadService extends AbstractExportService {
 		// Collapse a double slash from a trailing-slash template + filename.
 		return rtrim($base, '/') . '/' . ltrim($filename, '/');
 	}//end resolvePath()
-
-	/**
-	 * Build the UploadResult envelope from per-file outcomes.
-	 *
-	 * @param array<int, array<string, mixed>> $manifest The per-file manifest.
-	 * @param int $total Total files attempted.
-	 * @param int $succeeded Count of successful uploads.
-	 * @param array<int, string> $failures The failure descriptions.
-	 * @param int $byteCount Total bytes uploaded.
-	 * @param string|null $lastAck The last successful ack.
-	 *
-	 * @return array<string, mixed> The UploadResult.
-	 */
-	private function buildResult(
-		array $manifest,
-		int $total,
-		int $succeeded,
-		array $failures,
-		int $byteCount,
-		?string $lastAck,
-	): array {
-		$status = $this->uploadStatus(total: $total, succeeded: $succeeded);
-
-		$error = null;
-		if ($failures !== []) {
-			$error = implode('; ', $failures);
-		}
-
-		return [
-			'status' => $status,
-			'manifest' => $manifest,
-			'file_count' => $succeeded,
-			'byte_count' => $byteCount,
-			'destination_ack' => $lastAck,
-			'error_message' => $error,
-		];
-	}//end buildResult()
-
-	/**
-	 * The UploadResult status: all_succeeded, all_failed or partial.
-	 *
-	 * @param int $total     Total files attempted.
-	 * @param int $succeeded Count of successful uploads.
-	 *
-	 * @return string
-	 */
-	private function uploadStatus(int $total, int $succeeded): string {
-		$status = 'partial';
-		if ($total === 0 || $succeeded === $total) {
-			$status = 'all_succeeded';
-		}
-
-		if ($total > 0 && $succeeded === 0) {
-			$status = 'all_failed';
-		}
-
-		return $status;
-	}//end uploadStatus()
 
 	/**
 	 * Build an all-failed result without attempting any upload.
