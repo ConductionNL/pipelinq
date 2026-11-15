@@ -28,6 +28,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\ConfiguredSchemaCount;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -43,6 +44,7 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	use PayloadToArray;
 	use LoggedRegisterSchemaIds;
 	use ConfiguredSchemaCount;
+	use InjectedObjectService;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
@@ -241,15 +243,4 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 
 		return $this->toArray(value: $saved);
 	}//end persist()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

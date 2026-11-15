@@ -34,6 +34,7 @@ use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -55,6 +56,7 @@ use RuntimeException;
  */
 class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	use OptionalPayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -663,17 +665,6 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 
 		return $this->toArray(object: $object);
 	}//end getOption()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.

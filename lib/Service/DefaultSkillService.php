@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -34,6 +35,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/skill-routing/spec.md
  */
 class DefaultSkillService {
+	use InjectedObjectService;
+
 	/**
 	 * Default skill definitions.
 	 *
@@ -144,13 +147,4 @@ class DefaultSkillService {
 			$this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
 		}
 	}//end saveDefaultSkills()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

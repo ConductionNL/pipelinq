@@ -30,6 +30,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -49,6 +50,7 @@ use RuntimeException;
 class PosStaffReportService implements PosStaffReportServiceInterface {
 	use CastingPayloadToArray;
 	use PosRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * The fiscally-final statuses that count toward the report.
@@ -342,17 +344,6 @@ class PosStaffReportService implements PosStaffReportServiceInterface {
 
 		return $out;
 	}//end finalOnly()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.

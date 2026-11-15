@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -59,6 +60,7 @@ class EligibilityService implements EligibilityServiceInterface {
 	use NullablePayloadToArray;
 	use RowIdOf;
 	use ConfiguredRegisterId;
+	use InjectedObjectService;
 
 	/**
 	 * App-config key for the Service schema id/slug.
@@ -634,15 +636,4 @@ class EligibilityService implements EligibilityServiceInterface {
 
 		return $out;
 	}//end normaliseSkillList()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

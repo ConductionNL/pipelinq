@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -37,6 +38,8 @@ use RuntimeException;
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactSyncService implements ContactSyncServiceInterface {
+	use InjectedObjectService;
+
 	/**
 	 * Constructor.
 	 *
@@ -196,15 +199,6 @@ class ContactSyncService implements ContactSyncServiceInterface {
 
 		return [];
 	}//end createdData()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Search Nextcloud addressbooks for contacts matching a query.

@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -66,6 +67,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	use RowIdOf;
 	use NullablePayloadToArray;
 	use ConfiguredRegisterId;
+	use InjectedObjectService;
 
 	/**
 	 * Slot alignment in minutes.
@@ -1353,15 +1355,4 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			->modify(sprintf('+%d seconds', $seconds));
 		return $dateTime->format('Y-m-d\TH:i:sP');
 	}//end isoOffsetSeconds()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

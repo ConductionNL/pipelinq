@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
@@ -37,6 +38,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactVcardWriterService {
+	use InjectedObjectService;
+
 	/**
 	 * Constructor.
 	 *
@@ -406,13 +409,4 @@ class ContactVcardWriterService {
 			);
 		}//end try
 	}//end storeContactsUidOnObject()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

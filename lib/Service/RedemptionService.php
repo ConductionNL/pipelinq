@@ -30,6 +30,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredSchemaCount;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -49,6 +50,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	use PayloadToArray;
 	use LoggedRegisterSchemaIds;
 	use ConfiguredSchemaCount;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -570,15 +572,4 @@ class RedemptionService implements RedemptionServiceInterface {
 
 		return $object['redemptionId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -50,6 +51,7 @@ class PosRoleService implements PosRoleServiceInterface {
 	use CastingPayloadToArray;
 	use RandomUuid;
 	use PosRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -260,17 +262,4 @@ class PosRoleService implements PosRoleServiceInterface {
 
 		return $count;
 	}//end countActiveStaffForRole()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

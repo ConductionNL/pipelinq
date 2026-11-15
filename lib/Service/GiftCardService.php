@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SerialisedPayload;
@@ -49,6 +50,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	use PayloadToArray;
 	use LoggedRegisterSchemaIds;
 	use SerialisedPayload;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -970,15 +972,4 @@ class GiftCardService implements GiftCardServiceInterface {
 
 		return $object['giftCardId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -32,6 +32,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\EntityActivityServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -56,6 +57,8 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 class EntityActivityService implements EntityActivityServiceInterface {
+	use InjectedObjectService;
+
 	/**
 	 * Entity types the endpoint is allowed to expose. Anything outside this
 	 * list is rejected by the controller with a 400.
@@ -687,15 +690,4 @@ class EntityActivityService implements EntityActivityServiceInterface {
 			'results' => [],
 		];
 	}//end emptyResult()
-
-	/**
-	 * Resolve the OpenRegister `ObjectService` through the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

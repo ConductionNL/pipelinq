@@ -30,6 +30,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -43,6 +44,7 @@ use Throwable;
  */
 class BrpCacheService implements BrpCacheServiceInterface {
 	use SerialisedToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Default TTL in hours (24h per design.md).
@@ -303,15 +305,4 @@ class BrpCacheService implements BrpCacheServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Lazy OR ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

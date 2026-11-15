@@ -29,6 +29,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,7 @@ use Throwable;
  */
 class OptOutService implements OptOutServiceInterface {
 	use SerialisedToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -301,15 +303,4 @@ class OptOutService implements OptOutServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Lazy OR ObjectService lookup.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

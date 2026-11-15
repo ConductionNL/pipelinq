@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RapportageServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -55,6 +56,7 @@ use Psr\Log\LoggerInterface;
  */
 class RapportageService implements RapportageServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -556,16 +558,4 @@ class RapportageService implements RapportageServiceInterface {
 
 		return $leads;
 	}//end fetchLeads()
-
-	/**
-	 * Resolve the OpenRegister ObjectService from the container.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-
-	}//end getObjectService()
 }//end class

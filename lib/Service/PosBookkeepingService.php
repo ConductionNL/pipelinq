@@ -55,6 +55,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosObjectReadWrite;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -103,6 +104,7 @@ use Psr\Log\LoggerInterface;
 class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	use CastingPayloadToArray;
 	use PosObjectReadWrite;
+	use InjectedObjectService;
 
 	/**
 	 * CloudEvent type emitted when a Z-report is generated.
@@ -933,17 +935,6 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		return self::DEFAULT_MAX_ATTEMPTS;
 	}//end maxAttempts()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * The greater of two ISO 8601 timestamp strings (null-safe).

@@ -33,6 +33,7 @@ use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -79,6 +80,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	use CastingPayloadToArray;
 	use RandomUuid;
 	use PosRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
@@ -793,19 +795,6 @@ class PosRefundService implements PosRefundServiceInterface {
 			$this->logger->warning('Pipelinq: failed to persist refund line', ['exception' => $e->getMessage()]);
 		}
 	}//end saveRefundLine()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 *
-	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister lifecycle TransitionEngine.

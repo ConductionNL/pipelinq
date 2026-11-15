@@ -30,6 +30,7 @@ use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -60,6 +61,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	use CastingPayloadToArray;
 	use RandomUuid;
 	use PosRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * Maximum consecutive failed PIN attempts before a 15-minute lockout.
@@ -662,15 +664,4 @@ class PosStaffService implements PosStaffServiceInterface {
 			$this->logger->warning('Pipelinq: failed to update posStaff', ['exception' => $e->getMessage()]);
 		}
 	}//end updateStaffFields()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

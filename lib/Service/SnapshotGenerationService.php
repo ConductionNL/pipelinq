@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCA\Pipelinq\Service\Forecast\SnapshotLevel;
 use OCA\Pipelinq\Service\Forecast\SnapshotNode;
 use OCA\Pipelinq\Service\Forecast\SnapshotRun;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -57,6 +58,7 @@ use RuntimeException;
  */
 class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * App-config key for the JSON team=>division map.
@@ -598,15 +600,4 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 			);
 		}//end try
 	}//end notifyAdmin()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

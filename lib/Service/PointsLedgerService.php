@@ -37,6 +37,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\Lock\ILockingProvider;
@@ -60,6 +61,7 @@ use RuntimeException;
  */
 class PointsLedgerService implements PointsLedgerServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * The operation id the next movement carries; '' for none.
@@ -705,17 +707,6 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.

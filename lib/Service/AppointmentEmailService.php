@@ -37,6 +37,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -66,6 +67,7 @@ use Psr\Log\LoggerInterface;
 class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	use NullablePayloadToArray;
 	use ConfiguredRegisterId;
+	use InjectedObjectService;
 
 	/**
 	 * App-config key for the signing secret used on reschedule/cancel deep links.
@@ -988,15 +990,4 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	private function nowIso(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 	}//end nowIso()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class
