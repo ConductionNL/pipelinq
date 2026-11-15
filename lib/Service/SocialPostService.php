@@ -682,7 +682,7 @@ class SocialPostService implements SocialPostServiceInterface {
 		return new SocialPublishRequest(
 			network: $network,
 			body: $resolved['body'],
-			link: $this->decoratedLink(post: $post, network: $network, link: $resolved['link']),
+			link: $this->decoratedLink(post: $post, target: ['network' => $network, 'link' => $resolved['link']]),
 			media: $resolved['media'],
 			credentialRef: (string)($account['credentialRef'] ?? ''),
 			externalAccountId: (string)($account['externalAccountId'] ?? ''),
@@ -698,21 +698,21 @@ class SocialPostService implements SocialPostServiceInterface {
 	 * The STORED link is never touched, so moving a post to another campaign
 	 * does not mean unpicking a query string.
 	 *
-	 * @param array<string, mixed> $post The post.
-	 * @param string $network The network, which becomes the medium.
-	 * @param string $link The resolved link.
+	 * @param array<string, mixed>                $post   The post.
+	 * @param array{network: string, link: string} $target The network, which becomes the medium, and the resolved link.
 	 *
 	 * @return string The link to publish.
 	 *
 	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
-	private function decoratedLink(array $post, string $network, string $link): string {
+	private function decoratedLink(array $post, array $target): string {
+		$link = $target['link'];
 		$utm = $this->campaignUtm(post: $post, link: $link);
 		if ($utm === null) {
 			return $link;
 		}
 
-		$utm['utm_medium'] = $network;
+		$utm['utm_medium'] = $target['network'];
 
 		return ($this->links->decorateUrl(url: $link, utm: $utm) ?? $link);
 	}//end decoratedLink()
