@@ -114,37 +114,34 @@ class CtiDispositionService {
 			$groupId = $this->escalationGroup(queue: $queue);
 		}
 
-		$this->updateContactmoment(
-			id: $interactionId,
-			subject: $subject,
-			outcome: $outcome,
-			notes: $notes,
-		);
-
-		$taskId = null;
-		if ($outcome === 'callback') {
-			$taskId = $this->createTask(
-				type: 'callbackRequest',
-				subject: $subject,
-				notes: $notes,
-				interactionId: $interactionId,
-			);
-		} elseif ($outcome === 'escalated') {
-			$taskId = $this->createTask(
-				type: 'followUpTask',
-				subject: $subject,
-				notes: $notes,
-				interactionId: $interactionId,
-				groupId: $groupId,
-			);
-		}
+		$disposition = new CallDisposition(interactionId: $interactionId, subject: $subject, outcome: $outcome, notes: $notes, groupId: $groupId);
+		$this->updateContactmoment(disposition: $disposition);
 
 		return [
 			'outcome' => $outcome,
 			'interactionId' => $interactionId,
-			'taskId' => $taskId,
+			'taskId' => $this->followUpTask(disposition: $disposition),
 		];
 	}//end processDisposition()
+
+	/**
+	 * Create the follow-up task the outcome asks for: a callback request or an escalation task.
+	 *
+	 * @param CallDisposition $disposition The disposition.
+	 *
+	 * @return string|null The created task UUID, or null when none was created.
+	 */
+	private function followUpTask(CallDisposition $disposition): ?string {
+		if ($disposition->outcome === 'callback') {
+			return $this->createTask(type: 'callbackRequest', disposition: $disposition);
+		}
+
+		if ($disposition->outcome === 'escalated') {
+			return $this->createTask(type: 'followUpTask', disposition: $disposition);
+		}
+
+		return null;
+	}//end followUpTask()
 
 	/**
 	 * The escalation queues by id and label, for the wrap-up dialog.
@@ -193,16 +190,13 @@ class CtiDispositionService {
 	/**
 	 * Write the disposition back onto the contactmoment ticket.
 	 *
-	 * @param string $id Contactmoment ticket UUID.
-	 * @param string $subject Disposition subject.
-	 * @param string $outcome Outcome enum value.
-	 * @param string $notes Free-text notes.
+	 * @param CallDisposition $disposition The disposition.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	private function updateContactmoment(string $id, string $subject, string $outcome, string $notes): void {
+	private function updateContactmoment(CallDisposition $disposition): void {
 		if ($this->ticketService->isConfigured() === false) {
 			$this->logger->warning('CTI disposition: ticket register/schema not configured.');
 			return;
@@ -212,16 +206,16 @@ class CtiDispositionService {
 			$this->ticketService->save(
 				ticketType: TicketService::TYPE_CONTACTMOMENT,
 				payload: [
-					'disposition_subject' => $subject,
-					'disposition_outcome' => $outcome,
-					'disposition_notes' => $notes,
+					'disposition_subject' => $disposition->subject,
+					'disposition_outcome' => $disposition->outcome,
+					'disposition_notes' => $disposition->notes,
 				],
-				uuid: $id,
+				uuid: $disposition->interactionId,
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI disposition: contactmoment save failed',
-				['exception' => $e->getMessage(), 'id' => $id]
+				['exception' => $e->getMessage(), 'id' => $disposition->interactionId]
 			);
 		}
 	}//end updateContactmoment()
@@ -229,21 +223,12 @@ class CtiDispositionService {
 	/**
 	 * Create the follow-up task in the task schema.
 	 *
-	 * @param string $type Task type (terugbelverzoek|opvolgtaak).
-	 * @param string $subject Task subject.
-	 * @param string $notes Task notes.
-	 * @param string $interactionId Linked contactmoment UUID.
-	 * @param string|null $groupId The group the task is assigned to (escalation).
+	 * @param string          $type        Task type (terugbelverzoek|opvolgtaak).
+	 * @param CallDisposition $disposition The disposition the task follows up.
 	 *
 	 * @return string|null The created task UUID or null when creation failed.
 	 */
-	private function createTask(
-		string $type,
-		string $subject,
-		string $notes,
-		string $interactionId,
-		?string $groupId = null,
-	): ?string {
+	private function createTask(string $type, CallDisposition $disposition): ?string {
 		$target = $this->taskTarget();
 		if ($target === null) {
 			return null;
@@ -254,7 +239,7 @@ class CtiDispositionService {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$saved = $objectService->saveObject(
-				$this->taskPayload(type: $type, subject: $subject, notes: $notes, interactionId: $interactionId, groupId: $groupId),
+				$this->taskPayload(type: $type, disposition: $disposition),
 				[],
 				$register,
 				$taskSchema,
@@ -265,7 +250,7 @@ class CtiDispositionService {
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI disposition: task save failed',
-				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
+				['exception' => $e->getMessage(), 'interactionId' => $disposition->interactionId]
 			);
 			return null;
 		}//end try
@@ -300,23 +285,20 @@ class CtiDispositionService {
 	/**
 	 * The task payload; fields without a value (no group, empty notes) are left out.
 	 *
-	 * @param string      $type          Task type.
-	 * @param string      $subject       Task subject.
-	 * @param string      $notes         Task notes.
-	 * @param string      $interactionId Linked contactmoment UUID.
-	 * @param string|null $groupId       The group the task is assigned to.
+	 * @param string          $type        Task type.
+	 * @param CallDisposition $disposition The disposition the task follows up.
 	 *
 	 * @return array<string, string> The payload.
 	 */
-	private function taskPayload(string $type, string $subject, string $notes, string $interactionId, ?string $groupId): array {
+	private function taskPayload(string $type, CallDisposition $disposition): array {
 		return array_filter(
 			[
 				'type' => $type,
-				'subject' => $subject,
-				'description' => $notes,
+				'subject' => $disposition->subject,
+				'description' => $disposition->notes,
 				'status' => 'open',
-				'assigneeGroupId' => $groupId,
-				'interaction' => $interactionId,
+				'assigneeGroupId' => $disposition->groupId,
+				'interaction' => $disposition->interactionId,
 			],
 			static fn ($value): bool => ($value !== null && $value !== '')
 		);

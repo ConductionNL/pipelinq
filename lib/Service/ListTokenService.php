@@ -193,7 +193,6 @@ class ListTokenService {
 		return $this->sign(
 			purpose: self::PURPOSE_CONFIRM,
 			claims: ['s' => $subscriptionId, 'n' => $nonce],
-			ttlSeconds: $this->ttlSeconds(key: self::CONFIRM_TTL_CONFIG_KEY, default: self::DEFAULT_CONFIRM_TTL_DAYS),
 		);
 	}//end signConfirmToken()
 
@@ -212,7 +211,6 @@ class ListTokenService {
 		return $this->sign(
 			purpose: self::PURPOSE_UNSUBSCRIBE,
 			claims: ['s' => $subscriptionId, 'c' => $contactId],
-			ttlSeconds: $this->ttlSeconds(key: self::LINK_TTL_CONFIG_KEY, default: self::DEFAULT_LINK_TTL_DAYS),
 		);
 	}//end signUnsubscribeToken()
 
@@ -229,7 +227,6 @@ class ListTokenService {
 		return $this->sign(
 			purpose: self::PURPOSE_PREFERENCES,
 			claims: ['c' => $contactId],
-			ttlSeconds: $this->ttlSeconds(key: self::LINK_TTL_CONFIG_KEY, default: self::DEFAULT_LINK_TTL_DAYS),
 		);
 	}//end signPreferencesToken()
 
@@ -369,15 +366,15 @@ class ListTokenService {
 	}//end preferencesUrl()
 
 	/**
-	 * Sign a payload for a purpose.
+	 * Sign a payload for a purpose, valid for that purpose's lifetime.
 	 *
 	 * @param string $purpose One of the `PURPOSE_*` constants.
 	 * @param array<string, mixed> $claims Purpose-specific claims.
-	 * @param int $ttlSeconds Lifetime in seconds.
 	 *
 	 * @return string The dotted token.
 	 */
-	private function sign(string $purpose, array $claims, int $ttlSeconds): string {
+	private function sign(string $purpose, array $claims): string {
+		$ttlSeconds = $this->ttlFor(purpose: $purpose);
 		$issuedAt = $this->time->getTime();
 		$full = array_merge(
 			['p' => $purpose],
@@ -389,6 +386,22 @@ class ListTokenService {
 		$signature = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
 		return ($encoded . '.' . $signature);
 	}//end sign()
+
+	/**
+	 * The lifetime in seconds of a purpose's tokens: the confirm TTL for a
+	 * confirmation, the link TTL for every other purpose.
+	 *
+	 * @param string $purpose One of the `PURPOSE_*` constants.
+	 *
+	 * @return int Lifetime in seconds.
+	 */
+	private function ttlFor(string $purpose): int {
+		if ($purpose === self::PURPOSE_CONFIRM) {
+			return $this->ttlSeconds(key: self::CONFIRM_TTL_CONFIG_KEY, default: self::DEFAULT_CONFIRM_TTL_DAYS);
+		}
+
+		return $this->ttlSeconds(key: self::LINK_TTL_CONFIG_KEY, default: self::DEFAULT_LINK_TTL_DAYS);
+	}//end ttlFor()
 
 	/**
 	 * Resolve, or lazily mint, the per-instance HMAC signing key.

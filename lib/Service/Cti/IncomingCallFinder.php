@@ -96,7 +96,7 @@ class IncomingCallFinder implements IncomingCallFinderInterface {
 		return [
 			'enabled' => true,
 			'delayMs' => max(0, (int)($config['screen_pop_delay_ms'] ?? 0)),
-			'call' => $this->newestOpenCall(rows: $rows, userId: $userId, now: ($now ?? time())),
+			'call' => $this->newestOpenCall(rows: $rows, scope: new IncomingCallScope(userId: $userId, now: ($now ?? time()))),
 		];
 	}//end forAgent()
 
@@ -108,17 +108,16 @@ class IncomingCallFinder implements IncomingCallFinderInterface {
 	 * an agent a colleague's caller.
 	 *
 	 * @param array<int, mixed> $rows The rows the ticket service returned.
-	 * @param string $userId The agent's uid.
-	 * @param int $now Unix time.
+	 * @param IncomingCallScope $scope The agent and the current time.
 	 *
 	 * @return array<string, string>|null The call, or null when none is open.
 	 */
-	private function newestOpenCall(array $rows, string $userId, int $now): ?array {
+	private function newestOpenCall(array $rows, IncomingCallScope $scope): ?array {
 		$newest = null;
 		$newestStart = 0;
 		foreach ($rows as $row) {
 			$data = $this->toArray(value: $row);
-			$started = $this->freshOpenCallStart(data: $data, userId: $userId, now: $now);
+			$started = $this->freshOpenCallStart(data: $data, scope: $scope);
 			if ($started === false || $started <= $newestStart) {
 				continue;
 			}
@@ -134,18 +133,17 @@ class IncomingCallFinder implements IncomingCallFinderInterface {
 	 * The start time of an open call of the user that is not too old, else false.
 	 *
 	 * @param array<string, mixed> $data The call data.
-	 * @param string $userId The agent's user id.
-	 * @param int $now The current timestamp.
+	 * @param IncomingCallScope $scope The agent and the current time.
 	 *
 	 * @return int|false The start timestamp, or false.
 	 */
-	private function freshOpenCallStart(array $data, string $userId, int $now): int|false {
+	private function freshOpenCallStart(array $data, IncomingCallScope $scope): int|false {
 		$started = strtotime((string)($data['started_at'] ?? ''));
-		if ($started === false || $this->isOpenCallOf(data: $data, userId: $userId) === false) {
+		if ($started === false || $this->isOpenCallOf(data: $data, userId: $scope->userId) === false) {
 			return false;
 		}
 
-		if (($now - $started) > self::MAX_AGE_SECONDS) {
+		if (($scope->now - $started) > self::MAX_AGE_SECONDS) {
 			return false;
 		}
 
