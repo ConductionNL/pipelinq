@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\KeyedServiceResult;
 use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
@@ -52,6 +53,8 @@ use OCP\IUserSession;
  * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 class ArticleController extends Controller {
+	use KeyedServiceResult;
+
 	/**
 	 * Constructor.
 	 *
@@ -222,15 +225,7 @@ class ArticleController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function render(array $result): JSONResponse {
-		if (($result['error'] ?? '') === 'Not found') {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse(['article' => ($result['article'] ?? null)]);
+		return $this->keyedResult(result: $result, key: 'article');
 	}//end render()
 
 	/**
