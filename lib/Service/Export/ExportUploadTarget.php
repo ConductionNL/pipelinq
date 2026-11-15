@@ -35,9 +35,9 @@ final class ExportUploadTarget {
 	/**
 	 * Constructor.
 	 *
-	 * @param object $sink        The sink adapter.
-	 * @param array  $credentials The resolved credentials.
-	 * @param array  $destination The destination configuration.
+	 * @param object               $sink        The sink adapter.
+	 * @param array<string, mixed> $credentials The resolved credentials.
+	 * @param array<string, mixed> $destination The destination configuration.
 	 *
 	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
