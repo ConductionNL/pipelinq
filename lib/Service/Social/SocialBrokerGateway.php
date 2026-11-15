@@ -278,23 +278,38 @@ class SocialBrokerGateway {
 			return $refusal;
 		}
 
+		return $this->callBroker(
+			call: new BrokeredCall(method: $method, path: $path),
+			request: ['credentialRef' => $credentialRef, 'headers' => $headers, 'body' => $body, 'actingUserId' => $actingUserId]
+		);
+	}//end request()
+
+	/**
+	 * Make the call through the broker and turn what comes back, or what it throws, into a result.
+	 *
+	 * @param BrokeredCall                                                                                    $call    The method and path.
+	 * @param array{credentialRef: string, headers: array<string, string>, body: string|null, actingUserId: string|null} $request The rest of the call.
+	 *
+	 * @return SocialGatewayResult What came back, or which failure happened.
+	 */
+	private function callBroker(BrokeredCall $call, array $request): SocialGatewayResult {
 		try {
 			$broker = $this->container->get(self::BROKER_CLASS);
 			$response = $broker->request(
-				$credentialRef,
+				$request['credentialRef'],
 				self::APP_ID,
-				strtoupper($method),
-				$path,
-				$this->withoutBrokerOwnedHeaders(headers: $headers),
-				$body,
-				$actingUserId
+				strtoupper($call->method),
+				$call->path,
+				$this->withoutBrokerOwnedHeaders(headers: $request['headers']),
+				$request['body'],
+				$request['actingUserId']
 			);
 		} catch (Throwable $failure) {
-			return $this->classify(failure: $failure, call: new BrokeredCall(method: $method, path: $path));
+			return $this->classify(failure: $failure, call: $call);
 		}
 
-		return $this->interpret(response: $response, call: new BrokeredCall(method: $method, path: $path));
-	}//end request()
+		return $this->interpret(response: $response, call: $call);
+	}//end callBroker()
 
 	/**
 	 * Why a call cannot be made at all: no broker, or no credential. Null when it can.

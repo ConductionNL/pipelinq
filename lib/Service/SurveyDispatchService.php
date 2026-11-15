@@ -150,16 +150,11 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
 	 */
 	public function matchingRules(string $entityType, string $status, string $channel = ''): array {
-		$matching = [];
 		$interaction = new CompletedInteraction(entityType: $entityType, status: $status, channel: $channel);
 
-		foreach ($this->rules() as $rule) {
-			if ($this->ruleMatches(rule: $rule, interaction: $interaction) === true) {
-				$matching[] = $rule;
-			}
-		}
-
-		return $matching;
+		return array_values(
+			array_filter($this->rules(), fn (array $rule): bool => $this->ruleMatches(rule: $rule, interaction: $interaction))
+		);
 	}//end matchingRules()
 
 	/**
@@ -367,20 +362,31 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		array $recentInvitations = [],
 		?DateTimeImmutable $now = null,
 	): array {
-		$now = ($now ?? new DateTimeImmutable());
-		$invitation = $this->draftInvitation(
-			occasion: new SurveyInvitationOccasion(rule: $rule, contact: $contact, entity: $entity, now: $now)
-		);
+		$occasion = new SurveyInvitationOccasion(rule: $rule, contact: $contact, entity: $entity, now: ($now ?? new DateTimeImmutable()));
+
+		return $this->invitationFor(occasion: $occasion, recentInvitations: $recentInvitations);
+	}//end buildInvitation()
+
+	/**
+	 * Draft the invitation an occasion produces and mark it scheduled or suppressed.
+	 *
+	 * @param SurveyInvitationOccasion         $occasion          The rule, recipient, record and moment.
+	 * @param array<int, array<string, mixed>> $recentInvitations This contact's invitations.
+	 *
+	 * @return array<string, mixed> The invitation to persist.
+	 */
+	private function invitationFor(SurveyInvitationOccasion $occasion, array $recentInvitations): array {
+		$invitation = $this->draftInvitation(occasion: $occasion);
 
 		$reason = $this->suppressionReason(
-			rule: $rule,
-			contact: $contact,
+			rule: $occasion->rule,
+			contact: $occasion->contact,
 			recentInvitations: $recentInvitations,
-			now: $now,
+			now: $occasion->now,
 		);
 
 		return $this->withStatus(invitation: $invitation, reason: $reason);
-	}//end buildInvitation()
+	}//end invitationFor()
 
 	/**
 	 * The invitation fields an occasion produces, before its status is decided.
@@ -450,18 +456,29 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-automated-invitation-dispatch-on-interaction-completion
 	 */
 	public function onInteractionCompleted(string $entityType, array $entity, array $contact): array {
-		$rules = $this->matchingRules(
-			entityType: $entityType,
-			status: trim((string)($entity['status'] ?? '')),
-			channel: trim((string)($entity['channel'] ?? '')),
-		);
-
+		$rules = $this->rulesCompleting(entityType: $entityType, entity: $entity);
 		if ($rules === []) {
 			return [];
 		}
 
 		return $this->writeInvitations(rules: $rules, interaction: ['entity' => $entity, 'contact' => $contact]);
 	}//end onInteractionCompleted()
+
+	/**
+	 * The rules that match the record's status and channel.
+	 *
+	 * @param string               $entityType The completed record's type.
+	 * @param array<string, mixed> $entity     The record.
+	 *
+	 * @return array<int, array<string, mixed>> The matching rules.
+	 */
+	private function rulesCompleting(string $entityType, array $entity): array {
+		return $this->matchingRules(
+			entityType: $entityType,
+			status: trim((string)($entity['status'] ?? '')),
+			channel: trim((string)($entity['channel'] ?? '')),
+		);
+	}//end rulesCompleting()
 
 	/**
 	 * Build and write the invitation each matching rule produces for the contact.
