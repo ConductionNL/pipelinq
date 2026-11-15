@@ -278,7 +278,10 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 		$parts = ['nps' => null, 'ratings' => [], 'verbatim' => ''];
 
 		foreach (($survey['questions'] ?? []) as $question) {
-			$parts = $this->scoreAnswer(parts: $parts, question: $question, answers: $answers);
+			$parts = $this->scoreAnswer(
+				parts: $parts,
+				answered: ['kind' => (string)($question['kind'] ?? ''), 'answer' => ($answers[(string)($question['key'] ?? '')] ?? null)]
+			);
 		}
 
 		return [
@@ -292,17 +295,15 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 	 * Add one question's answer to the score parts.
 	 *
 	 * @param array{nps: int|null, ratings: list<float>, verbatim: string} $parts The parts so far.
-	 * @param mixed $question The question.
-	 * @param array<string, mixed> $answers The answers, keyed by question key.
+	 * @param array{kind: string, answer: mixed} $answered The question's kind and the answer given to it.
 	 *
 	 * @return array{nps: int|null, ratings: list<float>, verbatim: string}
 	 *
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
-	private function scoreAnswer(array $parts, $question, array $answers): array {
-		$key = (string)($question['key'] ?? '');
-		$kind = (string)($question['kind'] ?? '');
-		$answer = ($answers[$key] ?? null);
+	private function scoreAnswer(array $parts, array $answered): array {
+		$kind = $answered['kind'];
+		$answer = $answered['answer'];
 
 		if ($kind === 'nps' && is_numeric($answer) === true) {
 			$parts['nps'] = (int)$answer;
@@ -314,23 +315,22 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return $parts;
 		}
 
-		return $this->withVerbatim(parts: $parts, kind: $kind, answer: $answer);
+		return $this->withVerbatim(parts: $parts, answered: $answered);
 	}//end scoreAnswer()
 
 	/**
 	 * Take the answer as the verbatim when none was found yet.
 	 *
 	 * @param array{nps: int|null, ratings: list<float>, verbatim: string} $parts The parts so far.
-	 * @param string $kind The question kind.
-	 * @param mixed $answer The answer.
+	 * @param array{kind: string, answer: mixed} $answered The question's kind and the answer given to it.
 	 *
 	 * @return array{nps: int|null, ratings: list<float>, verbatim: string}
 	 *
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
-	private function withVerbatim(array $parts, string $kind, $answer): array {
+	private function withVerbatim(array $parts, array $answered): array {
 		if ($parts['verbatim'] === '') {
-			$parts['verbatim'] = $this->verbatimOf(kind: $kind, answer: $answer);
+			$parts['verbatim'] = $this->verbatimOf(kind: $answered['kind'], answer: $answered['answer']);
 		}
 
 		return $parts;
@@ -392,13 +392,10 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
-		$response = $this->newResponse(invitation: $invitation, answers: $answers);
-		$responseId = $this->writeResponse(response: $response);
-		if ($responseId === '') {
+		$response = $this->savedResponse(invitation: $invitation, answers: $answers);
+		if ($response === null) {
 			return ['status' => 500, 'error' => 'The response could not be saved.'];
 		}
-
-		$response['id'] = $responseId;
 
 		// The invitation is closed FIRST, so a second submission arriving
 		// while the follow-up is still being raised finds the token spent.
@@ -408,13 +405,43 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			$this->optOut->record(contactRef: (string)($invitation['contactRef'] ?? ''));
 		}
 
-		$response = $this->followUp->process(
+		return ['status' => 201, 'response' => $this->followedUp(invitation: $invitation, response: $response)];
+	}//end submit()
+
+	/**
+	 * Write the response to an open invitation, with the id it was saved under.
+	 *
+	 * @param array<string, mixed> $invitation The open invitation.
+	 * @param array<string, mixed> $answers    The answers.
+	 *
+	 * @return array<string, mixed>|null The saved response, or null when it could not be saved.
+	 */
+	private function savedResponse(array $invitation, array $answers): ?array {
+		$response = $this->newResponse(invitation: $invitation, answers: $answers);
+		$responseId = $this->writeResponse(response: $response);
+		if ($responseId === '') {
+			return null;
+		}
+
+		$response['id'] = $responseId;
+
+		return $response;
+	}//end savedResponse()
+
+	/**
+	 * The saved response after the follow-up for its client was raised.
+	 *
+	 * @param array<string, mixed> $invitation The invitation it answers.
+	 * @param array<string, mixed> $response   The saved response.
+	 *
+	 * @return array<string, mixed> The response as the follow-up left it.
+	 */
+	private function followedUp(array $invitation, array $response): array {
+		return $this->followUp->process(
 			response: $response,
 			client: $this->readPublic(uuid: (string)($invitation['clientRef'] ?? ''), schemaKey: self::CLIENT_SCHEMA_KEY),
 		);
-
-		return ['status' => 201, 'response' => $response];
-	}//end submit()
+	}//end followedUp()
 
 	/**
 	 * The response to an open invitation, scored against its survey and stamped now.
