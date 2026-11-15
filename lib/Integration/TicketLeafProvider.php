@@ -204,13 +204,7 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 
 		$filters['client'] = ['in' => array_keys($refOfClient)];
 		$filters['ticketType'] = ['in' => self::TICKET_TYPES];
-		if ($status === 'open') {
-			$filters['status'] = ['notIn' => self::CLOSED_STATUSES];
-		}
-
-		if ($status === 'closed') {
-			$filters['status'] = ['in' => self::CLOSED_STATUSES];
-		}
+		$filters += self::statusFilter(status: $status);
 
 		foreach ($this->read(filters: $filters) as $ticket) {
 			$ref = ($refOfClient[(string)($ticket['client'] ?? '')] ?? '');
@@ -221,6 +215,25 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 
 		return $tickets;
 	}//end ticketsOf()
+
+	/**
+	 * The store filter for a status: open or closed tickets, none for all.
+	 *
+	 * @param string $status `open`, `closed` or `all`.
+	 *
+	 * @return array<string, array<string, array<int, string>>>
+	 */
+	private static function statusFilter(string $status): array {
+		if ($status === 'open') {
+			return ['status' => ['notIn' => self::CLOSED_STATUSES]];
+		}
+
+		if ($status === 'closed') {
+			return ['status' => ['in' => self::CLOSED_STATUSES]];
+		}
+
+		return [];
+	}//end statusFilter()
 
 	/**
 	 * Whether a ticket the store answered fits the asked status filter, so a
