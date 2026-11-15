@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\SerialisedRecord;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -41,6 +42,8 @@ use Throwable;
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008
  */
 class BrpRetentionJob extends TimedJob {
+	use SerialisedRecord;
+
 	/**
 	 * Default interval (24h).
 	 */
@@ -131,25 +134,6 @@ class BrpRetentionJob extends TimedJob {
 
 		return [$register, $personSchema, $contactSchema];
 	}//end retentionConfig()
-
-	/**
-	 * Coerce an OpenRegister record (array or entity) to a plain array.
-	 *
-	 * @param mixed $rec Record from ObjectService::findAll()/find().
-	 *
-	 * @return array<string, mixed> Array representation (empty when unusable).
-	 */
-	private function recordToArray(mixed $rec): array {
-		if (is_array($rec) === true) {
-			return $rec;
-		}
-
-		if (method_exists($rec, 'jsonSerialize') === true) {
-			return (array)$rec->jsonSerialize();
-		}
-
-		return [];
-	}//end recordToArray()
 
 	/**
 	 * Delete a BrpPersoon record when its retention window has elapsed and

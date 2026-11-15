@@ -42,6 +42,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RequiredResourceTypes;
 use OCA\Pipelinq\Util\WithoutSelf;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
@@ -81,6 +82,7 @@ class BookingService implements BookingServiceInterface {
 	use InjectedObjectService;
 	use ByteTruncate;
 	use WithoutSelf;
+	use RequiredResourceTypes;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
@@ -1301,22 +1303,6 @@ class BookingService implements BookingServiceInterface {
 			return [];
 		}
 	}//end eligibleResources()
-
-	/**
-	 * The resource types a Service requires; empty means any type.
-	 *
-	 * @param array<string, mixed> $service The Service.
-	 *
-	 * @return array<int|string, mixed>
-	 */
-	private function requiredResourceTypes(array $service): array {
-		$requiredTypes = ($service['requiredResourceTypes'] ?? []);
-		if (is_array($requiredTypes) === false) {
-			return [];
-		}
-
-		return $requiredTypes;
-	}//end requiredResourceTypes()
 
 	/**
 	 * The id of a resource that may take the booking, or '' when it may not.

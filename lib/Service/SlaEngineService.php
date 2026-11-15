@@ -46,6 +46,7 @@ use OCA\Pipelinq\Service\Sla\SlaPause;
 use OCA\Pipelinq\Service\Sla\SlaPolicyQuery;
 use OCA\Pipelinq\Service\Sla\SlaRecipient;
 use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
@@ -73,6 +74,7 @@ use Throwable;
 class SlaEngineService implements SlaEngineServiceInterface {
 	use EntityAccessorTrait;
 	use ContainerObjectServiceLookup;
+	use ConfiguredSchemaSlug;
 
 	public const STATUS_ON_TRACK = 'on-track';
 	public const STATUS_AT_RISK = 'at-risk';
@@ -1069,7 +1071,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 	 * @return array<string, mixed>|null The recipient row, or null.
 	 */
 	private function resolveCustomerContact(string $objectType, string $objectId): ?array {
-		$targetSchema = $this->configuredSchema(key: 'sla_target_schema_' . $objectType, default: $objectType);
+		$targetSchema = $this->resolveSchemaSlug(key: 'sla_target_schema_' . $objectType, default: $objectType);
 		$target = $this->loadPipelinqObject(schema: $targetSchema, id: $objectId);
 		if ($target === null) {
 			return null;
@@ -1099,27 +1101,10 @@ class SlaEngineService implements SlaEngineServiceInterface {
 		}
 
 		return $this->loadPipelinqObject(
-			schema: $this->configuredSchema(key: $link . '_schema', default: $link),
+			schema: $this->resolveSchemaSlug(key: $link . '_schema', default: $link),
 			id: $linkedId
 		);
 	}//end linkedObject()
-
-	/**
-	 * A schema slug from app config, or the default when it is not set.
-	 *
-	 * @param string $key     The app-config key.
-	 * @param string $default The slug to fall back on.
-	 *
-	 * @return string
-	 */
-	private function configuredSchema(string $key, string $default): string {
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($schema === '') {
-			return $default;
-		}
-
-		return $schema;
-	}//end configuredSchema()
 
 	/**
 	 * Load a pipelinq-register object by schema slug + id (best effort).

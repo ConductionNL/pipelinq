@@ -46,6 +46,7 @@ use OCA\Pipelinq\Service\PersonLookup\LookupQuery;
 use OCA\Pipelinq\Service\PersonLookup\LookupRun;
 use OCA\Pipelinq\Service\PersonLookup\PersonFetch;
 use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\SerialisedRecord;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -74,6 +75,7 @@ use Throwable;
  */
 class BrpController extends Controller {
 	use InjectedObjectService;
+	use SerialisedRecord;
 
 	/**
 	 * Default role-based access list (group IDs).
@@ -1204,7 +1206,7 @@ class BrpController extends Controller {
 	private function latestFetched(mixed $results): ?array {
 		$latest = null;
 		foreach (($results ?? []) as $object) {
-			$arr = $this->personRow(object: $object);
+			$arr = $this->recordToArray(rec: $object);
 			if ($latest === null || (string)($arr['fetchedOn'] ?? '') > (string)($latest['fetchedOn'] ?? '')) {
 				$latest = $arr;
 			}
@@ -1212,23 +1214,4 @@ class BrpController extends Controller {
 
 		return $latest;
 	}//end latestFetched()
-
-	/**
-	 * A stored person as an array: as is, serialised, or empty.
-	 *
-	 * @param mixed $object A stored BrpPersoon.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function personRow(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (method_exists($object, 'jsonSerialize') === true) {
-			return (array)$object->jsonSerialize();
-		}
-
-		return [];
-	}//end personRow()
 }//end class

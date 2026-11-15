@@ -31,6 +31,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SearchQueryReportServiceInterface;
 use OCA\Pipelinq\Service\ObjectPageReader;
+use OCA\Pipelinq\Util\IsoDay;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -45,6 +46,7 @@ use Throwable;
  */
 class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	use SerialisedToArray;
+	use IsoDay;
 
 	/**
 	 * Default window in days when none is given.
@@ -233,25 +235,6 @@ class SearchQueryReportService implements SearchQueryReportServiceInterface {
 
 		return [$start->format('Y-m-d'), $end->format('Y-m-d')];
 	}//end window()
-
-	/**
-	 * Parse a `YYYY-MM-DD` string, or null.
-	 *
-	 * @param string|null $value The string.
-	 *
-	 * @return DateTimeImmutable|null UTC midnight or null.
-	 */
-	private function parseDay(?string $value): ?DateTimeImmutable {
-		if ($value === null || preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim($value), $matches) !== 1) {
-			return null;
-		}
-
-		if (checkdate((int)$matches[2], (int)$matches[3], (int)$matches[1]) === false) {
-			return null;
-		}
-
-		return new DateTimeImmutable((trim($value) . 'T00:00:00'), new DateTimeZone('UTC'));
-	}//end parseDay()
 
 	/**
 	 * Read the rows in the window from OpenRegister, paged.

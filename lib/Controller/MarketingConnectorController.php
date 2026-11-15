@@ -36,6 +36,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\MatomoReportServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
+use OCA\Pipelinq\Util\IsoDay;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -48,6 +49,7 @@ use OCP\IRequest;
  * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 class MarketingConnectorController extends Controller {
+	use IsoDay;
 
 	/**
 	 * The window used when the caller names none.
@@ -135,31 +137,12 @@ class MarketingConnectorController extends Controller {
 	 */
 	private function window(?string $from, ?string $to): array {
 		$today = (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC'));
-		$end = ($this->day(value: $to) ?? $today);
-		$start = ($this->day(value: $from) ?? $end->modify('-' . self::DEFAULT_WINDOW_DAYS . ' days'));
+		$end = ($this->parseDay(value: $to) ?? $today);
+		$start = ($this->parseDay(value: $from) ?? $end->modify('-' . self::DEFAULT_WINDOW_DAYS . ' days'));
 		if ($start > $end) {
 			$start = $end;
 		}
 
 		return [$start->format('Y-m-d'), $end->format('Y-m-d')];
 	}//end window()
-
-	/**
-	 * Parse a `YYYY-MM-DD` string, or null.
-	 *
-	 * @param string|null $value The string.
-	 *
-	 * @return DateTimeImmutable|null UTC midnight, or null.
-	 */
-	private function day(?string $value): ?DateTimeImmutable {
-		if ($value === null || preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim($value), $matches) !== 1) {
-			return null;
-		}
-
-		if (checkdate((int)$matches[2], (int)$matches[3], (int)$matches[1]) === false) {
-			return null;
-		}
-
-		return new DateTimeImmutable((trim($value) . 'T00:00:00'), new DateTimeZone('UTC'));
-	}//end day()
 }//end class

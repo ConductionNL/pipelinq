@@ -32,6 +32,7 @@ use DateTime;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\SerialisedCast;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -47,6 +48,7 @@ use Throwable;
  */
 class ClientBusinessReader implements ClientBusinessReaderInterface {
 	use SerialisedCast;
+	use ConfiguredSchemaSlug;
 
 	private const OBJECT_SERVICE = 'OCA\OpenRegister\Service\ObjectService';
 
@@ -91,12 +93,12 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 		$person    = (($client['type'] ?? '') === 'person');
 		$leads     = $this->rows(
 			register: $register,
-			schema: $this->schema(key: 'lead_schema', default: 'lead'),
+			schema: $this->resolveSchemaSlug(key: 'lead_schema', default: 'lead'),
 			filters: ['client' => $clientId, 'status' => 'open']
 		);
 		$contracts = $this->rows(
 			register: $register,
-			schema: $this->schema(key: 'contract_schema', default: 'salesContract'),
+			schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'),
 			filters: ['clientRef' => $clientId]
 		);
 
@@ -257,23 +259,6 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 	private function money(float $amount): string {
 		return '€ '.number_format($amount, 0, ',', '.');
 	}//end money()
-
-	/**
-	 * The schema configured under a key.
-	 *
-	 * @param string $key     The app config key.
-	 * @param string $default The slug when none is configured.
-	 *
-	 * @return string The schema.
-	 */
-	private function schema(string $key, string $default): string {
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($schema === '') {
-			return $default;
-		}
-
-		return $schema;
-	}//end schema()
 
 	/**
 	 * The rows of a schema that match the filters, as the reader may see them.
