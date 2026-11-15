@@ -544,16 +544,28 @@ class CtiService implements CtiServiceInterface {
 			);
 		}
 
-		$config = $this->loadConfig();
-		$call = new PendingCall(
-			direction: 'outbound',
-			fromNumber: (string)($config['default_outbound_caller_id'] ?? ''),
-			toNumber: $targetNumber,
-			agent: new CallAgent(userId: $userId, extension: $extension),
-		);
+		$call = $this->outboundCall(agent: new CallAgent(userId: $userId, extension: $extension), targetNumber: $targetNumber);
 
 		return $this->dialOut(platform: $platform, call: $call);
 	}//end originateCall()
+
+	/**
+	 * The outbound call from the configured caller id to the target number.
+	 *
+	 * @param CallAgent $agent        The agent placing the call.
+	 * @param string    $targetNumber Destination number (E.164 preferred).
+	 *
+	 * @return PendingCall The call to place.
+	 */
+	private function outboundCall(CallAgent $agent, string $targetNumber): PendingCall {
+		$config = $this->loadConfig();
+		return new PendingCall(
+			direction: 'outbound',
+			fromNumber: (string)($config['default_outbound_caller_id'] ?? ''),
+			toNumber: $targetNumber,
+			agent: $agent,
+		);
+	}//end outboundCall()
 
 	/**
 	 * Let the platform's adapter place an outbound call and pre-create its contactmoment.
@@ -861,14 +873,13 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
-		if ($register === '' || $schema === '') {
+		$target = $this->schemaTarget(schemaKey: 'ctiEventLog_schema');
+		if ($target === null) {
 			return [];
 		}
 
 		$query = new EventLogQuery(filters: $filters, limit: $limit, offset: $offset);
-		return $this->readEventLog(config: $query->config(register: $register, schema: $schema));
+		return $this->readEventLog(config: $query->config(register: $target[0], schema: $target[1]));
 	}//end listEventLog()
 
 	/**

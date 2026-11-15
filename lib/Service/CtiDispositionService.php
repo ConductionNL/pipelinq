@@ -105,14 +105,7 @@ class CtiDispositionService {
 		string $notes,
 		string $queue='',
 	): array {
-		if (in_array($outcome, self::OUTCOMES, true) === false) {
-			throw new InvalidArgumentException('Unknown disposition outcome: ' . $outcome);
-		}
-
-		$groupId = null;
-		if ($outcome === 'escalated') {
-			$groupId = $this->escalationGroup(queue: $queue);
-		}
+		$groupId = $this->outcomeGroup(outcome: $outcome, queue: $queue);
 
 		$disposition = new CallDisposition(interactionId: $interactionId, subject: $subject, outcome: $outcome, notes: $notes, groupId: $groupId);
 		$this->updateContactmoment(disposition: $disposition);
@@ -123,6 +116,28 @@ class CtiDispositionService {
 			'taskId' => $this->followUpTask(disposition: $disposition),
 		];
 	}//end processDisposition()
+
+	/**
+	 * Reject an unknown outcome, then give the escalation group an escalated outcome goes to.
+	 *
+	 * @param string $outcome One of self::OUTCOMES.
+	 * @param string $queue   The escalation queue id the agent chose; '' for the first queue.
+	 *
+	 * @return string|null The group id; null when the outcome is not an escalation or no queue is configured.
+	 *
+	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES, or $queue is unknown.
+	 */
+	private function outcomeGroup(string $outcome, string $queue): ?string {
+		if (in_array($outcome, self::OUTCOMES, true) === false) {
+			throw new InvalidArgumentException('Unknown disposition outcome: ' . $outcome);
+		}
+
+		if ($outcome === 'escalated') {
+			return $this->escalationGroup(queue: $queue);
+		}
+
+		return null;
+	}//end outcomeGroup()
 
 	/**
 	 * Create the follow-up task the outcome asks for: a callback request or an escalation task.

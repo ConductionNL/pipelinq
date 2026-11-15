@@ -153,23 +153,39 @@ class ContactmomentService implements ContactmomentServiceInterface {
 			return null;
 		}
 
+		$payload = $this->outboundPayload(
+			message: ['channel' => $channel, 'title' => $subject, 'description' => $summary, 'channelMetadata' => $channelMetadata],
+			links: ['client' => $clientId, 'assignee' => $agent]
+		);
+
+		return $this->saveTicket(payload: $payload, config: $config);
+	}//end recordOutboundMessage()
+
+	/**
+	 * The contact moment ticket fields of an outbound send.
+	 *
+	 * @param array{channel: string, title: string, description: string, channelMetadata: array<string, mixed>} $message The message.
+	 * @param array{client: string, assignee: string}                                                          $links   Client and agent.
+	 *
+	 * @return array<string, mixed> The ticket fields.
+	 */
+	private function outboundPayload(array $message, array $links): array {
 		$payload = [
 			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
-			'title' => $subject,
-			'description' => $summary,
-			'channel' => $channel,
+			'title' => $message['title'],
+			'description' => $message['description'],
+			'channel' => $message['channel'],
 			// This method records an outbound send and nothing else, so the
 			// direction is the method's, not the caller's envelope. The
 			// envelope keeps whatever it carried; the field is what surfaces
 			// and what facets.
 			'direction' => 'outbound',
 			'occurredAt' => gmdate('Y-m-d\TH:i:s\Z'),
-			'channelMetadata' => $channelMetadata,
+			'channelMetadata' => $message['channelMetadata'],
 		];
-		$payload += array_filter(['client' => $clientId, 'assignee' => $agent], static fn (string $value): bool => $value !== '');
 
-		return $this->saveTicket(payload: $payload, config: $config);
-	}//end recordOutboundMessage()
+		return $payload + array_filter($links, static fn (string $value): bool => $value !== '');
+	}//end outboundPayload()
 
 	/**
 	 * Log an inbound SMS or WhatsApp message from a number that matches no
@@ -204,25 +220,37 @@ class ContactmomentService implements ContactmomentServiceInterface {
 			return null;
 		}
 
-		[$channel, $title] = $this->inboundChannelAndTitle(platform: $platform, phone: $phone);
-		$payload = [
+		$payload = $this->inboundPayload(sender: ['platform' => $platform, 'phone' => $phone], message: ['body' => $body, 'messageId' => $messageId]);
+
+		return $this->saveTicket(payload: $payload, config: $config);
+	}//end recordInboundFromUnknownNumber()
+
+	/**
+	 * The contact moment ticket fields of an inbound message from an unknown number.
+	 *
+	 * @param array{platform: string, phone: string}  $sender  The platform (`sms` or `whatsapp`) and the sender in E.164.
+	 * @param array{body: string, messageId: string} $message The message text and persisted message UUID.
+	 *
+	 * @return array<string, mixed> The ticket fields.
+	 */
+	private function inboundPayload(array $sender, array $message): array {
+		[$channel, $title] = $this->inboundChannelAndTitle(platform: $sender['platform'], phone: $sender['phone']);
+		return [
 			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
 			'title' => $title,
-			'description' => $body,
+			'description' => $message['body'],
 			'channel' => $channel,
 			'direction' => 'inbound',
 			'status' => 'new',
 			'occurredAt' => gmdate('Y-m-d\TH:i:s\Z'),
 			'channelMetadata' => [
-				'platform' => $platform,
+				'platform' => $sender['platform'],
 				'direction' => 'inbound',
-				'from' => $phone,
-				'messageId' => $messageId,
+				'from' => $sender['phone'],
+				'messageId' => $message['messageId'],
 			],
 		];
-
-		return $this->saveTicket(payload: $payload, config: $config);
-	}//end recordInboundFromUnknownNumber()
+	}//end inboundPayload()
 
 	/**
 	 * The ticket register and schema, or null (logged) when they are unconfigured.
