@@ -159,11 +159,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 		$filterType = $this->normaliseTypeFilter(rawType: $type);
 		$window = new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit));
 
-		$registerId = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			'register',
-			''
-		);
+		$registerId = $this->registerId();
 		if ($registerId === '') {
 			return $this->emptyResult(page: $window->page);
 		}
@@ -175,6 +171,19 @@ class EntityActivityService implements EntityActivityServiceInterface {
 
 		return $this->paginate(items: $this->newestFirst(items: $items), window: $window);
 	}//end getActivity()
+
+	/**
+	 * The configured register id, or '' when none is configured.
+	 *
+	 * @return string
+	 */
+	private function registerId(): string {
+		return $this->appConfig->getValueString(
+			AppIdentity::APP_ID,
+			'register',
+			''
+		);
+	}//end registerId()
 
 	/**
 	 * Collect the activity items the type filter asks for: contactmomenten

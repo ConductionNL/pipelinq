@@ -233,12 +233,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			);
 		}
 
-		$blocking = array_values(
-			array_filter(
-				$this->resolve(partyId: $partyId, onDay: $onDay),
-				static fn (array $indicator): bool => ($indicator[$effect] ?? false) === true
-			)
-		);
+		$blocking = self::withEffect(indicators: $this->resolve(partyId: $partyId, onDay: $onDay), effect: $effect);
 
 		return [
 			'blocked' => ($blocking !== []),
@@ -246,6 +241,23 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			'indicators' => $blocking,
 		];
 	}//end isBlocked()
+
+	/**
+	 * The indicators that carry an effect, in order.
+	 *
+	 * @param array<int, array<string, mixed>> $indicators The resolved indicators.
+	 * @param string                           $effect     The effect flag.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function withEffect(array $indicators, string $effect): array {
+		return array_values(
+			array_filter(
+				$indicators,
+				static fn (array $indicator): bool => ($indicator[$effect] ?? false) === true
+			)
+		);
+	}//end withEffect()
 
 	/**
 	 * Record that a handler has seen an indicator that demands it.
