@@ -153,15 +153,26 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 		string $description = '',
 		string $returnUrl = '',
 	): array {
-		$target = $this->sessionTarget(bookingId: $bookingId, amountCents: $amountCents);
+		return $this->depositSession(request: new DepositSessionRequest($bookingId, $amountCents, $currency, $description, $returnUrl));
+	}//end createDepositSession()
+
+	/**
+	 * Create the payment session for a validated request, or the unavailable result.
+	 *
+	 * @param DepositSessionRequest $request The deposit session request.
+	 *
+	 * @return array{sessionUrl: string, status: string, providerReference: string}
+	 *
+	 * @throws InvalidArgumentException When the bookingId is empty or amountCents <= 0.
+	 */
+	private function depositSession(DepositSessionRequest $request): array {
+		$target = $this->sessionTarget(bookingId: $request->bookingId, amountCents: $request->amountCents);
 		if ($target === null) {
 			return $this->unavailableSession();
 		}
 
-		$amount = $this->sessionAmount(amountCents: $amountCents, currency: $currency);
-		$payload = $this->sessionPayload(bookingId: $bookingId, amount: $amount, description: $description, returnUrl: $returnUrl);
-		return $this->requestSession(target: $target, payload: $payload, amountCents: $amountCents);
-	}//end createDepositSession()
+		return $this->requestSession(target: $target, request: $request);
+	}//end depositSession()
 
 	/**
 	 * Reject an empty booking id or a non-positive deposit amount.
@@ -259,24 +270,22 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	/**
 	 * Build the createSession payload for a deposit booking.
 	 *
-	 * @param string               $bookingId   Booking UUID.
-	 * @param array<string, mixed> $amount      The amount block.
-	 * @param string               $description Short description for the payment session.
-	 * @param string               $returnUrl   The portal URL the customer returns to.
+	 * @param DepositSessionRequest $request The deposit session request.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function sessionPayload(string $bookingId, array $amount, string $description, string $returnUrl): array {
+	private function sessionPayload(DepositSessionRequest $request): array {
+		$amount = $this->sessionAmount(amountCents: $request->amountCents, currency: $request->currency);
 		$callbackUrl = $this->callbackUrl();
 		return [
 			'amount' => $amount,
-			'description' => $this->truncate(value: $description, max: 255),
-			'returnUrl' => $returnUrl,
+			'description' => $this->truncate(value: $request->description, max: 255),
+			'returnUrl' => $request->returnUrl,
 			'webhookUrl' => $callbackUrl,
 			'metadata' => [
 				'app' => AppIdentity::APP_ID,
 				'kind' => 'appointment-deposit',
-				'bookingId' => $bookingId,
+				'bookingId' => $request->bookingId,
 			],
 		];
 	}//end sessionPayload()
@@ -284,18 +293,18 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	/**
 	 * Ask the payment service for a session and shape the result.
 	 *
-	 * @param array{payment: object, source: string} $target      The payment service and source slug.
-	 * @param array<string, mixed>                   $payload     The createSession payload.
-	 * @param int                                    $amountCents Deposit amount in integer cents.
+	 * @param array{payment: object, source: string} $target  The payment service and source slug.
+	 * @param DepositSessionRequest                  $request The deposit session request.
 	 *
 	 * @return array{sessionUrl: string, status: string, providerReference: string}
 	 */
-	private function requestSession(array $target, array $payload, int $amountCents): array {
+	private function requestSession(array $target, DepositSessionRequest $request): array {
+		$payload = $this->sessionPayload(request: $request);
 		try {
 			// @phpstan-ignore-next-line dynamic openconnector seam
 			$result = $target['payment']->createSession($target['source'], $payload);
 		} catch (Throwable $e) {
-			return $this->sessionFailed(bookingId: $payload['metadata']['bookingId'], amountCents: $amountCents);
+			return $this->sessionFailed(bookingId: $request->bookingId, amountCents: $request->amountCents);
 		}
 
 		return [
@@ -588,7 +597,7 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 			return;
 		}
 
-		$this->stampDepositPaid(objectService: $objectService, bookingId: $bookingId, register: $register, schema: $schema);
+		$this->stampDepositPaid(objectService: $objectService, booking: ['id' => $bookingId, 'register' => $register, 'schema' => $schema]);
 	}//end markDepositPaid()
 
 	/**
@@ -607,45 +616,41 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	/**
 	 * Load the booking, set `depositPaidAt` and save it back, logging a failed save.
 	 *
-	 * @param mixed  $objectService The OpenRegister ObjectService.
-	 * @param string $bookingId     Booking UUID.
-	 * @param string $register      Register id.
-	 * @param string $schema        Booking schema id.
+	 * @param mixed                                             $objectService The OpenRegister ObjectService.
+	 * @param array{id: string, register: string, schema: string} $booking       The booking UUID, register id and schema id.
 	 *
 	 * @return void
 	 */
-	private function stampDepositPaid(mixed $objectService, string $bookingId, string $register, string $schema): void {
-		$data = $this->loadStampedBooking(objectService: $objectService, bookingId: $bookingId, register: $register, schema: $schema);
+	private function stampDepositPaid(mixed $objectService, array $booking): void {
+		$data = $this->loadStampedBooking(objectService: $objectService, booking: $booking);
 		if ($data === null) {
 			return;
 		}
 
 		try {
-			$objectService->saveObject(object: $data, extend: [], register: $register, schema: $schema, uuid: $bookingId);
+			$objectService->saveObject(object: $data, extend: [], register: $booking['register'], schema: $booking['schema'], uuid: $booking['id']);
 		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: depositPaidAt save failed', ['booking' => $bookingId]);
+			$this->logger->warning('Pipelinq: depositPaidAt save failed', ['booking' => $booking['id']]);
 		}
 	}//end stampDepositPaid()
 
 	/**
 	 * Load the booking as an array with `depositPaidAt` stamped, logging a failed load.
 	 *
-	 * @param mixed  $objectService The OpenRegister ObjectService.
-	 * @param string $bookingId     Booking UUID.
-	 * @param string $register      Register id.
-	 * @param string $schema        Booking schema id.
+	 * @param mixed                                             $objectService The OpenRegister ObjectService.
+	 * @param array{id: string, register: string, schema: string} $booking       The booking UUID, register id and schema id.
 	 *
 	 * @return array<string, mixed>|null Null when the booking cannot be loaded.
 	 */
-	private function loadStampedBooking(mixed $objectService, string $bookingId, string $register, string $schema): array|null {
+	private function loadStampedBooking(mixed $objectService, array $booking): array|null {
 		try {
-			$booking = $objectService->find(id: $bookingId, register: $register, schema: $schema);
+			$found = $objectService->find(id: $booking['id'], register: $booking['register'], schema: $booking['schema']);
 		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: depositPaidAt load failed', ['booking' => $bookingId]);
+			$this->logger->warning('Pipelinq: depositPaidAt load failed', ['booking' => $booking['id']]);
 			return null;
 		}
 
-		$data = $this->toArray(object: $booking);
+		$data = $this->toArray(object: $found);
 		if ($data === null) {
 			return null;
 		}
