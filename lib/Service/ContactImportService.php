@@ -89,11 +89,7 @@ class ContactImportService {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function importAsContact(array $ncContact, string $uid, ?string $clientId): array {
-		$data = $this->dataBuilder->buildContactImportData(
-			ncContact: $ncContact,
-			uid: $uid,
-			clientId: $clientId
-		);
+		$data = $this->dataBuilder->buildContactImportData(ncContact: $ncContact, uid: $uid, clientId: $clientId);
 
 		return $this->savedAs(data: $data, schemaKey: 'contact_schema');
 	}//end importAsContact()

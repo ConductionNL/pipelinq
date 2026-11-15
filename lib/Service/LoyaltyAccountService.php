@@ -193,10 +193,8 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		string $termsVersion = '1.0',
 	): array {
 		return $this->findAccountByKlantAndProgramme(customerId: $customerId, programmeId: $programmeId) ?? $this->createAccount(
-			customerId: $customerId,
-			programmeId: $programmeId,
-			optIn: $optIn,
-			termsVersion: $termsVersion
+			customerId: $customerId, programmeId: $programmeId,
+			optIn: $optIn, termsVersion: $termsVersion
 		);
 	}//end getOrCreateAccount()
 
