@@ -223,8 +223,20 @@ class ContactSyncService implements ContactSyncServiceInterface {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function importContact(string $uid, string $addressBookKey, string $type = 'client', ?string $clientId = null): array {
-		$ncContact = $this->requireContact(uid: $uid);
-		if ($type === 'client') {
+		return $this->importAs(ncContact: $this->requireContact(uid: $uid), import: ['uid' => $uid, 'type' => $type, 'clientId' => $clientId]);
+	}//end importContact()
+
+	/**
+	 * Import a read Nextcloud contact as a client or as a contact.
+	 *
+	 * @param array                                                 $ncContact The Nextcloud contact.
+	 * @param array{uid: string, type: string, clientId: ?string} $import    The contact UID, the import type and the optional client ID.
+	 *
+	 * @return array The created object data.
+	 */
+	private function importAs(array $ncContact, array $import): array {
+		$uid = $import['uid'];
+		if ($import['type'] === 'client') {
 			return $this->contactImportService->importAsClient(
 				ncContact: $ncContact,
 				uid: $uid
@@ -234,9 +246,9 @@ class ContactSyncService implements ContactSyncServiceInterface {
 		return $this->contactImportService->importAsContact(
 			ncContact: $ncContact,
 			uid: $uid,
-			clientId: $clientId
+			clientId: $import['clientId']
 		);
-	}//end importContact()
+	}//end importAs()
 
 	/**
 	 * The Nextcloud contact with this UID.

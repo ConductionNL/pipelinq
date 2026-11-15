@@ -308,16 +308,22 @@ class CallbackService implements CallbackServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyReassignment(array $taskData, string $assignee, string $assigneeType): array {
-		if ($assigneeType === 'user') {
-			$taskData['assigneeUserId'] = $assignee;
-			$taskData['assigneeGroupId'] = null;
+		return array_replace($taskData, self::assigneeFields(assignee: $assignee, assigneeType: $assigneeType));
+	}//end applyReassignment()
 
-			return $taskData;
+	/**
+	 * The assignee fields of a reassignment: the new assignee set, the other kind cleared.
+	 *
+	 * @param string $assignee     The new assignee ID.
+	 * @param string $assigneeType The assignee type (user or group).
+	 *
+	 * @return array<string, string|null> The fields, in the order they are written.
+	 */
+	private static function assigneeFields(string $assignee, string $assigneeType): array {
+		if ($assigneeType === 'user') {
+			return ['assigneeUserId' => $assignee, 'assigneeGroupId' => null];
 		}
 
-		$taskData['assigneeGroupId'] = $assignee;
-		$taskData['assigneeUserId'] = null;
-
-		return $taskData;
-	}//end applyReassignment()
+		return ['assigneeGroupId' => $assignee, 'assigneeUserId' => null];
+	}//end assigneeFields()
 }//end class

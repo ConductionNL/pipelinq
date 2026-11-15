@@ -106,16 +106,26 @@ class CtiDispositionService {
 		string $queue='',
 	): array {
 		$groupId = $this->outcomeGroup(outcome: $outcome, queue: $queue);
-
 		$disposition = new CallDisposition(interactionId: $interactionId, subject: $subject, outcome: $outcome, notes: $notes, groupId: $groupId);
+		return $this->disposed(disposition: $disposition);
+	}//end processDisposition()
+
+	/**
+	 * Update the contactmoment with a disposition and raise its follow-up task.
+	 *
+	 * @param CallDisposition $disposition The disposition.
+	 *
+	 * @return array{outcome: string, interactionId: string, taskId: string|null}
+	 */
+	private function disposed(CallDisposition $disposition): array {
 		$this->updateContactmoment(disposition: $disposition);
 
 		return [
-			'outcome' => $outcome,
-			'interactionId' => $interactionId,
+			'outcome' => $disposition->outcome,
+			'interactionId' => $disposition->interactionId,
 			'taskId' => $this->followUpTask(disposition: $disposition),
 		];
-	}//end processDisposition()
+	}//end disposed()
 
 	/**
 	 * Reject an unknown outcome, then give the escalation group an escalated outcome goes to.
