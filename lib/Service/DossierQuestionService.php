@@ -238,10 +238,24 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$ticket['portalReplies'] = $this->repliesWith(ticket: $ticket, message: $message);
-
-		return $this->savedReply(ticket: $this->resumeIfAwaiting(ticket: $ticket), ticketId: $ticketId);
+		return $this->replied(ticket: $ticket, reply: ['ticketId' => $ticketId, 'message' => $message]);
 	}//end reply()
+
+	/**
+	 * Add a reply to the resident's own ticket and save it, resumed when it awaited them.
+	 *
+	 * @param array<string, mixed>                     $ticket The resident's ticket.
+	 * @param array{ticketId: string, message: string} $reply  The ticket id and the reply text.
+	 *
+	 * @return array<string, mixed> The ticket's id, status and replies.
+	 *
+	 * @throws \RuntimeException When the ticket cannot be saved.
+	 */
+	private function replied(array $ticket, array $reply): array {
+		$ticket['portalReplies'] = $this->repliesWith(ticket: $ticket, message: $reply['message']);
+
+		return $this->savedReply(ticket: $this->resumeIfAwaiting(ticket: $ticket), ticketId: $reply['ticketId']);
+	}//end replied()
 
 	/**
 	 * Save a ticket that carries a new reply.
