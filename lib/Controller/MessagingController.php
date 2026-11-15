@@ -127,8 +127,6 @@ class MessagingController extends Controller {
 			return $refusal;
 		}
 
-		$uid = $this->privilege->actingUserId();
-
 		if ($this->isMessagingChannel(channel: $send['channel']) === false) {
 			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
 		}
@@ -140,7 +138,7 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->dispatchSend(contact: $contact, send: $send, uid: $uid);
+		return $this->dispatchSend(contact: $contact, send: $send);
 	}//end send()
 
 	/**
@@ -148,15 +146,14 @@ class MessagingController extends Controller {
 	 *
 	 * @param mixed $contact The loaded contact.
 	 * @param array<string, mixed> $send The typed send parameters.
-	 * @param string|null $uid The acting user id.
 	 *
 	 * @return JSONResponse The send outcome.
 	 */
-	private function dispatchSend($contact, array $send, $uid): JSONResponse {
+	private function dispatchSend($contact, array $send): JSONResponse {
 		$outcome = $this->messagingService->send(
 			route: new MessageRoute(contact: $contact, providerHint: $send['providerHint'], clientId: $send['clientId'], inReplyTo: $send['inReplyTo']),
 			content: new MessageContent(channel: $send['channel'], body: $send['body'], templateId: $send['templateId'], parameters: $send['parameters']),
-			actor: $uid
+			actor: $this->privilege->actingUserId()
 		);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
