@@ -207,12 +207,11 @@ final class LeadStagePlacer {
 			$patch['pipeline'] = (string)$pipeline['id'];
 		}
 
-		$stageName = trim((string)($lead['stage'] ?? ''));
-		if ($stageName === '') {
+		if (trim((string)($lead['stage'] ?? '')) === '') {
 			return $this->withFirstOpenStage(patch: $patch, pipeline: $pipeline);
 		}
 
-		return $this->withStageOrder(patch: $patch, lead: $lead, pipeline: $pipeline, stageName: $stageName);
+		return array_merge($patch, $this->missingStageOrder(lead: $lead, pipeline: $pipeline));
 	}//end stagePatch()
 
 	/**
@@ -235,23 +234,21 @@ final class LeadStagePlacer {
 	}//end withFirstOpenStage()
 
 	/**
-	 * Fill in the stage order of a lead whose stage is known but whose order is blank.
+	 * The stage order of a lead whose stage is known but whose order is blank.
 	 *
-	 * @param array<string, mixed> $patch The patch so far.
-	 * @param array<string, mixed> $lead The lead.
+	 * @param array<string, mixed> $lead The lead, with a stage.
 	 * @param array<string, mixed> $pipeline The pipeline.
-	 * @param string $stageName The lead's stage name.
 	 *
-	 * @return array<string, mixed> The patch.
+	 * @return array<string, mixed> `stageOrder`, or nothing when it is set or unknown.
 	 */
-	private function withStageOrder(array $patch, array $lead, array $pipeline, string $stageName): array {
-		$order = $this->stageOrder(pipeline: $pipeline, stageName: $stageName);
+	private function missingStageOrder(array $lead, array $pipeline): array {
+		$order = $this->stageOrder(pipeline: $pipeline, stageName: trim((string)($lead['stage'] ?? '')));
 		if ($order !== null && $this->isBlank(value: $lead['stageOrder'] ?? null) === true) {
-			$patch['stageOrder'] = $order;
+			return ['stageOrder' => $order];
 		}
 
-		return $patch;
-	}//end withStageOrder()
+		return [];
+	}//end missingStageOrder()
 
 	/**
 	 * An ISO 8601 moment: the given one, or now.
