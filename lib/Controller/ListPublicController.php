@@ -199,10 +199,12 @@ class ListPublicController extends Controller {
 
 		$listName = (string)(($result['list']['name'] ?? ''));
 		return $this->page(
-			title: $this->l10n->t('You are subscribed'),
-			heading: $this->l10n->t('You are subscribed'),
-			body: $this->l10n->t('You will receive %s from now on. Every message carries a link to stop.', [$listName]),
-			form: '',
+			text: new ListPageText(
+				title: $this->l10n->t('You are subscribed'),
+				heading: $this->l10n->t('You are subscribed'),
+				body: $this->l10n->t('You will receive %s from now on. Every message carries a link to stop.', [$listName]),
+				form: '',
+			)
 		);
 	}//end confirm()
 
@@ -248,10 +250,12 @@ class ListPublicController extends Controller {
 			. '</form>';
 
 		return $this->page(
-			title: $this->l10n->t('Unsubscribe'),
-			heading: $this->l10n->t('Unsubscribe from %s', [$listName]),
-			body: $this->l10n->t('You are about to stop receiving this list. Nothing has changed yet.'),
-			form: $form,
+			text: new ListPageText(
+				title: $this->l10n->t('Unsubscribe'),
+				heading: $this->l10n->t('Unsubscribe from %s', [$listName]),
+				body: $this->l10n->t('You are about to stop receiving this list. Nothing has changed yet.'),
+				form: $form,
+			)
 		);
 	}//end unsubscribePage()
 
@@ -405,10 +409,12 @@ class ListPublicController extends Controller {
 	 */
 	private function gonePage(): DataDisplayResponse {
 		return $this->page(
-			title: $this->l10n->t('Link expired'),
-			heading: $this->l10n->t('This link no longer works'),
-			body: $this->l10n->t('It may have been used already, or it may be too old. Ask for a new one from any message you received.'),
-			form: '',
+			text: new ListPageText(
+				title: $this->l10n->t('Link expired'),
+				heading: $this->l10n->t('This link no longer works'),
+				body: $this->l10n->t('It may have been used already, or it may be too old. Ask for a new one from any message you received.'),
+				form: '',
+			),
 			status: Http::STATUS_GONE,
 		);
 	}//end gonePage()
@@ -422,29 +428,19 @@ class ListPublicController extends Controller {
 	 * button. Every interpolated value is escaped, the document declares its
 	 * language, and it carries no script.
 	 *
-	 * @param string $title The document title.
-	 * @param string $heading The visible heading.
-	 * @param string $body One sentence of explanation.
-	 * @param string $form Pre-escaped markup for the action, or an empty
-	 *                     string for a page with nothing to do.
-	 * @param int $status HTTP status.
+	 * @param ListPageText $text   The title, heading, explanation and action markup.
+	 * @param int          $status HTTP status.
 	 *
 	 * @phpstan-param Http::STATUS_OK|Http::STATUS_GONE $status
 	 *
 	 * @return DataDisplayResponse The rendered page.
 	 */
-	private function page(
-		string $title,
-		string $heading,
-		string $body,
-		string $form,
-		int $status = Http::STATUS_OK,
-	): DataDisplayResponse {
-		$html = $this->documentHead(title: $title)
+	private function page(ListPageText $text, int $status = Http::STATUS_OK): DataDisplayResponse {
+		$html = $this->documentHead(title: $text->title)
 			. '<body>'
-			. '<h1>' . $this->escape(value: $heading) . '</h1>'
-			. '<p>' . $this->escape(value: $body) . '</p>'
-			. $form
+			. '<h1>' . $this->escape(value: $text->heading) . '</h1>'
+			. '<p>' . $this->escape(value: $text->body) . '</p>'
+			. $text->form
 			. '</body></html>';
 
 		return self::htmlResponse(html: $html, status: $status);
