@@ -284,11 +284,12 @@ class ActivityTimelineReader {
 	 */
 	private function withServiceNames(array $bookings, string $registerId): array {
 		$serviceSchema = $this->schemaId(key: 'service_schema');
+		$services = new RegisterSchema(register: $registerId, schema: $serviceSchema);
 		$names = [];
 		foreach ($bookings as $index => $booking) {
 			$serviceId = (string)($booking['serviceId'] ?? '');
 			if ($serviceId !== '' && $serviceSchema !== '' && array_key_exists($serviceId, $names) === false) {
-				$names[$serviceId] = $this->serviceName(serviceId: $serviceId, registerId: $registerId, schemaId: $serviceSchema);
+				$names[$serviceId] = $this->serviceName(serviceId: $serviceId, services: $services);
 			}
 
 			$bookings[$index]['serviceName'] = $names[$serviceId] ?? null;
@@ -360,15 +361,14 @@ class ActivityTimelineReader {
 	/**
 	 * The name of an appointment service, or null when it cannot be read.
 	 *
-	 * @param string $serviceId The service UUID.
-	 * @param string $registerId The register ID.
-	 * @param string $schemaId The service schema ID.
+	 * @param string         $serviceId The service UUID.
+	 * @param RegisterSchema $services  The register and service schema IDs.
 	 *
 	 * @return string|null The name.
 	 */
-	private function serviceName(string $serviceId, string $registerId, string $schemaId): ?string {
+	private function serviceName(string $serviceId, RegisterSchema $services): ?string {
 		try {
-			$service = $this->objectService->find(id: $serviceId, register: $registerId, schema: $schemaId);
+			$service = $this->objectService->find(id: $serviceId, register: $services->register, schema: $services->schema);
 		} catch (Throwable) {
 			return null;
 		}
