@@ -226,7 +226,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 			return;
 		}
 
-		if ($this->matchesSubject(data: $data, subjectId: $run->subjectId, linkFields: self::SUBJECT_LINKS[$run->sourceKey]) === false) {
+		if ($this->matchesSubject(data: $data, run: $run) === false) {
 			return;
 		}
 
@@ -245,14 +245,16 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 	/**
 	 * Whether an object belongs to the subject via own identity or a FK link.
 	 *
+	 * The link fields (`@self` or FK names) are those of the run's source.
+	 *
 	 * @param array<string, mixed> $data The object data.
-	 * @param string $subjectId The case subject identifier.
-	 * @param array<int, string> $linkFields The link fields (`@self` or FK names).
+	 * @param EvidenceHarvest $run The harvest: its subject and source.
 	 *
 	 * @return bool True when the object belongs to the subject.
 	 */
-	private function matchesSubject(array $data, string $subjectId, array $linkFields): bool {
-		foreach ($linkFields as $field) {
+	private function matchesSubject(array $data, EvidenceHarvest $run): bool {
+		$subjectId = $run->subjectId;
+		foreach (self::SUBJECT_LINKS[$run->sourceKey] as $field) {
 			if ($field === '@self') {
 				$ownId = (string)($data['id'] ?? ($data['uuid'] ?? ''));
 				$contactsUid = (string)($data['contactsUid'] ?? '');
