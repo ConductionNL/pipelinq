@@ -201,16 +201,28 @@ class SemanticHandoffService implements SemanticHandoffServiceInterface {
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 	 */
 	public function handoff(string $register, string $schema, string $id, string $handoffId): array {
+		return $this->handoffOf(source: ['register' => $register, 'schema' => $schema, 'id' => $id], handoffId: $handoffId);
+	}//end handoff()
+
+	/**
+	 * Execute a declared handoff of a source object via OpenRegister's engine.
+	 *
+	 * @param array{register: string, schema: string, id: string} $source    Source register and schema slugs, and object UUID.
+	 * @param string                                              $handoffId The declared `x-openregister-handoff` entry id.
+	 *
+	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string} Outcome.
+	 */
+	private function handoffOf(array $source, string $handoffId): array {
 		$engine = $this->resolveService(fqcn: self::ENGINE_CLASS, method: 'execute');
 		if ($engine === null) {
 			return $this->outcome(succeeded: false, fields: ['reason' => 'engine-unavailable']);
 		}
 
 		return $this->executedOutcome(
-			execute: static fn () => $engine->execute(register: $register, schema: $schema, id: $id, handoffId: $handoffId),
+			execute: static fn () => $engine->execute(register: $source['register'], schema: $source['schema'], id: $source['id'], handoffId: $handoffId),
 			handoffId: $handoffId
 		);
-	}//end handoff()
+	}//end handoffOf()
 
 	/**
 	 * Run the engine's execute call and normalise its answer; a throw or a non-array answer is a failure.
