@@ -1544,33 +1544,30 @@ class ComplianceService implements ComplianceServiceInterface {
 			return;
 		}
 
-		$rows = $this->findContactDeliveries(objectService: $objectService, contactId: $contactId, register: $register, schema: $schema);
+		$deliveries = new BlastDeliveryCollection(objectService: $objectService, register: $register, schema: $schema);
+		$rows = $this->findContactDeliveries(deliveries: $deliveries, contactId: $contactId);
 		foreach ($rows as $row) {
 			$array = $this->toArray(value: $row);
 			if ($this->isTransitionable(delivery: $array, sourceBlastId: $sourceBlastId) === false) {
 				continue;
 			}
 
-			$id = $this->extractObjectId(payload: $array);
-			if ($id === '') {
-				continue;
-			}
-
-			$this->markUnsubscribedBeforeSend(objectService: $objectService, id: $id, delivery: $array, register: $register, schema: $schema);
+			$this->markUnsubscribedBeforeSend(deliveries: $deliveries, delivery: $array);
 		}
 	}//end transitionQueuedDeliveries()
 
 	/**
 	 * Every BlastDelivery row of a contact, or none when the lookup fails.
 	 *
-	 * @param object $objectService OpenRegister's ObjectService.
-	 * @param string $contactId     Contact UUID / slug.
-	 * @param string $register      Register slug.
-	 * @param string $schema        BlastDelivery schema slug.
+	 * @param BlastDeliveryCollection $deliveries The BlastDelivery collection.
+	 * @param string                  $contactId  Contact UUID / slug.
 	 *
 	 * @return mixed The rows (a list from OpenRegister), or an empty array on failure.
 	 */
-	private function findContactDeliveries(object $objectService, string $contactId, string $register, string $schema): mixed {
+	private function findContactDeliveries(BlastDeliveryCollection $deliveries, string $contactId): mixed {
+		$objectService = $deliveries->objectService;
+		$register = $deliveries->register;
+		$schema = $deliveries->schema;
 		try {
 			$rows = $objectService->findAll(
 				config: [
@@ -1627,17 +1624,23 @@ class ComplianceService implements ComplianceServiceInterface {
 	}//end isTransitionable()
 
 	/**
-	 * Move one delivery to unsubscribed-before-send; a failed write is logged.
+	 * Move one delivery to unsubscribed-before-send; a delivery without an
+	 * id is left alone and a failed write is logged.
 	 *
-	 * @param object               $objectService OpenRegister's ObjectService.
-	 * @param string               $id            Delivery id.
-	 * @param array<string, mixed> $delivery      The delivery payload.
-	 * @param string               $register      Register slug.
-	 * @param string               $schema        BlastDelivery schema slug.
+	 * @param BlastDeliveryCollection $deliveries The BlastDelivery collection.
+	 * @param array<string, mixed>    $delivery   The delivery payload.
 	 *
 	 * @return void
 	 */
-	private function markUnsubscribedBeforeSend(object $objectService, string $id, array $delivery, string $register, string $schema): void {
+	private function markUnsubscribedBeforeSend(BlastDeliveryCollection $deliveries, array $delivery): void {
+		$id = $this->extractObjectId(payload: $delivery);
+		if ($id === '') {
+			return;
+		}
+
+		$objectService = $deliveries->objectService;
+		$register = $deliveries->register;
+		$schema = $deliveries->schema;
 		$delivery['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
 		$delivery['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
 
