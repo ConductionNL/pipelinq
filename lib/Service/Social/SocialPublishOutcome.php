@@ -72,8 +72,12 @@ class SocialPublishOutcome {
 	 */
 	public static function published(string $externalId, string $url = '', float $cost = 0.0): self {
 		return new self(
-			accepted: true, externalId: $externalId, url: $url,
-			cost: $cost, failureCode: '', failureReason: '',
+			accepted: true,
+			externalId: $externalId,
+			url: $url,
+			cost: $cost,
+			failureCode: '',
+			failureReason: '',
 		);
 	}//end published()
 
@@ -90,8 +94,12 @@ class SocialPublishOutcome {
 	 */
 	public static function refused(string $code, string $reason, float $cost = 0.0): self {
 		return new self(
-			accepted: false, externalId: '', url: '',
-			cost: $cost, failureCode: $code, failureReason: $reason,
+			accepted: false,
+			externalId: '',
+			url: '',
+			cost: $cost,
+			failureCode: $code,
+			failureReason: $reason,
 		);
 	}//end refused()
 

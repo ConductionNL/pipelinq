@@ -69,8 +69,11 @@ class PriceListResolver {
 		}
 
 		$line = new PriceListLine(
-			productId: $productId, sku: trim((string) $variantSku), quantity: $quantity,
-			currency: $currency, day: $day
+			productId: $productId,
+			sku: trim((string) $variantSku),
+			quantity: $quantity,
+			currency: $currency,
+			day: $day
 		);
 
 		return self::firstMatch(lists: $this->candidates(lists: $this->usableLists(lists: $lists, line: $line), client: $client), line: $line);

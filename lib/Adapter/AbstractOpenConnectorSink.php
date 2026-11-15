@@ -112,7 +112,12 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function upload(array $credentials, array $destination, string $remotePath, string $contents): string {
-		$result = $this->transfer(credentials: $credentials, destination: $destination, remotePath: $remotePath, contents: $contents);
+		$result = $this->transfer(
+			credentials: $credentials,
+			destination: $destination,
+			remotePath: $remotePath,
+			contents: $contents
+		);
 
 		return $this->acknowledge(result: $result);
 	}//end upload()

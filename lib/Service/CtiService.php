@@ -1355,8 +1355,11 @@ class CtiService implements CtiServiceInterface {
 	 */
 	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes, string $queue=''): array {
 		return $this->dispositionService->processDisposition(
-			interactionId: $interactionId, subject: $subject, outcome: $outcome,
-			notes: $notes, queue: $queue,
+			interactionId: $interactionId,
+			subject: $subject,
+			outcome: $outcome,
+			notes: $notes,
+			queue: $queue,
 		);
 	}//end processDisposition()
 
