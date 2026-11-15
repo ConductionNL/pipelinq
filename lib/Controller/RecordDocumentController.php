@@ -156,7 +156,8 @@ class RecordDocumentController extends Controller
             return new JSONResponse(['message' => 'This record has no document'], Http::STATUS_NOT_FOUND);
         }
 
-        $record = $this->readAuthorisedRecord(uid: $user->getUID(), schema: $schema, id: $id, ownerField: $config['ownerField']);
+        $target = ['schema' => $schema, 'id' => $id, 'ownerField' => $config['ownerField']];
+        $record = $this->readAuthorisedRecord(uid: $user->getUID(), target: $target);
         if ($record === null) {
             return new JSONResponse(['message' => 'Record not found'], Http::STATUS_NOT_FOUND);
         }
@@ -179,20 +180,18 @@ class RecordDocumentController extends Controller
     /**
      * Read a record the caller may act on, or null when it is absent or not theirs.
      *
-     * @param string $uid        The caller's uid.
-     * @param string $schema     The schema slug.
-     * @param string $id         The record id.
-     * @param mixed  $ownerField The configured owner field.
+     * @param string               $uid    The caller's uid.
+     * @param array<string, mixed> $target Keys: schema (slug), id (record id), ownerField (the configured owner field).
      *
      * @return array<string, mixed>|null
      */
-    private function readAuthorisedRecord(string $uid, string $schema, string $id, mixed $ownerField): array|null
+    private function readAuthorisedRecord(string $uid, array $target): array|null
     {
         // Existence is not authorization: OpenRegister answers a read whatever
         // `_rbac` says, so this app decides who may act on the record.
-        $record = $this->reader->readFromSchema(id: $id, schema: $schema);
+        $record = $this->reader->readFromSchema(id: $target['id'], schema: $target['schema']);
         if ($record === null
-            || $this->accessPolicy->mayAccess(uid: $uid, object: $record, ownerField: $ownerField) === false
+            || $this->accessPolicy->mayAccess(uid: $uid, object: $record, ownerField: $target['ownerField']) === false
         ) {
             return null;
         }
