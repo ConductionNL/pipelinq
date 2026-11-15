@@ -76,17 +76,17 @@ class DemoSocialSeeder {
 		[$accountSchema, $postSchema, $publicationSchema] = $this->schemas();
 
 		$accounts = $this->seedAccounts(definitions: ($social['accounts'] ?? []), schemaSlug: $accountSchema);
-		$posts = $this->seedPosts(definitions: ($social['posts'] ?? []), schemaSlug: $postSchema, accountIds: $accounts['ids']);
+		$posts = $this->seedPosts(
+			section: new DemoSocialSection(definitions: ($social['posts'] ?? []), schemaSlug: $postSchema),
+			accountIds: $accounts['ids']
+		);
 
 		$counts['accounts'] = $accounts['created'];
 		$counts['posts'] = $posts['created'];
 		$counts['skipped'] = ($accounts['skipped'] + $posts['skipped']);
 		$counts['publications'] = $this->seedPublications(
-			definitions: ($social['publications'] ?? []),
-			schemaSlug: $publicationSchema,
-			postIds: $posts['ids'],
-			accountIds: $accounts['ids'],
-			networks: $accounts['networks'],
+			section: new DemoSocialSection(definitions: ($social['publications'] ?? []), schemaSlug: $publicationSchema),
+			seeded: ['postIds' => $posts['ids'], 'accountIds' => $accounts['ids'], 'networks' => $accounts['networks']],
 		);
 
 		return $counts;
@@ -113,8 +113,7 @@ class DemoSocialSeeder {
 		[$accountSchema, $postSchema, $publicationSchema] = $this->schemas();
 
 		$postIds = $this->demoIds(
-			definitions: ($social['posts'] ?? []),
-			schemaSlug: $postSchema,
+			section: new DemoSocialSection(definitions: ($social['posts'] ?? []), schemaSlug: $postSchema),
 			field: 'title',
 		);
 
@@ -129,7 +128,7 @@ class DemoSocialSeeder {
 		$counts['posts'] = $this->deleteAll(schemaSlug: $postSchema, ids: $postIds);
 		$counts['accounts'] = $this->deleteAll(
 			schemaSlug: $accountSchema,
-			ids: $this->demoIds(definitions: ($social['accounts'] ?? []), schemaSlug: $accountSchema, field: 'displayName'),
+			ids: $this->demoIds(section: new DemoSocialSection(definitions: ($social['accounts'] ?? []), schemaSlug: $accountSchema), field: 'displayName'),
 		);
 
 		return $counts;
@@ -172,17 +171,17 @@ class DemoSocialSeeder {
 	/**
 	 * Seed the demo posts, linked to their accounts. A post that exists is skipped.
 	 *
-	 * @param array<int, array<string, mixed>> $definitions The `social.posts` definitions.
-	 * @param string $schemaSlug The post schema.
+	 * @param DemoSocialSection     $section    The `social.posts` definitions and the post schema.
 	 * @param array<string, string> $accountIds Account seed key => account id.
 	 *
 	 * @return array{created: int, skipped: int, ids: array<string, string>} Counts and seed key => id of each NEW post.
 	 */
-	private function seedPosts(array $definitions, string $schemaSlug, array $accountIds): array {
+	private function seedPosts(DemoSocialSection $section, array $accountIds): array {
+		$schemaSlug = $section->schemaSlug;
 		$result = ['created' => 0, 'skipped' => 0, 'ids' => []];
 		$existing = $this->idsByField(schemaSlug: $schemaSlug, field: 'title');
 
-		foreach ($definitions as $definition) {
+		foreach ($section->definitions as $definition) {
 			$data = $this->values->resolvePlaceholders(data: ($definition['data'] ?? []));
 			if (($existing[(string)($data['title'] ?? '')] ?? '') !== '') {
 				$result['skipped']++;
@@ -211,19 +210,18 @@ class DemoSocialSeeder {
 	/**
 	 * Seed the publications of the posts seeded in this run.
 	 *
-	 * @param array<int, array<string, mixed>> $definitions The `social.publications` definitions.
-	 * @param string $schemaSlug The publication schema.
-	 * @param array<string, string> $postIds Post seed key => id of each new post.
-	 * @param array<string, string> $accountIds Account seed key => account id.
-	 * @param array<string, string> $networks Account seed key => network.
+	 * @param DemoSocialSection                    $section The `social.publications` definitions and the publication schema.
+	 * @param array<string, array<string, string>> $seeded  `postIds` (post seed key => id of each new post),
+	 *                                                      `accountIds` (account seed key => account id) and
+	 *                                                      `networks` (account seed key => network).
 	 *
 	 * @return int How many publications were saved.
 	 */
-	private function seedPublications(array $definitions, string $schemaSlug, array $postIds, array $accountIds, array $networks): int {
+	private function seedPublications(DemoSocialSection $section, array $seeded): int {
 		$saved = 0;
-		foreach ($definitions as $definition) {
-			$postId = ($postIds[$definition['postKey'] ?? ''] ?? '');
-			$accountId = ($accountIds[$definition['accountKey'] ?? ''] ?? '');
+		foreach ($section->definitions as $definition) {
+			$postId = ($seeded['postIds'][$definition['postKey'] ?? ''] ?? '');
+			$accountId = ($seeded['accountIds'][$definition['accountKey'] ?? ''] ?? '');
 			if ($postId === '' || $accountId === '') {
 				continue;
 			}
@@ -231,9 +229,9 @@ class DemoSocialSeeder {
 			$payload = $this->values->resolvePlaceholders(data: ($definition['data'] ?? []));
 			$payload['postId'] = $postId;
 			$payload['accountId'] = $accountId;
-			$payload['network'] = ($networks[$definition['accountKey']] ?? '');
+			$payload['network'] = ($seeded['networks'][$definition['accountKey']] ?? '');
 
-			if ($this->store->save(schemaSlug: $schemaSlug, payload: $payload) !== null) {
+			if ($this->store->save(schemaSlug: $section->schemaSlug, payload: $payload) !== null) {
 				$saved++;
 			}
 		}
@@ -244,16 +242,15 @@ class DemoSocialSeeder {
 	/**
 	 * The ids of the existing rows a seed section names, demo-marked ones only.
 	 *
-	 * @param array<int, array<string, mixed>> $definitions The seed section.
-	 * @param string $schemaSlug The schema the rows live in.
-	 * @param string $field The field that carries the demo marker.
+	 * @param DemoSocialSection $section The seed section and the schema its rows live in.
+	 * @param string            $field   The field that carries the demo marker.
 	 *
 	 * @return array<int, string> The row ids.
 	 */
-	private function demoIds(array $definitions, string $schemaSlug, string $field): array {
-		$rows = $this->idsByField(schemaSlug: $schemaSlug, field: $field);
+	private function demoIds(DemoSocialSection $section, string $field): array {
+		$rows = $this->idsByField(schemaSlug: $section->schemaSlug, field: $field);
 		$ids = [];
-		foreach ($definitions as $definition) {
+		foreach ($section->definitions as $definition) {
 			$value = (string)($definition['data'][$field] ?? '');
 			if (str_starts_with($value, DemoSeedValues::DEMO_PREFIX) === true && ($rows[$value] ?? '') !== '') {
 				$ids[] = $rows[$value];

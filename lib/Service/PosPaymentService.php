@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
 use OCA\Pipelinq\Service\Payment\PaymentRefund;
 use OCA\Pipelinq\Service\Payment\PaymentStart;
 use OCA\Pipelinq\Service\Payment\PaymentWebhook;
+use OCA\Pipelinq\Service\Payment\PosTransactionStore;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -919,19 +920,31 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			return $this->unmatchedSettlement(providerName: $providerName, sessionId: $sessionId);
 		}
 
+		$update = new SettlementUpdate(
+			paymentStatus: $paymentStatus,
+			previousStatus: (string)($transaction['paymentStatus'] ?? ''),
+			eventId: $eventId
+		);
+		return $this->settle(transaction: $transaction, update: $update);
+	}//end handleSettlement()
+
+	/**
+	 * Apply a settlement update to its transaction once per provider event.
+	 *
+	 * @param array<string, mixed> $transaction The matched transaction.
+	 * @param SettlementUpdate     $update      The settlement update.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function settle(array $transaction, SettlementUpdate $update): array {
 		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
-		if ($this->isProcessedEvent(transaction: $transaction, eventId: $eventId) === true) {
+		if ($this->isProcessedEvent(transaction: $transaction, eventId: $update->eventId) === true) {
 			return [
 				'status' => 'duplicate',
 				'transactionId' => $id,
 			];
 		}
 
-		$update = new SettlementUpdate(
-			paymentStatus: $paymentStatus,
-			previousStatus: (string)($transaction['paymentStatus'] ?? ''),
-			eventId: $eventId
-		);
 		$updated = $this->saveTransaction(id: $id, patch: $this->buildSettlementPatch(update: $update));
 		$this->emitSettlementEvents(update: $update, transaction: $updated);
 
@@ -939,7 +952,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			'status' => 'ok',
 			'transactionId' => $id,
 		];
-	}//end handleSettlement()
+	}//end settle()
 
 	/**
 	 * Answer a settlement for a session this instance cannot match.
@@ -1079,7 +1092,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
 	 */
 	public function emitRefundedEvent(array $transaction, string $refundId, string $reason): void {
-		$payload = $this->buildRefundedPayload(transaction: $transaction, refundId: $refundId, reason: $reason);
+		$payload = $this->buildRefundedPayload(transaction: $transaction, refund: ['refundId' => $refundId, 'refundReason' => $reason]);
 		$this->dispatch(eventName: self::EVENT_REFUNDED, payload: $payload);
 	}//end emitRefundedEvent()
 
@@ -1362,8 +1375,8 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			throw new OCSNotFoundException('Transaction not found');
 		}
 
-		$objectService = $this->transactionObjectService();
-		return $this->findTransactionData(objectService: $objectService, id: $id, register: $register, schema: $schema);
+		$store = new PosTransactionStore(objectService: $this->transactionObjectService(), register: $register, schema: $schema);
+		return $this->findTransactionData(store: $store, id: $id);
 	}//end loadTransaction()
 
 	/**
@@ -1392,18 +1405,16 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	/**
 	 * Find one transaction and return it as an array.
 	 *
-	 * @param mixed  $objectService OpenRegister's ObjectService.
-	 * @param string $id            The id.
-	 * @param string $register      The register id.
-	 * @param string $schema        The posTransaction schema id.
+	 * @param PosTransactionStore $store Where transactions are read.
+	 * @param string              $id    The id.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @throws OCSNotFoundException When the transaction cannot be found.
 	 */
-	private function findTransactionData(mixed $objectService, string $id, string $register, string $schema): array {
+	private function findTransactionData(PosTransactionStore $store, string $id): array {
 		try {
-			$found = $objectService->find(id: $id, register: $register, schema: $schema);
+			$found = $store->objectService->find(id: $id, register: $store->register, schema: $store->schema);
 		} catch (Throwable $e) {
 			throw new OCSNotFoundException('Transaction not found');
 		}
@@ -1473,24 +1484,23 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			return [];
 		}
 
-		return $this->findBySessionId(objectService: $objectService, sessionId: $sessionId, register: $register, schema: $schema);
+		$store = new PosTransactionStore(objectService: $objectService, register: $register, schema: $schema);
+		return $this->findBySessionId(store: $store, sessionId: $sessionId);
 	}//end sessionTransactionRows()
 
 	/**
 	 * Run the paymentSessionId lookup, logging a failed one.
 	 *
-	 * @param mixed  $objectService OpenRegister's ObjectService.
-	 * @param string $sessionId     The session id.
-	 * @param string $register      The register id.
-	 * @param string $schema        The posTransaction schema id.
+	 * @param PosTransactionStore $store     Where transactions are read.
+	 * @param string              $sessionId The session id.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function findBySessionId(mixed $objectService, string $sessionId, string $register, string $schema): array {
+	private function findBySessionId(PosTransactionStore $store, string $sessionId): array {
 		try {
-			$result = $objectService->findAll(
+			$result = $store->objectService->findAll(
 				config: [
-					'filters' => ['paymentSessionId' => $sessionId, 'register' => $register, 'schema' => $schema],
+					'filters' => ['paymentSessionId' => $sessionId, 'register' => $store->register, 'schema' => $store->schema],
 					'limit' => 2,
 				]
 			);
@@ -1732,12 +1742,11 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	 * Build the CloudEvent payload for a refunded transaction.
 	 *
 	 * @param array<string, mixed> $transaction The transaction.
-	 * @param string $refundId The refund id.
-	 * @param string $reason The reason.
+	 * @param array<string, string> $refund The `refundId` and `refundReason`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function buildRefundedPayload(array $transaction, string $refundId, string $reason): array {
+	private function buildRefundedPayload(array $transaction, array $refund): array {
 		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
 
 		return [
@@ -1753,10 +1762,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 				'paymentProvider' => (string)($transaction['paymentProvider'] ?? ''),
 				'paymentSessionId' => (string)($transaction['paymentSessionId'] ?? ''),
 				'total' => (float)($transaction['total'] ?? 0),
-				'refundId' => $refundId,
-				'refundReason' => $reason,
-				'refundedAt' => (string)($transaction['refundedAt'] ?? $this->nowIso()),
-			],
+			] + $refund + ['refundedAt' => (string)($transaction['refundedAt'] ?? $this->nowIso())],
 		];
 	}//end buildRefundedPayload()
 

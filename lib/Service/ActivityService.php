@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -100,15 +99,8 @@ class ActivityService {
 		}
 
 		$this->publish(
-			subject: $type,
-			type: 'pipelinq_assignment',
-			parameters: [
-				'title' => $title,
-				'entityType' => $entityType,
-			],
-			objectType: $entityType,
-			objectId: $objectId,
-			affectedUser: $affectedUser
+			subject: new ActivitySubject(subject: $type, type: 'pipelinq_assignment', parameters: ['title' => $title, 'entityType' => $entityType]),
+			object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $affectedUser)
 		);
 	}//end publishCreated()
 
@@ -136,16 +128,12 @@ class ActivityService {
 		}
 
 		$this->publish(
-			subject: $type,
-			type: 'pipelinq_assignment',
-			parameters: [
-				'title' => $title,
-				'entityType' => $entityType,
-				'assignee' => $newAssignee,
-			],
-			objectType: $entityType,
-			objectId: $objectId,
-			affectedUser: $newAssignee
+			subject: new ActivitySubject(
+				subject: $type,
+				type: 'pipelinq_assignment',
+				parameters: ['title' => $title, 'entityType' => $entityType, 'assignee' => $newAssignee]
+			),
+			object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $newAssignee)
 		);
 	}//end publishAssigned()
 
@@ -168,15 +156,12 @@ class ActivityService {
 		?string $affectedUser = null,
 	): void {
 		$this->publish(
-			subject: 'lead_stage_changed',
-			type: 'pipelinq_stage_status',
-			parameters: [
-				'title' => $title,
-				'stage' => $newStage,
-			],
-			objectType: 'lead',
-			objectId: $objectId,
-			affectedUser: $affectedUser
+			subject: new ActivitySubject(
+				subject: 'lead_stage_changed',
+				type: 'pipelinq_stage_status',
+				parameters: ['title' => $title, 'stage' => $newStage]
+			),
+			object: new ActivityObject(objectType: 'lead', objectId: $objectId, affectedUser: $affectedUser)
 		);
 	}//end publishStageChanged()
 
@@ -199,15 +184,12 @@ class ActivityService {
 		?string $affectedUser = null,
 	): void {
 		$this->publish(
-			subject: 'request_status_changed',
-			type: 'pipelinq_stage_status',
-			parameters: [
-				'title' => $title,
-				'status' => $newStatus,
-			],
-			objectType: 'request',
-			objectId: $objectId,
-			affectedUser: $affectedUser
+			subject: new ActivitySubject(
+				subject: 'request_status_changed',
+				type: 'pipelinq_stage_status',
+				parameters: ['title' => $title, 'status' => $newStatus]
+			),
+			object: new ActivityObject(objectType: 'request', objectId: $objectId, affectedUser: $affectedUser)
 		);
 	}//end publishStatusChanged()
 
@@ -230,15 +212,12 @@ class ActivityService {
 		?string $affectedUser = null,
 	): void {
 		$this->publish(
-			subject: 'note_added',
-			type: 'pipelinq_notes',
-			parameters: [
-				'title' => $entityTitle,
-				'entityType' => $entityType,
-			],
-			objectType: $entityType,
-			objectId: $objectId,
-			affectedUser: $affectedUser
+			subject: new ActivitySubject(
+				subject: 'note_added',
+				type: 'pipelinq_notes',
+				parameters: ['title' => $entityTitle, 'entityType' => $entityType]
+			),
+			object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $affectedUser)
 		);
 	}//end publishNoteAdded()
 
@@ -261,15 +240,8 @@ class ActivityService {
 		?string $affectedUser = null,
 	): void {
 		$this->publish(
-			subject: 'lead_won',
-			type: 'pipelinq_deals',
-			parameters: [
-				'title' => $title,
-				'value' => $value,
-			],
-			objectType: 'lead',
-			objectId: $objectId,
-			affectedUser: $affectedUser
+			subject: new ActivitySubject(subject: 'lead_won', type: 'pipelinq_deals', parameters: ['title' => $title, 'value' => $value]),
+			object: new ActivityObject(objectType: 'lead', objectId: $objectId, affectedUser: $affectedUser)
 		);
 	}//end publishDealWon()
 
@@ -290,55 +262,41 @@ class ActivityService {
 		?string $affectedUser = null,
 	): void {
 		$this->publish(
-			subject: 'lead_lost',
-			type: 'pipelinq_deals',
-			parameters: [
-				'title' => $title,
-			],
-			objectType: 'lead',
-			objectId: $objectId,
-			affectedUser: $affectedUser
+			subject: new ActivitySubject(subject: 'lead_lost', type: 'pipelinq_deals', parameters: ['title' => $title]),
+			object: new ActivityObject(objectType: 'lead', objectId: $objectId, affectedUser: $affectedUser)
 		);
 	}//end publishDealLost()
 
 	/**
 	 * Publish an activity event.
 	 *
-	 * @param string $subject The activity subject.
-	 * @param string $type The activity type.
-	 * @param array $parameters The activity parameters.
-	 * @param string $objectType The object type.
-	 * @param string $objectId The object ID.
-	 * @param ?string $affectedUser The affected user or null.
+	 * @param ActivitySubject $subject What the activity says.
+	 * @param ActivityObject  $object  What it is about and who it is addressed to.
 	 *
 	 * @return void
 	 */
-	private function publish(
-		string $subject,
-		string $type,
-		array $parameters,
-		string $objectType,
-		string $objectId,
-		?string $affectedUser = null,
-	): void {
+	private function publish(ActivitySubject $subject, ActivityObject $object): void {
 		try {
 			$author = $this->currentAuthor();
 
 			$event = $this->activityManager->generateEvent();
 			$event->setApp(AppIdentity::APP_ID)
-				->setType($type)
+				->setType($subject->type)
 				->setAuthor($author)
 				->setTimestamp(time())
-				->setSubject(subject: $subject, parameters: $parameters)
-				->setObject(objectType: $objectType, objectId: (int)$objectId, objectName: $parameters['title'] ?? '');
+				->setSubject(subject: $subject->subject, parameters: $subject->parameters)
+				->setObject(objectType: $object->objectType, objectId: (int)$object->objectId, objectName: $subject->parameters['title'] ?? '');
 
-			$this->setAffectedUser(event: $event, affectedUser: $affectedUser, author: $author);
+			$recipient = $object->recipient(author: $author);
+			if ($recipient !== '') {
+				$event->setAffectedUser($recipient);
+			}
 
 			$this->activityManager->publish($event);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to publish Pipelinq activity',
-				['subject' => $subject, 'type' => $type, 'exception' => $e->getMessage()]
+				['subject' => $subject->subject, 'type' => $subject->type, 'exception' => $e->getMessage()]
 			);
 		}//end try
 	}//end publish()
@@ -357,21 +315,4 @@ class ActivityService {
 
 		return $author;
 	}//end currentAuthor()
-
-	/**
-	 * Address the event to the affected user, else to its author when there is one.
-	 *
-	 * @param IEvent $event The activity event.
-	 * @param string|null $affectedUser The affected user or null.
-	 * @param string $author The author's UID, or an empty string.
-	 *
-	 * @return void
-	 */
-	private function setAffectedUser(IEvent $event, string|null $affectedUser, string $author): void {
-		if ($affectedUser !== null && $affectedUser !== '') {
-			$event->setAffectedUser($affectedUser);
-		} elseif ($author !== '') {
-			$event->setAffectedUser($author);
-		}
-	}//end setAffectedUser()
 }//end class

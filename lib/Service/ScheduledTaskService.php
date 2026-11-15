@@ -140,7 +140,7 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		$page = max(1, (int)($params['_page'] ?? 1));
 		$limit = min(100, max(1, (int)($params['_limit'] ?? 20)));
 
-		$filters = $this->buildTaskFilters(registerId: $registerId, schemaId: $schemaId, params: $params);
+		$filters = $this->buildTaskFilters(scope: ['register' => $registerId, 'schema' => $schemaId], params: $params);
 
 		$items = [];
 		$total = 0;
@@ -188,17 +188,13 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 	 * Applies the register/schema scope plus the optional status, assignee and
 	 * deadline-window filters from the request params.
 	 *
-	 * @param string $registerId The configured register ID.
-	 * @param string $schemaId The task schema ID.
-	 * @param array<string,mixed> $params The request filter params.
+	 * @param array<string,string> $scope  The configured register and task schema IDs.
+	 * @param array<string,mixed>  $params The request filter params.
 	 *
 	 * @return array<string,mixed> The assembled filter array.
 	 */
-	private function buildTaskFilters(string $registerId, string $schemaId, array $params): array {
-		$filters = [
-			'register' => $registerId,
-			'schema' => $schemaId,
-		];
+	private function buildTaskFilters(array $scope, array $params): array {
+		$filters = $scope;
 
 		foreach (['status', 'assigneeUserId', 'assigneeGroupId'] as $key) {
 			if (isset($params[$key]) === true && $params[$key] !== '') {
@@ -491,7 +487,7 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		$now = new DateTimeImmutable('now');
 		$cutoff = $now->modify(sprintf('+%d minutes', $windowMinutes));
 
-		$items = $this->pendingItems(query: $this->pendingQuery(registerId: $registerId, schemaId: $schemaId, now: $now, cutoff: $cutoff));
+		$items = $this->pendingItems(query: $this->pendingQuery(scope: ['register' => $registerId, 'schema' => $schemaId], window: [$now, $cutoff]));
 
 		return $this->normaliseAll(items: $items);
 	}//end getPendingTasks()
@@ -520,24 +516,20 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 	/**
 	 * The query for open tasks whose deadline falls between now and the cutoff.
 	 *
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The task schema id.
-	 * @param DateTimeImmutable $now The window start.
-	 * @param DateTimeImmutable $cutoff The window end.
+	 * @param array<string, string>                              $scope  The register and task schema ids.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window The window start and end.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
-	private function pendingQuery(string $registerId, string $schemaId, DateTimeImmutable $now, DateTimeImmutable $cutoff): array {
+	private function pendingQuery(array $scope, array $window): array {
 		return [
-			'filters' => [
-				'register' => $registerId,
-				'schema' => $schemaId,
+			'filters' => $scope + [
 				'status' => 'open',
 				'deadline' => [
-					'>=' => $now->format(DateTimeInterface::ATOM),
-					'<=' => $cutoff->format(DateTimeInterface::ATOM),
+					'>=' => $window[0]->format(DateTimeInterface::ATOM),
+					'<=' => $window[1]->format(DateTimeInterface::ATOM),
 				],
 			],
 			'limit' => 100,

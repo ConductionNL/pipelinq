@@ -122,6 +122,18 @@ class NotesService implements NotesServiceInterface {
 		$comment->setVerb('comment');
 		$this->commentsManager->save($comment);
 
+		return $this->ownNoteOf(comment: $comment, userId: $userId);
+	}//end addNote()
+
+	/**
+	 * A comment the current user just wrote, as a note.
+	 *
+	 * @param IComment $comment The saved comment.
+	 * @param string   $userId  The author, the current user.
+	 *
+	 * @return array{id: int, message: string, authorId: string, authorName: string, timestamp: string, isOwn: bool}
+	 */
+	private function ownNoteOf(IComment $comment, string $userId): array {
 		$user = $this->userManager->get($userId);
 
 		return [
@@ -132,7 +144,7 @@ class NotesService implements NotesServiceInterface {
 			'timestamp' => $comment->getCreationDateTime()->format('c'),
 			'isOwn' => true,
 		];
-	}//end addNote()
+	}//end ownNoteOf()
 
 	/**
 	 * Delete a single note. Only the author may delete their own note.

@@ -66,11 +66,7 @@ class ContactVcardPropertyBuilder {
 		$properties = $this->addPreferredName(properties: $properties, objData: $objData, objectType: $objectType);
 
 		if ($objectType === 'client') {
-			$properties = $this->addClientProperties(
-				properties: $properties,
-				objData: $objData,
-				name: $name
-			);
+			$properties = $this->addClientProperties(properties: $properties, objData: $objData);
 		}
 
 		if ($objectType === 'contact') {
@@ -255,13 +251,12 @@ class ContactVcardPropertyBuilder {
 	 *
 	 * @param array $properties The existing properties.
 	 * @param array $objData The object data.
-	 * @param string $name The client name.
 	 *
 	 * @return array The updated properties.
 	 */
-	private function addClientProperties(array $properties, array $objData, string $name): array {
+	private function addClientProperties(array $properties, array $objData): array {
 		if (($objData['type'] ?? '') === 'organization') {
-			$properties['ORG'] = $name;
+			$properties['ORG'] = ($objData['name'] ?? 'Unknown');
 		}
 
 		if (empty($objData['website']) === false) {

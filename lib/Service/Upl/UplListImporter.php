@@ -152,8 +152,8 @@ class UplListImporter {
 
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER);
 		$schema = $this->appConfig->getValueString(Application::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
-		$stored = $this->storedByUri(objectService: $objectService, register: $register, schema: $schema);
 		$target = [$objectService, $register, $schema];
+		$stored = $this->storedByUri(target: $target);
 
 		$result = ['read' => count($rows), 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'failed' => 0];
 		foreach ($rows as $row) {
@@ -247,15 +247,14 @@ class UplListImporter {
 	/**
 	 * The stored entries by URI.
 	 *
-	 * @param object $objectService OpenRegister's ObjectService.
-	 * @param string $register      The register.
-	 * @param string $schema        The schema.
+	 * @param array{0: object, 1: string, 2: string} $target The ObjectService, register and schema.
 	 *
 	 * @return array<string, array{id: string|null, name: string, audience: array<int, string>}>
 	 *
 	 * @throws RuntimeException When the stored entries cannot be read, so the run does not duplicate them.
 	 */
-	private function storedByUri(object $objectService, string $register, string $schema): array {
+	private function storedByUri(array $target): array {
+		[$objectService, $register, $schema] = $target;
 		try {
 			$found = $objectService->findAll(
 				config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::READ_LIMIT],

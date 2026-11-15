@@ -233,7 +233,7 @@ class IntegriqMarketingConsent {
 		string $source,
 		array $evidence,
 	): bool {
-		$outcome = $this->integriq->record(
+		return $this->integriq->record(
 			request: [
 				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 				'state' => 'opted-in',
@@ -246,9 +246,7 @@ class IntegriqMarketingConsent {
 				'source' => $source,
 				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
 			]
-		);
-
-		return $outcome['recorded'];
+		)['recorded'];
 	}//end recordListConsent()
 
 	/**
@@ -268,26 +266,34 @@ class IntegriqMarketingConsent {
 			return false;
 		}
 
-		$scope = 'channel';
-		if ($listId !== null && $listId !== '') {
-			$scope = 'list';
-		}
-
-		$outcome = $this->integriq->record(
+		return $this->integriq->record(
 			request: [
 				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 				'state' => 'opted-out',
-				'scope' => $scope,
+				'scope' => $this->withdrawalScope(listId: $listId),
 				'channel' => $channel,
 				'ref' => (string)$listId,
 				'contactRef' => $this->contactRefOf(contactId: $contactId),
 				'source' => $reason,
 				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
 			]
-		);
-
-		return $outcome['recorded'];
+		)['recorded'];
 	}//end recordWithdrawal()
+
+	/**
+	 * The scope of a withdrawal: the list when one is named, else the channel.
+	 *
+	 * @param string|null $listId The list, or null for the channel.
+	 *
+	 * @return string `list` or `channel`.
+	 */
+	private function withdrawalScope(?string $listId): string {
+		if ($listId !== null && $listId !== '') {
+			return 'list';
+		}
+
+		return 'channel';
+	}//end withdrawalScope()
 
 	/**
 	 * The change request for one consentRecord, or null when it is not migrated.
