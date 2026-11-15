@@ -109,20 +109,34 @@ trait SlaTrackedObjectStore {
 			return;
 		}
 
+		$this->saveTracked(target: ['register' => $register, 'schema' => $schemaId, 'uuid' => $uuid], data: $data);
+	}//end persist()
+
+	/**
+	 * Save object data at its register, schema and uuid; a failure is logged, never thrown.
+	 *
+	 * @param array{register: string, schema: string, uuid: string} $target Where the object lives.
+	 * @param array<string, mixed>                                   $data   The object data.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function saveTracked(array $target, array $data): void {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$objectService->saveObject(
 				object: $data,
 				extend: [],
-				register: $register,
-				schema: $schemaId,
-				uuid: $uuid,
+				register: $target['register'],
+				schema: $target['schema'],
+				uuid: $target['uuid'],
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				substr(strrchr(self::class, '\\'), 1).': persist failed (non-blocking)',
-				['error' => $e->getMessage(), 'uuid' => $uuid]
+				['error' => $e->getMessage(), 'uuid' => $target['uuid']]
 			);
 		}//end try
-	}//end persist()
+	}//end saveTracked()
 }//end trait

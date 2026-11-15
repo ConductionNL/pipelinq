@@ -155,25 +155,39 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 		}
 
 		$snapshot = $this->snapshot(collectionId: $collectionId, collection: $collection);
-		$saved = $this->tickets->save(
-			schemaKey: self::TICKET,
-			data: [
-				'ticketType' => TicketService::TYPE_REQUEST,
-				'title' => $this->subjectLine(title: $title, snapshot: $snapshot),
-				'description' => $question,
-				'channel' => self::CHANNEL_PORTAL,
-				'status' => 'new',
-				'occurredAt' => $this->time->getDateTime()->format(DATE_ATOM),
-				'portalSubject' => $subjectRef,
-				'subjectReference' => $snapshot,
-			]
-		);
+		$asked = [
+			'title' => $this->subjectLine(title: $title, snapshot: $snapshot),
+			'description' => $question,
+			'portalSubject' => $subjectRef,
+		];
+		$saved = $this->tickets->save(schemaKey: self::TICKET, data: $this->questionTicket(asked: $asked, snapshot: $snapshot));
 
 		return [
 			'id' => $this->idOf(object: $saved),
 			'status' => (string)($saved['status'] ?? 'new'),
 		];
 	}//end ask()
+
+	/**
+	 * The new ticket of a resident's question.
+	 *
+	 * @param array{title: string, description: string, portalSubject: string} $asked    The subject line, question and portal subject.
+	 * @param array<string, mixed>                                              $snapshot The dossier snapshot.
+	 *
+	 * @return array<string, mixed> The ticket data.
+	 */
+	private function questionTicket(array $asked, array $snapshot): array {
+		return [
+			'ticketType' => TicketService::TYPE_REQUEST,
+			'title' => $asked['title'],
+			'description' => $asked['description'],
+			'channel' => self::CHANNEL_PORTAL,
+			'status' => 'new',
+			'occurredAt' => $this->time->getDateTime()->format(DATE_ATOM),
+			'portalSubject' => $asked['portalSubject'],
+			'subjectReference' => $snapshot,
+		];
+	}//end questionTicket()
 
 	/**
 	 * The subject line of a question: the resident's own, else the dossier title.
@@ -211,18 +225,28 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$replies = $this->repliesWith(ticket: $ticket, message: $message);
-		$ticket['portalReplies'] = $replies;
-		$ticket = $this->resumeIfAwaiting(ticket: $ticket);
+		$ticket['portalReplies'] = $this->repliesWith(ticket: $ticket, message: $message);
 
+		return $this->savedReply(ticket: $this->resumeIfAwaiting(ticket: $ticket), ticketId: $ticketId);
+	}//end reply()
+
+	/**
+	 * Save a ticket that carries a new reply.
+	 *
+	 * @param array<string, mixed> $ticket   The ticket with its replies.
+	 * @param string               $ticketId The ticket id.
+	 *
+	 * @return array<string, mixed> The ticket's id, status and replies.
+	 */
+	private function savedReply(array $ticket, string $ticketId): array {
 		$saved = $this->tickets->save(schemaKey: self::TICKET, data: $ticket, id: $ticketId);
 
 		return [
 			'id' => $ticketId,
 			'status' => (string)($saved['status'] ?? ($ticket['status'] ?? '')),
-			'portalReplies' => $replies,
+			'portalReplies' => $ticket['portalReplies'],
 		];
-	}//end reply()
+	}//end savedReply()
 
 	/**
 	 * The ticket's portal replies with the resident's new reply appended.
