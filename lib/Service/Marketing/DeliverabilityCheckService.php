@@ -30,7 +30,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
+use OCA\Pipelinq\Service\Support\ConfiguredMailTransportSchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Service\Support\QuietObjectSave;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,7 +46,13 @@ use Throwable;
  *
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
-class DeliverabilityCheckService {
+class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface {
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ConfiguredMailTransportSchemaSlug;
+	use ContainerObjectServiceLookup;
+	use QuietObjectSave;
+
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -115,8 +126,20 @@ class DeliverabilityCheckService {
 			return null;
 		}
 
+		return $this->transportAsArray(found: $this->findTransport(objectService: $objectService, id: $id));
+	}//end loadOne()
+
+	/**
+	 * Find the mail transport; null (logged) when the lookup throws.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $id The transport id.
+	 *
+	 * @return mixed The found object, or null.
+	 */
+	private function findTransport(object $objectService, string $id) {
 		try {
-			$found = $objectService->find(
+			return $objectService->find(
 				id: $id,
 				register: $this->getRegisterSlug(),
 				schema: $this->getMailTransportSchemaSlug(),
@@ -125,7 +148,16 @@ class DeliverabilityCheckService {
 			$this->logger->info('DeliverabilityCheckService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
+	}//end findTransport()
 
+	/**
+	 * The found transport as an array, or null when it is missing or not serialisable.
+	 *
+	 * @param mixed $found The found object.
+	 *
+	 * @return array<string, mixed>|null The transport.
+	 */
+	private function transportAsArray($found): array|null {
 		if ($found === null) {
 			return null;
 		}
@@ -139,7 +171,7 @@ class DeliverabilityCheckService {
 		}
 
 		return null;
-	}//end loadOne()
+	}//end transportAsArray()
 
 	/**
 	 * Return the cached verdict for a transport's `senderDomain`, refreshing
@@ -286,21 +318,12 @@ class DeliverabilityCheckService {
 		$payload['dmarcStatus'] = $verdict['dmarcStatus'];
 		$payload['deliverabilityCheckedAt'] = $verdict['checkedAt'];
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('DeliverabilityCheckService.persistVerdict: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getMailTransportSchemaSlug(),
+			id: $id,
+			failure: 'DeliverabilityCheckService.persistVerdict: save failed'
+		);
 	}//end persistVerdict()
 
 	/**
@@ -309,69 +332,8 @@ class DeliverabilityCheckService {
 	 * @return object|null
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('DeliverabilityCheckService.getObjectService: unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'DeliverabilityCheckService.getObjectService: unavailable', errorKey: 'exception');
 	}//end getObjectService()
-
-	/**
-	 * The configured `pipelinq` register slug.
-	 *
-	 * @return string
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * The configured `mailTransport` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
-	}//end getMailTransportSchemaSlug()
-
-	/**
-	 * Extract a UUID/id/slug from an OpenRegister payload.
-	 *
-	 * @param array<string, mixed> $payload The payload.
-	 *
-	 * @return string The id, or '' when none is present.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($payload[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($self[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
 
 	/**
 	 * Current UTC instant, ISO 8601.

@@ -22,7 +22,11 @@ vi.mock('../../src/store/modules/object.js', () => ({
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (u) => u }))
-vi.mock('@conduction/nextcloud-vue', () => ({ CnResourceSelect: { template: '<div />' } }))
+const clockStop = vi.hoisted(() => vi.fn())
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDurationField: { name: 'CnDurationField', props: { modelValue: String, timer: Boolean, autoStart: Boolean, inputLabel: String }, methods: { stop: clockStop }, template: '<div />' },
+	CnResourceSelect: { template: '<div />' },
+}))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@nextcloud/vue', () => ({
@@ -69,6 +73,18 @@ describe('the contact moment quick log', () => {
 		expect(subject(wrapper).attributes('data-error')).toBe('true')
 	})
 
+	it('runs the duration as a clock from the start and stops it on save (PqContactmoment)', async () => {
+		const wrapper = await mountForm()
+		const clock = wrapper.findComponent({ name: 'CnDurationField' })
+		expect(clock.props('timer')).toBe(true)
+		expect(clock.props('autoStart')).toBe(true)
+		expect(clock.props('inputLabel')).toBe('Duration')
+		const onSave = vi.spyOn(wrapper.vm, 'onSave').mockResolvedValue()
+		await wrapper.vm.stopClockAndSave()
+		expect(clockStop).toHaveBeenCalled()
+		expect(clockStop.mock.invocationCallOrder[0]).toBeLessThan(onSave.mock.invocationCallOrder[0])
+	})
+
 	it('lays paired fields in two columns that shrink with the card', () => {
 		const css = readFileSync(resolve(__dirname, '../../src/components/ContactmomentQuickLog.vue'), 'utf8').split('<style')[1]
 		const row = css.slice(css.indexOf('.form-row {'), css.indexOf('}', css.indexOf('.form-row {')))
@@ -95,7 +111,8 @@ describe('the contact moment quick log', () => {
 			['Save', 'primary'],
 		])
 		const css = readFileSync(resolve(__dirname, '../../src/components/ContactmomentQuickLog.vue'), 'utf8').split('<style')[1]
-		const actions = css.slice(css.indexOf('.form-actions {'), css.indexOf('}', css.indexOf('.form-actions {')))
+		const start = css.indexOf('\n.form-actions {')
+		const actions = css.slice(start, css.indexOf('}', start))
 		expect(actions).toMatch(/justify-content: flex-end;/)
 	})
 })

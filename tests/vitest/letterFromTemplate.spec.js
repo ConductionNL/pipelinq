@@ -418,3 +418,46 @@ describe('LetterFromTemplateModal preview', () => {
 	})
 })
 
+describe('LetterFromTemplateModal while a letter is made', () => {
+	const TEMPLATES = { available: true, templates: [{ id: 'tpl-1', name: 'Appointment letter', description: '' }] }
+
+	it('shows why a download failed, downloads nothing, and lets it be tried again', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(TEMPLATES)
+		api.makeLetter.mockRejectedValueOnce({ response: { data: { message: 'filinq is busy.' } } })
+		api.makeLetter.mockRejectedValueOnce(new Error('offline'))
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+		await w.find('[data-testid="letter-download"]').trigger('click')
+		await flushPromises()
+		expect(w.vm.error).toBe('filinq is busy.')
+		expect(w.vm.making).toBe(false)
+		expect(api.downloadLetter).not.toHaveBeenCalled()
+
+		await w.find('[data-testid="letter-download"]').trigger('click')
+		await flushPromises()
+		expect(w.vm.error).toBe('The letter could not be made.')
+		expect(w.vm.result).toBe(null)
+	})
+
+	it('makes one letter at a time, and keeps the made letter once it is in', async () => {
+		api.fetchLetterTemplates.mockResolvedValue(TEMPLATES)
+		let finish
+		api.makeLetter.mockImplementation(() => new Promise((resolve) => { finish = resolve }))
+
+		const w = mountOn(`/clients/${CLIENT}`, CLIENT)
+		await flushPromises()
+		w.vm.error = 'old'
+		const first = w.vm.make()
+		expect([w.vm.making, w.vm.error]).toEqual([true, ''])
+		await w.vm.make()
+		await w.vm.download()
+		expect(api.makeLetter).toHaveBeenCalledTimes(1)
+
+		const letter = { content: 'JVBERg==', filename: 'x.pdf', warnings: [], contactMomentId: 'cm-1' }
+		finish(letter)
+		await first
+		expect([w.vm.making, w.vm.result]).toEqual([false, letter])
+		expect(api.downloadLetter).toHaveBeenCalledWith(letter)
+	})
+})

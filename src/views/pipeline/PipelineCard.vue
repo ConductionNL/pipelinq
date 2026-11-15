@@ -172,6 +172,78 @@ import { cachedUserDisplayName, initialsOf, listAssignableUserIds } from '../../
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
+/**
+ * Whether a value is missing: null, undefined or ''.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean}
+ */
+function isBlankValue(value) {
+	return value === null || value === undefined || value === ''
+}
+
+/**
+ * A value as a whole number, or null when it is not a finite number.
+ *
+ * @param {unknown} value The value.
+ * @return {number|null} The rounded number.
+ */
+function roundedFinite(value) {
+	const number = Number(value)
+	return Number.isFinite(number) ? Math.round(number) : null
+}
+
+/**
+ * Whether a lead is won, lost or in a closed stage.
+ *
+ * @param {object} lead The lead.
+ * @param {Array<object>} stages The pipeline's stages.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isSettledLead(lead, stages) {
+	if (lead.status === 'won' || lead.status === 'lost') {
+		return true
+	}
+	// Cards in stages flagged isClosed never show overdue
+	const currentStage = stages.find((s) => s.name === lead.stage)
+	return Boolean(currentStage && currentStage.isClosed)
+}
+
+/**
+ * Whether an open lead is past its expected close date.
+ *
+ * @param {object} lead The lead.
+ * @param {Array<object>} stages The pipeline's stages.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isLeadOverdue(lead, stages) {
+	if (!lead.expectedCloseDate || isSettledLead(lead, stages)) {
+		return false
+	}
+	return new Date(lead.expectedCloseDate) < new Date()
+}
+
+/**
+ * Whether a request is more than 30 days old.
+ *
+ * @param {object} request The request.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+ */
+function isRequestOverdue(request) {
+	// `requestedAt` became `occurredAt` on the ticket supertype.
+	if (!request.occurredAt) {
+		return false
+	}
+	const daysSince = Math.floor(
+		(Date.now() - new Date(request.occurredAt).getTime())
+			/ 86400000,
+	)
+	return daysSince > 30
+}
+
 export default {
 	name: 'PipelineCard',
 	components: {
@@ -251,12 +323,11 @@ export default {
 		 */
 		chance() {
 			if (this.entityType !== 'lead') return null
-			const own = Number(this.item.probability)
-			if (this.item.probability !== null && this.item.probability !== undefined && this.item.probability !== '' && Number.isFinite(own)) {
-				return Math.round(own)
+			const own = isBlankValue(this.item.probability) ? null : roundedFinite(this.item.probability)
+			if (own !== null) {
+				return own
 			}
-			const fromStage = Number(this.cardStage?.probability)
-			return this.cardStage && Number.isFinite(fromStage) ? Math.round(fromStage) : null
+			return this.cardStage ? roundedFinite(this.cardStage.probability) : null
 		},
 
 		/**
@@ -293,7 +364,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -306,7 +377,7 @@ export default {
 		 * (unify-ticket-supertype). `entityType` stays logical so the badge, the
 		 * overdue rule and the board's routing keep working unchanged.
 		 *
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
 		resolvedType() {
 			return resolveObjectType(this.entityType)
@@ -333,56 +404,42 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
 		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
-				if (!this.item.expectedCloseDate) return false
-				if (this.item.status === 'won' || this.item.status === 'lost')
-					return false
-				// Cards in stages flagged isClosed never show overdue
-				const currentStage = this.stages.find(
-					(s) => s.name === this.item.stage,
-				)
-				if (currentStage && currentStage.isClosed) return false
-				return new Date(this.item.expectedCloseDate) < new Date()
+				return isLeadOverdue(this.item, this.stages)
 			}
 			if (this.entityType === 'request') {
-				// `requestedAt` became `occurredAt` on the ticket supertype.
-				if (!this.item.occurredAt) return false
-				const daysSince = Math.floor(
-					(Date.now() - new Date(this.item.occurredAt).getTime())
-						/ 86400000,
-				)
-				return daysSince > 30
+				return isRequestOverdue(this.item)
 			}
 			return false
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
 		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
 		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
 		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
@@ -400,14 +457,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
 		 */
 		stageOptions() {
 			return this.stages.map((s) => s.name)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
 		 */
 		userOptions() {
 			return this.users
@@ -433,7 +490,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
 				this.selectedStage = val || null
@@ -444,7 +501,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
 				this.selectedAssignee = val || null
@@ -494,7 +551,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
 		 */
 		async loadUsers() {
 			this.users = await listAssignableUserIds()
@@ -506,7 +563,7 @@ export default {
 		 * subtype, so a PUT can never strip it (unify-ticket-supertype).
 		 *
 		 * @return {object} Payload for objectStore.saveObject().
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		buildSavePayload() {
 			const updated = { ...this.item }
@@ -520,21 +577,12 @@ export default {
 
 		/**
 		 * @param {string} newStage The stage the card was moved to.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
-				const updated = this.buildSavePayload()
-				updated[this.columnProperty] = newStage
-				const targetStage = this.stages.find((s) => s.name === newStage)
-				if (
-					targetStage
-					&& typeof targetStage.order === 'number'
-					&& this.columnProperty === 'stage'
-				) {
-					updated.stageOrder = targetStage.order
-				}
+				const updated = this.stageMovePayload(newStage)
 				await this.objectStore.saveObject(
 					this.resolvedType.objectType,
 					updated,
@@ -550,8 +598,30 @@ export default {
 		},
 
 		/**
+		 * The card moved to another stage, with that stage's order when the
+		 * board columns are stages and the stage has one.
+		 *
+		 * @param {string} newStage The stage moved to.
+		 * @return {object} The object to save.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 */
+		stageMovePayload(newStage) {
+			const updated = this.buildSavePayload()
+			updated[this.columnProperty] = newStage
+			const targetStage = this.stages.find((s) => s.name === newStage)
+			if (
+				targetStage
+				&& typeof targetStage.order === 'number'
+				&& this.columnProperty === 'stage'
+			) {
+				updated.stageOrder = targetStage.order
+			}
+			return updated
+		},
+
+		/**
 		 * @param {string} newAssignee Nextcloud uid of the new assignee.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
 		 */
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
@@ -647,7 +717,7 @@ export default {
 
 		/**
 		 * @param {string} dateStr The stored date.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 */
 		formatDate(dateStr) {
 			return formatLocaleDate(dateStr)
@@ -821,13 +891,13 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1d4ed8);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
+	background: var(--color-warning-light, #ffedd5);
+	color: var(--color-warning-text, #c2410c);
 }
 
 .pipeline-card__title {
@@ -884,13 +954,13 @@ export default {
 }
 
 .aging-badge.aging-warning {
-	color: #92400e;
-	background: #fef3c7;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning-light, #fef3c7);
 }
 
 .aging-badge.aging-alert {
-	color: #991b1b;
-	background: #fee2e2;
+	color: var(--color-error-text, #991b1b);
+	background: var(--color-error-light, #fee2e2);
 }
 
 .card-date {

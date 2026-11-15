@@ -328,38 +328,14 @@ BSN wordt beschermd door masking in logs en nooit in URLs/parameters zichtbaar.
 
 ### Requirement: Service-monitor en SLA-rapportage (REQ-BSN-010)
 
-The system SHALL monitor the availability and response time of the BRP integration and report it against the SLA.
-
-Het systeem monitort beschikbaarheid en performa van BRP-integratie.
+pipelinq SHALL NOT monitor the BRP connection. Availability, response time, error rate and the certificate countdown are watched in integriq (board `integriq/IqBrpMonitor`), and keepiq holds the certificate, as change `brp-monitor-moves-to-integriq` sets out. pipelinq's BRP settings section SHALL say that integriq manages the connection, with a link there.
 
 **Feature tier**: MVP
-**Spec ref**: `design.md#Admin Dashboard: BRP-Monitor`
-**Files**: `lib/Job/BrpMonitorJob.php`, frontend admin dashboard
 
-#### Scenario: Dagelijkse beschikbaarheidsrapportage (REQ-BSN-010-01)
+#### Scenario: The BRP monitor is in integriq (REQ-BSN-010-01)
 
-- GIVEN Pipelinq draait een achtergrond-job om middernacht (configurable)
-- WHEN de job de afgelopen 24h analyseert
-- THEN wordt een rapport gegenereerd met:
-  - Aantal lookups
-  - Cache-hit ratio (%)
-  - Gemiddelde responsetijd (ms)
-  - Foutpercentage (%)
-- AND rapport beschikbaar in admin-tegel "BRP-Monitor"
-
-#### Scenario: Alert bij verhoogd foutpercentage (REQ-BSN-010-02)
-
-- GIVEN binnen 1 uur > 10% van de lookups faalt
-- WHEN de minuut-aggregator een drempel overschrijdt
-- THEN wordt een notificatie naar beheerder gestuurd via Nextcloud Notifications
-- AND optioneel via webhook naar gemeentelijke monitoring (Zabbix/Prometheus format)
-- AND notificatie bevat: "BRP error rate exceeded 10% in last hour (12 failures of 100 attempts)"
-
-#### Scenario: Certificate expiration warning (REQ-BSN-010-03)
-
-- GIVEN certificaat verloopt over < 30 dagen
-- WHEN health-check loopt
-- THEN beheerder ontvangt waarschuwing
-- AND admin dashboard geeft visual indicator met countdown
-- AND als vervaldatum binnen < 7 dagen: escalatie naar kritiek (rood badge)
+- GIVEN an administrator in pipelinq
+- WHEN they look for the BRP monitor
+- THEN pipelinq SHALL offer no monitor page
+- AND the BRP section on board `PqBeheerKoppelingen` SHALL say that lookups go through integriq and that the connection and its certificate are managed there
 

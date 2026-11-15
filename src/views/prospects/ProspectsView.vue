@@ -134,7 +134,7 @@
 // from the KVK register in the shared index page, with the ideal customer
 // profile they are matched on above the list and Add as client per row.
 //
-// @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+// @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 import { CnDetailCard, CnIndexPage, CnQuickFilterBar } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -192,7 +192,7 @@ export default {
 		 * The list's columns, in the board's order.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		columns() {
 			return [
@@ -222,7 +222,7 @@ export default {
 		 * Download and Refresh prospects, as the board draws them.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		headerButtons() {
 			return [
@@ -316,7 +316,7 @@ export default {
 		 * The count line: how many companies match, best first.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		countText() {
 			return t(
@@ -329,7 +329,7 @@ export default {
 		 * The page state the index page draws its footer from.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		pagination() {
 			return {
@@ -382,7 +382,7 @@ export default {
 		 * Prospects sorted by the active sort column/direction.
 		 *
 		 * @return {Array<object>} The sorted prospect list.
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		sortedProspects() {
 			const list = this.narrowedProspects.filter((p) => matchesProspectLens(p, this.lens, new Date()))
@@ -401,7 +401,7 @@ export default {
 		 * Number of pages at the current page size, at least 1.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		totalPages() {
 			return Math.max(
@@ -415,7 +415,7 @@ export default {
 		 * shortens the list.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		currentPage() {
 			return Math.min(this.page, this.totalPages)
@@ -426,7 +426,7 @@ export default {
 		 * them first, so a column sort orders the whole list.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		pagedProspects() {
 			const start = (this.currentPage - 1) * this.pageSize
@@ -492,7 +492,7 @@ export default {
 		 * Sort the whole list by the column the index page reports.
 		 *
 		 * @param {{key?: string, order?: string, keys?: Array<{key: string, order: string}>}} event The sort event.
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		onSort(event) {
 			const first = event?.keys?.[0] || event || {}
@@ -522,7 +522,7 @@ export default {
 		 *
 		 * @param {object} prospect - The prospect record.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-10-07-refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		async addAsClient(prospect) {
 			this.addingKvk = prospect.kvkNumber

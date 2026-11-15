@@ -1,0 +1,1312 @@
+{
+    "before cutover: opt-in with a basis": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "evidence": "form 12",
+            "recordedAt": "<now>",
+            "legalBasis": "legitimate-interest",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "sms",
+                "state": "opted-in",
+                "source": "webform",
+                "evidence": "form 12",
+                "recordedAt": "<now>",
+                "legalBasis": "legitimate-interest",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: opt-out, default basis": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "evidence": "STOP",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "whatsapp",
+                "state": "opted-out",
+                "source": "keyword-stop",
+                "evidence": "STOP",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: opt-out with a basis": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "evidence": "STOP",
+            "recordedAt": "<now>",
+            "legalBasis": "contract",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "whatsapp",
+                "state": "opted-out",
+                "source": "keyword-stop",
+                "evidence": "STOP",
+                "recordedAt": "<now>",
+                "legalBasis": "contract",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: opt-in, empty basis": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "evidence": "form 12",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "sms",
+                "state": "opted-in",
+                "source": "webform",
+                "evidence": "form 12",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: no contact": {
+        "result": null,
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: no channel": {
+        "result": null,
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: empty source and evidence": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "",
+            "evidence": "",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "whatsapp",
+                "state": "opted-out",
+                "source": "",
+                "evidence": "",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [],
+        "warnings": []
+    },
+    "before cutover: save throws": {
+        "result": null,
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": [
+            {
+                "message": "ConsentService.saveObject: save failed",
+                "context": {
+                    "exception": "save failed"
+                }
+            }
+        ]
+    },
+    "before cutover: no openregister": {
+        "result": null,
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": [
+            {
+                "message": "ConsentService.getObjectService: OpenRegister unavailable",
+                "context": {
+                    "exception": "not registered: OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            }
+        ]
+    },
+    "cutover: opt-in, address looked up": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "contract",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "contract",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": []
+    },
+    "cutover: opt-in, empty basis": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": []
+    },
+    "cutover: opt-out with address and basis": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31 6 9999 0000",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31699990000",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: opt-out from a number, no contact": {
+        "result": {
+            "contactId": "",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31600000002",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31600000002",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: opt-in from a number, no contact": {
+        "result": {
+            "contactId": "",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31600000003",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31600000003",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: no contact and no address": {
+        "result": null,
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: no channel": {
+        "result": null,
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: contact without a phone": {
+        "result": {
+            "contactId": "contact-3",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "evidence": "form 12",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-3",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-3",
+                "channel": "sms",
+                "state": "opted-in",
+                "source": "webform",
+                "evidence": "form 12",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [
+            {
+                "id": "contact-3",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "invalid-request",
+                    "reason": "invalid request"
+                }
+            }
+        ]
+    },
+    "cutover: contact id is an email": {
+        "result": {
+            "contactId": "Jan@Example.nl",
+            "channel": "email",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "jan@example.nl",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "email",
+                "ref": "",
+                "contactRef": "Jan@Example.nl",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "jan@example.nl",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "email",
+                "ref": "",
+                "contactRef": "Jan@Example.nl",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: integriq does not answer": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "evidence": "form 12",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "sms",
+                "state": "opted-in",
+                "source": "webform",
+                "evidence": "form 12",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "authority-unavailable",
+                    "reason": "integriq did not answer"
+                }
+            }
+        ]
+    },
+    "cutover: integriq throws": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "evidence": "STOP",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "whatsapp",
+                "state": "opted-out",
+                "source": "keyword-stop",
+                "evidence": "STOP",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "authority-unavailable",
+                    "reason": "the change failed: integriq listener exploded"
+                }
+            }
+        ]
+    },
+    "cutover: unanswered and no openregister": {
+        "result": null,
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": [
+            {
+                "message": "ConsentService.getObjectService: OpenRegister unavailable",
+                "context": {
+                    "exception": "not registered: OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "authority-unavailable",
+                    "reason": "integriq did not answer"
+                }
+            },
+            {
+                "message": "ConsentService.getObjectService: OpenRegister unavailable",
+                "context": {
+                    "exception": "not registered: OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            }
+        ]
+    },
+    "cutover: pending rows replay first": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-in",
+            "source": "webform",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "contract",
+                "evidence": {
+                    "text": "form",
+                    "recordedAt": "2030-01-01T00:00:00.000000Z"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-old",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "stop",
+                    "recordedAt": "2030-01-02T00:00:00.000000Z"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-new",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form 12"
+                },
+                "source": "webform",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": []
+    },
+    "cutover: no contact skips the replay": {
+        "result": {
+            "contactId": "",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31600000005",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31600000005",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: replay unanswered, then fallback": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "evidence": "STOP",
+            "recordedAt": "<now>",
+            "legalBasis": "consent",
+            "uuid": "row-1",
+            "_register": "pipelinq",
+            "_schema": "messagingConsentRecord"
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "contract",
+                "evidence": {
+                    "text": "form",
+                    "recordedAt": "2030-01-01T00:00:00.000000Z"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-old",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "stop",
+                    "recordedAt": "2030-01-02T00:00:00.000000Z"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-new",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [],
+        "written": [
+            {
+                "contactId": "contact-1",
+                "channel": "whatsapp",
+                "state": "opted-out",
+                "source": "keyword-stop",
+                "evidence": "STOP",
+                "recordedAt": "<now>",
+                "legalBasis": "consent",
+                "uuid": "row-1",
+                "_register": "pipelinq",
+                "_schema": "messagingConsentRecord"
+            }
+        ],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            },
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": [
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "authority-unavailable",
+                    "reason": "integriq did not answer"
+                }
+            },
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "authority-unavailable",
+                    "reason": "integriq did not answer"
+                }
+            },
+            {
+                "message": "Pipelinq: integriq did not record the consent change; pipelinq keeps it and replays it",
+                "context": {
+                    "app": "pipelinq",
+                    "code": "authority-unavailable",
+                    "reason": "integriq did not answer"
+                }
+            }
+        ]
+    },
+    "cutover: sparse pending rows replay": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "whatsapp",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "store": "integriq",
+            "recordId": 2
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "consent",
+                "evidence": {
+                    "text": "form",
+                    "recordedAt": "2030-01-01T00:00:00.000000Z"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-no-basis",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-in",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "form",
+                    "recordedAt": "2030-01-02T00:00:00.000000Z"
+                },
+                "source": "webform",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-empty-basis",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "",
+                    "recordedAt": "2030-01-03T00:00:00.000000Z"
+                },
+                "source": "",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "seed-bare",
+                "purpose": ""
+            },
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "",
+                    "recordedAt": "2030-01-03T00:00:00.000000Z"
+                },
+                "source": "",
+                "purpose": "",
+                "legacyRef": "seed-bare"
+            },
+            {
+                "id": 2,
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "whatsapp",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            },
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": []
+    },
+    "change request: opt-in row": {
+        "result": {
+            "address": "+31611111111",
+            "state": "opted-in",
+            "scope": "channel",
+            "channel": "sms",
+            "contactRef": "contact-1",
+            "source": "webform",
+            "evidence": {
+                "text": "form",
+                "recordedAt": "2030-01-01T00:00:00.000000Z"
+            },
+            "legacyRef": "seed-old",
+            "lawfulBasis": "contract"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "change request: opt-out row": {
+        "result": {
+            "address": "",
+            "state": "opted-out",
+            "scope": "channel",
+            "channel": "sms",
+            "contactRef": "contact-1",
+            "source": "keyword-stop",
+            "evidence": {
+                "text": "stop",
+                "recordedAt": "2030-01-02T00:00:00.000000Z"
+            },
+            "legacyRef": "seed-new"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "change request: opt-in without a basis": {
+        "result": {
+            "address": "a@example.nl",
+            "state": "opted-in",
+            "scope": "channel",
+            "channel": "sms",
+            "contactRef": "contact-1",
+            "source": "webform",
+            "evidence": {
+                "text": "form",
+                "recordedAt": "2030-01-01T00:00:00.000000Z"
+            },
+            "legacyRef": "seed-no-basis",
+            "lawfulBasis": "consent"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "change request: empty row": {
+        "result": {
+            "address": "x",
+            "state": "",
+            "scope": "channel",
+            "channel": "",
+            "contactRef": "",
+            "source": "",
+            "evidence": {
+                "text": "",
+                "recordedAt": ""
+            },
+            "legacyRef": "only-id"
+        },
+        "changes": [],
+        "integriqRows": [],
+        "written": [],
+        "finds": [],
+        "warnings": []
+    },
+    "cutover: wish already in integriq": {
+        "result": {
+            "contactId": "contact-1",
+            "channel": "sms",
+            "state": "opted-out",
+            "source": "keyword-stop",
+            "store": "integriq",
+            "recordId": 1
+        },
+        "changes": [
+            {
+                "sourceApp": "pipelinq",
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "correlationId": "pipelinq-<random>",
+                "legacyRef": "",
+                "purpose": ""
+            }
+        ],
+        "integriqRows": [
+            {
+                "id": 1,
+                "address": "+31612345678",
+                "state": "opted-out",
+                "scope": "channel",
+                "channel": "sms",
+                "ref": "",
+                "contactRef": "contact-1",
+                "lawfulBasis": "",
+                "evidence": {
+                    "text": "STOP"
+                },
+                "source": "keyword-stop",
+                "purpose": "",
+                "legacyRef": ""
+            }
+        ],
+        "written": [],
+        "finds": [
+            {
+                "id": "contact-1",
+                "register": "pipelinq",
+                "schema": "contact"
+            }
+        ],
+        "warnings": []
+    }
+}

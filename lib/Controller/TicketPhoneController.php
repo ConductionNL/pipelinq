@@ -3,67 +3,90 @@
 /**
  * Pipelinq TicketPhoneController.
  *
- * Finds tickets by the phone number they are about.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * The phone search over tickets: `GET /api/tickets/by-phone?number=`.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conduction.nl>
+ * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://conduction.nl
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PhoneHistoryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PhoneHistoryServiceInterface;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
- * `GET /api/tickets/by-phone?number=`. Every result is read through
- * OpenRegister's object service as the signed-in user, so its RBAC decides
- * which tickets come back; there is no object id to guard here.
+ * Answers the tickets about a phone number, for the Tickets list search and
+ * the earlier contacts of an unknown caller (design D3, D4).
  *
- * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
+ * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
  */
 class TicketPhoneController extends Controller {
+
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest            $request The request.
-	 * @param PhoneHistoryService $history The phone search.
+	 * @param IRequest            $request      The request.
+	 * @param PhoneHistoryServiceInterface $phoneHistory The phone search over tickets.
+	 * @param IUserSession        $userSession  The signed-in user.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PhoneHistoryService $history,
+		private readonly PhoneHistoryServiceInterface $phoneHistory,
+		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
-	 * The tickets about a phone number, newest first.
+	 * The tickets about a number, newest first.
+	 *
+	 * No guard beyond a session: every ticket is read through OpenRegister as
+	 * the caller, so the answer holds only tickets the caller may read.
 	 *
 	 * @param string $number The number as typed.
 	 *
-	 * @return JSONResponse `{ number, results }`; `number` is null when the text is no phone number.
+	 * @return JSONResponse `{number, results, total}`; 400 without a number,
+	 *                      401 without a session.
 	 *
-	 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
-	 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-an-unknown-callers-earlier-contacts-are-shown-req-chp-001
+	 * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
 	 */
 	#[NoAdminRequired]
 	public function byPhone(string $number = ''): JSONResponse {
-		return new JSONResponse($this->history->findTickets(raw: $number));
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if (trim($number) === '') {
+			return new JSONResponse(['error' => 'A phone number is required'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$found = $this->phoneHistory->findTickets(raw: $number);
+
+		return new JSONResponse(
+			[
+				'number' => $found['number'],
+				'results' => $found['tickets'],
+				'total' => count($found['tickets']),
+			]
+		);
 	}//end byPhone()
 }//end class

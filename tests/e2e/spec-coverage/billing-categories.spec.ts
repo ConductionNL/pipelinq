@@ -27,7 +27,7 @@ import {
 	openApp,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/pos-transaction-core/spec.md#billing-categories-page
+// @e2e openspec/specs/pos-transaction-core/spec.md
 test('Billing categories: the widget renders on the Operational dashboard', async ({
 	page,
 }) => {
@@ -49,7 +49,7 @@ test('Billing categories: the widget renders on the Operational dashboard', asyn
 	await assertNoHardError(page)
 })
 
-// @e2e openspec/specs/pos-transaction-core/spec.md#billing-categories-create
+// @e2e openspec/specs/pos-transaction-core/spec.md
 test('Billing categories: the retired nav entry is gone from the sidebar', async ({
 	page,
 }) => {
@@ -70,7 +70,7 @@ test('Billing categories: the retired nav entry is gone from the sidebar', async
 	).toHaveCount(0)
 })
 
-// @e2e openspec/specs/pos-transaction-core/spec.md#billing-categories-list
+// @e2e openspec/specs/pos-transaction-core/spec.md
 test('Billing categories: the widget sits alongside the other operational widgets', async ({
 	page,
 }) => {

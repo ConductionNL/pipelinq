@@ -280,6 +280,8 @@
 								"field": "sortOrder",
 								"dir": "asc"
 							},
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "name",

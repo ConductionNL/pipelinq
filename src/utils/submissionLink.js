@@ -74,26 +74,72 @@ function step(choice, create, what) {
  */
 export function linkPlan({ ticket, client, contact, lead = false }) {
 	const party = submittedParty(ticket)
-	const personName = party.name || party.email
+	const newClient = newClientFor(party)
+	const newContact = newContactFor(party)
+	return {
+		client: step(client, newClient, 'client'),
+		contact: step(contact, newContact, 'contact'),
+		lead: lead ? newLeadFor(ticket, party) : null,
+	}
+}
+
+/**
+ * @param {{name: string, email: string}} party What the visitor typed.
+ * @return {string} The person's name, or their e-mail address.
+ */
+function personNameOf(party) {
+	return party.name || party.email
+}
+
+/**
+ * The client to create: named after the organisation, or a person client
+ * named after the person, with the e-mail address when there is one.
+ *
+ * @param {object} party What the visitor typed.
+ * @return {object} The client.
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ */
+function newClientFor(party) {
 	const newClient = party.organisation
 		? { name: party.organisation, type: 'organization' }
-		: { name: personName, type: 'person' }
+		: { name: personNameOf(party), type: 'person' }
 	if (party.email) {
 		newClient.email = party.email
 	}
-	const newContact = { name: personName }
+	return newClient
+}
+
+/**
+ * The contact to create, with the e-mail address and phone typed.
+ *
+ * @param {object} party What the visitor typed.
+ * @return {object} The contact.
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ */
+function newContactFor(party) {
+	const newContact = { name: personNameOf(party) }
 	if (party.email) {
 		newContact.email = party.email
 	}
 	if (party.phone) {
 		newContact.phone = party.phone
 	}
+	return newContact
+}
+
+/**
+ * The lead to create from the ticket's title, description and form.
+ *
+ * @param {object} ticket The ticket.
+ * @param {object} party What the visitor typed.
+ * @return {{title: string, description: string, source: string}} The lead.
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+ */
+function newLeadFor(ticket, party) {
 	return {
-		client: step(client, newClient, 'client'),
-		contact: step(contact, newContact, 'contact'),
-		lead: lead
-			? { title: text(ticket?.title) || personName, description: text(ticket?.description), source: party.form || 'website' }
-			: null,
+		title: text(ticket?.title) || personNameOf(party),
+		description: text(ticket?.description),
+		source: party.form || 'website',
 	}
 }
 

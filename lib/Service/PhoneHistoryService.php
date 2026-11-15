@@ -3,236 +3,200 @@
 /**
  * Pipelinq PhoneHistoryService.
  *
- * Finds tickets and contact moments by the phone number they are about.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * Finds the tickets and contact moments about a phone number, however the
+ * number was typed.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conduction.nl>
+ * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://conduction.nl
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Listener\TicketPhoneListener;
+use OCA\Pipelinq\Kernel\Contracts\PhoneHistoryServiceInterface;
+use OCA\Pipelinq\Util\PayloadToArray;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * The query is normalised with the screen pop's normaliser and matched on the
- * ticket's stored `phoneE164`, read as the viewer, so a ticket the viewer may
- * not read is never returned.
+ * The phone search over tickets (design D3).
  *
- * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
+ * The query is normalised the way the screen pop normalises a caller, then
+ * matched on the ticket's stored `phoneE164`. A ticket stored before that field
+ * existed is still found by the last nine digits of its number, and is labelled
+ * a possible match, because a number from another country can share that tail.
+ * Every read goes through OpenRegister as the viewer, so a ticket the viewer
+ * may not read is never in the result.
+ *
+ * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
  */
-class PhoneHistoryService {
+class PhoneHistoryService implements PhoneHistoryServiceInterface {
+	use PayloadToArray;
+
 	/**
-	 * The most tickets one search returns.
+	 * Most tickets one search answers.
 	 */
 	public const MAX_RESULTS = 50;
 
 	/**
-	 * How many tickets the back-fill reads per page.
+	 * Recent tickets scanned for a number stored before `phoneE164` existed.
 	 */
-	private const BATCH_SIZE = 200;
+	public const TAIL_SCAN = 500;
+
+	/**
+	 * A ticket whose stored E.164 number equals the query's.
+	 */
+	public const MATCH_EXACT = 'exact';
+
+	/**
+	 * A ticket whose number only shares the query's last nine digits.
+	 */
+	public const MATCH_POSSIBLE = 'possible';
 
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService       $tickets    The ticket service.
-	 * @param PhoneNormaliser     $normaliser The phone normaliser the screen pop uses.
-	 * @param TicketPhoneListener $phone      The rule that picks a ticket's number.
-	 * @param LoggerInterface     $logger     The logger.
+	 * @param TicketService     $ticketService   The ticket schema and OpenRegister.
+	 * @param PhoneNormaliser   $phoneNormaliser Normalises the query.
+	 * @param TicketPhoneNumber $phoneNumber     Reads the number a stored ticket is about.
+	 * @param LoggerInterface   $logger          PSR logger.
 	 */
 	public function __construct(
-		private readonly TicketService $tickets,
-		private readonly PhoneNormaliser $normaliser,
-		private readonly TicketPhoneListener $phone,
+		private readonly TicketService $ticketService,
+		private readonly PhoneNormaliser $phoneNormaliser,
+		private readonly TicketPhoneNumber $phoneNumber,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
 
 	/**
-	 * The tickets about a phone number, newest first.
+	 * The tickets about a number, newest first, at most MAX_RESULTS.
 	 *
-	 * @param string      $raw   The number as typed or as the platform sent it.
-	 * @param string|null $orgId The organisation, for its default country.
+	 * @param string      $raw   The number as typed.
+	 * @param string|null $orgId The organisation whose default country applies.
 	 *
-	 * @return array{number: string|null, results: array<int, array<string, mixed>>} The
-	 *         normalised number (null when the text is no phone number) and the tickets.
+	 * @return array{number:string|null, tickets:array<int,array<string,mixed>>}
+	 *         The query in E.164 (null when it does not normalise) and the
+	 *         tickets, each with `_phoneMatch` set to exact or possible.
 	 *
-	 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
+	 * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
 	 */
 	public function findTickets(string $raw, ?string $orgId = null): array {
-		$e164 = $this->normaliser->normaliseForOrg($raw, $orgId)['e164'];
-		if ($e164 === null || $this->tickets->isConfigured() === false) {
-			return ['number' => $e164, 'results' => []];
+		$e164 = $this->phoneNormaliser->normaliseForOrg($raw, $orgId)['e164'];
+		if ($e164 === null || $this->ticketService->isConfigured() === false) {
+			return ['number' => $e164, 'tickets' => []];
 		}
 
-		try {
-			$rows = $this->tickets->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $this->tickets->getRegisterId(),
-						'schema' => $this->tickets->getSchemaId(),
-						'phoneE164' => $e164,
-					],
-					'sort' => ['occurredAt' => 'desc'],
-					'limit' => self::MAX_RESULTS,
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: phone search failed', ['exception' => $e->getMessage()]);
-			return ['number' => $e164, 'results' => []];
+		$found = [];
+		foreach ($this->read(filters: [TicketPhoneNumber::FIELD => $e164], limit: self::MAX_RESULTS) as $ticket) {
+			$found[$this->key(ticket: $ticket)] = array_merge($ticket, ['_phoneMatch' => self::MATCH_EXACT]);
 		}
 
-		$results = [];
-		foreach ($rows as $row) {
-			$ticket = $this->toArray(object: $row);
-			if (($ticket['phoneE164'] ?? null) !== $e164) {
+		$tail = PhoneNeedles::tail(number: $e164);
+		foreach ($this->read(filters: [], limit: self::TAIL_SCAN) as $ticket) {
+			$key = $this->key(ticket: $ticket);
+			if (isset($found[$key]) === true || $tail === null) {
 				continue;
 			}
 
-			$results[] = $this->summary(ticket: $ticket);
-		}
-
-		return ['number' => $e164, 'results' => $results];
-	}//end findTickets()
-
-	/**
-	 * Store `phoneE164` on every ticket that carries a number and lacks it.
-	 *
-	 * Idempotent: a ticket whose stored value already matches is skipped.
-	 *
-	 * @return array{updated: int, skipped: int} The counts.
-	 *
-	 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-a-ticket-is-found-by-phone-number-however-it-was-typed-req-chp-002
-	 */
-	public function backfillTicketPhones(): array {
-		$counts = ['updated' => 0, 'skipped' => 0];
-		if ($this->tickets->isConfigured() === false) {
-			return $counts;
-		}
-
-		$objectService = $this->tickets->getObjectService();
-		$register = $this->tickets->getRegisterId();
-		$schema = $this->tickets->getSchemaId();
-
-		$offset = 0;
-		do {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
-					'limit' => self::BATCH_SIZE,
-					'offset' => $offset,
-				],
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			foreach ($rows as $row) {
-				[$ticket, $uuid] = $this->dataAndId(object: $row);
-				$e164 = $this->phone->numberOf(ticket: $ticket);
-				if ($e164 === null || $uuid === '' || ($ticket['phoneE164'] ?? null) === $e164) {
-					$counts['skipped']++;
-					continue;
-				}
-
-				try {
-					$objectService->runAsSystem(
-						static fn () => $objectService->saveObject(
-							object: array_merge($ticket, ['phoneE164' => $e164]),
-							register: $register,
-							schema: $schema,
-							uuid: $uuid
-						)
-					);
-					$counts['updated']++;
-				} catch (Throwable $e) {
-					$this->logger->warning(
-						'Pipelinq: phone back-fill skipped a ticket',
-						['id' => $uuid, 'exception' => $e->getMessage()]
-					);
-					$counts['skipped']++;
-				}
-			}//end foreach
-
-			$offset += self::BATCH_SIZE;
-			$fetched = count($rows);
-		} while ($fetched === self::BATCH_SIZE);
-
-		return $counts;
-	}//end backfillTicketPhones()
-
-	/**
-	 * What the phone search shows of one ticket.
-	 *
-	 * @param array<string, mixed> $ticket The ticket data.
-	 *
-	 * @return array<string, mixed> The summary.
-	 */
-	private function summary(array $ticket): array {
-		return [
-			'id' => (string)($ticket['id'] ?? ($ticket['uuid'] ?? '')),
-			'title' => (string)($ticket['title'] ?? ''),
-			'ticketType' => (string)($ticket['ticketType'] ?? ''),
-			'status' => (string)($ticket['status'] ?? ''),
-			'channel' => (string)($ticket['channel'] ?? ''),
-			'direction' => (string)($ticket['direction'] ?? ''),
-			'assignee' => (string)($ticket['assignee'] ?? ''),
-			'reference' => (string)($ticket['reference'] ?? ''),
-			'occurredAt' => (string)($ticket['occurredAt'] ?? ($ticket['started_at'] ?? ($ticket['@self']['created'] ?? ''))),
-		];
-	}//end summary()
-
-	/**
-	 * The stored data of an OpenRegister object and its id, for a write back.
-	 *
-	 * @param mixed $object The object (entity or array).
-	 *
-	 * @return array{0: array<string, mixed>, 1: string} The data and the id.
-	 */
-	private function dataAndId(mixed $object): array {
-		if (is_object($object) === true && method_exists($object, 'getObject') === true && method_exists($object, 'getUuid') === true) {
-			return [($object->getObject() ?? []), (string)$object->getUuid()];
-		}
-
-		$data = $this->toArray(object: $object);
-		$uuid = (string)($data['id'] ?? ($data['uuid'] ?? ''));
-		unset($data['@self'], $data['id'], $data['uuid']);
-
-		return [$data, $uuid];
-	}//end dataAndId()
-
-	/**
-	 * An OpenRegister object (entity or array) as plain data with its id.
-	 *
-	 * @param mixed $object The object.
-	 *
-	 * @return array<string, mixed> The data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$data = $object->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
+			$stored = $this->phoneNumber->rawNumber(ticket: $ticket);
+			if ($stored !== null && PhoneNeedles::tail(number: $stored) === $tail) {
+				$found[$key] = array_merge($ticket, ['_phoneMatch' => self::MATCH_POSSIBLE]);
 			}
 		}
 
-		return [];
-	}//end toArray()
+		$tickets = array_values($found);
+		usort($tickets, fn (array $a, array $b): int => strcmp($this->when(ticket: $b), $this->when(ticket: $a)));
+
+		return ['number' => $e164, 'tickets' => array_slice($tickets, 0, self::MAX_RESULTS)];
+	}//end findTickets()
+
+	/**
+	 * Tickets matching the filters, newest first, read as the viewer.
+	 *
+	 * @param array<string,mixed> $filters Extra filters.
+	 * @param int                 $limit   Most rows to read.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function read(array $filters, int $limit): array {
+		try {
+			$rows = $this->ticketService->getObjectService()->findAll(
+				[
+					'filters' => array_merge(
+						['register' => $this->ticketService->getRegisterId(), 'schema' => $this->ticketService->getSchemaId()],
+						$filters
+					),
+					'sort' => ['occurredAt' => 'desc'],
+					'limit' => $limit,
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning('Phone history: reading tickets failed', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		$tickets = [];
+		foreach ($rows as $row) {
+			$ticket = $this->toArray(value: $row);
+			if ($ticket !== []) {
+				$tickets[] = $ticket;
+			}
+		}
+
+		return $tickets;
+	}//end read()
+
+	/**
+	 * The ticket's id, or its position-free fingerprint when it has none.
+	 *
+	 * @param array<string,mixed> $ticket The ticket.
+	 *
+	 * @return string
+	 */
+	private function key(array $ticket): string {
+		$id = (string) ($ticket['id'] ?? ($ticket['uuid'] ?? ''));
+		if ($id !== '') {
+			return $id;
+		}
+
+		return md5((string) json_encode($ticket));
+	}//end key()
+
+	/**
+	 * When the ticket happened, for the newest-first order.
+	 *
+	 * @param array<string,mixed> $ticket The ticket.
+	 *
+	 * @return string
+	 */
+	private function when(array $ticket): string {
+		$self    = ($ticket['@self'] ?? []);
+		$created = null;
+		if (is_array($self) === true) {
+			$created = ($self['created'] ?? null);
+		}
+
+		foreach ([($ticket['occurredAt'] ?? null), ($ticket['started_at'] ?? null), $created] as $value) {
+			if (is_string($value) === true && $value !== '') {
+				return $value;
+			}
+		}
+
+		return '';
+	}//end when()
 }//end class

@@ -161,7 +161,7 @@
           "exchange_rates": {
             "type": "object",
             "description": "The rate each foreign currency was converted at in this run: currency code to rate, source (override, shillinq, manual, none), shillinq origin, rate date and stale flag.",
-            "title": "Exchange Rates"
+            "title": "Exchange rates"
           }
         }
       },

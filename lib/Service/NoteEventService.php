@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\NoteEventServiceInterface;
+use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -33,7 +35,9 @@ use Throwable;
  *
  * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
-class NoteEventService {
+class NoteEventService implements NoteEventServiceInterface {
+	use OptionalPayloadToArray;
+
 	private const TYPE_MAP = [
 		'pipelinq_client' => 'client',
 		'pipelinq_contact' => 'contact',
@@ -92,9 +96,8 @@ class NoteEventService {
 			}
 
 			$this->publishNoteActivity(
-				entityType: $entityType,
-				entityData: $entityData,
-				objectId: $objectId
+				about: new NoticedObject(objectType: $entityType, objectId: $objectId),
+				entityData: $entityData
 			);
 		} catch (\Exception $e) {
 			$this->logger->warning(
@@ -152,77 +155,39 @@ class NoteEventService {
 			return null;
 		}//end try
 
-		return $this->toArray(row: $object);
+		return $this->toArray(object: $object);
 	}//end fetchEntityData()
-
-	/**
-	 * Normalise an OpenRegister result to a plain array.
-	 *
-	 * @param mixed $row The value returned by ObjectService.
-	 *
-	 * @return ?array The object as an array, or null when it cannot be read.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true) {
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$serialized = $row->jsonSerialize();
-				if (is_array($serialized) === true) {
-					return $serialized;
-				}
-			}
-
-			if (method_exists($row, 'getObject') === true) {
-				$inner = $row->getObject();
-				if (is_array($inner) === true) {
-					return $inner;
-				}
-			}
-		}
-
-		return null;
-	}//end toArray()
 
 	/**
 	 * Publish activity and notification for a note addition.
 	 *
-	 * @param string $entityType The entity type.
-	 * @param array $entityData The entity data from OpenRegister.
-	 * @param string $objectId The object ID.
+	 * @param NoticedObject $about      The entity type and object id.
+	 * @param array         $entityData The entity data from OpenRegister.
 	 *
 	 * @return void
 	 */
-	private function publishNoteActivity(string $entityType, array $entityData, string $objectId): void {
-		$entityTitle = $entityData['title'] ?? $entityType . ' ' . $objectId;
+	private function publishNoteActivity(NoticedObject $about, array $entityData): void {
+		$entityTitle = $entityData['title'] ?? $about->objectType . ' ' . $about->objectId;
 		$assignee = $entityData['assignee'] ?? '';
-
-		$currentUser = $this->userSession->getUser();
-		$author = '';
-		if ($currentUser !== null) {
-			$author = $currentUser->getUID();
-		}
-
+		$author = ($this->userSession->getUser()?->getUID() ?? '');
 		$assigneeOrNull = null;
 		if ($assignee !== '') {
 			$assigneeOrNull = $assignee;
 		}
 
 		$this->activityService->publishNoteAdded(
-			entityType: $entityType,
+			entityType: $about->objectType,
 			entityTitle: $entityTitle,
-			objectId: $objectId,
+			objectId: $about->objectId,
 			affectedUser: $assigneeOrNull
 		);
 
 		if ($assignee !== '') {
 			$this->notificationService->notifyNoteAdded(
-				entityType: $entityType,
+				entityType: $about->objectType,
 				entityTitle: $entityTitle,
 				assigneeUserId: $assignee,
-				objectId: $objectId,
+				objectId: $about->objectId,
 				author: $author
 			);
 		}

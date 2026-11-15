@@ -69,15 +69,39 @@ class NrcSubscriptionService {
 	 * Register an abonnement at NRC and persist the NrcAbonnement record.
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<int, array<string,mixed>> $kanalen List of `{naam, filters}` kanaal entries.
-	 * @param string $callbackUrl Pipelinq inbox URL.
+	 * @param AbonnementRequest    $request  The kanalen and the callback URL.
 	 *
 	 * @return array<string, mixed> Saved NrcAbonnement record.
 	 *
 	 * @throws NrcSubscriptionFailedException On HTTP failure.
 	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-007
 	 */
-	public function registerAbonnement(array $endpoint, array $kanalen, string $callbackUrl): array {
+	public function registerAbonnement(array $endpoint, AbonnementRequest $request): array {
+		$nrc = new NrcConnection(
+			client: $this->requireRegistrationClient(endpoint: $endpoint),
+			url: self::requireNrcUrl(endpoint: $endpoint)
+		);
+
+		$bearer = $this->generateCallbackBearer();
+		$abonnementUrl = $this->postAbonnement(nrc: $nrc, body: $this->callbackBody(request: $request, bearer: $bearer));
+
+		$record = ['endpointId' => (string)($endpoint['id'] ?? ''), 'abonnementUrl' => $abonnementUrl]
+			+ $this->storedCallback(request: $request, bearer: $bearer);
+
+		$saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $record);
+		return $saved ?? $record;
+	}//end registerAbonnement()
+
+	/**
+	 * The endpoint's client, refusing a registration when it cannot be resolved.
+	 *
+	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws NrcSubscriptionFailedException When the endpoint has no resolvable client.
+	 */
+	private function requireRegistrationClient(array $endpoint): array {
 		$client = $this->registers->findClientForEndpoint($endpoint);
 		if ($client === null) {
 			throw new NrcSubscriptionFailedException(
@@ -88,24 +112,60 @@ class NrcSubscriptionService {
 			);
 		}
 
+		return $client;
+	}//end requireRegistrationClient()
+
+	/**
+	 * The endpoint's NRC URL, refusing when it has none.
+	 *
+	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
+	 *
+	 * @return string
+	 *
+	 * @throws NrcSubscriptionFailedException When the endpoint has no NRC URL.
+	 */
+	private static function requireNrcUrl(array $endpoint): string {
 		$nrcUrl = (string)($endpoint['componenten']['nrc'] ?? '');
 		if ($nrcUrl === '') {
 			throw new NrcSubscriptionFailedException('ZGW NRC: endpoint missing nrc URL');
 		}
 
-		$bearer = $this->generateCallbackBearer();
-		$body = [
-			'callbackUrl' => $callbackUrl,
-			'auth' => 'Bearer ' . $bearer,
-			'kanalen' => $this->normaliseKanalen(kanalen: $kanalen),
-		];
+		return $nrcUrl;
+	}//end requireNrcUrl()
 
+	/**
+	 * The body NRC gets: where to post, the bearer to post with, and the kanalen.
+	 *
+	 * @param AbonnementRequest $request The kanalen and the callback URL.
+	 * @param string            $bearer  The callback bearer.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function callbackBody(AbonnementRequest $request, string $bearer): array {
+		return [
+			'callbackUrl' => $request->callbackUrl,
+			'auth' => 'Bearer ' . $bearer,
+			'kanalen' => $this->normaliseKanalen(kanalen: $request->kanalen),
+		];
+	}//end callbackBody()
+
+	/**
+	 * POST the abonnement and answer the URL NRC gives it.
+	 *
+	 * @param NrcConnection        $nrc  The client and NRC URL.
+	 * @param array<string, mixed> $body The abonnement body.
+	 *
+	 * @return string The abonnement URL.
+	 *
+	 * @throws NrcSubscriptionFailedException When the POST fails or answers no URL.
+	 */
+	private function postAbonnement(NrcConnection $nrc, array $body): string {
 		try {
 			$response = $this->api->callComponent(
-				componentUrl: $nrcUrl,
+				componentUrl: $nrc->url,
 				method: 'POST',
 				path: '/abonnement',
-				client: $client,
+				client: $nrc->client,
 				body: $body
 			);
 		} catch (Throwable $e) {
@@ -116,24 +176,43 @@ class NrcSubscriptionService {
 			);
 		}
 
+		return self::requireAbonnementUrl(response: $response);
+	}//end postAbonnement()
+
+	/**
+	 * The abonnement URL from NRC's answer (Location header, else body url).
+	 *
+	 * @param array<string, mixed> $response The NRC answer.
+	 *
+	 * @return string
+	 *
+	 * @throws NrcSubscriptionFailedException When the answer carries no URL.
+	 */
+	private static function requireAbonnementUrl(array $response): string {
 		$abonnementUrl = (string)($response['headers']['location'] ?? $response['body']['url'] ?? '');
 		if ($abonnementUrl === '') {
 			throw new NrcSubscriptionFailedException('ZGW NRC: registration returned no abonnement URL');
 		}
 
-		$endpointId = (string)($endpoint['id'] ?? '');
-		$record = [
-			'endpointId' => $endpointId,
-			'abonnementUrl' => $abonnementUrl,
-			'callbackUrl' => $callbackUrl,
+		return $abonnementUrl;
+	}//end requireAbonnementUrl()
+
+	/**
+	 * The callback half of the stored NrcAbonnement record, active.
+	 *
+	 * @param AbonnementRequest $request The kanalen and the callback URL.
+	 * @param string            $bearer  The callback bearer.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function storedCallback(AbonnementRequest $request, string $bearer): array {
+		return [
+			'callbackUrl' => $request->callbackUrl,
 			'callbackAuth' => $bearer,
-			'kanalen' => $this->normaliseKanalen(kanalen: $kanalen),
+			'kanalen' => $this->normaliseKanalen(kanalen: $request->kanalen),
 			'active' => true,
 		];
-
-		$saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $record);
-		return $saved ?? $record;
-	}//end registerAbonnement()
+	}//end storedCallback()
 
 	/*
 	 * NO syncAbonnement() HERE.
@@ -166,20 +245,7 @@ class NrcSubscriptionService {
 
 		$abonnementUrl = (string)($abonnement['abonnementUrl'] ?? '');
 		if ($abonnementUrl !== '') {
-			try {
-				$this->api->callComponent(
-					componentUrl: $abonnementUrl,
-					method: 'DELETE',
-					path: '',
-					client: $client
-				);
-			} catch (Throwable $e) {
-				throw new NrcSubscriptionFailedException(
-					'ZGW NRC: DELETE failed: ' . $e->getMessage(),
-					0,
-					$e
-				);
-			}
+			$this->deleteAbonnement(nrc: new NrcConnection(client: $client, url: $abonnementUrl));
 		}
 
 		$abonnement['active'] = false;
@@ -191,6 +257,32 @@ class NrcSubscriptionService {
 
 		$this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $abonnement, $saveUuid);
 	}//end unregisterAbonnement()
+
+	/**
+	 * DELETE an abonnement at NRC.
+	 *
+	 * @param NrcConnection $nrc The client and the abonnement URL (as the component URL).
+	 *
+	 * @return void
+	 *
+	 * @throws NrcSubscriptionFailedException When the DELETE fails.
+	 */
+	private function deleteAbonnement(NrcConnection $nrc): void {
+		try {
+			$this->api->callComponent(
+				componentUrl: $nrc->url,
+				method: 'DELETE',
+				path: '',
+				client: $nrc->client
+			);
+		} catch (Throwable $e) {
+			throw new NrcSubscriptionFailedException(
+				'ZGW NRC: DELETE failed: ' . $e->getMessage(),
+				0,
+				$e
+			);
+		}
+	}//end deleteAbonnement()
 
 	/**
 	 * Generate a fresh 256-bit callback bearer token.

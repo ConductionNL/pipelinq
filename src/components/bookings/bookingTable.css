@@ -1,0 +1,33 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ *
+ * The bordered booking table of the booking detail section and the
+ * customer's bookings card. Each loads it as a scoped style.
+ */
+
+.viewTableContainer {
+	background: var(--color-main-background);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	box-shadow: 0 2px 4px var(--color-box-shadow);
+	border: 1px solid var(--color-border);
+}
+
+.viewTable {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.viewTable th,
+.viewTable td {
+	padding: 12px;
+	text-align: start;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.viewTable th {
+	background-color: var(--color-background-dark);
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}

@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
 /**
  * Title, headings and CSS-selected fragments out of an HTML document.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
  */
 class HtmlTextExtractor {
 
@@ -66,7 +66,7 @@ class HtmlTextExtractor {
 	 *
 	 * @return string The extracted text, empty when nothing parses.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-our-own-pages-are-crawled-through-the-egress-plane
 	 */
 	public function headline(string $html): string {
 		$xpath = $this->xpath(html: $html);
@@ -105,7 +105,7 @@ class HtmlTextExtractor {
 	 *
 	 * @return string|null The fragment text, or null when the selector matches nothing.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function fragment(string $html, string $selector): ?string {
 		$xpath = $this->xpath(html: $html);
@@ -129,7 +129,7 @@ class HtmlTextExtractor {
 	 *
 	 * @return string|null The expression, or null when the selector is not supported.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function toXPath(string $selector): ?string {
 		$parts = preg_split('/\s+/', trim($selector));

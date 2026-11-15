@@ -1,0 +1,984 @@
+{
+    "all rows": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-1",
+                    "name": "Both",
+                    "email": " a@x.test ",
+                    "phone": "0612",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "a@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "0612",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": 77,
+                    "phone": "010",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "010",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "77",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-4",
+                    "email": "c@x.test",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "c@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": []
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-4",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-5",
+                    "email": "   ",
+                    "phone": 12345,
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "12345",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-5",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-1",
+                    "email": "p@x.test",
+                    "phones": [
+                        {
+                            "value": "1"
+                        }
+                    ],
+                    "phone": "2",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "p@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-2",
+                    "phone": "+31 6",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "+31 6",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-2",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 6 record(s) backfilled, 4 already had channel data, 0 failed to save"
+        }
+    ],
+    "save throws for one row": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-1",
+                    "name": "Both",
+                    "email": " a@x.test ",
+                    "phone": "0612",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "a@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "0612",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "log": "warning",
+            "message": "BackfillContactChannelArrays: failed to save record",
+            "context": {
+                "uuid": "c-1",
+                "schema": "schema-client",
+                "error": "save failed"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": 77,
+                    "phone": "010",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "010",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "77",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-4",
+                    "email": "c@x.test",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "c@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": []
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-4",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-5",
+                    "email": "   ",
+                    "phone": 12345,
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "12345",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-5",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-1",
+                    "email": "p@x.test",
+                    "phones": [
+                        {
+                            "value": "1"
+                        }
+                    ],
+                    "phone": "2",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "p@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-2",
+                    "phone": "+31 6",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "+31 6",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-2",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 5 record(s) backfilled, 4 already had channel data, 1 failed to save"
+        }
+    ],
+    "no admin": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-1",
+                    "name": "Both",
+                    "email": " a@x.test ",
+                    "phone": "0612",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "a@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "0612",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-1",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": 77,
+                    "phone": "010",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "010",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "77",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-4",
+                    "email": "c@x.test",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "c@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": []
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-4",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-5",
+                    "email": "   ",
+                    "phone": 12345,
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "12345",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-5",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-1",
+                    "email": "p@x.test",
+                    "phones": [
+                        {
+                            "value": "1"
+                        }
+                    ],
+                    "phone": "2",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "p@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-1",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-2",
+                    "phone": "+31 6",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "+31 6",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-2",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 6 record(s) backfilled, 4 already had channel data, 0 failed to save"
+        }
+    ],
+    "no admin group": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-1",
+                    "name": "Both",
+                    "email": " a@x.test ",
+                    "phone": "0612",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "a@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "0612",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-1",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": 77,
+                    "phone": "010",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "010",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "77",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-4",
+                    "email": "c@x.test",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "c@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ],
+                    "phones": []
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-4",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-5",
+                    "email": "   ",
+                    "phone": 12345,
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "12345",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-5",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-1",
+                    "email": "p@x.test",
+                    "phones": [
+                        {
+                            "value": "1"
+                        }
+                    ],
+                    "phone": "2",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "p@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-1",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-2",
+                    "phone": "+31 6",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "+31 6",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-2",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 6 record(s) backfilled, 4 already had channel data, 0 failed to save"
+        }
+    ],
+    "two admins": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "c-1",
+                    "email": "x@y",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "x@y",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-client",
+                "uuid": "c-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:zed"
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 1 record(s) backfilled, 0 already had channel data, 0 failed to save"
+        }
+    ],
+    "client schema not set": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-1",
+                    "email": "p@x.test",
+                    "phones": [
+                        {
+                            "value": "1"
+                        }
+                    ],
+                    "phone": "2",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "p@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-2",
+                    "phone": "+31 6",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "+31 6",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-2",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 2 record(s) backfilled, 0 already had channel data, 0 failed to save"
+        }
+    ],
+    "findAll throws": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "log": "warning",
+            "message": "BackfillContactChannelArrays: findAll failed",
+            "context": {
+                "schema": "schema-client",
+                "error": "find failed"
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-1",
+                    "email": "p@x.test",
+                    "phones": [
+                        {
+                            "value": "1"
+                        }
+                    ],
+                    "phone": "2",
+                    "emails": [
+                        {
+                            "kind": "work",
+                            "value": "p@x.test",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-1",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "saveObject": {
+                "object": {
+                    "id": "p-2",
+                    "phone": "+31 6",
+                    "phones": [
+                        {
+                            "kind": "work",
+                            "value": "+31 6",
+                            "primary": true,
+                            "verified": false
+                        }
+                    ]
+                },
+                "register": "reg-1",
+                "schema": "schema-contact",
+                "uuid": "p-2",
+                "_rbac": false,
+                "_multitenancy": false,
+                "currentUser": "user:root"
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 2 record(s) backfilled, 0 already had channel data, 0 failed to save"
+        }
+    ],
+    "register not configured": [
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: pipelinq register not configured, skipping"
+        }
+    ],
+    "ObjectService unavailable": [
+        {
+            "output": "warning",
+            "message": "BackfillContactChannelArrays: OpenRegister ObjectService unavailable, skipping (no such service: OCA\\OpenRegister\\Service\\ObjectService)"
+        }
+    ],
+    "nothing stored": [
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-client"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "findAll": {
+                "config": {
+                    "filters": {
+                        "register": "reg-1",
+                        "schema": "schema-contact"
+                    },
+                    "limit": 10000
+                },
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "output": "info",
+            "message": "BackfillContactChannelArrays: 0 record(s) backfilled, 0 already had channel data, 0 failed to save"
+        }
+    ]
+}

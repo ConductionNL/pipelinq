@@ -48,7 +48,8 @@ of the client's contact moments, tickets, notes and leads through OpenRegister's
 ObjectService as the viewer, so RBAC decides what goes in. It sends a bounded
 text (newest first, at most 40 records) to hermiq through the same lazy resolve
 as `RelevanceScorer`, and returns the summary with `recordsRead` and
-`generatedAt`. Without hermiq the card is hidden, not empty.
+`generatedAt`. Without hermiq the card stays, without Summarise, and says that
+summarising is not available (board PqKlant, design-system #903).
 
 ### D4. Where it shows
 

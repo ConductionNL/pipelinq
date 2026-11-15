@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ContactSyncSettingsController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCP\AppFramework\Http;
@@ -55,8 +56,7 @@ class ContactSyncSettingsControllerTest extends TestCase {
 		return new ContactSyncSettingsController(
 			$request,
 			$settings,
-			$session,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged]),
+			new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
 			$l10n,
 		);
 	}//end controller()

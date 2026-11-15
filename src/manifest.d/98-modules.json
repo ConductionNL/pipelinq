@@ -265,6 +265,14 @@
 						"route": "WalkInQueue"
 					},
 					{
+						"id": "CallReviews",
+						"label": "Call reviews",
+						"description": "Recorded calls scored on a scorecard, with coaching points the agent agrees.",
+						"icon": "AccountStarOutline",
+						"category": "other",
+						"route": "CallReviews"
+					},
+					{
 						"id": "Programmes",
 						"label": "Projects",
 						"description": "Delivery projects above the cases: plan, tasks, cycles and team.",
@@ -274,7 +282,7 @@
 					},
 					{
 						"id": "Store",
-						"label": "Store",
+						"label": "Marketplace",
 						"description": "Add apps and connections that work with Pipelinq.",
 						"icon": "StoreOutline",
 						"category": "more",
@@ -292,7 +300,7 @@
 						"id": "FeaturesRoadmap",
 						"label": "Features and roadmap",
 						"description": "What Pipelinq can do, and what is coming.",
-						"icon": "Timeline",
+						"icon": "MapMarkerPath",
 						"category": "more",
 						"route": "FeaturesRoadmap"
 					},

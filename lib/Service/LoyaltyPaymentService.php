@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyPaymentServiceInterface;
 use RuntimeException;
 
 /**
@@ -32,7 +33,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
  */
-class LoyaltyPaymentService {
+class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -65,6 +66,47 @@ class LoyaltyPaymentService {
 			throw new RuntimeException('Give the points to spend and the sale they pay for.');
 		}
 
+		$balance = $this->spendableBalance(accountId: $accountId, points: $points);
+
+		return $this->spend(spend: ['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId], balance: $balance);
+	}//end payWithPoints()
+
+	/**
+	 * Debit the points against the sale and answer with what was spent and what is left.
+	 *
+	 * @param array{accountId: string, points: int, posTransactionId: string} $spend   The account, the points and the sale.
+	 * @param array{balance: int, programmeId: string}                         $balance The account's balance and programme.
+	 *
+	 * @return array{points: int, amount: float, currentBalance: int}
+	 *
+	 * @throws RuntimeException When the programme gives points no value.
+	 */
+	private function spend(array $spend, array $balance): array {
+		['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId] = $spend;
+		$pointValue = $this->pointValueOf(programmeId: $balance['programmeId']);
+
+		$source = ['posTransactionId' => $posTransactionId, 'kind' => 'pos-payment'];
+		$this->ledgerService->forOperation(operationId: 'pos-payment:'.$posTransactionId)
+			->debitPoints(accountId: $accountId, amount: $points, redemptionId: $posTransactionId, sourceDocument: $source, processedBy: 'pos-payment');
+
+		return [
+			'points'         => $points,
+			'amount'         => round($points * $pointValue, 2),
+			'currentBalance' => $balance['balance'] - $points,
+		];
+	}//end spend()
+
+	/**
+	 * The account's balance and programme, when it holds at least the points.
+	 *
+	 * @param string $accountId The loyalty account.
+	 * @param int    $points    The points to spend.
+	 *
+	 * @return array{balance: int, programmeId: string}
+	 *
+	 * @throws RuntimeException When the account is not found or holds fewer points.
+	 */
+	private function spendableBalance(string $accountId, int $points): array {
 		$account = $this->accountService->getAccount(accountId: $accountId);
 		if ($account === null) {
 			throw new RuntimeException('Account not found.');
@@ -75,24 +117,25 @@ class LoyaltyPaymentService {
 			throw new RuntimeException('Insufficient balance.');
 		}
 
-		$programme  = $this->programmeService->getProgramme(programmeId: (string)($account['programmeId'] ?? ''));
+		return ['balance' => $balance, 'programmeId' => (string)($account['programmeId'] ?? '')];
+	}//end spendableBalance()
+
+	/**
+	 * The programme's value of one point.
+	 *
+	 * @param string $programmeId The programme.
+	 *
+	 * @return float
+	 *
+	 * @throws RuntimeException When the programme gives points no value.
+	 */
+	private function pointValueOf(string $programmeId): float {
+		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
 		$pointValue = (float)($programme['pointValue'] ?? 0);
 		if ($pointValue <= 0) {
 			throw new RuntimeException('The programme gives points no value.');
 		}
 
-		$this->ledgerService->debitPoints(
-			accountId: $accountId,
-			amount: $points,
-			redemptionId: $posTransactionId,
-			sourceDocument: ['posTransactionId' => $posTransactionId, 'kind' => 'pos-payment'],
-			processedBy: 'pos-payment'
-		);
-
-		return [
-			'points'         => $points,
-			'amount'         => round($points * $pointValue, 2),
-			'currentBalance' => $balance - $points,
-		];
-	}//end payWithPoints()
+		return $pointValue;
+	}//end pointValueOf()
 }//end class

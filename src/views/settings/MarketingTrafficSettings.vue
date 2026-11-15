@@ -8,7 +8,7 @@
   the page learns only whether one is on file and which service account
   email it belongs to, from GET /api/marketing/search-queries.
 
-  @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+  @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 -->
 <template>
 	<NcSettingsSection
@@ -166,7 +166,7 @@ export default {
 	computed: {
 		/**
 		 * @return {object} The pinia settings store.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		settingsStore() {
 			return useSettingsStore()
@@ -174,7 +174,7 @@ export default {
 
 		/**
 		 * @return {string} The key field's placeholder, which says whether a key is on file.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		keyPlaceholder() {
 			return this.keySet
@@ -187,7 +187,7 @@ export default {
 
 		/**
 		 * @return {string} The key field's helper text.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		keyHelp() {
 			return this.t(
@@ -202,7 +202,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} value The settings map.
-			 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+			 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 			 */
 			handler(value) {
 				this.applyConfig(value || {})
@@ -219,7 +219,7 @@ export default {
 		 * Copy the stored values into the form.
 		 *
 		 * @param {object} config The settings map.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		applyConfig(config) {
 			this.utmAuto = String(config[UTM_KEY] ?? 'true') !== 'false'
@@ -236,7 +236,7 @@ export default {
 		 * The service account email and last import, from the read endpoint.
 		 * Failure is non-fatal: the form still works without them.
 		 *
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		async fetchStatus() {
 			try {
@@ -254,7 +254,7 @@ export default {
 		/**
 		 * Persist the section. The key is sent only when the admin pasted one.
 		 *
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		async save() {
 			this.saving = true
@@ -288,7 +288,7 @@ export default {
 		/**
 		 * Delete the stored key.
 		 *
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 		 */
 		async clearKey() {
 			this.saving = true

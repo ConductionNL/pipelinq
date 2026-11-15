@@ -13,19 +13,23 @@
               "type": "object",
               "properties": {
                 "label": {
+                  "description": "What the tariff is called, such as the rate of a fee regulation.",
                   "type": "string",
                   "title": "Tariff"
                 },
                 "price": {
+                  "description": "The amount in euros.",
                   "type": "number",
                   "title": "Amount"
                 },
                 "validFrom": {
+                  "description": "The day the tariff applies from.",
                   "type": "string",
                   "format": "date",
                   "title": "Valid from"
                 },
                 "note": {
+                  "description": "A note on the tariff, such as when it applies.",
                   "type": "string",
                   "title": "Note"
                 }

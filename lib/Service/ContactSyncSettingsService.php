@@ -23,10 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
-use OCP\IAppConfig;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
@@ -35,7 +34,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactSyncSettingsService {
+class ContactSyncSettingsService implements ContactSyncSettingsServiceInterface {
 
 	/**
 	 * The user setting that turns write-back on or off.
@@ -52,30 +51,21 @@ class ContactSyncSettingsService {
 	public const KEY_LAST_RUN = 'contacts_sync_last_run';
 
 	/**
-	 * The most linked records one run writes back.
-	 *
-	 * @var int
-	 */
-	private const RUN_LIMIT = 500;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IConfig                $config          Per-user settings.
-	 * @param IAppConfig             $appConfig       The app config (register and schema ids).
 	 * @param IContactsManager       $contactsManager The user's addressbooks.
 	 * @param ContactSyncService     $syncService     Writes one record back.
 	 * @param ContactVcardWriterService $writerService Knows the addressbook new cards go to.
-	 * @param ObjectServiceInterface $objectService   Reads the linked records.
+	 * @param LinkedContactRecords   $linked          The records linked to a Nextcloud contact.
 	 * @param LoggerInterface        $logger          The logger.
 	 */
 	public function __construct(
 		private IConfig $config,
-		private IAppConfig $appConfig,
 		private IContactsManager $contactsManager,
 		private ContactSyncService $syncService,
 		private ContactVcardWriterService $writerService,
-		private readonly ObjectServiceInterface $objectService,
+		private LinkedContactRecords $linked,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -92,7 +82,7 @@ class ContactSyncSettingsService {
 	public function writesBack(string $userId): bool {
 		return $this->config->getUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_WRITE_BACK,
 			default: '1'
 		) !== '0';
@@ -116,7 +106,7 @@ class ContactSyncSettingsService {
 
 		$this->config->setUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_WRITE_BACK,
 			value: $value
 		);
@@ -139,7 +129,7 @@ class ContactSyncSettingsService {
 
 		return [
 			'writeBack' => $this->writesBack(userId: $userId),
-			'linked' => count($this->linkedRecords()),
+			'linked' => count($this->linked->all()),
 			'addressBook' => $addressBook,
 			'lastRun' => $this->lastRun(userId: $userId),
 		];
@@ -158,7 +148,7 @@ class ContactSyncSettingsService {
 	public function run(string $userId, string $now): array {
 		$updated = 0;
 		$failed = [];
-		foreach ($this->linkedRecords() as $record) {
+		foreach ($this->linked->all() as $record) {
 			$uid = null;
 			try {
 				$uid = $this->syncService->syncToContacts(objectType: $record['type'], objectId: $record['id']);
@@ -177,7 +167,7 @@ class ContactSyncSettingsService {
 		$run = ['at' => $now, 'updated' => $updated, 'failed' => $failed];
 		$this->config->setUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_LAST_RUN,
 			value: (string)json_encode($run)
 		);
@@ -195,7 +185,7 @@ class ContactSyncSettingsService {
 	private function lastRun(string $userId): ?array {
 		$stored = $this->config->getUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: self::KEY_LAST_RUN,
 			default: ''
 		);
@@ -206,73 +196,4 @@ class ContactSyncSettingsService {
 
 		return $run;
 	}//end lastRun()
-
-	/**
-	 * The clients and contact persons linked to a Nextcloud contact.
-	 *
-	 * @return array<int, array{type: string, id: string, name: string}> The records.
-	 */
-	private function linkedRecords(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($registerId === '') {
-			return [];
-		}
-
-		$records = [];
-		foreach (['client', 'contact'] as $type) {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $type . '_schema', '');
-			if ($schemaId === '') {
-				continue;
-			}
-
-			try {
-				$objects = $this->objectService->findAll(
-					config: [
-						'filters' => ['@self' => ['register' => $registerId, 'schema' => $schemaId]],
-						'limit' => self::RUN_LIMIT,
-					]
-				);
-			} catch (\Throwable $e) {
-				$this->logger->warning('Pipelinq: linked records not read', ['exception' => $e->getMessage()]);
-				continue;
-			}
-
-			foreach ($objects as $object) {
-				$data = $this->toArray(object: $object);
-				if (empty($data['contactsUid']) === true) {
-					continue;
-				}
-
-				$records[] = [
-					'type' => $type,
-					'id' => (string)($data['id'] ?? ($data['@self']['id'] ?? '')),
-					'name' => (string)($data['name'] ?? ''),
-				];
-			}
-		}//end foreach
-
-		return $records;
-	}//end linkedRecords()
-
-	/**
-	 * An OpenRegister result as an array.
-	 *
-	 * @param mixed $object The result.
-	 *
-	 * @return array<string, mixed> The data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$data = $object->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

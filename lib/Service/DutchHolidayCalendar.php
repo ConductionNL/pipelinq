@@ -108,8 +108,18 @@ class DutchHolidayCalendar {
 			->setTimezone($tz);
 		// Normalise to midnight so the "5 working days from" semantics
 		// are date-comparison, not time-of-day.
-		$current = $current->setTime(0, 0, 0);
+		return $this->advance(current: $current->setTime(0, 0, 0), days: $days);
+	}//end addWorkingDays()
 
+	/**
+	 * Step forward day by day until the given number of working days has passed.
+	 *
+	 * @param DateTimeImmutable $current The start date at midnight.
+	 * @param int               $days    Number of working days to add.
+	 *
+	 * @return DateTimeImmutable The resulting date.
+	 */
+	private function advance(DateTimeImmutable $current, int $days): DateTimeImmutable {
 		$added = 0;
 		while ($added < $days) {
 			$current = $current->modify('+1 day');
@@ -119,7 +129,7 @@ class DutchHolidayCalendar {
 		}
 
 		return $current;
-	}//end addWorkingDays()
+	}//end advance()
 
 	/**
 	 * Tell whether a given date is a Dutch working day.

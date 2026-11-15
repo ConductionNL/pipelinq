@@ -21,7 +21,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/pos-refund-return/spec.md#returns-page
+// @e2e openspec/specs/pos-refund-return/spec.md
 test('Returns: navigates from sidebar and mounts the index chrome', async ({
 	page,
 }) => {
@@ -32,7 +32,7 @@ test('Returns: navigates from sidebar and mounts the index chrome', async ({
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
 })
 
-// @e2e openspec/specs/pos-refund-return/spec.md#returns-add-item
+// @e2e openspec/specs/pos-refund-return/spec.md
 test('Returns: the create entry point is reachable from the Actions menu', async ({
 	page,
 }) => {
@@ -68,7 +68,7 @@ test('Returns: the create entry point is reachable from the Actions menu', async
 	})
 })
 
-// @e2e openspec/specs/pos-refund-return/spec.md#returns-list
+// @e2e openspec/specs/pos-refund-return/spec.md
 test('Returns: refund list data surface renders without a registration error', async ({
 	page,
 }) => {

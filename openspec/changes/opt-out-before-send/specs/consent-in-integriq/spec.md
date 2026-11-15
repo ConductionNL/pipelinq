@@ -43,7 +43,7 @@ On upgrade, pipelinq MUST migrate every `messagingConsentRecord` and `consentRec
 
 ### Requirement: pipelinq asks integriq before every non-exempt message (REQ-CII-002)
 
-After the cutover, pipelinq MUST decide every SMS, WhatsApp message, blast, journey send, appointment mail and Berichtenbox email fallback through `OutboundSendDecisionRequestedEvent`. A marketing send MUST set `requiresConsent`. A WhatsApp business-initiated send MUST set `requiresConsent`. An appointment mail MUST use category `reminder`. Dunning suppression MUST still apply after integriq allows a promotional send. Without an answer from integriq, pipelinq MUST refuse the message with `authority-unavailable` and MUST log the refusal, except account and security mail. An answer inside a conversation the contact started MUST be sent as `reply` with the inbound message as `inReplyTo`, and an opt-out MUST NOT stop it.
+After the cutover, pipelinq MUST decide every SMS, WhatsApp message, blast, journey send, appointment mail and Berichtenbox email fallback through `OutboundSendDecisionRequestedEvent`. A marketing send MUST set `requiresConsent`. A WhatsApp business-initiated send MUST set `requiresConsent`. An appointment mail MUST use category `reminder`. Dunning suppression MUST still apply after integriq allows a promotional send. Without an answer from integriq, pipelinq MUST refuse the message with `authority-unavailable` and MUST log the refusal. A decision whose `send` is not a boolean counts as no answer. The exempt categories `besluit`, `statutory`, `account` and `security` MUST still be sent without an answer, without an unsubscribe link, as hydra REQ-CMO-003 and REQ-CMO-005 fix them. An answer inside a conversation the contact started MUST be sent as `reply` with the inbound message as `inReplyTo`, and an opt-out MUST NOT stop it.
 
 #### Scenario: A blast skips a contact who opted out elsewhere
 
@@ -67,6 +67,22 @@ After the cutover, pipelinq MUST decide every SMS, WhatsApp message, blast, jour
 - **WHEN** a portal user asks for a password reset
 - **THEN** the mail is sent
 - @e2e exclude needs an instance without integriq, covered by PHPUnit
+
+#### Scenario: A malformed answer lets an exempt message go without a link
+
+- **GIVEN** integriq answers a `besluit` email with `send` set to the text `true`
+- **WHEN** pipelinq checks the send
+- **THEN** the mail is sent without an unsubscribe link
+- **AND** pipelinq logs the answer as `authority-unavailable`
+- @e2e exclude backend check, covered by PHPUnit
+
+#### Scenario: A malformed answer refuses a non-exempt message
+
+- **GIVEN** integriq answers a `marketing` email with `send` set to `1`
+- **WHEN** pipelinq checks the send
+- **THEN** the send is refused with `authority-unavailable` and no unsubscribe link
+- **AND** pipelinq logs the refusal with the category and the channel
+- @e2e exclude backend check, covered by PHPUnit
 
 #### Scenario: A late payer is still suppressed
 

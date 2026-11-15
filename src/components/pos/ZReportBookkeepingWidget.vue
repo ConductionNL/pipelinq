@@ -141,6 +141,7 @@ import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { getUserLocale } from '../../services/localeUtils.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
 import { formatEur } from '../../services/posTotals.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 const BOOKKEEPING_STATUS_LABELS = {
 	pending: 'Waiting for shillinq',
@@ -164,33 +165,11 @@ export default {
 		NcNoteCard,
 	},
 
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/**
-		 * The Z-report, from the detail page.
-		 *
-		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
-		 */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The Z-report id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-	},
 
 	data() {
 		return {
@@ -345,6 +324,8 @@ export default {
 	font-weight: 700;
 }
 
+/* As board PqZRapport draws its card tables: 14px on the normal line, rows
+   12px with 18px outer insets and a rule under every row. */
 .z-bookkeeping__table {
 	width: 100%;
 	border: 1px solid var(--color-border);
@@ -352,15 +333,17 @@ export default {
 	border-collapse: separate;
 	border-spacing: 0;
 	overflow: hidden;
+	font-size: 14px;
+	line-height: normal;
 }
 
 .z-bookkeeping__table th,
 .z-bookkeeping__table td {
-	padding: 10px 18px;
 	text-align: start;
 }
 
 .z-bookkeeping__table th {
+	padding: 10px 12px;
 	background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
 	color: var(--color-text-maxcontrast);
 	font-size: 14px;
@@ -368,8 +351,17 @@ export default {
 	line-height: 1.2;
 }
 
-.z-bookkeeping__table tbody tr + tr td {
-	border-top: 1px solid var(--color-border);
+.z-bookkeeping__table td {
+	padding: 12px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.z-bookkeeping__table :is(th, td):first-child {
+	padding-inline-start: 18px;
+}
+
+.z-bookkeeping__table :is(th, td):last-child {
+	padding-inline-end: 18px;
 }
 
 .z-bookkeeping__table .z-bookkeeping__amount {

@@ -18,7 +18,7 @@
   - the prepared text, a copy action and a link into the network's own
   - composer, and the person confirms when they have posted it.
   -
-  - @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+  - @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
   -->
 <template>
 	<div class="social-publications" data-testid="social-publications">
@@ -117,7 +117,7 @@
 						{{ t('pipelinq', 'Copy text') }}
 					</NcButton>
 					<!-- The network's own composer, in a new tab.
-						@spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share -->
+						@spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share -->
 					<NcButton
 						v-if="share.composerUrl"
 						variant="secondary"
@@ -139,7 +139,6 @@
 </template>
 
 <script>
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import {
 	confirmShare,
@@ -153,6 +152,7 @@ import {
 	networkLimits,
 	publicationStatusChip,
 } from '../../services/socialNetworks.js'
+import socialPostSectionMixin from './socialPostSectionMixin.js'
 
 export default {
 	name: 'SocialPublicationsSection',
@@ -163,17 +163,7 @@ export default {
 		NcNoteCard,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
-
-	props: {
-		/** The post id, on the post detail page (`@objectId`). */
-		postId: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [socialPostSectionMixin],
 
 	data() {
 		return {
@@ -186,21 +176,6 @@ export default {
 		}
 	},
 
-	/**
-	 * Load the publications and follow page refreshes.
-	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
-	 */
-	mounted() {
-		this.load()
-		// An approval in the page header can put the post in line to go out.
-		subscribe('cn:page:refresh', this.load)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.load)
-	},
-
 	methods: {
 		/**
 		 * The icon a publication's network is shown with.
@@ -208,31 +183,16 @@ export default {
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
 		},
 
 		/**
-		 * The id this section is bound to, either the prop or the section
-		 * context the page host provides.
-		 *
-		 * @return {string} The post id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
-		 */
-		effectiveId() {
-			if (this.postId) {
-				return this.postId
-			}
-			const context = this.cnSectionContext || {}
-			return context.objectId || context.id || ''
-		},
-
-		/**
 		 * @param {object} row A publication row.
 		 * @return {string} Its id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		rowId(row) {
 			return row?.id || row?.uuid || ''
@@ -241,7 +201,7 @@ export default {
 		/**
 		 * @param {string} status The publication status.
 		 * @return {object} The chip.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		chip(status) {
 			return publicationStatusChip(status)
@@ -250,7 +210,7 @@ export default {
 		/**
 		 * @param {string} network The network.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
@@ -259,7 +219,7 @@ export default {
 		/**
 		 * @param {object} row A publication row.
 		 * @return {boolean} Whether a retry is worth offering.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		retryable(row) {
 			return isRetryable(row)
@@ -267,7 +227,7 @@ export default {
 
 		/**
 		 * @return {Promise<void>} Resolves once the rows are in.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		async load() {
 			const id = this.effectiveId()
@@ -290,7 +250,7 @@ export default {
 		/**
 		 * @param {object} row The publication to try again.
 		 * @return {Promise<void>} Resolves once retried.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		async retry(row) {
 			this.busy = this.rowId(row)
@@ -310,7 +270,7 @@ export default {
 		/**
 		 * @param {object} row The publication whose share is prepared.
 		 * @return {Promise<void>} Resolves once the bundle is in.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+		 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 		 */
 		async openShare(row) {
 			this.busy = this.rowId(row)
@@ -330,7 +290,7 @@ export default {
 		 * Put the prepared text on the clipboard.
 		 *
 		 * @return {Promise<void>} Resolves once copied.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+		 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 		 */
 		async copyPrepared() {
 			try {
@@ -347,7 +307,7 @@ export default {
 		 * Record that the owner posted it.
 		 *
 		 * @return {Promise<void>} Resolves once recorded.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+		 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 		 */
 		async confirm() {
 			this.error = ''

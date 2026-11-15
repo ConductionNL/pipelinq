@@ -1,4 +1,6 @@
 # Screens
 
-- PqKassa https://identity.conduction.nl/screens/board?id=pipelinq/PqKassa
-- PqProduct https://identity.conduction.nl/screens/board?id=pipelinq/PqProduct
+- pipelinq/PqKassa kassa https://identity.conduction.nl/screens/board?id=pipelinq/PqKassa
+- pipelinq/PqProduct product https://identity.conduction.nl/screens/board?id=pipelinq/PqProduct
+
+Components: CnActionButtons, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnNoteCard, CnRelatedCollections, CnSettingsPage, CnSettingsSection, CnTabs

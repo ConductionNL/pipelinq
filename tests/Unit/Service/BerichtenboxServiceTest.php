@@ -35,6 +35,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\DeliveryAuditLogger;
 use OCA\Pipelinq\Service\DutchHolidayCalendar;
@@ -233,12 +235,8 @@ class BerichtenboxServiceTest extends TestCase {
 		);
 
 		$result = $service->queueOutboundMessage(
-			'Z-2026-1',
-			'cm-1',
-			'handled',
-			'123456789',
-			null,
-			['caseType' => 'paspoort']
+			new CaseStatusMessage('Z-2026-1', 'cm-1', 'handled', '123456789'),
+			new MessageOptions(null, ['caseType' => 'paspoort'])
 		);
 
 		$this->assertIsArray($result);

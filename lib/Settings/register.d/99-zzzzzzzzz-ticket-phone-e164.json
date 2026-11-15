@@ -1,0 +1,21 @@
+{
+    "$comment": "contact-moments-phone-lookup (design D2): a ticket carries the number it is about in E.164, whatever the writer was given, so the phone search over tickets and the earlier contacts of an unknown caller find it however the number was typed. Written by TicketPhoneE164Listener on every create and update and by the BackfillTicketPhoneE164 repair step for tickets stored before; never typed by hand, so hidden in forms. ticket 1.7.0 -> 1.8.0.",
+    "components": {
+        "schemas": {
+            "ticket": {
+                "slug": "ticket",
+                "version": "1.8.0",
+                "properties": {
+                    "phoneE164": {
+                        "type": "string",
+                        "title": "Phone number (E.164)",
+                        "description": "The phone number this ticket is about, normalised to E.164: the caller on an inbound call, the callee on an outbound one, else the number the reporter gave. Set by pipelinq, not typed.",
+                        "maxLength": 32,
+                        "facetable": true,
+                        "visible": false
+                    }
+                }
+            }
+        }
+    }
+}

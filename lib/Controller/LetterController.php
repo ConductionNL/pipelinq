@@ -29,11 +29,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\FilinqLetterAdapterInterface;
+use OCA\Pipelinq\Kernel\Contracts\LetterLogInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\CallerObjectReader;
-use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
-use OCA\Pipelinq\Service\Letter\LetterLog;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,6 +46,8 @@ use RuntimeException;
  * Letter templates and letters for a client.
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class LetterController extends Controller
 {
@@ -56,21 +58,21 @@ class LetterController extends Controller
      * Constructor.
      *
      * @param IRequest                $request      The request.
-     * @param FilinqLetterAdapter     $letters      filinq's side of the letter.
-     * @param LetterLog               $log          Logs the letter as a contact moment.
+     * @param FilinqLetterAdapterInterface     $letters      filinq's side of the letter.
+     * @param LetterLogInterface               $log          Logs the letter as a contact moment.
      * @param IUserSession            $userSession  The acting user.
-     * @param CallerObjectReader      $reader       Reads the client, contact and ticket.
+     * @param CallerObjectReaderInterface      $reader       Reads the client, contact and ticket.
      * @param ObjectOwnerAccessPolicy $accessPolicy Who may act on a client.
      */
     public function __construct(
         IRequest $request,
-        private readonly FilinqLetterAdapter $letters,
-        private readonly LetterLog $log,
+        private readonly FilinqLetterAdapterInterface $letters,
+        private readonly LetterLogInterface $log,
         private readonly IUserSession $userSession,
-        private readonly CallerObjectReader $reader,
+        private readonly CallerObjectReaderInterface $reader,
         private readonly ObjectOwnerAccessPolicy $accessPolicy,
     ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+        parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
     }//end __construct()
 
@@ -129,75 +131,52 @@ class LetterController extends Controller
     #[NoAdminRequired]
     public function create(string $id): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-        }
-
-        $templateId = trim((string) $this->request->getParam('templateId', ''));
-        if ($templateId === '') {
-            return new JSONResponse(['message' => 'Missing required parameter: templateId'], Http::STATUS_BAD_REQUEST);
-        }
-
-        $reason = $this->letters->unavailableReason();
-        if ($reason !== null) {
-            return new JSONResponse(
-                ['message' => 'filinq is not available, so no letter can be made.', 'reason' => $reason],
-                Http::STATUS_SERVICE_UNAVAILABLE
-            );
-        }
-
-        $records = $this->readRecords(clientId: $id);
-        if (is_string($records) === true) {
-            return new JSONResponse(['message' => $records], Http::STATUS_NOT_FOUND);
-        }
-
-        $template = $this->letters->findTemplate(templateId: $templateId);
-        if ($template === null) {
-            return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
+        $run = $this->letterRun(clientId: $id, action: 'made');
+        if ($run instanceof JSONResponse) {
+            return $run;
         }
 
         $downloadOnly = filter_var($this->request->getParam('downloadOnly', false), FILTER_VALIDATE_BOOLEAN);
-        $outputMode   = match ($downloadOnly) {
-            true    => 'return',
-            default => 'both',
-        };
-
-        $filename     = $this->filename(templateName: $template['name'], clientName: (string) ($records['client']['name'] ?? ''));
-        try {
-            $letter = $this->letters->render(
-                templateId: $templateId,
-                dataRefs: $records['refs'],
-                filename: $filename,
-                outputMode: $outputMode
-            );
-        } catch (RuntimeException $e) {
-            return new JSONResponse(['message' => 'filinq could not make the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+        $run->filename = $this->filename(templateName: $run->template['name'], clientName: (string) ($run->records['client']['name'] ?? ''));
+        $letter        = $this->renderLetter(run: $run, downloadOnly: $downloadOnly);
+        if ($letter instanceof JSONResponse) {
+            return $letter;
         }
 
-        $contactMomentId = null;
+        $letter['contactMomentId'] = null;
         if ($downloadOnly === false) {
-            $contactMomentId = $this->log->log(
-                clientId: $id,
-                contactId: $records['contactId'],
-                ticketId: $records['ticketId'],
-                templateName: $template['name'],
-                path: $letter['path']
-            );
+            $letter['contactMomentId'] = $this->logLetter(run: $run, path: $letter['path']);
         }
 
+        return $this->letterResponse(run: $run, letter: $letter);
+
+    }//end create()
+
+
+    /**
+     * The made letter: the PDF (base64), its copy in Files, filinq's warnings
+     * and the logged contact moment.
+     *
+     * @param LetterRun            $run    The run.
+     * @param array<string, mixed> $letter The rendered letter and its contact moment id.
+     *
+     * @return JSONResponse The response.
+     */
+    private function letterResponse(LetterRun $run, array $letter): JSONResponse
+    {
         return new JSONResponse(
             [
-                'filename'        => $filename.'.pdf',
+                'filename'        => $run->filename.'.pdf',
                 'mimeType'        => 'application/pdf',
                 'content'         => base64_encode($letter['content']),
                 'fileId'          => $letter['fileId'],
                 'path'            => $letter['path'],
                 'warnings'        => $letter['warnings'],
-                'contactMomentId' => $contactMomentId,
+                'contactMomentId' => $letter['contactMomentId'],
             ]
         );
 
-    }//end create()
+    }//end letterResponse()
 
 
     /**
@@ -216,6 +195,57 @@ class LetterController extends Controller
     #[NoAdminRequired]
     public function preview(string $id): JSONResponse
     {
+        $run = $this->letterRun(clientId: $id, action: 'previewed');
+        if ($run instanceof JSONResponse) {
+            return $run;
+        }
+
+        try {
+            return new JSONResponse($this->letters->preview(templateId: $run->templateId, dataRefs: $run->records['refs']));
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['message' => 'filinq could not preview the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+        }
+
+    }//end preview()
+
+
+    /**
+     * Check a letter or preview request and read what it is made from.
+     *
+     * Refuses, in this order: no user (401), no template id (400), no
+     * filinq (503), a record the caller may not read (404), an unknown
+     * template (404).
+     *
+     * @param string $clientId The client id.
+     * @param string $action   How the refusal without filinq names the action: made or previewed.
+     *
+     * @return LetterRun|JSONResponse The run, or the refusal.
+     */
+    private function letterRun(string $clientId, string $action): LetterRun|JSONResponse
+    {
+        $templateId = $this->requestedTemplateId();
+        if ($templateId instanceof JSONResponse) {
+            return $templateId;
+        }
+
+        $refusal = $this->unavailableRefusal(action: $action);
+        if ($refusal !== null) {
+            return $refusal;
+        }
+
+        $run = new LetterRun(clientId: $clientId, templateId: $templateId);
+        return $this->withRecordsAndTemplate(run: $run);
+
+    }//end letterRun()
+
+
+    /**
+     * The template id asked for, by a logged-in user.
+     *
+     * @return string|JSONResponse The template id, or the 401 / 400 refusal.
+     */
+    private function requestedTemplateId(): string|JSONResponse
+    {
         if ($this->userSession->getUser() === null) {
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
@@ -225,30 +255,107 @@ class LetterController extends Controller
             return new JSONResponse(['message' => 'Missing required parameter: templateId'], Http::STATUS_BAD_REQUEST);
         }
 
+        return $templateId;
+
+    }//end requestedTemplateId()
+
+
+    /**
+     * The 503 refusal when filinq is not available.
+     *
+     * @param string $action How the message names the action: made or previewed.
+     *
+     * @return JSONResponse|null The refusal, or null when filinq is available.
+     */
+    private function unavailableRefusal(string $action): ?JSONResponse
+    {
         $reason = $this->letters->unavailableReason();
-        if ($reason !== null) {
-            return new JSONResponse(
-                ['message' => 'filinq is not available, so no letter can be previewed.', 'reason' => $reason],
-                Http::STATUS_SERVICE_UNAVAILABLE
-            );
+        if ($reason === null) {
+            return null;
         }
 
-        $records = $this->readRecords(clientId: $id);
+        return new JSONResponse(
+            ['message' => 'filinq is not available, so no letter can be '.$action.'.', 'reason' => $reason],
+            Http::STATUS_SERVICE_UNAVAILABLE
+        );
+
+    }//end unavailableRefusal()
+
+
+    /**
+     * Read the records as the caller, then the template.
+     *
+     * @param LetterRun $run The run.
+     *
+     * @return LetterRun|JSONResponse The run with its records and template, or the 404.
+     */
+    private function withRecordsAndTemplate(LetterRun $run): LetterRun|JSONResponse
+    {
+        $records = $this->readRecords(clientId: $run->clientId);
         if (is_string($records) === true) {
             return new JSONResponse(['message' => $records], Http::STATUS_NOT_FOUND);
         }
 
-        if ($this->letters->findTemplate(templateId: $templateId) === null) {
+        $template = $this->letters->findTemplate(templateId: $run->templateId);
+        if ($template === null) {
             return new JSONResponse(['message' => 'Template not found'], Http::STATUS_NOT_FOUND);
         }
 
+        $run->records  = $records;
+        $run->template = $template;
+        return $run;
+
+    }//end withRecordsAndTemplate()
+
+
+    /**
+     * Have filinq render the letter; a download-only letter is only returned.
+     *
+     * @param LetterRun $run          The run.
+     * @param bool      $downloadOnly Whether to skip the copy in Files.
+     *
+     * @return array<string, mixed>|JSONResponse The letter, or the 502.
+     */
+    private function renderLetter(LetterRun $run, bool $downloadOnly): array|JSONResponse
+    {
+        $outputMode = match ($downloadOnly) {
+            true    => 'return',
+            default => 'both',
+        };
+
         try {
-            return new JSONResponse($this->letters->preview(templateId: $templateId, dataRefs: $records['refs']));
+            return $this->letters->render(
+                templateId: $run->templateId,
+                dataRefs: $run->records['refs'],
+                filename: $run->filename,
+                outputMode: $outputMode
+            );
         } catch (RuntimeException $e) {
-            return new JSONResponse(['message' => 'filinq could not preview the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+            return new JSONResponse(['message' => 'filinq could not make the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
         }
 
-    }//end preview()
+    }//end renderLetter()
+
+
+    /**
+     * Log the letter on the client as a contact moment.
+     *
+     * @param LetterRun   $run  The run.
+     * @param string|null $path The path of the copy in Files.
+     *
+     * @return string|null The contact moment id.
+     */
+    private function logLetter(LetterRun $run, ?string $path): ?string
+    {
+        return $this->log->log(
+            clientId: $run->clientId,
+            contactId: $run->records['contactId'],
+            ticketId: $run->records['ticketId'],
+            templateName: $run->template['name'],
+            path: $path
+        );
+
+    }//end logLetter()
 
 
     /**
@@ -263,48 +370,153 @@ class LetterController extends Controller
      */
     private function readRecords(string $clientId): array|string
     {
-        $client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
-        // Existence is not authorization: OpenRegister answers a read whatever
-        // `_rbac` says (see ActivityTimelineController), so this app decides.
-        $uid = (string) $this->userSession->getUser()?->getUID();
-        if ($client === null || $this->accessPolicy->mayAccess(uid: $uid, object: $client, ownerField: 'ownerId') === false) {
+        $client = $this->readOwnClient(clientId: $clientId);
+        if ($client === null) {
             return 'Client not found';
         }
 
         $register = $this->reader->register();
         $refs     = [['register' => $register, 'schema' => 'client', 'id' => $clientId]];
 
-        $contactId = $this->optionalId(name: 'contactId');
-        if ($contactId !== null) {
-            if ($this->reader->read(id: $contactId, schemaKey: 'contact_schema') === null) {
-                return 'Contact not found';
-            }
-
-            $refs[] = ['register' => $register, 'schema' => 'contact', 'id' => $contactId];
+        $linked = $this->linkedRecords(clientId: $clientId, register: $register);
+        if (is_string($linked) === true) {
+            return $linked;
         }
 
-        $ticketId = $this->optionalId(name: 'ticketId');
-        if ($ticketId !== null) {
-            // A ticket of another client would log the letter on the wrong timeline.
-            if ($this->ticketOfClient(ticketId: $ticketId, clientId: $clientId) === false) {
-                return 'Ticket not found';
-            }
-
-            $refs[] = ['register' => $register, 'schema' => 'ticket', 'id' => $ticketId];
-        }
-
-        $appointmentId = $this->optionalId(name: 'appointmentId');
-        if ($appointmentId !== null) {
-            if ($this->appointmentOf(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId) === false) {
-                return 'Appointment not found';
-            }
-
-            $refs[] = ['register' => $register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
-        }
-
-        return ['client' => $client, 'contactId' => $contactId, 'ticketId' => $ticketId, 'refs' => $refs];
+        return [
+            'client'    => $client,
+            'contactId' => $linked['contactId'],
+            'ticketId'  => $linked['ticketId'],
+            'refs'      => array_merge($refs, $linked['refs']),
+        ];
 
     }//end readRecords()
+
+
+    /**
+     * Read the client as the caller, or null when it is absent or not theirs.
+     *
+     * @param string $clientId The client id.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function readOwnClient(string $clientId): array|null
+    {
+        $client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
+        // Existence is not authorization: OpenRegister answers a read whatever
+        // `_rbac` says (see ActivityTimelineController), so this app decides.
+        $uid = (string) $this->userSession->getUser()?->getUID();
+        if ($client === null || $this->accessPolicy->mayAccess(uid: $uid, object: $client, ownerField: 'ownerId') === false) {
+            return null;
+        }
+
+        return $client;
+
+    }//end readOwnClient()
+
+
+    /**
+     * The contact, ticket and appointment named in the request, checked in that order.
+     *
+     * @param string $clientId The client id.
+     * @param string $register The register.
+     *
+     * @return array{contactId: string|null, ticketId: string|null, refs: array<int, array<string, string>>}|string
+     *         The ids and filinq references, or the not-found message.
+     */
+    private function linkedRecords(string $clientId, string $register): array|string
+    {
+        $contactId  = $this->optionalId(name: 'contactId');
+        $contactRef = $this->contactRef(contactId: $contactId, register: $register);
+        if (is_string($contactRef) === true) {
+            return $contactRef;
+        }
+
+        $ticketId  = $this->optionalId(name: 'ticketId');
+        $owner     = new LetterRecordOwner(clientId: $clientId, register: $register, ticketId: $ticketId);
+        $ticketRef = $this->ticketRef(owner: $owner);
+        if (is_string($ticketRef) === true) {
+            return $ticketRef;
+        }
+
+        $appointmentId  = $this->optionalId(name: 'appointmentId');
+        $appointmentRef = $this->appointmentRef(appointmentId: $appointmentId, owner: $owner);
+        if (is_string($appointmentRef) === true) {
+            return $appointmentRef;
+        }
+
+        return ['contactId' => $contactId, 'ticketId' => $ticketId, 'refs' => array_values(array_filter([$contactRef, $ticketRef, $appointmentRef]))];
+
+    }//end linkedRecords()
+
+
+    /**
+     * The filinq reference of the named contact, null when none is named, or the not-found message.
+     *
+     * @param string|null $contactId The contact id.
+     * @param string      $register  The register.
+     *
+     * @return array<string, string>|string|null
+     */
+    private function contactRef(string|null $contactId, string $register): array|string|null
+    {
+        if ($contactId === null) {
+            return null;
+        }
+
+        if ($this->reader->read(id: $contactId, schemaKey: 'contact_schema') === null) {
+            return 'Contact not found';
+        }
+
+        return ['register' => $register, 'schema' => 'contact', 'id' => $contactId];
+
+    }//end contactRef()
+
+
+    /**
+     * The filinq reference of the named ticket, null when none is named, or the not-found message.
+     *
+     * @param LetterRecordOwner $owner The client, register and named ticket.
+     *
+     * @return array<string, string>|string|null
+     */
+    private function ticketRef(LetterRecordOwner $owner): array|string|null
+    {
+        if ($owner->ticketId === null) {
+            return null;
+        }
+
+        // A ticket of another client would log the letter on the wrong timeline.
+        if ($this->ticketOfClient(ticketId: $owner->ticketId, clientId: $owner->clientId) === false) {
+            return 'Ticket not found';
+        }
+
+        return ['register' => $owner->register, 'schema' => 'ticket', 'id' => $owner->ticketId];
+
+    }//end ticketRef()
+
+
+    /**
+     * The filinq reference of the named appointment, null when none is named, or the not-found message.
+     *
+     * @param string|null       $appointmentId The appointment id.
+     * @param LetterRecordOwner $owner         The client, register and ticket.
+     *
+     * @return array<string, string>|string|null
+     */
+    private function appointmentRef(string|null $appointmentId, LetterRecordOwner $owner): array|string|null
+    {
+        if ($appointmentId === null) {
+            return null;
+        }
+
+        if ($this->appointmentOf(appointmentId: $appointmentId, owner: $owner) === false) {
+            return 'Appointment not found';
+        }
+
+        return ['register' => $owner->register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
+
+    }//end appointmentRef()
 
 
     /**
@@ -346,26 +558,25 @@ class LetterController extends Controller
     /**
      * Whether the appointment exists, is readable and belongs to the client or to the letter's ticket.
      *
-     * @param string      $appointmentId The appointment id.
-     * @param string      $clientId      The client id.
-     * @param string|null $ticketId      The letter's ticket, if any.
+     * @param string            $appointmentId The appointment id.
+     * @param LetterRecordOwner $owner         The client and the letter's ticket, if any.
      *
      * @return bool True when the letter may read it.
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
-    private function appointmentOf(string $appointmentId, string $clientId, ?string $ticketId): bool
+    private function appointmentOf(string $appointmentId, LetterRecordOwner $owner): bool
     {
         $appointment = $this->reader->read(id: $appointmentId, schemaKey: 'booking_schema');
         if ($appointment === null) {
             return false;
         }
 
-        if ((string) ($appointment['customerId'] ?? '') === $clientId) {
+        if ((string) ($appointment['customerId'] ?? '') === $owner->clientId) {
             return true;
         }
 
-        return $ticketId !== null && (string) ($appointment['ticket'] ?? '') === $ticketId;
+        return $owner->ticketId !== null && (string) ($appointment['ticket'] ?? '') === $owner->ticketId;
 
     }//end appointmentOf()
 

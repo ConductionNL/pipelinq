@@ -242,4 +242,97 @@ class WooRequestConversionServiceTest extends TestCase {
 		$this->assertSame('converted-unsynced', $result['status']);
 		$this->assertSame('c0a8f1e2-0000-4000-8000-000000000042', $result['caseReference']);
 	}//end testACaseWithAnUnsavedTicketIsReported()
+	/**
+	 * The service over a container that hands out the given intake, or throws.
+	 *
+	 * @param mixed           $intake The intake, or a Throwable.
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return WooRequestConversionService
+	 */
+	private function over(mixed $intake, LoggerInterface $logger): WooRequestConversionService {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function () use ($intake) {
+				if ($intake instanceof \Throwable) {
+					throw $intake;
+				}
+
+				return $intake;
+			}
+		);
+		$tickets = $this->createMock(MainRegisterReader::class);
+		$tickets->method('save')->willReturnCallback(
+			function (string $schemaKey, array $data, ?string $id = null): array {
+				$this->saves[] = ['schemaKey' => $schemaKey, 'data' => $data, 'id' => $id];
+				return $data;
+			}
+		);
+
+		return new WooRequestConversionService(container: $container, tickets: $tickets, logger: $logger, intakeClass: FakeWooRequestIntake::class);
+	}//end over()
+
+	/**
+	 * Every way a conversion ends: an intake the container cannot build, or
+	 * one without start(), is not available (the first logged at debug); an
+	 * answer that is not a list or has no case id is an intake failure with
+	 * nothing written; an answer without a case URL converts with an empty
+	 * URL and writes exactly the converted ticket.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayAConversionEnds(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('debug')->with('Pipelinq: Woo request intake not resolvable', ['reason' => 'boom']);
+		$this->assertSame(['status' => 'not-available'], $this->over(new RuntimeException('boom'), $logger)->convert(ticketId: 't-9', ticket: $this->question()));
+		$this->assertSame(['status' => 'not-available'], $this->over(new \stdClass(), $this->createMock(LoggerInterface::class))->convert(ticketId: 't-9', ticket: $this->question()));
+
+		foreach (['not a list', ['caseUrl' => '/x'], ['caseId' => '']] as $answer) {
+			$intake = new class ($answer) {
+				/**
+				 * Constructor.
+				 *
+				 * @param mixed $answer The answer.
+				 */
+				public function __construct(private mixed $answer) {
+				}
+
+				/**
+				 * Answer the request.
+				 *
+				 * @param array<string, mixed> $request The request.
+				 *
+				 * @return mixed
+				 */
+				public function start(array $request): mixed {
+					return $this->answer;
+				}
+			};
+			$this->assertSame(['status' => 'intake-failed'], $this->over($intake, $this->createMock(LoggerInterface::class))->convert(ticketId: 't-9', ticket: $this->question()));
+		}
+
+		$this->assertSame([], $this->saves);
+
+		$intake = new class {
+			/**
+			 * Answer with a case id only.
+			 *
+			 * @param array<string, mixed> $request The request.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function start(array $request): array {
+				return ['caseId' => 42];
+			}
+		};
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('warning');
+		$result = $this->over($intake, $logger)->convert(ticketId: 't-9', ticket: $this->question());
+		$this->assertSame(['status' => 'converted', 'caseReference' => '42', 'caseUrl' => ''], $result);
+		$expected = $this->question();
+		$expected['ticketType'] = 'request';
+		$expected['status'] = 'converted';
+		$expected['caseReference'] = '42';
+		$this->assertSame([['schemaKey' => 'ticket', 'data' => $expected, 'id' => 't-9']], $this->saves);
+	}//end testEveryWayAConversionEnds()
 }//end class

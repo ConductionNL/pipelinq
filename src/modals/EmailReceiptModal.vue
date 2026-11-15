@@ -8,32 +8,14 @@
 		:name="t('pipelinq', 'Email Receipt')"
 		size="normal"
 		@closing="$emit('close')">
-		<div class="receipt-modal">
-			<NcSelect
-				v-model="selectedTemplate"
-				:inputLabel="t('pipelinq', 'Receipt Template')"
-				:options="templateOptions"
-				:placeholder="t('pipelinq', 'Select template')"
-				label="label"
-				:clearable="false"
-				@update:modelValue="loadPreview" />
-
+		<ReceiptModalBody v-bind="receiptBody" @update:selectedTemplate="selectTemplate">
 			<p class="receipt-modal__recipient">
 				{{ t('pipelinq', 'The receipt is sent to the linked customer:') }}
 				<strong>{{
 					recipient || t('pipelinq', 'No customer email linked')
 				}}</strong>
 			</p>
-
-			<ReceiptPreviewPane :content="previewText" :loading="previewLoading" />
-
-			<p
-				v-if="statusMessage"
-				class="receipt-modal__status"
-				:class="statusClass">
-				{{ statusMessage }}
-			</p>
-		</div>
+		</ReceiptModalBody>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
@@ -50,111 +32,61 @@
 
 <script>
 import { CnDialog } from '@conduction/nextcloud-vue'
-import { emit } from '@nextcloud/event-bus'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcSelect } from '@nextcloud/vue'
-import ReceiptPreviewPane from '../components/pos/ReceiptPreviewPane.vue'
-import { loadActiveReceiptTemplates } from '../services/receiptTemplates.js'
+import { NcButton } from '@nextcloud/vue'
+import ReceiptModalBody from '../components/pos/ReceiptModalBody.vue'
+import receiptModalMixin from '../mixins/receiptModalMixin.js'
+
+/**
+ * Why the server did not send the receipt: its refusal, or a failed delivery.
+ *
+ * @param {boolean} ok Whether the server took the request.
+ * @param {object} data Its answer.
+ * @return {(string|null)} The message, or null when the receipt was sent.
+ */
+function emailRefusal(ok, data) {
+	if (!ok) {
+		return data.error
+			|| t('pipelinq', 'Error sending receipt: {error}', {
+				error: '',
+			})
+	}
+	if (data.receipt && data.receipt.status === 'failed') {
+		return data.receipt.error
+			|| t(
+				'pipelinq',
+				'Mail delivery failed (no SMTP relay configured).',
+			)
+	}
+	return null
+}
 
 export default {
 	name: 'EmailReceiptModal',
 	components: {
 		CnDialog,
 		NcButton,
-		NcSelect,
-		ReceiptPreviewPane,
+		ReceiptModalBody,
 	},
 
-	props: {
-		transactionId: {
-			type: String,
-			required: true,
-		},
-
-		templates: {
-			type: Array,
-			default: () => [],
-		},
-	},
+	mixins: [receiptModalMixin],
 
 	emits: ['close', 'sent'],
 	data() {
 		return {
-			loadedTemplates: [],
-			selectedTemplate: null,
-			previewText: '',
-			previewLoading: false,
 			recipient: '',
 			sending: false,
-			statusMessage: '',
-			statusType: '',
 		}
-	},
-
-	computed: {
-		/**
-		 * Template options for the NcSelect dropdown.
-		 *
-		 * @return {Array} The options.
-		 */
-		templateOptions() {
-			const templates = this.templates.length > 0 ? this.templates : this.loadedTemplates
-			return templates.map((tpl) => ({
-				id: tpl.id,
-				label: tpl.name || tpl.id,
-			}))
-		},
-
-		/**
-		 * CSS class for the status message.
-		 *
-		 * @return {object} The class binding.
-		 */
-		statusClass() {
-			return {
-				'receipt-modal__status--error': this.statusType === 'error',
-				'receipt-modal__status--success': this.statusType === 'success',
-			}
-		},
-	},
-
-	async mounted() {
-		if (this.templates.length === 0) {
-			this.loadedTemplates = await loadActiveReceiptTemplates()
-		}
-		await this.loadPreview()
 	},
 
 	methods: {
 		/**
-		 * Load the rendered receipt preview and the linked customer email.
+		 * Read the linked customer email from the preview.
+		 *
+		 * @param {object} receipt The previewed receipt.
+		 * @return {void}
 		 */
-		async loadPreview() {
-			this.previewLoading = true
-			this.statusMessage = ''
-			try {
-				const params = this.selectedTemplate
-					? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
-					: ''
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`,
-					),
-					{
-						headers: {
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (response.ok && data.receipt) {
-					this.previewText = data.receipt.text || ''
-					this.recipient = data.receipt.customerEmail || ''
-				}
-			} finally {
-				this.previewLoading = false
-			}
+		showPreview(receipt) {
+			this.recipient = receipt.customerEmail || ''
 		},
 
 		/**
@@ -164,57 +96,21 @@ export default {
 			this.sending = true
 			this.statusMessage = ''
 			try {
-				const body = {}
-				if (this.selectedTemplate) {
-					body.template = this.selectedTemplate.id
-				}
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/email`,
-					),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(body),
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (!response.ok) {
-					this.statusType = 'error'
-					this.statusMessage =
-						data.error
-						|| t('pipelinq', 'Error sending receipt: {error}', {
-							error: '',
-						})
+				const { ok, data } = await this.postReceipt('email')
+				const refusal = emailRefusal(ok, data)
+				if (refusal !== null) {
+					this.showReceiptError(refusal)
 					return
 				}
-				if (data.receipt && data.receipt.status === 'failed') {
-					this.statusType = 'error'
-					this.statusMessage =
-						data.receipt.error
-						|| t(
-							'pipelinq',
-							'Mail delivery failed (no SMTP relay configured).',
-						)
-					return
-				}
-				this.statusType = 'success'
-				this.statusMessage = t('pipelinq', 'Receipt sent successfully')
+				this.showReceiptSuccess(t('pipelinq', 'Receipt sent successfully'))
 				this.$emit('sent', data.receipt)
-				// Opened from a declared header action, the modal closes and the page re-reads the receipt log itself.
-				emit('cn:page:refresh', {})
-				this.$emit('close')
+				this.closeAfterReceipt()
 			} catch (e) {
-				this.statusType = 'error'
-				this.statusMessage = t(
+				this.showReceiptError(t(
 					'pipelinq',
 					'Error sending receipt: {error}',
 					{ error: e.message },
-				)
+				))
 			} finally {
 				this.sending = false
 			}
@@ -224,28 +120,8 @@ export default {
 </script>
 
 <style scoped>
-.receipt-modal {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding: 8px 0;
-}
-
 .receipt-modal__recipient {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.receipt-modal__status {
-	font-size: 13px;
-	margin: 0;
-}
-
-.receipt-modal__status--error {
-	color: var(--color-error);
-}
-
-.receipt-modal__status--success {
-	color: var(--color-success);
 }
 </style>

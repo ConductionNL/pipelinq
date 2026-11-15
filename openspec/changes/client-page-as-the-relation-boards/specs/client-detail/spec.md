@@ -32,6 +32,13 @@ The overview SHALL show the resident's card (name, given names, surname, date of
 
 The header SHALL offer Log contact and New request; New request SHALL open the request dialog with the client already chosen.
 
+#### Scenario: New request from Sanne de Vries
+
+- **GIVEN** the client page of Sanne de Vries
+- **WHEN** the user clicks New request in the header
+- **THEN** the request dialog opens with Sanne de Vries already chosen as the client
+- **AND** the header also offers Log contact
+
 ### Requirement: An organisation shows its main contact
 
 The side column of an organisation SHALL show, under KvK and address, the contact person flagged as main contact (else the first contact person) with initials, name, role and e-mail, and a link to the Contact persons tab with the number of contact persons.

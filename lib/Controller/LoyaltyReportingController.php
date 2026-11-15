@@ -25,16 +25,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Loyalty reporting REST controller.
@@ -50,17 +49,15 @@ class LoyaltyReportingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param LoyaltyReportingService $reportingService The reporting service.
-	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param LoyaltyReportingServiceInterface $reportingService The reporting service.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private LoyaltyReportingService $reportingService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private LoyaltyReportingServiceInterface $reportingService,
+		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -84,22 +81,45 @@ class LoyaltyReportingController extends Controller {
 		?int $days = null,
 		string $format = 'json',
 	): JSONResponse|DataDownloadResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Loyalty reporting is a CRM capability, not an any-authenticated-user
 		// one. Admins bypass; see ObjectOwnerAccessPolicy.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if (($from === null || $from === '') && $days !== null && $days > 0) {
+		$window = $this->reportingWindow(window: ['from' => $from, 'to' => $to], days: $days);
+
+		return $this->kpisResponse(query: ['programmeId' => $programmeId] + $window, format: $format);
+	}//end kpis()
+
+	/**
+	 * The requested window, or the last `days` days when no start is given.
+	 *
+	 * @param array{from: string|null, to: string|null} $window The requested window start and end.
+	 * @param int|null $days The number of trailing days.
+	 *
+	 * @return array{from: string|null, to: string|null} The window start and end.
+	 */
+	private function reportingWindow(array $window, int|null $days): array {
+		if (($window['from'] === null || $window['from'] === '') && $days !== null && $days > 0) {
 			['from' => $from, 'to' => $to] = $this->reportingService->lastDaysWindow(days: $days);
+			return ['from' => $from, 'to' => $to];
 		}
 
-		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
+		return $window;
+	}//end reportingWindow()
+
+	/**
+	 * The KPIs as JSON, or as a CSV download.
+	 *
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The loyalty programme id and window.
+	 * @param string $format `json` or `csv`.
+	 *
+	 * @return JSONResponse|DataDownloadResponse The KPIs.
+	 */
+	private function kpisResponse(array $query, string $format): JSONResponse|DataDownloadResponse {
+		$kpis = $this->reportingService->getKpis(programmeId: $query['programmeId'], from: $query['from'], to: $query['to']);
 		if (strtolower($format) === 'csv') {
 			return new DataDownloadResponse(
 				data: $this->reportingService->kpisToCsv(kpis: $kpis),
@@ -109,7 +129,7 @@ class LoyaltyReportingController extends Controller {
 		}
 
 		return new JSONResponse($kpis);
-	}//end kpis()
+	}//end kpisResponse()
 
 	/**
 	 * GET liability snapshot (IFRS 15 / RJ 270).
@@ -122,15 +142,11 @@ class LoyaltyReportingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function liability(string $programmeId): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Loyalty reporting is a CRM capability, not an any-authenticated-user
 		// one. Admins bypass; see ObjectOwnerAccessPolicy.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return new JSONResponse($this->reportingService->getLiabilitySnapshot(programmeId: $programmeId));
@@ -153,15 +169,11 @@ class LoyaltyReportingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function tierDistribution(string $programmeId, string $format = 'json'): JSONResponse|DataDownloadResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Loyalty reporting is a CRM capability, not an any-authenticated-user
 		// one. Admins bypass; see ObjectOwnerAccessPolicy.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$tiers = $this->reportingService->getTierReport(programmeId: $programmeId);
@@ -196,15 +208,11 @@ class LoyaltyReportingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function expiryForecast(string $programmeId, int $days = 30): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Loyalty reporting is a CRM capability, not an any-authenticated-user
 		// one. Admins bypass; see ObjectOwnerAccessPolicy.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return new JSONResponse(

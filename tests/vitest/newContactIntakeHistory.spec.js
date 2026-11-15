@@ -3,11 +3,11 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * An unknown caller's earlier contacts: the intake dialog asks the phone
- * search for the caller's number and lists what it finds, or says there is
- * nothing.
+ * An unknown caller's earlier contacts are shown in the intake dialog
+ * (REQ-CHP-001): read from the phone search over tickets for the caller's
+ * number, each linking to its ticket, and an empty or failed read says so.
  *
- * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-an-unknown-callers-earlier-contacts-are-shown-req-chp-001
+ * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.5
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -15,25 +15,37 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
 const get = vi.fn()
-let offline = false
 
-vi.mock('@nextcloud/axios', () => ({
-	default: { get: (...args) => (offline ? Promise.reject(new Error('offline')) : get(...args)) },
-}))
-vi.mock('@nextcloud/router', () => ({
-	generateUrl: (path, vars = {}) => `/index.php${path.replace(/\{(\w+)\}/g, (_all, key) => vars[key])}`,
-}))
-vi.mock('@nextcloud/vue', () => ({
-	NcButton: { name: 'NcButton', render() { return h('button', this.$slots.default?.()) } },
-	NcTextArea: { name: 'NcTextArea', render: () => h('textarea') },
-	NcTextField: { name: 'NcTextField', render: () => h('input') },
-}))
+vi.mock('@nextcloud/axios', () => ({ default: { get: (...args) => get(...args) } }))
+vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => `/index.php${path}` }))
+
+vi.mock('@nextcloud/vue', () => {
+	const field = (name, tag) => ({ name, props: ['id', 'label', 'labelOutside', 'modelValue', 'placeholder'], render() { return h(tag, { id: this.id }) } })
+	return {
+		NcButton: { name: 'NcButton', render() { return h('button', this.$slots.default?.()) } },
+		NcTextArea: field('NcTextArea', 'textarea'),
+		NcTextField: field('NcTextField', 'input'),
+	}
+})
+
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDialog: { name: 'CnDialog', render() { return h('div', [this.$slots.default?.(), this.$slots.actions?.()]) } },
-	CnNoteCard: { name: 'CnNoteCard', props: ['text'], render() { return h('div', this.text) } },
+	CnNoteCard: { name: 'CnNoteCard', props: ['text', 'type'], render() { return h('div', this.text) } },
 }))
 
 let Modal
+
+/**
+ * @return {Promise<object>} The settled dialog for an unknown caller.
+ */
+async function mountModal() {
+	const wrapper = mount(Modal, {
+		props: { e164: '+31612345678' },
+		global: { mixins: [{ methods: { t: (_app, text, vars) => globalThis.t(_app, text, vars) } }] },
+	})
+	await flushPromises()
+	return wrapper
+}
 
 beforeAll(async () => {
 	globalThis.t = (_app, text, vars = {}) => text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`)
@@ -42,56 +54,47 @@ beforeAll(async () => {
 
 beforeEach(() => {
 	get.mockReset()
-	offline = false
 })
 
-/**
- * Mount the dialog for a caller.
- *
- * @return {object} The wrapper.
- */
-function mountModal() {
-	return mount(Modal, {
-		props: { e164: '+31612345678', prefillPhone: '0612345678' },
-		global: { mixins: [{ methods: { t: (_app, text, vars) => globalThis.t(_app, text, vars) } }] },
-	})
-}
-
-describe('NewContactIntakeModal earlier contacts', () => {
-	it('asks the phone search for the caller and lists the earlier contact moments', async () => {
+describe('earlier contacts from an unknown number', () => {
+	it('asks the phone search for the caller\'s number and lists each earlier contact with a link', async () => {
 		get.mockResolvedValue({
 			data: {
-				number: '+31612345678',
 				results: [
-					{ id: 't-2', title: 'Vraag over afvalpas', ticketType: 'interaction', occurredAt: '2026-10-02T10:00:00+00:00' },
-					{ id: 't-1', title: 'Melding losliggende stoeptegel', ticketType: 'request', occurredAt: '2026-09-20T10:00:00+00:00' },
+					{ id: 't-2', title: 'Vraag over afvalpas', ticketType: 'contactmoment', occurredAt: '2026-10-12T09:00:00Z', assignee: 'anna', _phoneMatch: 'exact' },
+					{ id: 't-1', title: 'Klacht container', ticketType: 'complaint', occurredAt: '2026-10-01T09:00:00Z', _phoneMatch: 'possible' },
 				],
 			},
 		})
-		const w = mountModal()
-		await flushPromises()
+
+		const w = await mountModal()
 
 		expect(get).toHaveBeenCalledWith('/index.php/apps/pipelinq/api/tickets/by-phone', { params: { number: '+31612345678' } })
-		const links = w.findAll('[data-testid="cti-intake-history"] a')
-		expect(links.map((link) => link.text())).toEqual(['Vraag over afvalpas', 'Melding losliggende stoeptegel'])
-		expect(links[0].attributes('href')).toBe('/index.php/apps/pipelinq/tickets/t-2')
-		expect(w.find('[data-testid="cti-intake-history"]').text()).toContain('Contact moment')
+		const items = w.findAll('[data-testid="cti-intake-history-item"]')
+		expect(items).toHaveLength(2)
+		expect(items[0].find('a').text()).toBe('Vraag over afvalpas')
+		expect(items[0].find('a').attributes('href')).toBe('/index.php/apps/pipelinq/tickets/t-2')
+		expect(items[0].text()).toContain('Contact moment · anna')
+		expect(items[0].text()).not.toContain('possible match')
+		expect(items[1].text()).toContain('Ticket')
+		expect(items[1].text()).toContain('possible match')
 	})
 
 	it('says there are no earlier contacts for a first-time caller', async () => {
-		get.mockResolvedValue({ data: { number: '+31612345678', results: [] } })
-		const w = mountModal()
-		await flushPromises()
+		get.mockResolvedValue({ data: { results: [] } })
 
-		expect(w.find('[data-testid="cti-intake-history-empty"]').text()).toBe('No earlier contacts from this number.')
+		const w = await mountModal()
+
+		expect(w.find('[data-testid="cti-intake-history-empty"]').text()).toBe('There are no earlier contacts from this number.')
+		expect(w.findAll('[data-testid="cti-intake-history-item"]')).toHaveLength(0)
 	})
 
-	it('says the same when the search fails, and the form stays usable', async () => {
-		offline = true
-		const w = mountModal()
-		await flushPromises()
+	it('says so when the earlier contacts cannot be read', async () => {
+		get.mockRejectedValue(new Error('500'))
 
-		expect(w.find('[data-testid="cti-intake-history-empty"]').exists()).toBe(true)
-		expect(w.find('form').exists()).toBe(true)
+		const w = await mountModal()
+
+		expect(w.find('[data-testid="cti-intake-history-failed"]').exists()).toBe(true)
+		expect(w.find('[data-testid="cti-intake-history-empty"]').exists()).toBe(false)
 	})
 })

@@ -22,16 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\OrganisationEnrichmentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OrganisationEnrichmentServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Organisation enrichment endpoints.
@@ -43,19 +42,17 @@ class OrganisationEnrichmentController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                      $request     The request.
-	 * @param OrganisationEnrichmentService $enrichment  The lookup and the write.
-	 * @param IUserSession                  $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy       $policy      Who may change the CRM.
+	 * @param OrganisationEnrichmentServiceInterface $enrichment  The lookup and the write.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N                         $l10n        Translations.
 	 */
 	public function __construct(
 		IRequest $request,
-		private OrganisationEnrichmentService $enrichment,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private OrganisationEnrichmentServiceInterface $enrichment,
+		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -67,7 +64,7 @@ class OrganisationEnrichmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function propose(): JSONResponse {
-		$refusal = $this->refusal();
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -89,7 +86,7 @@ class OrganisationEnrichmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function apply(): JSONResponse {
-		$refusal = $this->refusal();
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
 		if ($refusal !== null) {
 			return $refusal;
 		}
@@ -101,22 +98,4 @@ class OrganisationEnrichmentController extends Controller {
 
 		return new JSONResponse($this->enrichment->apply(changes: $changes));
 	}//end apply()
-
-	/**
-	 * Refuse a caller who is not signed in or may not change the CRM.
-	 *
-	 * @return JSONResponse|null The refusal, or null to go on.
-	 */
-	private function refusal(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
-		}
-
-		return null;
-	}//end refusal()
 }//end class

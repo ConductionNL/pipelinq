@@ -30,7 +30,10 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Controller\RoutingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\RoutingService;
@@ -144,8 +147,8 @@ class RoutingControllerTest extends TestCase {
 				int|string $id,
 				?array $_extend = [],
 				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 				bool $_render = true,
@@ -280,8 +283,7 @@ class RoutingControllerTest extends TestCase {
 				logger: $logger,
 				objectService: $this->objects,
 			),
-			userSession: $this->userSession,
-			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $logger,
 		);
 	}//end buildController()
@@ -583,8 +585,7 @@ class RoutingControllerTest extends TestCase {
 				logger: $logger,
 				objectService: $failing,
 			),
-			userSession: $this->userSession,
-			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $logger,
 		);
 
@@ -593,4 +594,44 @@ class RoutingControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$this->assertSame(['message' => 'Operation failed'], $response->getData());
 	}//end testGetSuggestionsMapsBackendFailureToAStaticServerError()
+
+	/**
+	 * Golden: the failure log line carries the exception and the entity, never on the wire.
+	 *
+	 * @return void
+	 */
+	public function testGetSuggestionsLogsTheFailureWithItsEntity(): void {
+		$this->signIn();
+		$this->withParams(['entityType' => 'lead', 'entityId' => 'lead-7']);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$failure = new \RuntimeException('postgres down');
+		$appConfig->method('getValueString')->willThrowException($failure);
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$quiet = $this->createMock(LoggerInterface::class);
+		$logged = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('error')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$logged): void {
+				$logged[] = [$message, $context];
+			}
+		);
+		$controller = new RoutingController(
+			request: $this->request,
+			routingService: new RoutingService(
+				appConfig: $appConfig,
+				ticketService: new TicketService(appConfig: $appConfig, logger: $quiet, objectService: $objects, mcp: new McpAnswer(new NullLogger())),
+				logger: $quiet,
+				objectService: $objects,
+			),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
+			logger: $logger,
+		);
+
+		$controller->getSuggestions();
+
+		$this->assertSame(
+			[['RoutingController: getSuggestions failed', ['exception' => $failure, 'entityType' => 'lead', 'entityId' => 'lead-7']]],
+			$logged
+		);
+	}//end testGetSuggestionsLogsTheFailureWithItsEntity()
 }//end class

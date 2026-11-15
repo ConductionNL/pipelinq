@@ -6,9 +6,10 @@
   - contact on the back of an unmatched CTI screen-pop, laid out as board
   - PqGesprekNieuwContact: the call and its queue over the title, why the form
   - is open, name and phone, e-mail and organisation, notes, and what happens
-  - after Create contact.
+  - after Create contact. Below the form, the earlier contacts from the
+  - caller's number (contact-moments-phone-lookup, REQ-CHP-001).
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.2
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.2
   -->
 <template>
 	<CnDialog
@@ -23,23 +24,6 @@
 				type="warning"
 				class="cti-intake__wide"
 				:text="t('pipelinq', 'No contact found for {number}. Fill in what the caller tells you; the number is already there.', { number: shownNumber })" />
-			<section class="cti-intake__wide cti-intake__history" aria-labelledby="cti-intake-history-title" data-testid="cti-intake-history">
-				<h3 id="cti-intake-history-title" class="cti-intake__label">
-					{{ t('pipelinq', 'Earlier contacts from this number') }}
-				</h3>
-				<p v-if="history.loading" class="cti-intake__hint">
-					{{ t('pipelinq', 'Looking up earlier contacts.') }}
-				</p>
-				<p v-else-if="history.items.length === 0" class="cti-intake__hint" data-testid="cti-intake-history-empty">
-					{{ t('pipelinq', 'No earlier contacts from this number.') }}
-				</p>
-				<ul v-else class="cti-intake__history-list">
-					<li v-for="item in history.items" :key="item.id" class="cti-intake__history-item">
-						<a :href="ticketHref(item.id)">{{ item.title || t('pipelinq', 'Untitled') }}</a>
-						<span class="cti-intake__hint">{{ historyMeta(item) }}</span>
-					</li>
-				</ul>
-			</section>
 			<div class="cti-intake__field">
 				<label for="cti-intake-name" class="cti-intake__label">{{ t('pipelinq', 'Name') }}</label>
 				<NcTextField
@@ -96,6 +80,26 @@
 			<p class="cti-intake__wide cti-intake__hint">
 				{{ t('pipelinq', 'The new contact opens straight away, with this call as its first contact moment.') }}
 			</p>
+			<section class="cti-intake__wide cti-intake__history" data-testid="cti-intake-history" :aria-busy="historyLoading ? 'true' : 'false'">
+				<h3 class="cti-intake__label">
+					{{ t('pipelinq', 'Earlier contacts from this number') }}
+				</h3>
+				<p v-if="historyLoading" class="cti-intake__hint">
+					{{ t('pipelinq', 'Looking up earlier contacts…') }}
+				</p>
+				<p v-else-if="historyFailed" class="cti-intake__hint" data-testid="cti-intake-history-failed">
+					{{ t('pipelinq', 'Earlier contacts could not be loaded.') }}
+				</p>
+				<p v-else-if="history.length === 0" class="cti-intake__hint" data-testid="cti-intake-history-empty">
+					{{ t('pipelinq', 'There are no earlier contacts from this number.') }}
+				</p>
+				<ul v-else class="cti-intake__history-list">
+					<li v-for="item in history" :key="item.id" data-testid="cti-intake-history-item">
+						<a :href="ticketUrl(item.id)" target="_blank" rel="noopener">{{ item.title || t('pipelinq', 'Untitled') }}</a>
+						<span class="cti-intake__optional">{{ historyLine(item) }}</span>
+					</li>
+				</ul>
+			</section>
 		</form>
 		<template #actions>
 			<NcButton data-testid="cti-intake-cancel" @click="$emit('close')">
@@ -144,7 +148,10 @@ export default {
 				notes: '',
 			},
 
-			history: { loading: false, items: [] },
+			/** Earlier tickets and contact moments from this number (REQ-CHP-001). */
+			history: [],
+			historyLoading: false,
+			historyFailed: false,
 		}
 	},
 
@@ -174,15 +181,15 @@ export default {
 		},
 	},
 
-	mounted() {
+	created() {
 		this.loadHistory()
 	},
 
 	methods: {
 		/**
-		 * The earlier tickets and contact moments from the caller's number.
+		 * Read the earlier contacts from the caller's number, as the agent may
+		 * read them, newest first (contact-moments-phone-lookup D4).
 		 *
-		 * @spec openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone/spec.md#requirement-an-unknown-callers-earlier-contacts-are-shown-req-chp-001
 		 * @return {Promise<void>}
 		 */
 		async loadHistory() {
@@ -190,33 +197,43 @@ export default {
 			if (!number) {
 				return
 			}
-			this.history.loading = true
+			this.historyLoading = true
+			this.historyFailed = false
 			try {
 				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/tickets/by-phone'), { params: { number } })
-				this.history.items = Array.isArray(data?.results) ? data.results : []
+				this.history = Array.isArray(data?.results) ? data.results : []
 			} catch {
-				this.history.items = []
+				this.historyFailed = true
+				this.history = []
 			} finally {
-				this.history.loading = false
+				this.historyLoading = false
 			}
 		},
 
 		/**
 		 * @param {string} id The ticket id.
-		 * @return {string} The ticket page's address.
+		 * @return {string} The ticket's page.
 		 */
-		ticketHref(id) {
-			return generateUrl('/apps/pipelinq/tickets/{id}', { id })
+		ticketUrl(id) {
+			return generateUrl('/apps/pipelinq/tickets/' + id)
 		},
 
 		/**
-		 * @param {object} item A ticket from the phone search.
-		 * @return {string} "12 October 2026 · Contact moment".
+		 * "12 Oct 2026 · Contact moment · Anna de Vries", and "possible match"
+		 * when only the last nine digits agree.
+		 *
+		 * @param {object} item The ticket.
+		 * @return {string}
 		 */
-		historyMeta(item) {
-			const when = item.occurredAt ? new Date(item.occurredAt).toLocaleDateString() : ''
-			const type = item.ticketType === 'interaction' ? t('pipelinq', 'Contact moment') : t('pipelinq', 'Ticket')
-			return [when, type].filter(Boolean).join(' · ')
+		historyLine(item) {
+			const when = item.occurredAt || item.started_at || item['@self']?.created || ''
+			const date = when ? new Date(when).toLocaleDateString() : ''
+			const type = item.ticketType === 'contactmoment' ? t('pipelinq', 'Contact moment') : t('pipelinq', 'Ticket')
+			const parts = [date, type, item.assignee || '']
+			if (item._phoneMatch === 'possible') {
+				parts.push(t('pipelinq', 'possible match'))
+			}
+			return parts.filter(Boolean).join(' · ')
 		},
 
 		submit() {
@@ -230,6 +247,26 @@ export default {
 </script>
 
 <style scoped>
+.cti-intake__history {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.cti-intake__history-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cti-intake__history-list a {
+	color: var(--color-primary-element);
+	margin-inline-end: 8px;
+}
+
 .cti-intake {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -255,27 +292,6 @@ export default {
 .cti-intake__optional {
 	font-weight: 400;
 	color: var(--color-text-maxcontrast);
-}
-
-.cti-intake__history-list {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-
-.cti-intake__history-item {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px 12px;
-	align-items: baseline;
-}
-
-.cti-intake__history-item a {
-	color: var(--color-primary-element);
-	text-decoration: underline;
 }
 
 .cti-intake__hint {

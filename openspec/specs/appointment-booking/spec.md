@@ -20,7 +20,7 @@ skills, multi-step composition, and booking policies.
 
 #### Scenario: Service with simple duration
 
-- **GIVEN** a Service is created with `name: "Haircut"`, `durationMinutes: 30`, `price: 25.00`, `bookableOnline: true`
+- **GIVEN** a Service is created with `name: "Locatiebezoek"`, `durationMinutes: 30`, `price: 25.00`, `bookableOnline: true`
 - **WHEN** the Service is saved in OpenRegister
 - **THEN** the Service MUST be queryable and usable in availability computations
 
@@ -544,7 +544,7 @@ Bookings: list, create, edit, and delete.
 
 - **GIVEN** an admin opens a confirmed Booking detail page in the future
 - **WHEN** the page renders
-- **THEN** buttons for "Mark completed", "Mark no-show", "Reschedule", and "Cancel" MUST be available, wired to the booking endpoints
+- **THEN** buttons for "Markeren als afgerond", "Markeren als niet verschenen", "Reschedule", and "Cancel" MUST be available, wired to the booking endpoints
 
 ### Requirement: REQ-APT-017 Compliance and Audit Trails
 
@@ -627,8 +627,8 @@ SHALL be asked for again on the next change, not shown as its uuid until reload.
 #### Scenario: A step is saved with a product
 
 - GIVEN a service in step editing
-- WHEN the user picks "Knipbeurt" for a step and saves
-- THEN the step table shows "Knipbeurt"
+- WHEN the user picks "Locatiebezoek" for a step and saves
+- THEN the step table shows "Locatiebezoek"
 
 ### Requirement: The booking page names the customer and the service (REQ-RF-020)
 
@@ -639,9 +639,9 @@ placeholder. When no object is found the id SHALL stay visible.
 
 #### Scenario: A booking shows names
 
-- GIVEN a booking for contact Jan Jansen and service Haircut
+- GIVEN a booking for contact Sanne de Vries and service Haircut
 - WHEN the user opens the booking
-- THEN the data block shows "Jan Jansen" as customer and "Haircut" as service
+- THEN the data block shows "Sanne de Vries" as customer and "Locatiebezoek" as service
 
 ### Requirement: The booking timeline is the library timeline widget (REQ-RP2-001)
 

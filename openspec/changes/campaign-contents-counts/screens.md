@@ -1,3 +1,5 @@
 # Screens
 
-- PqCampagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
+- pipelinq/PqCampagne campagne https://identity.conduction.nl/screens/board?id=pipelinq/PqCampagne
+
+Components: CnActionButtons, CnActionsMenu, CnAppNav, CnAuditTrailCard, CnBreadcrumbs, CnBuildiqEditButton, CnDataTable, CnDetailCard, CnDetailGrid, CnDetailPage, CnKpiGrid, CnNoteCard, CnStatsBlock, CnStatusBadge, CnTabs

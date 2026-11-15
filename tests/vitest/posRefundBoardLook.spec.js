@@ -8,7 +8,7 @@
  * cards Refund and Items to take back, and beside them Total refund, After
  * saving and Original receipt. There is no Back to list button.
  *
- * @spec openspec/changes/pos-refund-board-look/specs/pos-refunds/spec.md#requirement-the-refund-page-reads-as-the-board
+ * @spec openspec/specs/pos-refund-return/spec.md
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

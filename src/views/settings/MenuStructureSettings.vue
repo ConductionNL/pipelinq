@@ -9,7 +9,7 @@ The choice is read at page load by the app's boot code, before it builds the
 navigation, so a change shows the next time somebody opens Pipelinq. The
 section says so, because a setting that seems to do nothing gets changed back.
 
-@spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+@spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
 -->
 <template>
 	<NcSettingsSection
@@ -121,7 +121,7 @@ import {
 /**
  * The menu structure choice on the admin settings page.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export default {
 	name: 'MenuStructureSettings',
@@ -150,7 +150,7 @@ export default {
 		 *
 		 * @return {Array<{key: string, label: string}>} One option per module.
 		 *
-		 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+		 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
 		 */
 		moduleOptions() {
 			return Object.entries(simpleMenuLayout.modules).map(([key, module]) => ({
@@ -165,7 +165,7 @@ export default {
 		/**
 		 * Store the choice, and put the controls back when that fails.
 		 *
-		 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+		 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
 		 */
 		async save() {
 			this.saving = true

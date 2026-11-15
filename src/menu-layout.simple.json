@@ -41,7 +41,8 @@
 		"KeywordIntelligence",
 		"CompetitorWatches",
 		"ConnectionAudit",
-		"SearchQueries"
+		"SearchQueries",
+		"CallReviews"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -54,16 +55,19 @@
 		"Tasks": "Modules",
 		"OperationalDashboard": "Modules",
 		"SlaAttainment": "Reports",
-		"Bookings": "AppointmentsMenu"
+		"Bookings": "AppointmentsMenu",
+		"CallReviews": "Modules"
 	},
 	"settingsSection": [
 		"Pipelines",
 		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
+		"RetentionReview",
 		"Services",
 		"Resources",
-		"SavedReplies"
+		"SavedReplies",
+		"BulkChanges"
 	],
 	"nav": {
 		"brand": {
@@ -509,6 +513,41 @@
 			}
 		},
 		{
+			"id": "TaskDetail",
+			"_note": "Board PqTaak draws no follow row under the header, as the ticket page (openspec/changes/detail-follow-row-off). The full profile keeps it.",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "ZReportDetail",
+			"_note": "Board PqZRapport draws no follow row under the header (openspec/changes/detail-follow-row-off).",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "SocialPostDetail",
+			"_note": "Board PqSocialBericht draws no follow row under the header (openspec/changes/detail-follow-row-off).",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "ClientDetail",
+			"_note": "Boards PqKlant and PqOrganisatie draw no follow row under the header, as DqContact and DqOrganisatie (openspec/changes/client-contact-follow-row-off). The full profile keeps it.",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "ContactDetail",
+			"_note": "Board PqContactpersoon draws no follow row under the header (openspec/changes/client-contact-follow-row-off). The full profile keeps it.",
+			"config": {
+				"follow": false
+			}
+		},
+		{
 			"id": "TicketDetail",
 			"_note": "The ticket page in the simple structure (openspec/changes/simple-ticket-page). The full structure has no overlay, so its page is today's page. STAGE: `status`, the ticket's own lifecycle field. EVERY STATUS CHANGE HERE IS A TRANSITION OF THE SCHEMA'S x-openregister-lifecycle, posted to OpenRegister's transition endpoint, which checks the `from` state and the authorization again. `visibleWhen` only hides a button on a status its transition cannot leave; it decides nothing. The spec fails when an action names a transition the schema lacks or shows on a status outside the transition's `from`. THE DESIGN NAMES THREE THINGS PIPELINQ DOES NOT HAVE and they are not invented: a reminder to a customer who does not answer (the waiting stage offers Answer again), a step from answered to closed (resolved, completed, rejected, converted and closed are all final, so a finished ticket has no primary button), and a convert-to-case header action (conversion needs an availability answer first, so it stays the self-hiding section it is). A CONTACT MOMENT HAS NO CUSTOMER TO ANSWER: Answer hides on it, the stage then has no primary button, and Close the ticket is in the More menu. THE ANSWER IS WRITTEN IN ONE PLACE: `customer-reply` leaves the body and opens as a dialog from the Answer button, and the body shows the conversation to read. THE GRID IS ONE TABS WIDGET, full width: beside the side column the grid is narrow, and three cards side by side would stack. LOG CONTACT SEEDS THE TICKET AND NOT THE CUSTOMER: the library leaves a token it cannot resolve in place, so `@object.contact` on a ticket without a contact would be saved as those fifteen characters, a foreign key to nothing. `@objectId` always resolves. The contact moment hangs on the ticket, and the ticket names the customer. THE WHAT-NOW CARD (DqZaak, Acties: one next-step button inside a card that lists what the step still needs): `nextStep` names a checklist per stage on fields the ticket has (assignee, client, slaDeadline, portalReplies), and the stage's primary button sits in the card. A finished ticket has no stage entry, so it shows no card. Nothing in the checklist is a guess: an item is done when its field holds a value.",
 			"config": {
@@ -703,6 +742,48 @@
 							]
 						},
 						"group": "Finish"
+					},
+					{
+						"id": "lock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this ticket?",
+						"confirmMessage": "Nobody can change this ticket while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Ticket locked.",
+						"errorMessage": "Could not lock this ticket.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"id": "unlock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"successMessage": "Ticket unlocked.",
+						"errorMessage": "Could not unlock this ticket.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"primaryActionByStage": {
@@ -1348,10 +1429,20 @@
 				],
 				"layout": [
 					{
+						"id": "lock",
+						"widgetId": "ticket-locked",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"sizeToContent": true,
+						"showTitle": false
+					},
+					{
 						"id": "1",
 						"widgetId": "ticket-panels",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 8
 					}
@@ -1500,7 +1591,10 @@
 					}
 				},
 				"editTitle": "Edit ticket",
-				"editConfirmLabel": "Save changes"
+				"editEyebrow": "Edit · {reference}",
+				"editSubtitle": "{reference} · {ticketType}",
+				"editConfirmLabel": "Save changes",
+				"editFootnote": "You do not change the status here: it moves through the ticket's steps, Answer the customer, Complete or Reject, so every change is checked."
 			},
 			"configPatch": {
 				"bodyWidgets": {
@@ -1581,6 +1675,17 @@
 									}
 								},
 								{
+									"widgetIds": [
+										"ticket-call-summary",
+										"ticket-call-transcript"
+									],
+									"label": "Call",
+									"visibleWhen": {
+										"field": "recording_url",
+										"op": "notEmpty"
+									}
+								},
+								{
 									"widgetId": "ticket-history",
 									"label": "History"
 								}
@@ -1651,6 +1756,8 @@
 								"field": "occurredAt",
 								"dir": "desc"
 							},
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "title",
@@ -1781,7 +1888,73 @@
 						"id": "ticket-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"_note": "The same words as the full TicketDetail History tab (ticket-handover-history); tests/vitest/ticketHandoverHistory.spec.js keeps the two equal.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {changed.assignee} by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
 					},
 					{
 						"id": "ticket-resident-view",
@@ -2226,6 +2399,24 @@
 						"sizeToContent": true
 					},
 					{
+						"id": "scm",
+						"widgetId": "simple-call-matters",
+						"gridX": 4,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "main"
+					},
+					{
+						"id": "sce",
+						"widgetId": "simple-call-earlier",
+						"gridX": 8,
+						"gridY": 33,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "side"
+					},
+					{
 						"id": "sca",
 						"widgetId": "simple-call-actions",
 						"gridX": 0,
@@ -2296,6 +2487,11 @@
 						"schema": "ticket",
 						"props": {
 							"ticketType": "interaction"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					}
 				],
@@ -2340,7 +2536,7 @@
 							},
 							{
 								"id": "cc",
-								"widgetId": "client-cases",
+								"widgetId": "simple-call-matters",
 								"title": "Open matters",
 								"gridX": 4,
 								"gridY": 8,
@@ -2368,7 +2564,7 @@
 							},
 							{
 								"id": "cm",
-								"widgetId": "client-contacts",
+								"widgetId": "simple-call-earlier",
 								"title": "Earlier contact",
 								"gridX": 8,
 								"gridY": 11,
@@ -2376,6 +2572,11 @@
 								"gridHeight": 4,
 								"sizeToContent": true
 							}
+						],
+						"gridColumnWeights": [
+							{ "span": 4, "weight": 352 },
+							{ "span": 4, "weight": 435 },
+							{ "span": 4, "weight": 352 }
 						]
 					}
 				],
@@ -2942,7 +3143,7 @@
 					},
 					{
 						"id": "simple-call-tasks",
-						"type": "object-list",
+						"type": "record-list",
 						"title": "Tasks and callback requests",
 						"visibleWhen": {
 							"workspace": "callActive",
@@ -2954,29 +3155,179 @@
 							"schema": "crmTask",
 							"filter": {
 								"clientId": "@workspace.selectedClient",
-								"status": [
-									"open",
-									"in_progress"
-								]
+								"status": {
+									"in": [
+										"open",
+										"in_progress"
+									]
+								}
 							},
 							"sort": {
 								"field": "deadline",
 								"dir": "asc"
 							},
 							"limit": 6,
-							"rowRoute": "TaskDetail",
-							"columns": [
-								{
-									"key": "subject",
-									"label": "Task"
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{subject}",
+							"meta": {
+								"parts": [
+									"{type}",
+									"for {assigneeUserId|user}",
+									"{deadline|soon}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"open": "Open",
+									"in_progress": "In progress"
 								},
-								{
-									"key": "deadline",
-									"label": "Time limit",
-									"formatter": "relativeDate"
+								"colorMap": {
+									"open": "info",
+									"in_progress": "info"
 								}
-							],
+							},
+							"valueLabels": {
+								"type": {
+									"callbackRequest": "Call back",
+									"followUpTask": "Follow-up task",
+									"informationRequest": "Information request"
+								}
+							},
+							"rowRoute": "TaskDetail",
 							"emptyText": "No open tasks for this client."
+						}
+					},
+					{
+						"id": "simple-call-matters",
+						"type": "record-list",
+						"title": "Open matters",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@workspace.selectedClient",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 4,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"{ticketType|lowerfirst}",
+									"{assignee|user}"
+								]
+							},
+							"pill": {
+								"cases": [
+									{
+										"when": {
+											"field": "status",
+											"op": "in",
+											"value": [
+												"resolved",
+												"completed",
+												"closed",
+												"rejected",
+												"converted"
+											]
+										},
+										"label": "Done"
+									},
+									{
+										"when": {
+											"field": "slaDeadline",
+											"op": "notEmpty"
+										},
+										"label": "By {slaDeadline|date}",
+										"variant": "warning"
+									}
+								]
+							},
+							"valueLabels": {
+								"ticketType": {
+									"request": "Request",
+									"complaint": "Complaint"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No open matters for this client."
+						}
+					},
+					{
+						"id": "simple-call-earlier",
+						"type": "record-list",
+						"title": "Earlier contact",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@workspace.selectedClient",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{occurredAt|datetime}",
+									"{channel}",
+									"{direction}"
+								]
+							},
+							"valueLabels": {
+								"channel": {
+									"telefoon": "Phone",
+									"email": "Email",
+									"balie": "Counter",
+									"chat": "Chat",
+									"social": "Social media",
+									"brief": "Letter",
+									"portal": "Mijn Zuiddrecht"
+								},
+								"direction": {
+									"inbound": "inbound",
+									"outbound": "outbound",
+									"internal": "internal"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No earlier contact with this client.",
+							"headerLink": {
+								"label": "All {total}",
+								"route": "Tickets",
+								"query": {
+									"client": "@workspace.selectedClient",
+									"ticketType": "interaction"
+								}
+							}
 						}
 					},
 					{
@@ -3039,6 +3390,7 @@
 									"type": "open-modal",
 									"target": "BrpClientCheckDialog",
 									"variant": "tonal",
+									"icon": "CardAccountDetailsOutline",
 									"label": "Look up in the BRP",
 									"props": {
 										"clientId": "@source.id"
@@ -3874,9 +4226,14 @@
 				"headerFilters": false,
 				"hideTableHeader": true,
 				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+				"pagerOnOnePage": false,
+				"sidebar": {
+					"enabled": false
+				},
 				"filterStrip": {
 					"field": "channel",
 					"label": "Kind, then channel",
+					"allLabel": "All",
 					"showCount": true,
 					"options": [
 						{
@@ -3958,7 +4315,10 @@
 								"url": "/apps/pipelinq/api/routing/team-load",
 								"responsePath": "results"
 							},
-							"avatar": "{displayName}",
+							"avatar": {
+								"text": "{displayName}",
+								"size": 32
+							},
 							"title": "{displayName}",
 							"meta": "{isAvailable}",
 							"valueLabels": {
@@ -4193,10 +4553,6 @@
 								"label": "Legal form"
 							},
 							{
-								"key": "industry",
-								"label": "Industry"
-							},
-							{
 								"key": "place",
 								"label": "Place"
 							},
@@ -4237,10 +4593,6 @@
 									}
 								},
 								"widget": "badge"
-							},
-							{
-								"key": "phone",
-								"label": "Phone"
 							},
 							{
 								"key": "lastContact",

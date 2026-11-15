@@ -14,7 +14,7 @@
  * a composer that says a post fits and a server that refuses it, which is the
  * one failure this whole module exists to prevent.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 /** Every network the `socialAccount.network` enum declares, in its order. */
@@ -75,7 +75,7 @@ export const RETRYABLE_FAILURES = ['rejected_by_network', 'unavailable']
  *
  * @param {string} network The network name.
  * @return {{label: string, bodyLimit: number, maxMedia: number}} Its limits.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function networkLimits(network) {
 	const known = NETWORKS[network]
@@ -90,7 +90,7 @@ export function networkLimits(network) {
  *
  * @param {string} status The stored `status` value.
  * @return {{label: string, color: string}} The chip.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
  */
 export function accountStatusChip(status) {
 	return { ...(STATUS_CHIPS[status] || STATUS_CHIPS.pending) }
@@ -101,7 +101,7 @@ export function accountStatusChip(status) {
  *
  * @param {string} status The stored `status` value.
  * @return {{label: string, color: string}} The chip.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 export function publicationStatusChip(status) {
 	return { ...(PUBLICATION_CHIPS[status] || PUBLICATION_CHIPS.pending) }
@@ -116,7 +116,7 @@ export function publicationStatusChip(status) {
  *
  * @param {object} publication The publication row.
  * @return {boolean} True when a retry may help.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 export function isRetryable(publication) {
 	return (
@@ -134,7 +134,7 @@ export function isRetryable(publication) {
  *
  * @param {object} row A ranking row from `GET /api/social-performance`.
  * @return {string} The rate, or a hyphen.
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+ * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
  */
 export function formatEngagementRate(row) {
 	const rate = row?.engagementRate

@@ -26,15 +26,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\CtiService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * GET /api/cti/escalation-queues: the queues by id and label.
@@ -46,19 +44,17 @@ class CtiEscalationQueueController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request     The request.
-	 * @param CtiService              $ctiService  The CTI service.
-	 * @param IUserSession            $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy      Who may use the CTI surfaces.
+	 * @param CtiServiceInterface              $ctiService  The CTI service.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private CtiService $ctiService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private CtiServiceInterface $ctiService,
+		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -70,14 +66,10 @@ class CtiEscalationQueueController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Same posture as the disposition: only an agent who may close a call sees where it can go.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return new JSONResponse(['queues' => $this->ctiService->escalationQueues()]);

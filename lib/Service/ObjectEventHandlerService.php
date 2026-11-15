@@ -17,12 +17,14 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-crm-automation-triggers
- * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
+
+use OCA\Pipelinq\Kernel\Contracts\ObjectEventHandlerServiceInterface;
 
 /**
  * Service for handling object event business logic.
@@ -31,9 +33,9 @@ namespace OCA\Pipelinq\Service;
  * been retired. CRM events are surfaced through the OpenRegister flow leaf
  * (NC Flow / n8n) — this service only handles in-app dispatcher notifications.
  *
- * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-06-14-migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
-class ObjectEventHandlerService {
+class ObjectEventHandlerService implements ObjectEventHandlerServiceInterface {
 	/**
 	 * The field that holds an object's name, per entity type. A type not
 	 * listed here keeps it in `title`.
@@ -106,35 +108,15 @@ class ObjectEventHandlerService {
 		$objectId = (string)$newObject->getId();
 		$assignee = $this->stringifyScalar(value: ($newData['assignee'] ?? ''));
 
-		$this->diffService->dispatchAssigneeChangeIfNeeded(
-			oldData: $oldData,
-			entityType: $entityType,
-			title: $title,
-			objectId: $objectId,
-			assignee: $assignee,
-			dispatcher: $this->dispatcher
-		);
+		$change = ['new' => $newData, 'old' => $oldData, 'entityType' => $entityType, 'title' => $title, 'objectId' => $objectId, 'assignee' => $assignee];
+		$this->diffService->dispatchAssigneeChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 
 		if ($entityType === 'lead') {
-			$this->diffService->dispatchStageChangeIfNeeded(
-				newData: $newData,
-				oldData: $oldData,
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee,
-				dispatcher: $this->dispatcher
-			);
+			$this->diffService->dispatchStageChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 		}
 
 		if ($entityType === 'request') {
-			$this->diffService->dispatchStatusChangeIfNeeded(
-				newData: $newData,
-				oldData: $oldData,
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee,
-				dispatcher: $this->dispatcher
-			);
+			$this->diffService->dispatchStatusChangeIfNeeded(change: $change, dispatcher: $this->dispatcher);
 		}
 	}//end handleUpdated()
 

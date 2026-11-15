@@ -20,7 +20,7 @@ Canvas `5NkFW28vZUUij43xzxHg5a`, board `PqBiExport` (BI export, advanced).
 The board draws the end state of this change:
 
 - the job "Leads and pipeline value" with last run `Failed`, "6 Oct, 01:00 ·
-  connection refused", next run "Not scheduled" and the Enabled switch off;
+  connection refused", next run "Niet ingepland" and the Enabled switch off;
 - the view chips "All", "Enabled" and "Last run failed";
 - the footnote "A new job stays off until a test run has passed."
 

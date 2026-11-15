@@ -24,10 +24,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
+use OCA\Pipelinq\Service\Forecast\CategoryOverride;
+use OCA\Pipelinq\Service\Support\FindAllAsArrays;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Forecast computation engine.
@@ -39,42 +44,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastService {
-	/**
-	 * App-config key for the open-pipeline target the dashboard gauge
-	 * measures against, in the reporting currency. 0 means no target.
-	 *
-	 * @var string
-	 */
-	public const PIPELINE_TARGET_KEY = 'pipeline_target';
-
-	/**
-	 * App-config key for the accuracy green band threshold.
-	 *
-	 * @var string
-	 */
-	public const ACCURACY_GREEN_KEY = 'forecast_accuracy_green';
-
-	/**
-	 * App-config key for the accuracy amber band threshold.
-	 *
-	 * @var string
-	 */
-	public const ACCURACY_AMBER_KEY = 'forecast_accuracy_amber';
-
-	/**
-	 * Default accuracy green band threshold (0.90).
-	 *
-	 * @var float
-	 */
-	public const ACCURACY_GREEN_DEFAULT = 0.90;
-
-	/**
-	 * Default accuracy amber band threshold (0.75).
-	 *
-	 * @var float
-	 */
-	public const ACCURACY_AMBER_DEFAULT = 0.75;
+class ForecastService implements ForecastServiceInterface {
+	use PayloadToArray;
+	use InjectedObjectService;
+	use FindAllAsArrays;
 
 	/**
 	 * Constructor.
@@ -106,8 +79,49 @@ class ForecastService {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-03
 	 */
 	public function computeRollUp(string $ownerId, string $periodId, string $level): array {
-		$snapshot = $this->latestSnapshot(ownerId: $ownerId, periodId: $periodId, level: $level);
+		$scope = ['owner_id' => $ownerId, 'period_id' => $periodId, 'level' => $level];
+		$snapshot = $this->latestSnapshot(scope: $scope);
 
+		$result = $scope + $this->snapshotFigures(snapshot: $snapshot) + [
+			'quota' => $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level),
+			'deal_snapshot_ids' => ($snapshot['deal_snapshot_ids'] ?? []),
+			'partial' => (bool)($snapshot['partial'] ?? false),
+		];
+
+		return $this->withOverrides(rollUp: $result, scope: $scope);
+	}//end computeRollUp()
+
+	/**
+	 * The roll-up with the latest commit and best-case overrides applied.
+	 *
+	 * @param array<string, mixed> $rollUp The roll-up before overrides.
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The owner, fiscal period and hierarchy level.
+	 *
+	 * @return array<string, mixed> The override-applied roll-up.
+	 */
+	private function withOverrides(array $rollUp, array $scope): array {
+		$result = $rollUp;
+		foreach (['commit', 'best_case'] as $category) {
+			$result = $this->withOverride(
+				rollUp: $result,
+				override: new CategoryOverride(
+					category: $category,
+					row: $this->latestOverride(scope: $scope, category: $category)
+				)
+			);
+		}
+
+		return $result;
+	}//end withOverrides()
+
+	/**
+	 * The snapshot's four amounts, with the commit and best-case originals and empty override slots.
+	 *
+	 * @param array<string, mixed> $snapshot The latest snapshot, or the empty totals.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function snapshotFigures(array $snapshot): array {
 		$commit = (float)($snapshot['commit_amount'] ?? 0);
 		$bestCase = (float)($snapshot['best_case_amount'] ?? 0);
 		$pipeline = (float)($snapshot['pipeline_amount'] ?? 0);
@@ -115,10 +129,7 @@ class ForecastService {
 		$originalCommit = $commit;
 		$originalBest = $bestCase;
 
-		$result = [
-			'owner_id' => $ownerId,
-			'period_id' => $periodId,
-			'level' => $level,
+		return [
 			'commit' => $commit,
 			'original_commit' => $originalCommit,
 			'commit_override_id' => null,
@@ -129,27 +140,30 @@ class ForecastService {
 			'best_case_override_reason' => null,
 			'pipeline' => $pipeline,
 			'closed_won' => $closedWon,
-			'quota' => $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level),
-			'deal_snapshot_ids' => ($snapshot['deal_snapshot_ids'] ?? []),
-			'partial' => (bool)($snapshot['partial'] ?? false),
 		];
+	}//end snapshotFigures()
 
-		$commitOverride = $this->latestOverride(ownerId: $ownerId, periodId: $periodId, level: $level, category: 'commit');
-		if ($commitOverride !== null) {
-			$result['commit'] = (float)($commitOverride['override_amount'] ?? $commit);
-			$result['commit_override_id'] = $this->objectId(object: $commitOverride);
-			$result['commit_override_reason'] = (string)($commitOverride['reason'] ?? '');
+	/**
+	 * Apply one category's latest override to the roll-up; without one the roll-up is returned as is.
+	 *
+	 * The amount falls back to the snapshot's own figure, the reason to an empty string.
+	 *
+	 * @param array<string, mixed> $rollUp   The roll-up so far.
+	 * @param CategoryOverride     $override The category and its latest override.
+	 *
+	 * @return array<string, mixed> The roll-up with the override applied.
+	 */
+	private function withOverride(array $rollUp, CategoryOverride $override): array {
+		if ($override->row === null) {
+			return $rollUp;
 		}
 
-		$bestOverride = $this->latestOverride(ownerId: $ownerId, periodId: $periodId, level: $level, category: 'best_case');
-		if ($bestOverride !== null) {
-			$result['best_case'] = (float)($bestOverride['override_amount'] ?? $bestCase);
-			$result['best_case_override_id'] = $this->objectId(object: $bestOverride);
-			$result['best_case_override_reason'] = (string)($bestOverride['reason'] ?? '');
-		}
-
-		return $result;
-	}//end computeRollUp()
+		$key = $override->category;
+		$rollUp[$key] = (float)($override->row['override_amount'] ?? $rollUp[$key]);
+		$rollUp[$key.'_override_id'] = $this->objectId(object: $override->row);
+		$rollUp[$key.'_override_reason'] = (string)($override->row['reason'] ?? '');
+		return $rollUp;
+	}//end withOverride()
 
 	/**
 	 * Compute the forecast accuracy score for a closed period.
@@ -224,8 +238,8 @@ class ForecastService {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-04
 	 */
 	public function accuracyBand(float $score): string {
-		$green = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_GREEN_KEY, (string)self::ACCURACY_GREEN_DEFAULT);
-		$amber = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_AMBER_KEY, (string)self::ACCURACY_AMBER_DEFAULT);
+		$green = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ACCURACY_GREEN_KEY, (string)self::ACCURACY_GREEN_DEFAULT);
+		$amber = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ACCURACY_AMBER_KEY, (string)self::ACCURACY_AMBER_DEFAULT);
 
 		$greenThreshold = self::ACCURACY_GREEN_DEFAULT;
 		if ($green !== '') {
@@ -251,25 +265,17 @@ class ForecastService {
 	/**
 	 * Fetch the most recent snapshot for an owner/period/level.
 	 *
-	 * @param string $ownerId The owner identifier.
-	 * @param string $periodId The fiscal period identifier.
-	 * @param string $level The hierarchy level.
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The owner, fiscal period and hierarchy level.
 	 *
 	 * @return array<string, mixed> The latest snapshot, or an empty totals array.
 	 */
-	private function latestSnapshot(string $ownerId, string $periodId, string $level): array {
+	private function latestSnapshot(array $scope): array {
 		// Push the "most recent" selection down into OpenRegister: sort by
 		// as_of_date descending and take the first row, instead of fetching
 		// every matching snapshot and sorting in PHP.
 		$rows = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			filters: [
-				'owner_id' => $ownerId,
-				'period_id' => $periodId,
-				'level' => $level,
-			],
-			sort: ['as_of_date' => 'DESC'],
-			limit: 1
+			query: ['filters' => $scope, 'sort' => ['as_of_date' => 'DESC'], 'limit' => 1]
 		);
 
 		if ($rows === []) {
@@ -282,26 +288,23 @@ class ForecastService {
 	/**
 	 * Fetch the most recent override for an owner/period/level/category.
 	 *
-	 * @param string $ownerId The override_owner_id being overridden.
-	 * @param string $periodId The fiscal period identifier.
-	 * @param string $level The hierarchy level.
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The override_owner_id being overridden, fiscal period and level.
 	 * @param string $category The overridden category.
 	 *
 	 * @return array<string, mixed>|null The latest override, or null.
 	 */
-	private function latestOverride(string $ownerId, string $periodId, string $level, string $category): ?array {
+	private function latestOverride(array $scope, string $category): ?array {
 		// Push the "most recent" selection down into OpenRegister: sort by
 		// created_at descending and take the first row.
+		$filters = [
+			'override_owner_id' => $scope['owner_id'],
+			'period_id' => $scope['period_id'],
+			'level' => $scope['level'],
+			'category' => $category,
+		];
 		$rows = $this->findObjects(
 			schemaKey: 'forecastOverride_schema',
-			filters: [
-				'override_owner_id' => $ownerId,
-				'period_id' => $periodId,
-				'level' => $level,
-				'category' => $category,
-			],
-			sort: ['created_at' => 'DESC'],
-			limit: 1
+			query: ['filters' => $filters, 'sort' => ['created_at' => 'DESC'], 'limit' => 1]
 		);
 
 		if ($rows === []) {
@@ -312,76 +315,35 @@ class ForecastService {
 	}//end latestOverride()
 
 	/**
-	 * Query objects of a configured schema with equality filters.
+	 * Query objects of a configured schema with equality filters, a sort and a limit pushed to OR.
 	 *
 	 * @param string $schemaKey The app-config schema key.
-	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param array<string, string> $sort Optional sort map (field => ASC|DESC) pushed to OR.
-	 * @param int|null $limit Optional row limit pushed to OR.
+	 * @param array{filters: array<string, mixed>, sort: array<string, string>, limit: int} $query The equality filters, sort map and row limit.
 	 *
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
-	private function findObjects(string $schemaKey, array $filters, array $sort = [], ?int $limit = null): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+	private function findObjects(string $schemaKey, array $query): array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
+		$config = ['filters' => array_merge(['register' => $register, 'schema' => $schema], $query['filters'])] + $query;
 
-		$config = ['filters' => $allFilters];
-		if ($sort !== []) {
-			$config['sort'] = $sort;
-		}
-
-		if ($limit !== null) {
-			$config['limit'] = $limit;
-		}
-
-		try {
-			$results = $this->getObjectService()->findAll(config: $config);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: forecast query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
-		}
-
-		return $objects;
+		return $this->readObjects(config: $config);
 	}//end findObjects()
 
 	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
+	 * Run the query and return the rows as arrays; none (logged) when it fails.
 	 *
-	 * @param mixed $object The entity or array.
+	 * @param array<string, mixed> $config The findAll config.
 	 *
-	 * @return array<string, mixed> The object data.
+	 * @return array<int, array<string, mixed>> The objects.
 	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
+	private function readObjects(array $config): array {
+		return $this->findAllAsArrays(config: $config, failure: 'Pipelinq: forecast query failed');
+	}//end readObjects()
 
 	/**
 	 * Resolve an object's identifier.
@@ -406,15 +368,4 @@ class ForecastService {
 
 		return null;
 	}//end objectId()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

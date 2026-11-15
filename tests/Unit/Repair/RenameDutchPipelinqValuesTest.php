@@ -264,4 +264,130 @@ final class RenameDutchPipelinqValuesTest extends TestCase {
 		$step->run($output);
 
 	}//end testRewritesEveryMappedValueOnAMatchingColumn()
+
+	/**
+	 * A connection over the given prepared statements, quoting identifiers in double quotes.
+	 *
+	 * @param array<int, IPreparedStatement|\Throwable> $statements What each prepare() returns or throws, in order.
+	 *
+	 * @return IDBConnection&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private function connection(array $statements) {
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('prepare')->willReturnCallback(
+			static function () use (&$statements) {
+				$next = array_shift($statements);
+				if ($next instanceof \Throwable) {
+					throw $next;
+				}
+
+				return $next;
+			}
+		);
+		$db->method('getDatabasePlatform')->willReturn(
+			new class {
+				/**
+				 * Quote an identifier.
+				 *
+				 * @param string $identifier Identifier.
+				 *
+				 * @return string
+				 */
+				public function quoteSingleIdentifier(string $identifier): string {
+					return '"' . $identifier . '"';
+				}
+			}
+		);
+
+		return $db;
+
+	}//end connection()
+
+	/**
+	 * A prepared statement returning these rows.
+	 *
+	 * @param array<int, array<string, string>> $rows The rows.
+	 *
+	 * @return IPreparedStatement
+	 */
+	private function rows(array $rows): IPreparedStatement {
+		$statement = $this->createMock(IPreparedStatement::class);
+		$statement->method('fetchAll')->willReturn($rows);
+		return $statement;
+
+	}//end rows()
+
+	/**
+	 * An UPDATE that fails is logged with its table and column, counts as no
+	 * rows, and the other values are still rewritten.
+	 *
+	 * @return void
+	 */
+	public function testAFailingRewriteIsLoggedAndTheRestStillRun(): void {
+		$db = $this->connection([
+			$this->rows([['table_name' => 'oc_openregister_table_1_2']]),
+			$this->rows([['column_name' => 'vat_class']]),
+		]);
+		$expected = count(RenameDutchPipelinqValues::VALUE_MAP['vatClass']);
+		self::assertGreaterThan(1, $expected, 'The test needs more than one mapped value');
+
+		$calls = 0;
+		$db->expects(self::exactly($expected))->method('executeStatement')->willReturnCallback(
+			static function (string $sql, array $params) use (&$calls): int {
+				$calls++;
+				self::assertSame('UPDATE "oc_openregister_table_1_2" SET "vat_class" = ? WHERE "vat_class" = ?', $sql);
+				if ($calls === 1) {
+					throw new \OCP\DB\Exception('deadlock');
+				}
+
+				return 2;
+			}
+		);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'RenameDutchPipelinqValues: value rewrite failed.',
+			['table' => 'oc_openregister_table_1_2', 'column' => 'vat_class', 'exception' => 'deadlock']
+		);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with('RenameDutchPipelinqValues: ' . (2 * ($expected - 1)) . ' row value(s) translated.');
+
+		(new RenameDutchPipelinqValues($db, $logger))->run($output);
+
+	}//end testAFailingRewriteIsLoggedAndTheRestStillRun()
+
+	/**
+	 * A table whose columns cannot be read is skipped with a warning; the next table is still migrated.
+	 *
+	 * @return void
+	 */
+	public function testATableWhoseColumnsCannotBeReadIsSkipped(): void {
+		$db = $this->connection([
+			$this->rows([['table_name' => 'oc_openregister_table_1_2'], ['table_name' => 'oc_openregister_table_1_3']]),
+			new \RuntimeException('permission denied'),
+			$this->rows([['column_name' => 'vat_class']]),
+		]);
+		$expected = count(RenameDutchPipelinqValues::VALUE_MAP['vatClass']);
+		$db->expects(self::exactly($expected))->method('executeStatement')->willReturnCallback(
+			static function (string $sql): int {
+				self::assertStringStartsWith('UPDATE "oc_openregister_table_1_3"', $sql);
+				return 1;
+			}
+		);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'RenameDutchPipelinqValues: could not read columns; skipping table.',
+			['table' => 'oc_openregister_table_1_2', 'exception' => 'permission denied']
+		);
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with('RenameDutchPipelinqValues: ' . $expected . ' row value(s) translated.');
+
+		(new RenameDutchPipelinqValues($db, $logger))->run($output);
+
+	}//end testATableWhoseColumnsCannotBeReadIsSkipped()
 }//end class

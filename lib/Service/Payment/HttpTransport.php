@@ -37,6 +37,17 @@ namespace OCA\Pipelinq\Service\Payment;
  */
 interface HttpTransport {
 	/**
+	 * The reply of a request that was not sent or got no usable answer.
+	 *
+	 * @var array{status: int, body: array<string, mixed>, raw: string}
+	 */
+	public const NO_RESPONSE = [
+		'status' => 0,
+		'body' => [],
+		'raw' => '',
+	];
+
+	/**
 	 * Execute an HTTP request and return { status, body }.
 	 *
 	 * @param string $method The HTTP method (GET, POST, ...).

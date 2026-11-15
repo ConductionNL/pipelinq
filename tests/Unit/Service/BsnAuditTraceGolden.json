@@ -1,0 +1,406 @@
+{
+    "service: defaults": {
+        "uuid": "aud-1",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-executed",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "actor": "behandelaar1",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "ipAddress": "10.0.0.0",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "vogScreening": false,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:info": {
+                    "message": "BSN audit record written",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "outcome": "succeeded"
+                    }
+                }
+            }
+        ]
+    },
+    "service: every field": {
+        "uuid": "aud-2",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-refused",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "actor": "behandelaar1",
+                        "actorRole": "behandelaar-burgerzaken",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "responseCode": 403,
+                        "ipAddress": "192.168.10.0",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "haalcentraalCorrelationId": "corr-1",
+                        "linkedRequest": "req-9",
+                        "vogScreening": true,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:info": {
+                    "message": "BSN audit record written",
+                    "context": {
+                        "action": "brp-lookup-refused",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "outcome": "succeeded"
+                    }
+                }
+            }
+        ]
+    },
+    "service: hash given wins over the raw bsn": {
+        "uuid": "aud-3",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-executed",
+                        "bsnHash": "given-hash",
+                        "actor": "behandelaar1",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "ipAddress": "2001:db8:1::",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "vogScreening": false,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:info": {
+                    "message": "BSN audit record written",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "outcome": "succeeded"
+                    }
+                }
+            }
+        ]
+    },
+    "service: empty hash falls back to hashing": {
+        "uuid": "",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-executed",
+                        "bsnHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "actor": "behandelaar1",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "ipAddress": "10.0.0.0",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "vogScreening": false,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:info": {
+                    "message": "BSN audit record written",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "",
+                        "outcome": "succeeded"
+                    }
+                }
+            }
+        ]
+    },
+    "service: nulls are dropped": {
+        "uuid": "aud-4",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-executed",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "actor": "behandelaar1",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "ipAddress": "10.0.0.0",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "vogScreening": false,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:info": {
+                    "message": "BSN audit record written",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "outcome": "succeeded"
+                    }
+                }
+            }
+        ]
+    },
+    "service: save throws": {
+        "uuid": "",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-refused",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "actor": "behandelaar1",
+                        "actorRole": "behandelaar-burgerzaken",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "responseCode": 403,
+                        "ipAddress": "10.0.0.0",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "haalcentraalCorrelationId": "corr-1",
+                        "linkedRequest": "req-9",
+                        "vogScreening": true,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:error": {
+                    "message": "BSN audit record write failed",
+                    "context": {
+                        "action": "brp-lookup-refused",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "error": "store down"
+                    }
+                }
+            }
+        ]
+    },
+    "service: register not configured": {
+        "uuid": "",
+        "calls": [
+            {
+                "log:error": {
+                    "message": "BSN audit record write failed",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "error": "bsnAuditRecord register/schema not configured."
+                    }
+                }
+            }
+        ]
+    },
+    "service: schema not configured": {
+        "uuid": "",
+        "calls": [
+            {
+                "log:error": {
+                    "message": "BSN audit record write failed",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "error": "bsnAuditRecord register/schema not configured."
+                    }
+                }
+            }
+        ]
+    },
+    "service: unparseable ip": {
+        "uuid": "aud-5",
+        "calls": [
+            {
+                "saveObject": {
+                    "object": {
+                        "action": "brp-lookup-executed",
+                        "bsnHash": "eef30647d28ea37791c73e9ee10e982ee0eebf8f13cd29b144f5f1c4d8ef7596",
+                        "actor": "behandelaar1",
+                        "moment": "<time>",
+                        "verzoekreden": "Adresverificatie",
+                        "purposeBinding": "Wet BRP",
+                        "outcome": "succeeded",
+                        "ipAddress": "",
+                        "userAgent": "Pipelinq/pipelinq (Nextcloud)",
+                        "vogScreening": false,
+                        "retainUntil": "<time>"
+                    },
+                    "extend": [],
+                    "register": "reg-1",
+                    "schema": "schema-audit",
+                    "retainYears": 5
+                }
+            },
+            {
+                "log:info": {
+                    "message": "BSN audit record written",
+                    "context": {
+                        "action": "brp-lookup-executed",
+                        "actor": "behandelaar1",
+                        "bsn": "***4567*",
+                        "outcome": "succeeded"
+                    }
+                }
+            }
+        ]
+    },
+    "caller: lookup refused for a caller without a role": {
+        "status": 403,
+        "calls": [
+            {
+                "recordLookup": {
+                    "actor": "behandelaar1",
+                    "rawBsn": "123456782",
+                    "verzoekreden": "Adresverificatie",
+                    "purposeBinding": "Wet BRP",
+                    "outcome": "refused-unauthorised",
+                    "action": "brp-lookup-refused",
+                    "responseCode": 403,
+                    "haalcentraalCorrelationId": null,
+                    "linkedRequest": "req-7",
+                    "actorRole": null,
+                    "vogScreening": true,
+                    "bsnHash": null
+                }
+            }
+        ]
+    },
+    "caller: lookup executed by an admin": {
+        "status": 200,
+        "calls": [
+            {
+                "recordLookup": {
+                    "actor": "behandelaar1",
+                    "rawBsn": "123456782",
+                    "verzoekreden": "Adresverificatie",
+                    "purposeBinding": "Wet BRP",
+                    "outcome": "succeeded",
+                    "action": "brp-lookup-executed",
+                    "responseCode": 200,
+                    "haalcentraalCorrelationId": "corr-9",
+                    "linkedRequest": "req-7",
+                    "actorRole": "beheerder",
+                    "vogScreening": true,
+                    "bsnHash": null
+                }
+            }
+        ]
+    },
+    "caller: lookup executed by a group member": {
+        "status": 200,
+        "calls": [
+            {
+                "recordLookup": {
+                    "actor": "behandelaar1",
+                    "rawBsn": "123456782",
+                    "verzoekreden": "Adresverificatie",
+                    "purposeBinding": "Wet BRP",
+                    "outcome": "succeeded",
+                    "action": "brp-lookup-executed",
+                    "responseCode": 200,
+                    "haalcentraalCorrelationId": "corr-9",
+                    "linkedRequest": "req-7",
+                    "actorRole": "behandelaar-burgerzaken",
+                    "vogScreening": true,
+                    "bsnHash": null
+                }
+            }
+        ]
+    },
+    "caller: address revealed": {
+        "status": 200,
+        "calls": [
+            {
+                "recordLookup": {
+                    "actor": "behandelaar1",
+                    "rawBsn": "",
+                    "verzoekreden": "Adres onthuld op behandelaarsverantwoording",
+                    "purposeBinding": "Wet BRP art. 3.3 (uitzondering geheimhouding)",
+                    "outcome": "address-revealed",
+                    "action": "brp-address-revealed",
+                    "responseCode": 200,
+                    "haalcentraalCorrelationId": null,
+                    "linkedRequest": null,
+                    "actorRole": "beheerder",
+                    "vogScreening": false,
+                    "bsnHash": "h-person"
+                }
+            }
+        ]
+    },
+    "caller: webhook invalidates the cache": {
+        "status": 1,
+        "calls": [
+            {
+                "recordLookup": {
+                    "actor": "system:brp-webhook",
+                    "rawBsn": "123456782",
+                    "verzoekreden": "BRP mutation webhook",
+                    "purposeBinding": "Cache-consistentie (BRP mutatie)",
+                    "outcome": "cache-invalidated",
+                    "action": "brp-cache-invalidated",
+                    "responseCode": 200,
+                    "haalcentraalCorrelationId": null,
+                    "linkedRequest": null,
+                    "actorRole": "system",
+                    "vogScreening": false,
+                    "bsnHash": null
+                }
+            }
+        ]
+    }
+}

@@ -722,6 +722,7 @@
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "k1",
@@ -730,6 +731,7 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
+						"sizeToContent": true,
 						"showTitle": false
 					},
 					{
@@ -739,6 +741,7 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
+						"sizeToContent": true,
 						"showTitle": false
 					},
 					{
@@ -748,6 +751,7 @@
 						"gridY": 0,
 						"gridWidth": 3,
 						"gridHeight": 2,
+						"sizeToContent": true,
 						"showTitle": false
 					},
 					{
@@ -756,7 +760,8 @@
 						"gridX": 9,
 						"gridY": 0,
 						"gridWidth": 3,
-						"gridHeight": 2
+						"gridHeight": 2,
+						"sizeToContent": true
 					},
 					{
 						"id": "1",
@@ -765,6 +770,7 @@
 						"gridY": 2,
 						"gridWidth": 12,
 						"gridHeight": 18,
+						"sizeToContent": true,
 						"showTitle": false
 					}
 				],

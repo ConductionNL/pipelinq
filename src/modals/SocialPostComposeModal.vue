@@ -16,7 +16,7 @@
   - Rule 4 of the marketing architecture: agents propose, people dispose, and
   - a publish is a gated action with a recorded human decision.
   -
-  - @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+  - @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
   -->
 <template>
 	<CnDialog width="wizard" :name="modalTitle" @closing="$emit('close')">
@@ -163,6 +163,17 @@ import {
 } from '../services/socialApi.js'
 import { canSubmit, fitsForNetworks } from '../services/socialComposer.js'
 
+/**
+ * The id of a stored post, or ''.
+ *
+ * @param {object|null} post The post.
+ * @return {string} Its id or uuid.
+ * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+ */
+function postId(post) {
+	return post?.id || post?.uuid || ''
+}
+
 export default {
 	name: 'SocialPostComposeModal',
 
@@ -208,7 +219,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The modal heading.
-		 * @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
 		 */
 		modalTitle() {
 			return this.post
@@ -218,7 +229,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} One option per account the composer may pick.
-		 * @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
 		 */
 		accountOptions() {
 			return this.accounts.map((account) => ({
@@ -229,7 +240,7 @@ export default {
 
 		/**
 		 * @return {Array<string>} The distinct networks the chosen accounts live on.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		chosenNetworks() {
 			const out = []
@@ -247,7 +258,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The per-network fit, from the shared rule.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		fits() {
 			return fitsForNetworks(this.model, this.chosenNetworks)
@@ -255,7 +266,7 @@ export default {
 
 		/**
 		 * @return {Array<string>} What stops this post being submitted.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		problems() {
 			return canSubmit(this.model, this.chosenNetworks).problems
@@ -263,7 +274,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether the post may go up for approval.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		canSubmitPost() {
 			return this.problems.length === 0
@@ -279,7 +290,7 @@ export default {
 		 * The accounts a post may be sent to.
 		 *
 		 * @return {Promise<void>} Resolves once the list is in.
-		 * @spec openspec/changes/social-publishing/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
 		 */
 		async loadAccounts() {
 			try {
@@ -297,7 +308,7 @@ export default {
 		 *
 		 * @param {string} network The network.
 		 * @return {string} The variant body.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		variantBody(network) {
 			return this.model.variants?.[network]?.body || ''
@@ -313,7 +324,7 @@ export default {
 		 * @param {string} network The network.
 		 * @param {string} value The typed text.
 		 * @return {void}
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+		 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		setVariantBody(network, value) {
 			const variants = { ...this.model.variants }
@@ -326,11 +337,25 @@ export default {
 		},
 
 		/**
+		 * Update the post being edited, or create a new one.
+		 *
+		 * @param {object} payload The post to store.
+		 * @return {Promise<object>} The stored post.
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 */
+		storePost(payload) {
+			const existingId = postId(this.post)
+			return existingId
+				? updatePost(existingId, payload)
+				: createPost(payload)
+		},
+
+		/**
 		 * Save the post, and optionally put it up for approval.
 		 *
 		 * @param {boolean} submit Whether to submit it after saving.
 		 * @return {Promise<void>} Resolves once saved.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 * @spec openspec/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		async save(submit) {
 			this.saving = true
@@ -338,12 +363,8 @@ export default {
 
 			const payload = { ...this.model, accountIds: this.chosenAccounts }
 			try {
-				const existingId = this.post?.id || this.post?.uuid || ''
-				let saved = existingId
-					? await updatePost(existingId, payload)
-					: await createPost(payload)
-
-				const id = saved?.id || saved?.uuid || ''
+				let saved = await this.storePost(payload)
+				const id = postId(saved)
 				if (submit && id) {
 					saved = await movePost(id, 'submit')
 				}
