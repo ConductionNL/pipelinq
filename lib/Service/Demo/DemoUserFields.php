@@ -98,8 +98,9 @@ class DemoUserFields {
 	/**
 	 * Every record with its user fields pointed at the accounts.
 	 *
-	 * @param ExampleUserAccounts                                                                          $accounts The real accounts.
-	 * @param array{objects: array<int, array<string, mixed>>, schemas: array<string, array<string, mixed>>} $records  The records and the schemas by slug.
+	 * @param ExampleUserAccounts $accounts The real accounts.
+	 * @param array{objects: array<int, array<string, mixed>>, schemas: array<string, array<string, mixed>>} $records The records
+	 *                                                                                                        and schemas by slug.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
