@@ -230,28 +230,19 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 	private function matchOrCreateContact(array $submitter): string {
 		$email = $submitter['email'];
 		$name = $submitter['name'];
-		foreach (array_unique([$email, $submitter['submitted']]) as $candidate) {
-			$rows = $this->store->findAll(schemaSlug: self::CONTACT_SCHEMA_SLUG, filters: ['email' => $candidate]);
-			if ($rows !== []) {
-				return $this->store->idOf(payload: $rows[0]);
-			}
-		}
-
 		if ($name === '') {
 			$name = $email;
 		}
 
-		$saved = $this->store->save(
-			schemaSlug: self::CONTACT_SCHEMA_SLUG,
-			payload: [
+		return $this->parties()->contactId(
+			candidates: array_unique([$email, $submitter['submitted']]),
+			newContact: [
 				'name' => $name,
 				'email' => $email,
 				'source' => $submitter['source'],
 				'marketingConsent' => false,
-			],
+			]
 		);
-
-		return $this->store->idOf(payload: $saved);
 	}//end matchOrCreateContact()
 
 	/**
@@ -266,17 +257,7 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 	 * @return string The client id, or an empty string when the write failed.
 	 */
 	private function matchOrCreateClient(string $organisation): string {
-		$rows = $this->store->findAll(schemaSlug: self::CLIENT_SCHEMA_SLUG, filters: ['name' => $organisation]);
-		if ($rows !== []) {
-			return $this->store->idOf(payload: $rows[0]);
-		}
-
-		$saved = $this->store->save(
-			schemaSlug: self::CLIENT_SCHEMA_SLUG,
-			payload: ['name' => $organisation, 'type' => 'organization', 'notes' => 'Created from a form submission.'],
-		);
-
-		return $this->store->idOf(payload: $saved);
+		return $this->parties()->clientId(organisation: $organisation, notes: 'Created from a form submission.');
 	}//end matchOrCreateClient()
 
 	/**
@@ -291,11 +272,15 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 			$utm = [];
 		}
 
-		$block = [];
-		foreach (['campaign', 'source', 'medium', 'term', 'content'] as $key) {
-			$block[$key] = trim((string)($utm[$key] ?? ''));
-		}
-
-		return $block;
+		return $this->parties()->utmBlock(utm: $utm);
 	}//end utmBlock()
+
+	/**
+	 * The submitter's contact and client records.
+	 *
+	 * @return SubmitterParties
+	 */
+	private function parties(): SubmitterParties {
+		return new SubmitterParties(store: $this->store);
+	}//end parties()
 }//end class
