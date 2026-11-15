@@ -29,6 +29,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PosObjectUpsert;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -52,6 +53,7 @@ class PosRoleService implements PosRoleServiceInterface {
 	use RandomUuid;
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
+	use PosObjectUpsert;
 
 	/**
 	 * Constructor.
@@ -158,22 +160,7 @@ class PosRoleService implements PosRoleServiceInterface {
 			'canNoSale' => (bool)($data['canNoSale'] ?? false),
 		];
 
-		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
-
-		$uuid = $id;
-		if ($uuid === '') {
-			$uuid = $this->uuid();
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(object: $saved);
+		return $this->upsertObject(schemaKey: 'posRole_schema', id: $id, payload: $payload);
 	}//end saveRole()
 
 	/**

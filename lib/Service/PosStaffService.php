@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosObjectFetch;
+use OCA\Pipelinq\Util\PosObjectUpsert;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -64,6 +65,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectFetch;
+	use PosObjectUpsert;
 
 	/**
 	 * Maximum consecutive failed PIN attempts before a 15-minute lockout.
@@ -190,22 +192,7 @@ class PosStaffService implements PosStaffServiceInterface {
 			existing: $existing
 		);
 
-		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
-
-		$uuid = $id;
-		if ($uuid === '') {
-			$uuid = $this->uuid();
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->stripSensitive(staff: $this->toArray(object: $saved));
+		return $this->stripSensitive(staff: $this->upsertObject(schemaKey: 'posStaff_schema', id: $id, payload: $payload));
 	}//end saveStaff()
 
 	/**
