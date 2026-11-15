@@ -39,6 +39,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Util\SubscriptionContactKey;
 use OCP\IL10N;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
@@ -58,6 +59,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-self-service-subscribe-creates-a-pending-subscription
  */
 class SubscriptionService implements SubscriptionServiceInterface {
+	use SubscriptionContactKey;
+
 	/**
 	 * A membership awaiting its confirmation link.
 	 *
@@ -657,27 +660,6 @@ class SubscriptionService implements SubscriptionServiceInterface {
 
 		return $this->loadSubscription(id: (string)($payload['s'] ?? ''));
 	}//end subscriptionForUnsubscribeToken()
-
-	/**
-	 * The key the consent ledger is written under for a membership.
-	 *
-	 * A public signup that has not been matched to a contact still needs a
-	 * ledger entry, so the address stands in for the contact id. It is
-	 * stable, it is what the person gave us, and it is what a later match
-	 * will join on.
-	 *
-	 * @param array<string, mixed> $subscription The membership.
-	 *
-	 * @return string The consent key.
-	 */
-	private function contactKeyFor(array $subscription): string {
-		$contactId = (string)($subscription['contactId'] ?? '');
-		if ($contactId !== '') {
-			return $contactId;
-		}
-
-		return (string)($subscription['email'] ?? '');
-	}//end contactKeyFor()
 
 	/**
 	 * Find one membership by list and address.

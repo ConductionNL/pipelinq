@@ -34,6 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\AppointmentServiceLookup;
+use OCA\Pipelinq\Util\ByteTruncate;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -68,6 +69,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	use ConfiguredRegisterId;
 	use AppointmentServiceLookup;
 	use InjectedObjectService;
+	use ByteTruncate;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -862,22 +864,6 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 
 		return $payload;
 	}//end stripSelf()
-
-	/**
-	 * Truncate a string to a maximum length.
-	 *
-	 * @param string $value Raw value.
-	 * @param int $max Maximum length.
-	 *
-	 * @return string
-	 */
-	private function truncate(string $value, int $max): string {
-		if (strlen($value) <= $max) {
-			return $value;
-		}
-
-		return substr($value, 0, $max);
-	}//end truncate()
 
 	/**
 	 * Compose a UTC ISO-8601 timestamp from a date + local HH:MM time.

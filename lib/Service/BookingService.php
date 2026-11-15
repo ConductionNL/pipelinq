@@ -37,6 +37,7 @@ use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCA\Pipelinq\Util\AppointmentServiceLookup;
+use OCA\Pipelinq\Util\ByteTruncate;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -77,6 +78,7 @@ class BookingService implements BookingServiceInterface {
 	use ConfiguredRegisterId;
 	use AppointmentServiceLookup;
 	use InjectedObjectService;
+	use ByteTruncate;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
@@ -1709,22 +1711,6 @@ class BookingService implements BookingServiceInterface {
 
 		return 'portal';
 	}//end normaliseSource()
-
-	/**
-	 * Truncate a string to a maximum length.
-	 *
-	 * @param string $value Raw value.
-	 * @param int $max Maximum length.
-	 *
-	 * @return string
-	 */
-	private function truncate(string $value, int $max): string {
-		if (strlen($value) <= $max) {
-			return $value;
-		}
-
-		return substr($value, 0, $max);
-	}//end truncate()
 
 	/**
 	 * True when the value is a parseable ISO-8601 datetime.

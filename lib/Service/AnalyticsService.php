@@ -42,6 +42,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\WinChanceWeightedValue;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -64,6 +65,7 @@ use RuntimeException;
 class AnalyticsService implements AnalyticsServiceInterface {
 	use PayloadToArray;
 	use InjectedObjectService;
+	use WinChanceWeightedValue;
 
 	/**
 	 * Allowed period selectors (ADR-018, REQ-KB360-021).
@@ -1030,30 +1032,6 @@ class AnalyticsService implements AnalyticsServiceInterface {
 
 		return $fields;
 	}//end filterFields()
-
-	/**
-	 * A lead's value weighted by its win chance.
-	 *
-	 * The win chance is the lead's qualification score read as a percentage,
-	 * clamped to 0-100; a lead without a score counts as 0 (decided by Ruben,
-	 * 2026-10-06). The `probability` field is hidden on the lead form and
-	 * empty on real installs, so it never feeds a forecast. RapportageService
-	 * applies the same rule; keep the two in step.
-	 *
-	 * @param array<string, mixed> $lead The lead row.
-	 *
-	 * @return float The weighted value.
-	 *
-	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 */
-	private function winChanceWeightedValue(array $lead): float {
-		$score = ($lead['qualificationScore'] ?? null);
-		if (is_numeric($score) === false) {
-			return 0.0;
-		}
-
-		return ((float)($lead['value'] ?? 0) * (max(0.0, min(100.0, (float)$score)) / 100.0));
-	}//end winChanceWeightedValue()
 
 	/**
 	 * Time-bucketed revenue series: settled-POS turnover + won-deal value.

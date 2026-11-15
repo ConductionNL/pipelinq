@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -77,6 +78,7 @@ class SegmentService implements SegmentServiceInterface {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
+	use PageCount;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -404,25 +406,6 @@ class SegmentService implements SegmentServiceInterface {
 			],
 		];
 	}//end listSegments()
-
-	/**
-	 * Compute the page-count from a total + page-size pair.
-	 *
-	 * Centralised so the inline ternary stays out of the envelope
-	 * builder (matches the team's "no inline IF" coding style).
-	 *
-	 * @param int $total Total row count.
-	 * @param int $limit Page size.
-	 *
-	 * @return int Page count (0 when total is 0).
-	 */
-	private function computePages(int $total, int $limit): int {
-		if ($total <= 0 || $limit <= 0) {
-			return 0;
-		}
-
-		return (int)ceil($total / $limit);
-	}//end computePages()
 
 	/**
 	 * Public accessor returning one Segment payload (or null).

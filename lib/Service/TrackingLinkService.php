@@ -45,6 +45,7 @@ use OCA\Pipelinq\Util\Base64UrlDecode;
 use OCA\Pipelinq\Util\BlastDeliveryLookup;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSigningKey;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -74,6 +75,7 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	use ContainerObjectService;
 	use Base64UrlDecode;
 	use BlastDeliveryLookup;
+	use ConfiguredSigningKey;
 
 	/**
 	 * App-config key for the per-instance HMAC signing secret.
@@ -459,21 +461,6 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 		$signature = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
 		return ($encoded . '.' . $signature);
 	}//end signPayload()
-
-	/**
-	 * Resolve (or lazily mint) the per-instance HMAC signing key.
-	 *
-	 * @return string The signing key.
-	 */
-	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, '');
-		if ($key === '') {
-			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
-		}
-
-		return $key;
-	}//end signingKey()
 
 	/**
 	 * Resolve the token TTL in seconds — 90-day fixed default,

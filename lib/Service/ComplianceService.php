@@ -40,6 +40,7 @@ use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -71,6 +72,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
+	use PageCount;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -911,25 +913,6 @@ class ComplianceService implements ComplianceServiceInterface {
 			],
 		];
 	}//end listTemplates()
-
-	/**
-	 * Compute the page-count from a total + page-size pair.
-	 *
-	 * Centralised so the inline ternary stays out of the envelope
-	 * builders (matches the team's "no inline IF" coding style).
-	 *
-	 * @param int $total Total row count.
-	 * @param int $limit Page size.
-	 *
-	 * @return int Page count (0 when total is 0).
-	 */
-	private function computePages(int $total, int $limit): int {
-		if ($total <= 0 || $limit <= 0) {
-			return 0;
-		}
-
-		return (int)ceil($total / $limit);
-	}//end computePages()
 
 	/**
 	 * Fetch one CampaignTemplate by id.

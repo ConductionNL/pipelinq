@@ -33,13 +33,13 @@ use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RequiredObjectService;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -56,6 +56,7 @@ use Throwable;
 class AvailabilityCacheRefreshJob extends TimedJob {
 	use AnyPayloadToArray;
 	use RowIdOf;
+	use RequiredObjectService;
 
 
 	/**
@@ -309,27 +310,4 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	private function schemaSlug(string $key): string {
 		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaSlug()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 */
-	private function getObjectService(): object {
-		// Availability established before the reach (ADR-083) — the lookup names
-		// OpenRegister only as a string, so without this the dependency is
-		// declared nowhere a reader or a gate can see it. Converting to a typed
-		// constructor property is the ADR's preferred shape: pipelinq#1160.
-		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException('The OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
-	}//end getObjectService()
 }//end class

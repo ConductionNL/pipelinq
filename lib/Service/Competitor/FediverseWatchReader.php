@@ -37,6 +37,7 @@ namespace OCA\Pipelinq\Service\Competitor;
 
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
+use OCA\Pipelinq\Util\ShortPlainText;
 
 /**
  * Public Mastodon and Bluesky timelines.
@@ -51,6 +52,7 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
  *  the method name does.
  */
 class FediverseWatchReader {
+	use ShortPlainText;
 
 	/**
 	 * Bluesky's public AppView, which serves an author feed without a grant.
@@ -339,20 +341,4 @@ class FediverseWatchReader {
 
 		return ('https://bsky.app/profile/' . rawurlencode($handle) . '/post/' . rawurlencode($rkey));
 	}//end blueskyPermalink()
-
-	/**
-	 * A plain-text summary, capped.
-	 *
-	 * @param string $value The post body, possibly HTML.
-	 *
-	 * @return string
-	 */
-	private function shorten(string $value): string {
-		$text = trim(strip_tags($value));
-		if (mb_strlen($text, 'UTF-8') <= 500) {
-			return $text;
-		}
-
-		return (mb_substr($text, 0, 497, 'UTF-8') . '...');
-	}//end shorten()
 }//end class

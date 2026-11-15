@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\Base64UrlDecode;
+use OCA\Pipelinq\Util\ConfiguredSigningKey;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -54,6 +55,7 @@ use OCP\Security\ISecureRandom;
  */
 class ListTokenService {
 	use Base64UrlDecode;
+	use ConfiguredSigningKey;
 
 	/**
 	 * Purpose of a confirmation link.
@@ -392,21 +394,6 @@ class ListTokenService {
 		$signature = $this->base64UrlEncode(data: hash_hmac('sha256', $encoded, $this->signingKey(), true));
 		return ($encoded . '.' . $signature);
 	}//end sign()
-
-	/**
-	 * Resolve, or lazily mint, the per-instance HMAC signing key.
-	 *
-	 * @return string The signing key.
-	 */
-	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, '');
-		if ($key === '') {
-			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
-		}
-
-		return $key;
-	}//end signingKey()
 
 	/**
 	 * Resolve a TTL in seconds from app config, falling back to a default.
