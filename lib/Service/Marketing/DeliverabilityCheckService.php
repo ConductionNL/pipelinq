@@ -34,6 +34,7 @@ use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Util\QuietObjectSave;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -50,6 +51,7 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 	use SavedPayloadId;
 	use ConfiguredMailTransportSchemaSlug;
 	use ContainerObjectServiceLookup;
+	use QuietObjectSave;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -316,21 +318,12 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 		$payload['dmarcStatus'] = $verdict['dmarcStatus'];
 		$payload['deliverabilityCheckedAt'] = $verdict['checkedAt'];
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('DeliverabilityCheckService.persistVerdict: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getMailTransportSchemaSlug(),
+			id: $id,
+			failure: 'DeliverabilityCheckService.persistVerdict: save failed'
+		);
 	}//end persistVerdict()
 
 	/**

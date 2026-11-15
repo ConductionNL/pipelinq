@@ -48,6 +48,7 @@ use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Util\QuietObjectSave;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -82,6 +83,7 @@ class MailTransportService {
 	use ConfiguredMailTransportSchemaSlug;
 	use CastSerialisedToArray;
 	use ContainerObjectServiceLookup;
+	use QuietObjectSave;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -814,21 +816,12 @@ class MailTransportService {
 	 * @return void
 	 */
 	private function saveObject(array $payload, string $id): void {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('MailTransportService.saveObject: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getMailTransportSchemaSlug(),
+			id: $id,
+			failure: 'MailTransportService.saveObject: save failed'
+		);
 	}//end saveObject()
 
 	/**
@@ -840,21 +833,12 @@ class MailTransportService {
 	 * @return void
 	 */
 	private function saveDelivery(array $payload, string $id): void {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getBlastDeliverySchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('MailTransportService.saveDelivery: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getBlastDeliverySchemaSlug(),
+			id: $id,
+			failure: 'MailTransportService.saveDelivery: save failed'
+		);
 	}//end saveDelivery()
 
 	/**
