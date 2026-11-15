@@ -1233,7 +1233,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		if ($this->signals->isSignalField(field: $field) === true) {
-			return $this->evaluateSignalLeaf(field: $field, operator: $operator, handler: $handler, value: $value, entity: $entity);
+			return $this->evaluateSignalLeaf(leaf: $leaf, entity: $entity);
 		}
 
 		if (str_contains($field, '.') === true) {
@@ -1257,23 +1257,21 @@ class SegmentService implements SegmentServiceInterface {
 	 * exception, because "this customer has no bookkeeping" is a question a
 	 * marketer may legitimately ask.
 	 *
-	 * @param string $field The signal field.
-	 * @param string $operator The rule operator, as written.
-	 * @param callable(mixed, mixed): bool $handler Operator handler.
-	 * @param mixed $value Rule value.
+	 * @param array<string, mixed> $leaf   Leaf predicate on a signal field, with a known operator.
 	 * @param array<string, mixed> $entity Entity payload.
 	 *
 	 * @return bool Whether the entity matches.
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
-	private function evaluateSignalLeaf(string $field, string $operator, callable $handler, mixed $value, array $entity): bool {
-		$actual = $this->signals->valueFor(field: $field, entity: $entity);
+	private function evaluateSignalLeaf(array $leaf, array $entity): bool {
+		$operator = (string)($leaf['operator'] ?? 'equals');
+		$actual = $this->signals->valueFor(field: (string)$leaf['field'], entity: $entity);
 		if ($actual === null) {
 			return ($operator === 'isNull');
 		}
 
-		return $handler($actual, $value);
+		return $this->operatorHandlers()[$operator]($actual, ($leaf['value'] ?? null));
 	}//end evaluateSignalLeaf()
 
 	/**
