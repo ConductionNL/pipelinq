@@ -346,25 +346,26 @@ class IngestProductVendorMaster implements IRepairStep {
 		$lookup = ['register' => $registerId, 'schema' => $schemaId, 'product' => $shillinqProduct];
 		$existing = $this->findProductBySku(objectService: $objectService, lookup: $lookup);
 
+		$lookup['objectService'] = $objectService;
 		if ($existing !== null) {
-			return $this->fillExistingProduct(objectService: $objectService, lookup: $lookup, existing: $existing);
+			return $this->fillExistingProduct(lookup: $lookup, existing: $existing);
 		}
 
-		return $this->createProduct(objectService: $objectService, lookup: $lookup);
+		return $this->createProduct(lookup: $lookup);
 	}//end matchFillOrCreateProduct()
 
 	/**
 	 * Fill the empty supply-master fields of a matched product and link its source record.
 	 *
-	 * @param object              $objectService The OpenRegister ObjectService.
-	 * @param array<string,mixed> $lookup        Keys: register, schema, product (the shillinq record).
-	 * @param array<string,mixed> $existing      The matched pipelinq product.
+	 * @param array<string,mixed> $lookup   Keys: register, schema, product (the shillinq record), objectService.
+	 * @param array<string,mixed> $existing The matched pipelinq product.
 	 *
 	 * @return string The pipelinq productId.
 	 *
 	 * @throws \Throwable When a write fails.
 	 */
-	private function fillExistingProduct(object $objectService, array $lookup, array $existing): string {
+	private function fillExistingProduct(array $lookup, array $existing): string {
+		$objectService = $lookup['objectService'];
 		$productId = $existing['productId'] ?? $existing['id'] ?? null;
 		// Fill-only: only write supply-master fields that are currently empty.
 		$updates = $this->buildProductFillPayload(existing: $existing, shillinqSource: $lookup['product']);
@@ -378,8 +379,7 @@ class IngestProductVendorMaster implements IRepairStep {
 		}
 
 		$this->writeSourceRecord(
-			objectService: $objectService,
-			registerId: $lookup['register'],
+			store: ['objectService' => $objectService, 'registerId' => $lookup['register']],
 			link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $lookup['product']),
 		);
 
@@ -389,14 +389,14 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Create a product from a shillinq record and link its source record.
 	 *
-	 * @param object              $objectService The OpenRegister ObjectService.
-	 * @param array<string,mixed> $lookup        Keys: register, schema, product (the shillinq record).
+	 * @param array<string,mixed> $lookup Keys: register, schema, product (the shillinq record), objectService.
 	 *
 	 * @return string The pipelinq productId.
 	 *
 	 * @throws \Throwable When a write fails.
 	 */
-	private function createProduct(object $objectService, array $lookup): string {
+	private function createProduct(array $lookup): string {
+		$objectService = $lookup['objectService'];
 		// Create: map shillinq fields onto the extended product schema.
 		$newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $lookup['product']);
 		$created = $objectService->saveObject(object: $newProduct, register: $lookup['register'], schema: $lookup['schema'], uuid: null);
@@ -405,11 +405,10 @@ class IngestProductVendorMaster implements IRepairStep {
 			$createdArr = $created->jsonSerialize();
 		}
 
-		$productId = $this->reconcileProductId(objectService: $objectService, lookup: $lookup, createdArr: $createdArr);
+		$productId = $this->reconcileProductId(lookup: $lookup, createdArr: $createdArr);
 
 		$this->writeSourceRecord(
-			objectService: $objectService,
-			registerId: $lookup['register'],
+			store: ['objectService' => $objectService, 'registerId' => $lookup['register']],
 			link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $lookup['product']),
 		);
 
@@ -419,21 +418,20 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Ensure a created product's productId equals its object UUID, returning the productId.
 	 *
-	 * @param object              $objectService The OpenRegister ObjectService.
-	 * @param array<string,mixed> $lookup        Keys: register, schema, product (the shillinq record).
-	 * @param array<string,mixed> $createdArr    The created product.
+	 * @param array<string,mixed> $lookup     Keys: register, schema, product (the shillinq record), objectService.
+	 * @param array<string,mixed> $createdArr The created product.
 	 *
 	 * @return mixed The productId.
 	 *
 	 * @throws \Throwable When the write fails.
 	 */
-	private function reconcileProductId(object $objectService, array $lookup, array $createdArr): mixed {
+	private function reconcileProductId(array $lookup, array $createdArr): mixed {
 		$productId = $createdArr['productId'] ?? $createdArr['id'] ?? null;
 
 		// Ensure productId == object UUID (REQ-PVM-002).
 		if (isset($createdArr['id']) === true && ($createdArr['productId'] ?? null) !== $createdArr['id']) {
 			$createdArr['productId'] = $createdArr['id'];
-			$objectService->saveObject(object: $createdArr, register: $lookup['register'], schema: $lookup['schema'], uuid: $createdArr['id']);
+			$lookup['objectService']->saveObject(object: $createdArr, register: $lookup['register'], schema: $lookup['schema'], uuid: $createdArr['id']);
 			$productId = $createdArr['id'];
 		}
 
@@ -567,7 +565,7 @@ class IngestProductVendorMaster implements IRepairStep {
 	private function storeSupplier(SupplierTarget $target, SourceRecordLink $link): void {
 		$this->upsertSupplier(target: $target, link: $link);
 
-		$this->writeSourceRecord(objectService: $target->objectService, registerId: $target->registerId, link: $link);
+		$this->writeSourceRecord(store: ['objectService' => $target->objectService, 'registerId' => $target->registerId], link: $link);
 	}//end storeSupplier()
 
 	/**
@@ -932,13 +930,12 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Write an MDM sourceRecord for provenance tracking.
 	 *
-	 * @param mixed            $objectService The OpenRegister ObjectService.
-	 * @param string           $registerId    The register ID.
-	 * @param SourceRecordLink $link          The ingested record and its master entity.
+	 * @param array{objectService: mixed, registerId: string} $store The OpenRegister ObjectService and the register ID.
+	 * @param SourceRecordLink                                $link  The ingested record and its master entity.
 	 *
 	 * @return void
 	 */
-	private function writeSourceRecord(mixed $objectService, string $registerId, SourceRecordLink $link): void {
+	private function writeSourceRecord(array $store, SourceRecordLink $link): void {
 		$sourceRecordSchemaId = $this->appConfig->getValueString(
 			AppIdentity::APP_ID,
 			'sourceRecord_schema',
@@ -953,9 +950,9 @@ class IngestProductVendorMaster implements IRepairStep {
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
 		try {
-			$objectService->saveObject(
+			$store['objectService']->saveObject(
 				object: $link->toRecord(now: $now),
-				register: $registerId,
+				register: $store['registerId'],
 				schema: $sourceRecordSchemaId,
 				uuid: null
 			);
