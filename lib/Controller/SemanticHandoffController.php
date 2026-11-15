@@ -37,6 +37,7 @@ use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
+use OCA\Pipelinq\Util\LooseServiceLookup;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -81,6 +82,7 @@ use Throwable;
 class SemanticHandoffController extends Controller {
 	use PayloadToArray;
 	use ConfiguredSchemaSlug;
+	use LooseServiceLookup;
 
 	/**
 	 * Canonical semantic kind URIs.
@@ -715,17 +717,7 @@ class SemanticHandoffController extends Controller {
 	 * @return object|null Service or null.
 	 */
 	private function objectService(): ?object {
-		try {
-			$service = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (is_object($service) === false || method_exists($service, 'find') === false) {
-			return null;
-		}
-
-		return $service;
+		return $this->looseService(serviceId: 'OCA\\OpenRegister\\Service\\ObjectService', method: 'find');
 	}//end objectService()
 
 	/**
