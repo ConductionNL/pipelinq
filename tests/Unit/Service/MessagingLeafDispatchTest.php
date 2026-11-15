@@ -331,4 +331,35 @@ class MessagingLeafDispatchTest extends TestCase {
 			sourceId: 'twilio-sms',
 		);
 	}//end makeTwilio()
+	/**
+	 * The exact bodies the WhatsApp sends hand to the leaf: a template with
+	 * its language and one text parameter per value, a text message, and an
+	 * image message for the first media id; the vendor is empty when the
+	 * provider names none.
+	 *
+	 * @return void
+	 */
+	public function testEveryWhatsAppBody(): void {
+		$client = new WhatsAppProviderClient($this->container, $this->logger);
+		$this->leaf->nextResult = ['status' => 'sent', 'response' => ['messages' => [['id' => 'wamid.1']]]];
+
+		$this->assertSame(
+			['externalMessageId' => 'wamid.1', 'vendor' => ''],
+			$client->sendTemplate(channelProvider: ['sourceId' => 'wa'], phoneNumber: '+316', templateName: 'welcome', language: 'nl', parameters: ['k' => 'Jan', 'x' => 'Piet'])
+		);
+		$client->sendFreeForm(channelProvider: ['openconnectorSourceId' => 'wa2', 'vendor' => 'meta'], phoneNumber: '+317', body: 'hoi');
+		$client->sendFreeForm(channelProvider: ['sourceId' => 'wa'], phoneNumber: '+318', body: 'kijk', mediaIds: ['m-1', 'm-2']);
+
+		$this->assertSame(
+			[
+				['wa', 'messages', ['messaging_product' => 'whatsapp', 'to' => '+316', 'type' => 'template', 'template' => ['name' => 'welcome', 'language' => ['code' => 'nl'], 'components' => [['type' => 'body', 'parameters' => [['type' => 'text', 'text' => 'Jan'], ['type' => 'text', 'text' => 'Piet']]]]]]],
+				['wa2', 'messages', ['messaging_product' => 'whatsapp', 'to' => '+317', 'type' => 'text', 'text' => ['body' => 'hoi']]],
+				['wa', 'messages', ['messaging_product' => 'whatsapp', 'to' => '+318', 'type' => 'image', 'text' => ['body' => 'kijk'], 'image' => ['id' => 'm-1']]],
+			],
+			array_map(static fn (array $call): array => [$call['source'], $call['path'], $call['body']], $this->leaf->calls)
+		);
+
+		$this->expectException(PermanentSmsProviderException::class);
+		$client->sendTemplate(channelProvider: [], phoneNumber: '+316', templateName: 'welcome', language: 'nl', parameters: []);
+	}//end testEveryWhatsAppBody()
 }//end class

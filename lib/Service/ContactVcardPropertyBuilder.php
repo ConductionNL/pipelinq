@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -35,6 +36,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactVcardPropertyBuilder {
 	use ResultToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -142,7 +144,7 @@ class ContactVcardPropertyBuilder {
 	 *
 	 * @return array The updated properties.
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-write-back-maps-channel-arrays-to-typed-vcard-properties
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-maps-channel-arrays-to-typed-vcard-properties
 	 */
 	private function addChannelProperties(array $properties, array $objData): array {
 		$emailEntries = $this->buildTypedVcardEntries(entries: ($objData['emails'] ?? []));
@@ -311,8 +313,8 @@ class ContactVcardPropertyBuilder {
 	 */
 	private function resolveClientName(string $clientId): ?string {
 		$objectService = $this->getObjectService();
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 
 		if ($registerId === '' || $schemaId === '') {
 			return null;
@@ -332,13 +334,4 @@ class ContactVcardPropertyBuilder {
 			return null;
 		}
 	}//end resolveClientName()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

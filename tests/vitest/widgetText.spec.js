@@ -58,4 +58,9 @@ describe('toText', () => {
 		// wrapped, so the string is pulled straight out.
 		expect(toText({ nl: 'test' })).toBe('test')
 	})
+
+	it('reads every kind of value the same way, field order included', () => {
+		const cases = [null, undefined, '', 'a', 0, 1.5, NaN, true, false, [], [null, 'a', 0, 2, { title: 'x' }], {}, { title: null, name: 'n' }, { label: 0 }, { value: false }, { nl: 'test' }, { '@self': { title: 't' } }, { '@self': { name: 'n' } }, { '@self': null }, { title: { nl: 'deep' } }, { name: '', label: 'L' }, 10n, { title: undefined, value: [1, 2] }]
+		expect(cases.map((value) => toText(value))).toEqual(['', '', '', 'a', '0', '1.5', 'NaN', 'true', 'false', '', 'a, 0, 2, x', '', 'n', '0', 'false', 'test', 't', 'n', '', 'deep', '', '10', '1, 2'])
+	})
 })

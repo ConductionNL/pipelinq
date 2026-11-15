@@ -46,7 +46,7 @@ import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
 import { useObjectStore } from '../../store/modules/object.js'
-import { exportPageTabs } from './exportPageTabs.js'
+import exportListMixin from './exportListMixin.js'
 
 export default {
 	name: 'ExportRuns',
@@ -54,6 +54,8 @@ export default {
 		CnIndexPage,
 		NcButton,
 	},
+
+	mixins: [exportListMixin],
 
 	setup() {
 		const sidebarState = inject('sidebarState', null)
@@ -65,24 +67,7 @@ export default {
 		})
 	},
 
-	data() {
-		return {
-			busyId: null,
-			refreshing: false,
-		}
-	},
-
 	computed: {
-		/**
-		 * The tab strip over the BI export lists (board PqBiExport).
-		 *
-		 * @return {Array<object>}
-		 * @spec openspec/specs/bi-export-board/spec.md#requirement-the-bi-export-lists-share-one-tab-strip
-		 */
-		pageTabs() {
-			return exportPageTabs(t)
-		},
-
 		/**
 		 * Columns shown on the list, in order.
 		 *
@@ -101,21 +86,6 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
-		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
-		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
-		},
-
 		/**
 		 * Whether a run can be retried.
 		 *

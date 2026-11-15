@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "MainRegisterReader::find": [
+                "MainRegisterReaderInterface::findAsCaller": [
                     "ticket",
                     "sample-id"
                 ]
@@ -76,7 +76,7 @@
                 ]
             },
             {
-                "MainRegisterReader::find": [
+                "MainRegisterReaderInterface::findAsCaller": [
                     "ticket",
                     "sample-id"
                 ]

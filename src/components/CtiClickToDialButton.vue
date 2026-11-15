@@ -5,7 +5,7 @@
   - CtiClickToDialButton renders a phone icon next to any phone number;
   - clicking it issues a click-to-dial via the CTI API and surfaces a toast.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.3
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.3
   -->
 <template>
 	<span class="cti-click-to-dial">
@@ -33,6 +33,13 @@ import { NcButton } from '@nextcloud/vue'
 import PhoneIcon from 'vue-material-design-icons/Phone.vue'
 import { clickToDial } from '../services/ctiApi.js'
 
+/**
+ * @param {string} error Why the dial failed.
+ */
+function showDialFailure(error) {
+	showError(t('pipelinq', 'Click-to-dial failed: {error}', { error }))
+}
+
 export default {
 	name: 'CtiClickToDialButton',
 	components: { NcButton, PhoneIcon },
@@ -58,6 +65,22 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Say the call is placed and tell the host, or say why it was not.
+		 *
+		 * @param {object|null} result The dial answer.
+		 */
+		reportDial(result) {
+			if (result && result.success) {
+				showSuccess(
+					t('pipelinq', 'Call initiated — your extension will ring.'),
+				)
+				this.$emit('initiated', result)
+				return
+			}
+			showDialFailure((result && result.error) || 'unknown error')
+		},
+
 		async dial() {
 			if (!this.targetNumber || !this.extension) {
 				showError(
@@ -67,25 +90,9 @@ export default {
 			}
 			this.dialing = true
 			try {
-				const result = await clickToDial(this.targetNumber, this.extension)
-				if (result && result.success) {
-					showSuccess(
-						t('pipelinq', 'Call initiated — your extension will ring.'),
-					)
-					this.$emit('initiated', result)
-				} else {
-					showError(
-						t('pipelinq', 'Click-to-dial failed: {error}', {
-							error: (result && result.error) || 'unknown error',
-						}),
-					)
-				}
+				this.reportDial(await clickToDial(this.targetNumber, this.extension))
 			} catch (e) {
-				showError(
-					t('pipelinq', 'Click-to-dial failed: {error}', {
-						error: e.message || 'network error',
-					}),
-				)
+				showDialFailure(e.message || 'network error')
 			} finally {
 				this.dialing = false
 			}

@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ContactmomentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -45,19 +45,19 @@ class ContactmomentController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContactmomentService $contactmomentService The contactmoment service.
+	 * @param ContactmomentServiceInterface $contactmomentService The contactmoment service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ContactmomentService $contactmomentService,
+		private ContactmomentServiceInterface $contactmomentService,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -88,22 +88,37 @@ class ContactmomentController extends Controller {
 				$user->getUID()
 			);
 			return new JSONResponse(['success' => true]);
-		} catch (DoesNotExistException $e) {
+		} catch (\Exception $e) {
+			return $this->deleteFailure(exception: $e);
+		}
+	}//end destroy()
+
+	/**
+	 * The answer to a failed delete: 404 when missing, 403 when not permitted, else a logged 500.
+	 *
+	 * @param \Exception $exception What the delete threw.
+	 *
+	 * @return JSONResponse
+	 */
+	private function deleteFailure(\Exception $exception): JSONResponse {
+		if ($exception instanceof DoesNotExistException) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Contactmoment not found')],
 				404
 			);
-		} catch (NotPermittedException $e) {
+		}
+
+		if ($exception instanceof NotPermittedException) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('You do not have permission to delete this contactmoment')],
 				403
 			);
-		} catch (\Exception $e) {
-			$this->logger->error('ContactmomentController::destroy failed', ['exception' => $e]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Operation failed')],
-				500
-			);
-		}//end try
-	}//end destroy()
+		}
+
+		$this->logger->error('ContactmomentController::destroy failed', ['exception' => $exception]);
+		return new JSONResponse(
+			['error' => $this->l10n->t('Operation failed')],
+			500
+		);
+	}//end deleteFailure()
 }//end class

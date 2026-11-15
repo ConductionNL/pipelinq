@@ -6,7 +6,7 @@
  * any POS view. Every check fails closed when no session is open — the
  * absence of a session is treated as zero permissions.
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#6.1
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#6.1
  */
 
 import { usePosSessionStore } from '../store/modules/posSessionStore.js'

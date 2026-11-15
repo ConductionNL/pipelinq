@@ -60,7 +60,7 @@ class TicketWooRequestControllerTest extends TestCase {
 		$policy->method('isPrivileged')->willReturn($privileged);
 
 		$tickets = $this->createMock(MainRegisterReader::class);
-		$tickets->method('find')->willReturn($ticket);
+		$tickets->method('findAsCaller')->willReturn($ticket);
 
 		$conversion = $this->createMock(WooRequestConversionService::class);
 		$conversion->method('convert')->willReturn($result);
@@ -129,7 +129,7 @@ class TicketWooRequestControllerTest extends TestCase {
 		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
 		$policy->method('isPrivileged')->willReturn(true);
 		$tickets = $this->createMock(MainRegisterReader::class);
-		$tickets->method('find')->willThrowException(new \RuntimeException('Main register schema is not configured.'));
+		$tickets->method('findAsCaller')->willThrowException(new \RuntimeException('Main register schema is not configured.'));
 		$conversion = $this->createMock(WooRequestConversionService::class);
 		$conversion->expects($this->never())->method('convert');
 

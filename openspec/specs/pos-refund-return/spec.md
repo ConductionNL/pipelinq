@@ -48,7 +48,7 @@ See design.md for full schema definitions.
 
 ## Requirements
 
-### REQ-REF-001: Refund Reason Configuration [MVP]
+### Requirement: REQ-REF-001: Refund Reason Configuration [MVP]
 
 The system MUST provide a configurable list of standard refund reasons. Reasons are
 stored as OpenRegister `refundReason` objects in the pipelinq register. Managers can
@@ -76,7 +76,7 @@ mark reasons as active/inactive to control which appear in refund forms.
 
 ---
 
-### REQ-REF-002: Create Refund from Transaction [MVP]
+### Requirement: REQ-REF-002: Create Refund from Transaction [MVP]
 
 The system MUST allow creating a refund against any settled or confirmed posTransaction.
 The refund captures the original transaction reference, cashier, and payment method for
@@ -108,7 +108,7 @@ reversal purposes.
 
 ---
 
-### REQ-REF-003: Select Items and Quantities to Refund [MVP]
+### Requirement: REQ-REF-003: Select Items and Quantities to Refund [MVP]
 
 The system MUST allow the user to select which line items from the original transaction
 are being refunded, and how much of each (supporting partial refunds).
@@ -151,7 +151,7 @@ are being refunded, and how much of each (supporting partial refunds).
 
 ---
 
-### REQ-REF-004: Refund Reason per Item [MVP]
+### Requirement: REQ-REF-004: Refund Reason per Item [MVP]
 
 The system SHALL allow each refund line to carry its own reason (e.g., one item damaged, another unwanted), and the overall refund MUST also record a primary reason.
 
@@ -172,7 +172,7 @@ The system SHALL allow each refund line to carry its own reason (e.g., one item 
 
 ---
 
-### REQ-REF-005: Restock Flag per Item [MVP]
+### Requirement: REQ-REF-005: Restock Flag per Item [MVP]
 
 Each refund line MUST include a boolean `restock` flag (default: true). When restock=true
 and the refund is completed, a stock movement event is emitted to Shillinq to restore inventory.
@@ -203,7 +203,7 @@ and the refund is completed, a stock movement event is emitted to Shillinq to re
 
 ---
 
-### REQ-REF-006: Confirm Refund and Emit Events [MVP]
+### Requirement: REQ-REF-006: Confirm Refund and Emit Events [MVP]
 
 When a refund is confirmed, the system MUST validate the refund, compute final totals,
 set status=completed, emit the refund event to Shillinq for accounting, and emit stock
@@ -245,7 +245,7 @@ movement events for restocked items.
 
 ---
 
-### REQ-REF-007: Reject Refund [MVP]
+### Requirement: REQ-REF-007: Reject Refund [MVP]
 
 The system SHALL allow a pending refund to be rejected by a manager with a reason code. Rejected refunds MUST be
 immutable and MUST NOT trigger any events or stock changes.
@@ -272,7 +272,7 @@ immutable and MUST NOT trigger any events or stock changes.
 
 ---
 
-### REQ-REF-008: Refund List View [MVP]
+### Requirement: REQ-REF-008: Refund List View [MVP]
 
 The system MUST provide a list view of all refunds with search, filter, and sort capabilities.
 
@@ -309,7 +309,7 @@ The system MUST provide a list view of all refunds with search, filter, and sort
 
 ---
 
-### REQ-REF-009: Refund Detail View [MVP]
+### Requirement: REQ-REF-009: Refund Detail View [MVP]
 
 The system MUST provide a detail view showing the full refund, linked original transaction
 context, refund line items, and lifecycle actions.
@@ -347,7 +347,7 @@ context, refund line items, and lifecycle actions.
 
 ---
 
-### REQ-REF-010: Full Transaction Refund [MVP]
+### Requirement: REQ-REF-010: Full Transaction Refund [MVP]
 
 The system MUST support refunding an entire transaction at once (all line items, full quantities).
 
@@ -375,7 +375,7 @@ The system MUST support refunding an entire transaction at once (all line items,
 
 ---
 
-### REQ-REF-011: Partial Transaction Refund [MVP]
+### Requirement: REQ-REF-011: Partial Transaction Refund [MVP]
 
 The system MUST support refunding a subset of items or quantities from a transaction.
 
@@ -395,7 +395,7 @@ The system MUST support refunding a subset of items or quantities from a transac
 
 ---
 
-### REQ-REF-012: Payment Method and Tender Reversal [MVP]
+### Requirement: REQ-REF-012: Payment Method and Tender Reversal [MVP]
 
 The refund MUST capture the original payment method and a payment reference for use
 in reversing the charge to the customer's original tender.
@@ -418,7 +418,7 @@ in reversing the charge to the customer's original tender.
 
 ---
 
-### REQ-REF-013: Audit Trail [MVP]
+### Requirement: REQ-REF-013: Audit Trail [MVP]
 
 Every refund MUST have a complete audit trail recorded automatically by OpenRegister.
 The trail MUST include creation, edits, confirmation, and rejection.
@@ -438,7 +438,7 @@ The trail MUST include creation, edits, confirmation, and rejection.
 
 ---
 
-### REQ-REF-014: Error Scenarios [MVP]
+### Requirement: REQ-REF-014: Error Scenarios [MVP]
 
 The system MUST handle error conditions gracefully.
 
@@ -470,7 +470,7 @@ The system MUST handle error conditions gracefully.
 
 ---
 
-### REQ-REF-015: Refund Statistics and Reporting [V1]
+### Requirement: REQ-REF-015: Refund Statistics and Reporting [V1]
 
 The system SHALL provide basic refund statistics for reporting (e.g., refund count, total amount,
 top refund reasons). This is a V1 capability and the reporting widget SHOULD be available on the dashboard.
@@ -486,7 +486,7 @@ top refund reasons). This is a V1 capability and the reporting widget SHOULD be 
 
 ---
 
-### REQ-REF-016: Bulk Refund Processing [V1]
+### Requirement: REQ-REF-016: Bulk Refund Processing [V1]
 
 The system SHALL support processing multiple refunds at once (batch confirm) to save time
 during end-of-day reconciliation. This is a V1 capability.
@@ -500,7 +500,7 @@ during end-of-day reconciliation. This is a V1 capability.
 
 ---
 
-### REQ-REF-017: Mobile Refund Processing [V1]
+### Requirement: REQ-REF-017: Mobile Refund Processing [V1]
 
 The refund form SHALL be optimized for mobile devices (small screens, touch-friendly). This is a V1 capability.
 

@@ -139,14 +139,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-59
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-59
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-62
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-62
 		 */
 		sortedCategories() {
 			return [...this.categories].sort((a, b) => {
@@ -164,7 +164,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-58
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-58
 		 */
 		async fetchCategories() {
 			this.loading = true
@@ -182,7 +182,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-63
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-63
 		 */
 		startAdding() {
 			this.adding = true
@@ -194,7 +194,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-55
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-55
 		 */
 		cancelAdding() {
 			this.adding = false
@@ -203,7 +203,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-61
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-61
 		 */
 		async saveNew() {
 			const name = this.addForm.name.trim()
@@ -226,7 +226,7 @@ export default {
 
 		/**
 		 * @param {object} cat The category to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
 		 */
 		startEditing(cat) {
 			this.editingId = cat.id
@@ -241,7 +241,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-56
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-56
 		 */
 		cancelEdit() {
 			this.editingId = null
@@ -251,7 +251,7 @@ export default {
 
 		/**
 		 * @param {string} id Identifier of the category being saved.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
 		 */
 		async saveEdit(id) {
 			const name = this.editForm.name.trim()
@@ -274,7 +274,7 @@ export default {
 
 		/**
 		 * @param {object} cat The category the user asked to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-57
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-57
 		 */
 		async confirmRemove(cat) {
 			const message = t(

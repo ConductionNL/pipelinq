@@ -1,0 +1,481 @@
+{
+    "missing subject": {
+        "calls": [],
+        "refused": [
+            400,
+            "missingFields",
+            "Onderwerp en bericht zijn verplicht."
+        ]
+    },
+    "missing body": {
+        "calls": [],
+        "refused": [
+            400,
+            "missingFields",
+            "Onderwerp en bericht zijn verplicht."
+        ]
+    },
+    "rate limited": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ]
+        ],
+        "refused": [
+            429,
+            "rateLimited",
+            "Wacht alstublieft 60 minuten voordat u een nieuw verzoek indient."
+        ]
+    },
+    "just under the rate limit": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-1"
+            ],
+            [
+                "save",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "title": "Subject",
+                    "description": "Body",
+                    "contact": "c-1",
+                    "client": "o-1",
+                    "category": "cat-1",
+                    "status": "new",
+                    "channel": "portal",
+                    "reporterAccountId": "acc-1",
+                    "occurredAt": "2026-03-01T12:00:00+00:00",
+                    "attachmentIds": []
+                },
+                null
+            ],
+            [
+                "dispatchTyped",
+                "req-1",
+                "t-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "t-1",
+                "request-submit",
+                "success",
+                {
+                    "targetObjectType": "request",
+                    "targetObjectId": "req-1"
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "reference": "req-1",
+            "receivedAt": "2026-03-01T12:00:00+00:00",
+            "status": "new",
+            "estimatedResponseTime": "24 uur"
+        }
+    },
+    "oversize attachment": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ]
+        ],
+        "refused": [
+            413,
+            "fileTooLarge",
+            "Bestand mag maximaal 25 MB zijn. Dit bestand is 26 MB."
+        ]
+    },
+    "category not exposed": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-hidden"
+            ]
+        ],
+        "refused": [
+            422,
+            "categoryNotAvailable",
+            "Deze categorie is niet beschikbaar."
+        ]
+    },
+    "category missing": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-gone"
+            ]
+        ],
+        "refused": [
+            422,
+            "categoryNotAvailable",
+            "Deze categorie is niet beschikbaar."
+        ]
+    },
+    "no category schema": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "save",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "title": "Subject",
+                    "description": "Body",
+                    "contact": "c-1",
+                    "client": "o-1",
+                    "category": "anything",
+                    "status": "new",
+                    "channel": "portal",
+                    "reporterAccountId": "acc-1",
+                    "occurredAt": "2026-03-01T12:00:00+00:00",
+                    "attachmentIds": [
+                        "7"
+                    ]
+                },
+                null
+            ],
+            [
+                "dispatchTyped",
+                "req-1",
+                "t-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "t-1",
+                "request-submit",
+                "success",
+                {
+                    "targetObjectType": "request",
+                    "targetObjectId": "req-1"
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "reference": "req-1",
+            "receivedAt": "2026-03-01T12:00:00+00:00",
+            "status": "new",
+            "estimatedResponseTime": "24 uur"
+        }
+    },
+    "saved with a case reference": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-1"
+            ],
+            [
+                "save",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "title": "Subject",
+                    "description": "Body",
+                    "contact": "c-1",
+                    "client": "o-1",
+                    "category": "cat-1",
+                    "status": "new",
+                    "channel": "portal",
+                    "reporterAccountId": "acc-1",
+                    "occurredAt": "2026-03-01T12:00:00+00:00",
+                    "attachmentIds": []
+                },
+                null
+            ],
+            [
+                "dispatchTyped",
+                "req-1",
+                "t-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "t-1",
+                "request-submit",
+                "success",
+                {
+                    "targetObjectType": "request",
+                    "targetObjectId": "req-1"
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "reference": "VZ-2026-1",
+            "receivedAt": "2026-03-01T12:00:01+00:00",
+            "status": "new",
+            "estimatedResponseTime": "24 uur"
+        }
+    },
+    "saved with a reference": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-1"
+            ],
+            [
+                "save",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "title": "Subject",
+                    "description": "Body",
+                    "contact": "c-1",
+                    "client": "o-1",
+                    "category": "cat-1",
+                    "status": "new",
+                    "channel": "portal",
+                    "reporterAccountId": "acc-1",
+                    "occurredAt": "2026-03-01T12:00:00+00:00",
+                    "attachmentIds": []
+                },
+                null
+            ],
+            [
+                "dispatchTyped",
+                "req-1",
+                "t-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "t-1",
+                "request-submit",
+                "success",
+                {
+                    "targetObjectType": "request",
+                    "targetObjectId": "req-1"
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "reference": "R-9",
+            "receivedAt": "2026-03-01T12:00:00+00:00",
+            "status": "new",
+            "estimatedResponseTime": "24 uur"
+        }
+    },
+    "saved without a reference": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-2"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-1"
+            ],
+            [
+                "save",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "title": "Subject",
+                    "description": "Body",
+                    "contact": null,
+                    "client": null,
+                    "category": "cat-1",
+                    "status": "new",
+                    "channel": "portal",
+                    "reporterAccountId": "acc-2",
+                    "occurredAt": "2026-03-01T12:00:00+00:00",
+                    "attachmentIds": []
+                },
+                null
+            ],
+            [
+                "dispatchTyped",
+                "req-1",
+                "t-2"
+            ],
+            [
+                "audit",
+                "acc-2",
+                "t-2",
+                "request-submit",
+                "success",
+                {
+                    "targetObjectType": "request",
+                    "targetObjectId": "req-1"
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "reference": "req-1",
+            "receivedAt": "2026-03-01T12:00:00+00:00",
+            "status": "new",
+            "estimatedResponseTime": "24 uur"
+        }
+    },
+    "dispatch fails": {
+        "calls": [
+            [
+                "findAll",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "reporterAccountId": "acc-1"
+                }
+            ],
+            [
+                "hasSchema",
+                "requestCategory"
+            ],
+            [
+                "find",
+                "requestCategory",
+                "cat-1"
+            ],
+            [
+                "save",
+                "ticket",
+                {
+                    "ticketType": "request",
+                    "title": "Subject",
+                    "description": "Body",
+                    "contact": "c-1",
+                    "client": "o-1",
+                    "category": "cat-1",
+                    "status": "new",
+                    "channel": "portal",
+                    "reporterAccountId": "acc-1",
+                    "occurredAt": "2026-03-01T12:00:00+00:00",
+                    "attachmentIds": []
+                },
+                null
+            ],
+            [
+                "dispatchTyped",
+                "req-1",
+                "t-1"
+            ],
+            [
+                "warning",
+                "Pipelinq portal: SLA dispatch failed",
+                {
+                    "requestId": "req-1",
+                    "exception": "no listener"
+                }
+            ],
+            [
+                "audit",
+                "acc-1",
+                "t-1",
+                "request-submit",
+                "success",
+                {
+                    "targetObjectType": "request",
+                    "targetObjectId": "req-1"
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "reference": "req-1",
+            "receivedAt": "2026-03-01T12:00:00+00:00",
+            "status": "new",
+            "estimatedResponseTime": "24 uur"
+        }
+    }
+}

@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -34,7 +34,7 @@ use Throwable;
 /**
  * The sale and its lines as OpenRegister stores them.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
  */
 class PosCartObjects {
 	use PayloadToArray;
@@ -50,7 +50,7 @@ class PosCartObjects {
 	 * @param ObjectServiceInterface $objects   OpenRegister's object service.
 	 * @param IAppConfig             $appConfig Holds the register and schema ids.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objects,
@@ -65,7 +65,7 @@ class PosCartObjects {
 	 *
 	 * @return bool True for a posTransactionLine.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function isLineSchema(string $schemaId): bool {
 		$lineSchema = $this->schemaId(slug: 'posTransactionLine');
@@ -79,7 +79,7 @@ class PosCartObjects {
 	 *
 	 * @return string|null The stored priceMode.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function priceModeOf(string $transactionId): ?string {
 		try {
@@ -104,7 +104,7 @@ class PosCartObjects {
 	 *
 	 * @throws OCSNotFoundException When the sale is not in this app's register.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function transaction(string $transactionId): array {
 		$found = null;
@@ -132,7 +132,7 @@ class PosCartObjects {
 	 *
 	 * @return array<int, array<string, mixed>> The lines.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function lines(string $transactionId): array {
 		$filters = [
@@ -151,7 +151,7 @@ class PosCartObjects {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-1
 	 */
 	public function saveLine(array $line): void {
 		$uuid = (string)($line['id'] ?? '');
@@ -172,7 +172,7 @@ class PosCartObjects {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function registerId(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerId()
 
 	/**
@@ -183,6 +183,6 @@ class PosCartObjects {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function schemaId(string $slug): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $slug.'_schema', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $slug.'_schema', '');
 	}//end schemaId()
 }//end class

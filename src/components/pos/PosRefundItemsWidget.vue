@@ -82,33 +82,16 @@ import {
 } from '../../services/posRefundLines.js'
 import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'PosRefundItemsWidget',
 	components: { CnIcon, CnWidgetWrapper, NcLoadingIcon },
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/** The refund, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The refund id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-	},
 
 	data() {
 		return {

@@ -15,7 +15,7 @@
   - object — see channelProvider.credentials in the register schema, which is
   - kept only for backward compatibility and is never written here.
   -
-  - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+  - @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
   -->
 <template>
 	<div class="messaging-settings">
@@ -556,6 +556,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ServiceAccountPicker from '../../components/admin/ServiceAccountPicker.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import { formatLocalTimestamp } from '../../services/localeUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const KIND_LABELS = {
@@ -664,7 +665,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -678,7 +679,7 @@ export default {
 		 *
 		 * @return {string} The confirmation message.
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		deleteProviderMessage() {
 			if (!this.pendingDeleteProvider) {
@@ -701,7 +702,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		vendorOptions() {
 			return [
@@ -715,7 +716,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		periodOptions() {
 			return [
@@ -731,7 +732,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 	 */
 	async mounted() {
 		await Promise.all([
@@ -744,7 +745,7 @@ export default {
 	methods: {
 		/**
 		 * @param {string} kind The provider kind.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		kindLabel(kind) {
 			return KIND_LABELS[kind] || kind || '—'
@@ -766,7 +767,7 @@ export default {
 
 		/**
 		 * @param {string} status The template status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		templateStatusClass(status) {
 			return (
@@ -776,27 +777,14 @@ export default {
 
 		/**
 		 * @param {string} providerId Identifier of the messaging provider.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		providerDisplayName(providerId) {
 			const provider = this.providers.find((p) => p.id === providerId)
 			return provider ? provider.displayName : providerId || '—'
 		},
 
-		/**
-		 * @param {string} value The stored date.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
-		 */
-		formatDate(value) {
-			if (!value) {
-				return '—'
-			}
-			const parsed = new Date(value)
-			if (Number.isNaN(parsed.getTime())) {
-				return value
-			}
-			return parsed.toLocaleString()
-		},
+		formatDate: formatLocalTimestamp,
 
 		webhookUrl(provider) {
 			const channel = provider.kind === 'sms' ? 'sms' : 'whatsapp'
@@ -816,7 +804,7 @@ export default {
 		 *
 		 * @param {object} provider The provider.
 		 * @return {string} The shortened URL.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		shortWebhookUrl(provider) {
 			const parts = this.webhookUrl(provider).split('/').filter(Boolean)
@@ -828,7 +816,7 @@ export default {
 		 *
 		 * @param {object} result The test result.
 		 * @return {string} Reachable, reachable in mock mode, or degraded with its cause.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		testResultLabel(result) {
 			if (result.reachable) {
@@ -846,7 +834,7 @@ export default {
 		 *
 		 * @param {object} budget The send budget.
 		 * @return {number} The share; 0 without a cap.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		budgetUsageShare(budget) {
 			const cap = Number(budget.maxMessages) || 0
@@ -858,7 +846,7 @@ export default {
 
 		/**
 		 * @param {object} provider The provider whose webhook URL to copy.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async copyWebhookUrl(provider) {
 			try {
@@ -888,7 +876,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		startNewProvider() {
 			this.editingProvider = null
@@ -898,7 +886,7 @@ export default {
 
 		/**
 		 * @param {object} provider The provider to edit.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		editProvider(provider) {
 			this.editingProvider = provider
@@ -907,7 +895,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		cancelProviderForm() {
 			this.showProviderForm = false
@@ -920,7 +908,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async saveProvider() {
 			this.savingProvider = true
@@ -945,7 +933,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		deleteProvider(provider) {
 			this.pendingDeleteProvider = provider
@@ -956,7 +944,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async performDeleteProvider() {
 			const provider = this.pendingDeleteProvider
@@ -977,7 +965,7 @@ export default {
 
 		/**
 		 * @param {object} provider The provider to probe.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async testProviderConnection(provider) {
 			this.testingProviderId = provider.id
@@ -1000,7 +988,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async fetchBudgets() {
 			this.loadingBudgets = true
@@ -1018,7 +1006,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		startNewBudget() {
 			this.budgetForm = DEFAULT_BUDGET_FORM()
@@ -1030,7 +1018,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		cancelBudgetForm() {
 			this.showBudgetForm = false
@@ -1042,7 +1030,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async createBudget() {
 			this.creatingBudget = true
@@ -1062,7 +1050,7 @@ export default {
 
 		/**
 		 * @param {object} budget The budget to persist.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async saveBudget(budget) {
 			this.savingBudgetId = budget.id
@@ -1083,7 +1071,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		deleteBudget(budget) {
 			this.pendingDeleteBudget = budget
@@ -1094,7 +1082,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async performDeleteBudget() {
 			const budget = this.pendingDeleteBudget
@@ -1112,7 +1100,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async fetchTemplates() {
 			this.loadingTemplates = true

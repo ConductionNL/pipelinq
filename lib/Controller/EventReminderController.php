@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Event\EventReminderService;
+use OCA\Pipelinq\Kernel\Contracts\EventReminderServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -49,12 +49,12 @@ class EventReminderController extends Controller
      * Constructor.
      *
      * @param IRequest             $request     The request.
-     * @param EventReminderService $reminders   Sends the reminder.
+     * @param EventReminderServiceInterface $reminders   Sends the reminder.
      * @param IUserSession         $userSession The acting user.
      */
     public function __construct(
         IRequest $request,
-        private readonly EventReminderService $reminders,
+        private readonly EventReminderServiceInterface $reminders,
         private readonly IUserSession $userSession,
     ) {
         parent::__construct(appName: 'pipelinq', request: $request);

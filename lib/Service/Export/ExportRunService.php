@@ -22,27 +22,35 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 
 /**
  * Lifecycle + audit management for export runs and schema snapshots.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
  */
-class ExportRunService extends AbstractExportService {
+class ExportRunService extends AbstractExportService implements ExportRunServiceInterface {
 	/**
 	 * The exportRun schema config key.
 	 *
 	 * @var string
 	 */
 	private const RUN_SCHEMA_KEY = 'exportRun_schema';
+
+	/**
+	 * Run list filters passed on to the store: request name => stored name.
+	 *
+	 * @var array<string, string>
+	 */
+	private const RUN_FILTERS = ['job_id' => 'jobId', 'status' => 'status'];
 
 	/**
 	 * The exportSchemaSnapshot schema config key.
@@ -59,7 +67,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The created exportRun.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
 	 */
 	public function createPendingRun(array $job, ?string $watermarkFrom = null): array {
 		$datasets = ($job['sourceSchemas'] ?? []);
@@ -105,35 +113,40 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching runs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
 	 */
 	public function listRuns(array $filters = []): array {
-		$objectFilters = [];
-		if (isset($filters['job_id']) === true && (string)$filters['job_id'] !== '') {
-			$objectFilters['jobId'] = (string)$filters['job_id'];
-		}
-
-		if (isset($filters['status']) === true && (string)$filters['status'] !== '') {
-			$objectFilters['status'] = (string)$filters['status'];
-		}
-
-		$runs = $this->findAllObjects(schemaKey: self::RUN_SCHEMA_KEY, filters: $objectFilters);
+		$runs = $this->findAllObjects(schemaKey: self::RUN_SCHEMA_KEY, filters: $this->runFilters(filters: $filters));
 
 		$dateFrom = (string)($filters['date_from'] ?? '');
 		$dateTo = (string)($filters['date_to'] ?? '');
 		if ($dateFrom !== '' || $dateTo !== '') {
-			$runs = $this->filterByDate(runs: $runs, dateFrom: $dateFrom, dateTo: $dateTo);
+			$runs = $this->filterByDate(runs: $runs, range: ['from' => $dateFrom, 'to' => $dateTo]);
 		}
 
-		usort(
-			$runs,
-			static function (array $a, array $b): int {
-				return strcmp((string)($b['startedAt'] ?? ''), (string)($a['startedAt'] ?? ''));
-			}
-		);
+		usort($runs, static fn (array $a, array $b): int => strcmp((string)($b['startedAt'] ?? ''), (string)($a['startedAt'] ?? '')));
 
 		return $runs;
 	}//end listRuns()
+
+	/**
+	 * The stored-object filters of a run list request: the job and the
+	 * status, each under its stored name and only when not blank.
+	 *
+	 * @param array<string, mixed> $filters The request's filters.
+	 *
+	 * @return array<string, string>
+	 */
+	private function runFilters(array $filters): array {
+		$objectFilters = [];
+		foreach (self::RUN_FILTERS as $requested => $stored) {
+			if (isset($filters[$requested]) === true && (string)$filters[$requested] !== '') {
+				$objectFilters[$stored] = (string)$filters[$requested];
+			}
+		}
+
+		return $objectFilters;
+	}//end runFilters()
 
 	/**
 	 * Mark a run as running and stamp startedAt.
@@ -159,7 +172,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The updated run.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-03
 	 */
 	public function markSkippedOverlap(string $runId, string $reason): array {
 		$run = $this->getRun(runId: $runId);
@@ -179,7 +192,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The completed run.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010-01
 	 */
 	public function completeRun(string $runId, array $outcome): array {
 		$run = $this->getRun(runId: $runId);
@@ -216,7 +229,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> The created snapshot.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function createSnapshot(
 		string $runId,
@@ -260,7 +273,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed>|null The previous snapshot, or null.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function findPreviousSnapshot(string $jobId, string $schemaName): ?array {
 		$runs = $this->listRuns(filters: ['job_id' => $jobId]);
@@ -288,7 +301,7 @@ class ExportRunService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed>|null The last succeeded run, or null.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006-01
 	 */
 	public function lastSucceededRun(string $jobId): ?array {
 		$runs = $this->listRuns(filters: ['job_id' => $jobId, 'status' => 'succeeded']);
@@ -302,21 +315,20 @@ class ExportRunService extends AbstractExportService {
 	/**
 	 * Filter runs to a startedAt date range (inclusive bounds, ISO comparison).
 	 *
-	 * @param array<int, array<string, mixed>> $runs The runs.
-	 * @param string $dateFrom The lower bound (ISO, optional).
-	 * @param string $dateTo The upper bound (ISO, optional).
+	 * @param array<int, array<string, mixed>>   $runs  The runs.
+	 * @param array{from: string, to: string} $range The lower and upper bounds (ISO, each optional).
 	 *
 	 * @return array<int, array<string, mixed>> The filtered runs.
 	 */
-	private function filterByDate(array $runs, string $dateFrom, string $dateTo): array {
+	private function filterByDate(array $runs, array $range): array {
 		$filtered = [];
 		foreach ($runs as $run) {
 			$started = (string)($run['startedAt'] ?? '');
-			if ($dateFrom !== '' && ($started === '' || strcmp($started, $dateFrom) < 0)) {
+			if ($range['from'] !== '' && ($started === '' || strcmp($started, $range['from']) < 0)) {
 				continue;
 			}
 
-			if ($dateTo !== '' && ($started === '' || strcmp($started, $dateTo) > 0)) {
+			if ($range['to'] !== '' && ($started === '' || strcmp($started, $range['to']) > 0)) {
 				continue;
 			}
 

@@ -468,6 +468,38 @@ class SubscriptionServiceTest extends TestCase {
 	}//end testEveryAudienceMemberCarriesItsOwnUnsubscribeLink()
 
 	/**
+	 * Every way an audience row ends: an empty list id reads nothing; a
+	 * membership without a contact is keyed and consent-checked on its
+	 * email; a missing state is skipped; skipped and queued keep the list's
+	 * order; a member carries exactly its contact, email, id and link.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayAnAudienceRowEnds(): void {
+		$this->assertSame(['members' => [], 'skipped' => []], $this->queries->getBlastAudienceForList(listId: ''));
+
+		$first = $this->seedConfirmed(listId: 'list-news', contactId: 'contact-1', email: 'a@a.nl');
+		$this->store->save(schemaSlug: 'subscription', payload: ['listId' => 'list-news', 'contactId' => 'contact-2', 'email' => 'b@a.nl']);
+		$byMail = $this->seedSubscription(listId: 'list-news', contactId: '', email: 'm@a.nl', state: 'confirmed');
+		$this->seedSubscription(listId: 'list-news', contactId: '', email: 'n@a.nl', state: 'confirmed');
+		$this->listConsent['m@a.nl|list-news'] = true;
+		$this->seedSubscription(listId: 'list-other', contactId: 'contact-9', email: 'z@a.nl', state: 'confirmed');
+
+		$audience = $this->queries->getBlastAudienceForList(listId: 'list-news');
+
+		$this->assertSame(['contact-2', 'n@a.nl'], $audience['skipped']);
+		$this->assertSame(['contact-1', 'm@a.nl'], array_column($audience['members'], 'contactId'));
+		$this->assertSame(['contactId', 'email', 'subscriptionId', 'unsubscribeUrl'], array_keys($audience['members'][0]));
+		$this->assertSame('a@a.nl', $audience['members'][0]['email']);
+		$this->assertSame($first, $audience['members'][0]['subscriptionId']);
+		$this->assertSame($byMail, $audience['members'][1]['subscriptionId']);
+		$this->assertSame(
+			$this->queries->unsubscribeUrlFor(subscriptionId: $byMail, contactId: 'm@a.nl'),
+			$audience['members'][1]['unsubscribeUrl']
+		);
+	}//end testEveryWayAnAudienceRowEnds()
+
+	/**
 	 * A membership with no id gets no link rather than a link that names
 	 * nothing: a signed token for an empty subscription would verify and
 	 * then resolve to no row, which reads to a subscriber as a broken page.

@@ -1,0 +1,1612 @@
+{
+    "assignment lead, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-1"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_assigned",
+                {
+                    "title": "Big deal",
+                    "entityType": "lead",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "assignment lead, by bob himself": [],
+    "assignment lead, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ]
+    ],
+    "assignment lead, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "lead_assigned",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "assignment request, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "request",
+                "obj-2"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "request_assigned",
+                {
+                    "title": "Help",
+                    "entityType": "request",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "assignment request, by bob himself": [],
+    "assignment request, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ]
+    ],
+    "assignment request, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "request_assigned",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "assignment task, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-3"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_assigned",
+                {
+                    "title": "Call back",
+                    "entityType": "task",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "assignment task, by bob himself": [],
+    "assignment task, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ]
+    ],
+    "assignment task, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "task_assigned",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "assignment other, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "complaint",
+                "obj-4"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_assigned",
+                {
+                    "title": "Grr",
+                    "entityType": "complaint",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "assignment other, by bob himself": [],
+    "assignment other, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ]
+    ],
+    "assignment other, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "lead_assigned",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "task completed, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-5"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_completed",
+                {
+                    "title": "Call back",
+                    "resultText": "Done",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task completed, by bob himself": [],
+    "task completed, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ]
+    ],
+    "task completed, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "task_completed",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "task reassigned, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-6"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_reassigned",
+                {
+                    "title": "Call back",
+                    "author": "alice",
+                    "deadline": "2026-04-01"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task reassigned, by bob himself": [],
+    "task reassigned, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ]
+    ],
+    "task reassigned, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "task_reassigned",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "task reassigned without deadline, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-6"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_reassigned",
+                {
+                    "title": "Call back",
+                    "author": "alice",
+                    "deadline": ""
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task reassigned without deadline, by bob himself": [],
+    "task reassigned without deadline, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ]
+    ],
+    "task reassigned without deadline, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_assignments",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "task_reassigned",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "task expired, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-7"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_expired",
+                {
+                    "title": "Call back",
+                    "deadline": "2026-04-02"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task expired, by bob himself": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-7"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_expired",
+                {
+                    "title": "Call back",
+                    "deadline": "2026-04-02"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task expired, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ]
+    ],
+    "task expired, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "task_expired",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "task expired without deadline, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-7"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_expired",
+                {
+                    "title": "Call back",
+                    "deadline": ""
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task expired without deadline, by bob himself": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "task",
+                "obj-7"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "task_expired",
+                {
+                    "title": "Call back",
+                    "deadline": ""
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "task expired without deadline, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ]
+    ],
+    "task expired without deadline, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "task_expired",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "stage change, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-8"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_stage_changed",
+                {
+                    "title": "Big deal",
+                    "stage": "Proposal",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "stage change, by bob himself": [],
+    "stage change, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ]
+    ],
+    "stage change, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "lead_stage_changed",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "status change, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "request",
+                "obj-9"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "request_status_changed",
+                {
+                    "title": "Help",
+                    "status": "Closed",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "status change, by bob himself": [],
+    "status change, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ]
+    ],
+    "status change, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_stage_status",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "request_status_changed",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "note added, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_notes",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "client",
+                "obj-10"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "note_added",
+                {
+                    "title": "ACME",
+                    "entityType": "client",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "note added, by bob himself": [],
+    "note added, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_notes",
+            "true"
+        ]
+    ],
+    "note added, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_notes",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "note_added",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "deal won, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-11"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_won",
+                {
+                    "title": "Big deal",
+                    "value": "1200",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "deal won, by bob himself": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-11"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_won",
+                {
+                    "title": "Big deal",
+                    "value": "1200",
+                    "author": "bob"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "deal won, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ]
+    ],
+    "deal won, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "lead_won",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "deal lost, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-12"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_lost",
+                {
+                    "title": "Big deal",
+                    "author": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "deal lost, by bob himself": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-12"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_lost",
+                {
+                    "title": "Big deal",
+                    "author": "bob"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "deal lost, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ]
+    ],
+    "deal lost, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "lead_lost",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "custom subject, by alice": [
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "",
+                ""
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "custom_thing",
+                {
+                    "x": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "custom subject, by bob himself": [
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "",
+                ""
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "custom_thing",
+                {
+                    "x": "bob"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "custom subject, opted out": [
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "",
+                ""
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "custom_thing",
+                {
+                    "x": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "custom subject, manager fails": [
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "custom_thing",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ],
+    "custom mapped subject, by alice": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-13"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_won",
+                {
+                    "x": "alice"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "custom mapped subject, by bob himself": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "setApp",
+            [
+                "pipelinq"
+            ]
+        ],
+        [
+            "setUser",
+            [
+                "bob"
+            ]
+        ],
+        [
+            "setDateTime",
+            [
+                "DateTime"
+            ]
+        ],
+        [
+            "setObject",
+            [
+                "lead",
+                "obj-13"
+            ]
+        ],
+        [
+            "setSubject",
+            [
+                "lead_won",
+                {
+                    "x": "bob"
+                }
+            ]
+        ],
+        [
+            "notify"
+        ]
+    ],
+    "custom mapped subject, opted out": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ]
+    ],
+    "custom mapped subject, manager fails": [
+        [
+            "getUserValue",
+            "bob",
+            "pipelinq",
+            "notify_deals",
+            "true"
+        ],
+        [
+            "createNotification"
+        ],
+        [
+            "error",
+            "Failed to send Pipelinq notification",
+            {
+                "subject": "lead_won",
+                "userId": "bob",
+                "exception": "no notifications app"
+            }
+        ]
+    ]
+}

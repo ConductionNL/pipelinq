@@ -13,7 +13,7 @@
   - template-invalid / no-provider / failed / sent) is what's actually shown,
   - since preflight facts can be stale by send time.
   -
-  - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+  - @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
 	<CnDialog
@@ -306,14 +306,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		today() {
 			return new Date().toLocaleDateString()
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		channelOptions() {
 			const options = []
@@ -327,7 +327,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		channelLabel() {
 			return this.channel === 'sms'
@@ -340,7 +340,7 @@ export default {
 		 * it is active.
 		 *
 		 * @return {Array<object>} value, label, icon and available per channel.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		channelChoices() {
 			const channels = this.preflight.channels || {}
@@ -354,7 +354,7 @@ export default {
 		 * The client the message is about, as the eyebrow names it.
 		 *
 		 * @return {string} "Message · {client}", or empty without a name.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		eyebrow() {
 			const name = this.clientName || this.recipientName
@@ -365,7 +365,7 @@ export default {
 		 * The recipient and the number the message goes to.
 		 *
 		 * @return {string} "To {name}, {phone}", or the parts there are.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		subtitle() {
 			const parts = [this.recipientName, this.recipientPhone].filter(Boolean)
@@ -376,7 +376,7 @@ export default {
 		 * The consent state of the chosen channel, in words.
 		 *
 		 * @return {string} "Consent for {channel}: {state}".
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentText() {
 			return t('pipelinq', 'Consent for {channel}: {state}', {
@@ -390,7 +390,7 @@ export default {
 		 * when there are templates or one is required.
 		 *
 		 * @return {boolean} True to show the template select.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		showTemplates() {
 			return this.channel === 'whatsapp'
@@ -409,7 +409,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		selectedTemplate() {
 			return (
@@ -420,7 +420,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveConsentState() {
 			if (this.localConsent && this.localConsent.channel === this.channel) {
@@ -433,7 +433,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentLabel() {
 			const labels = {
@@ -452,7 +452,7 @@ export default {
 		 * server's own gating (REQ-OM-005) purely for UX — the server
 		 * decides authoritatively on send regardless of this value.
 		 *
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentOk() {
 			if (!this.channel) {
@@ -476,7 +476,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		canSend() {
 			if (this.sending || !this.channel || !this.consentOk) {
@@ -492,7 +492,7 @@ export default {
 		 * Whether the send goes out as the chosen template.
 		 *
 		 * @return {boolean} True when a template is required or picked.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		useTemplate() {
 			return this.channel === 'whatsapp'
@@ -544,7 +544,7 @@ export default {
 
 	watch: {
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		channel() {
 			this.sendResult = null
@@ -569,7 +569,7 @@ export default {
 		 * The channel to open on when only one has an active provider.
 		 *
 		 * @return {string|null} That channel, or null.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		onlyChannel() {
 			const channels = (this.preflight && this.preflight.channels) || {}
@@ -578,7 +578,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async recordConsent() {
 			if (!this.consentEvidence) {
@@ -610,7 +610,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async send() {
 			if (!this.canSend) {

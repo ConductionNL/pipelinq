@@ -463,4 +463,52 @@ class BlastWebhookControllerTest extends TestCase {
 		$response = $this->buildController(rawBody: '{"RecordType":"Delivery"}')->postmark();
 		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 	}//end testPostmarkInvalidSignatureReturns422()
+	/**
+	 * Every SES notification shape normalises to its exact event, key order included.
+	 *
+	 * @return void
+	 */
+	public function testSesEventsNormaliseExactly(): void {
+		$mail = ['messageId' => 'm-1', 'timestamp' => '2026-06-07T12:00:00Z'];
+		$cases = [
+			'permanent bounce' => [
+				['notificationType' => 'Bounce', 'mail' => $mail, 'bounce' => ['bounceType' => 'Permanent', 'bouncedRecipients' => [['emailAddress' => 'a@x.nl', 'diagnosticCode' => '550']]]],
+				['eventType' => 'bounce', 'bounceType' => 'hard', 'providerId' => 'm-1', 'email' => 'a@x.nl', 'timestamp' => '2026-06-07T12:00:00Z', 'reason' => '550'],
+			],
+			'transient bounce via eventType' => [
+				['eventType' => 'bounce', 'bounce' => ['bounceType' => 'Transient']],
+				['eventType' => 'bounce', 'bounceType' => 'soft', 'providerId' => '', 'email' => '', 'timestamp' => '', 'reason' => ''],
+			],
+			'bounce section not an array' => [
+				['notificationType' => 'Bounce', 'mail' => $mail, 'bounce' => 'oops'],
+				['eventType' => 'bounce', 'bounceType' => 'soft', 'providerId' => 'm-1', 'email' => '', 'timestamp' => '2026-06-07T12:00:00Z', 'reason' => ''],
+			],
+			'complaint' => [
+				['notificationType' => 'Complaint', 'mail' => $mail, 'complaint' => ['complainedRecipients' => [['emailAddress' => 'c@x.nl']]]],
+				['eventType' => 'complaint', 'providerId' => 'm-1', 'email' => 'c@x.nl', 'timestamp' => '2026-06-07T12:00:00Z'],
+			],
+			'complaint section not an array' => [
+				['notificationType' => 'complaint', 'complaint' => 5],
+				['eventType' => 'complaint', 'providerId' => '', 'email' => '', 'timestamp' => ''],
+			],
+			'delivery' => [
+				['notificationType' => 'Delivery', 'mail' => $mail],
+				['eventType' => 'delivered', 'providerId' => 'm-1', 'timestamp' => '2026-06-07T12:00:00Z'],
+			],
+			'notificationType wins over eventType' => [
+				['notificationType' => 'Delivery', 'eventType' => 'Bounce', 'mail' => $mail],
+				['eventType' => 'delivered', 'providerId' => 'm-1', 'timestamp' => '2026-06-07T12:00:00Z'],
+			],
+			'other type' => [
+				['notificationType' => 'Open', 'mail' => $mail],
+				['eventType' => 'open', 'providerId' => 'm-1'],
+			],
+			'no type' => [[], ['eventType' => '', 'providerId' => '']],
+		];
+		$method = new \ReflectionMethod(BlastWebhookController::class, 'normaliseSesEvent');
+		$controller = $this->buildController();
+		foreach ($cases as $name => [$event, $expected]) {
+			$this->assertSame($expected, $method->invoke($controller, $event), $name);
+		}
+	}//end testSesEventsNormaliseExactly()
 }//end class

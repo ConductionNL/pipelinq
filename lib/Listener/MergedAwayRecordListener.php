@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\Pipelinq\Service\Merge\MergedAwayStamp;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayStampInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -43,11 +43,11 @@ class MergedAwayRecordListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param MergedAwayStamp $stamp  Writes and clears the stamp.
+	 * @param MergedAwayStampInterface $stamp  Writes and clears the stamp.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private readonly MergedAwayStamp $stamp,
+		private readonly MergedAwayStampInterface $stamp,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

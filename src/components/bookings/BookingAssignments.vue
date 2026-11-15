@@ -53,55 +53,17 @@
 
 <script>
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import { showError } from '@nextcloud/dialogs'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { getUserLocale } from '../../services/localeUtils.js'
-import { useObjectStore } from '../../store/modules/object.js'
 import { timeOfDay } from '../../utils/bookingTime.js'
+import bookingSectionMixin from './bookingSectionMixin.js'
 
 export default {
 	name: 'BookingAssignments',
 	components: { CnStatusBadge, NcLoadingIcon },
-	inject: {
-		cnSectionContext: { default: null },
-	},
-
-	props: {
-		/** The booking id (`@objectId`). */
-		bookingId: {
-			type: String,
-			default: '',
-		},
-	},
-
-	data() {
-		return {
-			booking: {},
-			loading: false,
-			resourceLookup: {},
-		}
-	},
+	mixins: [bookingSectionMixin],
 
 	computed: {
-		objectStore() {
-			return useObjectStore()
-		},
-
-		/**
-		 * The booking id, from the prop or the section context.
-		 *
-		 * @return {string}
-		 */
-		resolvedId() {
-			if (this.bookingId) {
-				return this.bookingId
-			}
-			const ctx = this.cnSectionContext
-			const bag = ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
-		},
-
 		/**
 		 * The booking's resource assignments.
 		 *
@@ -121,32 +83,6 @@ export default {
 		multiStep() {
 			return new Set(this.assignments.map((a) => a?.stepIndex ?? 0)).size > 1
 		},
-	},
-
-	watch: {
-		resolvedId: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-	},
-
-	/**
-	 * Re-read the booking on `cn:page:refresh`, which a header action sends.
-	 *
-	 * @spec openspec/specs/appointment-booking/spec.md
-	 */
-	mounted() {
-		this.onPageRefresh = (payload) => {
-			const done = this.load({ silent: true })
-			payload?.waitUntil?.(done)
-		}
-		subscribe('cn:page:refresh', this.onPageRefresh)
-	},
-
-	beforeUnmount() {
-		unsubscribe('cn:page:refresh', this.onPageRefresh)
 	},
 
 	methods: {
@@ -205,26 +141,13 @@ export default {
 		},
 
 		/**
-		 * Load the booking, then the names of its resources.
+		 * Once the booking is in, the names of its resources.
 		 *
-		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner (a refresh).
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
-		async load(opts = {}) {
-			if (!this.resolvedId) {
-				return
-			}
-			if (opts.silent !== true) {
-				this.loading = true
-			}
-			try {
-				this.booking = (await this.objectStore.fetchObject('appointmentBooking', this.resolvedId)) || {}
-				await this.loadResourceNames()
-			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load booking.'))
-			} finally {
-				this.loading = false
-			}
+		loadLinked() {
+			return this.loadResourceNames()
 		},
 
 		/**

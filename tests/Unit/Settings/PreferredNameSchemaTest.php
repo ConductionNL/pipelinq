@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
  * @covers \OCA\Pipelinq\Service\ContactDataBuilder
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class PreferredNameSchemaTest extends TestCase {
 	/**

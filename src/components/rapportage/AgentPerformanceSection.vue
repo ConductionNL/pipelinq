@@ -90,13 +90,12 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { reportSectionMixin } from './reportSection.js'
 
 export default {
 	name: 'AgentPerformanceSection',
 	components: { NcLoadingIcon },
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [reportSectionMixin],
 
 	props: {
 		/** Relative period token (today / week / month), from `@workspace`.period. */
@@ -114,9 +113,7 @@ export default {
 
 	computed: {
 		effectivePeriod() {
-			if (this.period) return this.period
-			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
-			return (ctx && ctx.period) || 'today'
+			return this.period || this.fromWorkspace('period', 'today')
 		},
 
 		sortedAgents() {
@@ -141,16 +138,6 @@ export default {
 					: 0
 			return { totalContacts: total, avgFcr }
 		},
-	},
-
-	watch: {
-		effectivePeriod() {
-			this.fetchData()
-		},
-	},
-
-	mounted() {
-		this.fetchData()
 	},
 
 	methods: {

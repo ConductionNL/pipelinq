@@ -2362,7 +2362,20 @@ OC.L10N.register(
         "You have an unsaved contact moment from {time}.": "Sie haben einen nicht gespeicherten Kundenkontakt von {time}.",
         "Restore draft": "Entwurf wiederherstellen",
         "Discard": "Verwerfen",
-        "Your session has ended. Log in again in a new tab, then press Save here.": "Ihre Sitzung ist abgelaufen. Melden Sie sich in einem neuen Tab erneut an und klicken Sie dann hier auf Speichern."
+        "Your session has ended. Log in again in a new tab, then press Save here.": "Ihre Sitzung ist abgelaufen. Melden Sie sich in einem neuen Tab erneut an und klicken Sie dann hier auf Speichern.",
+        "Deal room": "Verkaufsraum",
+        "Client room": "Kundenraum",
+        "Board": "Board",
+        "Apply link": "Antragslink",
+        "At the desk": "Am Schalter",
+        "By post": "Per Post",
+        "Published from": "Veröffentlicht ab",
+        "Published until": "Veröffentlicht bis",
+        "UPL reference": "UPL-Verweis",
+        "Catalogue": "Katalog",
+        "UPL product": "UPL-Produkt",
+        "Residents": "Einwohner",
+        "Businesses": "Unternehmen"
     },
     "nplurals=2; plural=(n != 1);"
 )

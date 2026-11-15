@@ -1623,6 +1623,186 @@
             }
         ]
     },
+    "vendor, not configured": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "log": "warning",
+                "message": "PVM ingest: supplier register/schema not configured",
+                "context": []
+            }
+        ]
+    },
+    "vendor, contact match without uid": {
+        "returned": {
+            "products": [],
+            "vendors": {
+                "V-1": "uid-after-miss"
+            }
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "contacts.search": [
+                    "a@acme.test",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "syncToContacts": [
+                    "contact",
+                    "pvm-ingest-<uniqid>"
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-after-miss",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-after-miss"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "sourceRecordId": "shillinq-vendors:sv-1",
+                        "sourceSystem": "shillinq-vendors",
+                        "nativeId": "sv-1",
+                        "entityType": "vendor",
+                        "currentMasterEntity": "uid-after-miss",
+                        "rawAttributes": {
+                            "id": "sv-1",
+                            "ref": "V-1",
+                            "name": "Acme",
+                            "kvkNumber": "123",
+                            "email": "a@acme.test",
+                            "iban": "NL01",
+                            "paymentTermDays": 30
+                        },
+                        "mappedAttributes": [],
+                        "firstSeen": "<now>",
+                        "lastSeen": "<now>",
+                        "lastChange": "<now>",
+                        "linkageMethod": "migration",
+                        "linkageConfidence": 1.0,
+                        "confidence": 1.0
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-src",
+                    "uuid": null
+                }
+            }
+        ]
+    },
+    "vendor without ref or id": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "log": "warning",
+                "message": "PVM ingest: skipping vendor with no ref",
+                "context": {
+                    "name": "Anon"
+                }
+            }
+        ]
+    },
+    "vendor, supplier save throws": {
+        "returned": {
+            "products": [],
+            "vendors": []
+        },
+        "trace": [
+            {
+                "contacts.search": [
+                    "123",
+                    [
+                        "X-KVK",
+                        "X-VAT",
+                        "EMAIL",
+                        "UID"
+                    ],
+                    []
+                ]
+            },
+            {
+                "findAll": {
+                    "filters": {
+                        "contactsUid": "uid-acme",
+                        "register": "reg-1",
+                        "schema": "schema-supplier"
+                    },
+                    "limit": 1,
+                    "offset": 0
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "displayName": "Acme",
+                        "category": "goods",
+                        "status": "active",
+                        "termsOfTrade": {
+                            "paymentTermDays": 30
+                        },
+                        "contactsUid": "uid-acme"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-supplier",
+                    "uuid": null
+                }
+            },
+            {
+                "log": "error",
+                "message": "PVM ingest: vendor ingest failed",
+                "context": {
+                    "vendor": "Acme",
+                    "exception": "save failed for schema-supplier"
+                }
+            }
+        ]
+    },
     "both lists": {
         "returned": {
             "products": {

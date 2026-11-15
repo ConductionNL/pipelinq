@@ -71,6 +71,9 @@ class DemoSeedGoldenTest extends TestCase {
 		'contactmomenten' => ['ticket_schema', 'title', 'contactmoment'],
 		'tasks'           => ['task_schema', 'subject', null],
 		'contracts'       => ['contract_schema', 'title', null],
+		'appointmentServices'  => ['service_schema', 'name', null],
+		'appointmentResources' => ['resource_schema', 'name', null],
+		'appointmentBookings'  => ['booking_schema', 'subject', null],
 	];
 
 	/**

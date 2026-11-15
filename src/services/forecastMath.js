@@ -33,27 +33,37 @@ export function gapToQuota(quota, projected) {
 }
 
 /**
- * Whether a forecast is at risk for its quota.
+ * Whether a forecast is at risk for its quota: below the attainment
+ * threshold with fewer days left than the days threshold.
  *
- * @param {number} projected The projected attainment.
- * @param {number} quota The quota amount.
- * @param {number} daysRemaining Days remaining in the period.
- * @param {number} [percentThreshold] The attainment percent threshold.
- * @param {number} [daysThreshold] The days-remaining threshold.
+ * @param {{projected: number, quota: number, daysRemaining: number}} forecast The forecast standing.
+ * @param {{percent: (number|undefined), days: (number|undefined)}} [thresholds] The attainment percent (90) and days-remaining (30) thresholds.
  * @return {boolean} True when at risk.
  */
-export function isAtRisk(
-	projected,
-	quota,
-	daysRemaining,
-	percentThreshold = 90,
-	daysThreshold = 30,
-) {
-	if (!quota || quota <= 0) {
+export function isAtRisk(forecast, thresholds = {}) {
+	if (!forecast.quota || forecast.quota <= 0) {
 		return false
 	}
-	const attainmentPercent = (Number(projected) / Number(quota)) * 100
-	return attainmentPercent < percentThreshold && daysRemaining < daysThreshold
+	return isBelowAttainment(forecast, thresholds) && isClosingSoon(forecast, thresholds)
+}
+
+/**
+ * @param {{projected: number, quota: number}} forecast The forecast standing.
+ * @param {{percent: (number|undefined)}} thresholds The thresholds.
+ * @return {boolean} Whether the projected attainment is below the percent threshold.
+ */
+function isBelowAttainment(forecast, { percent = 90 }) {
+	const attainmentPercent = (Number(forecast.projected) / Number(forecast.quota)) * 100
+	return attainmentPercent < percent
+}
+
+/**
+ * @param {{daysRemaining: number}} forecast The forecast standing.
+ * @param {{days: (number|undefined)}} thresholds The thresholds.
+ * @return {boolean} Whether fewer days remain than the days threshold.
+ */
+function isClosingSoon(forecast, { days = 30 }) {
+	return forecast.daysRemaining < days
 }
 
 /**
@@ -167,29 +177,49 @@ export function previousPeriodId(periodId) {
  * @spec openspec/changes/forecast-accuracy-rows/specs/forecasting/spec.md#requirement-the-forecast-shows-last-quarters-accuracy-per-seller
  */
 export function accuracyRows(snapshots) {
+	const out = []
+	for (const [owner, rows] of snapshotsByOwner(snapshots)) {
+		const row = accuracyRow(owner, rows)
+		if (row !== null) {
+			out.push(row)
+		}
+	}
+	return out
+}
+
+/**
+ * @param {?Array<object>} snapshots The period's rows.
+ * @return {Map<string, Array<object>>} The rows per seller, in the order sellers first appear.
+ */
+function snapshotsByOwner(snapshots) {
 	const byOwner = new Map()
 	for (const row of snapshots || []) {
-		if (!row || !row.owner_id) {
+		if (!row?.owner_id) {
 			continue
 		}
 		const rows = byOwner.get(row.owner_id) || []
 		rows.push(row)
 		byOwner.set(row.owner_id, rows)
 	}
-	const out = []
-	for (const [owner, rows] of byOwner) {
-		if (rows.length < 2) {
-			continue
-		}
-		const sorted = [...rows].sort((a, b) => String(a.as_of_date).localeCompare(String(b.as_of_date)))
-		const weekOneCommit = Number(sorted[0].commit || 0)
-		if (!(weekOneCommit > 0)) {
-			continue
-		}
-		const actual = Number(sorted[sorted.length - 1].closed_won || 0)
-		out.push({ owner_id: owner, weekOneCommit, actual, score: actual / weekOneCommit })
+	return byOwner
+}
+
+/**
+ * @param {string} owner The seller.
+ * @param {Array<object>} rows The seller's snapshots.
+ * @return {(object|null)} The seller's score, or null without two snapshots and a first commit.
+ */
+function accuracyRow(owner, rows) {
+	if (rows.length < 2) {
+		return null
 	}
-	return out
+	const sorted = [...rows].sort((a, b) => String(a.as_of_date).localeCompare(String(b.as_of_date)))
+	const weekOneCommit = Number(sorted[0].commit || 0)
+	if (!(weekOneCommit > 0)) {
+		return null
+	}
+	const actual = Number(sorted[sorted.length - 1].closed_won || 0)
+	return { owner_id: owner, weekOneCommit, actual, score: actual / weekOneCommit }
 }
 
 /**
@@ -197,7 +227,7 @@ export function accuracyRows(snapshots) {
  *
  * @param {string} date An ISO date (YYYY-MM-DD).
  * @return {number|string} The week, or '' when the date does not parse.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function isoWeekOf(date) {
 	const day = new Date(String(date) + 'T12:00:00Z')
@@ -218,7 +248,7 @@ export function isoWeekOf(date) {
  *
  * @param {Array<object>} snapshots Rows with owner_id, as_of_date and commit.
  * @return {Array<{owner_id: string, direction: 'into'|'out', amount: number}>} The moves.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function commitMovements(snapshots) {
 	const dates = [...new Set(snapshots.map((row) => String(row.as_of_date || '')).filter(Boolean))].sort()

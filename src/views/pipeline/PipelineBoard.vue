@@ -620,9 +620,12 @@ import {
 	pipelineEntitySlugs,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
+import { boardLeadIds, groupLeadProducts, productNames, productTotals } from './leadProductBreakdown.js'
+import { placeOnStage, stagePayload, validationMessage } from './stageMove.js'
 
 // What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
 const UNSCOPED_SLUGS = ['lead', 'request']
@@ -689,7 +692,7 @@ export default {
 			itemsFetchSeq: 0,
 			showFilter: 'all',
 			/**
-			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
+			 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.1
 			 */
 			searchQuery: '',
 			/** Index of the active chip above the board (0 is every open lead). */
@@ -728,19 +731,19 @@ export default {
 			 * Map of leadId → LeadProduct[] for the visible pipeline. Populated
 			 * after fetchPipelineItems so stage breakdowns are aggregated client-side.
 			 *
-			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+			 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
 			 */
 			leadProductsByLead: {},
 			/**
 			 * Map of productId → product name, populated alongside leadProductsByLead.
 			 *
-			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+			 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.2
 			 */
 			productNamesById: {},
 			/**
 			 * Name of the stage whose product-breakdown popover is open, or null.
 			 *
-			 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+			 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.3
 			 */
 			expandedBreakdownStage: null,
 		}
@@ -748,7 +751,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -765,14 +768,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
 		 */
 		pipelineSelectOptions() {
 			return this.pipelines.map((p) => ({
@@ -785,14 +788,14 @@ export default {
 		 * The leads no board column shows, with the reason.
 		 *
 		 * @return {Array<{lead: object, reason: string}>}
-		 * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
+		 * @spec openspec/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
 		 */
 		orphanedLeads() {
 			return findOrphanedLeads(this.allLeads, this.pipelines)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
 		 */
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
@@ -827,7 +830,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
 		 */
 		propertyMappings() {
 			return this.selectedPipeline?.propertyMappings || []
@@ -842,7 +845,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
 		 */
 		showFilterOptions() {
 			const options = [{ id: 'all', label: t('pipelinq', 'All') }]
@@ -859,7 +862,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
 		 */
 		sortedStages() {
 			if (!this.selectedPipeline?.stages) return []
@@ -869,14 +872,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
 		 */
 		openStages() {
 			return this.sortedStages.filter((s) => !s.isClosed)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
 		 */
 		closedStages() {
 			return this.sortedStages.filter((s) => s.isClosed)
@@ -885,7 +888,7 @@ export default {
 		/**
 		 * Schema-filtered merged array of all pipeline items; no search applied.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-1
 		 */
 		allItems() {
 			let result = this.items
@@ -900,7 +903,7 @@ export default {
 		 * allItems filtered by searchQuery (case-insensitive title match).
 		 * Empty searchQuery passes all items through unchanged.
 		 *
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.2
 		 */
 		filteredItems() {
 			const chipped = this.allItems.filter((item) =>
@@ -1015,7 +1018,7 @@ export default {
 		 * The list view's sortable columns, in order.
 		 *
 		 * @return {Array<{key: string, label: string}>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
 		listColumns() {
 			return [
@@ -1032,7 +1035,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		sortedListItems() {
@@ -1080,7 +1083,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
 	 */
 	async mounted() {
 		this.loading = true
@@ -1103,7 +1106,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
 	 */
 	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
@@ -1116,7 +1119,7 @@ export default {
 		 *
 		 * @param {string} sortBy The list column key.
 		 * @return {((item: object) => (string|number))|null} Item to sort value.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
 		 */
 		listSortKey(sortBy) {
 			const lower = (value) => (value || '').toLowerCase()
@@ -1151,26 +1154,53 @@ export default {
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async syncLiveSubscriptions() {
-			const store = this.objectStore
-			if (typeof store.subscribe !== 'function') {
+			if (typeof this.objectStore.subscribe !== 'function') {
 				return
 			}
 			const types = this.liveTypes
+			if (!this.claimLiveScope(types)) {
+				return
+			}
+			const epoch = this.liveEpoch
+			const handles = await this.subscribeLiveTypes(types)
+			this.adoptLiveHandles(handles, epoch)
+		},
+
+		/**
+		 * Take the scope of the given types: release the previous scope and
+		 * mark this one pending before the subscribe awaits.
+		 *
+		 * @param {Array<string>} types The object types.
+		 * @return {boolean} Whether there is a new, non-empty scope to subscribe.
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		claimLiveScope(types) {
 			const key = types.join(',')
 			if (key === this.liveTypesKey) {
 				// Same scope already subscribed (or subscribe in flight).
-				return
+				return false
 			}
 			this.releaseLiveSubscriptions()
 			if (types.length === 0) {
-				return
+				return false
 			}
 			this.liveTypesKey = key
-			const epoch = this.liveEpoch
+			return true
+		},
+
+		/**
+		 * Subscribe to each object type in turn. A failure stops the run and
+		 * is logged; the handles gathered before it are kept.
+		 *
+		 * @param {Array<string>} types The object types.
+		 * @return {Promise<Array>} The subscription handles.
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		async subscribeLiveTypes(types) {
 			const handles = []
 			try {
-				for (const type of types) {
-					handles.push(await store.subscribe(type))
+				for (const objectType of types) {
+					handles.push(await this.objectStore.subscribe(objectType))
 				}
 			} catch (e) {
 				console.warn(
@@ -1178,10 +1208,23 @@ export default {
 					e?.message ?? e,
 				)
 			}
+			return handles
+		},
+
+		/**
+		 * Keep the new handles, unless the subscriptions were released while
+		 * they were being made.
+		 *
+		 * @param {Array} handles The subscription handles.
+		 * @param {number} epoch The live epoch the subscribe started in.
+		 * @return {void}
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		adoptLiveHandles(handles, epoch) {
 			if (this.liveEpoch !== epoch) {
 				// Released while awaiting (pipeline switch / destroy) — drop
 				// the now-stale subscriptions instead of leaking them.
-				handles.forEach((h) => store.unsubscribe(h))
+				handles.forEach((h) => this.objectStore.unsubscribe(h))
 				return
 			}
 			this.liveHandles = handles
@@ -1230,7 +1273,7 @@ export default {
 
 		/**
 		 * @param {object} pipelineData The edited pipeline payload to save
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
 		async onPipelineSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
@@ -1248,7 +1291,7 @@ export default {
 
 		/**
 		 * @param {object} item The board item
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
 		 */
 		getColumnProperty(item) {
 			const mapping = this.getMappingForItem(item)
@@ -1261,7 +1304,7 @@ export default {
 
 		/**
 		 * @param {object} item The board item
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
 		 */
 		getItemTotalsValue(item) {
 			const mapping = this.getMappingForItem(item)
@@ -1277,8 +1320,8 @@ export default {
 		 * With "Highest score first" on, the cards are ordered by score.
 		 *
 		 * @param {string} stageName The stage (column) name
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.2
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		getStageItems(stageName) {
@@ -1303,7 +1346,7 @@ export default {
 
 		/**
 		 * @param {string} stageName The stage (column) name
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
 		 */
 		getStageTotalValue(stageName) {
 			const stageItems = this.getStageItems(stageName)
@@ -1320,8 +1363,8 @@ export default {
 		/**
 		 * Fetches items for the selected pipeline and resets the search query.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-18
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-1.1
 		 */
 		/**
 		 * The board look's pipeline select chose a pipeline.
@@ -1377,7 +1420,7 @@ export default {
 		/**
 		 * @param {object} [options] Fetch options.
 		 * @param {boolean} [options.silent] Refresh in place, without the loading state.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
 		 */
 		async fetchPipelineItems({ silent = false } = {}) {
 			if (!this.selectedPipelineId) return
@@ -1388,11 +1431,7 @@ export default {
 				this.loading = true
 			}
 
-			const pipeline = this.selectedPipeline
-			const items =
-				pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
-					? await this.fetchItemsViaMappings(pipeline)
-					: await this.fetchItemsBySlug(pipeline)
+			const items = await this.fetchSelectedPipelineItems()
 
 			if (seq === this.itemsFetchSeq) {
 				this.items = items
@@ -1401,6 +1440,20 @@ export default {
 			if (!silent && seq === this.itemsFetchSeq) {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The items of the selected pipeline: through its property mappings
+		 * when it has any, by entity slug otherwise.
+		 *
+		 * @return {Promise<Array<object>>} The board items.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
+		 */
+		fetchSelectedPipelineItems() {
+			const pipeline = this.selectedPipeline
+			return pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+				? this.fetchItemsViaMappings(pipeline)
+				: this.fetchItemsBySlug(pipeline)
 		},
 
 		/**
@@ -1418,19 +1471,13 @@ export default {
 		 * Batch-fetch all LeadProduct objects for leads in the visible pipeline so
 		 * the per-stage product-value breakdown can be computed client-side.
 		 *
-		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
 		 */
 		async fetchLeadProductsForStages() {
-			const leadIds = new Set(
-				this.items
-					.filter((i) => i._schemaSlug === 'lead')
-					.map((i) => i.id)
-					.filter(Boolean),
-			)
+			const leadIds = boardLeadIds(this.items)
 
 			if (leadIds.size === 0) {
-				this.leadProductsByLead = {}
-				this.productNamesById = {}
+				this.clearLeadProducts()
 				return
 			}
 
@@ -1444,37 +1491,43 @@ export default {
 						_limit: 500,
 					},
 				)
-				const byLead = {}
-				const productIds = new Set()
-				for (const lp of lpCollection || []) {
-					if (!lp.lead || !leadIds.has(lp.lead)) continue
-					if (!byLead[lp.lead]) byLead[lp.lead] = []
-					byLead[lp.lead].push(lp)
-					if (lp.product) productIds.add(lp.product)
-				}
+				const { byLead, productIds } = groupLeadProducts(lpCollection, leadIds)
 				this.leadProductsByLead = byLead
-
-				if (productIds.size > 0) {
-					const products = await this.objectStore.fetchCollection(
-						'product',
-						{
-							_limit: 500,
-						},
-					)
-					const names = {}
-					for (const p of products || []) {
-						if (productIds.has(p.id)) {
-							names[p.id] = p.name || p.id
-						}
-					}
-					this.productNamesById = names
-				} else {
-					this.productNamesById = {}
-				}
+				this.productNamesById = await this.fetchProductNames(productIds)
 			} catch {
-				this.leadProductsByLead = {}
-				this.productNamesById = {}
+				this.clearLeadProducts()
 			}
+		},
+
+		/**
+		 * The names of the given products, read from the store; none without products.
+		 *
+		 * @param {Set<string>} productIds The products to name.
+		 * @return {Promise<object>} The names by product id.
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
+		 */
+		async fetchProductNames(productIds) {
+			if (productIds.size === 0) {
+				return {}
+			}
+			const products = await this.objectStore.fetchCollection(
+				'product',
+				{
+					_limit: 500,
+				},
+			)
+			return productNames(products, productIds)
+		},
+
+		/**
+		 * Forget the line items and product names of the board leads.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.1
+		 */
+		clearLeadProducts() {
+			this.leadProductsByLead = {}
+			this.productNamesById = {}
 		},
 
 		/**
@@ -1483,31 +1536,16 @@ export default {
 		 *
 		 * @param {string} stageName Stage to aggregate.
 		 * @return {{items: Array<{product: string, name: string, count: number, total: number}>, remaining: number}} Top-5 entries plus remaining count.
-		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.2
 		 */
 		getStageBreakdown(stageName) {
 			const stageLeads = this.getStageItems(stageName).filter(
 				(i) => i._schemaSlug === 'lead',
 			)
-			const aggregate = new Map()
-			for (const lead of stageLeads) {
-				const lineItems = this.leadProductsByLead[lead.id] || []
-				for (const lp of lineItems) {
-					if (!lp.product) continue
-					const current = aggregate.get(lp.product) || {
-						product: lp.product,
-						name: this.productNamesById[lp.product] || lp.product,
-						count: 0,
-						total: 0,
-					}
-					current.count += 1
-					current.total += Number(lp.total) || 0
-					aggregate.set(lp.product, current)
-				}
-			}
-			const sorted = Array.from(aggregate.values()).sort(
-				(a, b) => b.total - a.total,
+			const lineItems = stageLeads.flatMap(
+				(lead) => this.leadProductsByLead[lead.id] || [],
 			)
+			const sorted = productTotals(lineItems, this.productNamesById)
 			const top = sorted.slice(0, 5)
 			const remaining = Math.max(0, sorted.length - top.length)
 			return { items: top, remaining }
@@ -1517,7 +1555,7 @@ export default {
 		 * Toggles the breakdown popover for the given stage.
 		 *
 		 * @param {string} stageName Stage whose breakdown to show or hide.
-		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
+		 * @spec openspec/changes/archive/2026-06-14-lead-product-link/tasks.md#task-4.3
 		 */
 		toggleStageBreakdown(stageName) {
 			this.expandedBreakdownStage =
@@ -1527,7 +1565,7 @@ export default {
 		/**
 		 * @param {object} pipeline The pipeline whose propertyMappings drive the fetch
 		 * @return {Promise<Array<object>>} The board items
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
 			const mappings = pipeline.propertyMappings || []
@@ -1549,7 +1587,7 @@ export default {
 		 *
 		 * @param {object|null} pipeline The selected pipeline
 		 * @return {Promise<Array<object>>} The board items
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
 		async fetchItemsBySlug(pipeline) {
 			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
@@ -1572,7 +1610,7 @@ export default {
 		 * opens on the default pipeline.
 		 *
 		 * @return {Promise<Array<object>>} The leads.
-		 * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
+		 * @spec openspec/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
 		 */
 		async fetchAllLeads() {
 			const config = this.objectStore.objectTypeRegistry.lead
@@ -1582,11 +1620,7 @@ export default {
 					`/apps/openregister/api/objects/${config.register}/${config.schema}?_limit=500`,
 				)
 				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
+					headers: jsonRequestHeaders(),
 				})
 				if (!response.ok) return []
 				const data = await response.json()
@@ -1607,7 +1641,7 @@ export default {
 		 * `_schemaSlug` so mappings, badges, filters and routing still line up.
 		 *
 		 * @param {string} schemaSlug The logical schema slug from the pipeline's propertyMappings
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
 		 */
 		async fetchSchemaItems(schemaSlug) {
 			const { objectType, ticketType } = resolveObjectType(schemaSlug)
@@ -1620,11 +1654,7 @@ export default {
 					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
 				)
 				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
+					headers: jsonRequestHeaders(),
 				})
 				if (!response.ok) return []
 				const data = await response.json()
@@ -1681,7 +1711,7 @@ export default {
 		 *
 		 * @param {{from: HTMLElement, to: HTMLElement, dragged: HTMLElement}} evt The Sortable move event.
 		 * @return {boolean} Whether the placeholder may move.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		onCardMove(evt) {
 			if (evt.to !== evt.from) {
@@ -1716,7 +1746,7 @@ export default {
 		 *
 		 * @param {{added?: {element: object}}} event The vuedraggable change event.
 		 * @param {object} targetStage The stage of the column the card landed in.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		onCardDropped(event, targetStage) {
 			if (event.added) {
@@ -1734,45 +1764,29 @@ export default {
 		 * @param {object} item The board item that was dropped.
 		 * @param {object} targetStage The stage it was dropped on.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		async moveItemToStage(item, targetStage) {
 			const columnProp = this.getColumnProperty(item)
 			if (item[columnProp] === targetStage.name) return
 
-			const previous = {
-				[columnProp]: item[columnProp],
-				stageOrder: item.stageOrder,
-			}
-			item[columnProp] = targetStage.name
-			if (columnProp === 'stage' && typeof targetStage.order === 'number') {
-				item.stageOrder = targetStage.order
-			}
+			const previous = placeOnStage({ item, columnProp, targetStage })
 
 			// A request/complaint/contactmoment is stored as a `ticket` and must
 			// keep its ticketType discriminator (unify-ticket-supertype).
 			const { objectType, ticketType } = resolveObjectType(item._schemaSlug)
 			const current = await this.objectStore.fetchObject(objectType, item.id)
-			let saved = null
-			if (current) {
-				const payload = {
-					...current,
-					id: item.id,
-					[columnProp]: item[columnProp],
-				}
-				if (item.stageOrder !== previous.stageOrder)
-					payload.stageOrder = item.stageOrder
-				if (ticketType && !payload.ticketType)
-					payload.ticketType = ticketType
-				saved = await this.objectStore.saveObject(objectType, payload)
-			}
+			const saved = current
+				? await this.objectStore.saveObject(
+					objectType,
+					stagePayload(current, { item, columnProp, previous, ticketType }),
+				)
+				: null
 			if (!saved) {
 				Object.assign(item, previous)
-				const refusal = this.objectStore.errors?.[objectType]
 				showError(
-					refusal?.isValidation && refusal.message
-						? refusal.message
-						: t('pipelinq', 'Could not move the card to {stage}.', {
+					validationMessage(this.objectStore.errors?.[objectType])
+						?? t('pipelinq', 'Could not move the card to {stage}.', {
 							stage: targetStage.name,
 						}),
 				)
@@ -1808,7 +1822,7 @@ export default {
 
 		/**
 		 * @param {string} stageName The closed stage to expand or collapse
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
 		 */
 		toggleClosedStage(stageName) {
 			this.expandedClosed =
@@ -1820,7 +1834,7 @@ export default {
 		 *
 		 * @param {string} column The list-view column key.
 		 * @return {string} `ascending`, `descending` or `none`.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
 		ariaSortOf(column) {
 			if (this.sortBy !== column) {
@@ -1831,7 +1845,7 @@ export default {
 
 		/**
 		 * @param {string} column The list-view column key to sort by
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
 		toggleSort(column) {
 			if (this.sortBy === column) {
@@ -1844,7 +1858,7 @@ export default {
 
 		/**
 		 * @param {object} item The board item
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
 		 */
 		isItemOverdue(item) {
 			const dateStr = item.expectedCloseDate || item.occurredAt
@@ -1854,7 +1868,7 @@ export default {
 
 		/**
 		 * @param {string|null} dateStr The ISO date string to format
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
 		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '—'
@@ -1917,7 +1931,7 @@ export default {
 		/**
 		 * @param {object} item The board item to open
 		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event; a modified or middle click opens a new tab.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
 		 */
 		openItem(item, event) {
 			if (item._schemaSlug === 'lead') {
@@ -2539,15 +2553,15 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1d4ed8);
+	border: 1px solid var(--color-primary-element, #93c5fd);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning-light, #ffedd5);
+	color: var(--color-warning-text, #c2410c);
+	border: 1px solid var(--color-warning, #fdba74);
 }
 
 .overdue-date {
@@ -2565,9 +2579,9 @@ export default {
 	border-radius: 4px;
 	font-size: 10px;
 	font-weight: 700;
-	background: #fff7ed;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning-light, #fff7ed);
+	color: var(--color-warning-text, #c2410c);
+	border: 1px solid var(--color-warning, #fdba74);
 	margin-inline-start: 6px;
 	vertical-align: middle;
 }
@@ -2583,13 +2597,13 @@ export default {
 }
 
 .aging-badge.aging-warning {
-	color: #92400e;
-	background: #fef3c7;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning-light, #fef3c7);
 }
 
 .aging-badge.aging-alert {
-	color: #991b1b;
-	background: #fee2e2;
+	color: var(--color-error-text, #991b1b);
+	background: var(--color-error-light, #fee2e2);
 }
 
 .list-empty {

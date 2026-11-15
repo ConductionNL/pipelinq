@@ -11,7 +11,7 @@
  * next sync from Contacts puts the old value back. Best-effort, like every
  * write-back: the record is already saved when this runs.
  *
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
+ * @spec openspec/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
  */
 
 import { writeBack } from '../../services/contactSyncApi.js'
@@ -25,7 +25,7 @@ const IDENTITY_FIELDS = ['name', 'email', 'phone']
  * @param {string} type The object type.
  * @param {object} data The saved payload.
  * @return {boolean} True when the contact needs the change too.
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
+ * @spec openspec/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
  */
 export function needsWriteBack(type, data) {
 	if (partyType(type) === null || !data || !data.id) {
@@ -44,7 +44,7 @@ export function needsWriteBack(type, data) {
  *
  * @param {string} type The store's object type.
  * @return {string|null} `client`, `contact`, or null.
- * @spec openspec/changes/round3-review-points/specs/client-forms/spec.md
+ * @spec openspec/specs/client-forms/spec.md
  */
 export function partyType(type) {
 	const name = String(type || '')
@@ -60,7 +60,7 @@ export function partyType(type) {
  *
  * @param {(type: string, id: string) => Promise<string|null>} [write] The write-back call (injectable for tests).
  * @return {{name: string, setup: (store: object) => void}} The plugin.
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
+ * @spec openspec/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
  */
 export function contactWriteBackPlugin(write = writeBack) {
 	return {
