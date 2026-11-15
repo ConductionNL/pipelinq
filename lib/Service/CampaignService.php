@@ -244,6 +244,20 @@ class CampaignService implements CampaignServiceInterface {
 			return $failure;
 		}
 
+		return $this->saveOver(existing: $existing, edit: ['payload' => $payload, 'id' => $id, 'uid' => $uid]);
+	}//end save()
+
+	/**
+	 * Validate the edit's name and vocabulary, then store it over the existing campaign.
+	 *
+	 * @param array<string, mixed>|null $existing The existing campaign, or null for a new one.
+	 * @param array{payload: array<string, mixed>, id: string|null, uid: string} $edit The campaign fields, the campaign id
+	 *                                                                                (null to create) and the acting user.
+	 *
+	 * @return array{error: string, value: string, allowed: array<int, string>, campaign: array<string, mixed>|null}
+	 */
+	private function saveOver(array|null $existing, array $edit): array {
+		$payload = $edit['payload'];
 		$name = trim((string)($payload['name'] ?? ($existing['name'] ?? '')));
 		if ($name === '') {
 			return $this->failure(error: 'name_required', value: '', allowed: []);
@@ -254,9 +268,9 @@ class CampaignService implements CampaignServiceInterface {
 			return $check;
 		}
 
-		$record = $this->campaignRecord(existing: $existing, edit: ['payload' => $payload, 'name' => $name, 'uid' => $uid]);
-		return $this->storeCampaign(record: $record, id: $id);
-	}//end save()
+		$record = $this->campaignRecord(existing: $existing, edit: ['payload' => $payload, 'name' => $name, 'uid' => $edit['uid']]);
+		return $this->storeCampaign(record: $record, id: $edit['id']);
+	}//end saveOver()
 
 	/**
 	 * The campaign being updated, or a not-found failure; [null, null] for a new campaign.
