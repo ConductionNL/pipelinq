@@ -84,6 +84,20 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
+		return ($this->refusal(object: $object, userId: $userId) ?? GuardResult::allow());
+	}//end check()
+
+	/**
+	 * Why the user may not confirm the transaction, or null when they may.
+	 *
+	 * @param array<string, mixed> $object The posTransaction payload.
+	 * @param string               $userId The acting user UID.
+	 *
+	 * @return GuardResult|null The denial, or null.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) GuardResult exposes only the static deny() factory.
+	 */
+	private function refusal(array $object, string $userId): ?GuardResult {
 		if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {
 			return GuardResult::deny(
 				'U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, '
@@ -96,8 +110,8 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			return GuardResult::deny('Voeg minimaal één artikel toe.');
 		}
 
-		return GuardResult::allow();
-	}//end check()
+		return null;
+	}//end refusal()
 
 	/**
 	 * Whether the transaction has no persisted line items.
