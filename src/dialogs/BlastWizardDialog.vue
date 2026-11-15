@@ -429,6 +429,7 @@ import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
 import { previewTemplate } from '../services/articlesApi.js'
+import { mailPreviewDocument } from '../services/mailPreview.js'
 
 const STEPS = [
 	{ key: 'basics', label: 'Basics' },
@@ -702,14 +703,7 @@ export default {
 		 * @spec openspec/specs/marketing-ui/spec.md#scenario-the-blast-preview-shows-the-embedded-articles
 		 */
 		previewDocument() {
-			const csp =
-				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return (
-				'<!DOCTYPE html><html><head><meta charset="utf-8">'
-				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
-				+ `</head><body>${this.preview?.bodyHtml || ''}</body></html>`
-			)
+			return mailPreviewDocument(this.preview?.bodyHtml || '')
 		},
 
 		/**
@@ -1412,7 +1406,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .blast-wizard {
 	display: flex;
 	flex-direction: column;
@@ -1550,12 +1546,7 @@ export default {
 }
 
 .blast-wizard__preview-articles {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
+	@include plain-stacked-list;
 }
 
 .blast-wizard__preview-articles p {
