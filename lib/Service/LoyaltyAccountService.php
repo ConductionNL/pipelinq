@@ -86,22 +86,33 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		bool $optIn = false,
 		string $termsVersion = '1.0',
 	): array {
-		if ($customerId === '' || $programmeId === '') {
+		$owner = ['customerId' => $customerId, 'programmeId' => $programmeId];
+		self::assertCreatable(owner: $owner, optIn: $optIn);
+
+		return $this->persist(payload: $this->newAccountPayload(owner: $owner, termsVersion: $termsVersion), uuid: null);
+	}//end createAccount()
+
+	/**
+	 * Refuse an account without a customer and programme, or without opt-in.
+	 *
+	 * @param array{customerId: string, programmeId: string} $owner The customer and programme.
+	 * @param bool                                            $optIn Whether the customer accepted opt-in.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the owner is incomplete or opt-in is missing.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn is the REQ-LOY-010 opt-in acceptance flag, checked here.
+	 */
+	private static function assertCreatable(array $owner, bool $optIn): void {
+		if ($owner['customerId'] === '' || $owner['programmeId'] === '') {
 			throw new RuntimeException('klantId and programmeId are required.');
 		}
 
 		if ($optIn === false) {
 			throw new RuntimeException('Opt-in is mandatory for loyalty account creation (REQ-LOY-010-01).');
 		}
-
-		return $this->persist(
-			payload: $this->newAccountPayload(
-				owner: ['customerId' => $customerId, 'programmeId' => $programmeId],
-				termsVersion: $termsVersion
-			),
-			uuid: null
-		);
-	}//end createAccount()
+	}//end assertCreatable()
 
 	/**
 	 * The payload of a new, opted-in account for its owner.
@@ -182,10 +193,8 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		string $termsVersion = '1.0',
 	): array {
 		return $this->findAccountByKlantAndProgramme(customerId: $customerId, programmeId: $programmeId) ?? $this->createAccount(
-			customerId: $customerId,
-			programmeId: $programmeId,
-			optIn: $optIn,
-			termsVersion: $termsVersion
+			customerId: $customerId, programmeId: $programmeId,
+			optIn: $optIn, termsVersion: $termsVersion
 		);
 	}//end getOrCreateAccount()
 

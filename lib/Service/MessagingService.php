@@ -330,18 +330,9 @@ class MessagingService implements MessagingServiceInterface {
 	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	public function resend(array $message, array $contact, string $actor): array {
-		$channel = (string)($message['channel'] ?? '');
-
-		$outcome = $this->send(
-			route: new MessageRoute(contact: $contact),
-			content: $this->resendContent(message: $message, channel: $channel),
-			actor: $actor
-		);
-
-		$newId = (string)($outcome['messageId'] ?? '');
-		if ($outcome['status'] === 'sent' && $newId !== '') {
-			$this->linkResend(original: $message, newId: $newId);
-		}
+		$content = $this->resendContent(message: $message, channel: (string)($message['channel'] ?? ''));
+		$outcome = $this->send(route: new MessageRoute(contact: $contact), content: $content, actor: $actor);
+		$this->linkResend(original: $message, outcome: $outcome);
 
 		return $outcome;
 	}//end resend()
@@ -389,14 +380,19 @@ class MessagingService implements MessagingServiceInterface {
 	}//end resendTemplateId()
 
 	/**
-	 * Link a failed row and the row that sent it again, both ways.
+	 * Link a failed row and the row that sent it again, both ways, when the resend went out.
 	 *
-	 * @param array<string, mixed> $original The failed row.
-	 * @param string $newId The new row's id.
+	 * @param array<string, mixed>                                      $original The failed row.
+	 * @param array{status: string, messageId?: string, reason?: string} $outcome  The resend's sanitised outcome.
 	 *
 	 * @return void
 	 */
-	private function linkResend(array $original, string $newId): void {
+	private function linkResend(array $original, array $outcome): void {
+		$newId = (string)($outcome['messageId'] ?? '');
+		if ($outcome['status'] !== 'sent' || $newId === '') {
+			return;
+		}
+
 		$originalId = (string)($original['id'] ?? ($original['uuid'] ?? ''));
 		$this->saveMessageRow(row: $this->withMetadata(row: $original, fields: ['resentAs' => $newId]), rowId: $originalId);
 

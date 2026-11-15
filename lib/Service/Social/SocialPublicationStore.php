@@ -185,15 +185,10 @@ class SocialPublicationStore implements SocialPublicationStoreInterface {
 	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function open(string $postId, string $accountId, string $network): ?array {
-		$existing = $this->rowFor(postId: $postId, accountId: $accountId);
-		if ($existing !== null) {
-			return $existing;
-		}
-
-		return $this->store->save(
+		return ($this->rowFor(postId: $postId, accountId: $accountId) ?? $this->store->save(
 			schemaSlug: $this->schema(),
 			payload: ['postId' => $postId, 'accountId' => $accountId, 'network' => $network] + self::NEW_ROW,
-		);
+		));
 	}//end open()
 
 	/**

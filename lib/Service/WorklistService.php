@@ -241,7 +241,7 @@ class WorklistService implements WorklistServiceInterface {
 		$openLeads = $this->openLeads(leads: $leads, closedStages: $this->getClosedStageNames(pipelines: $pipelines));
 		$nowTs = (new DateTimeImmutable())->getTimestamp();
 		$items = array_merge(
-			$this->buildLeadRows(leads: $openLeads, nowTs: $nowTs),
+			array_values(array_map(fn (array $lead): array => $this->leadRow(lead: $lead, nowTs: $nowTs), $openLeads)),
 			$this->buildRequestRows(requests: $requests, nowTs: $nowTs)
 		);
 
@@ -302,22 +302,6 @@ class WorklistService implements WorklistServiceInterface {
 			'requestCount' => ($total - $leadCount),
 		];
 	}//end mineResponse()
-
-	/**
-	 * Normalize the user's leads into worklist rows.
-	 *
-	 * Port of the lead branch in MyWorkWidget.vue:75-87: skip leads in a
-	 * closed stage, default stage to `-` and priority to `normal`, due
-	 * date = expectedCloseDate, overdue when strictly before now.
-	 *
-	 * @param array<int, array<string, mixed>> $leads Open lead rows from OpenRegister.
-	 * @param int                              $nowTs Current Unix timestamp.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function buildLeadRows(array $leads, int $nowTs): array {
-		return array_values(array_map(fn (array $lead): array => $this->leadRow(lead: $lead, nowTs: $nowTs), $leads));
-	}//end buildLeadRows()
 
 	/**
 	 * The leads that are open work: not in a closed pipeline stage (MyWorkWidget.vue:76).
@@ -456,20 +440,35 @@ class WorklistService implements WorklistServiceInterface {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function items(string $userId, string $bucket='', string $lens='', string $sort='deadline', string $scope='open'): array {
+		$list = ['now' => new DateTimeImmutable(), 'bucket' => $bucket, 'lens' => $lens, 'sort' => $sort];
+		$items = self::listed(rows: $this->openWorkRows(userId: $userId, done: $scope === 'all'), list: $list);
+
+		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
+	}//end items()
+
+	/**
+	 * The work rows decorated with their bucket, kept to one list and lens, and sorted.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The open work rows.
+	 * @param array{now: DateTimeImmutable, bucket: string, lens: string, sort: string} $list The moment to judge on, the
+	 *   bucket ('' for all), the lens ('' or `all` for all) and the sort.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 */
+	private static function listed(array $rows, array $list): array {
 		$buckets = new WorkBuckets();
-		$now     = new DateTimeImmutable();
 		$items   = [];
-		foreach ($this->openWorkRows(userId: $userId, done: $scope === 'all') as $row) {
-			$row = $buckets->decorate(row: $row, now: $now);
-			if (($bucket === '' || $row['bucket'] === $bucket) && $buckets->inLens(kind: $row['kind'], lens: $lens) === true) {
+		foreach ($rows as $row) {
+			$row = $buckets->decorate(row: $row, now: $list['now']);
+			if (($list['bucket'] === '' || $row['bucket'] === $list['bucket']) && $buckets->inLens(kind: $row['kind'], lens: $list['lens']) === true) {
 				$items[] = $row;
 			}
 		}
 
-		usort($items, $buckets->comparator(sort: $sort));
+		usort($items, $buckets->comparator(sort: $list['sort']));
 
-		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
-	}//end items()
+		return $items;
+	}//end listed()
 
 	/**
 	 * The user's open leads (not in a closed stage), tickets (not closed) and

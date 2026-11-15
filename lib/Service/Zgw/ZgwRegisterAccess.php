@@ -199,16 +199,11 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 			return null;
 		}
 
-		// Strip any stray @self envelope; OR expects a flat payload + (register, schema) args.
-		if (array_key_exists('@self', $data) === true) {
-			unset($data['@self']);
-		}
-
 		return $this->saveFlat(objectService: $objectService, write: ['schema' => $schema, 'data' => $data, 'uuid' => $uuid]);
 	}//end save()
 
 	/**
-	 * Save a flat payload; null (logged) when the save fails.
+	 * Save a payload flat, without any stray `@self` envelope; null (logged) when the save fails.
 	 *
 	 * @param object                                                         $objectService The OpenRegister ObjectService.
 	 * @param array{schema: string, data: array<string, mixed>, uuid: string|null} $write         The schema slug, the flat
@@ -218,6 +213,11 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 	 */
 	private function saveFlat(object $objectService, array $write): array|null {
 		['schema' => $schema, 'data' => $data, 'uuid' => $uuid] = $write;
+		// OR expects a flat payload + (register, schema) args.
+		if (array_key_exists('@self', $data) === true) {
+			unset($data['@self']);
+		}
+
 		try {
 			$saved = $objectService->saveObject(object: $data, extend: [], register: self::REGISTER, schema: $schema, uuid: $uuid);
 		} catch (Throwable $e) {

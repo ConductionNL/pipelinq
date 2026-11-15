@@ -119,10 +119,8 @@ class ProgrammeController extends Controller {
 	): JSONResponse {
 		return $this->respond(
 			result: $this->portfolio->linkWork(
-				programmeId: $programmeId,
-				domainObjectType: $domainObjectType,
-				domainObjectRef: $domainObjectRef,
-				title: $title,
+				programmeId: $programmeId, domainObjectType: $domainObjectType,
+				domainObjectRef: $domainObjectRef, title: $title,
 			)
 		);
 	}//end linkWork()

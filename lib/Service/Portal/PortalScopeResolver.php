@@ -153,7 +153,18 @@ class PortalScopeResolver {
 	 *   audit are all unspecified
 	 */
 	public function classify(array $resolved, ?string $contactId, ?string $clientId): string|null|false {
-		$owner = new ScopedOwner(contactId: $contactId, clientId: $clientId);
+		return self::scopeOf(resolved: $resolved, owner: new ScopedOwner(contactId: $contactId, clientId: $clientId));
+	}//end classify()
+
+	/**
+	 * Where an object's owner sits in the resolved scope.
+	 *
+	 * @param array<string, mixed> $resolved The resolved scope from resolve().
+	 * @param ScopedOwner          $owner    The object's owning contact and client.
+	 *
+	 * @return string|null|false null=own, string=delegatedFrom, false=not visible.
+	 */
+	private static function scopeOf(array $resolved, ScopedOwner $owner): string|null|false {
 		if ($owner->isIn(contactIds: $resolved['ownContactIds'], clientIds: $resolved['ownClientIds']) === true) {
 			return null;
 		}
@@ -165,7 +176,7 @@ class PortalScopeResolver {
 		}
 
 		return false;
-	}//end classify()
+	}//end scopeOf()
 
 	/**
 	 * Normalise a possibly-null id into a list of non-empty id strings.

@@ -129,22 +129,46 @@ class JourneyService implements JourneyServiceInterface {
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function save(array $payload, string $createdByUid, ?string $journeyId = null): ?array {
+		$write = ['journeyId' => $journeyId, 'author' => $createdByUid];
+
+		return $this->storedAndCompiled(journey: $this->stamped(payload: $payload, write: $write), write: $write);
+	}//end save()
+
+	/**
+	 * The journey stamped for a write: updated now, created by the author when new, and its activation.
+	 *
+	 * @param array<string, mixed>                       $payload The journey fields.
+	 * @param array{journeyId: ?string, author: string} $write   The id when updating (null when creating) and the author.
+	 *
+	 * @return array<string, mixed> The journey to store.
+	 */
+	private function stamped(array $payload, array $write): array {
 		$payload['updatedAt'] = date('c', $this->time->getTime());
-		$before = $this->storedBefore(journeyId: $journeyId);
-		if ($journeyId === null) {
+		$before = $this->storedBefore(journeyId: $write['journeyId']);
+		if ($write['journeyId'] === null) {
 			$payload['createdAt'] = $payload['updatedAt'];
-			$payload['createdBy'] = $createdByUid;
+			$payload['createdBy'] = $write['author'];
 		}
 
-		$payload = $this->stampActivation(journey: $payload, before: $before);
+		return $this->stampActivation(journey: $payload, before: $before);
+	}//end stamped()
 
-		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $payload, id: $journeyId);
+	/**
+	 * Store a stamped journey and compile it as its author.
+	 *
+	 * @param array<string, mixed>                       $journey The journey to store.
+	 * @param array{journeyId: ?string, author: string} $write   The id when updating (null when creating) and the author.
+	 *
+	 * @return array<string, mixed>|null The stored journey, or null when the write failed.
+	 */
+	private function storedAndCompiled(array $journey, array $write): ?array {
+		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $write['journeyId']);
 		if ($stored === null) {
 			return null;
 		}
 
-		return $this->compile(journeyId: $this->store->idOf($stored), runAs: $createdByUid);
-	}//end save()
+		return $this->compile(journeyId: $this->store->idOf($stored), runAs: $write['author']);
+	}//end storedAndCompiled()
 
 	/**
 	 * The journey as stored before a write, or null for a new one.
@@ -179,14 +203,25 @@ class JourneyService implements JourneyServiceInterface {
 			return null;
 		}
 
-		$journey = $this->withStatus(journey: $journey, status: $status);
-		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $journeyId);
+		return $this->storedStatus(journey: $this->withStatus(journey: $journey, status: $status), write: ['journeyId' => $journeyId, 'runAs' => $runAs]);
+	}//end setStatus()
+
+	/**
+	 * Store a journey with its new status and compile it again.
+	 *
+	 * @param array<string, mixed>                     $journey The journey to store.
+	 * @param array{journeyId: string, runAs: string} $write   The journey UUID or slug, and the identity a scheduled journey runs as.
+	 *
+	 * @return array<string, mixed>|null The journey with its flow status, or null when the write failed.
+	 */
+	private function storedStatus(array $journey, array $write): ?array {
+		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $write['journeyId']);
 		if ($stored === null) {
 			return null;
 		}
 
-		return $this->compile(journeyId: $journeyId, runAs: $runAs);
-	}//end setStatus()
+		return $this->compile(journeyId: $write['journeyId'], runAs: $write['runAs']);
+	}//end storedStatus()
 
 	/**
 	 * The journey with a new status, stamped now.

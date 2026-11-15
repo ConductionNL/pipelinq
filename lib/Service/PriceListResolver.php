@@ -69,16 +69,24 @@ class PriceListResolver {
 		}
 
 		$line = new PriceListLine(
-			productId: $productId,
-			sku: trim((string) $variantSku),
-			quantity: $quantity,
-			currency: $currency,
-			day: $day
+			productId: $productId, sku: trim((string) $variantSku), quantity: $quantity,
+			currency: $currency, day: $day
 		);
-		$usable = array_values(array_filter($lists, fn (array $list): bool => $this->isUsable(list: $list, line: $line)));
 
-		return self::firstMatch(lists: $this->candidates(lists: $usable, client: $client), line: $line);
+		return self::firstMatch(lists: $this->candidates(lists: $this->usableLists(lists: $lists, line: $line), client: $client), line: $line);
 	}//end select()
+
+	/**
+	 * The lists that are active, valid on the line's day and in its currency.
+	 *
+	 * @param array<int, array<string, mixed>> $lists Every price list.
+	 * @param PriceListLine                    $line  The line to price.
+	 *
+	 * @return list<array<string, mixed>> The usable lists.
+	 */
+	private function usableLists(array $lists, PriceListLine $line): array {
+		return array_values(array_filter($lists, fn (array $list): bool => $this->isUsable(list: $list, line: $line)));
+	}//end usableLists()
 
 	/**
 	 * The answer of the first list, in order, with an entry that prices the line.
