@@ -450,7 +450,7 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 			];
 		}
 
-		return $this->inactivityForecast(accounts: $accounts, months: $this->policyMonths(policy: $policy), days: $days);
+		return $this->inactivityForecast(accounts: $accounts, window: ['months' => $this->policyMonths(policy: $policy), 'days' => $days]);
 	}//end getExpiryForecast()
 
 	/**
@@ -493,14 +493,14 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	 * Forecast the points of accounts that pass the inactivity cutoff within the window.
 	 *
 	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
-	 * @param int $months The inactivity window in months.
-	 * @param int $days Window size in days.
+	 * @param array{months: int, days: int} $window The inactivity window in months, and the window size in days.
 	 *
 	 * @return array{points: int, accounts: int, until: string}
 	 *
 	 * @spec exclude phpmd mechanical refactor
 	 */
-	private function inactivityForecast(array $accounts, int $months, int $days): array {
+	private function inactivityForecast(array $accounts, array $window): array {
+		['months' => $months, 'days' => $days] = $window;
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$cutoff = $now->modify('-' . max(0, $months - ((int)round($days / 30))) . ' months');
 
