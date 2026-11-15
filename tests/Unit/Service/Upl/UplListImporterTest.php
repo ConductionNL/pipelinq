@@ -276,4 +276,21 @@ class UplListImporterTest extends TestCase {
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end importerDownloading()
+	/**
+	 * A stored entry without a usable id is updated as a new save, never under an empty or structured id.
+	 *
+	 * @return void
+	 */
+	public function testAStoredEntryWithoutAnIdIsSavedWithoutOne(): void {
+		$stored = [
+			['id' => '', 'uuid' => ['not' => 'scalar'], 'name' => 'oud paspoort', 'uri' => 'http://standaarden.overheid.nl/owms/terms/paspoort', 'audience' => ['resident']],
+			['@self' => ['id' => ''], 'name' => 'oude bijstand', 'uri' => 'http://standaarden.overheid.nl/owms/terms/bijstand', 'audience' => ['resident']],
+		];
+
+		$result = $this->importer(stored: $stored)->import(csv: self::CSV);
+
+		$this->assertSame(['read' => 4, 'created' => 2, 'updated' => 2, 'unchanged' => 0, 'failed' => 0], $result);
+		$this->assertSame([null, null, null, null], array_column($this->saved, 'uuid'));
+		$this->assertSame(['paspoort', 'bijstand'], [$this->saved[0]['object']['name'], $this->saved[1]['object']['name']]);
+	}//end testAStoredEntryWithoutAnIdIsSavedWithoutOne()
 }//end class
