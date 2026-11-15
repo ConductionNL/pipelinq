@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\ConfiguredObjectFind;
 use OCA\Pipelinq\Util\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\ConfiguredSchemaCount;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -47,6 +48,7 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	use ConfiguredSchemaCount;
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
+	use ConfiguredObjectFind;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
@@ -191,22 +193,7 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	 *   and nothing inherited it
 	 */
 	public function getProgramme(string $programmeId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'loyaltyProgramme_schema');
-		if ($register === '' || $schema === '' || $programmeId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $programmeId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'loyaltyProgramme_schema'), id: $programmeId);
 	}//end getProgramme()
 
 	/**

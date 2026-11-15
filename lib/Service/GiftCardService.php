@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredObjectFind;
 use OCA\Pipelinq\Util\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
@@ -53,6 +54,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	use SerialisedPayload;
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
+	use ConfiguredObjectFind;
 
 	/**
 	 * Constructor.
@@ -728,22 +730,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	 *   and nothing inherited it
 	 */
 	public function getCard(string $giftCardId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');
-		if ($register === '' || $schema === '' || $giftCardId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $giftCardId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'giftCard_schema'), id: $giftCardId);
 	}//end getCard()
 
 	/**

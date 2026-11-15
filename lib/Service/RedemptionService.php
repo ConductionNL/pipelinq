@@ -29,6 +29,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredObjectFind;
 use OCA\Pipelinq\Util\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\ConfiguredSchemaCount;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -53,6 +54,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	use ConfiguredSchemaCount;
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
+	use ConfiguredObjectFind;
 
 	/**
 	 * Constructor.
@@ -354,22 +356,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	 *   and nothing inherited it
 	 */
 	public function getRedemption(string $redemptionId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '' || $redemptionId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $redemptionId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'redemption_schema'), id: $redemptionId);
 	}//end getRedemption()
 
 	/**
@@ -475,22 +462,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return array<string, mixed>|null
 	 */
 	private function getOption(string $optionId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'redemptionOption_schema');
-		if ($register === '' || $schema === '' || $optionId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $optionId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'redemptionOption_schema'), id: $optionId);
 	}//end getOption()
 
 	/**
