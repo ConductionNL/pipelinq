@@ -32,6 +32,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -57,6 +58,7 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
+	use SchemaRowQuery;
 
 	/**
 	 * Default register slug.
@@ -322,21 +324,13 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 			return [];
 		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'providerId' => $providerId,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TemplateApprovalSyncService.buildLocalIndex: findAll failed',
-				['providerId' => $providerId, 'exception' => $e->getMessage()]
-			);
+		$rows = $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['providerId' => $providerId],
+			failure: 'TemplateApprovalSyncService.buildLocalIndex: findAll failed',
+			context: ['providerId' => $providerId]
+		);
+		if ($rows === null) {
 			return [];
 		}
 

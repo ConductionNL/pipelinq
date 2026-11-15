@@ -36,6 +36,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowArrays;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -69,6 +70,7 @@ class ConsentService implements ConsentServiceInterface {
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
 	use ContainerObjectService;
+	use SchemaRowArrays;
 
 	/**
 	 * Default messagingConsentRecord schema slug.
@@ -797,37 +799,12 @@ class ConsentService implements ConsentServiceInterface {
 	 */
 	private function loadRecords(array $filters): array {
 		$contactId = (string)($filters['contactId'] ?? '');
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $this->getRegisterSlug(),
-							'schema' => $this->getSchemaSlug(),
-						]
-					),
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.loadAllRecords: findAll failed',
-				['contactId' => $contactId, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
+		return $this->schemaRowArrays(
+			filters: $filters,
+			failure: 'ConsentService.loadAllRecords: findAll failed',
+			context: ['contactId' => $contactId]
+		);
 	}//end loadRecords()
 
 	/**

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -55,6 +56,7 @@ class WebhookProcessorJob extends TimedJob {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
+	use SchemaRowQuery;
 
 	/**
 	 * Default register slug.
@@ -142,23 +144,12 @@ class WebhookProcessorJob extends TimedJob {
 	 * @return mixed
 	 */
 	private function queuedRows(object $objectService): mixed {
-		try {
-			return $objectService->findAll(
-				config: [
-					'filters' => [
-						'status' => 'queued',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorJob.drain: findAll failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['status' => 'queued'],
+			failure: 'WebhookProcessorJob.drain: findAll failed',
+			context: []
+		);
 	}//end queuedRows()
 
 	/**

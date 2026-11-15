@@ -35,6 +35,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowArrays;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,6 +63,7 @@ class BudgetService implements BudgetServiceInterface {
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
 	use ContainerObjectService;
+	use SchemaRowArrays;
 
 	/**
 	 * Default messageSendBudget schema slug.
@@ -266,24 +268,12 @@ class BudgetService implements BudgetServiceInterface {
 	 * @return mixed The rows, or null.
 	 */
 	private function findBudgetRows(object $objectService, string $tenantId, string $providerId) {
-		try {
-			return $objectService->findAll(
-				config: [
-					'filters' => [
-						'tenantId' => $tenantId,
-						'providerId' => $providerId,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.loadBudget: findAll failed',
-				['tenantId' => $tenantId, 'providerId' => $providerId, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['tenantId' => $tenantId, 'providerId' => $providerId],
+			failure: 'BudgetService.loadBudget: findAll failed',
+			context: ['tenantId' => $tenantId, 'providerId' => $providerId]
+		);
 	}//end findBudgetRows()
 
 	/**
@@ -308,34 +298,7 @@ class BudgetService implements BudgetServiceInterface {
 	 * @return array<int, array<string, mixed>> All budgets.
 	 */
 	private function loadAllBudgets(): array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.loadAllBudgets: findAll failed',
-				['exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
+		return $this->schemaRowArrays(filters: [], failure: 'BudgetService.loadAllBudgets: findAll failed', context: []);
 	}//end loadAllBudgets()
 
 	/**
