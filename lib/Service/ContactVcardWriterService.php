@@ -71,19 +71,11 @@ class ContactVcardWriterService {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function writeToAddressBook(array $properties, array $objData, string $objectType): ?string {
-		$existingUid = $objData['contactsUid'] ?? null;
-		$write = new VcardWrite(properties: $properties, existingUid: $existingUid);
-		$target = $this->writableTarget(write: $write, noBooksMessage: 'Pipelinq: No addressbooks available for sync');
-		if ($target === null) {
-			return null;
-		}
-
-		$created = $this->createOrUpdateCard(target: $target, failureMessage: 'Pipelinq: Failed to sync contact to addressbook');
-		if ($created === null) {
-			return null;
-		}
-
-		$contactsUid = $this->extractContactsUid(result: $created['result'], existingUid: $existingUid);
+		$write = new VcardWrite(properties: $properties, existingUid: ($objData['contactsUid'] ?? null));
+		$contactsUid = $this->writtenUid(
+			write: $write,
+			messages: ['noBooks' => 'Pipelinq: No addressbooks available for sync', 'failure' => 'Pipelinq: Failed to sync contact to addressbook']
+		);
 
 		if ($contactsUid !== null && $write->isLinked() === false) {
 			$this->storeContactsUidOnObject(updateData: array_replace($objData, ['contactsUid' => $contactsUid]), objectType: $objectType);
@@ -150,22 +142,34 @@ class ContactVcardWriterService {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function writeVcard(array $properties, ?string $existingUid = null): ?string {
-		$noBooksMessage = 'Pipelinq: No addressbooks available for contact provisioning';
-		$target = $this->writableTarget(write: new VcardWrite(properties: $properties, existingUid: $existingUid), noBooksMessage: $noBooksMessage);
+		$messages = [
+			'noBooks' => 'Pipelinq: No addressbooks available for contact provisioning',
+			'failure' => 'Pipelinq: Failed to provision contact in addressbook',
+		];
+		return $this->writtenUid(write: new VcardWrite(properties: $properties, existingUid: $existingUid), messages: $messages);
+	}//end writeVcard()
+
+	/**
+	 * Write the card and return its UID; null when no addressbook is available or the write failed.
+	 *
+	 * @param VcardWrite            $write    The properties and the linked card UID.
+	 * @param array<string, string> $messages Keys: noBooks (debug message), failure (error message).
+	 *
+	 * @return ?string The created/updated contact UID.
+	 */
+	private function writtenUid(VcardWrite $write, array $messages): ?string {
+		$target = $this->writableTarget(write: $write, noBooksMessage: $messages['noBooks']);
 		if ($target === null) {
 			return null;
 		}
 
-		$created = $this->createOrUpdateCard(target: $target, failureMessage: 'Pipelinq: Failed to provision contact in addressbook');
+		$created = $this->createOrUpdateCard(target: $target, failureMessage: $messages['failure']);
 		if ($created === null) {
 			return null;
 		}
 
-		return $this->extractContactsUid(
-			result: $created['result'],
-			existingUid: $existingUid
-		);
-	}//end writeVcard()
+		return $this->extractContactsUid(result: $created['result'], existingUid: $write->existingUid);
+	}//end writtenUid()
 
 	/**
 	 * Pick the addressbook and the properties for a create or an update.
