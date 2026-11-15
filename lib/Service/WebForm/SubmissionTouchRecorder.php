@@ -114,21 +114,35 @@ class SubmissionTouchRecorder {
 	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-the-website-enquiry-form-keeps-campaign-values-req-moc-003
 	 */
 	public function record(array $form, array $payload, ?string $idempotencyKey = null): ?array {
+		return $this->recordLogged(payload: $payload, submit: ['form' => $form, 'idempotencyKey' => $idempotencyKey]);
+
+	}//end record()
+
+	/**
+	 * Record one submit; a failure is logged and records nothing.
+	 *
+	 * @param array<string, mixed>                                      $payload The raw submitted fields.
+	 * @param array{form: array<string, mixed>, idempotencyKey: ?string} $submit  The published form and the submit's
+	 *                                                                           Idempotency-Key.
+	 *
+	 * @return array<string, mixed>|null The saved touchpoint, or null when nothing was recorded.
+	 */
+	private function recordLogged(array $payload, array $submit): ?array {
 		try {
-			$formId = trim((string)($form['id'] ?? ''));
+			$formId = trim((string)($submit['form']['id'] ?? ''));
 			return $this->recordOrThrow(
 				payload: $payload,
-				submit: ['formId' => $formId, 'nonce' => self::nonceFor(formId: $formId, idempotencyKey: $idempotencyKey)]
+				submit: ['formId' => $formId, 'nonce' => self::nonceFor(formId: $formId, idempotencyKey: $submit['idempotencyKey'])]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: website form submit stored, its campaign touch was not recorded.',
-				['form' => (string)($form['id'] ?? ''), 'reason' => $e->getMessage()]
+				['form' => (string)($submit['form']['id'] ?? ''), 'reason' => $e->getMessage()]
 			);
 			return null;
 		}
 
-	}//end record()
+	}//end recordLogged()
 
 	/**
 	 * The campaign values of a submit: the five keys a touchpoint's `utm` holds, trimmed and capped.
