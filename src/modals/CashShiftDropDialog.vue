@@ -3,9 +3,9 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
 -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Remove cash')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-drop">
@@ -34,16 +34,17 @@
 				{{ t('pipelinq', 'Record') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftDropDialog',
 	components: {
-		NcDialog,
+		CnDialog,
 		NcButton,
 		NcTextField,
 		NcSelect,

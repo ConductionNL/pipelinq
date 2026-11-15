@@ -1,0 +1,4 @@
+- [x] WorkBuckets: due date per kind, list, due group, lens, sort
+- [x] WorklistService::items + client names; GET /api/worklist/items (bucket, lens, sort, done, csv)
+- [x] My work: three lists on the endpoint, kind pill, priority, Downloaden; phone list (viewport narrow, needs nc-vue feat/r33-dashboard-widget-viewport)
+- [x] Tests: PHPUnit WorkBuckets/WorklistService/WorklistController, vitest myWorkPage

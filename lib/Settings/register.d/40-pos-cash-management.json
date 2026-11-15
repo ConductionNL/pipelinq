@@ -66,6 +66,7 @@
           },
           "operator": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the cashier who opened the shift (server-set from the session)",
             "maxLength": 255,
             "facetable": true,
@@ -73,6 +74,7 @@
           },
           "managedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the manager who reviews the close",
             "maxLength": 255,
             "facetable": true,
@@ -179,6 +181,7 @@
           },
           "droppedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of who performed the drop (server-set from the session)",
             "maxLength": 255,
             "facetable": true,
@@ -223,6 +226,7 @@
           },
           "countedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the counter (server-set from the session)",
             "maxLength": 255,
             "facetable": true,
@@ -322,6 +326,7 @@
           },
           "approvedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the approver (server-set from the session)",
             "maxLength": 255,
             "facetable": true,

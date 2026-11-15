@@ -36,7 +36,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
  */
 
 declare(strict_types=1);
@@ -44,7 +44,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -52,9 +57,14 @@ use Throwable;
 /**
  * Nest customer organisations, with the three guards that make it survivable.
  *
- * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+ * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class PartyOrganisationTreeService {
+class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterface {
+	use JsonSerializableToArray;
+	use PartyObjectRead;
+
 	/**
 	 * The default depth cap, used when the instance has not set one.
 	 *
@@ -99,11 +109,11 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return int The maximum number of nodes from the root to a leaf.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function maxDepth(): int {
 		$configured = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'party_organisation_max_depth',
 			(string)self::DEFAULT_MAX_DEPTH
 		);
@@ -140,7 +150,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return int The depth.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function depthOf(string $path): int {
 		$trimmed = trim($path, self::PATH_SEPARATOR);
@@ -177,18 +187,15 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return array<string, mixed> `status` plus either `moved` or `error`.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function setParent(string $nodeId, ?string $parentId): array {
 		$nodeId = trim($nodeId);
 		$parentId = trim((string)$parentId);
 
-		if ($nodeId === '') {
-			return ['status' => 400, 'error' => 'An organisation is required.'];
-		}
-
-		if ($nodeId === $parentId) {
-			return ['status' => 409, 'error' => 'An organisation cannot be its own parent.'];
+		$invalid = $this->moveRequestError(nodeId: $nodeId, parentId: $parentId);
+		if ($invalid !== null) {
+			return $invalid;
 		}
 
 		$node = $this->read(id: $nodeId);
@@ -201,12 +208,65 @@ class PartyOrganisationTreeService {
 			return $resolved;
 		}
 
-		$newPath = $this->pathUnder(nodeId: $nodeId, parentPath: (string)$resolved['path']);
+		$placement = ['nodeId' => $nodeId, 'parentId' => $parentId, 'parentPath' => (string)$resolved['path']];
+		return $this->applyMove(move: $this->buildMove(node: $node, placement: $placement));
+	}//end setParent()
+
+	/**
+	 * The error for a move without an organisation or onto itself, or null when the request is valid.
+	 *
+	 * @param string $nodeId The trimmed organisation id.
+	 * @param string $parentId The trimmed parent id ('' for a root).
+	 *
+	 * @return array<string, mixed>|null The error result.
+	 */
+	private function moveRequestError(string $nodeId, string $parentId): array|null {
+		if ($nodeId === '') {
+			return ['status' => 400, 'error' => 'An organisation is required.'];
+		}
+
+		if ($nodeId === $parentId) {
+			return ['status' => 409, 'error' => 'An organisation cannot be its own parent.'];
+		}
+
+		return null;
+	}//end moveRequestError()
+
+	/**
+	 * Describe a move: the node, its old and new path and its current descendants.
+	 *
+	 * @param array<string, mixed> $node The organisation.
+	 * @param array{nodeId: string, parentId: string, parentPath: string} $placement The organisation id,
+	 *        the new parent id ('' for a root) and the new parent's path.
+	 *
+	 * @return array<string, mixed> The move.
+	 *
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 */
+	private function buildMove(array $node, array $placement): array {
+		['nodeId' => $nodeId, 'parentId' => $parentId, 'parentPath' => $parentPath] = $placement;
 		$oldPath = (string)($node['organisationPath'] ?? $this->pathUnder(nodeId: $nodeId, parentPath: ''));
+		return [
+			'node' => $node,
+			'nodeId' => $nodeId,
+			'parentId' => $parentId,
+			'newPath' => $this->pathUnder(nodeId: $nodeId, parentPath: $parentPath),
+			'oldPath' => $oldPath,
+			'descendants' => $this->descendantsOf(path: $oldPath),
+		];
+	}//end buildMove()
 
-		$descendants = $this->descendantsOf(path: $oldPath);
-
-		$deepest = $this->deepestAfter(newPath: $newPath, oldPath: $oldPath, descendants: $descendants);
+	/**
+	 * Guard the depth cap, then write the moved subtree.
+	 *
+	 * @param array<string, mixed> $move The move.
+	 *
+	 * @return array<string, mixed> `status` plus either `moved` or `error`.
+	 *
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 */
+	private function applyMove(array $move): array {
+		$deepest = $this->deepestAfter(move: $move);
 		if ($deepest > $this->maxDepth()) {
 			return [
 				'status' => 409,
@@ -214,14 +274,7 @@ class PartyOrganisationTreeService {
 			];
 		}
 
-		$writes = $this->movePlan(
-			node: $node,
-			nodeId: $nodeId,
-			parentId: $parentId,
-			newPath: $newPath,
-			oldPath: $oldPath,
-			descendants: $descendants,
-		);
+		$writes = $this->movePlan(move: $move);
 
 		foreach ($writes as $uuid => $object) {
 			if ($this->write(uuid: (string)$uuid, object: $object) === false) {
@@ -229,8 +282,8 @@ class PartyOrganisationTreeService {
 			}
 		}
 
-		return ['status' => 200, 'moved' => count($writes), 'path' => $newPath];
-	}//end setParent()
+		return ['status' => 200, 'moved' => count($writes), 'path' => $move['newPath']];
+	}//end applyMove()
 
 	/**
 	 * The proposed parent's path, or the refusal reading it produced.
@@ -240,7 +293,7 @@ class PartyOrganisationTreeService {
 	 *
 	 * @return array<string, mixed> Either `path`, or `status` plus `error`.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	private function parentPathFor(string $nodeId, string $parentId): array {
 		if ($parentId === '') {
@@ -270,18 +323,16 @@ class PartyOrganisationTreeService {
 	/**
 	 * How deep the deepest node sits once the subtree has moved.
 	 *
-	 * @param string $newPath The node's path after the move.
-	 * @param string $oldPath The node's path before it.
-	 * @param array<int, array<string, mixed>> $descendants The subtree.
+	 * @param array<string, mixed> $move The move (see movePlan()).
 	 *
 	 * @return int The deepest level the move reaches.
 	 */
-	private function deepestAfter(string $newPath, string $oldPath, array $descendants): int {
-		$newDepth = $this->depthOf(path: $newPath);
-		$oldDepth = $this->depthOf(path: $oldPath);
+	private function deepestAfter(array $move): int {
+		$newDepth = $this->depthOf(path: $move['newPath']);
+		$oldDepth = $this->depthOf(path: $move['oldPath']);
 		$deepest = $newDepth;
 
-		foreach ($descendants as $descendant) {
+		foreach ($move['descendants'] as $descendant) {
 			$relative = ($this->depthOf(path: (string)($descendant['organisationPath'] ?? '')) - $oldDepth);
 			$deepest = max($deepest, ($newDepth + $relative));
 		}
@@ -296,36 +347,25 @@ class PartyOrganisationTreeService {
 	 * pointing at a path its parent no longer holds is invisible until
 	 * somebody reads the subtree and finds half of it.
 	 *
-	 * @param array<string, mixed> $node The organisation being moved.
-	 * @param string $nodeId Its uuid.
-	 * @param string $parentId The new parent, or an empty string for a root.
-	 * @param string $newPath The node's path after the move.
-	 * @param string $oldPath The node's path before it.
-	 * @param array<int, array<string, mixed>> $descendants The subtree.
+	 * @param array<string, mixed> $move The organisation being moved (`node`), its uuid (`nodeId`), the
+	 *                                   new parent or an empty string for a root (`parentId`), the node's
+	 *                                   path after and before the move (`newPath`, `oldPath`) and the
+	 *                                   subtree (`descendants`).
 	 *
 	 * @return array<string, array<string, mixed>> The objects to write.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
-	private function movePlan(
-		array $node,
-		string $nodeId,
-		string $parentId,
-		string $newPath,
-		string $oldPath,
-		array $descendants,
-	): array {
+	private function movePlan(array $move): array {
+		['newPath' => $newPath, 'oldPath' => $oldPath] = $move;
 		$newParent = null;
-		if ($parentId !== '') {
-			$newParent = $parentId;
+		if ($move['parentId'] !== '') {
+			$newParent = $move['parentId'];
 		}
 
-		$writes = [$nodeId => array_merge($node, [
-			'parentOrganisation' => $newParent,
-			'organisationPath' => $newPath,
-		])];
+		$writes = [$move['nodeId'] => array_merge($move['node'], ['parentOrganisation' => $newParent, 'organisationPath' => $newPath])];
 
-		foreach ($descendants as $descendant) {
+		foreach ($move['descendants'] as $descendant) {
 			$descendantId = (string)($descendant['id'] ?? $descendant['uuid'] ?? '');
 			if ($descendantId === '') {
 				continue;
@@ -345,18 +385,37 @@ class PartyOrganisationTreeService {
 	 * @param string $path The materialised path of the subtree root.
 	 *
 	 * @return array<int, array<string, mixed>> The descendants.
+	 *
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function descendantsOf(string $path): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '' || trim($path, self::PATH_SEPARATOR) === '') {
 			return [];
 		}
 
+		$rows = $this->readSubtreeRows(filters: ['register' => $register, 'schema' => $schema], path: $path);
+		if ($rows === null) {
+			return [];
+		}
+
+		return $this->rowsUnderPath(rows: $rows, path: $path);
+	}//end descendantsOf()
+
+	/**
+	 * Read the organisation rows for a subtree scan; null (logged) when the read fails.
+	 *
+	 * @param array{register: string, schema: string} $filters The register and client schema.
+	 * @param string $path The subtree root path (for the log).
+	 *
+	 * @return iterable<mixed>|null The rows.
+	 */
+	private function readSubtreeRows(array $filters, string $path): iterable|null {
 		try {
-			$rows = $this->objectService->findAll(
+			return $this->objectService->findAll(
 				[
-					'filters' => ['register' => $register, 'schema' => $schema],
+					'filters' => $filters,
 					'limit' => self::SUBTREE_LIMIT,
 				]
 			);
@@ -366,9 +425,19 @@ class PartyOrganisationTreeService {
 				['path' => $path, 'exception' => $e->getMessage()]
 			);
 
-			return [];
+			return null;
 		}
+	}//end readSubtreeRows()
 
+	/**
+	 * The rows whose organisation path lies strictly under the given path.
+	 *
+	 * @param iterable<mixed> $rows The organisation rows.
+	 * @param string $path The subtree root path.
+	 *
+	 * @return array<int, array<string, mixed>> The descendants.
+	 */
+	private function rowsUnderPath(iterable $rows, string $path): array {
 		$prefix = rtrim($path, self::PATH_SEPARATOR) . self::PATH_SEPARATOR;
 		$descendants = [];
 		foreach ($rows as $row) {
@@ -384,7 +453,7 @@ class PartyOrganisationTreeService {
 		}
 
 		return $descendants;
-	}//end descendantsOf()
+	}//end rowsUnderPath()
 
 	/**
 	 * Read one organisation as a plain array.
@@ -394,28 +463,7 @@ class PartyOrganisationTreeService {
 	 * @return array<string, mixed>|null The row, or null.
 	 */
 	private function read(string $id): ?array {
-		try {
-			$entity = $this->objectService->find(id: $id);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'PartyOrganisationTreeService: could not read the organisation',
-				['uuid' => $id, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $id, failure: 'PartyOrganisationTreeService: could not read the organisation', idKey: 'uuid');
 	}//end read()
 
 	/**
@@ -430,9 +478,13 @@ class PartyOrganisationTreeService {
 		try {
 			$this->objectService->saveObject(
 				object: $object,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+							schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '')
+						),
+					uuid: $uuid
+				)
 			);
 
 			return true;
@@ -445,26 +497,4 @@ class PartyOrganisationTreeService {
 			return false;
 		}
 	}//end write()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The row data, or null.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

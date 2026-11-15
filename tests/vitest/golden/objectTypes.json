@@ -1,0 +1,354 @@
+{
+	"groups": [
+		{
+			"key": "core",
+			"name": "[pipelinq] Pipelinq Objects",
+			"description": "[pipelinq] Core CRM object types used by Pipelinq",
+			"registerConfigKey": "register",
+			"registerSlug": "pipelinq"
+		},
+		{
+			"key": "pos",
+			"name": "[pipelinq] Point of Sale",
+			"description": "[pipelinq] POS transactions, receipts, refunds, cash drawer and staff",
+			"registerConfigKey": "register",
+			"registerSlug": "pipelinq"
+		},
+		{
+			"key": "appointments",
+			"name": "[pipelinq] Appointment Booking",
+			"description": "[pipelinq] Bookable services, resources, bookings and walk-in tickets",
+			"registerConfigKey": "register",
+			"registerSlug": "pipelinq"
+		},
+		{
+			"key": "projects",
+			"name": "[pipelinq] Projects",
+			"description": "[pipelinq] Project / WBS hierarchy: projects, phases, tasks and activities",
+			"registerConfigKey": "register",
+			"registerSlug": "pipelinq"
+		},
+		{
+			"key": "export",
+			"name": "[pipelinq] BI Export",
+			"description": "[pipelinq] Data-warehouse export jobs, destinations and run history",
+			"registerConfigKey": "register",
+			"registerSlug": "pipelinq"
+		},
+		{
+			"key": "marketing",
+			"name": "[pipelinq] Marketing",
+			"description": "[pipelinq] Marketing blasts and campaigns",
+			"registerConfigKey": "register",
+			"registerSlug": "pipelinq"
+		}
+	],
+	"types": [
+		{
+			"slug": "client",
+			"group": "core",
+			"label": "[pipelinq] Client",
+			"description": "[pipelinq] Companies and organisations"
+		},
+		{
+			"slug": "contact",
+			"group": "core",
+			"label": "[pipelinq] Contact",
+			"description": "[pipelinq] Contact persons"
+		},
+		{
+			"slug": "lead",
+			"group": "core",
+			"label": "[pipelinq] Lead",
+			"description": "[pipelinq] Sales leads"
+		},
+		{
+			"slug": "ticket",
+			"group": "core",
+			"label": "[pipelinq] Ticket",
+			"description": "[pipelinq] Requests, complaints and contact moments"
+		},
+		{
+			"slug": "pipeline",
+			"group": "core",
+			"label": "[pipelinq] Pipeline",
+			"description": "[pipelinq] Pipeline stages"
+		},
+		{
+			"slug": "product",
+			"group": "core",
+			"label": "[pipelinq] Product",
+			"description": "[pipelinq] Products and services"
+		},
+		{
+			"slug": "productCategory",
+			"group": "core",
+			"label": "[pipelinq] Product Category",
+			"description": "[pipelinq] Product categories"
+		},
+		{
+			"slug": "leadProduct",
+			"group": "core",
+			"label": "[pipelinq] Lead Product",
+			"description": "[pipelinq] Product line items on leads"
+		},
+		{
+			"slug": "relationship",
+			"group": "core",
+			"label": "[pipelinq] Relationship",
+			"description": "[pipelinq] Typed relationships between contacts and clients"
+		},
+		{
+			"slug": "skill",
+			"group": "core",
+			"label": "[pipelinq] Skill",
+			"description": "[pipelinq] Skills for agent routing"
+		},
+		{
+			"slug": "agentProfile",
+			"group": "core",
+			"label": "[pipelinq] Agent Profile",
+			"description": "[pipelinq] Agent skill profiles"
+		},
+		{
+			"slug": "billingCategory",
+			"group": "core",
+			"label": "[pipelinq] Billing Category",
+			"description": "[pipelinq] Billable categories and tags"
+		},
+		{
+			"slug": "crmTask",
+			"group": "core",
+			"label": "[pipelinq] Task",
+			"description": "[pipelinq] Work items / tasks"
+		},
+		{
+			"slug": "posTransaction",
+			"group": "pos",
+			"label": "[pipelinq] POS Transaction",
+			"description": "[pipelinq] Point-of-sale transactions (kassabon)"
+		},
+		{
+			"slug": "posTransactionLine",
+			"group": "pos",
+			"label": "[pipelinq] POS Line Item",
+			"description": "[pipelinq] Line items on a POS transaction"
+		},
+		{
+			"slug": "refundReason",
+			"group": "pos",
+			"label": "[pipelinq] Refund Reason",
+			"description": "[pipelinq] Reason codes for POS refunds"
+		},
+		{
+			"slug": "posRefund",
+			"group": "pos",
+			"label": "[pipelinq] POS Refund",
+			"description": "[pipelinq] Refund and return documents for POS transactions"
+		},
+		{
+			"slug": "posRefundLine",
+			"group": "pos",
+			"label": "[pipelinq] POS Refund Line",
+			"description": "[pipelinq] Returned items on a POS refund"
+		},
+		{
+			"slug": "receiptTemplate",
+			"group": "pos",
+			"label": "[pipelinq] Receipt Template",
+			"description": "[pipelinq] Customizable POS receipt templates"
+		},
+		{
+			"slug": "receiptPrintLog",
+			"group": "pos",
+			"label": "[pipelinq] Receipt Print Log",
+			"description": "[pipelinq] Audit log of printed or emailed receipts"
+		},
+		{
+			"slug": "cashShift",
+			"group": "pos",
+			"label": "[pipelinq] Cash Shift",
+			"description": "[pipelinq] POS cash-drawer shifts"
+		},
+		{
+			"slug": "cashDrop",
+			"group": "pos",
+			"label": "[pipelinq] Cash Drop",
+			"description": "[pipelinq] Cash drops and pickups during a shift"
+		},
+		{
+			"slug": "posCashCount",
+			"group": "pos",
+			"label": "[pipelinq] Cash Count",
+			"description": "[pipelinq] Cash count entries for a shift"
+		},
+		{
+			"slug": "cashDiff",
+			"group": "pos",
+			"label": "[pipelinq] Cash Difference",
+			"description": "[pipelinq] Over/short differences on cash reconciliation"
+		},
+		{
+			"slug": "posRole",
+			"group": "pos",
+			"label": "[pipelinq] POS Role",
+			"description": "[pipelinq] POS staff roles and permissions"
+		},
+		{
+			"slug": "posStaff",
+			"group": "pos",
+			"label": "[pipelinq] POS Staff",
+			"description": "[pipelinq] POS staff members with PIN access"
+		},
+		{
+			"slug": "posZReport",
+			"group": "pos",
+			"label": "[pipelinq] Z-Report",
+			"description": "[pipelinq] POS end-of-day Z-reports"
+		},
+		{
+			"slug": "appointmentService",
+			"group": "appointments",
+			"label": "[pipelinq] Service",
+			"description": "[pipelinq] Bookable services"
+		},
+		{
+			"slug": "appointmentResource",
+			"group": "appointments",
+			"label": "[pipelinq] Resource",
+			"description": "[pipelinq] Bookable resources (staff, rooms, equipment)"
+		},
+		{
+			"slug": "appointmentBooking",
+			"group": "appointments",
+			"label": "[pipelinq] Booking",
+			"description": "[pipelinq] Appointment bookings"
+		},
+		{
+			"slug": "walkInTicket",
+			"group": "appointments",
+			"label": "[pipelinq] Walk-in Ticket",
+			"description": "[pipelinq] Walk-in queue tickets"
+		},
+		{
+			"slug": "availabilityCache",
+			"group": "appointments",
+			"label": "[pipelinq] Availability Cache",
+			"description": "[pipelinq] Cached bookable-slot availability"
+		},
+		{
+			"slug": "exportJob",
+			"group": "export",
+			"label": "[pipelinq] Export Job",
+			"description": "[pipelinq] BI / data-warehouse export jobs"
+		},
+		{
+			"slug": "exportDestination",
+			"group": "export",
+			"label": "[pipelinq] Export Destination",
+			"description": "[pipelinq] BI export destinations (data warehouse / BI tool)"
+		},
+		{
+			"slug": "exportRun",
+			"group": "export",
+			"label": "[pipelinq] Export Run",
+			"description": "[pipelinq] BI export run history"
+		},
+		{
+			"slug": "blast",
+			"group": "marketing",
+			"label": "[pipelinq] Blast",
+			"description": "[pipelinq] Marketing blasts / campaigns"
+		},
+		{
+			"slug": "campaign",
+			"group": "marketing",
+			"label": "[pipelinq] Campaign",
+			"description": "[pipelinq] Campaigns that group mailings, posts and a landing page"
+		},
+		{
+			"slug": "touchpoint",
+			"group": "marketing",
+			"label": "[pipelinq] Touchpoint",
+			"description": "[pipelinq] One attributable interaction with a campaign"
+		},
+		{
+			"slug": "campaignEvent",
+			"group": "marketing",
+			"label": "[pipelinq] Campaign event",
+			"description": "[pipelinq] An event a campaign holds, with its places"
+		},
+		{
+			"slug": "eventRegistration",
+			"group": "marketing",
+			"label": "[pipelinq] Registration",
+			"description": "[pipelinq] One sign-up for a campaign event"
+		},
+		{
+			"slug": "journey",
+			"group": "marketing",
+			"label": "[pipelinq] Journey",
+			"description": "[pipelinq] A trigger, a wait, a condition and one action"
+		},
+		{
+			"slug": "journeyRun",
+			"group": "marketing",
+			"label": "[pipelinq] Journey run",
+			"description": "[pipelinq] What a journey did for one contact"
+		},
+		{
+			"slug": "weeklyReview",
+			"group": "marketing",
+			"label": "[pipelinq] Weekly review",
+			"description": "[pipelinq] What moved last week, and what to try"
+		},
+		{
+			"slug": "channelConversation",
+			"group": "marketing",
+			"label": "[pipelinq] Conversation",
+			"description": "[pipelinq] Messaging conversations (WhatsApp / SMS)"
+		},
+		{
+			"slug": "channelMessage",
+			"group": "marketing",
+			"label": "[pipelinq] Message",
+			"description": "[pipelinq] Outbound / inbound messages within a conversation"
+		},
+		{
+			"slug": "savedReply",
+			"group": "core",
+			"label": "[pipelinq] Saved reply",
+			"description": "[pipelinq] Replies the team writes once and agents insert when they answer"
+		},
+		{
+			"slug": "itemLabel",
+			"group": "marketing",
+			"label": "[pipelinq] Label",
+			"description": "[pipelinq] The labels people can pick for articles, leads and clients."
+		},
+		{
+			"slug": "channelProvider",
+			"group": "marketing",
+			"label": "[pipelinq] Channel Provider",
+			"description": "[pipelinq] Messaging channel providers (WhatsApp / SMS gateways)"
+		},
+		{
+			"slug": "mailTransport",
+			"group": "marketing",
+			"label": "[pipelinq] Mail Transport",
+			"description": "[pipelinq] How a mailing leaves the instance: the mail server, a Mail account or a bulk provider"
+		},
+		{
+			"slug": "messageSendBudget",
+			"group": "marketing",
+			"label": "[pipelinq] Message Send Budget",
+			"description": "[pipelinq] Per-channel outbound send budgets"
+		},
+		{
+			"slug": "messageTemplate",
+			"group": "marketing",
+			"label": "[pipelinq] Message Template",
+			"description": "[pipelinq] Reusable outbound message templates"
+		}
+	]
+}

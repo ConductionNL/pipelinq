@@ -35,8 +35,10 @@ use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Service\ReportingService;
 use OCA\Pipelinq\Service\PosStaffReportService;
 use OCA\Pipelinq\Service\PosStaffService;
+use OCA\Pipelinq\Service\TierService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -102,6 +104,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 			aggregationRunner: $runner,
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		self::assertSame(120, $phpBalance);
@@ -122,6 +125,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 			aggregationRunner: $runner,
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		self::assertSame(0, $service->getAccountBalance(accountId: 'nobody'));
@@ -170,6 +174,8 @@ class QueryPushdownBatch2Test extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 			aggregationRunner: $runner,
+			tierService: $this->createMock(TierService::class),
+			reportingService: $this->createMock(ReportingService::class),
 		);
 
 		$report = $service->getTierReport(programmeId: 'p1');

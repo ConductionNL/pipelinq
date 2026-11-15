@@ -17,7 +17,7 @@
  * Nothing here fetches. The page hands it the one response the report
  * endpoint returned.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 
 /** The attribution models the report computes, in the order they are offered. */
@@ -54,7 +54,7 @@ const MODEL_LABELS = {
  *
  * @param {string} basis The basis the report reported.
  * @return {{label: string, description: string, color: string}} The chip.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 export function chipForBasis(basis) {
 	return (
@@ -71,7 +71,7 @@ export function chipForBasis(basis) {
  *
  * @param {string} model One of first, last, linear.
  * @return {string} The label.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 export function labelForModel(model) {
 	return MODEL_LABELS[model] || model
@@ -80,25 +80,48 @@ export function labelForModel(model) {
 /**
  * The channel table, one row per channel.
  *
- * A reach the report left null stays null and renders as "not recorded".
- * Turning it into 0 here would claim nobody was reached, which is a
- * different and wrong statement.
+ * A reach the report left null stays null and renders as "not recorded",
+ * and so do the opens: only a blast measures those. Turning either into 0
+ * here would claim nobody was reached, which is a different and wrong
+ * statement.
  *
  * @param {object} report The report response.
  * @return {Array<object>} The rows.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 export function channelRows(report) {
 	const channels = report?.channels || []
-	return channels.map((row) => ({
+	return channels.map(channelRow)
+}
+
+/**
+ * @param {object} row One channel of the report.
+ * @return {object} The channel's table row.
+ */
+function channelRow(row) {
+	const count = (key) => row[key] || 0
+	return {
 		channel: row.channel,
-		reach: row.reach === null || row.reach === undefined ? null : row.reach,
-		opened: row.opened || 0,
-		clicks: row.click || 0,
-		visits: row.visit || 0,
-		submissions: row.submit || 0,
-		replies: row.reply || 0,
-	}))
+		...reachCounts(row),
+		clicks: count('click'),
+		visits: count('visit'),
+		submissions: count('submit'),
+		replies: count('reply'),
+		attended: count('attend'),
+		leads: count('leads'),
+	}
+}
+
+/**
+ * @param {object} row One channel of the report.
+ * @return {{reach: (number|null), opened: (number|null)}} Its reach and opens; both unrecorded without a reach figure.
+ */
+function reachCounts(row) {
+	const unrecorded = row.reach === null || row.reach === undefined
+	return {
+		reach: unrecorded ? null : row.reach,
+		opened: unrecorded ? null : row.opened || 0,
+	}
 }
 
 /**
@@ -107,7 +130,7 @@ export function channelRows(report) {
  * @param {object} report The report response.
  * @param {string} model One of first, last, linear.
  * @return {Array<{channel: string, value: number, share: number}>} The rows.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
  */
 export function modelRows(report, model) {
 	const byChannel = report?.models?.[model]?.byChannel || {}
@@ -130,7 +153,7 @@ export function modelRows(report, model) {
  *
  * @param {object} report The report response.
  * @return {Array<object>} The rows.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 export function leadRows(report) {
 	const leads = report?.leads || []
@@ -153,7 +176,7 @@ export function leadRows(report) {
  * @param {object} report The report response.
  * @return {{leads: number, submissions: number, clicks: number, attributedValue: number, cost: (number|null), budget: (number|null)}}
  *         The tiles.
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
 export function summaryTiles(report) {
 	const engagement = report?.engagement || {}

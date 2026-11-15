@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\JourneyController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCP\AppFramework\Http;
@@ -80,8 +81,7 @@ class JourneyControllerTest extends TestCase {
 			'pipelinq',
 			$this->request,
 			$this->journeys,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true])),
 		);
 
 		$this->authenticate('marketeer');
@@ -247,6 +247,18 @@ class JourneyControllerTest extends TestCase {
 	}//end testEveryEndpointRefusesACallerWithoutASession()
 
 	/**
+	 * Only active and paused are accepted, and an unknown journey is 404.
+	 *
+	 * @return void
+	 */
+	public function testSetStatusAcceptsOnlyActiveAndPaused(): void {
+		$this->journeys->expects($this->once())->method('setStatus')->willReturn(null);
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller->setStatus(id: 'journey-1', status: 'draft')->getStatus());
+		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller->setStatus(id: 'nope', status: 'paused')->getStatus());
+	}//end testSetStatusAcceptsOnlyActiveAndPaused()
+
+	/**
 	 * Point the shared session mock at a uid, or at nobody.
 	 *
 	 * @param string|null $uid The acting uid, or null for no session.
@@ -268,8 +280,7 @@ class JourneyControllerTest extends TestCase {
 			'pipelinq',
 			$this->request,
 			$this->journeys,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true])),
 		);
 	}//end authenticate()
 }//end class

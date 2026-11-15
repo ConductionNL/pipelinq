@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\TemplateApprovalSyncService;
+use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -35,21 +35,21 @@ use Psr\Log\LoggerInterface;
 /**
  * Hourly WhatsApp template-state sync.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class TemplateApprovalSyncJob extends TimedJob {
 	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param TemplateApprovalSyncService $syncService Sync orchestrator.
+	 * @param TemplateApprovalSyncServiceInterface $syncService Sync orchestrator.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private TemplateApprovalSyncService $syncService,
+		private TemplateApprovalSyncServiceInterface $syncService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

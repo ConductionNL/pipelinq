@@ -1,0 +1,489 @@
+{
+    "full, three pages": {
+        "file": {
+            "schema": "lead",
+            "rows": 1203,
+            "contents": "0d52276a6af11fab19b715082f9a5986ed5aa22ad3d9174a4b57cfdd392503b3",
+            "size_bytes": 79119,
+            "sha256": "0d52276a6af11fab19b715082f9a5986ed5aa22ad3d9174a4b57cfdd392503b3",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 500
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 1000
+            }
+        ]
+    },
+    "full, exactly one page": {
+        "file": {
+            "schema": "lead",
+            "rows": 500,
+            "contents": "5d9f8c360cf855a1252e1743478dba489d3ecc9ee8845491a65f30373e207037",
+            "size_bytes": 32518,
+            "sha256": "5d9f8c360cf855a1252e1743478dba489d3ecc9ee8845491a65f30373e207037",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 500
+            }
+        ]
+    },
+    "full, empty": {
+        "file": {
+            "schema": "lead",
+            "rows": 0,
+            "contents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "size_bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": []
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "full, cap inside first page": {
+        "file": {
+            "schema": "lead",
+            "rows": 7,
+            "contents": "63dfe3902d24941f6223509e284600da40122ce6ec4ebbb5456f69ab5fa58626",
+            "size_bytes": 430,
+            "sha256": "63dfe3902d24941f6223509e284600da40122ce6ec4ebbb5456f69ab5fa58626",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "full, cap on a page edge": {
+        "file": {
+            "schema": "lead",
+            "rows": 500,
+            "contents": "5d9f8c360cf855a1252e1743478dba489d3ecc9ee8845491a65f30373e207037",
+            "size_bytes": 32518,
+            "sha256": "5d9f8c360cf855a1252e1743478dba489d3ecc9ee8845491a65f30373e207037",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "full, cap in a later page": {
+        "file": {
+            "schema": "lead",
+            "rows": 777,
+            "contents": "fb1321e6379c6b1269e5e249c430f20b27fb87aaea490bf89e391afb00e9efbe",
+            "size_bytes": 50800,
+            "sha256": "fb1321e6379c6b1269e5e249c430f20b27fb87aaea490bf89e391afb00e9efbe",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 500
+            }
+        ]
+    },
+    "full, cap above the rows": {
+        "file": {
+            "schema": "lead",
+            "rows": 12,
+            "contents": "659f9e0684a7962e5c5eee178ca0bcbb2e5faeff342300b81c5c447019c50194",
+            "size_bytes": 742,
+            "sha256": "659f9e0684a7962e5c5eee178ca0bcbb2e5faeff342300b81c5c447019c50194",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "full, second page fails": {
+        "file": {
+            "schema": "lead",
+            "rows": 500,
+            "contents": "5d9f8c360cf855a1252e1743478dba489d3ecc9ee8845491a65f30373e207037",
+            "size_bytes": 32518,
+            "sha256": "5d9f8c360cf855a1252e1743478dba489d3ecc9ee8845491a65f30373e207037",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 500
+            }
+        ]
+    },
+    "full, first page fails": {
+        "file": {
+            "schema": "lead",
+            "rows": 0,
+            "contents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "size_bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": []
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "full, watermark ignored": {
+        "file": {
+            "schema": "lead",
+            "rows": 3,
+            "contents": "a16d925f4d63143a7b105658ee0a00396b02847ec0b74ce625538e01de5d2421",
+            "size_bytes": 183,
+            "sha256": "a16d925f4d63143a7b105658ee0a00396b02847ec0b74ce625538e01de5d2421",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "incremental from a watermark": {
+        "file": {
+            "schema": "lead",
+            "rows": 600,
+            "contents": "1be4c3f7d5ab5b5a9720f4151e4d16fffd01338e8bdf18da678cea59a126be36",
+            "size_bytes": 25346,
+            "sha256": "1be4c3f7d5ab5b5a9720f4151e4d16fffd01338e8bdf18da678cea59a126be36",
+            "compression_used": "none",
+            "watermark_to": "2026-02-28T10:00:00+00:00",
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer",
+                "_deleted": "boolean"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead",
+                    "updated": {
+                        ">": "2026-01-01T00:00:00+00:00"
+                    }
+                },
+                "limit": 500,
+                "offset": 0
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead",
+                    "updated": {
+                        ">": "2026-01-01T00:00:00+00:00"
+                    }
+                },
+                "limit": 500,
+                "offset": 500
+            }
+        ]
+    },
+    "incremental without watermark": {
+        "file": {
+            "schema": "lead",
+            "rows": 4,
+            "contents": "afbbe4830df3ffbd93f2667faa50e1380af36c371eb3652af66d89bf7850f290",
+            "size_bytes": 180,
+            "sha256": "afbbe4830df3ffbd93f2667faa50e1380af36c371eb3652af66d89bf7850f290",
+            "compression_used": "none",
+            "watermark_to": "2026-02-04T10:00:00+00:00",
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer",
+                "_deleted": "boolean"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "incremental, empty watermark": {
+        "file": {
+            "schema": "lead",
+            "rows": 4,
+            "contents": "afbbe4830df3ffbd93f2667faa50e1380af36c371eb3652af66d89bf7850f290",
+            "size_bytes": 180,
+            "sha256": "afbbe4830df3ffbd93f2667faa50e1380af36c371eb3652af66d89bf7850f290",
+            "compression_used": "none",
+            "watermark_to": "2026-02-04T10:00:00+00:00",
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer",
+                "_deleted": "boolean"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "incremental on register column": {
+        "file": {
+            "schema": "lead",
+            "rows": 4,
+            "contents": "afbbe4830df3ffbd93f2667faa50e1380af36c371eb3652af66d89bf7850f290",
+            "size_bytes": 180,
+            "sha256": "afbbe4830df3ffbd93f2667faa50e1380af36c371eb3652af66d89bf7850f290",
+            "compression_used": "none",
+            "watermark_to": null,
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer",
+                "_deleted": "boolean"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": {
+                        ">": "x"
+                    },
+                    "schema": "sch-lead"
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ]
+    },
+    "incremental, capped": {
+        "file": {
+            "schema": "lead",
+            "rows": 501,
+            "contents": "f006a65cd1c04d1b8927e40c32d5ab10799751a7a980faf9a58e46cfeaad186f",
+            "size_bytes": 21089,
+            "sha256": "f006a65cd1c04d1b8927e40c32d5ab10799751a7a980faf9a58e46cfeaad186f",
+            "compression_used": "none",
+            "watermark_to": "2026-02-28T10:00:00+00:00",
+            "dropped_columns": [],
+            "column_definitions": {
+                "id": "string",
+                "updated": "string",
+                "amount": "integer",
+                "_deleted": "boolean"
+            }
+        },
+        "requests": [
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead",
+                    "updated": {
+                        ">": "2026"
+                    }
+                },
+                "limit": 500,
+                "offset": 0
+            },
+            {
+                "filters": {
+                    "register": "reg-1",
+                    "schema": "sch-lead",
+                    "updated": {
+                        ">": "2026"
+                    }
+                },
+                "limit": 500,
+                "offset": 500
+            }
+        ]
+    },
+    "incremental, no column": {
+        "threw": "OCP\\AppFramework\\OCS\\OCSBadRequestException",
+        "message": "Watermark column is required for incremental mode.",
+        "requests": []
+    },
+    "unknown schema": {
+        "threw": "OCP\\AppFramework\\OCS\\OCSBadRequestException",
+        "message": "Schema 'nothing' does not exist.",
+        "requests": []
+    },
+    "bad slug": {
+        "threw": "OCP\\AppFramework\\OCS\\OCSBadRequestException",
+        "message": "Schema '1x' does not exist.",
+        "requests": []
+    }
+}

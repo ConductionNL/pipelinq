@@ -30,6 +30,9 @@ use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
 use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Export\ExportRunService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\AppFramework\OCS\OCSForbiddenException;
+use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -109,6 +112,27 @@ class ExportRunControllerTest extends TestCase {
 			$logger
 		);
 	}//end setUp()
+
+	/**
+	 * The controller over the current mocks, logging to the given logger.
+	 *
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return ExportRunController The controller.
+	 */
+	private function controllerLoggingTo(LoggerInterface $logger): ExportRunController {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => $text);
+
+		return new ExportRunController($this->request,
+			$this->runs,
+			$this->jobs,
+			$this->policy,
+			$this->userSession,
+			$l10n,
+			$logger
+		);
+	}//end controllerLoggingTo()
 
 	/**
 	 * Stub the acting user (or none) and the policy decision.
@@ -223,4 +247,58 @@ class ExportRunControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 	}//end testRetryRunRejectsNonRetryableStatus()
+
+	/**
+	 * Golden: the export-admin gate asks the policy about the session user, and an
+	 * unexpected failure is logged under the action's label and answered 500.
+	 *
+	 * @return void
+	 */
+	public function testUnexpectedFailureIsLoggedAndAnswered500(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')
+			->with('ExportRunController::showRun failed', ['exception' => 'disk full']);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('analyst-1');
+		$this->userSession->method('getUser')->willReturn($user);
+		$this->policy->expects($this->once())->method('isExportAdmin')->with('analyst-1')->willReturn(true);
+		$this->runs->method('getRun')->willThrowException(new \RuntimeException('disk full'));
+
+		$response = $this->controllerLoggingTo($logger)->showRun('run-1');
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'An unexpected error occurred'], $response->getData());
+	}//end testUnexpectedFailureIsLoggedAndAnswered500()
+
+	/**
+	 * Golden: every refusal and every service exception maps to its exact status and body,
+	 * and a refused caller never reaches the service.
+	 *
+	 * @return void
+	 */
+	public function testGateAndErrorMappingAnswerExactly(): void {
+		$cases = [
+			'no session' => [null, true, null, [Http::STATUS_UNAUTHORIZED, ['error' => 'Authentication required']]],
+			'no export role' => ['u1', false, null, [Http::STATUS_FORBIDDEN, ['error' => 'Insufficient permissions']]],
+			'not found' => ['u1', true, new OCSNotFoundException('gone'), [Http::STATUS_NOT_FOUND, ['error' => 'gone']]],
+			'forbidden' => ['u1', true, new OCSForbiddenException('nope'), [Http::STATUS_FORBIDDEN, ['error' => 'nope']]],
+			'bad request' => ['u1', true, new OCSBadRequestException('bad'), [Http::STATUS_UNPROCESSABLE_ENTITY, ['error' => 'bad']]],
+		];
+		foreach ($cases as $name => [$uid, $isAdmin, $thrown, $expected]) {
+			$this->userSession = $this->createMock(IUserSession::class);
+			$this->policy = $this->createMock(ExportAccessPolicy::class);
+			$this->runs = $this->createMock(ExportRunService::class);
+			$this->authenticate($uid, $isAdmin);
+			if ($thrown === null) {
+				$this->runs->expects($this->never())->method('getRun');
+			} else {
+				$this->runs->method('getRun')->willThrowException($thrown);
+			}
+
+			$response = $this->controllerLoggingTo($this->createMock(LoggerInterface::class))->showRun('run-1');
+
+			$this->assertSame($expected, [$response->getStatus(), $response->getData()], $name);
+		}
+	}//end testGateAndErrorMappingAnswerExactly()
+
 }//end class

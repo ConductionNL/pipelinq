@@ -52,6 +52,7 @@ use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * MessagingWebhookController wire-contract coverage.
@@ -133,7 +134,11 @@ class MessagingWebhookControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The saved object.
 			 */
-			public function saveObject(array $object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$this->writes++;
 				$object['@self'] = ['id' => 'saved-1'];
 				return $object;
@@ -206,6 +211,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$this->createMock(BudgetService::class),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$sms = new SmsAdapter($container,
@@ -216,6 +222,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$this->createMock(BudgetService::class),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		return new MessagingWebhookController($this->request(), $whatsApp, $sms, $logger);
@@ -566,4 +573,25 @@ class MessagingWebhookControllerTest extends TestCase {
 			);
 		}
 	}//end testEveryVendorClientComparesTheWebhookSecretInConstantTime()
+
+	/**
+	 * Without a usable messaging service account the webhook writes nothing
+	 * and answers 503, so the provider retries the delivery later. The answer
+	 * names no reason: the caller is the internet.
+	 *
+	 * @return void
+	 */
+	public function testBothWebhooksAnswer503WhenTheServiceAccountIsUnusable(): void {
+		$whatsApp = $this->createMock(WhatsAppAdapter::class);
+		$whatsApp->method('handleInboundWebhook')->willReturn(['status' => 'serviceUnavailable']);
+		$sms = $this->createMock(SmsAdapter::class);
+		$sms->method('handleInboundWebhook')->willReturn(['status' => 'serviceUnavailable']);
+
+		$controller = new MessagingWebhookController($this->request(), $whatsApp, $sms, $this->createMock(LoggerInterface::class));
+
+		foreach ([$controller->whatsapp('provider-1'), $controller->sms('provider-1')] as $response) {
+			$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
+			$this->assertSame(['error' => 'serviceUnavailable'], $response->getData());
+		}
+	}//end testBothWebhooksAnswer503WhenTheServiceAccountIsUnusable()
 }//end class

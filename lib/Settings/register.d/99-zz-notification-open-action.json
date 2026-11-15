@@ -1,0 +1,247 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Round 3 review point 5 (openspec change round3-review-points). A pipelinq notification such as 'Client changed: X' arrived without a link, so it led nowhere. The canonical x-openregister-notifications dialect (ADR-031) has an `actions[]` list; a target of kind `object-detail` is resolved by OpenRegister's AnnotationNotificationDispatcher to the deep link pipelinq registers for the schema (DeepLinkRegistrationEvent), so the button opens the record's own pipelinq page. This fragment gives every pipelinq rule one primary 'Open' action. It only adds `actions` to rules that other fragments declare; tests/Unit/Settings/ReviewRound3RegisterTest.php fails when a rule has no Open action, or when this fragment names a rule nobody declares."
+  },
+  "components": {
+    "schemas": {
+      "contact": {
+        "slug": "contact",
+        "x-openregister-notifications": {
+          "newContact": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "x-openregister-notifications": {
+          "newLead": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          },
+          "leadWon": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          },
+          "leadLost": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          },
+          "leadUpdated": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "crmTask": {
+        "slug": "crmTask",
+        "x-openregister-notifications": {
+          "taskCompleted": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          },
+          "taskExpired": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          },
+          "taskUpdated": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "enquiry": {
+        "slug": "enquiry",
+        "x-openregister-notifications": {
+          "newEnquiry": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "surveyResponse": {
+        "slug": "surveyResponse",
+        "x-openregister-notifications": {
+          "detractorResponse": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "salesContract": {
+        "slug": "salesContract",
+        "x-openregister-notifications": {
+          "contractExpiring": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "x-openregister-notifications": {
+          "clientUpdated": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ticket": {
+        "slug": "ticket",
+        "x-openregister-notifications": {
+          "ticketUpdated": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          },
+          "newTicket": {
+            "actions": [
+              {
+                "label": {
+                  "en": "Open",
+                  "nl": "Openen"
+                },
+                "primary": true,
+                "target": {
+                  "kind": "object-detail"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

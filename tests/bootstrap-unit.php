@@ -269,6 +269,9 @@ if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) ==
 	}
 }
 
+// Integriq event and OpenRegister helper stubs, shared with the other bootstraps.
+require_once __DIR__ . '/bootstrap-cross-app-stubs.php';
+
 // Portal test helpers.
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php') === true) {
 	require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
@@ -277,3 +280,35 @@ if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php')
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php') === true) {
 	require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
 }
+
+// Load every lib/ class before the first test starts collecting coverage.
+//
+// A class whose parent or interface lives in another file is bound at runtime,
+// the moment the autoloader includes it, and pcov records that binding as an
+// executed line of the class file. Loaded lazily, the binding lands inside
+// whichever test happens to touch the class first, which then "executes" a
+// class it never lists in @covers/@uses and is reported risky; with
+// beStrictAboutCoverageMetadata its whole coverage is discarded. Which tests
+// that hits depends only on run order. Loading the classes here, before any
+// test runs, makes coverage independent of order.
+(static function (): void {
+	$libDir = realpath(__DIR__ . '/../lib');
+	if ($libDir === false) {
+		return;
+	}
+
+	$files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($libDir, \FilesystemIterator::SKIP_DOTS));
+	foreach ($files as $file) {
+		if ($file->getExtension() !== 'php') {
+			continue;
+		}
+
+		$relative = substr($file->getPathname(), strlen($libDir) + 1, -4);
+		$fqcn = 'OCA\\Pipelinq\\' . str_replace('/', '\\', $relative);
+		try {
+			class_exists($fqcn) || interface_exists($fqcn) || trait_exists($fqcn) || enum_exists($fqcn);
+		} catch (\Throwable) {
+			// A class whose dependency is unavailable in the unit context stays lazy.
+		}
+	}
+})();

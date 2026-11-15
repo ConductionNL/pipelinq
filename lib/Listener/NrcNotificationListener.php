@@ -34,18 +34,20 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-007
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-007
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
-use OCA\Pipelinq\Service\Zgw\ZrcClient;
-use OCA\Pipelinq\Service\Zgw\ZtcClient;
+use OCA\Pipelinq\Kernel\Contracts\NrcNotificationListenerInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZrcClientInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZtcClientInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -54,7 +56,7 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class NrcNotificationListener {
+class NrcNotificationListener implements NrcNotificationListenerInterface {
 	/**
 	 * Notifications MUST complete within this many milliseconds (REQ-ZGW-007).
 	 */
@@ -63,15 +65,15 @@ class NrcNotificationListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ZgwRegisterAccess $registers Register facade.
-	 * @param ZrcClient $zrc ZRC client (status fetches).
-	 * @param ZtcClient $ztc ZTC client (omschrijving resolution + cache invalidation).
+	 * @param ZgwRegisterAccessInterface $registers Register facade.
+	 * @param ZrcClientInterface $zrc ZRC client (status fetches).
+	 * @param ZtcClientInterface $ztc ZTC client (omschrijving resolution + cache invalidation).
 	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
-		private ZgwRegisterAccess $registers,
-		private ZrcClient $zrc,
-		private ZtcClient $ztc,
+		private ZgwRegisterAccessInterface $registers,
+		private ZrcClientInterface $zrc,
+		private ZtcClientInterface $ztc,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -84,18 +86,33 @@ class NrcNotificationListener {
 	 *
 	 * @return void
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The per-kanaal match is an
-	 *  intentional flat routing table — clearer as one dispatcher than split.
-	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-007
+	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-007
 	 */
 	public function dispatch(array $abonnement, array $notification): void {
 		$start = microtime(true);
 
+		$endpoint = $this->endpointFor(abonnement: $abonnement);
+		if ($endpoint === null) {
+			return;
+		}
+
+		$this->markReceived(abonnement: $abonnement);
+		$this->runHandler(endpoint: $endpoint, notification: $notification);
+		$this->warnWhenOverBudget(start: $start, notification: $notification);
+	}//end dispatch()
+
+	/**
+	 * The endpoint a subscription belongs to; an unknown one is logged.
+	 *
+	 * @param array<string, mixed> $abonnement NrcAbonnement record.
+	 *
+	 * @return array<string, mixed>|null The endpoint, or null when unknown.
+	 */
+	private function endpointFor(array $abonnement): ?array {
 		$endpointId = (string)($abonnement['endpointId'] ?? '');
 		$endpoint = null;
 		if ($endpointId !== '') {
-			$endpoint = $this->registers->find(ZgwRegisterAccess::SCHEMA_ENDPOINT, $endpointId);
+			$endpoint = $this->registers->find(ZgwRegisterAccessInterface::SCHEMA_ENDPOINT, $endpointId);
 		}
 
 		if ($endpoint === null) {
@@ -103,41 +120,90 @@ class NrcNotificationListener {
 				'ZGW NRC: notification received for unknown endpoint',
 				['endpoint' => $endpointId]
 			);
-			return;
 		}
 
-		$this->markReceived(abonnement: $abonnement);
+		return $endpoint;
+	}//end endpointFor()
 
-		$channel = (string)($notification['channel'] ?? '');
-		$resource = (string)($notification['resource'] ?? '');
-		$action = (string)($notification['action'] ?? '');
+	/**
+	 * Run the handler of the notification's route; a failing handler is
+	 * logged, never rethrown (REQ-ZGW-007 — no retries).
+	 *
+	 * @param array<string, mixed> $endpoint Endpoint payload.
+	 * @param array<string, mixed> $notification Inbound payload.
+	 *
+	 * @return void
+	 */
+	private function runHandler(array $endpoint, array $notification): void {
+		$route = self::routeOf(notification: $notification);
+		$handler = $this->handlerFor(route: $route);
 		try {
-			match (true) {
-				($channel === 'zaken' && $resource === 'zaak' && $action === 'create')
-					=> $this->onCaseCreated(endpoint: $endpoint, notification: $notification),
-				($channel === 'zaken' && $resource === 'status' && $action === 'create')
-					=> $this->onStatusCreated(endpoint: $endpoint, notification: $notification),
-				($channel === 'besluiten' && $resource === 'besluit' && $action === 'create')
-					=> $this->onDecisionCreated(endpoint: $endpoint, notification: $notification),
-				($channel === 'catalogi')
-					=> $this->onCatalogiChange(endpoint: $endpoint, notification: $notification),
-				default => null,
-			};
+			if ($handler !== null) {
+				$handler($endpoint, $notification);
+			}
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'ZGW NRC: dispatch handler threw',
-				['channel' => $channel, 'resource' => $resource, 'action' => $action, 'err' => $e->getMessage()]
-			);
+			$this->logger->error('ZGW NRC: dispatch handler threw', $route + ['err' => $e->getMessage()]);
+		}
+	}//end runHandler()
+
+	/**
+	 * The channel, resource and action of a notification.
+	 *
+	 * @param array<string, mixed> $notification Inbound payload.
+	 *
+	 * @return array{channel: string, resource: string, action: string} The route.
+	 */
+	private static function routeOf(array $notification): array {
+		return [
+			'channel' => (string)($notification['channel'] ?? ''),
+			'resource' => (string)($notification['resource'] ?? ''),
+			'action' => (string)($notification['action'] ?? ''),
+		];
+	}//end routeOf()
+
+	/**
+	 * The handler of a route: every catalogi change, else the handler of the
+	 * exact channel, resource and action.
+	 *
+	 * @param array{channel: string, resource: string, action: string} $route The route.
+	 *
+	 * @return (Closure(array<string, mixed>, array<string, mixed>): void)|null The handler, null when the route has none.
+	 */
+	private function handlerFor(array $route): ?Closure {
+		if ($route['channel'] === 'catalogi') {
+			return $this->onCatalogiChange(...);
 		}
 
+		$handlers = [
+			'zaken' => [
+				'zaak' => ['create' => $this->onCaseCreated(...)],
+				'status' => ['create' => $this->onStatusCreated(...)],
+			],
+			'besluiten' => [
+				'besluit' => ['create' => $this->onDecisionCreated(...)],
+			],
+		];
+
+		return ($handlers[$route['channel']][$route['resource']][$route['action']] ?? null);
+	}//end handlerFor()
+
+	/**
+	 * Log a dispatch that took longer than the budget.
+	 *
+	 * @param float                $start        The microtime the dispatch started.
+	 * @param array<string, mixed> $notification Inbound payload.
+	 *
+	 * @return void
+	 */
+	private function warnWhenOverBudget(float $start, array $notification): void {
 		$elapsedMs = (int)round((microtime(true) - $start) * 1000);
 		if ($elapsedMs > self::TARGET_DISPATCH_MS) {
 			$this->logger->warning(
 				'ZGW NRC: dispatch exceeded 5s budget',
-				['channel' => $channel, 'resource' => $resource, 'action' => $action, 'ms' => $elapsedMs]
+				self::routeOf(notification: $notification) + ['ms' => $elapsedMs]
 			);
 		}
-	}//end dispatch()
+	}//end warnWhenOverBudget()
 
 	/**
 	 * Update `laatstOntvangenOp` on the matching NrcAbonnement.
@@ -155,7 +221,7 @@ class NrcNotificationListener {
 		}
 
 		$this->registers->save(
-			ZgwRegisterAccess::SCHEMA_ABONN,
+			ZgwRegisterAccessInterface::SCHEMA_ABONN,
 			$abonnement,
 			$saveUuid
 		);
@@ -170,7 +236,7 @@ class NrcNotificationListener {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $endpoint keeps the uniform
-	 *  per-kanaal handler signature invoked from the dispatch() match table.
+	 *  per-kanaal handler signature invoked from the dispatch() routing table.
 	 */
 	private function onCaseCreated(array $endpoint, array $notification): void {
 		$caseUrl = (string)($notification['hoofdObject'] ?? $notification['resourceUrl'] ?? '');
@@ -179,7 +245,7 @@ class NrcNotificationListener {
 		}
 
 		$existing = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_MAPPING,
+			ZgwRegisterAccessInterface::SCHEMA_MAPPING,
 			['zgwUrl' => $caseUrl]
 		);
 		if ($existing !== []) {
@@ -205,28 +271,52 @@ class NrcNotificationListener {
 		}
 
 		$mappings = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_MAPPING,
+			ZgwRegisterAccessInterface::SCHEMA_MAPPING,
 			['zgwUrl' => $caseUrl]
 		);
 		if ($mappings === []) {
 			return;
 		}
 
-		$mapping = $mappings[0];
+		$omsch = $this->statusDescription(endpoint: $endpoint, statusUrl: $statusUrl);
+		$this->applyRequestStatus(requestId: (string)($mappings[0]['pipelinqId'] ?? ''), omsch: $omsch);
+	}//end onStatusCreated()
+
+	/**
+	 * The omschrijving of a status's statustype, fetched from the ZRC and ZTC.
+	 *
+	 * @param array<string, mixed> $endpoint  Endpoint payload.
+	 * @param string               $statusUrl The status URL.
+	 *
+	 * @return string|null The omschrijving, null when the status cannot be
+	 *                     fetched (logged), has no statustype or none resolves.
+	 */
+	private function statusDescription(array $endpoint, string $statusUrl): ?string {
 		try {
 			$status = $this->zrc->getStatus($endpoint, $statusUrl);
 		} catch (Throwable $e) {
 			$this->logger->warning('ZGW NRC: failed to GET status', ['url' => $statusUrl, 'err' => $e->getMessage()]);
-			return;
+			return null;
 		}
 
 		$statustypeUrl = (string)($status['statustype'] ?? '');
-		$omsch = null;
-		if ($statustypeUrl !== '') {
-			$omsch = $this->ztc->resolveOmschrijvingFromUrl($endpoint, $statustypeUrl);
+		if ($statustypeUrl === '') {
+			return null;
 		}
 
-		$requestId = (string)($mapping['pipelinqId'] ?? '');
+		return $this->ztc->resolveOmschrijvingFromUrl($endpoint, $statustypeUrl);
+	}//end statusDescription()
+
+	/**
+	 * Write a status omschrijving onto a pipelinq Request; nothing happens
+	 * without a Request id or an omschrijving.
+	 *
+	 * @param string      $requestId The pipelinq Request id, '' when the mapping has none.
+	 * @param string|null $omsch     The status omschrijving, null when unresolved.
+	 *
+	 * @return void
+	 */
+	private function applyRequestStatus(string $requestId, ?string $omsch): void {
 		if ($requestId === '' || $omsch === null) {
 			return;
 		}
@@ -239,7 +329,7 @@ class NrcNotificationListener {
 
 		$request['status'] = $omsch;
 		$this->registers->save('request', $request, $requestId);
-	}//end onStatusCreated()
+	}//end applyRequestStatus()
 
 	/**
 	 * Handle besluit.create — observability log, mapping already persisted on outbound.
@@ -250,7 +340,7 @@ class NrcNotificationListener {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $endpoint keeps the uniform
-	 *  per-kanaal handler signature invoked from the dispatch() match table.
+	 *  per-kanaal handler signature invoked from the dispatch() routing table.
 	 */
 	private function onDecisionCreated(array $endpoint, array $notification): void {
 		$url = (string)($notification['resourceUrl'] ?? $notification['hoofdObject'] ?? '');
@@ -259,7 +349,7 @@ class NrcNotificationListener {
 		}
 
 		$existing = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_MAPPING,
+			ZgwRegisterAccessInterface::SCHEMA_MAPPING,
 			['zgwUrl' => $url]
 		);
 		if ($existing !== []) {
@@ -280,11 +370,11 @@ class NrcNotificationListener {
 	private function onCatalogiChange(array $endpoint, array $notification): void {
 		$resource = (string)($notification['resource'] ?? '*');
 		$resourceMap = [
-			'caseType' => ZtcClient::RESOURCE_ZAAKTYPE,
-			'statustype' => ZtcClient::RESOURCE_STATUSTYPE,
-			'roltype' => ZtcClient::RESOURCE_ROLTYPE,
-			'resultaattype' => ZtcClient::RESOURCE_RESULTAATTYPE,
-			'besluittype' => ZtcClient::RESOURCE_BESLUITTYPE,
+			'caseType' => ZtcClientInterface::RESOURCE_ZAAKTYPE,
+			'statustype' => ZtcClientInterface::RESOURCE_STATUSTYPE,
+			'roltype' => ZtcClientInterface::RESOURCE_ROLTYPE,
+			'resultaattype' => ZtcClientInterface::RESOURCE_RESULTAATTYPE,
+			'besluittype' => ZtcClientInterface::RESOURCE_BESLUITTYPE,
 		];
 		$bucket = $resourceMap[$resource] ?? '*';
 		$this->ztc->invalidateCache($endpoint, $bucket);

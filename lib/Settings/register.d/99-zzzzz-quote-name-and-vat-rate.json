@@ -1,0 +1,33 @@
+{
+    "$comment": "PqOfferte: a quote line has a name of its own (a catalogue product's name, or your own for a line of your own: \"Koppeling met het kassasysteem\"), and a quote keeps the VAT rate its VAT is worked out at (\"Btw 21%\"). Optional and additive; salesQuote and salesQuoteLine move to 1.1.0 and the register needs a fresh import before the fields are kept.",
+    "components": {
+        "schemas": {
+            "salesQuote": {
+                "slug": "salesQuote",
+                "version": "1.1.0",
+                "properties": {
+                    "vatRate": {
+                        "type": "number",
+                        "title": "VAT rate",
+                        "description": "The VAT percentage the quote's VAT is worked out at.",
+                        "minimum": 0,
+                        "maximum": 100,
+                        "default": 21
+                    }
+                }
+            },
+            "salesQuoteLine": {
+                "slug": "salesQuoteLine",
+                "version": "1.1.0",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "The line's name on the quote: the product's name, or your own for a line of your own.",
+                        "maxLength": 255
+                    }
+                }
+            }
+        }
+    }
+}

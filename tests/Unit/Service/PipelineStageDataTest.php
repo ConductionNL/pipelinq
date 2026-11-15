@@ -53,7 +53,7 @@ class PipelineStageDataTest extends TestCase {
 		$this->assertSame('Sales Pipeline', $data['title']);
 		$this->assertTrue($data['isDefault']);
 		$this->assertSame('EUR', $data['totalsLabel']);
-		$this->assertNull($data['viewId']);
+		$this->assertArrayNotHasKey('viewId', $data);
 		$this->assertIsArray($data['stages']);
 		$this->assertIsArray($data['propertyMappings']);
 	}//end testSalesPipelineStructure()
@@ -143,7 +143,7 @@ class PipelineStageDataTest extends TestCase {
 
 		$this->assertSame('Service Requests', $data['title']);
 		$this->assertFalse($data['isDefault']);
-		$this->assertNull($data['totalsLabel']);
+		$this->assertArrayNotHasKey('totalsLabel', $data);
 		$this->assertIsArray($data['stages']);
 	}//end testServiceRequestsPipelineStructure()
 
@@ -225,4 +225,111 @@ class PipelineStageDataTest extends TestCase {
 		$this->assertSame('stage', $mappings[0]['columnProperty']);
 		$this->assertSame('value', $mappings[0]['totalsProperty']);
 	}//end testSalesPipelinePropertyMappings()
+
+	/**
+	 * The totals label is the reporting currency handed in.
+	 *
+	 * @return void
+	 */
+	public function testSalesPipelineTotalsLabelIsTheReportingCurrency(): void {
+		$data = $this->stageData->getSalesPipelineData(viewId: null, currency: 'USD');
+
+		$this->assertSame('USD', $data['totalsLabel']);
+	}//end testSalesPipelineTotalsLabelIsTheReportingCurrency()
+
+	/**
+	 * Both default pipelines satisfy the real pipeline schema fragment.
+	 *
+	 * Pipelinq review R5: OpenRegister refused the default pipeline with
+	 * "propertyMappings.1.totalsProperty null", because the request mapping
+	 * sent null for a string property. This walks the payload against the
+	 * schema in lib/Settings/pipelinq_register.json, so a null (or any value
+	 * of the wrong type) under a typed property fails here first.
+	 *
+	 * @return void
+	 */
+	public function testDefaultPipelinesSatisfyThePipelineSchema(): void {
+		$register = json_decode(
+			(string)file_get_contents(__DIR__.'/../../../lib/Settings/pipelinq_register.json'),
+			true
+		);
+		$schema   = $register['components']['schemas']['pipeline'];
+
+		foreach ([$this->stageData->getSalesPipelineData(), $this->stageData->getServiceRequestsPipelineData()] as $data) {
+			$errors = $this->typeErrors(value: $data, schema: $schema, path: '');
+			$this->assertSame([], $errors, $data['title'].' violates the pipeline schema');
+		}
+	}//end testDefaultPipelinesSatisfyThePipelineSchema()
+
+	/**
+	 * Collect type violations of a value against a JSON-schema fragment.
+	 *
+	 * Checks `type` (a null is only allowed when the type lists "null"),
+	 * `required`, object `properties` and array `items`.
+	 *
+	 * @param mixed  $value  The value.
+	 * @param array  $schema The schema fragment.
+	 * @param string $path   The dotted path, for messages.
+	 *
+	 * @return array<int, string> The violations.
+	 */
+	private function typeErrors(mixed $value, array $schema, string $path): array {
+		$types  = (array)($schema['type'] ?? []);
+		$errors = [];
+		if ($types !== [] && $this->matchesType(value: $value, types: $types) === false) {
+			return [$path.' '.json_encode($value).' is not '.implode('|', $types)];
+		}
+
+		if (is_array($value) === true && array_is_list($value) === true && isset($schema['items']) === true) {
+			foreach ($value as $index => $item) {
+				$errors = array_merge($errors, $this->typeErrors(value: $item, schema: $schema['items'], path: $path.'.'.$index));
+			}
+
+			return $errors;
+		}
+
+		if (is_array($value) === true) {
+			foreach (($schema['required'] ?? []) as $required) {
+				if (array_key_exists($required, $value) === false) {
+					$errors[] = $path.'.'.$required.' is missing';
+				}
+			}
+
+			foreach (($schema['properties'] ?? []) as $name => $property) {
+				if (array_key_exists($name, $value) === true) {
+					$errors = array_merge($errors, $this->typeErrors(value: $value[$name], schema: $property, path: $path.'.'.$name));
+				}
+			}
+		}
+
+		return $errors;
+	}//end typeErrors()
+
+	/**
+	 * Whether a value matches one of the JSON-schema types.
+	 *
+	 * @param mixed              $value The value.
+	 * @param array<int, string> $types The allowed types.
+	 *
+	 * @return bool True when one type matches.
+	 */
+	private function matchesType(mixed $value, array $types): bool {
+		foreach ($types as $type) {
+			$matches = match ($type) {
+				'null'    => $value === null,
+				'string'  => is_string($value),
+				'boolean' => is_bool($value),
+				'integer' => is_int($value),
+				'number'  => is_int($value) || is_float($value),
+				'array'   => is_array($value) && array_is_list($value),
+				'object'  => is_array($value) && ($value === [] || array_is_list($value) === false),
+				default   => true,
+			};
+			if ($matches === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end matchesType()
 }//end class

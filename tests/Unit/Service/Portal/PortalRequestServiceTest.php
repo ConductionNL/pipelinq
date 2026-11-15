@@ -195,6 +195,8 @@ class PortalRequestServiceTest extends TestCase {
 		$this->assertSame('new', $stored['status']);
 		$this->assertSame('contact-a', $stored['contact']);
 		$this->assertSame(['f1'], $stored['attachmentIds']);
+		$this->assertSame($result['requestId'], $result['reference'], 'Without a case reference the answer names the ticket by its id');
+		$this->assertSame($stored['occurredAt'], $result['receivedAt']);
 	}//end testSubmitCreatesRequestTicket()
 
 	/**
@@ -350,4 +352,53 @@ class PortalRequestServiceTest extends TestCase {
 
 		return $base;
 	}//end deepMerge()
+	/**
+	 * The back-office preview is the portal's own detail, byte for byte.
+	 *
+	 * A preview that restated the portal's rules would drift from them; this
+	 * fails the moment the portal response and the preview differ.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+	 */
+	public function testThePreviewEqualsThePortalDetail(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->reader->seed('ticket', 'r1', [
+			'ticketType' => 'request',
+			'contact' => 'contact-a',
+			'title' => 'Mine',
+			'notes' => 'internal note',
+			'assignee' => 'm.bakker',
+			'customerMessage' => 'Please send a copy.',
+		]);
+		$ticket = $this->reader->find('ticket', 'r1');
+
+		foreach ([false, true] as $expose) {
+			$this->assertSame(
+				$this->service->getDetailForAccount($account, 'r1', $expose),
+				$this->service->previewDetail(ticket: $ticket, exposeAssigneeName: $expose)
+			);
+		}
+
+		$this->assertNull($this->service->previewDetail(ticket: ['ticketType' => 'complaint'], exposeAssigneeName: false));
+	}//end testThePreviewEqualsThePortalDetail()
+
+	/**
+	 * A list of linked ids yields its first usable one, read from a plain id or
+	 * an `{id}` / `{uuid}` reference; a list with no usable id links nothing.
+	 *
+	 * @return void
+	 */
+	public function testSubmitLinksTheFirstUsableIdOfALinkedList(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', [
+			'linkedContactId' => ['', ['name' => 'no id'], ['uuid' => 'contact-b'], 'contact-c'],
+			'linkedOrganisationId' => [null, ['name' => 'no id']],
+		]);
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+
+		$stored = $this->reader->find('ticket', $result['requestId']);
+		$this->assertSame('contact-b', $stored['contact']);
+		$this->assertNull($stored['client'] ?? null);
+	}//end testSubmitLinksTheFirstUsableIdOfALinkedList()
 }//end class

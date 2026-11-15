@@ -28,6 +28,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\BusinessHoursCalculator;
 use OCA\Pipelinq\Service\HolidayCalendarService;
+use OCA\Pipelinq\Service\Sla\SlaEscalation;
+use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCP\IAppConfig;
 use OCP\Notification\IManager as INotificationManager;
@@ -35,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Coverage for the sms/whatsapp escalation dispatch legs + marker vocabulary.
@@ -111,7 +114,9 @@ class SlaEngineDispatchTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}
 		};
@@ -184,9 +189,13 @@ class SlaEngineDispatchTest extends TestCase {
 	private function dispatch(SlaEngineService $engine, string $channel, string $notify, array $step = []): array {
 		$method = new ReflectionMethod(SlaEngineService::class, 'dispatchNotification');
 		$method->setAccessible(true);
-		return $method->invokeArgs($engine,
-			[$channel, $notify, ['name' => 'Test policy'], 'request', 'req-1', 1, $step]
+		$escalation = new SlaEscalation(
+			policy: ['name' => 'Test policy'],
+			object: new SlaTrackedObject(type: 'request', id: 'req-1'),
+			step: [...$step, 'channel' => $channel, 'notify' => $notify],
+			level: 1,
 		);
+		return $method->invokeArgs($engine, [$escalation]);
 	}//end dispatch()
 
 	/**

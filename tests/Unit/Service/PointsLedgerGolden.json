@@ -1,0 +1,781 @@
+{
+    "credit": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "credit",
+            "count": 40,
+            "balanceAfter": 140,
+            "sourceDocument": {
+                "orderId": "o-1",
+                "channel": "web"
+            },
+            "ruleId": "rule-1",
+            "timestamp": "<now>",
+            "processedBy": "system:rules",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "credit",
+                        "count": 40,
+                        "balanceAfter": 140,
+                        "sourceDocument": {
+                            "orderId": "o-1",
+                            "channel": "web"
+                        },
+                        "ruleId": "rule-1",
+                        "timestamp": "<now>",
+                        "processedBy": "system:rules"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 140,
+                    "lifetimeDelta": 40,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "credit without a rule": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "credit",
+            "count": 1,
+            "balanceAfter": 101,
+            "sourceDocument": [],
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "alice",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "credit",
+                        "count": 1,
+                        "balanceAfter": 101,
+                        "sourceDocument": [],
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "alice"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 101,
+                    "lifetimeDelta": 1,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "credit of zero": {
+        "threw": "RuntimeException",
+        "message": "Credit amount must be positive.",
+        "trace": []
+    },
+    "credit, unknown account": {
+        "threw": "RuntimeException",
+        "message": "Account not found.",
+        "trace": [
+            {
+                "getAccount": "acc-x"
+            }
+        ]
+    },
+    "credit, account without fields": {
+        "returned": {
+            "accountId": "acc-bare",
+            "customerId": null,
+            "type": "credit",
+            "count": 5,
+            "balanceAfter": 5,
+            "sourceDocument": {
+                "orderId": "o-1",
+                "channel": "web"
+            },
+            "ruleId": "r",
+            "timestamp": "<now>",
+            "processedBy": "alice",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-bare"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-bare",
+                        "customerId": null,
+                        "type": "credit",
+                        "count": 5,
+                        "balanceAfter": 5,
+                        "sourceDocument": {
+                            "orderId": "o-1",
+                            "channel": "web"
+                        },
+                        "ruleId": "r",
+                        "timestamp": "<now>",
+                        "processedBy": "alice"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-bare",
+                    "newCurrentBalance": 5,
+                    "lifetimeDelta": 5,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "credit, not configured": {
+        "threw": "RuntimeException",
+        "message": "PointsLedgerEntry schema is not configured.",
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "log": "warning",
+                "message": "Pipelinq: register/pointsLedgerEntry_schema not configured; OpenRegister calls are refused, not run unscoped",
+                "context": []
+            }
+        ]
+    },
+    "credit, save throws": {
+        "threw": "RuntimeException",
+        "message": "save failed",
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "credit",
+                        "count": 5,
+                        "balanceAfter": 105,
+                        "sourceDocument": [],
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "alice"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            }
+        ]
+    },
+    "credit, balance update throws": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "credit",
+            "count": 7,
+            "balanceAfter": 107,
+            "sourceDocument": {
+                "orderId": "o-1",
+                "channel": "web"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "alice",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "credit",
+                        "count": 7,
+                        "balanceAfter": 107,
+                        "sourceDocument": {
+                            "orderId": "o-1",
+                            "channel": "web"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "alice"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 107,
+                    "lifetimeDelta": 7,
+                    "lastActivityDate": "<now>"
+                }
+            },
+            {
+                "log": "error",
+                "message": "Pipelinq: account balance denorm update failed; ledger entry retained",
+                "context": {
+                    "accountId": "acc-1",
+                    "exception": "account write failed"
+                }
+            }
+        ]
+    },
+    "credit, only getObject": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "credit",
+            "count": 3,
+            "balanceAfter": 103,
+            "sourceDocument": [],
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "alice",
+            "uuid": "entry-1",
+            "readBy": "getObject"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "credit",
+                        "count": 3,
+                        "balanceAfter": 103,
+                        "sourceDocument": [],
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "alice"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 103,
+                    "lifetimeDelta": 3,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "debit": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "debit",
+            "count": -30,
+            "balanceAfter": 70,
+            "sourceDocument": {
+                "orderId": "o-1",
+                "channel": "web",
+                "redemptionId": "red-1"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "bob",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "debit",
+                        "count": -30,
+                        "balanceAfter": 70,
+                        "sourceDocument": {
+                            "orderId": "o-1",
+                            "channel": "web",
+                            "redemptionId": "red-1"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "bob"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 70,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "debit of the whole balance": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "debit",
+            "count": -100,
+            "balanceAfter": 0,
+            "sourceDocument": {
+                "redemptionId": "red-2"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "bob",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "debit",
+                        "count": -100,
+                        "balanceAfter": 0,
+                        "sourceDocument": {
+                            "redemptionId": "red-2"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "bob"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 0,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "debit over the balance": {
+        "threw": "RuntimeException",
+        "message": "Insufficient balance.",
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            }
+        ]
+    },
+    "debit of zero": {
+        "threw": "RuntimeException",
+        "message": "Debit amount must be positive.",
+        "trace": []
+    },
+    "debit, unknown account": {
+        "threw": "RuntimeException",
+        "message": "Account not found.",
+        "trace": [
+            {
+                "getAccount": "acc-x"
+            }
+        ]
+    },
+    "debit, balance update throws": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "debit",
+            "count": -2,
+            "balanceAfter": 98,
+            "sourceDocument": {
+                "redemptionId": "red-6"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "bob",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "debit",
+                        "count": -2,
+                        "balanceAfter": 98,
+                        "sourceDocument": {
+                            "redemptionId": "red-6"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "bob"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 98,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            },
+            {
+                "log": "error",
+                "message": "Pipelinq: account balance denorm update failed; ledger entry retained",
+                "context": {
+                    "accountId": "acc-1",
+                    "exception": "account write failed"
+                }
+            }
+        ]
+    },
+    "expire": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "expiry",
+            "count": -25,
+            "balanceAfter": 75,
+            "sourceDocument": {
+                "expiryPolicyRef": "policy-12m"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "system:expiry-batch",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "expiry",
+                        "count": -25,
+                        "balanceAfter": 75,
+                        "sourceDocument": {
+                            "expiryPolicyRef": "policy-12m"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "system:expiry-batch"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 75,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "expire of a negative amount": {
+        "threw": "RuntimeException",
+        "message": "Expiry amount must be positive.",
+        "trace": []
+    },
+    "expire, unknown account": {
+        "threw": "RuntimeException",
+        "message": "Account not found.",
+        "trace": [
+            {
+                "getAccount": "acc-x"
+            }
+        ]
+    },
+    "adjust up": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "adjustment",
+            "count": 12,
+            "balanceAfter": 112,
+            "sourceDocument": {
+                "reason": "goodwill"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "carol",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "adjustment",
+                        "count": 12,
+                        "balanceAfter": 112,
+                        "sourceDocument": {
+                            "reason": "goodwill"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "carol"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 112,
+                    "lifetimeDelta": 12,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "adjust down": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "adjustment",
+            "count": -150,
+            "balanceAfter": -50,
+            "sourceDocument": {
+                "reason": "correction"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "carol",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "adjustment",
+                        "count": -150,
+                        "balanceAfter": -50,
+                        "sourceDocument": {
+                            "reason": "correction"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "carol"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": -50,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "adjust by zero": {
+        "threw": "RuntimeException",
+        "message": "Adjustment delta cannot be zero.",
+        "trace": []
+    },
+    "adjust, not configured": {
+        "threw": "RuntimeException",
+        "message": "PointsLedgerEntry schema is not configured.",
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "log": "warning",
+                "message": "Pipelinq: register/pointsLedgerEntry_schema not configured; OpenRegister calls are refused, not run unscoped",
+                "context": []
+            }
+        ]
+    },
+    "refund": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "refund",
+            "count": 30,
+            "balanceAfter": 130,
+            "sourceDocument": {
+                "redemptionId": "red-1",
+                "reason": "redemption cancelled"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "dave",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "refund",
+                        "count": 30,
+                        "balanceAfter": 130,
+                        "sourceDocument": {
+                            "redemptionId": "red-1",
+                            "reason": "redemption cancelled"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "dave"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 130,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            }
+        ]
+    },
+    "refund of zero": {
+        "threw": "RuntimeException",
+        "message": "Refund amount must be positive.",
+        "trace": []
+    },
+    "refund, balance update throws": {
+        "returned": {
+            "accountId": "acc-1",
+            "customerId": "cust-1",
+            "type": "refund",
+            "count": 9,
+            "balanceAfter": 109,
+            "sourceDocument": {
+                "redemptionId": "red-9",
+                "reason": "redemption cancelled"
+            },
+            "ruleId": null,
+            "timestamp": "<now>",
+            "processedBy": "dave",
+            "uuid": "entry-1"
+        },
+        "trace": [
+            {
+                "getAccount": "acc-1"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "accountId": "acc-1",
+                        "customerId": "cust-1",
+                        "type": "refund",
+                        "count": 9,
+                        "balanceAfter": 109,
+                        "sourceDocument": {
+                            "redemptionId": "red-9",
+                            "reason": "redemption cancelled"
+                        },
+                        "ruleId": null,
+                        "timestamp": "<now>",
+                        "processedBy": "dave"
+                    },
+                    "register": "reg-1",
+                    "schema": "schema-ledger"
+                }
+            },
+            {
+                "updateBalances": {
+                    "accountId": "acc-1",
+                    "newCurrentBalance": 109,
+                    "lifetimeDelta": 0,
+                    "lastActivityDate": "<now>"
+                }
+            },
+            {
+                "log": "error",
+                "message": "Pipelinq: account balance denorm update failed; ledger entry retained",
+                "context": {
+                    "accountId": "acc-1",
+                    "exception": "account write failed"
+                }
+            }
+        ]
+    }
+}

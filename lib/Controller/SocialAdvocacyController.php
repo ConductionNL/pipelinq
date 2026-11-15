@@ -27,15 +27,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SocialAdvocacyService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialAdvocacyServiceInterface;
+use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,24 +47,26 @@ use OCP\IUserSession;
 /**
  * REST controller for the prepared-share path.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 class SocialAdvocacyController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialAdvocacyService $advocacy The prepared-share path and its per-object guard.
+	 * @param SocialAdvocacyServiceInterface $advocacy The prepared-share path and its per-object guard.
 	 * @param IUserSession $userSession Current user session.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialAdvocacyService $advocacy,
+		private readonly SocialAdvocacyServiceInterface $advocacy,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -74,7 +77,7 @@ class SocialAdvocacyController extends Controller {
 	 *
 	 * @return JSONResponse `{share}`, or a refusal.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	#[NoAdminRequired]
 	public function share(string $id): JSONResponse {
@@ -95,7 +98,7 @@ class SocialAdvocacyController extends Controller {
 	 *
 	 * @return JSONResponse `{publication}`, or a refusal.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	#[NoAdminRequired]
 	public function confirmShare(string $id): JSONResponse {
@@ -112,21 +115,6 @@ class SocialAdvocacyController extends Controller {
 			),
 		);
 	}//end confirmShare()
-
-	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
 
 	/**
 	 * The single refusal.

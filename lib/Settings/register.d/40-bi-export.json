@@ -205,6 +205,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the job creator.",
             "maxLength": 255,
             "title": "Created By"

@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\Controller\AnalyticsController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\AnalyticsService;
@@ -96,8 +97,7 @@ class AnalyticsControllerTest extends TestCase {
 		return new AnalyticsController(
 			request: $this->request,
 			analyticsService: $this->service,
-			userSession: $this->userSession,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $this->logger,
 		);
 	}
@@ -396,11 +396,35 @@ class AnalyticsControllerTest extends TestCase {
 				),
 				objectService: $store,
 			),
-			userSession: $this->userSession,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $this->logger,
 		);
 	}
+
+	/**
+	 * The commercial overview hands the list's `filter` to the service as the
+	 * lead filter, and a filter that is not a map as none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
+	 */
+	public function testCommercialPassesTheListFilter(): void {
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('test-user');
+		$this->userSession->method('getUser')->willReturn($user);
+		$params = ['period' => 'month', 'filter' => ['pipeline' => 'sales', 'status' => 'open']];
+		$this->request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default)
+		);
+
+		$this->service->expects($this->once())
+			->method('getCommercialOverview')
+			->with('month', ['pipeline' => 'sales', 'status' => 'open'])
+			->willReturn([]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->buildController()->commercial()->getStatus());
+	}//end testCommercialPassesTheListFilter()
 
 	/**
 	 * GET /api/analytics/commercial returns 200 with every documented KPI key.

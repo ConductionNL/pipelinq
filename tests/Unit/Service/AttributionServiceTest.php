@@ -26,6 +26,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for AttributionService — click recording, deal linking,
@@ -36,6 +38,13 @@ use Psr\Log\LoggerInterface;
 class AttributionServiceTest extends TestCase {
 	private ContainerInterface $container;
 	private IAppConfig $appConfig;
+
+	/**
+	 * The `currency` app config the mock returns.
+	 *
+	 * @var string
+	 */
+	private string $reportingCurrency = 'EUR';
 	private LoggerInterface $logger;
 	private object $objectService;
 
@@ -75,7 +84,9 @@ class AttributionServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}
 
@@ -117,7 +128,10 @@ class AttributionServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The saved payload.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}
@@ -147,6 +161,7 @@ class AttributionServiceTest extends TestCase {
 					'attributionLink_schema' => 'attributionLink',
 					'blastDelivery_schema' => 'blastDelivery',
 					'lead_schema' => 'lead',
+					'currency' => $this->reportingCurrency,
 					default => $default,
 				};
 			}
@@ -260,6 +275,27 @@ class AttributionServiceTest extends TestCase {
 		$this->assertEqualsWithDelta(28500.50, $created['attributedValue'], 0.001);
 		$this->assertSame('EUR', $created['currency']);
 	}//end testLinkBlastToDealCreatesAttributionLink()
+
+	/**
+	 * An attribution is labelled with the deal's own currency, or the
+	 * reporting currency chosen in setup, never a hardcoded EUR.
+	 *
+	 * @return void
+	 */
+	public function testAttributionCurrencyFollowsTheDealOrTheReportingCurrency(): void {
+		$this->reportingCurrency = 'USD';
+		$this->objectService->store['d1'] = ['uuid' => 'd1', 'blastId' => 'blast-1', 'contactId' => 'c1', 'firstClickAt' => '2026-12-01T12:00:00Z'];
+		$this->objectService->store['deal-1'] = ['uuid' => 'deal-1', 'value' => 100];
+		$this->objectService->store['deal-2'] = ['uuid' => 'deal-2', 'value' => 200, 'currency' => 'gbp'];
+
+		$this->service->linkBlastToDeal('d1', 'deal-1');
+		$this->assertSame('USD', end($this->objectService->saved)['currency']);
+
+		$this->service->linkBlastToDeal('d1', 'deal-2');
+		$this->assertSame('GBP', end($this->objectService->saved)['currency']);
+
+		$this->assertSame('USD', $this->service->getBlastAttributionSummary('blast-1')['currency']);
+	}//end testAttributionCurrencyFollowsTheDealOrTheReportingCurrency()
 
 	/**
 	 * linkBlastToDeal is idempotent: re-running for the same triple

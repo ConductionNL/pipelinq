@@ -114,14 +114,13 @@ test.afterAll(async ({ browser }) => {
 })
 
 // @e2e lead-management::call-first
-test('Call first lists the leads highest score first with their band', async ({
+test('the lead list opens Call first: highest score first with their band', async ({
 	page,
 }) => {
 	await gotoAppRoute(page, '/')
 	await createLeads(page)
 	await gotoAppRoute(page, '/leads')
 
-	await page.getByText('Call first', { exact: true }).click()
 	const rows = page.locator('tr', { hasText: RUN })
 	await expect(rows).toHaveCount(3, { timeout: 20000 })
 

@@ -54,3 +54,22 @@ avatar and colour a deadline that is today or past.
 - **GIVEN** a ticket whose deadline is today
 - **WHEN** the reader opens the tickets list in the simple structure
 - **THEN** the deadline MUST be marked as late
+
+### Requirement: The dashboard reads in two columns with one primary action (REQ-KCC-104)
+Under the four numbers the dashboard MUST draw two columns: the reader's own
+work (Waiting for me, Contact today per channel) over two thirds of the row and
+what the reader looks up (Callbacks, Latest contact) over the right third. The
+attention card MUST offer one primary action, the one that opens the late
+tickets. The type of a waiting ticket MUST show as a pill with the labels the
+ticket page's type pill uses, and Waiting for me MUST link to the whole list
+with the filter it counts by. Nothing MUST be invented for it: no customer
+initials, no waiting time as a duration.
+
+#### Scenario: The dashboard at desk width
+@e2e exclude The layout is a grid declaration, asserted cell by cell in simpleContactDashboard.spec.js; the e2e instance has no seeded tickets of the reader.
+- **GIVEN** a handler on the contact centre dashboard in the simple structure
+- **WHEN** the page has rendered
+- **THEN** Waiting for me and Contact today per channel MUST sit left, eight
+  columns wide, and Callbacks and Latest contact right, four columns wide
+- **AND** the attention card's first action MUST be its primary one
+- **AND** each row under Waiting for me MUST show the ticket's type as a pill

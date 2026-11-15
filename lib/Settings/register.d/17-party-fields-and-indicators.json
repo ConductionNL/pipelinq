@@ -175,6 +175,7 @@
             "title": "Parent organisation",
             "description": "The organisation this one sits under. The CUSTOMER organisation, not the internal one: a gemeente's own afdelingen are org units, and a housing corporation with six regional offices is a customer tree. A parent that would close a cycle is refused on the write.",
             "format": "uuid",
+            "$ref": "client",
             "facetable": true
           },
           "organisationPath": {

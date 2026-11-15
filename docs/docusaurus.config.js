@@ -108,6 +108,11 @@ const config = createConfig({
         position: 'left',
       },
       {
+        to: '/compare',
+        label: 'How pipelinq compares',
+        position: 'left',
+      },
+      {
         href: 'https://github.com/ConductionNL/pipelinq',
         label: 'GitHub',
         position: 'right',

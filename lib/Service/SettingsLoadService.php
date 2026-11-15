@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCA\OpenRegister\Service\ConfigurationService;
@@ -31,7 +31,7 @@ use OCA\OpenRegister\Service\ConfigurationService;
 /**
  * Service for loading and importing Pipelinq configuration.
  *
- * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
  */
 class SettingsLoadService {
 	/**
@@ -57,13 +57,13 @@ class SettingsLoadService {
 		'partyKind',
 		'partyKindAcceptance',
 		'partyLink',
-		// Anonymous website intake (website-enquiry). An enquiry is what a
-		// visitor sends before a client exists, so it deliberately does NOT
-		// reuse `lead`: lead requires `client` and `pipeline`, and neither is
-		// knowable at intake. Without this slug the `enquiry_schema` app-config
-		// key is never written on import and EnquiryIntakeService cannot
-		// resolve the schema, which is the same failure the posTenderType
-		// comment below records.
+		// Website forms (website-forms-submit-into-tickets, decision 179): a
+		// published webForm names the object a submit creates. WebFormFinder
+		// reads `webForm_schema`; without this slug it is never written.
+		'webForm',
+		// Retired holding schema (decision 179). Kept until
+		// `occ pipelinq:enquiry:drain` reports zero pending: the drain reads
+		// `enquiry_schema` to find what is still held.
 		'enquiry',
 		// Unified inbound-matter supertype (unify-ticket-supertype). It replaced
 		// the retired `request`, `complaint` and `contactmoment` schemas; a
@@ -234,6 +234,17 @@ class SettingsLoadService {
 		'forecastOverride',
 		'forecastSnapshot',
 		'salesQuota',
+		// Quotes: the quote number listener and the line roll-up read these keys.
+		'salesQuote',
+		'salesQuoteLine',
+		// Price lists: the price resolver reads this key (products-price-lists).
+		'priceList',
+		// Campaign events: the reminder and check-in read these two keys.
+		'campaignEvent',
+		'eventRegistration',
+		// Call review: the save listener reads the review and its scorecard by these keys.
+		'callScorecard',
+		'callReview',
 	];
 
 	/**
@@ -284,10 +295,10 @@ class SettingsLoadService {
 		$data = $this->fileLoader->ensureSourceType(data: $data);
 
 		$configurationService = $this->getConfigurationService();
-		$currentAppVersion = $this->appManager->getAppVersion(Application::APP_ID);
+		$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
 
 		$result = $configurationService->importFromApp(
-			appId: Application::APP_ID,
+			appId: AppIdentity::APP_ID,
 			data: $data,
 			version: $currentAppVersion,
 			force: $force
@@ -318,7 +329,7 @@ class SettingsLoadService {
 		);
 
 		if ($defaultViewId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'default_view', (string)$defaultViewId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'default_view', (string)$defaultViewId);
 		}
 	}//end updateObjectTypeConfiguration()
 
@@ -335,7 +346,7 @@ class SettingsLoadService {
 		);
 
 		if ($registerId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'register', (string)$registerId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'register', (string)$registerId);
 		}
 
 		$portalRegisterId = $this->resolveRegisterIdBySlug(
@@ -343,7 +354,7 @@ class SettingsLoadService {
 			slug: self::PORTAL_REGISTER_SLUG
 		);
 		if ($portalRegisterId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'portal_register', (string)$portalRegisterId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'portal_register', (string)$portalRegisterId);
 		}
 
 		$slaRegisterId = $this->resolveRegisterIdBySlug(
@@ -351,7 +362,7 @@ class SettingsLoadService {
 			slug: self::SLA_REGISTER_SLUG
 		);
 		if ($slaRegisterId !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'sla_register', (string)$slaRegisterId);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'sla_register', (string)$slaRegisterId);
 		}
 	}//end applyRegisterConfig()
 
@@ -464,7 +475,7 @@ class SettingsLoadService {
 			}
 
 			$key = (self::SCHEMA_CONFIG_KEYS[$slug] ?? "{$slug}_schema");
-			$this->appConfig->setValueString(Application::APP_ID, $key, (string)$schemaMap[$slug]);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$schemaMap[$slug]);
 		}
 	}//end applySchemaConfig()
 

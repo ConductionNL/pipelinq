@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ZgwApiClient JWT + skew handling.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
  */
 class ZgwApiClientTest extends TestCase {
 	private ZgwApiClient $client;

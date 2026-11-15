@@ -25,6 +25,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "article",
+				"columnOverrides": { "author": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
@@ -86,7 +87,8 @@
 								"portalPageRef",
 								"tags",
 								"slug"
-							]
+							],
+							"overrides": { "author": { "formatter": "userDisplayName" } }
 						}
 					}
 				],

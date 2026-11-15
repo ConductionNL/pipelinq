@@ -23,12 +23,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Support\FirstValue;
+
 /**
  * Service for building import data arrays from Nextcloud contact data.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactDataBuilder {
+	use FirstValue;
+
 	/**
 	 * vCard TYPE parameter (uppercased, single token) -> our `kind` enum
 	 * used on `emails[]`/`phones[]`. TYPE tokens with no mapping (or no
@@ -74,38 +78,18 @@ class ContactDataBuilder {
 	 * @return array The client data ready for saving.
 	 *
 	 * @spec openspec/specs/contacts-sync/spec.md
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	public function buildClientImportData(array $ncContact, string $uid): array {
 		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
 		$org = $this->extractFirstValue(value: ($ncContact['ORG'] ?? ''));
 
 		$clientType = $this->determineClientType(name: $name, org: $org);
+		$name = $this->displayName(name: $name, org: $org);
 
-		if ($name === '' && $org !== '') {
-			$name = $org;
-		}
-
-		$industry = '';
-		if ($clientType === 'person') {
-			$industry = $org;
-		}
-
-		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
-		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
-
-		$data = [
-			'name' => $name,
-			'type' => $clientType,
-			'email' => $emails[0]['value'] ?? '',
-			'phone' => $phones[0]['value'] ?? '',
-			'emails' => $emails,
-			'phones' => $phones,
-			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
-			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
-			'industry' => $industry,
-			'contactsUid' => $uid,
-		];
+		$data = ['name' => $name, 'type' => $clientType]
+			+ $this->clientChannels(ncContact: $ncContact)
+			+ ['contactsUid' => $uid];
 
 		// Scalar values are filtered out when empty; `emails`/`phones`/
 		// `socialProfiles` are arrays (never `''`) so array_filter's
@@ -116,8 +100,92 @@ class ContactDataBuilder {
 		$data['name'] = $name;
 		$data['type'] = $clientType;
 
-		return $data;
+		return $this->withClientExtras(data: $data, ncContact: $ncContact);
 	}//end buildClientImportData()
+
+	/**
+	 * The client's name: the organisation's when the contact has no name of its own.
+	 *
+	 * @param string $name The contact's name.
+	 * @param string $org The contact's organisation.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function displayName(string $name, string $org): string {
+		if ($name === '' && $org !== '') {
+			$name = $org;
+		}
+
+		return $name;
+	}//end displayName()
+
+	/**
+	 * A person's industry is their organisation; an organisation has none from the card.
+	 *
+	 * @param string $clientType The client type.
+	 * @param string $org The contact's organisation.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function industryFor(string $clientType, string $org): string {
+		$industry = '';
+		if ($clientType === 'person') {
+			$industry = $org;
+		}
+
+		return $industry;
+	}//end industryFor()
+
+	/**
+	 * Add the industry when there is one, and a person's preferred name.
+	 *
+	 * @param array $data The client data, with its `type`.
+	 * @param array $ncContact The Nextcloud contact data.
+	 *
+	 * @return array
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function withClientExtras(array $data, array $ncContact): array {
+		$clientType = $data['type'];
+		$industry = $this->industryFor(clientType: $clientType, org: $this->extractFirstValue(value: ($ncContact['ORG'] ?? '')));
+		// `industry` is a list of sectors (pipelinq-forms-review); written only
+		// when there is one, like the scalars above.
+		if ($industry !== '') {
+			$data['industry'] = [$industry];
+		}
+
+		if ($clientType === 'person') {
+			$data = $this->withPreferredName(data: $data, ncContact: $ncContact);
+		}
+
+		return $data;
+	}//end withClientExtras()
+
+	/**
+	 * A client's channels from the card: first email and phone, the typed lists, social profiles and website.
+	 *
+	 * @param array $ncContact The Nextcloud contact data.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function clientChannels(array $ncContact): array {
+		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
+		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
+
+		return [
+			'email' => $emails[0]['value'] ?? '',
+			'phone' => $phones[0]['value'] ?? '',
+			'emails' => $emails,
+			'phones' => $phones,
+			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
+			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
+		];
+	}//end clientChannels()
 
 	/**
 	 * Build contact person data from a Nextcloud contact.
@@ -129,28 +197,39 @@ class ContactDataBuilder {
 	 * @return array The contact data ready for saving.
 	 *
 	 * @spec openspec/specs/contacts-sync/spec.md
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
-		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+		$data = self::withClient(data: $this->contactPersonFields(ncContact: $ncContact, uid: $uid), clientId: $clientId);
 
-		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
-		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
+		return $this->withPreferredName(data: self::filledKeepingName(data: $data), ncContact: $ncContact);
+	}//end buildContactImportData()
 
-		$data = [
-			'name' => $name,
-			'email' => $emails[0]['value'] ?? '',
-			'phone' => $phones[0]['value'] ?? '',
-			'emails' => $emails,
-			'phones' => $phones,
-			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
-			'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
-			'contactsUid' => $uid,
-		];
-
+	/**
+	 * The contact person fields linked to a client, when one is given.
+	 *
+	 * @param array<string, mixed> $data     The contact person fields.
+	 * @param string|null          $clientId The client to link, or null/'' for none.
+	 *
+	 * @return array<string, mixed> The fields.
+	 */
+	private static function withClient(array $data, ?string $clientId): array {
 		if ($clientId !== null && $clientId !== '') {
 			$data['client'] = $clientId;
 		}
+
+		return $data;
+	}//end withClient()
+
+	/**
+	 * The fields without empty strings, the name kept even when it is empty.
+	 *
+	 * @param array<string, mixed> $data The contact person fields, with a `name`.
+	 *
+	 * @return array<string, mixed> The fields.
+	 */
+	private static function filledKeepingName(array $data): array {
+		$name = $data['name'];
 
 		// Same as above: emails/phones/socialProfiles are arrays, so the
 		// `!== ''` check always keeps them.
@@ -158,7 +237,50 @@ class ContactDataBuilder {
 		$data['name'] = $name;
 
 		return $data;
-	}//end buildContactImportData()
+	}//end filledKeepingName()
+
+	/**
+	 * The name, channels (without website), role and contacts UID of a contact person.
+	 *
+	 * @param array  $ncContact The Nextcloud contact data.
+	 * @param string $uid       The contact UID.
+	 *
+	 * @return array The fields, name first.
+	 */
+	private function contactPersonFields(array $ncContact, string $uid): array {
+		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+
+		return ['name' => $name]
+			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
+			+ [
+				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
+				'contactsUid' => $uid,
+			];
+	}//end contactPersonFields()
+
+	/**
+	 * Read the vCard NICKNAME as the preferred name.
+	 *
+	 * Set whenever the Nextcloud contact carries the property, an empty value
+	 * included: a nickname removed in the Contacts app clears the preferred
+	 * name here. A contact without the property leaves the field alone.
+	 *
+	 * @param array $data The import data built so far.
+	 * @param array $ncContact The Nextcloud contact properties.
+	 *
+	 * @return array The import data, with `preferredName` when the contact carries a nickname.
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	private function withPreferredName(array $data, array $ncContact): array {
+		if (array_key_exists('NICKNAME', $ncContact) === false) {
+			return $data;
+		}
+
+		$data['preferredName'] = trim($this->extractFirstValue(value: ($ncContact['NICKNAME'] ?? '')));
+
+		return $data;
+	}//end withPreferredName()
 
 	/**
 	 * Extract typed channel entries (emails or phones) from a vCard
@@ -173,17 +295,14 @@ class ContactDataBuilder {
 	 *
 	 * @return array<int, array{kind:string,value:string,primary:bool,verified:bool}>
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	private function extractTypedEntries(mixed $value): array {
 		$items = $this->normaliseToList(value: $value);
 
 		$entries = [];
 		foreach ($items as $item) {
-			$raw = (string)$item;
-			if (is_array($item) === true) {
-				$raw = (string)($item['value'] ?? '');
-			}
+			$raw = self::itemValue(item: $item);
 
 			if ($raw === '') {
 				continue;
@@ -206,6 +325,22 @@ class ContactDataBuilder {
 	}//end extractTypedEntries()
 
 	/**
+	 * The text of one vCard property item: its `value` when it is a
+	 * `{type, value}` pair, the item itself otherwise.
+	 *
+	 * @param mixed $item The item.
+	 *
+	 * @return string
+	 */
+	private static function itemValue(mixed $item): string {
+		if (is_array($item) === true) {
+			return (string)($item['value'] ?? '');
+		}
+
+		return (string)$item;
+	}//end itemValue()
+
+	/**
 	 * Extract X-SOCIALPROFILE entries into the `socialProfiles[]` shape.
 	 * The vCard value is treated as a URL when it looks like one, else as
 	 * a bare handle; the TYPE parameter (when present) is matched
@@ -216,55 +351,72 @@ class ContactDataBuilder {
 	 *
 	 * @return array<int, array{network:string,handle:string,url:string,verified:bool,followedByUs:bool,followsUs:bool}>
 	 *
-	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	private function extractSocialProfiles(mixed $value): array {
-		$items = $this->normaliseToList(value: $value);
-
 		$profiles = [];
-		foreach ($items as $item) {
-			$raw = (string)$item;
-			if (is_array($item) === true) {
-				$raw = (string)($item['value'] ?? '');
+		foreach ($this->normaliseToList(value: $value) as $item) {
+			$profile = $this->socialProfile(item: $item);
+			if ($profile !== null) {
+				$profiles[] = $profile;
 			}
-
-			if ($raw === '') {
-				continue;
-			}
-
-			$typeRaw = '';
-			if (is_array($item) === true) {
-				$typeRaw = (string)($item['type'] ?? '');
-			}
-
-			$typeRaw = strtolower($typeRaw);
-
-			$network = 'other';
-			if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
-				$network = $typeRaw;
-			}
-
-			$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
-
-			$handle = $raw;
-			$url = '';
-			if ($isUrl === true) {
-				$handle = '';
-				$url = $raw;
-			}
-
-			$profiles[] = [
-				'network' => $network,
-				'handle' => $handle,
-				'url' => $url,
-				'verified' => false,
-				'followedByUs' => false,
-				'followsUs' => false,
-			];
 		}
 
 		return $profiles;
 	}//end extractSocialProfiles()
+
+	/**
+	 * One X-SOCIALPROFILE item as a profile, or null when it carries no value.
+	 *
+	 * @param mixed $item The vCard item: a value, or `{type, value}`.
+	 *
+	 * @return array{network:string,handle:string,url:string,verified:bool,followedByUs:bool,followsUs:bool}|null The profile.
+	 */
+	private function socialProfile(mixed $item): ?array {
+		$raw = self::itemValue(item: $item);
+		if ($raw === '') {
+			return null;
+		}
+
+		$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
+
+		$handle = $raw;
+		$url = '';
+		if ($isUrl === true) {
+			$handle = '';
+			$url = $raw;
+		}
+
+		return [
+			'network' => $this->socialNetworkOf(item: $item),
+			'handle' => $handle,
+			'url' => $url,
+			'verified' => false,
+			'followedByUs' => false,
+			'followsUs' => false,
+		];
+	}//end socialProfile()
+
+	/**
+	 * The item's network: its TYPE when it names a known network (case-insensitive), else `other`.
+	 *
+	 * @param mixed $item The vCard item.
+	 *
+	 * @return string The network.
+	 */
+	private function socialNetworkOf(mixed $item): string {
+		$typeRaw = '';
+		if (is_array($item) === true) {
+			$typeRaw = (string)($item['type'] ?? '');
+		}
+
+		$typeRaw = strtolower($typeRaw);
+		if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
+			return $typeRaw;
+		}
+
+		return 'other';
+	}//end socialNetworkOf()
 
 	/**
 	 * Normalise a vCard property value (string, untyped array, single
@@ -329,19 +481,4 @@ class ContactDataBuilder {
 
 		return 'person';
 	}//end determineClientType()
-
-	/**
-	 * Extract first value from a vCard property that may be an array or string.
-	 *
-	 * @param mixed $value The value to extract from.
-	 *
-	 * @return string The extracted string value.
-	 */
-	private function extractFirstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			return (string)($value[0] ?? '');
-		}
-
-		return (string)$value;
-	}//end extractFirstValue()
 }//end class

@@ -13,6 +13,7 @@
 
 import BookingConfirmationPage from '../views/portal/BookingConfirmationPage.vue'
 import BookingPortal from '../views/portal/BookingPortal.vue'
+import PublicSurveyForm from '../views/surveys/PublicSurveyForm.vue'
 import PortalDashboard from './views/PortalDashboard.vue'
 import PortalDelegations from './views/PortalDelegations.vue'
 import PortalExport from './views/PortalExport.vue'
@@ -39,6 +40,9 @@ export const portalRoutes = [
 		component: BookingConfirmationPage,
 		meta: { public: true },
 	},
+	// The satisfaction survey an invitation links to: the token is the
+	// authorisation, so the route is public (customer-satisfaction-closed-loop).
+	{ path: '/survey/:token', component: PublicSurveyForm, meta: { public: true } },
 	{ path: '/dashboard', component: PortalDashboard },
 	{ path: '/requests', component: PortalRequests },
 	{ path: '/profile', component: PortalProfile },

@@ -207,6 +207,18 @@ class CorrespondenceLanguageServiceTest extends TestCase {
 	}//end testThePickerOffersOnlyWhatExists()
 
 	/**
+	 * A catalogue file that is not a language is not offered: pipelinq keeps
+	 * `.schema-l10n-baseline.json` in l10n/, and Nextcloud lists it.
+	 *
+	 * @return void
+	 */
+	public function testANonLanguageFileIsNotOffered(): void {
+		$this->shipped = ['.schema-l10n-baseline', 'nl', 'en_US'];
+
+		$this->assertSame(['en', 'en_US', 'nl'], $this->service()->available());
+	}//end testANonLanguageFileIsNotOffered()
+
+	/**
 	 * An unrenderable tag is refused, naming it and listing what exists.
 	 *
 	 * @return void

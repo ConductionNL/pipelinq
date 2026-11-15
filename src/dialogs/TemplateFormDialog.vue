@@ -5,16 +5,21 @@
   - `form-dialog` slot. It saves through POST / PATCH /api/templates rather
   - than the slot's `confirm`, because only that endpoint runs the compliance
   - check, and then calls the slot's `refresh` so the list shows the result.
+  -
+  - An email template is built from blocks (MailBlockEditor) or written as
+  - HTML (marketing-block-editor). A new email template opens in Blocks mode;
+  - one saved without blocks opens in HTML mode as before. The server renders
+  - the blocks on save and for the preview.
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
+		width="wizard"
 		:name="
 			isEditing
 				? t('pipelinq', 'Edit template')
 				: t('pipelinq', 'New template')
 		"
-		:open="true"
 		size="large"
 		:closeOnClickOutside="false"
 		@closing="close()">
@@ -96,11 +101,66 @@
 							</template>
 							{{
 								previewing
-									? t('pipelinq', 'Edit HTML')
+									? isBlocks
+										? t('pipelinq', 'Edit blocks')
+										: t('pipelinq', 'Edit HTML')
 									: t('pipelinq', 'Preview')
 							}}
 						</NcButton>
 					</div>
+					<div
+						v-if="isEmail"
+						class="template-form__mode"
+						role="group"
+						:aria-label="t('pipelinq', 'How the message is made')">
+						<NcButton
+							:variant="isBlocks ? 'primary' : 'secondary'"
+							:pressed="isBlocks"
+							:disabled="!isBlocks && !canSwitchToBlocks"
+							data-testid="template-mode-blocks"
+							@click="switchToBlocks">
+							{{ t('pipelinq', 'Build from blocks') }}
+						</NcButton>
+						<NcButton
+							:variant="isBlocks ? 'secondary' : 'primary'"
+							:pressed="!isBlocks"
+							data-testid="template-mode-html"
+							@click="askSwitchToHtml">
+							{{ t('pipelinq', 'Write HTML') }}
+						</NcButton>
+						<span
+							v-if="!isBlocks && !canSwitchToBlocks"
+							class="template-form__hint">
+							{{
+								t(
+									'pipelinq',
+									'Blocks are offered for an empty message body.',
+								)
+							}}
+						</span>
+					</div>
+					<NcNoteCard
+						v-if="confirmingHtml"
+						type="warning"
+						class="template-form__note">
+						<p>
+							{{
+								t(
+									'pipelinq',
+									'Switching to HTML keeps the message as it is now, but the blocks are not kept. You edit the HTML from then on.',
+								)
+							}}
+						</p>
+						<NcButton
+							variant="primary"
+							data-testid="template-mode-html-confirm"
+							@click="switchToHtml">
+							{{ t('pipelinq', 'Switch to HTML') }}
+						</NcButton>
+						<NcButton variant="tertiary" @click="confirmingHtml = false">
+							{{ t('pipelinq', 'Keep blocks') }}
+						</NcButton>
+					</NcNoteCard>
 					<NcTextField
 						v-if="isEmail"
 						v-model="model.subject"
@@ -110,13 +170,38 @@
 					<!-- An empty `sandbox` gives the preview an opaque origin and no
 					     scripts, forms or popups, so pasted HTML cannot reach the
 					     page around it. -->
+					<div
+						v-if="isEmail && previewing && isBlocks"
+						class="template-form__mode"
+						role="group"
+						:aria-label="t('pipelinq', 'Preview width')">
+						<NcButton
+							:pressed="previewWidth === 600"
+							variant="tertiary"
+							@click="previewWidth = 600">
+							{{ t('pipelinq', 'Desktop') }}
+						</NcButton>
+						<NcButton
+							:pressed="previewWidth === 375"
+							variant="tertiary"
+							@click="previewWidth = 375">
+							{{ t('pipelinq', 'Phone') }}
+						</NcButton>
+					</div>
 					<iframe
 						v-if="isEmail && previewing"
 						class="template-form__preview"
+						:style="
+							isBlocks ? { maxWidth: previewWidth + 32 + 'px' } : null
+						"
 						sandbox=""
 						referrerpolicy="no-referrer"
 						:title="t('pipelinq', 'HTML body preview')"
 						:srcdoc="previewDocument" />
+					<MailBlockEditor
+						v-else-if="isBlocks"
+						v-model="model.blocks"
+						data-testid="template-block-editor" />
 					<NcTextArea
 						v-else
 						v-model="model.bodyHtml"
@@ -133,6 +218,7 @@
 						:class="{ 'template-form__body-html--code': isEmail }" />
 					<template v-if="isEmail">
 						<NcTextArea
+							v-if="!isBlocks"
 							v-model="model.bodyText"
 							:label="t('pipelinq', 'Plain-text body')"
 							rows="4"
@@ -188,7 +274,7 @@
 			<span v-if="saveHint" class="template-form__save-hint">
 				{{ saveHint }}
 			</span>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" :disabled="!canSave" @click="save">
@@ -202,16 +288,16 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -220,13 +306,17 @@ import {
 } from '@nextcloud/vue'
 import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
+import MailBlockEditor from '../components/templates/MailBlockEditor.vue'
 import { fetchArticles } from '../services/articlesApi.js'
+import { starterBlocks, withFooterLast } from '../services/mailBlocks.js'
+import { mailPreviewDocument } from '../services/mailPreview.js'
 import {
 	orderedArticleIds,
 	publishedOnly,
 	resolveSelectedArticles,
 	shouldWarnMissingMarker,
 } from '../services/templateArticlePicker.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 // Where the address goes in an email body. Must match PhysicalAddressRenderer::TOKENS,
 // whose render() places it the same way on send.
@@ -280,6 +370,8 @@ function blankModel() {
 		replyTo: '',
 		footerOverride: '',
 		articleIds: [],
+		editorMode: 'html',
+		blocks: [],
 	}
 }
 
@@ -288,8 +380,9 @@ export default {
 	components: {
 		CodeTags,
 		EyeOutline,
+		MailBlockEditor,
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -297,33 +390,7 @@ export default {
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the index page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The row being edited, or null to create. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -338,6 +405,10 @@ export default {
 			articles: [],
 			articlesLoading: false,
 			previewing: false,
+			previewWidth: 600,
+			// The server's rendering of the blocks, for the preview.
+			blocksPreviewHtml: '',
+			confirmingHtml: false,
 		}
 	},
 
@@ -347,7 +418,7 @@ export default {
 		 *
 		 * @return {string|null}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		templateId() {
 			return (
@@ -368,7 +439,7 @@ export default {
 		 *
 		 * @return {Array<{value: string, label: string}>}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		channelOptions() {
 			return [
@@ -381,7 +452,7 @@ export default {
 		 * The channel decides the fields: email adds subject, sender,
 		 * reply-to, plain-text body and footer; SMS does not.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		channelOption: {
 			/**
@@ -389,7 +460,7 @@ export default {
 			 *
 			 * @return {{value: string, label: string}}
 			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 			 */
 			get() {
 				return (
@@ -403,7 +474,7 @@ export default {
 			 *
 			 * @param {object} option The picked option.
 			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 			 */
 			set(option) {
 				this.model.channel = option?.value || 'email'
@@ -448,19 +519,35 @@ export default {
 		 *
 		 * @spec openspec/specs/marketing-compliance/spec.md#scenario-the-physical-address-renders-where-the-template-marks-it
 		 */
-		previewDocument() {
-			const csp =
-				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return (
-				'<!DOCTYPE html><html><head><meta charset="utf-8">'
-				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
-				+ `</head><body>${withAddress(this.model.bodyHtml, this.model.footerOverride)}</body></html>`
-			)
+		/**
+		 * Whether the email body is built from blocks.
+		 *
+		 * @return {boolean} True in Blocks mode.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
+		 */
+		isBlocks() {
+			return this.isEmail && this.model.editorMode === 'blocks'
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * Blocks are offered for an empty HTML body only: nothing is lost.
+		 *
+		 * @return {boolean} Whether switching to blocks is possible.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+		 */
+		canSwitchToBlocks() {
+			return this.model.bodyHtml.trim() === ''
+		},
+
+		/**
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+		 */
+		previewDocument() {
+			return mailPreviewDocument(this.isBlocks ? this.blocksPreviewHtml : withAddress(this.model.bodyHtml, this.model.footerOverride))
+		},
+
+		/**
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 * @return {Array<object>} Only published articles may be embedded.
 		 */
 		publishedArticles() {
@@ -471,7 +558,7 @@ export default {
 		 * The picked articles in the order `model.articleIds` holds them, so
 		 * opening the picker never reorders the embed.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		selectedArticles: {
 			/**
@@ -479,7 +566,7 @@ export default {
 			 *
 			 * @return {Array<object>}
 			 *
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 			 */
 			get() {
 				return resolveSelectedArticles(this.model.articleIds, this.articles)
@@ -490,7 +577,7 @@ export default {
 			 *
 			 * @param {Array<object>} options The picked article options.
 			 *
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 			 */
 			set(options) {
 				this.model.articleIds = orderedArticleIds(options)
@@ -498,7 +585,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 * @return {boolean} Articles are picked but the body has no marker to put them at.
 		 */
 		showMarkerWarning() {
@@ -511,7 +598,7 @@ export default {
 		/**
 		 * @return {string} The hint under the article picker.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		articlesHintText() {
 			return this.t(
@@ -523,7 +610,7 @@ export default {
 		/**
 		 * @return {string} The warning when the body has no articles marker.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#scenario-picking-articles-for-a-body-without-the-marker-warns-the-marketer
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-picking-articles-for-a-body-without-the-marker-warns-the-marketer
 		 */
 		markerWarningText() {
 			return this.t(
@@ -535,12 +622,12 @@ export default {
 		/**
 		 * @return {boolean} A name and a body, and nothing loading or saving.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		canSave() {
 			return (
 				this.model.name.trim() !== ''
-				&& this.model.bodyHtml.trim() !== ''
+				&& (this.isBlocks || this.model.bodyHtml.trim() !== '')
 				&& !this.saving
 				&& !this.loading
 			)
@@ -549,7 +636,7 @@ export default {
 		/**
 		 * @return {string} Why Save is disabled.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		saveHint() {
 			if (this.loading || this.saving || this.loadError) {
@@ -558,7 +645,7 @@ export default {
 			if (this.model.name.trim() === '') {
 				return this.t('pipelinq', 'Give the template a name.')
 			}
-			if (this.model.bodyHtml.trim() === '') {
+			if (!this.isBlocks && this.model.bodyHtml.trim() === '') {
 				return this.t('pipelinq', 'Add a message body.')
 			}
 			return ''
@@ -566,21 +653,6 @@ export default {
 	},
 
 	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Reset the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
-			 */
-			handler(open) {
-				if (open) {
-					this.reset()
-				}
-			},
-		},
 
 		// An error clears once the field it is about is edited.
 		'model.bodyHtml': function () {
@@ -593,14 +665,58 @@ export default {
 
 		'model.footerOverride': function () {
 			this.clearFieldError('footerOverride')
+			this.refreshBlocksPreview()
+		},
+
+		'model.blocks': {
+			deep: true,
+			/**
+			 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+			 */
+			handler() {
+				this.refreshBlocksPreview()
+			},
+		},
+
+		'model.articleIds': function () {
+			this.refreshBlocksPreview()
+		},
+
+		/**
+		 * Render the blocks when the preview opens.
+		 *
+		 * @param {boolean} open Whether the preview is open.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+		 */
+		previewing(open) {
+			if (open) {
+				this.refreshBlocksPreview()
+			}
+		},
+
+		// An SMS template has no Blocks mode.
+		'model.channel': function (channel) {
+			if (channel !== 'email' && this.model.editorMode === 'blocks') {
+				this.model.editorMode = 'html'
+				this.model.blocks = []
+			}
 		},
 	},
 
 	methods: {
 		/**
+		 * Reset the form each time the dialog opens.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
+		prepareOnOpen() {
+			this.reset()
+		},
+
+		/**
 		 * Clear the form, load the articles, and read the template when editing one.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		reset() {
 			this.model = blankModel()
@@ -608,9 +724,14 @@ export default {
 			this.saveError = ''
 			this.fieldErrors = {}
 			this.previewing = false
+			this.confirmingHtml = false
+			this.blocksPreviewHtml = ''
 			this.loadArticles()
 			if (this.isEditing) {
 				this.loadTemplate()
+			} else {
+				this.model.editorMode = 'blocks'
+				this.model.blocks = starterBlocks()
 			}
 		},
 
@@ -621,6 +742,90 @@ export default {
 		 *
 		 * @spec openspec/specs/marketing-ui/spec.md#scenario-template-save-surfaces-a-compliance-error-as-a-field-error
 		 */
+		/**
+		 * Ask the server to render the blocks as they will be sent.
+		 *
+		 * @return {Promise<object>} renderedHtml, renderedText, bodyHtml, bodyText.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+		 */
+		async renderBlocks() {
+			const { data } = await axios.post(
+				generateUrl('/apps/pipelinq/api/templates/render'),
+				{
+					blocks: this.model.blocks,
+					articleIds: this.model.articleIds,
+					footerOverride: this.model.footerOverride,
+				},
+			)
+			return data || {}
+		},
+
+		/**
+		 * Refresh the blocks preview, at most every half second.
+		 *
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+		 */
+		refreshBlocksPreview() {
+			if (!this.isBlocks || !this.previewing) {
+				return
+			}
+			clearTimeout(this.previewTimer)
+			this.previewTimer = setTimeout(async () => {
+				try {
+					this.blocksPreviewHtml =
+						(await this.renderBlocks()).bodyHtml || ''
+				} catch {
+					this.blocksPreviewHtml = ''
+				}
+			}, 500)
+		},
+
+		/**
+		 * Switch an empty HTML template to blocks.
+		 *
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+		 */
+		switchToBlocks() {
+			if (this.isBlocks || !this.canSwitchToBlocks) {
+				return
+			}
+			this.model.editorMode = 'blocks'
+			this.model.blocks = starterBlocks()
+		},
+
+		/**
+		 * Ask before leaving Blocks mode: the blocks are not kept.
+		 *
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+		 */
+		askSwitchToHtml() {
+			if (this.isBlocks) {
+				this.confirmingHtml = true
+			}
+		},
+
+		/**
+		 * Leave Blocks mode, keeping the rendered HTML as the body.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+		 */
+		async switchToHtml() {
+			try {
+				const rendered = await this.renderBlocks()
+				this.model.bodyHtml = rendered.renderedHtml || ''
+				this.model.bodyText = rendered.renderedText || ''
+				this.model.editorMode = 'html'
+				this.model.blocks = []
+				this.confirmingHtml = false
+			} catch {
+				this.saveError = this.t(
+					'pipelinq',
+					'The blocks could not be turned into HTML. Nothing was changed.',
+				)
+			}
+		},
+
 		clearFieldError(field) {
 			if (this.fieldErrors[field]) {
 				const { [field]: _, ...rest } = this.fieldErrors
@@ -629,7 +834,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		async loadArticles() {
 			this.articlesLoading = true
@@ -645,7 +850,7 @@ export default {
 		/**
 		 * Read the template being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		async loadTemplate() {
 			this.loading = true
@@ -660,6 +865,15 @@ export default {
 						data?.[key] ?? blank[key],
 					]),
 				)
+				// A template saved before blocks existed opens as HTML.
+				const hasBlocks =
+					this.model.editorMode === 'blocks'
+					&& Array.isArray(this.model.blocks)
+					&& this.model.blocks.length > 0
+				this.model.editorMode = hasBlocks ? 'blocks' : 'html'
+				this.model.blocks = hasBlocks
+					? withFooterLast(this.model.blocks)
+					: []
 			} catch (e) {
 				this.loadError =
 					e?.response?.data?.error
@@ -676,7 +890,7 @@ export default {
 		 *
 		 * @param {string} message The error from the API.
 		 * @return {object} A `{ bodyHtml?, footerOverride?, subject? }` map.
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
+		 * @spec openspec/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
 		 */
 		parseFieldErrors(message) {
 			const lower = (message || '').toLowerCase()
@@ -693,7 +907,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
+		 * @spec openspec/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
 		 */
 		async save() {
 			if (!this.canSave) {
@@ -713,6 +927,8 @@ export default {
 				replyTo: this.model.replyTo,
 				footerOverride: this.model.footerOverride,
 				articleIds: this.model.articleIds,
+				editorMode: this.isBlocks ? 'blocks' : 'html',
+				blocks: this.isBlocks ? this.model.blocks : [],
 			}
 			try {
 				if (this.isEditing) {
@@ -751,7 +967,16 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
+.template-form__mode {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
 .template-form {
 	display: flex;
 	flex-direction: column;
@@ -764,18 +989,11 @@ export default {
 }
 
 .template-form__grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: start;
-	gap: 12px 16px;
+	@include two-column-form-grid;
 }
 
 .template-form__section {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
+	@include bordered-form-section;
 }
 
 .template-form__heading {
@@ -819,7 +1037,7 @@ export default {
 	height: 216px;
 	border: 1px solid var(--color-border-dark);
 	border-radius: var(--border-radius-large);
-	background: #fff;
+	background: var(--color-main-background, #fff);
 }
 
 .template-form__body-html--code :deep(textarea) {

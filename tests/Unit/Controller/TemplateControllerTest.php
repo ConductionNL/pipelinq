@@ -44,6 +44,8 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory object store for campaign templates.
@@ -72,7 +74,9 @@ class TemplateStoreDouble {
 	 *
 	 * @return array<string, mixed>|null The template, or null.
 	 */
-	public function find(string $id, $register = null, $schema = null): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$register = $options?->register;
+		$schema = $options?->schema;
 		return ($this->store[$id] ?? null);
 	}//end find()
 
@@ -86,7 +90,10 @@ class TemplateStoreDouble {
 	 *
 	 * @return array<string, mixed> The stored template.
 	 */
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$uuid = ($uuid ?? ('tpl-' . count($this->saved)));
 		$object['uuid'] = $uuid;
 		$this->saved[] = $object;
@@ -125,11 +132,12 @@ class TemplateControllerTest extends TestCase {
 	/**
 	 * Build the controller over the real ComplianceService.
 	 *
-	 * @param array<string, mixed> $params The request body.
+	 * @param array<string, mixed> $params     The request body.
+	 * @param bool                 $privileged Whether the caller holds CRM rights.
 	 *
 	 * @return TemplateController The controller under test.
 	 */
-	private function controller(array $params): TemplateController {
+	private function controller(array $params, bool $privileged = true): TemplateController {
 		$this->objects = ($this->objects ?? new TemplateStoreDouble());
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -168,12 +176,17 @@ class TemplateControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
-		$policy->method('isPrivileged')->willReturn(true);
+		$policy->method('isPrivileged')->willReturn($privileged);
+
+		// The articles expansion passes the body through: no article is picked.
+		$articles = $this->createMock(ArticleService::class);
+		$articles->method('loadArticlesByIds')->willReturn([]);
+		$articles->method('expandArticlesMarker')->willReturnArgument(0);
 
 		return new TemplateController(
 			$request,
 			$compliance,
-			$this->createMock(ArticleService::class),
+			$articles,
 			$session,
 			$policy,
 			new PhysicalAddressRenderer(),
@@ -200,6 +213,21 @@ class TemplateControllerTest extends TestCase {
 		$this->assertCount(1, $this->objects->saved);
 		$this->assertSame('reply@example.nl', ($this->objects->saved[0]['replyTo'] ?? null));
 	}//end testCreateStoresTheReplyTo()
+
+	/**
+	 * A signed-in user without CRM rights cannot create a template, and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testCreateIsRefusedForAnUnprivilegedCaller(): void {
+		$response = $this->controller(
+			['name' => 'Renewal reminder', 'channel' => 'email', 'bodyHtml' => self::BODY, 'footerOverride' => self::ADDRESS],
+			privileged: false
+		)->create();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame([], $this->objects->saved);
+	}//end testCreateIsRefusedForAnUnprivilegedCaller()
 
 	/**
 	 * Saving an existing template stores a changed reply-to.
@@ -314,4 +342,81 @@ class TemplateControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(['valid' => true, 'error' => null], $response->getData());
 	}//end testValidateAcceptsACompliantTemplate()
+	/**
+	 * Blocks are rendered on save, and the result passes compliance.
+	 *
+	 * The heading carries a script: it is stored as text. No body is sent;
+	 * the footer block brings the unsubscribe token by itself.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-saved-blocks-become-mail-safe-html-req-mbe-003
+	 */
+	public function testABlocksTemplateIsRenderedOnSaveAndPassesCompliance(): void {
+		$response = $this->controller(
+			[
+				'name' => 'Autumn news',
+				'channel' => 'email',
+				'editorMode' => 'blocks',
+				'bodyHtml' => '<p>ignored</p>',
+				'blocks' => [
+					['id' => 'h', 'type' => 'heading', 'props' => ['text' => '<script>alert(1)</script>', 'level' => 1]],
+					['id' => 'f', 'type' => 'footer', 'props' => ['text' => 'Sent by Zuiddrecht']],
+				],
+				'footerOverride' => self::ADDRESS,
+			]
+		)->create();
+
+		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+		$saved = $this->objects->saved[0];
+		$this->assertSame('blocks', $saved['editorMode']);
+		$this->assertSame(['heading', 'footer'], array_column($saved['blocks'], 'type'));
+		$this->assertStringContainsString('{{unsubscribe_link}}', $saved['bodyHtml']);
+		$this->assertStringNotContainsString('<script', $saved['bodyHtml']);
+		$this->assertStringNotContainsString('ignored', $saved['bodyHtml']);
+		$this->assertStringContainsString('Sent by Zuiddrecht', $saved['bodyText']);
+	}//end testABlocksTemplateIsRenderedOnSaveAndPassesCompliance()
+
+	/**
+	 * A template saved without blocks stays an HTML template.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+	 */
+	public function testAnHtmlTemplateKeepsItsBody(): void {
+		$this->controller(
+			['name' => 'Plain', 'channel' => 'email', 'bodyHtml' => self::BODY, 'footerOverride' => self::ADDRESS]
+		)->create();
+
+		$saved = $this->objects->saved[0];
+		$this->assertSame('html', $saved['editorMode']);
+		$this->assertSame([], $saved['blocks']);
+		$this->assertSame(self::BODY, $saved['bodyHtml']);
+	}//end testAnHtmlTemplateKeepsItsBody()
+
+	/**
+	 * The preview renders unsaved blocks and places the address as the send does.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+	 */
+	public function testRenderPreviewsUnsavedBlocks(): void {
+		$response = $this->controller(
+			[
+				'blocks' => [['id' => 'b', 'type' => 'button', 'props' => ['label' => 'Read more', 'href' => 'https://www.example.nl']]],
+				'footerOverride' => self::ADDRESS,
+			]
+		)->render();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = $response->getData();
+		$this->assertStringContainsString('href="https://www.example.nl"', $data['bodyHtml']);
+		$this->assertStringContainsString('Voorbeeldstraat 1', $data['bodyHtml']);
+		$this->assertStringContainsString('Read more: https://www.example.nl', $data['bodyText']);
+		$this->assertStringContainsString('{{physical_address}}', $data['renderedHtml']);
+		$this->assertStringNotContainsString('Voorbeeldstraat 1', $data['renderedHtml']);
+		$this->assertCount(0, $this->objects->saved);
+	}//end testRenderPreviewsUnsavedBlocks()
 }//end class

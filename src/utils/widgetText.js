@@ -17,33 +17,49 @@
  * @return {string} a display string ('' when nothing usable is found).
  */
 export function toText(value) {
-	if (value === null || value === undefined) {
+	if (isAbsent(value)) {
 		return ''
 	}
 	if (typeof value === 'string') {
 		return value
 	}
-	if (typeof value === 'number' || typeof value === 'boolean') {
-		return String(value)
-	}
 	if (Array.isArray(value)) {
 		return value.map(toText).filter(Boolean).join(', ')
 	}
 	if (typeof value === 'object') {
-		// Expanded relation or wrapper map ({"nl":"test"} — the key carries no
-		// meaning): prefer an explicit display field, then the `nl` wrapper key.
-		const display =
-			value.title
-			?? value.name
-			?? value.label
-			?? value.value
-			?? value.nl
-			?? value['@self']?.title
-			?? value['@self']?.name
-		if (display !== null && display !== undefined) {
-			return toText(display)
-		}
-		return ''
+		return objectText(value)
 	}
 	return String(value)
+}
+
+/**
+ * The fields an expanded relation or wrapper map is shown by, in order.
+ */
+const DISPLAY_KEYS = ['title', 'name', 'label', 'value', 'nl']
+
+/**
+ * @param {(string|number|boolean|object|null|undefined)} value A value.
+ * @return {boolean} Whether it is null or undefined.
+ */
+function isAbsent(value) {
+	return value === null || value === undefined
+}
+
+/**
+ * An expanded relation or wrapper map as text.
+ *
+ * @param {object} value The object.
+ * @return {string} Its display field as text, or ''.
+ */
+function objectText(value) {
+	// Expanded relation or wrapper map ({"nl":"test"} — the key carries no
+	// meaning): prefer an explicit display field, then the `nl` wrapper key.
+	const display =
+		DISPLAY_KEYS.map((key) => value[key]).find((field) => !isAbsent(field))
+		?? value['@self']?.title
+		?? value['@self']?.name
+	if (!isAbsent(display)) {
+		return toText(display)
+	}
+	return ''
 }

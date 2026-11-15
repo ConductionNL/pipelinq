@@ -3,8 +3,8 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.9.0",
-    "x-changelog": "1.9.0: ticket gains portalAnswers (every answer the handler sent to the customer, oldest first, each with when it was sent), so a resident reads on the portal what was answered and when, not only the latest customerMessage without a date (question-detail-on-the-portal). ticket schema version 1.3.1->1.4.0. 1.8.1: ticket.portalSubject also scopes a resident's own request and complaint filed from the portal (createOwnRequest, createOwnComplaint), so a DigiD resident without a clientId claim reads what they filed; description and x-notes only, no property added. ticket schema version 1.3.0->1.3.1. 1.8.0: ticket lifecycle allows every move a dossier question makes: convert also from new and awaiting_customer, a new await (new, in_progress -> awaiting_customer) and resume (awaiting_customer -> in_progress). Without them OpenRegister refused converting a question, saving an answer that waits for the resident, and the resident's reply (found by the Woo journey e2e). ticket schema version 1.2.0->1.3.0. 1.7.0: ticket gains portalSubject (the portal reference of the resident who asked, never a BSN) and subjectReference (a snapshot of the opencatalogi dossier a question is about: type, id, title, items with title and url), so a resident can ask about their Woo dossier from the portal and the KCC employee sees what they saw (questions-about-a-citizen-dossier, hydra woo-citizen-journey C4). ticket schema version 1.1.0->1.2.0. 1.6.1: lead swaps its AccountArrowRightOutline icon for CashMultiple. A lead is a deal, not a person: the person is the contact, which carries the people icon, and two adjacent surfaces reading as the same thing is a rebrand the icon never got. lead schema version 1.4.0->1.4.1; declaration only, no property changed. 1.5.0: pipeline gains propertyMappings — which object types the pipeline boards and which property supplies the stage column. The pipeline editor already wrote this array and PipelineBoard/PipelineManager already read it, but the schema never declared it, so magic-table storage dropped every mapping a user configured: the board resolved no object types and the create forms, filtering on the retired entityType field, offered no pipeline at all. A pipeline declaring no mappings is unscoped, not inapplicable. pipeline schema version 3.1.0->3.2.0. 1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
+    "version": "1.15.0",
+    "x-changelog": "1.15.0: lead gains calculatedValue (the sum of its product lines, written by the line roll-up) and valueOverridden (calculated on every save: true when the value was typed over the calculated one), so the lead page can offer Use calculated value. A lead line change no longer overwrites a value typed by hand. lead 1.6.0->1.7.0 (register.d/99-zzzzzzz-lead-calculated-value.json). 1.14.0: salesQuote and lead gain lines, an inverse relation (inversedBy quote, inversedBy lead) to their salesQuoteLine and leadProduct objects, so the quote and lead form edit the lines as a table (nextcloud-vue CnChildRecordsField) and save them as their own objects after the parent; nothing is stored on the parent. leadProduct gains name, the product name the table shows. salesQuote 1.1.0->1.2.0, lead 1.5.0->1.6.0, leadProduct 1.1.0->1.2.0 (register.d/99-zzzzzz-quote-and-lead-lines.json). 1.13.0: pipeline.stages[] gains maxItems (integer, minimum 1, optional): the most items an open stage may hold; empty means no limit. StageLimitGuard refuses a create or update that would put one item more into a full stage (pipeline-stage-limit). pipeline schema version 3.2.0->3.3.0. 1.12.0: forecastSnapshot gains exchange_rates: the rate each foreign currency was converted at in that run, with its source (override, shillinq, manual, none), shillinq origin, date and stale flag, so the forecast says which rate it used (pipeline-live-exchange-rates). forecastSnapshot schema version 1.0.0->1.1.0. 1.11.0: Version only. Decision 207 (1.10.0) and the web form schemas of decision 179 landed together, so the register moves once more and an instance that imported either alone imports the other. 1.10.0: lead.client is optional (decision 207, 12 October 2026). A lead can exist with no client linked: a website visitor who names no organisation, or a deal a salesperson logs before knowing who the customer is. required on lead goes from title, pipeline, client to title, pipeline. OpenRegister validates required on every save, so until now a lead without a client could not be saved at all; no stored lead becomes invalid by this change. lead schema version 1.4.1->1.5.0. 1.9.0: ticket gains portalAnswers (every answer the handler sent to the customer, oldest first, each with when it was sent), so a resident reads on the portal what was answered and when, not only the latest customerMessage without a date (question-detail-on-the-portal). ticket schema version 1.3.1->1.4.0. 1.8.1: ticket.portalSubject also scopes a resident's own request and complaint filed from the portal (createOwnRequest, createOwnComplaint), so a DigiD resident without a clientId claim reads what they filed; description and x-notes only, no property added. ticket schema version 1.3.0->1.3.1. 1.8.0: ticket lifecycle allows every move a dossier question makes: convert also from new and awaiting_customer, a new await (new, in_progress -> awaiting_customer) and resume (awaiting_customer -> in_progress). Without them OpenRegister refused converting a question, saving an answer that waits for the resident, and the resident's reply (found by the Woo journey e2e). ticket schema version 1.2.0->1.3.0. 1.7.0: ticket gains portalSubject (the portal reference of the resident who asked, never a BSN) and subjectReference (a snapshot of the opencatalogi dossier a question is about: type, id, title, items with title and url), so a resident can ask about their Woo dossier from the portal and the KCC employee sees what they saw (questions-about-a-citizen-dossier, hydra woo-citizen-journey C4). ticket schema version 1.1.0->1.2.0. 1.6.1: lead swaps its AccountArrowRightOutline icon for CashMultiple. A lead is a deal, not a person: the person is the contact, which carries the people icon, and two adjacent surfaces reading as the same thing is a rebrand the icon never got. lead schema version 1.4.0->1.4.1; declaration only, no property changed. 1.5.0: pipeline gains propertyMappings — which object types the pipeline boards and which property supplies the stage column. The pipeline editor already wrote this array and PipelineBoard/PipelineManager already read it, but the schema never declared it, so magic-table storage dropped every mapping a user configured: the board resolved no object types and the create forms, filtering on the retired entityType field, offered no pipeline at all. A pipeline declaring no mappings is unscoped, not inapplicable. pipeline schema version 3.1.0->3.2.0. 1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
   },
   "x-openregister": {
     "type": "application",
@@ -59,6 +59,9 @@
       "client": {
         "x-schema-org": "schema:Organization",
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
           "implements": [
             "https://openregister.app/ns#Customer",
             "https://schema.org/Organization"
@@ -82,7 +85,7 @@
         "slug": "client",
         "title": "Client",
         "icon": "AccountStarOutline",
-        "version": "1.2.0",
+        "version": "1.2.1",
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity: either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
@@ -92,7 +95,8 @@
           "email",
           "calendar",
           "forms",
-          "planninq-projects"
+          "planninq-projects",
+          "talk"
         ],
         "required": [
           "name",
@@ -142,9 +146,32 @@
             "title": "Website"
           },
           "industry": {
-            "type": "string",
-            "description": "Industry or sector (schema:industry)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The sectors this client works in. Pick one or more, or type your own (schema:industry).",
             "title": "Industry",
+            "examples": [
+              [
+                "Agriculture",
+                "Construction",
+                "Consultancy",
+                "Education",
+                "Energy",
+                "Finance and insurance",
+                "Healthcare",
+                "Hospitality",
+                "ICT",
+                "Logistics",
+                "Manufacturing",
+                "Non-profit",
+                "Public sector",
+                "Real estate",
+                "Retail",
+                "Wholesale"
+              ]
+            ],
             "facetable": true
           },
           "notes": {
@@ -164,6 +191,22 @@
       "contact": {
         "x-schema-org": "schema:Person",
         "slug": "contact",
+        "archive": {
+          "enabled": true,
+          "afleidingswijze": "gerelateerde_zaak",
+          "sourceRelation": "client",
+          "sourceRelationProperty": "relationshipEndedAt",
+          "defaultBewaartermijn": "P2Y",
+          "defaultNominatie": "vernietigen",
+          "anonymisation": {
+            "name": {"treatment": "fixed", "value": "Anonymised contact person"},
+            "email": "remove",
+            "emails": "remove",
+            "phone": "remove",
+            "phones": "remove",
+            "brpPersonId": "remove"
+          }
+        },
         "x-openregister-notifications": {
           "newContact": {
             "trigger": {
@@ -253,7 +296,8 @@
           },
           "verifiedBSN": {
             "type": "boolean",
-            "description": "True na succesvolle BRP-lookup; false na retentie-expiratie of art. 17 verwijdering. Beheerd door BrpController/BrpRetentionJob: NIET handmatig setbaar via UI.",
+            "description": "On when the BRP (Personal Records Database) confirmed this person's BSN. You cannot change it yourself.",
+            "x-notes": "True after a successful BRP lookup; false after the retention period expires or an art. 17 erasure. Managed by BrpController/BrpRetentionJob: not settable by hand in the UI.",
             "default": false,
             "title": "BSN verified",
             "facetable": true
@@ -267,7 +311,8 @@
           },
           "secrecy": {
             "type": "boolean",
-            "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views. Alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
+            "description": "On when this person asked the BRP to keep their address secret. Their address is then hidden in lists and pages.",
+            "x-notes": "Derived from OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). When true, address data is hidden in the standard views. Visible only through an explicit \"show address under accountability\" action, which writes an extra audit entry.",
             "default": false,
             "title": "Confidentiality",
             "facetable": true
@@ -352,7 +397,7 @@
         },
         "title": "Lead",
         "icon": "CashMultiple",
-        "version": "1.4.1",
+        "version": "1.5.1",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead: a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
@@ -362,9 +407,13 @@
           "xwiki",
           "email",
           "calendar",
-          "forms"
+          "forms",
+          "talk"
         ],
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
           "linkedTypes": [
             "mail"
           ],
@@ -424,6 +473,31 @@
             }
           },
           "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "Whether the lead is in a final lifecycle state (won or lost). Not materialised, so it is always fresh on read; the Lock action on LeadDetail shows only when it is true (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "won"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "lost"
+                    ]
+                  }
+                ]
+              }
+            },
             "daysSinceActivity": {
               "type": "integer",
               "materialise": false,
@@ -656,8 +730,7 @@
         },
         "required": [
           "title",
-          "pipeline",
-          "client"
+          "pipeline"
         ],
         "authorization": {
           "create": [
@@ -717,7 +790,7 @@
           },
           "value": {
             "type": "number",
-            "description": "Estimated deal value in euros (schema:price)",
+            "description": "Estimated deal value, in the lead currency or else the reporting currency (schema:price)",
             "default": 0,
             "title": "Lead Value"
           },
@@ -737,6 +810,7 @@
           },
           "assignee": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the assigned sales representative",
             "title": "Assignee",
             "facetable": true
@@ -831,7 +905,7 @@
         "slug": "pipeline",
         "title": "Pipeline",
         "icon": "Pipe",
-        "version": "3.2.0",
+        "version": "3.3.0",
         "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
         "description": "Represents a CRM pipeline configuration: maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
         "x-schema-org": "schema:ItemList",
@@ -938,6 +1012,12 @@
                   "description": "Whether this is the default entry stage for new leads/requests in this pipeline",
                   "default": false,
                   "title": "Default Pipeline"
+                },
+                "maxItems": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "The most items this open stage may hold at a time. Empty means no limit.",
+                  "title": "Limit"
                 }
               }
             },
@@ -1008,7 +1088,7 @@
           },
           "unitPrice": {
             "type": "number",
-            "description": "Default selling price per unit in EUR (schema:price)",
+            "description": "Default selling price per unit, in the reporting currency (schema:price)",
             "minimum": 0,
             "title": "Unit Price"
           },
@@ -1057,7 +1137,7 @@
           },
           "taxRate": {
             "type": "number",
-            "description": "Tax percentage (0-100). Default: 21 (Dutch BTW). Auto-populated from btwClass when set.",
+            "description": "VAT percentage (0-100). Default 21. Filled in from the VAT class when one is set.",
             "minimum": 0,
             "maximum": 100,
             "default": 21,
@@ -1066,14 +1146,20 @@
           },
           "vatClass": {
             "type": "string",
-            "description": "Dutch BTW class. Governs receipt printing and invoice BTW labels and drives taxRate: hoog (21%), laag (9%), nul (0%), vrijgesteld (exempt, 0%).",
+            "description": "The VAT class sets the VAT rate on receipts and invoices. An administrator sets the rate per class on the admin settings page.",
             "enum": [
               "high",
               "low",
               "zero",
               "exempt"
             ],
-            "title": "BTW Class",
+            "x-enum-labels": {
+              "high": "High (21%)",
+              "low": "Low (9%)",
+              "zero": "Zero (0%)",
+              "exempt": "Exempt"
+            },
+            "title": "VAT class",
             "facetable": true
           },
           "barcode": {
@@ -1115,7 +1201,7 @@
                 },
                 "unitPrice": {
                   "type": "number",
-                  "description": "Per-variant selling price in EUR. Defaults to the parent product unitPrice.",
+                  "description": "Per-variant selling price, in the reporting currency. Defaults to the parent product unitPrice.",
                   "minimum": 0,
                   "title": "Unit Price"
                 },
@@ -1192,7 +1278,7 @@
                       },
                       "priceAdjustment": {
                         "type": "number",
-                        "description": "Amount added to (or subtracted from) the line price in EUR",
+                        "description": "Amount added to (or subtracted from) the line price, in the reporting currency",
                         "default": 0,
                         "title": "Price Adjustment"
                       }
@@ -1219,7 +1305,7 @@
                 },
                 "unitPrice": {
                   "type": "number",
-                  "description": "Per-unit price in EUR when the tier applies",
+                  "description": "Per-unit price, in the reporting currency, when the tier applies",
                   "minimum": 0,
                   "title": "Unit Price"
                 },
@@ -1601,6 +1687,7 @@
           },
           "assigneeUserId": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the assigned handler (VNG toegewezenAanMedewerker)",
             "title": "Assignee",
             "facetable": true
@@ -1626,6 +1713,20 @@
             "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
           },
+          "leadId": {
+            "type": "string",
+            "description": "The lead this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Lead"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "The contact person this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "Contact"
+          },
           "contactMomentSummary": {
             "type": "string",
             "description": "Summary text from the originating contact moment",
@@ -1644,6 +1745,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the agent who created this task",
             "title": "Created by",
             "facetable": true
@@ -1860,6 +1962,7 @@
         "properties": {
           "userId": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID",
             "maxLength": 255,
             "minLength": 1,
@@ -1898,7 +2001,7 @@
         "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A point-of-sale transaction (kassabon) with lifecycle, totals and tax breakdown",
-        "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per BTW rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
+        "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per VAT rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
         "x-schema-org": "schema:Order",
         "configuration": {
           "x-openregister-lifecycle": {
@@ -1979,6 +2082,7 @@
           },
           "cashier": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the logged-in cashier",
             "maxLength": 255,
             "title": "Cashier",
@@ -2256,7 +2360,7 @@
           },
           "unitPrice": {
             "type": "number",
-            "description": "Price per unit in EUR (pre-filled from product.unitPrice)",
+            "description": "Price per unit, in the reporting currency (pre-filled from product.unitPrice)",
             "minimum": 0,
             "title": "Unit Price"
           },
@@ -2270,7 +2374,7 @@
           },
           "taxRate": {
             "type": "number",
-            "description": "BTW rate percentage. Default 21 (Dutch standard rate). Common values: 0, 9, 21",
+            "description": "VAT rate percentage. Default 21 (Dutch standard rate). Common values: 0, 9, 21",
             "minimum": 0,
             "maximum": 100,
             "default": 21,
@@ -2416,6 +2520,7 @@
           },
           "cashier": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the cashier processing the return",
             "maxLength": 255,
             "title": "Cashier",
@@ -2642,6 +2747,7 @@
           },
           "userId": {
             "type": "string",
+            "format": "user",
             "description": "Optional Nextcloud user UID linking this operator to an NC account",
             "maxLength": 64,
             "title": "Nextcloud user",
@@ -2694,7 +2800,7 @@
         "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A customizable POS receipt template (header/footer/company/layout)",
-        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only: no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
+        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (VAT) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only: no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "name"
@@ -2735,7 +2841,7 @@
           },
           "isInvoiceMode": {
             "type": "boolean",
-            "description": "When true, always render the legal-invoice (BTW breakdown + compliance footer) variant. Transactions >= EUR 100 render as an invoice regardless of this flag.",
+            "description": "When true, always render the legal-invoice (VAT breakdown + compliance footer) variant. Transactions >= EUR 100 render as an invoice regardless of this flag.",
             "default": false,
             "title": "Invoice Mode"
           },
@@ -2813,6 +2919,7 @@
           },
           "actor": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the user who performed the action",
             "maxLength": 255,
             "facetable": true,
@@ -2997,6 +3104,7 @@
           },
           "initiatedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID die de validatie initieerde",
             "maxLength": 128,
             "title": "Initiated by"
@@ -3068,6 +3176,7 @@
           },
           "requestedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID van behandelaar",
             "maxLength": 128,
             "title": "Requested by"
@@ -3332,6 +3441,7 @@
           },
           "actor": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID van uitvoerder",
             "maxLength": 128,
             "title": "Actor",
@@ -3487,6 +3597,7 @@
           },
           "localEnteredBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID van wie de opt-out lokaal registreerde",
             "maxLength": 128,
             "visible": false,
@@ -3700,37 +3811,6 @@
         "webhookSecret": "{{ENCRYPTED: whsec_test_signature}}",
         "testMode": true,
         "testResult": null
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "skill",
-          "slug": "skill-vergunningen",
-          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21"
-        },
-        "title": "Vergunningen",
-        "description": "Behandeling van omgevingsvergunningen en meldingen op basis van de Wabo",
-        "categories": [
-          "vergunningen",
-          "omgeving"
-        ],
-        "isActive": true
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "skill",
-          "slug": "skill-wmo-zorg",
-          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
-        },
-        "title": "WMO / Zorg",
-        "description": "Begeleiding bij Wmo-aanvragen, hulpmiddelen en zorgvragen",
-        "categories": [
-          "wmo",
-          "zorg",
-          "hulpmiddelen"
-        ],
-        "isActive": true
       },
       {
         "@self": {

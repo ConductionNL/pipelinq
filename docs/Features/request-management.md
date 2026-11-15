@@ -45,6 +45,26 @@ Requests can optionally be placed on a pipeline board alongside leads for visual
 - Error toasts on save/delete failures
 - Orphaned client reference handling (`[Deleted client]` placeholder)
 
+### What the resident sees
+
+A request ticket shows a section "What the resident sees". It is the request
+as the resident portal shows it: number, subject, category, status, date,
+description, your message to the customer and the resident's own replies, and
+your name only when the portal settings show the handler's name. When portaliq
+is installed and the ticket belongs to an organisation, a second panel shows
+what that organisation's contact reads in portaliq, including the message to
+the customer. One line says everything else on the ticket stays internal, and
+"Show internal fields" lists those fields by name.
+
+The message to the customer is the one field written for the resident: save it
+and the section shows it at once. Complaint and contact moment tickets have no
+section, because the portal does not show them.
+
+The section reads `GET /apps/pipelinq/api/tickets/{id}/resident-view`, which
+answers `{bespoke, portaliq, internalFields}` for a ticket you may read and 404
+for one you may not. Both panels are built by the portal's own code, so the
+preview cannot drift from what the resident reads.
+
 ### Planned (V1)
 
 - Request channel tracking (phone, email, web, counter)

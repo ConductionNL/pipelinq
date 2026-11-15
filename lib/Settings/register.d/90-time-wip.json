@@ -80,6 +80,7 @@
           },
           "approvedBy": {
             "type": "string",
+            "format": "user",
             "description": "User UID of the approver.",
             "title": "Approved By"
           },

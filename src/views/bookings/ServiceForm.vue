@@ -15,7 +15,7 @@
   sums to multi-step total"); enforced client-side here AND server-side by
   AvailabilityService when the booking is created.
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<div class="service-form" data-testid="service-form">
@@ -99,7 +99,7 @@
 				<NcTextField
 					id="service-currency"
 					:label="t('pipelinq', 'Currency')"
-					:modelValue="form.currency || 'EUR'"
+					:modelValue="form.currency || reportingCurrency()"
 					:maxlength="3"
 					@update:modelValue="
 						(v) => (form.currency = (v || '').toUpperCase())
@@ -222,8 +222,13 @@
 </template>
 
 <script>
+import { translate } from '@nextcloud/l10n'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
+import { reportingCurrency } from '../../services/reportingCurrency.js'
+import { serializeStep } from '../../services/serviceSteps.js'
+import { CANCELLATION_POLICY_LABELS, enumOptions } from '../../utils/enumLabels.js'
+import { populateFormWatcher } from '../../utils/formFields.js'
 
 export default {
 	name: 'ServiceForm',
@@ -269,26 +274,22 @@ export default {
 		},
 
 		cancellationPolicyOptions() {
-			return [
-				{ value: 'free', label: t('pipelinq', 'Free') },
-				{ value: 'charge-deposit', label: t('pipelinq', 'Charge deposit') },
-				{ value: 'always-charge', label: t('pipelinq', 'Always charge') },
-			]
+			return enumOptions(CANCELLATION_POLICY_LABELS, (text) =>
+				translate('pipelinq', text),
+			)
 		},
 	},
 
 	watch: {
-		service: {
-			immediate: true,
-			handler(val) {
-				if (val && Object.keys(val).length > 0) {
-					this.populateForm(val)
-				}
-			},
-		},
+		service: populateFormWatcher(),
 	},
 
 	methods: {
+		/**
+		 * A blank service, priced in the reporting currency.
+		 *
+		 * @spec openspec/specs/commercial-dashboard/spec.md
+		 */
 		emptyForm() {
 			return {
 				name: '',
@@ -297,7 +298,7 @@ export default {
 				bufferBeforeMinutes: 0,
 				bufferAfterMinutes: 0,
 				price: 0,
-				currency: 'EUR',
+				currency: reportingCurrency(),
 				requiredSkills: [],
 				multiStep: [],
 				bookableOnline: true,
@@ -373,17 +374,19 @@ export default {
 				.filter((s) => s.length > 0)
 		},
 
+		/**
+		 * Validate and emit the service, steps included.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return
 			}
 			const data = { ...this.form }
-			data.multiStep = (this.form.multiStep || []).map((s) => ({
-				durationMinutes: Number(s.durationMinutes) || 0,
-				resourceType: s.resourceType || 'staff',
-				skillRequired: (s.skillRequired || '').trim(),
-				allowGap: !!s.allowGap,
-			}))
+			// serializeStep keeps the product, quantity and unit of a step
+			// (round3-review-points).
+			data.multiStep = (this.form.multiStep || []).map(serializeStep)
 			data.requiredSkills = [...(this.form.requiredSkills || [])]
 			if (this.service?.id) {
 				data.id = this.service.id
@@ -394,49 +397,16 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .service-form {
 	max-width: 960px;
 	padding: 0 4px;
 }
 
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-}
-
 .form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-	flex-wrap: wrap;
-}
-
-.form-row .form-group {
-	flex: 1 1 200px;
-}
-
-.toggle-group {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.toggle-group label {
-	margin: 0;
-	font-weight: normal;
+	@include textarea-field;
 }
 
 .service-form__actions {
@@ -445,3 +415,5 @@ export default {
 	margin-top: 24px;
 }
 </style>
+
+<style scoped src="./bookingForm.css"></style>

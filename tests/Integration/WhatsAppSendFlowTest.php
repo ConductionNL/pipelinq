@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -36,11 +36,13 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Integration tests for the WhatsApp send flow.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppSendFlowTest extends TestCase {
 	private ContainerInterface $container;
@@ -84,7 +86,10 @@ class WhatsAppSendFlowTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
 				}
@@ -105,7 +110,9 @@ class WhatsAppSendFlowTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}
 
@@ -122,7 +129,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				$filters = $config['filters'] ?? [];
 				unset($filters['register'], $filters['schema']);
 
@@ -173,6 +180,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			$this->budgetService,
 			$this->notificationService,
 			$this->logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($this->appConfig, $this->logger),
 		);
 	}//end setUp()
 

@@ -64,6 +64,7 @@
           },
           "mailAccountUserId": {
             "type": "string",
+            "format": "user",
             "description": "The Nextcloud user id that owns mailAccountRef. The Mail app scopes account lookups per user (AccountService::find(userId, id)), so this is required alongside mailAccountRef when kind=mailAccount: it is not optional metadata, it is the IDOR guard.",
             "title": "Mail Account Owner"
           },

@@ -9,6 +9,7 @@ use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The portal's write into the main register.
@@ -43,15 +44,15 @@ class MainRegisterReaderTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->equalTo(['title' => 'Vraag']),
-				$this->anything(),
-				$this->equalTo('7'),
-				$this->equalTo('42'),
-				$this->isNull(),
-				$this->isFalse(),
-				$this->isFalse(),
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->equalTo(['title' => 'Vraag']),
+					'extend' => $this->anything(),
+					'register' => $this->equalTo('7'),
+					'schema' => $this->equalTo('42'),
+					'uuid' => $this->isNull(),
+					'_rbac' => $this->isFalse(),
+					'_multitenancy' => $this->isFalse(),
+				]))
 			->willReturn($saved);
 
 		$reader = new MainRegisterReader($appConfig, $this->createMock(LoggerInterface::class), $objectService);
@@ -82,15 +83,15 @@ class MainRegisterReaderTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->expects($this->once())
 			->method('find')
-			->with(
-				$this->equalTo('t-1'),
-				$this->anything(),
-				$this->anything(),
-				$this->equalTo('7'),
-				$this->equalTo('42'),
-				$this->isFalse(),
-				$this->isFalse(),
-			)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => $this->equalTo('t-1'),
+					'_extend' => $this->anything(),
+					'files' => $this->anything(),
+					'register' => $this->equalTo('7'),
+					'schema' => $this->equalTo('42'),
+					'_rbac' => $this->isFalse(),
+					'_multitenancy' => $this->isFalse(),
+				]))
 			->willReturn($found);
 		$objectService->expects($this->once())
 			->method('findAll')
@@ -101,4 +102,39 @@ class MainRegisterReaderTest extends TestCase {
 		$this->assertNotNull($reader->find(schemaKey: 'ticket', id: 't-1'));
 		$reader->findAll(schemaKey: 'ticket', filters: ['portalSubject' => 's-1']);
 	}//end testAPortalReadIsNotEmptiedForHavingNoNextcloudUser()
+
+	/**
+	 * An employee's read keeps OpenRegister's RBAC and organisation filter
+	 * on, so a ticket of another organisation answers null.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeesReadKeepsTheirRbacAndOrganisation(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => '7',
+				'ticket_schema' => '42',
+				default => $default,
+			}
+		);
+
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objectService->expects($this->once())
+			->method('find')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => $this->equalTo(value: 't-other-organisation'),
+					'_extend' => $this->anything(),
+					'files' => $this->anything(),
+					'register' => $this->equalTo(value: '7'),
+					'schema' => $this->equalTo(value: '42'),
+					'_rbac' => $this->isTrue(),
+					'_multitenancy' => $this->isTrue(),
+				]))
+			->willReturn(null);
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$reader = new MainRegisterReader(appConfig: $appConfig, logger: $logger, objectService: $objectService);
+		$this->assertNull(actual: $reader->findAsCaller(schemaKey: 'ticket', id: 't-other-organisation'));
+	}//end testAnEmployeesReadKeepsTheirRbacAndOrganisation()
 }//end class

@@ -34,6 +34,8 @@ namespace OCA\Pipelinq\Tests\Integration;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
@@ -46,11 +48,14 @@ use OCA\Pipelinq\Service\SmsProviderFactory;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Outbound messaging contract ring (network-free, mock vendor shapes).
@@ -100,19 +105,23 @@ class OutboundMessagingContractTest extends TestCase {
 			 * @return ObjectEntityInterface The stored row, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				array|ObjectEntity $object,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				bool $_validation = true,
-				?array $uploadedFiles = null,
-				?IUser $currentUser = null,
-				bool $failIfExists = false,
+				bool $_multitenancy = true
 			): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$silent = $options->policy->silent ?? false;
+				$_validation = $options->policy->validation ?? true;
+				$uploadedFiles = $options->uploadedFiles;
+				$currentUser = $options->actor->currentUser;
+				$failIfExists = $options->policy->failIfExists ?? false;
+				$_unowned = $options->actor->unowned ?? false;
+				$_dedupOverride = $options->policy->dedupOverride ?? false;
+				$_owner = $options->actor->owner;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('row-' . count($this->store));
 				}
@@ -145,15 +154,16 @@ class OutboundMessagingContractTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $_render = true,
-				bool $_audit = true,
+				bool $_multitenancy = true
 			): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
+				$_audit = $options?->audit ?? true;
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null) {
 					return null;
@@ -201,6 +211,7 @@ class OutboundMessagingContractTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->objectService,
+			l10n: $this->createMock(IL10N::class),
 		);
 
 		$this->container->method('get')->willReturnCallback(
@@ -228,6 +239,7 @@ class OutboundMessagingContractTest extends TestCase {
 			new BudgetService($this->container, $appConfig, $this->createMock(NotificationService::class), $logger),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 	}//end setUp()
 
@@ -340,6 +352,7 @@ class OutboundMessagingContractTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
+			l10n: $this->createMock(IL10N::class),
 		);
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($store, $contactmomentService) {
@@ -363,6 +376,7 @@ class OutboundMessagingContractTest extends TestCase {
 			new BudgetService($container, $appConfig, $this->createMock(NotificationService::class), $logger),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$this->providerRepo->method('listActive')->willReturn([

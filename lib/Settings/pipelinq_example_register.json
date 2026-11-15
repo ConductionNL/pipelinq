@@ -566,6 +566,46 @@
                 "@self": {
                     "register": "pipelinq",
                     "schema": "product",
+                    "slug": "product-toner-hp-cf283a"
+                },
+                "name": "Toner HP 83A zwart",
+                "description": "Originele HP-tonercartridge CF283A voor LaserJet Pro, circa 1.500 pagina's",
+                "sku": "TONER-HP-CF283A",
+                "unitPrice": 79.95,
+                "type": "product",
+                "status": "active",
+                "unit": "stuk",
+                "unitOfMeasure": "stuks",
+                "manufacturer": "HP",
+                "weight": 0.9,
+                "stockTracked": true,
+                "taxRate": 21,
+                "vatClass": "high"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
+                    "slug": "product-box-cardboard-s"
+                },
+                "name": "Verzenddoos klein",
+                "description": "Kartonnen verzenddoos, klein formaat, enkelgolf",
+                "sku": "BOX-CARDBOARD-S",
+                "unitPrice": 0.85,
+                "type": "product",
+                "status": "active",
+                "unit": "stuk",
+                "unitOfMeasure": "dozen",
+                "manufacturer": "Smurfit Westrock",
+                "weight": 0.12,
+                "stockTracked": true,
+                "taxRate": 21,
+                "vatClass": "high"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "product",
                     "slug": "product-knippen-fohnen"
                 },
                 "name": "Knippen en Föhnen",
@@ -574,6 +614,7 @@
                 "unitPrice": 42.5,
                 "type": "service",
                 "status": "active",
+                "stockTracked": false,
                 "unit": "behandeling",
                 "taxRate": 21,
                 "vatClass": "high",
@@ -1151,7 +1192,7 @@
                 "name": "Gemeente Amsterdam",
                 "type": "organization",
                 "contactsUid": "example-client-gemeente-amsterdam",
-                "industry": "Lokale overheid"
+                "industry": ["Lokale overheid"]
             },
             {
                 "@self": {
@@ -1163,7 +1204,7 @@
                 "name": "Provincie Zuid-Holland",
                 "type": "organization",
                 "contactsUid": "example-client-provincie-zuid-holland",
-                "industry": "Provinciale overheid"
+                "industry": ["Provinciale overheid"]
             },
             {
                 "@self": {
@@ -1175,7 +1216,7 @@
                 "name": "Rijkswaterstaat",
                 "type": "organization",
                 "contactsUid": "example-client-rijkswaterstaat",
-                "industry": "Rijksoverheid"
+                "industry": ["Rijksoverheid"]
             },
             {
                 "@self": {
@@ -1187,7 +1228,7 @@
                 "name": "GGD Rotterdam-Rijnmond",
                 "type": "organization",
                 "contactsUid": "example-client-ggd-rotterdam-rijnmond",
-                "industry": "Zorg"
+                "industry": ["Zorg"]
             },
             {
                 "@self": {
@@ -1199,7 +1240,7 @@
                 "name": "Waterschap Hollandse Delta",
                 "type": "organization",
                 "contactsUid": "example-client-waterschap-hollandse-delta",
-                "industry": "Waterschap"
+                "industry": ["Waterschap"]
             },
             {
                 "@self": {
@@ -1211,7 +1252,7 @@
                 "name": "Bakker BV",
                 "type": "organization",
                 "contactsUid": "example-client-bakker-bv",
-                "industry": "Bouw"
+                "industry": ["Bouw"]
             },
             {
                 "@self": {
@@ -1223,7 +1264,7 @@
                 "name": "Van der Berg Groep",
                 "type": "organization",
                 "contactsUid": "example-client-van-der-berg-groep",
-                "industry": "Groothandel"
+                "industry": ["Groothandel"]
             },
             {
                 "@self": {
@@ -1235,7 +1276,7 @@
                 "name": "Gemeente Arnhem",
                 "type": "organization",
                 "contactsUid": "example-client-gemeente-arnhem",
-                "industry": "Lokale overheid"
+                "industry": ["Lokale overheid"]
             },
             {
                 "@self": {
@@ -1411,7 +1452,7 @@
                 "contactsUid": "demo-gemeente-001",
                 "email": "info@gemeente-demo.nl",
                 "phone": "085-9999999",
-                "industry": "Lokale overheid",
+                "industry": ["Lokale overheid"],
                 "notes": "Demonstration client for the entity-notes change. Used as the target for the five contactmoment-001..005 seed objects so the Communication History panel is populated on first install."
             },
             {
@@ -1876,7 +1917,7 @@
                 "email": "kcc@gemeente-voorbeeld.nl",
                 "phone": "0800-1234500",
                 "address": "Raadhuisplein 1, 1234 AB Voorbeeldstad",
-                "industry": "Lokale overheid",
+                "industry": ["Lokale overheid"],
                 "notes": "Seed client for klantbeeld-360-activation (municipality archetype).",
                 "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000"
             },
@@ -1894,7 +1935,7 @@
                 "email": "info@meridiaan-advies.nl",
                 "phone": "020-5551234",
                 "address": "Zuidas 88, 1082 MS Amsterdam",
-                "industry": "Consultancy",
+                "industry": ["Consultancy"],
                 "notes": "Seed client for klantbeeld-360-activation (consultancy archetype).",
                 "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000"
             },
@@ -1912,7 +1953,7 @@
                 "email": "klantenservice@zonnereizen.nl",
                 "phone": "030-7778899",
                 "address": "Reiskade 12, 3511 ZZ Utrecht",
-                "industry": "Reisbranche",
+                "industry": ["Reisbranche"],
                 "notes": "Seed client for klantbeeld-360-activation (travel agency archetype)."
             },
             {
@@ -2641,7 +2682,7 @@
                     "schema": "appointmentBooking",
                     "slug": "booking-001-completed"
                 },
-                "customerId": "00000000-0000-0000-0000-000000000001",
+                "customerId": "client-bakker-bv",
                 "serviceId": "service-haircut-simple",
                 "resourceAssignments": [
                     {
@@ -2681,7 +2722,7 @@
                     "schema": "appointmentBooking",
                     "slug": "booking-002-confirmed"
                 },
-                "customerId": "00000000-0000-0000-0000-000000000002",
+                "customerId": "client-zonnereizen",
                 "serviceId": "service-color-and-cut",
                 "resourceAssignments": [
                     {
@@ -5507,6 +5548,121 @@
                 "hardStop": true,
                 "currentPeriodMessages": 0,
                 "currentPeriodCostEur": 0
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "skill",
+                    "slug": "skill-vergunningen",
+                    "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21"
+                },
+                "title": "Vergunningen",
+                "description": "Behandeling van omgevingsvergunningen en meldingen op basis van de Wabo",
+                "categories": [
+                    "vergunningen",
+                    "omgeving"
+                ],
+                "isActive": true
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "skill",
+                    "slug": "skill-wmo-zorg",
+                    "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
+                },
+                "title": "WMO / Zorg",
+                "description": "Begeleiding bij Wmo-aanvragen, hulpmiddelen en zorgvragen",
+                "categories": [
+                    "wmo",
+                    "zorg",
+                    "hulpmiddelen"
+                ],
+                "isActive": true
+            },
+            {
+                "@self": {
+                    "register": "sla",
+                    "schema": "slaPolicy",
+                    "slug": "goud-tier-request-sla"
+                },
+                "name": "Goud-tier klant-SLA",
+                "description": "Strakkere targets voor goud-tier klanten met 24x7-acknowledgement.",
+                "appliesTo": "request",
+                "customerTier": "gold",
+                "targets": [
+                    {
+                        "kind": "acknowledgement",
+                        "duration": "PT1H",
+                        "calendar": "24x7"
+                    },
+                    {
+                        "kind": "firstResponse",
+                        "duration": "PT4H",
+                        "calendar": "24x7"
+                    },
+                    {
+                        "kind": "resolution",
+                        "duration": "P1W",
+                        "calendar": "business-hours"
+                    }
+                ],
+                "escalationChain": [
+                    {
+                        "triggerAt": 0.8,
+                        "notify": "assignee",
+                        "channel": "nextcloud-notification"
+                    },
+                    {
+                        "triggerAt": 1.0,
+                        "notify": "manager",
+                        "channel": "email"
+                    },
+                    {
+                        "triggerAt": 1.5,
+                        "notify": "director",
+                        "channel": "email"
+                    }
+                ],
+                "pauseConditions": [
+                    "awaiting_customer"
+                ],
+                "holidayCalendar": "nl-feestdagen-rijksoverheid",
+                "priority": 10,
+                "active": true,
+                "justification": "Goud-tier contractueel commitment (seed data).",
+                "status": "published"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "segment",
+                    "slug": "segment-service-without-product"
+                },
+                "name": "Advice customers without a product",
+                "description": "Customers invoiced for the demo advice hour and never for the demo coffee. Copy it and swap the two item names for your own catalogue. Reads shillinq, and is empty where shillinq is absent.",
+                "entityType": "customer",
+                "rules": {
+                    "type": "AND",
+                    "children": [
+                        {
+                            "field": "shillinqPurchasedServices",
+                            "operator": "contains",
+                            "value": "[demo] adviesuur"
+                        },
+                        {
+                            "type": "NOT",
+                            "children": [
+                                {
+                                    "field": "shillinqPurchasedProducts",
+                                    "operator": "contains",
+                                    "value": "[demo] koffie zwart"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "estimatedSize": 0
             }
         ]
     }

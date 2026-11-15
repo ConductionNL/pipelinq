@@ -21,16 +21,32 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
+use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
-use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Service\Provider\WhatsAppInbound;
+use OCA\Pipelinq\Service\Provider\WhatsAppMessage;
+use OCA\Pipelinq\Service\Provider\WhatsAppProviderAttempt;
+use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
+use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
+use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
+use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Service\Support\ChannelAdapterLookups;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,14 +78,30 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           The 2026-07 phpmd
  *  cleanup extracted several private single-purpose helpers
  *  (resolveSendContext, resolveTemplateForSend, attemptProviderSend,
- *  bodyForSend, templateIdForSend, latestInboundTimestamp, firstScalarId)
+ *  templateIdForSend, latestInboundTimestamp)
  *  specifically to bring per-method complexity under threshold; further
  *  splitting the class would scatter one channel-adapter concern without
  *  reducing real coupling.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class WhatsAppAdapter {
+class WhatsAppAdapter implements WhatsAppAdapterInterface {
+	use PayloadToArray;
+	use WritesAsMessagingAccount;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use ChannelAdapterLookups;
+	use SavedPayloadId;
+
+	/**
+	 * OpenRegister access scope for the webhook's LOOKUPS (contact,
+	 * conversation): reads without RBAC. Every write runs as the messaging
+	 * service account with the checks on (as the SMS webhook).
+	 *
+	 * @var array<string, bool>
+	 */
+	private const LOOKUP_SCOPE = ['_rbac' => false, '_multitenancy' => false];
+
 	/**
 	 * Default register slug.
 	 */
@@ -124,8 +156,9 @@ class WhatsAppAdapter {
 	 * @param BudgetService $budgetService Budget gate.
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
+	 * @param PhoneNormaliser $phoneNormaliser Normalises an inbound sender to E.164.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -136,6 +169,7 @@ class WhatsAppAdapter {
 		private BudgetService $budgetService,
 		private NotificationService $notificationService,
 		private LoggerInterface $logger,
+		private PhoneNormaliser $phoneNormaliser,
 	) {
 	}//end __construct()
 
@@ -171,7 +205,7 @@ class WhatsAppAdapter {
 	 *     error?: string
 	 * } Send outcome.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function send(
@@ -183,38 +217,91 @@ class WhatsAppAdapter {
 	): array {
 		$contactId = $this->extractId(payload: $contact);
 		$toNumber = $this->extractPhone(contact: $contact);
+		$message = new WhatsAppMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context);
 
-		if ($toNumber === '') {
+		return $this->sendMessage(message: $message, templateId: $templateId, parameters: $parameters);
+	}//end send()
+
+	/**
+	 * Check the recipient and consent, then send through the ordered providers.
+	 *
+	 * @param WhatsAppMessage $message The message to send.
+	 * @param string|null $templateId Template id for a business-initiated send, or null for free-form.
+	 * @param array<int|string, mixed> $parameters Template parameters.
+	 *
+	 * @return array<string, mixed> The send outcome.
+	 */
+	private function sendMessage(WhatsAppMessage $message, string|null $templateId, array $parameters): array {
+		if ($message->toNumber === '') {
 			return ['status' => self::STATUS_FAILED, 'error' => 'no recipient phone number'];
 		}
 
+		if ($this->consentAllowsSend(message: $message, templateId: $templateId) === false) {
+			return ['status' => self::STATUS_CONSENT_MISSING];
+		}
+
+		$resolved = $this->resolveSendTemplate(message: $message, templateId: $templateId, parameters: $parameters);
+		if ($resolved['error'] !== null) {
+			return $resolved['error'];
+		}
+
+		return $this->sendResolvedTemplate(message: $message, resolved: $resolved, parameters: $parameters);
+	}//end sendMessage()
+
+	/**
+	 * Ask consent for the send: a free-form send is a reply, a template send is business-initiated.
+	 *
+	 * @param WhatsAppMessage $message The message to send.
+	 * @param string|null $templateId Template id for a business-initiated send, or null for free-form.
+	 *
+	 * @return bool True when consent allows the send.
+	 */
+	private function consentAllowsSend(WhatsAppMessage $message, string|null $templateId): bool {
 		$isBusinessInitiated = (($templateId ?? '') !== '');
 		$inReplyTo = null;
 		if ($isBusinessInitiated === false) {
 			// A free-form send is an answer inside the session the contact
 			// opened, so integriq is asked about it as a reply (hydra
 			// decision 2). A template send is one pipelinq starts.
-			$inReplyTo = $this->replyTarget(contactId: $contactId, explicit: (string)($context['inReplyTo'] ?? ''));
+			$inReplyTo = $this->replyTarget(contactId: $message->contactId, explicit: (string)($message->context['inReplyTo'] ?? ''));
 		}
 
-		if ($this->consentForSend(contactId: $contactId, businessInitiated: $isBusinessInitiated, address: $toNumber, inReplyTo: $inReplyTo) === false) {
-			return ['status' => self::STATUS_CONSENT_MISSING];
-		}
-
-		$language = (string)$this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
-		$context = $this->resolveSendContext(
-			templateId: $templateId,
-			parameters: $parameters,
-			language: $language,
-			contactId: $contactId
+		return $this->consentForSend(
+			contactId: $message->contactId,
+			businessInitiated: $isBusinessInitiated,
+			address: $message->toNumber,
+			inReplyTo: $inReplyTo
 		);
-		if ($context['error'] !== null) {
-			return $context['error'];
-		}
+	}//end consentAllowsSend()
 
-		$template = $context['template'];
-		$templateName = $context['templateName'];
-		$language = $context['language'];
+	/**
+	 * Resolve the template, name and language for the send.
+	 *
+	 * @param WhatsAppMessage $message The message to send.
+	 * @param string|null $templateId Template id, or null for free-form.
+	 * @param array<int|string, mixed> $parameters Template parameters.
+	 *
+	 * @return array<string, mixed> The resolved send context (`error` is non-null on failure).
+	 */
+	private function resolveSendTemplate(WhatsAppMessage $message, string|null $templateId, array $parameters): array {
+		$language = (string)$this->appConfig->getValueString(AppIdentity::APP_ID, 'whatsapp.default_language', 'nl');
+		return $this->resolveSendContext(
+			request: new WhatsAppTemplateRequest(templateId: $templateId, parameters: $parameters, language: $language),
+			contactId: $message->contactId
+		);
+	}//end resolveSendTemplate()
+
+	/**
+	 * Send a resolved template message through the ordered providers.
+	 *
+	 * @param WhatsAppMessage $message The message to send.
+	 * @param array<string, mixed> $resolved The resolved send context.
+	 * @param array<int|string, mixed> $parameters Template parameters.
+	 *
+	 * @return array<string, mixed> The send outcome.
+	 */
+	private function sendResolvedTemplate(WhatsAppMessage $message, array $resolved, array $parameters): array {
+		$template = $resolved['template'];
 
 		$tenantId = $this->getTenantId();
 		$ordered = $this->orderedProvidersForSend(templateProviderId: (string)($template['providerId'] ?? ''));
@@ -223,33 +310,53 @@ class WhatsAppAdapter {
 			return ['status' => self::STATUS_NO_PROVIDER];
 		}
 
-		foreach ($ordered as $row) {
-			$outcome = $this->attemptProviderSend(
-				row: $row,
-				tenantId: $tenantId,
-				contactId: $contactId,
-				toNumber: $toNumber,
-				body: $body,
-				templateName: $templateName,
-				language: $language,
-				parameters: $parameters,
-				template: $template,
-				context: $context,
-			);
+		$run = new WhatsAppSendRun(
+			message: $message,
+			templateSend: $this->templateSendFor(resolved: $resolved, parameters: $parameters),
+			tenantId: $tenantId,
+		);
 
+		return $this->attemptProviders(ordered: $ordered, run: $run);
+	}//end sendResolvedTemplate()
+
+	/**
+	 * The template part of a send run.
+	 *
+	 * @param array<string, mixed> $resolved The resolved send context.
+	 * @param array<int|string, mixed> $parameters Template parameters.
+	 *
+	 * @return WhatsAppTemplateSend The template send.
+	 */
+	private function templateSendFor(array $resolved, array $parameters): WhatsAppTemplateSend {
+		return new WhatsAppTemplateSend(
+			templateName: $resolved['templateName'],
+			language: $resolved['language'],
+			parameters: $parameters,
+			template: $resolved['template'],
+		);
+	}//end templateSendFor()
+
+	/**
+	 * Try each provider in order; persist a failure and alert when all fail transiently.
+	 *
+	 * @param array<int, array<string, mixed>> $ordered The providers in send order.
+	 * @param WhatsAppSendRun $run The send run.
+	 *
+	 * @return array<string, mixed> The send outcome.
+	 */
+	private function attemptProviders(array $ordered, WhatsAppSendRun $run): array {
+		foreach ($ordered as $row) {
+			$outcome = $this->attemptProviderSend(row: $row, run: $run);
 			if ($outcome !== null) {
 				return $outcome;
 			}
-		}//end foreach
+		}
 
 		return $this->persistFailureAndAlert(
-			contactId: $contactId,
-			providerId: '',
-			body: $this->bodyForSend(templateName: $templateName, body: $body),
-			templateId: $this->templateIdForSend(template: $template),
-			error: 'all WhatsApp providers returned transient errors',
+			run: $run,
+			failure: new WhatsAppSendFailure(providerId: '', error: 'all WhatsApp providers returned transient errors'),
 		);
-	}//end send()
+	}//end attemptProviders()
 
 	/**
 	 * Resolve the send context: template resolution for a template send, or
@@ -259,10 +366,8 @@ class WhatsAppAdapter {
 	 * complexity budget; behaviour is unchanged — the two branches are
 	 * mutually exclusive on whether `$templateId` is set.
 	 *
-	 * @param string|null $templateId Template UUID/slug or null for free-form.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string $language Default language (app-config).
-	 * @param string $contactId Contact UUID (session-window lookup).
+	 * @param WhatsAppTemplateRequest $request   Template id, parameters and default language.
+	 * @param string                  $contactId Contact UUID (session-window lookup).
 	 *
 	 * @return array{
 	 *     error: array<string, mixed>|null,
@@ -271,27 +376,45 @@ class WhatsAppAdapter {
 	 *     language?: string
 	 * } Resolved context, or an `error` outcome to return immediately.
 	 */
-	private function resolveSendContext(?string $templateId, array $parameters, string $language, string $contactId): array {
-		$isTemplateSend = (($templateId ?? '') !== '');
-		if ($isTemplateSend === true) {
-			$resolved = $this->resolveTemplateForSend(
-				templateId: (string)$templateId,
-				parameters: $parameters,
-				language: $language
-			);
-			if ($resolved['ok'] === false) {
-				return ['error' => $resolved['error']];
-			}
-
-			return [
-				'error' => null,
-				'template' => $resolved['template'],
-				'templateName' => $resolved['templateName'],
-				'language' => $resolved['language'],
-			];
+	private function resolveSendContext(WhatsAppTemplateRequest $request, string $contactId): array {
+		if ($request->isTemplateSend() === true) {
+			return $this->templateSendContext(request: $request);
 		}
 
-		// Free-form: require an in-window session.
+		return $this->freeFormSendContext(contactId: $contactId, language: $request->language);
+	}//end resolveSendContext()
+
+	/**
+	 * The send context of a template send: the resolved template, or the
+	 * refusal to return.
+	 *
+	 * @param WhatsAppTemplateRequest $request Template id, parameters and default language.
+	 *
+	 * @return array<string, mixed> The context, `error` null on success.
+	 */
+	private function templateSendContext(WhatsAppTemplateRequest $request): array {
+		$resolved = $this->resolveTemplateForSend(request: $request);
+		if ($resolved['ok'] === false) {
+			return ['error' => $resolved['error']];
+		}
+
+		return [
+			'error' => null,
+			'template' => $resolved['template'],
+			'templateName' => $resolved['templateName'],
+			'language' => $resolved['language'],
+		];
+	}//end templateSendContext()
+
+	/**
+	 * The send context of a free-form send, which requires an in-window session.
+	 *
+	 * @param string $contactId Contact UUID (session-window lookup).
+	 * @param string $language  Default language (app-config).
+	 *
+	 * @return array<string, mixed> The context, or the session-expired refusal.
+	 */
+	private function freeFormSendContext(string $contactId, string $language): array {
 		if ($this->isWithinSessionWindow(contactId: $contactId) === false) {
 			return ['error' => ['status' => self::STATUS_SESSION_WINDOW_EXPIRED]];
 		}
@@ -302,7 +425,7 @@ class WhatsAppAdapter {
 			'templateName' => '',
 			'language' => $language,
 		];
-	}//end resolveSendContext()
+	}//end freeFormSendContext()
 
 	/**
 	 * Consent gate for a WhatsApp send.
@@ -364,11 +487,19 @@ class WhatsAppAdapter {
 	}//end replyTarget()
 
 	/**
-	 * This contact's inbound WhatsApp messages inside the session window.
+	 * This contact's answerable inbound WhatsApp messages inside the session
+	 * window.
+	 *
+	 * A STOP is the contact's last word: it and everything before it are not
+	 * answerable. Integriq lets a reply through an opt-out, and the STOP opens
+	 * the session itself, so without this the next free-form send after a
+	 * STOP went out as an answer to it.
 	 *
 	 * @param string $contactId Contact UUID.
 	 *
 	 * @return array<string,int> Message id to its sent time.
+	 *
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	private function inboundInWindow(string $contactId): array {
 		$objectService = $this->getObjectService();
@@ -377,34 +508,83 @@ class WhatsAppAdapter {
 		}
 
 		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'contactId' => $contactId,
-						'channel' => 'whatsapp',
-						'direction' => 'inbound',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-					],
-				]
-			);
+			$rows = $this->findInboundRows(objectService: $objectService, contactId: $contactId);
 		} catch (Throwable $e) {
 			return [];
 		}
 
+		return $this->openInboundMessages(rows: (array)$rows, contactId: $contactId);
+	}//end inboundInWindow()
+
+	/**
+	 * Read the contact's inbound WhatsApp messages.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return mixed The rows as returned by findAll.
+	 *
+	 * @throws Throwable When the read fails.
+	 */
+	private function findInboundRows(object $objectService, string $contactId): mixed {
+		return $objectService->findAll(
+			config: [
+				'filters' => [
+					'contactId' => $contactId,
+					'channel' => 'whatsapp',
+					'direction' => 'inbound',
+					'register' => $this->getRegisterSlug(),
+					'schema' => $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+				],
+			]
+		);
+	}//end findInboundRows()
+
+	/**
+	 * The contact's inbound messages inside the session window and after the last opt-out keyword.
+	 *
+	 * @param array<int, mixed> $rows The inbound rows.
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return array<string, int> Message id to sent-at timestamp.
+	 */
+	private function openInboundMessages(array $rows, string $contactId): array {
 		$found = [];
-		foreach ((array)$rows as $raw) {
+		$lastStop = 0;
+		foreach ($rows as $raw) {
 			$row = $this->toArray(value: $raw);
-			$sentAt = (int)strtotime((string)($row['sentAt'] ?? ''));
-			$messageId = $this->extractId(payload: $row);
-			$isOwn = ((string)($row['contactId'] ?? $contactId) === $contactId);
-			if ($messageId !== '' && $isOwn === true && (time() - $sentAt) < self::SESSION_WINDOW_SECONDS) {
-				$found[$messageId] = $sentAt;
+			$entry = $this->inboundWindowEntry(row: $row, contactId: $contactId);
+			if ($entry === null) {
+				continue;
+			}
+
+			$found[$entry[0]] = $entry[1];
+			if ($this->consentService->isOptOutKeyword(body: (string)($row['body'] ?? '')) === true) {
+				$lastStop = max($lastStop, $entry[1]);
 			}
 		}
 
-		return $found;
-	}//end inboundInWindow()
+		return array_filter($found, static fn (int $sentAt): bool => $sentAt > $lastStop);
+	}//end openInboundMessages()
+
+	/**
+	 * The message id and sent-at of an own inbound message inside the session window, else null.
+	 *
+	 * @param array<string, mixed> $row The message row.
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return array{0: string, 1: int}|null The message id and sent-at timestamp.
+	 */
+	private function inboundWindowEntry(array $row, string $contactId): array|null {
+		$sentAt = (int)strtotime((string)($row['sentAt'] ?? ''));
+		$messageId = $this->extractId(payload: $row);
+		$isOwn = ((string)($row['contactId'] ?? $contactId) === $contactId);
+		if ($messageId !== '' && $isOwn === true && (time() - $sentAt) < self::SESSION_WINDOW_SECONDS) {
+			return [$messageId, $sentAt];
+		}
+
+		return null;
+	}//end inboundWindowEntry()
 
 	/**
 	 * Resolve + validate a template send.
@@ -413,10 +593,9 @@ class WhatsAppAdapter {
 	 * complexity budget; behaviour (template load / approval / parameter
 	 * count checks) is unchanged.
 	 *
-	 * @param string $templateId Template UUID/slug.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string $language Fallback language when the
-	 *                         template does not specify one.
+	 * @param WhatsAppTemplateRequest $request Template id, parameters and the
+	 *                                         fallback language when the template
+	 *                                         does not specify one.
 	 *
 	 * @return array{
 	 *     ok: bool,
@@ -426,158 +605,180 @@ class WhatsAppAdapter {
 	 *     language?: string
 	 * } Resolution outcome.
 	 */
-	private function resolveTemplateForSend(string $templateId, array $parameters, string $language): array {
-		$template = $this->loadTemplate(id: $templateId);
+	private function resolveTemplateForSend(WhatsAppTemplateRequest $request): array {
+		$template = $this->loadTemplate(id: (string)$request->templateId);
+		$refusal = $this->templateRefusal(template: $template);
+		if ($refusal !== null) {
+			return ['ok' => false, 'error' => $refusal];
+		}
+
+		$mismatch = $this->parameterMismatch(template: $template, parameters: $request->parameters);
+		if ($mismatch !== null) {
+			return ['ok' => false, 'error' => $mismatch];
+		}
+
+		return $this->templateResolution(template: $template, fallbackLanguage: $request->language);
+	}//end resolveTemplateForSend()
+
+	/**
+	 * Why a template cannot be sent: missing, or not approved.
+	 *
+	 * @param array<string, mixed>|null $template The loaded template, or null.
+	 *
+	 * @return array<string, string>|null The refusal, or null when it may be sent.
+	 */
+	private function templateRefusal(?array $template): ?array {
 		if ($template === null) {
-			return ['ok' => false, 'error' => ['status' => self::STATUS_TEMPLATE_NOT_FOUND]];
+			return ['status' => self::STATUS_TEMPLATE_NOT_FOUND];
 		}
 
-		$status = (string)($template['status'] ?? '');
-		if ($status !== 'approved') {
-			return ['ok' => false, 'error' => ['status' => self::STATUS_TEMPLATE_NOT_APPROVED]];
+		if ((string)($template['status'] ?? '') !== 'approved') {
+			return ['status' => self::STATUS_TEMPLATE_NOT_APPROVED];
 		}
 
-		$templateName = (string)($template['externalId'] ?? '');
-		$language = (string)($template['language'] ?? $language);
+		return null;
+	}//end templateRefusal()
 
+	/**
+	 * The refusal for parameters that do not match the template's placeholders.
+	 *
+	 * @param array<string, mixed> $template   The template.
+	 * @param array<int, string>   $parameters Positional template parameters.
+	 *
+	 * @return array<string, mixed>|null The mismatch, or null when they match.
+	 */
+	private function parameterMismatch(array $template, array $parameters): ?array {
 		$expected = $this->parseTemplatePlaceholders(templateBody: (string)($template['body'] ?? ''));
 		$given = count($parameters);
-		if ($expected !== $given) {
-			return [
-				'ok' => false,
-				'error' => [
-					'status' => self::STATUS_TEMPLATE_MISMATCH,
-					'expected' => $expected,
-					'given' => $given,
-				],
-			];
+		if ($expected === $given) {
+			return null;
 		}
 
 		return [
+			'status' => self::STATUS_TEMPLATE_MISMATCH,
+			'expected' => $expected,
+			'given' => $given,
+		];
+	}//end parameterMismatch()
+
+	/**
+	 * A resolved template send: the template, its external name and its
+	 * language, or the fallback when it has none.
+	 *
+	 * @param array<string, mixed> $template         The approved template.
+	 * @param string               $fallbackLanguage The default language.
+	 *
+	 * @return array{ok: bool, template: array<string, mixed>, templateName: string, language: string}
+	 */
+	private function templateResolution(array $template, string $fallbackLanguage): array {
+		return [
 			'ok' => true,
 			'template' => $template,
-			'templateName' => $templateName,
-			'language' => $language,
+			'templateName' => (string)($template['externalId'] ?? ''),
+			'language' => (string)($template['language'] ?? $fallbackLanguage),
 		];
-	}//end resolveTemplateForSend()
+	}//end templateResolution()
 
 	/**
 	 * Attempt a send through one provider row.
 	 *
-	 * Extracted from {@see send()}'s failover loop so the orchestrator stays
-	 * within the complexity budget; behaviour is unchanged: a budget denial,
-	 * a transient provider failure, or any unexpected throwable all signal
-	 * "try the next provider" (null return, mirrors the previous `continue`);
-	 * a permanent provider failure or a successful send are terminal
-	 * (mirrors the previous `return`).
+	 * A spent budget, a transient provider failure or any unexpected
+	 * throwable means "try the next provider" (null); a permanent provider
+	 * failure or a successful send is terminal.
 	 *
 	 * @param array<string, mixed> $row Provider row.
-	 * @param string $tenantId Tenant id.
-	 * @param string $contactId Contact UUID.
-	 * @param string $toNumber Recipient phone number.
-	 * @param string $body Free-form body.
-	 * @param string $templateName Resolved template external id, or empty for free-form.
-	 * @param string $language Resolved language.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param array<string, mixed>|null $template Resolved template row, or null for free-form.
-	 * @param array<string, mixed> $context Send context for the outbound audit.
+	 * @param WhatsAppSendRun      $run The send this attempt belongs to.
 	 *
 	 * @return array<string, mixed>|null Terminal outcome, or null to try the next provider.
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) The per-attempt send state
-	 *  (row + tenant + contact + recipient + body + template resolution + params
-	 *  + audit context) is threaded explicitly to keep the failover loop pure and
-	 *  free of mutable per-send instance state.
 	 */
-	private function attemptProviderSend(
-		array $row,
-		string $tenantId,
-		string $contactId,
-		string $toNumber,
-		string $body,
-		string $templateName,
-		string $language,
-		array $parameters,
-		?array $template,
-		array $context = [],
-	): ?array {
-		$providerId = $this->extractId(payload: $row);
-
-		if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
-			// Budget-failure is per-provider; the caller may still try the
-			// next priority.
+	private function attemptProviderSend(array $row, WhatsAppSendRun $run): ?array {
+		$attempt = new WhatsAppProviderAttempt(run: $run, row: $row, providerId: $this->extractId(payload: $row));
+		if ($this->budgetService->canSend(tenantId: $run->tenantId, providerId: $attempt->providerId) === false) {
 			return null;
 		}
 
 		try {
-			$result = match (true) {
-				$templateName !== '' => $this->providerClient->sendTemplate(
-					channelProvider: $row,
-					phoneNumber: $toNumber,
-					templateName: $templateName,
-					language: $language,
-					parameters: $parameters,
-				),
-				default => $this->providerClient->sendFreeForm(
-					channelProvider: $row,
-					phoneNumber: $toNumber,
-					body: $body,
-				),
-			};
-		} catch (TransientSmsProviderException $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.send: transient — failing over',
-				['providerId' => $providerId, 'message' => $e->getMessage()]
-			);
-			return null;
-		} catch (PermanentSmsProviderException $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.send: permanent provider failure',
-				['providerId' => $providerId, 'message' => $e->getMessage()]
-			);
-			return $this->persistFailureAndAlert(
-				contactId: $contactId,
-				providerId: $providerId,
-				body: $this->bodyForSend(templateName: $templateName, body: $body),
-				templateId: $this->templateIdForSend(template: $template),
-				error: $e->getMessage(),
-			);
+			$result = $this->sendThrough(attempt: $attempt);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.send: unexpected — failing over',
-				['providerId' => $providerId, 'message' => $e->getMessage()]
+			return $this->failedAttempt(attempt: $attempt, error: $e);
+		}
+
+		return $this->recordSent(attempt: $attempt, result: $result);
+	}//end attemptProviderSend()
+
+	/**
+	 * Send through the attempt's provider: a template send when a template
+	 * name is resolved, free-form otherwise.
+	 *
+	 * @param WhatsAppProviderAttempt $attempt The attempt.
+	 *
+	 * @return array{externalMessageId: string, vendor: string} The provider's answer.
+	 */
+	private function sendThrough(WhatsAppProviderAttempt $attempt): array {
+		$message = $attempt->run->message;
+		$templateSend = $attempt->run->templateSend;
+		if ($templateSend->templateName !== '') {
+			return $this->providerClient->sendTemplate(
+				channelProvider: $attempt->row,
+				phoneNumber: $message->toNumber,
+				templateName: $templateSend->templateName,
+				language: $templateSend->language,
+				parameters: $templateSend->parameters,
 			);
+		}
+
+		return $this->providerClient->sendFreeForm(
+			channelProvider: $attempt->row,
+			phoneNumber: $message->toNumber,
+			body: $message->body,
+		);
+	}//end sendThrough()
+
+	/**
+	 * Log a failed attempt; a permanent failure is stored and alerted, any
+	 * other failure hands over to the next provider.
+	 *
+	 * @param WhatsAppProviderAttempt $attempt The attempt.
+	 * @param Throwable               $error   What the client threw.
+	 *
+	 * @return array<string, mixed>|null The failure outcome, or null to try the next provider.
+	 */
+	private function failedAttempt(WhatsAppProviderAttempt $attempt, Throwable $error): ?array {
+		$this->logger->warning(
+			$attempt->failureLog(error: $error),
+			['providerId' => $attempt->providerId, 'message' => $error->getMessage()]
+		);
+		if (($error instanceof PermanentSmsProviderException) === false) {
 			return null;
-		}//end try
+		}
 
-		$persisted = $this->persistOutbound(
-			contactId: $contactId,
-			providerId: $providerId,
-			body: $this->bodyForSend(templateName: $templateName, body: $body),
-			externalMessageId: $result['externalMessageId'],
-			templateId: $this->templateIdForSend(template: $template),
-			templateParameters: $parameters,
+		return $this->persistFailureAndAlert(
+			run: $attempt->run,
+			failure: new WhatsAppSendFailure(providerId: $attempt->providerId, error: $error->getMessage()),
 		);
+	}//end failedAttempt()
 
-		$this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
-
-		$messageId = $this->extractId(payload: ($persisted ?? []));
-		$this->auditOutbound(
-			contactId: $contactId,
-			messageId: $messageId,
-			conversationId: (string)(($persisted ?? [])['conversationId'] ?? ''),
-			body: $this->bodyForSend(templateName: $templateName, body: $body),
-			context: $context,
-		);
+	/**
+	 * Store, count and audit a send that went out.
+	 *
+	 * @param WhatsAppProviderAttempt                          $attempt The attempt.
+	 * @param array{externalMessageId: string, vendor: string} $result  The provider's answer.
+	 *
+	 * @return array<string, mixed> The sent outcome.
+	 */
+	private function recordSent(WhatsAppProviderAttempt $attempt, array $result): array {
+		$persisted = ($this->persistOutbound(attempt: $attempt, externalMessageId: $result['externalMessageId']) ?? []);
+		$this->budgetService->recordSend(tenantId: $attempt->run->tenantId, providerId: $attempt->providerId);
+		$this->auditOutbound(run: $attempt->run, persisted: $persisted);
 
 		return [
 			'status' => self::STATUS_SENT,
-			'messageId' => $messageId,
+			'messageId' => $this->extractId(payload: $persisted),
 			'externalMessageId' => $result['externalMessageId'],
-			'providerId' => $providerId,
+			'providerId' => $attempt->providerId,
 			'vendor' => $result['vendor'],
 		];
-	}//end attemptProviderSend()
+	}//end recordSent()
 
 	/**
 	 * Best-effort outbound contactmoment audit (REQ-OM-006).
@@ -587,65 +788,34 @@ class WhatsAppAdapter {
 	 * `channelMetadata.platform = whatsapp` (omnichannel convention).
 	 * Log-and-continue: an audit failure MUST never affect the send outcome.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $messageId Persisted message UUID.
-	 * @param string $conversationId Conversation UUID.
-	 * @param string $body Message body / template marker.
-	 * @param array<string, mixed> $context Send context (`clientId`, `agent`).
+	 * @param WhatsAppSendRun      $run       The send.
+	 * @param array<string, mixed> $persisted The stored message row, or empty when storing failed.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
 	 */
-	private function auditOutbound(
-		string $contactId,
-		string $messageId,
-		string $conversationId,
-		string $body,
-		array $context,
-	): void {
-		try {
-			$auditor = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return;
-		}
-
-		if (($auditor instanceof ContactmomentService) === false) {
+	private function auditOutbound(WhatsAppSendRun $run, array $persisted): void {
+		$auditor = $this->contactmoments();
+		if ($auditor === null) {
 			return;
 		}
 
 		$auditor->recordOutboundMessage(
 			channel: 'chat',
 			subject: 'Outbound WhatsApp',
-			summary: $body,
+			summary: $run->outboundBody(),
 			channelMetadata: [
 				'platform' => 'whatsapp',
 				'direction' => 'outbound',
-				'messageId' => $messageId,
-				'conversationId' => $conversationId,
-				'contactId' => $contactId,
+				'messageId' => $this->extractId(payload: $persisted),
+				'conversationId' => (string)($persisted['conversationId'] ?? ''),
+				'contactId' => $run->message->contactId,
 			],
-			clientId: (string)($context['clientId'] ?? ''),
-			agent: (string)($context['agent'] ?? ''),
+			clientId: (string)($run->message->context['clientId'] ?? ''),
+			agent: (string)($run->message->context['agent'] ?? ''),
 		);
 	}//end auditOutbound()
-
-	/**
-	 * Outbound body: a `[template:NAME]` marker for template sends, the raw
-	 * free-form body otherwise.
-	 *
-	 * @param string $templateName Resolved template external id, or empty for free-form.
-	 * @param string $body Free-form body.
-	 *
-	 * @return string
-	 */
-	private function bodyForSend(string $templateName, string $body): string {
-		if ($templateName !== '') {
-			return sprintf('[template:%s]', $templateName);
-		}
-
-		return $body;
-	}//end bodyForSend()
 
 	/**
 	 * Outbound templateId: the resolved template's id, or empty for free-form.
@@ -665,10 +835,11 @@ class WhatsAppAdapter {
 	/**
 	 * Handle a Meta `messages` inbound webhook.
 	 *
-	 * Validates the X-Hub-Signature-256, opens or finds a
-	 * conversation, persists the inbound message, advances the
-	 * conversation `lastInboundAt`, fires automatic STOP / opt-in
-	 * detection, and creates a placeholder contact when needed.
+	 * Validates the X-Hub-Signature-256, persists the inbound message,
+	 * advances a known contact's conversation `lastInboundAt`, and fires
+	 * automatic STOP / opt-in detection. A number that matches no contact
+	 * gets no placeholder contact: a STOP is recorded on the number itself,
+	 * anything else is logged as a contact moment for a person to pick up.
 	 *
 	 * @param string $rawBody Raw request body.
 	 * @param string $signature Signature header value.
@@ -678,46 +849,102 @@ class WhatsAppAdapter {
 	 *     status: string,
 	 *     messageId?: string,
 	 *     conversationId?: string,
-	 *     placeholderCreated?: bool,
+	 *     unknownSender?: bool,
+	 *     contactMomentId?: string,
 	 *     optOutRecorded?: bool,
 	 *     error?: string
 	 * } Outcome envelope.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.6
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
-		$row = $this->providerRepo->findById(id: $providerId);
+		// The webhook is a PublicPage with no user. The provider lookup is a
+		// read without RBAC and its row stays in-process; after the signature
+		// check every write runs as the messaging service account.
+		$row = $this->providerRepo->findByIdForWebhook(id: $providerId);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
 		}
 
-		if ($this->providerClient->verifySignature(channelProvider: $row, rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'WhatsAppAdapter.handleInboundWebhook: invalid signature',
-				['providerId' => $providerId]
-			);
+		$delivery = new InboundWebhookDelivery(rawBody: $rawBody, signature: $signature, providerId: $providerId);
+		if ($this->hasValidSignature(row: $row, delivery: $delivery) === false) {
 			return ['status' => 'invalidSignature'];
 		}
 
-		$extracted = $this->extractMetaMessage(rawBody: $rawBody);
-		$from = $extracted['from'];
-		$body = $extracted['body'];
+		return $this->ingestVerifiedDelivery(row: $row, delivery: $delivery);
+	}//end handleInboundWebhook()
+
+	/**
+	 * Whether a delivery carries a valid signature for its provider row; an
+	 * invalid one is logged.
+	 *
+	 * @param array<string, mixed>   $row      The provider row.
+	 * @param InboundWebhookDelivery $delivery The delivery.
+	 *
+	 * @return bool True when the signature verifies.
+	 */
+	private function hasValidSignature(array $row, InboundWebhookDelivery $delivery): bool {
+		$valid = $this->providerClient->verifySignature(channelProvider: $row, rawBody: $delivery->rawBody, signature: $delivery->signature);
+		if ($valid === false) {
+			$this->logger->warning(
+				'WhatsAppAdapter.handleInboundWebhook: invalid signature',
+				['providerId' => $delivery->providerId]
+			);
+		}
+
+		return $valid;
+	}//end hasValidSignature()
+
+	/**
+	 * Read a verified delivery's message and ingest it as the messaging
+	 * account; a message without a sender is refused.
+	 *
+	 * @param array<string, mixed>   $row      The provider row.
+	 * @param InboundWebhookDelivery $delivery The verified delivery.
+	 *
+	 * @return array<string, mixed> Outcome envelope.
+	 */
+	private function ingestVerifiedDelivery(array $row, InboundWebhookDelivery $delivery): array {
+		$extracted = $this->extractMetaMessage(rawBody: $delivery->rawBody);
+		$from = $this->phoneNormaliser->normaliseInbound(rawNumber: $extracted['from']);
 
 		if ($from === '') {
 			return ['status' => 'invalidPayload'];
 		}
 
-		$contactInfo = $this->findOrCreatePlaceholderContact(phone: $from);
-		$contactId = $contactInfo['contactId'];
-		$placeholder = $contactInfo['created'];
-
-		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
-			channel: 'whatsapp',
+		return $this->asMessagingAccount(
+			writes: fn (): array => $this->ingestInbound(providerRow: $row, providerId: $delivery->providerId, extracted: $extracted, from: $from)
 		);
+	}//end ingestVerifiedDelivery()
 
-		$now = $this->nowIso();
+	/**
+	 * Persist a verified inbound WhatsApp message and act on it, as the
+	 * messaging account.
+	 *
+	 * @param array<string, mixed> $providerRow Provider row.
+	 * @param string               $providerId  channelProvider UUID.
+	 * @param array<string, mixed> $extracted   The Meta message (from, body, raw).
+	 * @param string               $from        Sender in E.164.
+	 *
+	 * @return array<string, mixed> Outcome envelope.
+	 */
+	private function ingestInbound(array $providerRow, string $providerId, array $extracted, string $from): array {
+		$body = (string)$extracted['body'];
+		$contactId = $this->findContactByPhone(phone: $from);
+
+		// An unknown number has no conversation to join: every unknown number
+		// would share the one keyed on an empty contact.
+		$conversationId = '';
+		if ($contactId !== '') {
+			$conversationId = $this->findOrOpenConversation(
+				contactId: $contactId,
+				providerId: $providerId,
+				channel: 'whatsapp',
+				scope: self::LOOKUP_SCOPE,
+			);
+		}
+
 		$windowExpiresAt = gmdate('Y-m-d\TH:i:s\Z', (time() + self::SESSION_WINDOW_SECONDS));
 
 		$persisted = $this->persistMessage(
@@ -729,7 +956,7 @@ class WhatsAppAdapter {
 				'body' => $body,
 				'providerId' => $providerId,
 				'deliveryStatus' => 'delivered',
-				'sentAt' => $now,
+				'sentAt' => $this->nowIso(),
 				'windowExpiresAt' => $windowExpiresAt,
 				'metadata' => ['raw' => $extracted],
 			],
@@ -737,39 +964,107 @@ class WhatsAppAdapter {
 
 		$this->touchConversationWindow(conversationId: $conversationId, windowExpiresAt: $windowExpiresAt);
 
-		$optOutRecorded = false;
-		if ($this->consentService->isOptOutKeyword(body: $body) === true) {
-			$this->consentService->recordOptOut(
-				contactId: $contactId,
-				channel: 'whatsapp',
-				source: 'keyword-stop',
-				evidence: sprintf('Inbound WhatsApp body "%s" matched STOP keyword', $body),
-				address: $from,
-			);
-			$optOutRecorded = true;
-			// Auto-acknowledgement: free-form acknowledgement is
-			// allowed under WhatsApp's utility-category rules within
-			// a session. We use the open session created by this very
-			// inbound message.
-			$this->sendOptOutAcknowledgement(contactId: $contactId, providerRow: $row);
-		} elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
-			$this->consentService->recordOptIn(
-				contactId: $contactId,
-				channel: 'whatsapp',
-				source: 'chat-reply',
-				evidence: sprintf('Inbound WhatsApp body "%s" matched opt-in keyword', $body),
-				address: $from,
-			);
-		}//end if
+		return $this->actOnInbound(
+			result: [
+				'status' => 'received',
+				'messageId' => $this->extractId(payload: $persisted ?? []),
+				'conversationId' => $conversationId,
+				'unknownSender' => ($contactId === ''),
+				'optOutRecorded' => false,
+			],
+			inbound: new WhatsAppInbound(contactId: $contactId, from: $from, body: $body, providerRow: $providerRow),
+		);
+	}//end ingestInbound()
 
-		return [
-			'status' => 'received',
-			'messageId' => $this->extractId(payload: $persisted ?? []),
-			'conversationId' => $conversationId,
-			'placeholderCreated' => $placeholder,
-			'optOutRecorded' => $optOutRecorded,
-		];
-	}//end handleInboundWebhook()
+	/**
+	 * Act on a persisted inbound message: a STOP opts the sender out (the
+	 * contact, or the number alone when it is unknown), a message from an
+	 * unknown number is logged for a person, an opt-in keyword from a known
+	 * contact opts them in.
+	 *
+	 * @param array<string, mixed> $result  Outcome envelope so far.
+	 * @param WhatsAppInbound      $inbound The message; an empty contact id is an unknown number.
+	 *
+	 * @return array<string, mixed> The completed envelope.
+	 */
+	private function actOnInbound(array $result, WhatsAppInbound $inbound): array {
+		if ($this->consentService->isOptOutKeyword(body: $inbound->body) === true) {
+			return $this->recordInboundOptOut(result: $result, inbound: $inbound);
+		}
+
+		if ($inbound->contactId === '') {
+			return $this->logUnknownSender(result: $result, inbound: $inbound);
+		}
+
+		$this->recordInboundOptIn(inbound: $inbound);
+
+		return $result;
+	}//end actOnInbound()
+
+	/**
+	 * Record the STOP of an inbound message and acknowledge it when it was recorded.
+	 *
+	 * @param array<string, mixed> $result  Outcome envelope so far.
+	 * @param WhatsAppInbound      $inbound The STOP message.
+	 *
+	 * @return array<string, mixed> The envelope with `optOutRecorded` set.
+	 */
+	private function recordInboundOptOut(array $result, WhatsAppInbound $inbound): array {
+		$result['optOutRecorded'] = $this->consentService->recordOptOut(
+			contactId: $inbound->contactId,
+			channel: 'whatsapp',
+			source: 'keyword-stop',
+			evidence: sprintf('Inbound WhatsApp body "%s" matched STOP keyword', $inbound->body),
+			address: $inbound->from,
+		) !== null;
+		if ($result['optOutRecorded'] === true) {
+			// Free-form acknowledgement is allowed under WhatsApp's
+			// utility-category rules within the session this very
+			// inbound message opened.
+			$this->sendOptOutAcknowledgement(phone: $inbound->from, providerRow: $inbound->providerRow);
+		}
+
+		return $result;
+	}//end recordInboundOptOut()
+
+	/**
+	 * Log a message from an unknown number as a contact moment for a person.
+	 *
+	 * @param array<string, mixed> $result  Outcome envelope so far.
+	 * @param WhatsAppInbound      $inbound The message.
+	 *
+	 * @return array<string, mixed> The envelope with `contactMomentId` set.
+	 */
+	private function logUnknownSender(array $result, WhatsAppInbound $inbound): array {
+		$result['contactMomentId'] = (string)$this->contactmoments()?->recordInboundFromUnknownNumber(
+			platform: 'whatsapp',
+			phone: $inbound->from,
+			body: $inbound->body,
+			messageId: (string)$result['messageId'],
+		);
+		return $result;
+	}//end logUnknownSender()
+
+	/**
+	 * Record an opt-in when a known contact's message is an opt-in keyword.
+	 *
+	 * @param WhatsAppInbound $inbound The message of a known contact.
+	 *
+	 * @return void
+	 */
+	private function recordInboundOptIn(WhatsAppInbound $inbound): void {
+		if ($this->consentService->isOptInKeyword(body: $inbound->body) === false) {
+			return;
+		}
+
+		$this->consentService->recordOptIn(
+			contactId: $inbound->contactId,
+			channel: 'whatsapp',
+			source: 'chat-reply',
+			evidence: sprintf('Inbound WhatsApp body "%s" matched opt-in keyword', $inbound->body),
+			address: $inbound->from,
+		);
+	}//end recordInboundOptIn()
 
 	/**
 	 * Count {{N}} placeholders in a template body.
@@ -778,7 +1073,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return int Distinct placeholder positions.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.3
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function parseTemplatePlaceholders(string $templateBody): int {
 		$matches = [];
@@ -794,7 +1089,7 @@ class WhatsAppAdapter {
 	 *
 	 * @return bool True if the most recent inbound is within 24h.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function isWithinSessionWindow(string $contactId): bool {
 		if ($contactId === '') {
@@ -807,28 +1102,23 @@ class WhatsAppAdapter {
 		}
 
 		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'contactId' => $contactId,
-						'channel' => 'whatsapp',
-						'direction' => 'inbound',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->resolveSchemaSlug(
-							key: 'message_schema',
-							default: self::DEFAULT_MESSAGE_SCHEMA_SLUG
-						),
-					],
-				]
-			);
+			$rows = $this->findInboundRows(objectService: $objectService, contactId: $contactId);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.isWithinSessionWindow: findAll failed',
-				['contactId' => $contactId, 'exception' => $e->getMessage()]
-			);
+			$this->logger->warning('WhatsAppAdapter.isWithinSessionWindow: findAll failed', ['contactId' => $contactId, 'exception' => $e->getMessage()]);
 			return false;
 		}//end try
 
+		return $this->sessionOpenFor(rows: $rows);
+	}//end isWithinSessionWindow()
+
+	/**
+	 * Whether the latest inbound row is inside the session window.
+	 *
+	 * @param mixed $rows The inbound rows as returned by findAll.
+	 *
+	 * @return bool True when the latest inbound message is recent enough.
+	 */
+	private function sessionOpenFor(mixed $rows): bool {
 		if (is_array($rows) === false || $rows === []) {
 			return false;
 		}
@@ -839,7 +1129,7 @@ class WhatsAppAdapter {
 		}
 
 		return ((time() - $latestTimestamp) < self::SESSION_WINDOW_SECONDS);
-	}//end isWithinSessionWindow()
+	}//end sessionOpenFor()
 
 	/**
 	 * Latest `sentAt` timestamp across a set of inbound message rows.
@@ -908,101 +1198,131 @@ class WhatsAppAdapter {
 	/**
 	 * Persist + alert on full-failure.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $body Body (or template marker).
-	 * @param string $templateId Template UUID or empty.
-	 * @param string $error Error description.
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
 	 *
 	 * @return array{status: string, error: string, providerId?: string} Outcome.
+	 *
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
-	private function persistFailureAndAlert(
-		string $contactId,
-		string $providerId,
-		string $body,
-		string $templateId,
-		string $error,
-	): array {
+	private function persistFailureAndAlert(WhatsAppSendRun $run, WhatsAppSendFailure $failure): array {
+		$this->persistMessage(payload: $this->failedMessagePayload(run: $run, failure: $failure));
+		$this->alertSendFailure(run: $run, failure: $failure);
+
+		return [
+			'status' => self::STATUS_FAILED,
+			'error' => $failure->error,
+			'providerId' => $failure->providerId,
+		];
+	}//end persistFailureAndAlert()
+
+	/**
+	 * The failed outbound message row, in the contact's WhatsApp conversation.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return array<string, mixed> The message payload.
+	 */
+	private function failedMessagePayload(WhatsAppSendRun $run, WhatsAppSendFailure $failure): array {
 		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
+			contactId: $run->message->contactId,
+			providerId: $failure->providerId,
 			channel: 'whatsapp',
 		);
 
-		$this->persistMessage(
-			payload: [
-				'contactId' => $contactId,
-				'conversationId' => $conversationId,
-				'channel' => 'whatsapp',
-				'direction' => 'outbound',
-				'body' => $body,
-				'providerId' => $providerId,
-				'templateId' => $templateId,
-				'deliveryStatus' => 'failed',
-				'sentAt' => $this->nowIso(),
-				'metadata' => ['error' => $error],
-			],
-		);
+		return ['contactId' => $run->message->contactId, 'conversationId' => $conversationId]
+			+ $this->failedMessageFields(run: $run, failure: $failure);
+	}//end failedMessagePayload()
 
+	/**
+	 * The fields of a failed outbound message after its contact and conversation.
+	 *
+	 * The template parameters are kept so Send again can repeat a template send.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return array<string, mixed> The message fields.
+	 */
+	private function failedMessageFields(WhatsAppSendRun $run, WhatsAppSendFailure $failure): array {
+		return [
+			'channel' => 'whatsapp',
+			'direction' => 'outbound',
+			'body' => $run->outboundBody(),
+			'providerId' => $failure->providerId,
+			'templateId' => $this->templateIdForSend(template: $run->templateSend->template),
+			'templateParameters' => array_values($run->templateSend->parameters),
+			'deliveryStatus' => 'failed',
+			'sentAt' => $this->nowIso(),
+			'metadata' => ['error' => $failure->error],
+		];
+	}//end failedMessageFields()
+
+	/**
+	 * Notify the admin of a failed send; a notification that fails is logged.
+	 *
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return void
+	 */
+	private function alertSendFailure(WhatsAppSendRun $run, WhatsAppSendFailure $failure): void {
 		try {
-			$this->notificationService->sendNotification(
-				userId: 'admin',
-				subject: 'messaging_whatsapp_send_failed',
-				parameters: ['contactId' => $contactId, 'providerId' => $providerId, 'error' => $error],
-				objectType: 'message',
-				objectId: $contactId,
-			);
+			$this->notifySendFailure(run: $run, failure: $failure);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'WhatsAppAdapter.persistFailureAndAlert: notification failed',
 				['exception' => $e->getMessage()]
 			);
 		}
-
-		return [
-			'status' => self::STATUS_FAILED,
-			'error' => $error,
-			'providerId' => $providerId,
-		];
-	}//end persistFailureAndAlert()
+	}//end alertSendFailure()
 
 	/**
-	 * Persist an outbound message row.
+	 * Send the admin the failed-send notification.
 	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $body Body.
-	 * @param string $externalMessageId Provider id.
-	 * @param string $templateId Template UUID or empty.
-	 * @param array<int, string> $templateParameters Positional template parameters.
+	 * @param WhatsAppSendRun     $run     The send that failed.
+	 * @param WhatsAppSendFailure $failure The provider it failed on and the error.
+	 *
+	 * @return void
+	 */
+	private function notifySendFailure(WhatsAppSendRun $run, WhatsAppSendFailure $failure): void {
+		$contactId = $run->message->contactId;
+		$this->notificationService->sendNotification(
+			userId: 'admin',
+			subject: 'messaging_whatsapp_send_failed',
+			parameters: ['contactId' => $contactId, 'providerId' => $failure->providerId, 'error' => $failure->error],
+			objectType: 'message',
+			objectId: $contactId,
+		);
+	}//end notifySendFailure()
+
+	/**
+	 * Persist the outbound message row of a provider attempt that went out.
+	 *
+	 * @param WhatsAppProviderAttempt $attempt           The attempt.
+	 * @param string                  $externalMessageId Provider id.
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistOutbound(
-		string $contactId,
-		string $providerId,
-		string $body,
-		string $externalMessageId,
-		string $templateId,
-		array $templateParameters,
-	): ?array {
+	private function persistOutbound(WhatsAppProviderAttempt $attempt, string $externalMessageId): ?array {
 		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
+			contactId: $attempt->run->message->contactId,
+			providerId: $attempt->providerId,
 			channel: 'whatsapp',
 		);
 
 		return $this->persistMessage(
 			payload: [
-				'contactId' => $contactId,
+				'contactId' => $attempt->run->message->contactId,
 				'conversationId' => $conversationId,
 				'channel' => 'whatsapp',
 				'direction' => 'outbound',
-				'body' => $body,
-				'providerId' => $providerId,
+				'body' => $attempt->run->outboundBody(),
+				'providerId' => $attempt->providerId,
 				'externalMessageId' => $externalMessageId,
-				'templateId' => $templateId,
-				'templateParameters' => array_values($templateParameters),
+				'templateId' => $this->templateIdForSend(template: $attempt->run->templateSend->template),
+				'templateParameters' => array_values($attempt->run->templateSend->parameters),
 				'deliveryStatus' => 'queued',
 				'sentAt' => $this->nowIso(),
 			],
@@ -1010,51 +1330,39 @@ class WhatsAppAdapter {
 	}//end persistOutbound()
 
 	/**
-	 * Auto-acknowledgement free-form send used after a keyword opt-out.
+	 * Send the opt-out acknowledgement to the number that sent the STOP.
 	 *
-	 * Permitted under utility-category rules because it happens
-	 * within the inbound's open session window.
+	 * Permitted under utility-category rules because it happens within the
+	 * inbound's open session window. Best-effort: a failure does not break the
+	 * opt-out, which is already recorded.
 	 *
-	 * @param string $contactId Contact UUID.
+	 * @param string $phone Sender in E.164.
 	 * @param array<string, mixed> $providerRow Provider row.
 	 *
 	 * @return void
 	 */
-	private function sendOptOutAcknowledgement(string $contactId, array $providerRow): void {
-		// Best-effort; the inbound has already opened a session.
-		// Failure to acknowledge does not break the opt-out audit
-		// trail (which is already persisted).
+	private function sendOptOutAcknowledgement(string $phone, array $providerRow): void {
 		try {
-			$contact = ['id' => $contactId, 'phoneNumber' => ''];
-
-			// Best effort: look up the actual phone via repo. The
-			// canonical send() requires a phone number; we degrade
-			// gracefully if missing.
-			$contactRow = $this->loadContact(id: $contactId);
-			if ($contactRow !== null) {
-				$contact = $contactRow;
-			}
-
 			$body = (string)$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'whatsapp.opt_out_ack_body',
 				'Bedankt. U bent uitgeschreven en ontvangt geen verdere berichten via dit kanaal.'
 			);
 
-			// We bypass consent here because the user just opted out —
+			// We bypass consent here because the user just opted out:
 			// ConsentService.canSend() would refuse. Use the provider
 			// client directly with the open session.
 			$this->providerClient->sendFreeForm(
 				channelProvider: $providerRow,
-				phoneNumber: $this->extractPhone(contact: $contact),
+				phoneNumber: $phone,
 				body: $body,
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'WhatsAppAdapter.sendOptOutAcknowledgement: best-effort failed',
-				['contactId' => $contactId, 'exception' => $e->getMessage()]
+				['exception' => $e->getMessage()]
 			);
-		}//end try
+		}
 	}//end sendOptOutAcknowledgement()
 
 	/**
@@ -1095,97 +1403,48 @@ class WhatsAppAdapter {
 	}//end extractMetaMessage()
 
 	/**
-	 * Look up a contact by phone number, creating a placeholder
-	 * when no match exists.
-	 *
-	 * @param string $phone Sender phone number (E.164).
-	 *
-	 * @return array{contactId: string, created: bool} Contact handle.
-	 */
-	private function findOrCreatePlaceholderContact(string $phone): array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return ['contactId' => '', 'created' => false];
-		}
-
-		$schema = $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG);
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'phoneNumber' => $phone,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $schema,
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$rows = [];
-		}
-
-		if (is_array($rows) === true && $rows !== []) {
-			return [
-				'contactId' => $this->extractId(payload: $this->toArray(value: $rows[0])),
-				'created' => false,
-			];
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: [
-					'phoneNumber' => $phone,
-					'displayName' => 'Unknown (' . $phone . ')',
-					'source' => 'whatsapp-inbound',
-					'placeholder' => true,
-				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.findOrCreatePlaceholderContact: create failed',
-				['phone' => $phone, 'exception' => $e->getMessage()]
-			);
-			return ['contactId' => '', 'created' => false];
-		}
-
-		return [
-			'contactId' => $this->extractId(payload: $this->toArray(value: $saved)),
-			'created' => true,
-		];
-	}//end findOrCreatePlaceholderContact()
-
-	/**
 	 * Find or open a conversation row for (contact, provider, channel).
 	 *
 	 * @param string $contactId Contact UUID.
 	 * @param string $providerId Provider UUID.
 	 * @param string $channel Channel.
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
 	 *
 	 * @return string Conversation UUID.
 	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel): string {
+	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return '';
 		}
 
 		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
+		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
 
+		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
+		if ($existingId !== null) {
+			return $existingId;
+		}
+
+		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
+	}//end findOrOpenConversation()
+
+	/**
+	 * The id of the first open conversation matching the identity, or null when there is none.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $conversation The contact, provider, channel and open status.
+	 * @param string $schema The conversation schema slug.
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup.
+	 *
+	 * @return string|null The conversation id, or null when none is open.
+	 */
+	private function findOpenConversation(object $objectService, array $conversation, string $schema, array $scope): string|null {
 		try {
 			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'contactId' => $contactId,
-						'providerId' => $providerId,
-						'channel' => $channel,
-						'status' => 'open',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $schema,
-					],
-				]
+				config: ['filters' => $conversation + ['register' => $this->getRegisterSlug(), 'schema' => $schema]],
+				_rbac: ($scope['_rbac'] ?? true),
+				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$rows = [];
@@ -1195,17 +1454,23 @@ class WhatsAppAdapter {
 			return $this->extractId(payload: $this->toArray(value: $rows[0]));
 		}
 
+		return null;
+	}//end findOpenConversation()
+
+	/**
+	 * Open a new conversation, returning its id or '' when the save fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $conversation The contact, provider, channel and open status.
+	 * @param string $schema The conversation schema slug.
+	 *
+	 * @return string The new conversation id.
+	 */
+	private function openConversation(object $objectService, array $conversation, string $schema): string {
 		try {
 			$saved = $objectService->saveObject(
-				object: [
-					'contactId' => $contactId,
-					'providerId' => $providerId,
-					'channel' => $channel,
-					'status' => 'open',
-				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
+				object: $conversation,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema))
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1216,13 +1481,16 @@ class WhatsAppAdapter {
 		}
 
 		return $this->extractId(payload: $this->toArray(value: $saved));
-	}//end findOrOpenConversation()
+	}//end openConversation()
 
 	/**
 	 * Refresh the conversation's lastInboundAt + windowExpiresAt.
 	 *
 	 * @param string $conversationId Conversation UUID.
 	 * @param string $windowExpiresAt ISO 8601 expiry.
+	 *
+	 * Called only from the signed public webhook: the read is a lookup without
+	 * RBAC, the save runs as the messaging account.
 	 *
 	 * @return void
 	 */
@@ -1238,30 +1506,77 @@ class WhatsAppAdapter {
 
 		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
 
-		try {
-			$existing = $objectService->find(
-				id: $conversationId,
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-			);
-		} catch (Throwable $e) {
+		$this->stampWindow(objectService: $objectService, conversationId: $conversationId, schema: $schema, windowExpiresAt: $windowExpiresAt);
+	}//end touchConversationWindow()
+
+	/**
+	 * Stamp the conversation's inbound time and window expiry and save it.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $conversationId Conversation UUID.
+	 * @param string $schema The conversation schema slug.
+	 * @param string $windowExpiresAt The new window expiry (ISO 8601).
+	 *
+	 * @return void
+	 */
+	private function stampWindow(object $objectService, string $conversationId, string $schema, string $windowExpiresAt): void {
+		$payload = $this->loadConversationPayload(objectService: $objectService, conversationId: $conversationId, schema: $schema);
+		if ($payload === null) {
 			return;
 		}
 
-		if ($existing === null) {
-			return;
-		}
-
-		$payload = $this->toArray(value: $existing);
 		$payload['lastInboundAt'] = $this->nowIso();
 		$payload['windowExpiresAt'] = $windowExpiresAt;
 
+		$this->saveConversationWindow(objectService: $objectService, payload: $payload, conversationId: $conversationId, schema: $schema);
+	}//end stampWindow()
+
+	/**
+	 * Load a conversation as an array, or null when it cannot be read.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $conversationId Conversation UUID.
+	 * @param string $schema The conversation schema slug.
+	 *
+	 * @return array<string, mixed>|null The conversation payload.
+	 */
+	private function loadConversationPayload(object $objectService, string $conversationId, string $schema): array|null {
+		try {
+			$existing = $objectService->find(
+				id: $conversationId,
+				options: new ObjectFindOptions(register: $this->getRegisterSlug(), schema: $schema),
+				_rbac: self::LOOKUP_SCOPE['_rbac'],
+				_multitenancy: self::LOOKUP_SCOPE['_multitenancy']
+			);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if ($existing === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $existing);
+	}//end loadConversationPayload()
+
+	/**
+	 * Save the conversation's window stamps, logging (not throwing) on failure.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $payload The updated conversation payload.
+	 * @param string $conversationId Conversation UUID.
+	 * @param string $schema The conversation schema slug.
+	 *
+	 * @return void
+	 */
+	private function saveConversationWindow(object $objectService, array $payload, string $conversationId, string $schema): void {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: $conversationId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema),
+					uuid: $conversationId
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1269,68 +1584,7 @@ class WhatsAppAdapter {
 				['conversationId' => $conversationId, 'exception' => $e->getMessage()]
 			);
 		}
-	}//end touchConversationWindow()
-
-	/**
-	 * Persist a message payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return array<string, mixed>|null Saved row.
-	 */
-	private function persistMessage(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.persistMessage: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistMessage()
-
-	/**
-	 * Load a contact by id (best effort).
-	 *
-	 * @param string $id Contact UUID.
-	 *
-	 * @return array<string, mixed>|null Row or null.
-	 */
-	private function loadContact(string $id): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null || $id === '') {
-			return null;
-		}
-
-		try {
-			$entity = $objectService->find(
-				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG),
-			);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
-	}//end loadContact()
+	}//end saveConversationWindow()
 
 	/**
 	 * Load a messageTemplate by id.
@@ -1348,8 +1602,10 @@ class WhatsAppAdapter {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG),
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG)
+				)
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -1361,156 +1617,6 @@ class WhatsAppAdapter {
 
 		return $this->toArray(value: $entity);
 	}//end loadTemplate()
-
-	/**
-	 * Extract a phone number from a contact row.
-	 *
-	 * @param array<string, mixed> $contact Contact row.
-	 *
-	 * @return string Phone number or empty.
-	 */
-	private function extractPhone(array $contact): string {
-		foreach (['phoneNumber', 'mobile', 'telephone', 'phone'] as $key) {
-			$value = ($contact[$key] ?? null);
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return '';
-	}//end extractPhone()
-
-	/**
-	 * Tenant id (app-config; defaults to `default`).
-	 *
-	 * @return string Tenant id.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
-
-	/**
-	 * App-config schema slug override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Normalise an OR entity to an array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$id = $this->firstScalarId(source: $payload);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarId(source: $payload['@self']);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * First non-empty scalar value among `uuid` / `id` / `slug` keys.
-	 *
-	 * Extracted from {@see extractId()} so both the top-level and `@self`
-	 * lookups share one implementation; behaviour is unchanged.
-	 *
-	 * @param array<string, mixed> $source Source array to probe.
-	 *
-	 * @return string The first matching value, or empty when none match.
-	 */
-	private function firstScalarId(array $source): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalarId()
 
 	/**
 	 * Current ISO 8601 UTC timestamp.

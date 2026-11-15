@@ -72,6 +72,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
+import { bookingPrice } from '../../components/bookings/bookingFormat.js'
 import { fetchBooking } from '../../services/bookingPortalApi.js'
 
 export default {
@@ -142,16 +143,7 @@ export default {
 		 * @spec exclude display formatter: amount and currency to a localised price string
 		 */
 		priceLabel() {
-			const cur = (this.booking && this.booking.currency) || 'EUR'
-			const amount = Number(this.booking ? this.booking.price : 0)
-			try {
-				return new Intl.NumberFormat(undefined, {
-					style: 'currency',
-					currency: cur,
-				}).format(amount)
-			} catch {
-				return amount + ' ' + cur
-			}
+			return bookingPrice(this.booking)
 		},
 
 		/**

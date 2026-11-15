@@ -64,7 +64,7 @@ The system MUST display a single, consolidated profile page for each client that
 
 - GIVEN a person client "Jan de Vries" with BSN linked, email "jan@devries.nl", telephone "+31 6 12345678"
 - WHEN the agent opens the customer 360 for this client
-- THEN the system MUST display: name, contact details (email, telephone, address), BSN (masked as "***456789" by default with a "Toon" toggle), and a "Verrijk met BRP" button
+- THEN the system MUST display: name, contact details (email, telephone, address), BSN (masked as "*****4001" by default with a "Tonen" action, each view logged), and a "Verrijk met BRP" button. A user without BSN rights MUST NOT see the row
 - AND the profile header MUST show the client type (Persoon) with a person avatar icon
 - AND the profile MUST extend the existing `ClientDetail.vue` layout with additional customer 360 tabs/sections
 
@@ -96,7 +96,7 @@ The system MUST display a single, consolidated profile page for each client that
 
 - GIVEN a client "Jan de Vries" with `contactsUid` set (synced with Nextcloud Contacts)
 - WHEN the agent opens the customer 360
-- THEN the system MUST display the "Synced with Contacts" badge (existing pattern from `ClientDetail.vue`)
+- THEN the system MUST display the "Gesynchroniseerd met Contacten" (Synced with Contacts) badge (existing pattern from `ClientDetail.vue`)
 - AND the agent MUST be able to navigate to the linked Nextcloud Contact
 - AND changes to the Nextcloud Contact MUST be reflected in Pipelinq via `ContactSyncService`
 
@@ -465,6 +465,47 @@ pinned notes SHALL remain out of the MVP and be tracked as follow-ups.
 
 ---
 
+### Requirement: The customer 360 summary follows the client's read rights (REQ-RAF-030)
+
+`GET /api/customer-360/summary` SHALL answer anyone who may read the client in
+OpenRegister with that client's summary. The client read SHALL run as the caller,
+pass the register and schema in their own parameters, and keep RBAC and
+multitenancy on. A caller OpenRegister refuses SHALL get 403, a client that does
+not exist SHALL give 404, and any other read failure SHALL give 500, never the
+summary.
+
+#### Scenario: A user who can read the client opens its page
+
+- GIVEN a client the user may read
+- WHEN the user opens the client page
+- THEN the Open matters, SLA and Last activity widgets show the summary, not a 404
+
+#### Scenario: A user who may not read the client asks
+
+- GIVEN a client whose schema does not let the user read it
+- WHEN that user asks for the client's summary
+- THEN the answer is 403 and the summary is not computed
+
+### Requirement: Per-Client Satisfaction Panel
+
+The customer 360 client view MUST include a satisfaction panel showing the client's NPS, average satisfaction rating, response count, trend direction (current vs. previous 90-day window), and the most recent open-text verbatims, aggregated from survey responses linked to the client directly or via their invitation's linked entity. Clients without responses MUST see an explanatory empty state.
+
+**Feature tier**: MVP
+
+#### Scenario: Satisfaction panel for a surveyed client
+
+- GIVEN a client with 6 survey responses across two contactmomenten
+- WHEN a user opens the client in customer 360
+- THEN the satisfaction panel MUST show the client-level NPS, average rating, response count of 6, a trend indicator, and up to 3 recent verbatims
+- @e2e exclude covered by PHPUnit on `SatisfactionAggregationService::summarise()`
+
+#### Scenario: Empty state without responses
+
+- GIVEN a client with no linked survey responses
+- WHEN the client view is opened
+- THEN the satisfaction panel MUST render an empty state explaining that no satisfaction data has been collected yet
+- e2e: `tests/e2e/customer-satisfaction.spec.ts`
+
 ## Appendix
 
 ### Current Implementation Status
@@ -472,7 +513,7 @@ pinned notes SHALL remain out of the MVP and be tracked as follow-ups.
 **Partially implemented.** The client detail view provides a basic customer profile, but the full 360-degree view with interaction history, cases, documents, and BRP/KVK enrichment is NOT implemented.
 
 Implemented (partial, via existing client detail view):
-- **Client profile**: `src/views/clients/ClientDetail.vue` displays: name, type, email, phone, website, address, notes. Shows "Synced with Contacts" badge when linked to Nextcloud Contacts.
+- **Client profile**: `src/views/clients/ClientDetail.vue` displays: name, type, email, phone, website, address, notes. Shows "Gesynchroniseerd met Contacten" (Synced with Contacts) badge when linked to Nextcloud Contacts.
 - **Linked contacts**: Contact persons list with name, role, email on client detail.
 - **Linked leads**: Leads list with title, stage, value on client detail.
 - **Linked requests**: Requests list with title, status on client detail.

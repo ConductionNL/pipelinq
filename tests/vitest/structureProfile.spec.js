@@ -12,8 +12,8 @@
  *
  * What has to stay true:
  *   - the full profile is exactly what it was before profiles existed;
- *   - the simple menu is the nine entries of the design, in order, under
- *     four captions;
+ *   - the simple menu is the eight entries of the design, in order, under
+ *     three captions;
  *   - a module that is off is out of the menu, a module that is on is in it;
  *   - nothing is lost: every entry the full menu offers is in the simple menu
  *     or its settings, or a page the simple menu opens has a card for it.
@@ -39,8 +39,12 @@ import {
 	resolveMenuModules,
 } from '../../src/utils/menuModules.js'
 import {
+	applyPageDefaults,
 	applyPageOverlay,
+	applyProfileTours,
 	buildProfiledManifest,
+	navTheming,
+	resolveNavPlaceholders,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
@@ -120,9 +124,25 @@ function validateBuilt(built) {
 }
 
 describe('the full profile', () => {
-	it('is exactly what buildManifest made before profiles existed', () => {
+	it('is exactly what buildManifest made before profiles existed, with the newer index header controls held back', () => {
 		const before = buildManifest(manifest(), fragments, fullFile)
-		expect(build(fullFile)).toEqual(before)
+		expect(build(fullFile)).toEqual(
+			applyPageDefaults(before, fullFile.pageDefaults),
+		)
+		// The only difference: every index page that did not choose shows
+		// the plain header row it had on nextcloud-vue ^2.61.0.
+		const after = build(fullFile)
+		for (const page of before.pages) {
+			const now = after.pages.find((item) => item.id === page.id)
+			if (page.type === 'index' && page.config?.headerFilters === undefined) {
+				expect(now, page.id).toEqual({
+					...page,
+					config: { ...page.config, headerFilters: false },
+				})
+			} else {
+				expect(now, page.id).toEqual(page)
+			}
+		}
 		// And the module step leaves a file without modules alone.
 		expect(applyMenuModules(fullFile, MODULE_KEYS)).toBe(fullFile)
 		expect(applyHomePage(before, fullFile.home)).toEqual({
@@ -131,15 +151,98 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 47 entries: 39 main, 4 footer, 4 settings, 0 integrations', () => {
+	it('still counts 54 entries: 43 main, 3 footer, 8 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
-		expect(flat(menu)).toHaveLength(47)
-		expect(count('main')).toBe(39)
-		expect(count('footer')).toBe(4)
-		expect(count('settings')).toBe(4)
+		// Website submissions sits in the settings, as PqAanvraagOmzetten draws it,
+		// and so does Retention review (platform-client-retention).
+		// The sixth settings entry is the Integrations caption above Connections
+		// and BI export, which settingsSection moves there. nextcloud-vue before
+		// 2.84.0 dropped it in the relocation step's clean-up; 2.84.0 keeps a
+		// caption that has entries under it (nextcloud-vue #1608).
+		// Bulk changes (clients-bulk-edit-and-undo) sits under the Dashboard
+		// group with Clients and Contacts. Call reviews (contact-moments-call-review)
+		// sits under the KCC workplace with My work and the queue.
+		expect(flat(menu)).toHaveLength(54)
+		expect(count('main')).toBe(43)
+		expect(count('footer')).toBe(3)
+		expect(count('settings')).toBe(8)
 		expect(count('integrations')).toBe(0)
+	})
+
+	it('holds the header controls back on index pages only, and the simple profile draws the board header with its column filters', () => {
+		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
+		expect(simpleFile.pageDefaults).toEqual({
+			index: {
+				showTitle: true,
+				showTitleIcon: false,
+				headerFilters: true,
+				headerButtons: [
+					{ action: 'export', label: 'Download' },
+					{ action: 'actions-menu' },
+					{ action: 'add', variant: 'primary', icon: 'Plus' },
+				],
+			},
+		})
+		const simpleIndex = buildSimple().pages.filter(
+			(page) => page.type === 'index',
+		)
+		expect(simpleIndex.length).toBeGreaterThan(0)
+		for (const page of simpleIndex) {
+			// A list without column heads has no heads to filter in.
+			expect(page.config?.headerFilters || page.config?.hideTableHeader === true, page.id).toBe(true)
+			expect(page.config?.showTitle, page.id).toBe(true)
+		}
+		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
+		expect(applyPageDefaults(unchanged, undefined)).toBe(unchanged)
+		expect(
+			applyPageDefaults(
+				{
+					pages: [
+						{ id: 'y', type: 'index', config: { headerFilters: true } },
+					],
+				},
+				fullFile.pageDefaults,
+			).pages[0].config.headerFilters,
+		).toBe(true)
+	})
+
+	it('gives a page that hides Add the default header buttons without the Add button', () => {
+		const defaults = {
+			index: {
+				headerButtons: [
+					{ action: 'export', label: 'Download' },
+					{ action: 'add', variant: 'primary', icon: 'Plus' },
+				],
+			},
+		}
+		const built = applyPageDefaults(
+			{
+				pages: [
+					{ id: 'noAdd', type: 'index', config: { showAdd: false } },
+					{ id: 'withAdd', type: 'index', config: {} },
+				],
+			},
+			defaults,
+		)
+
+		expect(built.pages[0].config.headerButtons).toEqual([
+			{ action: 'export', label: 'Download' },
+		])
+		expect(built.pages[1].config.headerButtons).toEqual(
+			defaults.index.headerButtons,
+		)
+		// The defaults themselves stay as they are.
+		expect(defaults.index.headerButtons).toHaveLength(2)
+	})
+
+	it('draws the website submissions header as its board: Download and Filter, no Add', () => {
+		const page = buildSimple().pages.find((item) => item.id === 'WebsiteSubmissions')
+
+		expect(page.config.headerButtons.map((button) => button.action)).not.toContain('add')
+		expect(page.config.headerButtons.map((button) => button.action)).toContain('export')
+		expect(page.config.filterMenu).toBe(true)
 	})
 
 	it('does not link to the Modules page, which only the simple menu needs', () => {
@@ -152,9 +255,10 @@ describe('the simple profile', () => {
 	const built = buildSimple()
 	const main = section(built.menu, 'main')
 
-	it('shows nine entries under four captions, in the order of the design', () => {
+	it('shows eight entries under two captions, in the order of the design', () => {
+		// PqDashboard: Dashboard, My work and Queue sit at the top with no
+		// caption above them; the board's first caption is Klantcontact.
 		expect(main.map((entry) => entry.id)).toEqual([
-			'StartCaption',
 			'KccWerkplek',
 			'MyWork',
 			'Queue',
@@ -165,18 +269,14 @@ describe('the simple profile', () => {
 			'RelationsCaption',
 			'Clients',
 			'OrganisationsMenu',
-			'MoreCaption',
-			'ReportsMenu',
 		])
 		const captions = main.filter((entry) => entry.type === 'caption')
 		expect(captions.map((entry) => nl[entry.label])).toEqual([
-			'Start',
 			'Klantcontact',
 			'Relaties',
-			'Meer',
 		])
 		const entries = main.filter((entry) => entry.type !== 'caption')
-		expect(entries).toHaveLength(9)
+		expect(entries).toHaveLength(8)
 		expect(entries.map((entry) => nl[entry.label])).toEqual([
 			'Dashboard',
 			'Mijn werk',
@@ -186,7 +286,6 @@ describe('the simple profile', () => {
 			'Afspraken',
 			'Inwoners en bedrijven',
 			'Organisaties',
-			'Rapportages',
 		])
 	})
 
@@ -196,19 +295,20 @@ describe('the simple profile', () => {
 		}
 	})
 
-	it('keeps relocations out of the file, because any relocation step drops the captions', () => {
-		// The library's relocation step ends by filtering out every entry with
-		// no route, href, action or children. That is a caption. `{}` is enough
-		// to run it, so the key has to be absent.
-		expect(Object.hasOwn(simpleFile, 'relocations')).toBe(false)
+	it('keeps its captions also through a relocation step', () => {
+		// Before nextcloud-vue 2.84.0 the relocation step dropped every entry
+		// with no route, href, action or children, which is what a caption is,
+		// so this file had to leave `relocations` out. 2.84.0 keeps a caption
+		// (nextcloud-vue #1608): the same captions come through either way.
+		const captions = (menu) =>
+			menu.filter((entry) => entry.type === 'caption').map((entry) => entry.id)
+		const without = buildSimple()
 		const withRelocations = build({
 			...applyMenuModules(simpleFile, []),
 			relocations: {},
 		})
-		expect(
-			withRelocations.menu.filter((entry) => entry.type === 'caption'),
-			'the library now keeps captions through relocations; the note in the profile file is stale',
-		).toEqual([])
+		expect(captions(without.menu).length).toBeGreaterThan(0)
+		expect(captions(withRelocations.menu)).toEqual(captions(without.menu))
 	})
 
 	it('gives every entry a label in English and Dutch, an icon the app registers and a page that exists', () => {
@@ -251,7 +351,10 @@ describe('the simple profile', () => {
 			const shown = main.find((entry) => entry.id === id)
 			expect(shown.route, id).toBe(original.route)
 		}
-		const reports = main.find((entry) => entry.id === 'ReportsMenu')
+		// Reports sits in the Advanced foldout, as in every app.
+		const reports = section(built.menu, 'settings').find(
+			(entry) => entry.id === 'ReportsMenu',
+		)
 		expect(reports).toMatchObject({ label: 'Reports', route: 'Reports' })
 	})
 
@@ -286,10 +389,11 @@ describe('the simple profile', () => {
 		expect(appointments.route).toBe('Bookings')
 		const settings = section(built.menu, 'settings').map((entry) => entry.id)
 		expect(settings).toEqual(expect.arrayContaining(['Services', 'Resources']))
-		// Everything the full profile has in settings is still there.
-		const fullSettings = section(build(fullFile).menu, 'settings').map(
-			(entry) => entry.id,
-		)
+		// Everything the full profile has in settings is still there. The
+		// simple menu is flat and draws no Integrations caption there.
+		const fullSettings = section(build(fullFile).menu, 'settings')
+			.filter((entry) => entry.type !== 'caption')
+			.map((entry) => entry.id)
 		expect(settings).toEqual(expect.arrayContaining(fullSettings))
 	})
 
@@ -301,7 +405,7 @@ describe('the simple profile', () => {
 			'StoreMenu',
 			'FeaturesRoadmapMenu',
 		])
-		// Reports moved up into the menu; nothing else left the footer.
+		// Reports moved into the Advanced foldout; nothing else left the footer.
 		expect(
 			ids(build(fullFile).menu).filter((id) => id !== 'ReportsMenu'),
 		).toEqual(ids(built.menu).filter((id) => id !== 'ModulesMenu'))
@@ -333,6 +437,12 @@ describe('the simple profile', () => {
 			}
 			for (const card of page.config?.cards ?? []) {
 				carded.add(card.route)
+			}
+			// A module card links each of its pages.
+			for (const module of page.config?.modules ?? []) {
+				for (const target of module.pages ?? []) {
+					carded.add(target.route)
+				}
 			}
 		}
 		const lost = flat(build(fullFile).menu)
@@ -380,11 +490,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 97 pages as the full profile, so every route stays', () => {
+	it('builds the same 110 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(97)
+		expect(built.pages).toHaveLength(110)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
@@ -396,6 +506,92 @@ describe('the simple profile', () => {
 		validateBuilt(applyHomePage(built, simpleFile.home).manifest)
 		// Three validator processes. The default five seconds is not enough
 		// on a busy machine, and a timeout here reads as a broken manifest.
+	}, 60_000)
+})
+
+describe('the brand block', () => {
+	const theming = {
+		name: 'Gemeente Zuiddrecht',
+		logo: '/core/img/logo/logo.svg',
+		emblem: '/apps/thematiq/img/emblem.svg',
+	}
+	const withTheming = () =>
+		buildProfiledManifest(
+			buildManifest,
+			manifest(),
+			fragments,
+			applyMenuModules(simpleFile, []),
+			{ theming },
+		)
+
+	it('names the app over the instance the theming capabilities answer, and the full profile declares none', () => {
+		expect(simpleFile.nav.brand).toEqual({
+			name: 'Pipelinq',
+			caption: '@theming.name',
+			logo: '@theming.emblem|@theming.logo',
+		})
+		expect(fullFile.nav).toBeUndefined()
+		// The set's emblem, never the wordmark beside the app's own name.
+		expect(withTheming().nav.brand).toEqual({
+			name: 'Pipelinq',
+			caption: 'Gemeente Zuiddrecht',
+			logo: '/apps/thematiq/img/emblem.svg',
+		})
+		expect(build(fullFile).nav?.brand).toBeUndefined()
+	})
+
+	it('falls back to the wordmark on a set without an emblem', () => {
+		for (const emblem of ['', undefined]) {
+			expect(
+				resolveNavPlaceholders(simpleFile.nav, { ...theming, emblem }).brand
+					.logo,
+			).toBe('/core/img/logo/logo.svg')
+		}
+	})
+
+	it('reads the emblem from thematiq and the rest from Nextcloud theming', () => {
+		expect(
+			navTheming({
+				theming: { name: 'Gemeente Zuiddrecht', logo: '/logo.svg' },
+				nldesign: { logos: { emblem: '/emblem.svg' } },
+			}),
+		).toEqual({
+			name: 'Gemeente Zuiddrecht',
+			logo: '/logo.svg',
+			emblem: '/emblem.svg',
+		})
+		expect(navTheming(null)).toEqual({ emblem: '' })
+		expect(
+			navTheming({
+				theming: { name: 'X' },
+				nldesign: { logos: { emblem: 7 } },
+			}),
+		).toEqual({ name: 'X', emblem: '' })
+	})
+
+	it('shows the app alone on an instance that answers nothing, and never a placeholder', () => {
+		for (const answer of [null, {}, { name: '', logo: 7 }]) {
+			expect(resolveNavPlaceholders(simpleFile.nav, answer).brand).toEqual({
+				name: 'Pipelinq',
+				caption: '',
+				logo: '',
+			})
+		}
+		expect(JSON.stringify(buildSimple().nav)).not.toContain('@theming')
+	})
+
+	it('is what main.js hands the theming capabilities to', () => {
+		expect(mainSource).toContain(
+			"import { getCapabilities } from '@nextcloud/capabilities'",
+		)
+		expect(mainSource).toContain('theming: navTheming(getCapabilities())')
+		expect(mainSource).toMatch(
+			/import \{[^}]*\bnavTheming,[^}]*\} from '\.\/utils\/structureProfile\.js'/,
+		)
+	})
+
+	it('validates against the manifest schema with the brand resolved', () => {
+		validateBuilt(withTheming())
 	}, 60_000)
 })
 
@@ -438,8 +634,23 @@ describe('the modules', () => {
 				seen.add(id)
 			}
 			for (const entry of module.menu) {
+				// An entry the module brings itself (a caption, or a link with
+				// its own label and route) is not in the full menu.
+				if (entry.label) continue
 				expect(known.has(entry.id), `${key}: ${entry.id}`).toBe(true)
 			}
+		}
+	})
+
+	it('marketing shows Campaigns and Newsletters only, as the boards draw it; its other pages open from the Modules page', () => {
+		const shown = flat(buildSimple(['marketing']).menu).map((entry) => entry.id)
+		expect(shown).toEqual(expect.arrayContaining(['MarketingCaption', 'CampaignsMenu', 'BlastsMenu']))
+		for (const id of ['MarketingGroup', 'Segments', 'Templates', 'Journeys', 'SocialPosts', 'KeywordIntelligence', 'SearchQueries']) {
+			expect(shown, id).not.toContain(id)
+		}
+		const routes = new Set(buildSimple(['marketing']).pages.map((page) => page.id))
+		for (const id of ['Segments', 'Templates', 'Journeys', 'SocialPosts', 'KeywordIntelligence', 'SearchQueries']) {
+			expect(routes.has(id), id).toBe(true)
 		}
 	})
 
@@ -456,20 +667,27 @@ describe('the modules', () => {
 					expect(shown.has(id), `${other}: ${id}`).toBe(false)
 				}
 			}
-			// Between Relations and More, under the one caption.
+			// After Relations. Sales and Marketing carry their own caption (the
+			// board groups them as Verkoop and Marketing); the rest sit under
+			// the one Modules caption.
 			const order = section(menu, 'main').map((entry) => entry.id)
 			const at = (id) => order.indexOf(id)
-			expect(at('ModulesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
-			expect(at('MoreCaption')).toBeGreaterThan(at('ModulesCaption'))
+			const own = new Set([
+				...simpleFile.modules[key].ids,
+				...simpleFile.modules[key].menu.map((entry) => entry.id),
+			])
 			for (const entry of simpleFile.modules[key].menu) {
-				expect(at(entry.id), entry.id).toBeGreaterThan(at('ModulesCaption'))
-				expect(at(entry.id), entry.id).toBeLessThan(at('MoreCaption'))
+				// Products belongs to the products module, so it stays out
+				// of the menu while only Sales is on.
+				if (!shown.has(entry.id)) continue
+				expect(at(entry.id), entry.id).toBeGreaterThan(
+					at('OrganisationsMenu'),
+				)
 			}
-			// The nine daily entries do not move.
-			expect(order.slice(0, at('ModulesCaption'))).toEqual(
-				section(buildSimple().menu, 'main')
-					.map((entry) => entry.id)
-					.slice(0, 11),
+			// The daily entries do not move.
+			const daily = (ids) => ids.filter((id) => !own.has(id)).slice(0, 10)
+			expect(daily(order)).toEqual(
+				daily(section(buildSimple().menu, 'main').map((entry) => entry.id)),
 			)
 		},
 	)
@@ -492,19 +710,23 @@ describe('the modules', () => {
 		const cards = page.config.cards
 		const pageIds = new Set(buildSimple().pages.map((item) => item.id))
 		const entries = flat(buildManifest(manifest(), fragments, {}).menu)
+		// Each module is a module card (board PqModules) that links every page of it.
 		for (const key of MODULE_KEYS) {
-			expect(page.config.categories[key], key).toBe(
-				simpleFile.modules[key].label,
-			)
+			const module = page.config.modules.find((item) => item.id === key)
+			expect(module, key).toBeTruthy()
+			expect(module.label, key).toBe(simpleFile.modules[key].label)
 			for (const id of simpleFile.modules[key].ids) {
 				const route = entries.find((entry) => entry.id === id).route
-				const card = cards.find((item) => item.route === route)
-				expect(card, `${key}: no card opens ${route}`).toBeTruthy()
-				expect(card.category, id).toBe(key)
+				expect(module.pages.some((item) => item.route === route), `${key}: no page opens ${route}`).toBe(true)
+			}
+			expect(iconsSource, key).toContain(`\n\t${module.icon},\n`)
+			for (const text of [module.label, module.description, ...module.pages.map((item) => item.label)]) {
+				expect(en[text], `en "${text}"`).toBeTruthy()
+				expect(nl[text], `nl "${text}"`).toBeTruthy()
 			}
 		}
 		for (const card of cards) {
-			expect(pageIds.has(card.route), card.id).toBe(true)
+			expect(card.href || pageIds.has(card.route), card.id).toBeTruthy()
 			expect(iconsSource, card.id).toContain(`\n\t${card.icon},\n`)
 			for (const text of [card.label, card.description]) {
 				expect(en[text], `en "${text}"`).toBeTruthy()
@@ -514,6 +736,10 @@ describe('the modules', () => {
 		for (const text of [
 			page.title,
 			page.config.description,
+			page.config.modulesTitle,
+			page.config.footnote,
+			page.config.modules[0].settings.prefix,
+			page.config.modules[0].settings.label,
 			...Object.values(page.config.categories),
 		]) {
 			expect(en[text], `en "${text}"`).toBeTruthy()
@@ -585,34 +811,110 @@ describe('the start page', () => {
 })
 
 describe('the getting-started tour', () => {
-	const navTargets = (source) =>
-		source.walkthrough.tours.flatMap((tour) =>
-			tour.steps
-				.filter((step) => step.target?.kind === 'nav-item')
-				.map((step) => step.target.ref),
+	const SALES_TOUR = 'pipelinq:getting-started'
+	const CONTACT_CENTRE_TOUR = 'pipelinq:contact-centre'
+	const navTargets = (tour) =>
+		tour.steps
+			.filter((step) => step.target?.kind === 'nav-item')
+			.map((step) => step.target.ref)
+	const tourById = (source, id) =>
+		source.walkthrough.tours.find((tour) => tour.id === id)
+	/**
+	 * The condition CnAppRoot (nextcloud-vue 2.71) mounts the user settings'
+	 * Walkthrough section on (`walkthroughEnabled`): no tour, no section, so
+	 * nobody can start, continue or start over.
+	 */
+	const settingsOfferTour = (source) => {
+		const w = source.walkthrough
+		return !!(
+			w
+			&& w.enabled !== false
+			&& Array.isArray(w.tours)
+			&& w.tours.length > 0
 		)
+	}
 
 	it('is a sales journey that the simple menu cannot carry, so it is held back there', () => {
 		const built = buildSimple()
 		// The library finds a `nav-item` by the route its entry opens.
 		const shown = new Set(flat(built.menu).map((entry) => entry.route))
-		const missing = navTargets(built).filter((ref) => !shown.has(ref))
+		const missing = navTargets(tourById(built, SALES_TOUR)).filter(
+			(ref) => !shown.has(ref),
+		)
 		// The control: the tour really points at entries the simple menu lacks.
-		expect(missing).toEqual(['Products', 'Contacts', 'Leads', 'Contracts'])
+		expect(missing).toEqual(['Contacts', 'Products', 'Leads', 'Contracts'])
 
 		const held = holdUnreachableTours(built)
-		expect(held.walkthrough.tours).toEqual([])
-		expect(held.walkthrough.enabled).toBe(false)
+		expect(tourById(held, SALES_TOUR)).toBeUndefined()
 		// Held back, not deleted: the manifest and the built input keep it.
-		expect(built.walkthrough.tours).toHaveLength(1)
+		expect(tourById(built, SALES_TOUR)).toBeDefined()
 		expect(manifest().walkthrough.tours).toHaveLength(1)
 		validateBuilt(held)
+	})
+
+	it('leaves the simple structure a tour of its own, so the user settings can start it', () => {
+		for (const enabled of [[], MODULE_KEYS]) {
+			const held = holdUnreachableTours(buildSimple(enabled))
+			// On development the simple structure kept no tour: CnAppRoot
+			// then left the Walkthrough section out of the user settings.
+			expect(settingsOfferTour(held), enabled.join(',') || 'no modules').toBe(
+				true,
+			)
+			expect(held.walkthrough.tours.map((tour) => tour.id)).toEqual([
+				CONTACT_CENTRE_TOUR,
+			])
+			validateBuilt(held)
+		}
+		// Two validator processes: the default five seconds is not enough on
+		// a busy machine, and a timeout here reads as a missing tour.
+	}, 60_000)
+
+	it('only points the contact centre tour at pages the simple menu opens', () => {
+		const built = buildSimple()
+		const tour = tourById(built, CONTACT_CENTRE_TOUR)
+		const shown = new Set(flat(built.menu).map((entry) => entry.route))
+		const refs = navTargets(tour)
+		// The control: the tour does point at menu entries.
+		expect(refs).toEqual(['Tickets', 'MyWork', 'Queue', 'Clients', 'Modules'])
+		expect(refs.filter((ref) => !shown.has(ref))).toEqual([])
+
+		const pages = new Map(built.pages.map((page) => [page.id, page]))
+		expect(pages.has(tour.steps[0].target.ref)).toBe(true)
+		// A route-match step names a page that exists, and an `index-add` step
+		// follows the step that opened an index page of the schema it waits for.
+		tour.steps.forEach((step, i) => {
+			if (step.advanceOn?.type === 'route-match') {
+				expect(pages.has(step.advanceOn.route), step.id).toBe(true)
+			}
+			if (step.target?.ref === 'index-add') {
+				const page = pages.get(tour.steps[i - 1].advanceOn.route)
+				expect(page.type, step.id).toBe('index')
+				expect(page.config.schema, step.id).toBe(step.advanceOn.schema)
+			}
+		})
+	})
+
+	it('has English and Dutch text for every step of the contact centre tour', () => {
+		const tour = tourById(buildSimple(), CONTACT_CENTRE_TOUR)
+		const texts = [tour.title]
+		for (const step of tour.steps) {
+			texts.push(...[step.title, step.body, step.task].filter(Boolean))
+		}
+		for (const text of texts) {
+			expect(en[text], text).toBe(text)
+			expect(nl[text], text).toBeTruthy()
+			expect(nl[text], text).not.toBe(text)
+			expect(text, text).not.toMatch(/\u2014|--/)
+		}
 	})
 
 	it('stays in the full structure, where every entry it points at is in the menu', () => {
 		const full = build(fullFile)
 		expect(holdUnreachableTours(full)).toBe(full)
 		expect(full.walkthrough.enabled).toBe(true)
+		// The full file declares no tours: the sales tour is the only one.
+		expect(fullFile.tours).toBeUndefined()
+		expect(full.walkthrough.tours.map((tour) => tour.id)).toEqual([SALES_TOUR])
 		expect(mainSource).toMatch(
 			/structureProfile === STRUCTURE_FULL\s+\? profiledManifest\s+: holdUnreachableTours\(profiledManifest\)/,
 		)
@@ -621,6 +923,17 @@ describe('the getting-started tour', () => {
 	it('leaves a manifest without tours alone', () => {
 		const bare = { menu: [], pages: [] }
 		expect(holdUnreachableTours(bare)).toBe(bare)
+		expect(applyProfileTours(bare, undefined)).toBe(bare)
+	})
+
+	it('never replaces a manifest tour with a profile tour of the same id', () => {
+		const built = { walkthrough: { tours: [{ id: 'a', steps: [] }] } }
+		expect(applyProfileTours(built, [{ id: 'a', steps: [{ id: 'x' }] }])).toBe(
+			built,
+		)
+		const added = applyProfileTours(built, [{ id: 'b', steps: [] }])
+		expect(added.walkthrough.tours.map((tour) => tour.id)).toEqual(['a', 'b'])
+		expect(built.walkthrough.tours).toHaveLength(1)
 	})
 })
 
@@ -670,6 +983,52 @@ describe('a page overlay', () => {
 		expect(out.slots).toEqual({ 'widget-e': 'E' })
 	})
 
+	it('takes a page slot out when the overlay names it with null', () => {
+		const out = applyPageOverlay(
+			{ id: 'P', config: {}, slots: { 'title-meta': 'Picker', keep: 'K' } },
+			{ id: 'P', slots: { 'title-meta': null, added: 'A' } },
+		)
+		expect(out.slots).toEqual({ keep: 'K', added: 'A' })
+	})
+
+	it('replaces the title only with a non-empty string', () => {
+		const page = { id: 'P', title: 'Old' }
+		expect(applyPageOverlay(page, { id: 'P', title: 'New' })).toEqual({ id: 'P', title: 'New', config: {} })
+		expect(applyPageOverlay(page, { id: 'P', title: '' })).toEqual({ id: 'P', title: 'Old', config: {} })
+		expect(applyPageOverlay(page, { id: 'P', title: 7 })).toEqual({ id: 'P', title: 'Old', config: {} })
+	})
+
+	it('reads lists that are not arrays as empty, and keeps bare items it cannot merge into', () => {
+		const page = { id: 'P', config: { text: 'x', list: ['a', { id: 'b' }] } }
+		const out = applyPageOverlay(page, {
+			id: 'P',
+			configPatch: { text: { x: { n: 1 } }, list: { a: { n: 1 }, b: { n: 2 } }, none: null },
+			configAppend: { more: 'nope', list: null },
+			configOrder: { list: 'b', other: ['ghost'] },
+		})
+		expect(out.config).toEqual({
+			text: [],
+			list: ['a', { id: 'b', n: 2 }],
+			none: [],
+			more: [],
+			other: [],
+		})
+	})
+
+	it('orders the named items first, skipping names it does not find', () => {
+		const out = applyPageOverlay(
+			{ id: 'P', config: { list: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] } },
+			{ id: 'P', configOrder: { list: ['c', 'ghost', 'a'] } },
+		)
+		expect(out.config.list).toEqual([{ id: 'c' }, { id: 'a' }, { id: 'b' }])
+	})
+
+	it('ignores slots that are not an object, and adds slots to a page without any', () => {
+		const page = { id: 'P', config: {}, slots: { keep: 'K' } }
+		expect(applyPageOverlay(page, { id: 'P', slots: 'nope' })).toEqual({ id: 'P', config: {}, slots: { keep: 'K' } })
+		expect(applyPageOverlay({ id: 'P' }, { id: 'P', slots: { s: 'S', gone: null } })).toEqual({ id: 'P', config: {}, slots: { s: 'S' } })
+	})
+
 	it('is skipped and reported when it names a page the manifest does not have', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 		const out = build({
@@ -709,8 +1068,8 @@ describe('the structure setting', () => {
 		expect(mainSource).toMatch(
 			/structureProfile === STRUCTURE_FULL\s+\? menuLayout\s+: applyMenuModules\(/,
 		)
-		expect(mainSource).toContain(
-			'buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile)',
+		expect(mainSource).toMatch(
+			/buildProfiledManifest\(buildManifest, bundledManifest, fragments, profileFile, \{\s+theming:/,
 		)
 	})
 

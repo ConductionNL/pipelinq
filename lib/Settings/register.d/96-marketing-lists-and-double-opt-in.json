@@ -94,6 +94,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user id that created the mailing list.",
             "title": "Created By"
           },

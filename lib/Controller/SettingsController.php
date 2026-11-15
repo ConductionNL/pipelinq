@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -37,7 +37,6 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use UnexpectedValueException;
 
 /**
@@ -45,16 +44,10 @@ use UnexpectedValueException;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/admin-settings/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-admin-settings/tasks.md#task-3
  */
 class SettingsController extends Controller {
-
-	/**
-	 * The OpenRegister object service.
-	 *
-	 * @var \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister object service.
-	 */
-	private ?\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService = null;
+	use OpenRegisterServiceLookup;
 
 	/**
 	 * Constructor.
@@ -63,7 +56,7 @@ class SettingsController extends Controller {
 	 * @param ContainerInterface $container The container.
 	 * @param IAppManager $appManager The app manager.
 	 * @param IGroupManager $groupManager The group manager.
-	 * @param SettingsService $settingsService The settings service.
+	 * @param SettingsServiceInterface $settingsService The settings service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -73,45 +66,13 @@ class SettingsController extends Controller {
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IGroupManager $groupManager,
-		private SettingsService $settingsService,
+		private SettingsServiceInterface $settingsService,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
-
-	/**
-	 * Attempts to retrieve the OpenRegister service from the container.
-	 *
-	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
-	 * @throws \RuntimeException If the service is not available.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-6
-	 */
-	public function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
-			$this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			return $this->objectService;
-		}
-
-		throw new RuntimeException('OpenRegister service is not available.');
-	}//end getObjectService()
-
-	/**
-	 * Attempts to retrieve the Configuration service from the container.
-	 *
-	 * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
-	 * @throws \RuntimeException If the service is not available.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-5
-	 */
-	public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
-			$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-			return $configurationService;
-		}
-
-		throw new RuntimeException('Configuration service is not available.');
-	}//end getConfigurationService()
 
 	/**
 	 * Get current Pipelinq settings.
@@ -119,7 +80,7 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The settings response.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/admin-settings/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-06-14-admin-settings/tasks.md#task-3
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -174,7 +135,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function update(): JSONResponse {
 		$data = $this->request->getParams();
 
@@ -202,8 +163,7 @@ class SettingsController extends Controller {
 	 *
 	 * The canonical AppHost route table keeps `settings#create` for the
 	 * fleet's pre-ADR-066 `index/create/load` dialect, and pipelinq has live
-	 * callers on it (`src/store/modules/settings.js::saveSettings()` and
-	 * `src/views/settings/ExportConfigurationSettings.vue::save()`), so the
+	 * callers on it (`src/store/modules/settings.js::saveSettings()`), so the
 	 * POST verb stays reachable and behaviourally identical (ADR-029).
 	 *
 	 * The attribute is repeated deliberately: Nextcloud's SecurityMiddleware
@@ -214,7 +174,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function create(): JSONResponse {
 		return $this->update();
 	}//end create()
@@ -226,38 +186,11 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function reimport(): JSONResponse {
 		try {
 			$result = $this->settingsService->loadSettings(force: true);
-
-			// A schema OpenRegister rejects is not an exception here: the
-			// ImportHandler logs it, lists it under `failed.schemas` and
-			// imports the rest. Counting only what arrived turned sixteen
-			// missing schemas into "re-imported successfully" on 2026-09-26
-			// (four fragments shipped without a slug), so the rejections
-			// decide `success` and are named in the message.
-			$rejected = $this->rejectedSchemas(result: $result);
-			$message = $this->l10n->t('Configuration re-imported successfully');
-			if ($rejected !== []) {
-				$message = $this->l10n->t(
-					'Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s',
-					[count($rejected), implode(', ', array_column($rejected, 'slug'))]
-				);
-			}
-
-			return new JSONResponse(
-				[
-					'success' => ($rejected === []),
-					'message' => $message,
-					'config' => $this->settingsService->getSettings(),
-					'result' => [
-						'registers' => count($result['registers'] ?? []),
-						'schemas' => count($result['schemas'] ?? []),
-						'rejectedSchemas' => $rejected,
-					],
-				]
-			);
+			return $this->reimported(result: $result);
 		} catch (\Exception $e) {
 			$this->logger->error('SettingsController::reimport failed', ['exception' => $e]);
 			return new JSONResponse(
@@ -270,6 +203,43 @@ class SettingsController extends Controller {
 			);
 		}//end try
 	}//end reimport()
+
+	/**
+	 * The answer to a finished import: success only when OpenRegister rejected no schema.
+	 *
+	 * @param array<string, mixed> $result What the import reported.
+	 *
+	 * @return JSONResponse
+	 */
+	private function reimported(array $result): JSONResponse {
+		// A schema OpenRegister rejects is not an exception here: the
+		// ImportHandler logs it, lists it under `failed.schemas` and
+		// imports the rest. Counting only what arrived turned sixteen
+		// missing schemas into "re-imported successfully" on 2026-09-26
+		// (four fragments shipped without a slug), so the rejections
+		// decide `success` and are named in the message.
+		$rejected = $this->rejectedSchemas(result: $result);
+		$message = $this->l10n->t('Configuration re-imported successfully');
+		if ($rejected !== []) {
+			$message = $this->l10n->t(
+				'Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s',
+				[count($rejected), implode(', ', array_column($rejected, 'slug'))]
+			);
+		}
+
+		return new JSONResponse(
+			[
+				'success' => ($rejected === []),
+				'message' => $message,
+				'config' => $this->settingsService->getSettings(),
+				'result' => [
+					'registers' => count($result['registers'] ?? []),
+					'schemas' => count($result['schemas'] ?? []),
+					'rejectedSchemas' => $rejected,
+				],
+			]
+		);
+	}//end reimported()
 
 	/**
 	 * The schemas OpenRegister refused during an import, as slug and reason.
@@ -306,7 +276,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse The user settings response.
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-7
 	 */
 	#[NoAdminRequired]
 	public function getUserSettings(): JSONResponse {
@@ -325,7 +295,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse The updated user settings response.
 	 *
-	 * @spec openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-8
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-settings/tasks.md#task-8
 	 */
 	#[NoAdminRequired]
 	public function updateUserSettings(): JSONResponse {

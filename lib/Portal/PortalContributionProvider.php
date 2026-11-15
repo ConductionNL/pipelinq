@@ -34,14 +34,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
 
-use OCA\Pipelinq\Service\Portal\QuestionDetailService;
+use OCA\Pipelinq\Kernel\Contracts\QuestionDetailServiceInterface;
 
 /**
  * Declares what an external portal subject may see and do in pipelinq.
@@ -71,7 +71,7 @@ use OCA\Pipelinq\Service\Portal\QuestionDetailService;
  * supertype it also carries the OTHER kinds' properties — the per-collection
  * `fields` whitelist below is what stops them leaking across kinds.
  *
- * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 class PortalContributionProvider {
 	/**
@@ -148,12 +148,12 @@ class PortalContributionProvider {
 	 * container hands in the question detail service when it can, and the
 	 * manifest never needs it. Only the two question reads use it.
 	 *
-	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
+	 * @param QuestionDetailServiceInterface|null $questionDetail Reads one question's timeline and items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function __construct(
-		private readonly ?QuestionDetailService $questionDetail = null,
+		private readonly ?QuestionDetailServiceInterface $questionDetail = null,
 	) {
 	}//end __construct()
 
@@ -168,7 +168,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, string> The audience identifiers.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getAudiences(): array {
@@ -183,7 +183,7 @@ class PortalContributionProvider {
 	 *
 	 * @return string The primary audience identifier.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function getAudience(): string {
 		return 'client';
@@ -204,7 +204,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>|null The manifest, or null when not contributing.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getContribution(array $subject): ?array {
@@ -248,193 +248,22 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The client manifest.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function clientContribution(): array {
 		return [
 			'label' => self::GROUP_CONTACT,
 			'collections' => [
-				[
-					'id' => 'clientRequests',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Narrowing filter on the supertype discriminator: only the
-					// subject's REQUEST tickets. Merged before the scope filter, so
-					// it can only subset the subject's own rows, never widen them.
-					'filter' => ['ticketType' => 'request'],
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'label' => 'Verzoeken van uw organisatie',
-					'listable' => true,
-					// Read-side field projection (the DATA authority): only these
-					// client-safe fields (+ identifiers) leave the server. The
-					// back-office `assignee`, `pipeline`, `stage`, `contact` and
-					// `priority` fields are dropped here — columns alone are
-					// presentation-only and would NOT stop them being returned.
-					// `ticket` is a supertype, so it also carries the complaint and
-					// contactmoment properties; this whitelist is what keeps them
-					// out of the request surface.
-					// `customerMessage` is the handler's message to the customer
-					// (pipelinq#2074); the internal `notes` stay behind.
-					'fields' => [
-						'title',
-						'category',
-						'status',
-						'description',
-						'occurredAt',
-						'customerMessage',
-					],
-					// Contribution-manifest-v3 UI (ADR-063), presentation-only:
-					// a column set, a detail layout, and a newest-first sort,
-					// over the projected fields above.
-					'columns' => [
-						['field' => 'title', 'label' => 'Onderwerp'],
-						['field' => 'category', 'label' => 'Categorie'],
-						['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
-						['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
-					],
-					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
-					'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
-				],
-				[
-					'id' => 'clientComplaints',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Only the subject's COMPLAINT tickets (see clientRequests).
-					'filter' => ['ticketType' => 'complaint'],
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'label' => 'Klachten van uw organisatie',
-					'listable' => true,
-					// This collection was UNPROJECTED while it read the narrow
-					// `complaint` schema. `ticket` is a supertype whose property set
-					// is a strict superset of it, so leaving it unprojected would
-					// newly hand the client the contactmoment CTI internals
-					// (recording URL, disposition notes, caller numbers), the
-					// internal `notes` and the back-office assignee/pipeline/stage
-					// fields. The whitelist below restores the pre-unification
-					// surface: complaint facts only.
-					'fields' => [
-						'title',
-						'complaintCategory',
-						'status',
-						'description',
-						'occurredAt',
-						'customerMessage',
-					],
-				],
-				[
-					'id' => 'clientContracts',
-					'register' => self::REGISTER,
-					'schema' => 'salesContract',
-					'scopeField' => 'clientRef',
-					'scopeClaim' => 'clientId',
-					'label' => 'Contracten',
-					'listable' => true,
-				],
-				[
-					'id' => 'clientContactmoments',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Only the subject's CONTACTMOMENT tickets (see clientRequests).
-					'filter' => ['ticketType' => 'interaction'],
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'label' => 'Contactmomenten',
-					'listable' => true,
-					// Client-safe interaction facts only. The internal `notes`, raw
-					// `channelMetadata`, `duration`, `assignee` identity, the
-					// `parentTicket` backlink and the CTI call internals (recording
-					// URL, disposition notes) all stay server-side.
-					'fields' => [
-						'title',
-						'channel',
-						'outcome',
-						'occurredAt',
-					],
-				],
+				$this->clientRequestsCollection(),
+				$this->clientComplaintsCollection(),
+				$this->clientContractsCollection(),
+				$this->clientContactmomentsCollection(),
 				$this->questionsCollection(),
 				...$this->ownTicketCollections(),
 			],
 			'actions' => [
-				[
-					'id' => 'createRequest',
-					'type' => 'create',
-					'label' => 'Een verzoek indienen namens uw organisatie',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Stamped server-side over the whitelisted client payload, so a
-					// client can never file a complaint or contactmoment through the
-					// request form. `ticketType` is required on the schema and is
-					// deliberately NOT a whitelisted field.
-					'defaults' => ['ticketType' => 'request'],
-					// The owner stamp: portaliq writes the subject's own
-					// `clientId` claim into `client`, the field `clientRequests`
-					// is scoped on. Without it the ticket was saved with no
-					// client and never showed in the resident's own list; a
-					// subject without the claim is now refused instead.
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					'fields' => [
-						'title',
-						'description',
-						'category',
-					],
-					// Contribution-manifest-v3 form config. `fieldConfigs` may only
-					// describe whitelisted fields; the category dropdown is a
-					// static enum here (a scoped `collection` provider would be
-					// used for a live-OR-backed picker).
-					'fieldConfigs' => [
-						'title' => [
-							'label' => 'Onderwerp',
-							'required' => true,
-							'size' => 'large',
-							'placeholder' => 'Waar gaat uw verzoek over?',
-						],
-						'description' => [
-							'label' => 'Omschrijving',
-							'required' => true,
-							'size' => 'full',
-							'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk',
-						],
-						'category' => ['label' => 'Categorie'],
-					],
-					'optionsProviders' => [
-						'category' => [
-							'type' => 'static',
-							'options' => [
-								['value' => 'Support', 'label' => 'Support'],
-								['value' => 'Facturatie', 'label' => 'Facturatie'],
-								['value' => 'Technisch', 'label' => 'Technisch'],
-								['value' => 'Accountbeheer', 'label' => 'Accountbeheer'],
-								['value' => 'Sales', 'label' => 'Sales'],
-								['value' => 'Integratie', 'label' => 'Integratie'],
-							],
-						],
-					],
-					'submitLabel' => 'Verzoek indienen',
-					'successMessage' => 'Uw verzoek is ingediend',
-				],
-				[
-					'id' => 'createComplaint',
-					'type' => 'create',
-					'label' => 'Een klacht indienen namens uw organisatie',
-					'register' => self::REGISTER,
-					'schema' => 'ticket',
-					// Stamped server-side (see createRequest).
-					'defaults' => ['ticketType' => 'complaint'],
-					// The owner stamp `clientComplaints` reads (see createRequest).
-					'scopeField' => 'client',
-					'scopeClaim' => 'clientId',
-					// The complaint's classification is `complaintCategory` on the
-					// unified ticket — the supertype's plain `category` is the
-					// REQUEST's free-text category and is not part of this intake.
-					'fields' => [
-						'title',
-						'description',
-						'complaintCategory',
-					],
-				],
+				$this->createRequestAction(),
+				$this->createComplaintAction(),
 				...$this->questionActions(),
 				...$this->ownTicketActions(),
 			],
@@ -445,48 +274,7 @@ class PortalContributionProvider {
 			// refuse that write. The organisation's pages follow, unchanged.
 			'pages' => [
 				...$this->ownTicketPages(),
-				[
-					'id' => 'organisationRequests',
-					'label' => 'Verzoeken van uw organisatie',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'OfficeBuilding',
-					'blocks' => [
-						[
-							'type' => 'richText',
-							'markdown' => 'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
-						],
-						['type' => 'action', 'action' => 'createRequest'],
-						['type' => 'collection', 'collection' => 'clientRequests'],
-					],
-				],
-				[
-					'id' => 'organisationComplaints',
-					'label' => 'Klachten van uw organisatie',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'AlertCircle',
-					'blocks' => [
-						['type' => 'action', 'action' => 'createComplaint'],
-						['type' => 'collection', 'collection' => 'clientComplaints'],
-					],
-				],
-				[
-					'id' => 'contracts',
-					'label' => 'Contracten',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'FileDocument',
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'clientContracts'],
-					],
-				],
-				[
-					'id' => 'contactmoments',
-					'label' => 'Contactmomenten',
-					'group' => self::GROUP_ORGANISATION,
-					'icon' => 'Phone',
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'clientContactmoments'],
-					],
-				],
+				...$this->organisationPages(),
 				$this->questionsPage(),
 			],
 			// A declared rule key, not a change rule: pipelinq writes the
@@ -496,6 +284,276 @@ class PortalContributionProvider {
 			'notifications' => [self::RULE_QUESTION_ANSWERED],
 		];
 	}//end clientContribution()
+
+	/**
+	 * The organisation's requests, scoped to its client id.
+	 * @return array<string, mixed>
+	 */
+	private function clientRequestsCollection(): array {
+		return [
+			'id' => 'clientRequests',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Narrowing filter on the supertype discriminator: only the
+			// subject's REQUEST tickets. Merged before the scope filter, so
+			// it can only subset the subject's own rows, never widen them.
+			'filter' => ['ticketType' => 'request'],
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'label' => 'Verzoeken van uw organisatie',
+			'listable' => true,
+			// Read-side field projection (the DATA authority): only these
+			// client-safe fields (+ identifiers) leave the server. The
+			// back-office `assignee`, `pipeline`, `stage`, `contact` and
+			// `priority` fields are dropped here — columns alone are
+			// presentation-only and would NOT stop them being returned.
+			// `ticket` is a supertype, so it also carries the complaint and
+			// contactmoment properties; this whitelist is what keeps them
+			// out of the request surface.
+			// `customerMessage` is the handler's message to the customer
+			// (pipelinq#2074); the internal `notes` stay behind.
+			'fields' => [
+				'title',
+				'category',
+				'status',
+				'description',
+				'occurredAt',
+				'customerMessage',
+			],
+			// Contribution-manifest-v3 UI (ADR-063), presentation-only:
+			// a column set, a detail layout, and a newest-first sort,
+			// over the projected fields above.
+			'columns' => [
+				['field' => 'title', 'label' => 'Onderwerp'],
+				['field' => 'category', 'label' => 'Categorie'],
+				['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
+				['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+			],
+			'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
+			'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+		];
+	}//end clientRequestsCollection()
+
+	/**
+	 * The organisation's complaints, scoped to its client id.
+	 * @return array<string, mixed>
+	 */
+	private function clientComplaintsCollection(): array {
+		return [
+			'id' => 'clientComplaints',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Only the subject's COMPLAINT tickets (see clientRequests).
+			'filter' => ['ticketType' => 'complaint'],
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'label' => 'Klachten van uw organisatie',
+			'listable' => true,
+			// This collection was UNPROJECTED while it read the narrow
+			// `complaint` schema. `ticket` is a supertype whose property set
+			// is a strict superset of it, so leaving it unprojected would
+			// newly hand the client the contactmoment CTI internals
+			// (recording URL, disposition notes, caller numbers), the
+			// internal `notes` and the back-office assignee/pipeline/stage
+			// fields. The whitelist below restores the pre-unification
+			// surface: complaint facts only.
+			'fields' => [
+				'title',
+				'complaintCategory',
+				'status',
+				'description',
+				'occurredAt',
+				'customerMessage',
+			],
+		];
+	}//end clientComplaintsCollection()
+
+	/**
+	 * The organisation's sales contracts, scoped to its client id.
+	 * @return array<string, mixed>
+	 */
+	private function clientContractsCollection(): array {
+		return [
+			'id' => 'clientContracts',
+			'register' => self::REGISTER,
+			'schema' => 'salesContract',
+			'scopeField' => 'clientRef',
+			'scopeClaim' => 'clientId',
+			'label' => 'Contracten',
+			'listable' => true,
+		];
+	}//end clientContractsCollection()
+
+	/**
+	 * The organisation's contactmomenten, field-projected so back-office internals never reach the client.
+	 * @return array<string, mixed>
+	 */
+	private function clientContactmomentsCollection(): array {
+		return [
+			'id' => 'clientContactmoments',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Only the subject's CONTACTMOMENT tickets (see clientRequests).
+			'filter' => ['ticketType' => 'interaction'],
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'label' => 'Contactmomenten',
+			'listable' => true,
+			// Client-safe interaction facts only. The internal `notes`, raw
+			// `channelMetadata`, `duration`, `assignee` identity, the
+			// `parentTicket` backlink and the CTI call internals (recording
+			// URL, disposition notes) all stay server-side.
+			'fields' => [
+				'title',
+				'channel',
+				'outcome',
+				'occurredAt',
+			],
+		];
+	}//end clientContactmomentsCollection()
+
+	/**
+	 * Submitting a request for the organisation, with whitelisted intake fields only.
+	 * @return array<string, mixed>
+	 */
+	private function createRequestAction(): array {
+		return [
+			'id' => 'createRequest',
+			'type' => 'create',
+			'label' => 'Een verzoek indienen namens uw organisatie',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Stamped server-side over the whitelisted client payload, so a
+			// client can never file a complaint or contactmoment through the
+			// request form. `ticketType` is required on the schema and is
+			// deliberately NOT a whitelisted field.
+			'defaults' => ['ticketType' => 'request'],
+			// The owner stamp: portaliq writes the subject's own
+			// `clientId` claim into `client`, the field `clientRequests`
+			// is scoped on. Without it the ticket was saved with no
+			// client and never showed in the resident's own list; a
+			// subject without the claim is now refused instead.
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			'fields' => [
+				'title',
+				'description',
+				'category',
+			],
+			// Contribution-manifest-v3 form config. `fieldConfigs` may only
+			// describe whitelisted fields; the category dropdown is a
+			// static enum here (a scoped `collection` provider would be
+			// used for a live-OR-backed picker).
+			'fieldConfigs' => [
+				'title' => [
+					'label' => 'Onderwerp',
+					'required' => true,
+					'size' => 'large',
+					'placeholder' => 'Waar gaat uw verzoek over?',
+				],
+				'description' => [
+					'label' => 'Omschrijving',
+					'required' => true,
+					'size' => 'full',
+					'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk',
+				],
+				'category' => ['label' => 'Categorie'],
+			],
+			'optionsProviders' => [
+				'category' => [
+					'type' => 'static',
+					'options' => [
+						['value' => 'Support', 'label' => 'Support'],
+						['value' => 'Facturatie', 'label' => 'Facturatie'],
+						['value' => 'Technisch', 'label' => 'Technisch'],
+						['value' => 'Accountbeheer', 'label' => 'Accountbeheer'],
+						['value' => 'Sales', 'label' => 'Sales'],
+						['value' => 'Integratie', 'label' => 'Integratie'],
+					],
+				],
+			],
+			'submitLabel' => 'Verzoek indienen',
+			'successMessage' => 'Uw verzoek is ingediend',
+		];
+	}//end createRequestAction()
+
+	/**
+	 * Submitting a complaint for the organisation, with whitelisted intake fields only.
+	 * @return array<string, mixed>
+	 */
+	private function createComplaintAction(): array {
+		return [
+			'id' => 'createComplaint',
+			'type' => 'create',
+			'label' => 'Een klacht indienen namens uw organisatie',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// Stamped server-side (see createRequest).
+			'defaults' => ['ticketType' => 'complaint'],
+			// The owner stamp `clientComplaints` reads (see createRequest).
+			'scopeField' => 'client',
+			'scopeClaim' => 'clientId',
+			// The complaint's classification is `complaintCategory` on the
+			// unified ticket — the supertype's plain `category` is the
+			// REQUEST's free-text category and is not part of this intake.
+			'fields' => [
+				'title',
+				'description',
+				'complaintCategory',
+			],
+		];
+	}//end createComplaintAction()
+
+	/**
+	 * The organisation's own pages: requests, complaints, contracts and contactmomenten.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function organisationPages(): array {
+		return [
+			[
+				'id' => 'organisationRequests',
+				'label' => 'Verzoeken van uw organisatie',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'OfficeBuilding',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => 'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
+					],
+					['type' => 'action', 'action' => 'createRequest'],
+					['type' => 'collection', 'collection' => 'clientRequests'],
+				],
+			],
+			[
+				'id' => 'organisationComplaints',
+				'label' => 'Klachten van uw organisatie',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'AlertCircle',
+				'blocks' => [
+					['type' => 'action', 'action' => 'createComplaint'],
+					['type' => 'collection', 'collection' => 'clientComplaints'],
+				],
+			],
+			[
+				'id' => 'contracts',
+				'label' => 'Contracten',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'FileDocument',
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'clientContracts'],
+				],
+			],
+			[
+				'id' => 'contactmoments',
+				'label' => 'Contactmomenten',
+				'group' => self::GROUP_ORGANISATION,
+				'icon' => 'Phone',
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'clientContactmoments'],
+				],
+			],
+		];
+	}//end organisationPages()
 
 	/**
 	 * Manifest for the `customer` audience (B2C).
@@ -517,7 +575,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The customer manifest.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function customerContribution(): array {
 		// NOTE: the citizen "My privacy requests" collection + "Submit a privacy
@@ -528,60 +586,79 @@ class PortalContributionProvider {
 		// pointed at OR's register is a portal follow-up, not part of this change.
 		return [
 			'label' => self::GROUP_CUSTOMER,
-			'pages' => [
-				[
-					'id' => 'customerLoyalty',
-					'label' => 'Mijn klantenkaart',
-					'group' => self::GROUP_CUSTOMER,
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'customerLoyalty'],
-						['type' => 'detail', 'collection' => 'customerLoyalty'],
-					],
-				],
-				[
-					'id' => 'customerBookings',
-					'label' => 'Mijn afspraken',
-					'group' => self::GROUP_CUSTOMER,
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'customerBookings'],
-						['type' => 'detail', 'collection' => 'customerBookings'],
-					],
-				],
-			],
-			'collections' => [
-				[
-					'id' => 'customerLoyalty',
-					'register' => self::REGISTER,
-					'schema' => 'customerLoyaltyAccount',
-					'scopeField' => 'customerId',
-					'scopeClaim' => 'customerUid',
-					'label' => 'Mijn klantenkaart',
-					'listable' => true,
-				],
-				[
-					'id' => 'customerBookings',
-					'register' => self::REGISTER,
-					'schema' => 'appointmentBooking',
-					'scopeField' => 'customerId',
-					'scopeClaim' => 'customerUid',
-					'label' => 'Mijn afspraken',
-					'listable' => true,
-					'minTrust' => 'substantial',
-					'fields' => [
-						'serviceId',
-						'startAt',
-						'endAt',
-						'status',
-						'notes',
-						'depositAmount',
-						'depositPaidAt',
-					],
-				],
-			],
+			'pages' => $this->customerPages(),
+			'collections' => $this->customerCollections(),
 			'actions' => [],
 			'notifications' => [],
 		];
 	}//end customerContribution()
+
+	/**
+	 * The customer's loyalty-card and appointments pages.
+	 *
+	 * @return array<int, array<string, mixed>> The page declarations.
+	 */
+	private function customerPages(): array {
+		return [
+			[
+				'id' => 'customerLoyalty',
+				'label' => 'Mijn klantenkaart',
+				'group' => self::GROUP_CUSTOMER,
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'customerLoyalty'],
+					['type' => 'detail', 'collection' => 'customerLoyalty'],
+				],
+			],
+			[
+				'id' => 'customerBookings',
+				'label' => 'Mijn afspraken',
+				'group' => self::GROUP_CUSTOMER,
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'customerBookings'],
+					['type' => 'detail', 'collection' => 'customerBookings'],
+				],
+			],
+		];
+	}//end customerPages()
+
+	/**
+	 * The customer's loyalty-account and booking collections, scoped by the
+	 * customer's Nextcloud contact UID.
+	 *
+	 * @return array<int, array<string, mixed>> The collection declarations.
+	 */
+	private function customerCollections(): array {
+		return [
+			[
+				'id' => 'customerLoyalty',
+				'register' => self::REGISTER,
+				'schema' => 'customerLoyaltyAccount',
+				'scopeField' => 'customerId',
+				'scopeClaim' => 'customerUid',
+				'label' => 'Mijn klantenkaart',
+				'listable' => true,
+			],
+			[
+				'id' => 'customerBookings',
+				'register' => self::REGISTER,
+				'schema' => 'appointmentBooking',
+				'scopeField' => 'customerId',
+				'scopeClaim' => 'customerUid',
+				'label' => 'Mijn afspraken',
+				'listable' => true,
+				'minTrust' => 'substantial',
+				'fields' => [
+					'serviceId',
+					'startAt',
+					'endAt',
+					'status',
+					'notes',
+					'depositAmount',
+					'depositPaidAt',
+				],
+			],
+		];
+	}//end customerCollections()
 
 	/**
 	 * Manifest for the `citizen` audience (a resident on the municipal portal).
@@ -621,7 +698,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The collection declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsCollection(): array {
 		return [
@@ -662,71 +739,31 @@ class PortalContributionProvider {
 	}//end questionsCollection()
 
 	/**
-	 * The two question actions, both endpoint actions portaliq forwards.
+	 * The question actions.
 	 *
-	 * `askAboutDossier` is offered only when opencatalogi, which holds the
-	 * dossier, is installed. `replyToQuestion` stays, so a resident can still
-	 * answer on a question asked earlier.
+	 * `askQuestion` is a create action for a question about no dossier in
+	 * particular (the site's contact form); it files the same kind of ticket
+	 * `myQuestions` lists. `askAboutDossier` and `replyToQuestion` are endpoint
+	 * actions portaliq forwards. `askAboutDossier` is offered only when
+	 * opencatalogi, which holds the dossier, is installed. `replyToQuestion`
+	 * stays, so a resident can still answer on a question asked earlier.
 	 *
 	 * @return array<int, array<string, mixed>> The action declarations.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 * @spec openspec/changes/a-resident-asks-a-question-without-a-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-that-is-not-about-a-dossier
+	 * @spec openspec/changes/a-contact-question-is-required-and-dated/specs/dossier-questions/spec.md#requirement-a-question-asked-on-the-contact-page-needs-its-text-and-is-dated
 	 */
 	private function questionActions(): array {
-		$actions = [];
+		$questions = new PortalQuestionActions();
+		$actions = [$questions->ask()];
 		if ($this->isOpenCatalogiInstalled() === true) {
-			$actions[] = [
-				'id' => 'askAboutDossier',
-				'label' => 'Stel een vraag over dit dossier',
-				'endpoint' => '/index.php/apps/pipelinq/api/portal/questions',
-				'method' => 'POST',
-				// Shown on the resident's dossier page (hydra woo-citizen-journey
-				// C7): portaliq proves the dossier is the resident's through
-				// opencatalogi's own scope and forwards its id as `collectionId`.
-				// The receiver checks the owner again.
-				'attachTo' => ['app' => 'opencatalogi', 'schema' => 'collection'],
-				'rowField' => 'collectionId',
-				'fields' => ['question', 'title'],
-				'fieldConfigs' => [
-					'title' => ['label' => 'Onderwerp', 'size' => 'large', 'placeholder' => 'Waar gaat uw vraag over?'],
-					'question' => [
-						'label' => 'Uw vraag',
-						'required' => true,
-						'size' => 'full',
-						'help' => 'De medewerker ziet welke documenten in uw dossier staan. Uw aantekeningen ziet de medewerker niet.',
-					],
-				],
-				'submitLabel' => 'Vraag versturen',
-				'successMessage' => 'Uw vraag is verstuurd. U krijgt bericht als er een antwoord is.',
-			];
+			$actions[] = $questions->askAboutDossier();
 		}
 
-		$actions[] = [
-			'id' => 'replyToQuestion',
-			'label' => 'Reageren op het antwoord',
-			'endpoint' => '/index.php/apps/pipelinq/api/portal/questions/reply',
-			'method' => 'POST',
-			// ON THE QUESTION'S DETAIL (question-detail-on-the-portal): attached
-			// to pipelinq's own `myQuestions` only, so the form asks the reply
-			// text on the question the resident opened. Portaliq proves the
-			// question is theirs through that collection's scope and stamps its
-			// id into `ticket`; the receiver checks the owner again.
-			'attachTo' => ['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'],
-			'rowField' => 'ticket',
-			// Offered only while the employee waits for the resident. Portaliq
-			// leaves it off any other question and refuses it there with 409.
-			'rowWhen' => ['field' => 'status', 'in' => ['awaiting_customer']],
-			'fields' => ['ticket', 'message'],
-			'fieldConfigs' => [
-				'ticket' => ['visible' => false, 'required' => true],
-				'message' => ['label' => 'Uw reactie', 'required' => true, 'size' => 'full'],
-			],
-			'submitLabel' => 'Reactie versturen',
-			'successMessage' => 'Uw reactie is verstuurd.',
-		];
-
+		$actions[] = $questions->reply();
 		return $actions;
 	}//end questionActions()
 
@@ -736,7 +773,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The page declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsPage(): array {
 		return [
@@ -769,7 +806,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two collections.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketCollections(): array {
 		return [
@@ -820,7 +857,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two create actions.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketActions(): array {
 		return [
@@ -866,7 +903,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two pages.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketPages(): array {
 		return [
@@ -926,7 +963,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function questionTimeline(string $id): array {
 		$detail = $this->questionDetail();
@@ -945,7 +982,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
 	 */
 	public function questionDossierItems(string $id): array {
 		$detail = $this->questionDetail();
@@ -961,11 +998,11 @@ class PortalContributionProvider {
 	 *
 	 * Protected so a test can hand in a double.
 	 *
-	 * @return QuestionDetailService|null The service, or null when it cannot be built.
+	 * @return QuestionDetailServiceInterface|null The service, or null when it cannot be built.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
-	protected function questionDetail(): ?QuestionDetailService {
+	protected function questionDetail(): ?QuestionDetailServiceInterface {
 		return $this->questionDetail;
 	}//end questionDetail()
 }//end class

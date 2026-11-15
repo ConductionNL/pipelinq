@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Controller\BlastController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
@@ -37,6 +39,7 @@ use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignPerformanceService;
+use OCA\Pipelinq\Service\CampaignSiteTraffic;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\SegmentService;
@@ -51,6 +54,7 @@ use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * BlastController contract coverage.
@@ -140,15 +144,16 @@ class BlastControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $_render = true,
-				bool $_audit = true,
+				bool $_multitenancy = true
 			): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
+				$_audit = $options?->audit ?? true;
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
 					return null;
@@ -252,9 +257,11 @@ class BlastControllerTest extends TestCase {
 	/**
 	 * Build the controller under test.
 	 *
+	 * @param bool $privileged Whether the caller holds CRM rights.
+	 *
 	 * @return BlastController
 	 */
-	private function buildController(): BlastController {
+	private function buildController(bool $privileged = true): BlastController {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			function (string $id): object {
@@ -292,6 +299,7 @@ class BlastControllerTest extends TestCase {
 				connectorRegister: FakeSlugResolver::connectorRegister(),
 				logger: $logger,
 				addressRenderer: new PhysicalAddressRenderer(),
+				recipientNames: new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($container, $appConfig, new \Psr\Log\NullLogger()),
 			),
 			logger: $logger,
 			container: $container,
@@ -309,15 +317,17 @@ class BlastControllerTest extends TestCase {
 			blastService: $blastService,
 			attributionService: $attributionService,
 			userSession: $this->userSession,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged, 'mayAccess' => $privileged]),
 			performanceService: new CampaignPerformanceService(
-				container: $container,
-				appConfig: $appConfig,
 				time: $time,
 				blastService: $blastService,
 				attributionService: $attributionService,
-				decorator: new CampaignLinkDecorator($appConfig),
-				logger: $logger,
+				traffic: new CampaignSiteTraffic(
+					container: $container,
+					appConfig: $appConfig,
+					decorator: new CampaignLinkDecorator(appConfig: $appConfig),
+					logger: $logger,
+				),
 			),
 		);
 	}//end buildController()
@@ -372,6 +382,22 @@ class BlastControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 		$this->assertSame(['error' => 'Authentication required'], $response->getData());
 	}//end testDeliveriesRequiresAuthentication()
+
+	/**
+	 * A signed-in user without CRM rights cannot create a Blast, and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testCreateIsRefusedForAnUnprivilegedCaller(): void {
+		$this->signIn();
+		$before = $this->objects->store;
+
+		$response = $this->buildController(privileged: false)->create();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(['error' => 'Forbidden'], $response->getData());
+		$this->assertSame($before, $this->objects->store);
+	}//end testCreateIsRefusedForAnUnprivilegedCaller()
 
 	/**
 	 * GET /api/blasts/{id}/deliveries returns the SEEDED rows for that Blast

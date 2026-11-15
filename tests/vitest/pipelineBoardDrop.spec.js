@@ -18,13 +18,26 @@ vi.mock('@nextcloud/dialogs', () => dialogs)
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 vi.mock('../../src/store/store.js', () => ({ initializeStores: vi.fn() }))
 vi.mock('@nextcloud/vue', () => ({
+	NcActionButton: {},
+	NcActionCaption: {},
+	NcActionCheckbox: {},
+	NcActions: {},
 	NcButton: {},
 	NcCheckboxRadioSwitch: {},
 	NcLoadingIcon: {},
+	NcNoteCard: {},
 	NcSelect: {},
 	NcTextField: {},
 }))
-vi.mock('@conduction/nextcloud-vue', () => ({ openRowTarget: vi.fn() }))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnActionsBar: {},
+	CnPageHeader: {},
+	CnBuildiqEditButton: {},
+	CnQuickFilterBar: {},
+	openRowTarget: vi.fn(),
+	useLook: () => ({ isBoard: false, lookClass: '' }),
+}))
+vi.mock('../../src/dialogs/LeadCreateDialog.vue', () => ({ default: {} }))
 vi.mock('../../src/components/leadScore/LeadScoreBadge.vue', () => ({ default: {} }))
 vi.mock('../../src/dialogs/PipelineFormDialog.vue', () => ({ default: {} }))
 vi.mock('../../src/views/pipeline/PipelineCard.vue', () => ({ default: {} }))
@@ -108,6 +121,20 @@ describe('moveItemToStage', () => {
 		expect(dialogs.showError).toHaveBeenCalledWith(
 			'Could not move the card to Won.',
 		)
+	})
+
+	it('shows the server refusal of a full stage and puts the card back', async () => {
+		const store = {
+			fetchObject: vi.fn().mockResolvedValue({ id: 'lead-1', stage: 'New' }),
+			saveObject: vi.fn().mockResolvedValue(null),
+			errors: { lead: { isValidation: true, message: 'Stage Proposal is full (8 of 8)' } },
+		}
+		const { ctx, item } = board(store)
+
+		await moveItemToStage.call(ctx, item, { name: 'Proposal', order: 2 })
+
+		expect(item.stage).toBe('New')
+		expect(dialogs.showError).toHaveBeenCalledWith('Stage Proposal is full (8 of 8)')
 	})
 
 	it('does not save when the object cannot be re-read', async () => {

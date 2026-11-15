@@ -127,10 +127,12 @@
 </template>
 
 <script>
+import { translate } from '@nextcloud/l10n'
 import { NcCheckboxRadioSwitch, NcSelect, NcTextField } from '@nextcloud/vue'
 import BookingRowsEditor from './BookingRowsEditor.vue'
 import { STEP_UNITS, unitLabel } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { enumOptions, RESOURCE_TYPE_LABELS } from '../../utils/enumLabels.js'
 
 let instanceCount = 0
 
@@ -152,7 +154,7 @@ export default {
 		},
 	},
 
-	emits: ['update:modelValue'],
+	emits: ['update:modelValue', 'catalogue'],
 
 	data() {
 		instanceCount += 1
@@ -268,11 +270,9 @@ export default {
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		resourceTypeOptions() {
-			return [
-				{ value: 'staff', label: t('pipelinq', 'Staff') },
-				{ value: 'room', label: t('pipelinq', 'Room') },
-				{ value: 'equipment', label: t('pipelinq', 'Equipment') },
-			]
+			return enumOptions(RESOURCE_TYPE_LABELS, (text) =>
+				translate('pipelinq', text),
+			)
 		},
 
 		/**
@@ -309,9 +309,11 @@ export default {
 	},
 
 	/**
-	 * Load the product catalogue for the step product picker.
+	 * Load the product catalogue for the step product picker, and hand it to
+	 * the parent, which shows the saved steps by product name.
 	 *
 	 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
 	 */
 	async mounted() {
 		this.productsLoading = true
@@ -320,6 +322,7 @@ export default {
 				_limit: 500,
 			})
 			this.products = Array.isArray(rows) ? rows : []
+			this.$emit('catalogue', this.products)
 		} catch {
 			this.products = []
 		} finally {

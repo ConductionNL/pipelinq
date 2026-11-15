@@ -215,4 +215,97 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 		$this->invokeRun(job: $job);
 
 	}//end testRunContinuesAfterReleaseFailure()
+
+	/**
+	 * Golden: the creation moment is `@self.created`, else `createdAt`, else the first status change.
+	 *
+	 * @return void
+	 */
+	public function testCreationMomentIsReadInThisOrder(): void {
+		$job = $this->buildJob(
+			$this->createMock(originalClassName: ObjectServiceInterface::class),
+			$this->createMock(originalClassName: AppointmentDepositService::class)
+		);
+		$createdAt = new ReflectionMethod(objectOrMethod: $job, method: 'createdAt');
+		$cases = [
+			[['@self' => ['created' => 'T-self'], 'createdAt' => 'T-row', 'statusHistory' => [['changedAt' => 'T-hist']]], 'T-self'],
+			[['@self' => ['id' => 'x'], 'createdAt' => 'T-row'], 'T-row'],
+			[['@self' => 'not-a-map', 'statusHistory' => [['changedAt' => 'T-hist'], ['changedAt' => 'later']]], 'T-hist'],
+			[['statusHistory' => [['status' => 'new']]], ''],
+			[['statusHistory' => ['not-a-map']], ''],
+			[['statusHistory' => 'none'], ''],
+			[['createdAt' => 12], '12'],
+			[[], ''],
+		];
+		foreach ($cases as [$row, $expected]) {
+			$this->assertSame($expected, $createdAt->invoke($job, $row), (string)json_encode($row));
+		}
+	}//end testCreationMomentIsReadInThisOrder()
+
+	/**
+	 * Golden: the pending-deposit query, and every way it reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testPendingDepositsAreReadExactly(): void {
+		$queries = [];
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objects->method('findAll')->willReturnCallback(
+			static function (array $config) use (&$queries): array {
+				$queries[] = $config;
+				return [['id' => 'b-1']];
+			}
+		);
+		$job = $this->buildJob($objects, $this->createMock(originalClassName: AppointmentDepositService::class));
+		$load = new ReflectionMethod(objectOrMethod: $job, method: 'loadPendingDeposits');
+
+		$this->assertSame([['id' => 'b-1']], $load->invoke($job));
+		$this->assertSame(
+			[['register' => 'pipelinq', 'schema' => 'appointmentBooking', 'filters' => ['status' => 'pending-deposit'], 'limit' => 50]],
+			$queries
+		);
+
+		$logs = [];
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		foreach (['debug', 'warning'] as $level) {
+			$logger->method($level)->willReturnCallback(
+				static function (string $message, array $context = []) use ($level, &$logs): void {
+					$logs[] = [$level, $message, array_keys($context)];
+				}
+			);
+		}
+
+		$failing = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$failing->method('findAll')->willThrowException(new RuntimeException('query failed'));
+		foreach ([['pipelinq', $failing], ['', $failing], ['pipelinq', null]] as [$register, $service]) {
+			$container = $this->createMock(originalClassName: ContainerInterface::class);
+			if ($service === null) {
+				$container->method('get')->willThrowException(new RuntimeException('no openregister'));
+			} else {
+				$container->method('get')->willReturn($service);
+			}
+
+			$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+			$appConfig->method('getValueString')->willReturnCallback(
+				static fn (string $app, string $key, string $default = ''): string => (['register' => $register, 'booking_schema' => 'appointmentBooking'][$key] ?? $default)
+			);
+			$quiet = new AppointmentDepositTimeoutJob(
+				time: $this->createMock(originalClassName: ITimeFactory::class),
+				container: $container,
+				appConfig: $appConfig,
+				depositService: $this->createMock(originalClassName: AppointmentDepositService::class),
+				logger: $logger
+			);
+			$this->assertSame([], (new ReflectionMethod(objectOrMethod: $quiet, method: 'loadPendingDeposits'))->invoke($quiet));
+		}
+
+		$this->assertSame(
+			[
+				['warning', 'AppointmentDepositTimeoutJob: pending-deposit query failed', ['exception']],
+				['debug', 'AppointmentDepositTimeoutJob: no register/schema configured, skipping', []],
+				['debug', 'AppointmentDepositTimeoutJob: OR ObjectService unavailable, skipping', []],
+			],
+			$logs
+		);
+	}//end testPendingDepositsAreReadExactly()
 }//end class

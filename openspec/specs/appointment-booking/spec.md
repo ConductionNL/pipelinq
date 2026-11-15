@@ -6,7 +6,9 @@ status: done
 
 ## Purpose
 Provides end-to-end appointment booking with services, resources, and availability computation, plus a public self-service portal where customers book, reschedule, and cancel without logging in. Handles deposits, reminders, no-show tracking, walk-in queues, and bi-directional calendar sync, with confirmation emails, AVG-compliant retention, and admin management of services and bookings.
+
 ## Requirements
+
 ### Requirement: REQ-APT-001 Service Entity Schema
 
 @e2e exclude register-schema persistence invariants — "the Service MUST be queryable" and "the multiStep array MUST be persisted" are stored-shape assertions about OpenRegister, with no browser surface that reveals the stored shape; asserted by tests/Integration/AppointmentBookingRegisterTest.php (testNamedServiceSeedsAreResolvable, testMultiStepServiceSeedRoundTrip).
@@ -18,7 +20,7 @@ skills, multi-step composition, and booking policies.
 
 #### Scenario: Service with simple duration
 
-- **GIVEN** a Service is created with `name: "Haircut"`, `durationMinutes: 30`, `price: 25.00`, `bookableOnline: true`
+- **GIVEN** a Service is created with `name: "Locatiebezoek"`, `durationMinutes: 30`, `price: 25.00`, `bookableOnline: true`
 - **WHEN** the Service is saved in OpenRegister
 - **THEN** the Service MUST be queryable and usable in availability computations
 
@@ -542,7 +544,7 @@ Bookings: list, create, edit, and delete.
 
 - **GIVEN** an admin opens a confirmed Booking detail page in the future
 - **WHEN** the page renders
-- **THEN** buttons for "Mark completed", "Mark no-show", "Reschedule", and "Cancel" MUST be available, wired to the booking endpoints
+- **THEN** buttons for "Markeren als afgerond", "Markeren als niet verschenen", "Reschedule", and "Cancel" MUST be available, wired to the booking endpoints
 
 ### Requirement: REQ-APT-017 Compliance and Audit Trails
 
@@ -616,3 +618,152 @@ English and Dutch translations. No hardcoded strings.
 - **WHEN** the files are compared
 - **THEN** they MUST have identical key sets (no missing keys) and no component MUST contain hardcoded user-visible strings
 
+### Requirement: A saved composition step shows its product name (REQ-RAF-040)
+
+After a user saves a service's composition steps, every step with a product
+SHALL show the product's name at once. A product whose name could not be read
+SHALL be asked for again on the next change, not shown as its uuid until reload.
+
+#### Scenario: A step is saved with a product
+
+- GIVEN a service in step editing
+- WHEN the user picks "Locatiebezoek" for a step and saves
+- THEN the step table shows "Locatiebezoek"
+
+### Requirement: The booking page names the customer and the service (REQ-RF-020)
+
+The booking page's data block SHALL show the customer's name and the
+service's name, not their ids. The customer SHALL be looked up as a contact
+first and as a client second. While a name loads the block SHALL show a
+placeholder. When no object is found the id SHALL stay visible.
+
+#### Scenario: A booking shows names
+
+- GIVEN a booking for contact Sanne de Vries and service Haircut
+- WHEN the user opens the booking
+- THEN the data block shows "Sanne de Vries" as customer and "Locatiebezoek" as service
+
+### Requirement: The booking timeline is the library timeline widget (REQ-RP2-001)
+
+The booking page SHALL show its timeline through the nextcloud-vue `timeline`
+widget. The timeline SHALL list the moments the booking holds: created,
+deposit cleared, confirmation mail sent, reminder sent, starts, ends,
+cancelled and no-show fee charged, each only when set. It SHALL include the
+booking's audit trail, so a status change shows as a dated change with who
+made it, and each `statusHistory` entry with its status and reason. A moment in the future SHALL be marked as upcoming.
+
+#### Scenario: A confirmed booking
+
+- GIVEN a booking created on 1 May, deposit cleared on 2 May and starting on 10 May
+- WHEN the user opens the Timeline tab on 5 May
+- THEN the timeline lists created, deposit cleared and starts in that order
+- AND starts is marked upcoming
+
+#### Scenario: A status change
+
+- GIVEN a user cancels a booking
+- WHEN the user opens the Timeline tab
+- THEN the change shows with its time and the user who made it
+
+### Requirement: A new service keeps the product of its steps (REQ-R3-004)
+
+When a user creates a service with composition steps, every step SHALL be saved
+with the product, quantity and unit the user picked.
+
+#### Scenario: Create a service with a product step
+
+@e2e exclude Asserted in tests/vitest/serviceFormSteps.spec.js on the mounted ServiceForm.
+- GIVEN the New service page
+- WHEN the user adds a step with the product "Implementatie", 8 hours, and saves
+- THEN the saved step SHALL carry the product's id, the quantity 8 and the unit `hour`
+
+### Requirement: Service values read as words (REQ-APT-READABLE-VALUES)
+Every enum on the appointmentService and appointmentResource schemas, and the
+resource type of a service step, MUST declare `x-enum-labels` with an en and an
+nl catalogue entry. The service page MUST show the cancellation policy and each
+step's resource type as their label.
+
+#### Scenario: A saved service
+@e2e exclude Asserted in tests/vitest/readableValues.spec.js on the merged register, the label maps and ServiceDetail.
+- **GIVEN** a service with cancellation policy `free` and a step of resource type `staff`
+- **WHEN** a user opens the service page
+- **THEN** the Policies card MUST read "Free" under Cancellation policy
+- **AND** the composition table MUST read "Staff" under Resource type
+
+### Requirement: The server expires cached availability when a resource or service changes
+
+When a resource is created, changed or deleted, the server SHALL delete every cached availability row of that resource.
+When a service is created, changed or deleted, the server SHALL delete the cached availability of every resource whose
+type is one of the service's required resource types before or after the change, or of every resource when the service
+names none. This SHALL hold for every writer (the pages, the API, an import, a sync) and SHALL run after the write, outside
+the request. The pages SHALL NOT delete cache rows themselves.
+
+#### Scenario: Working hours change through the API
+
+- GIVEN a resource with cached availability for the next week
+- WHEN its working hours are changed through the OpenRegister API
+- THEN the cached days of that resource are deleted and the next slot search computes them again
+
+#### Scenario: A service needs another resource type
+
+- GIVEN a service that needed rooms and now needs rooms and advisers
+- WHEN the service is saved
+- THEN the cached availability of every room and every adviser is deleted
+
+### Requirement: The booking context names the service and the customer
+
+The booking page SHALL show the booking's service and customer by name (the customer a contact or a client), its deposit
+with when it was paid, and a link to the booking it was rescheduled from when there is one.
+
+#### Scenario: A rescheduled booking
+
+- GIVEN a booking rescheduled from an earlier one
+- THEN the Service and customer card names the service and the customer and links to the earlier booking
+
+### Requirement: A walk-in ticket records its desk and when the customer left
+
+A walk-in ticket MAY name the desk the customer is called to. The Left action MUST set the status to abandoned and record the moment in `leftAt`.
+
+#### Scenario: a customer leaves the queue
+
+- GIVEN Joke Smit is waiting in the walk-in queue
+- WHEN the employee chooses Left on her row at 09:55
+- THEN her ticket is abandoned with `leftAt` 09:55
+
+### Requirement: A table inside a booking card is a flat frame
+
+The resource and service pages SHALL draw a table inside a card in a frame with a hairline border, 8px corners and no shadow.
+
+#### Scenario: A resource's working hours
+
+- **GIVEN** the resource Fatma Yildiz
+- **WHEN** an admin opens it
+- **THEN** Werktijden and Vakanties show their tables in flat 8px frames inside their cards
+
+### Requirement: A service reads in Overview and History tabs
+
+The service page SHALL show the service's details, rules and steps in an Overview tab and its audit trail in a History tab, with the Actions menu at the end of the tab row.
+
+#### Scenario: Reading what changed on a service
+
+- **GIVEN** the service Aanvraag paspoort
+- **WHEN** an admin opens it and picks Geschiedenis
+- **THEN** the page shows who changed the service and when, and the Acties menu stays at the end of the tab row
+
+### Requirement: The services list reads as words (REQ-APT-LIST-READABLE)
+The services list MUST show the same words as the service page. The Status
+column MUST show the label from the schema's `x-enum-labels` ("Active", not
+"active") and keep its colour. The Online column MUST read "Yes" or "No".
+
+#### Scenario: An active service that customers can book online
+@e2e exclude Asserted in tests/vitest/clientRelatedAndServiceList.spec.js through the library's CnCellRenderer with pipelinq's formatters.
+- **GIVEN** a service with status `active` and `bookableOnline` true
+- **WHEN** a user opens the services list
+- **THEN** the Status column MUST read "Active" in a green badge
+- **AND** the Online column MUST read "Yes"
+
+#### Scenario: A service that is not bookable online
+@e2e exclude Asserted in tests/vitest/clientRelatedAndServiceList.spec.js.
+- **GIVEN** a service with `bookableOnline` false
+- **WHEN** a user opens the services list
+- **THEN** the Online column MUST read "No"

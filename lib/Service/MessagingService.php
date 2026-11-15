@@ -31,8 +31,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
+use OCA\Pipelinq\Service\Messaging\MessageContent;
+use OCA\Pipelinq\Service\Messaging\MessageRoute;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,7 +55,10 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive send-surface
  *  orchestration kept in small single-purpose methods.
  */
-class MessagingService {
+class MessagingService implements MessagingServiceInterface {
+	use PayloadToArray;
+	use ConfiguredSchemaSlug;
+
 	/**
 	 * FQCN of the OpenRegister dispatch leaf used for connectivity tests.
 	 *
@@ -120,13 +130,26 @@ class MessagingService {
 		}
 
 		$schemas = [
-			$this->schemaSlug(key: 'contact_schema', default: 'contact'),
-			$this->schemaSlug(key: 'client_schema', default: 'client'),
+			$this->resolveSchemaSlug(key: 'contact_schema', default: 'contact'),
+			$this->resolveSchemaSlug(key: 'client_schema', default: 'client'),
 		];
 
-		foreach ($schemas as $schema) {
+		return $this->findInSchemas(objectService: $objectService, contactId: $contactId, target: ['register' => $register, 'schemas' => $schemas]);
+	}//end loadContact()
+
+	/**
+	 * The first object with the id across the schemas, as an array, or null.
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param string               $contactId     Contact or client UUID.
+	 * @param array<string, mixed> $target        Keys: register, schemas (in lookup order).
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findInSchemas(object $objectService, string $contactId, array $target): array|null {
+		foreach ($target['schemas'] as $schema) {
 			try {
-				$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
+				$entity = $objectService->find(id: $contactId, options: new ObjectFindOptions(register: $target['register'], schema: $schema));
 			} catch (Throwable $e) {
 				$entity = null;
 			}
@@ -137,7 +160,7 @@ class MessagingService {
 		}
 
 		return null;
-	}//end loadContact()
+	}//end findInSchemas()
 
 	/**
 	 * The channels that currently have at least one active provider.
@@ -184,57 +207,33 @@ class MessagingService {
 	/**
 	 * Send a message, delegating all gating to the adapters (REQ-OM-004).
 	 *
-	 * @param array<string, mixed> $contact The pre-loaded contact object.
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $body Free-text body (sms / in-window whatsapp).
-	 * @param string|null $templateId Approved template UUID (whatsapp) or null.
-	 * @param array<int, string> $parameters Positional template parameters.
-	 * @param string|null $providerHint Optional pinned vendor.
-	 * @param string $actor Acting user id (audit).
-	 * @param string $clientId Linked client UUID (audit), or empty.
-	 * @param string $inReplyTo The contact's inbound message this answers; the adapter verifies it.
+	 * @param MessageRoute   $route   The contact, pinned vendor, linked client and reply target.
+	 * @param MessageContent $content The channel, text and template.
+	 * @param string         $actor   Acting user id (audit).
 	 *
 	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004-server-side-send-endpoint
 	 */
-	public function send(
-		array $contact,
-		string $channel,
-		string $body,
-		?string $templateId,
-		array $parameters,
-		?string $providerHint,
-		string $actor,
-		string $clientId = '',
-		string $inReplyTo = '',
-	): array {
-		$client = $clientId;
-		if ($client === '') {
-			$client = (string)($contact['client'] ?? '');
-		}
+	public function send(MessageRoute $route, MessageContent $content, string $actor): array {
+		$context = $route->adapterContext(agent: $actor);
 
-		$context = ['agent' => $actor, 'clientId' => $client];
-		if ($inReplyTo !== '') {
-			$context['inReplyTo'] = $inReplyTo;
-		}
-
-		if ($channel === 'sms') {
+		if ($content->channel === 'sms') {
 			$outcome = $this->smsAdapter->send(
-				contact: $contact,
-				body: $body,
-				providerHint: $providerHint,
+				contact: $route->contact,
+				body: $content->body,
+				providerHint: $route->providerHint,
 				context: $context
 			);
 			return $this->sanitiseOutcome(outcome: $outcome);
 		}
 
-		if ($channel === 'whatsapp') {
+		if ($content->channel === 'whatsapp') {
 			$outcome = $this->whatsAppAdapter->send(
-				contact: $contact,
-				body: $body,
-				templateId: $templateId,
-				parameters: $parameters,
+				contact: $route->contact,
+				body: $content->body,
+				templateId: $content->templateId,
+				parameters: $content->parameters,
 				context: $context
 			);
 			return $this->sanitiseOutcome(outcome: $outcome);
@@ -242,6 +241,202 @@ class MessagingService {
 
 		return ['status' => 'unsupported-channel'];
 	}//end send()
+
+	/**
+	 * Load one channelMessage row through the register RBAC.
+	 *
+	 * @param string $messageId The message UUID.
+	 *
+	 * @return array<string, mixed>|null The row, or null when absent or not readable.
+	 *
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function loadMessage(string $messageId): ?array {
+		$objectService = $this->objectService();
+		if ($messageId === '' || $objectService === null) {
+			return null;
+		}
+
+		try {
+			$entity = $objectService->find(
+				id: $messageId,
+				options: new ObjectFindOptions(register: $this->registerSlug(), schema: $this->messageSchema())
+			);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end loadMessage()
+
+	/**
+	 * Why a message may not be sent again, or null when it may.
+	 *
+	 * @param array<string, mixed> $message The channelMessage row.
+	 *
+	 * @return string|null `inbound`, `not-failed`, `already-resent` or null.
+	 *
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function resendRefusal(array $message): ?string {
+		if (($message['direction'] ?? '') !== 'outbound') {
+			return 'inbound';
+		}
+
+		if (in_array(($message['deliveryStatus'] ?? ''), ['failed', 'expired'], true) === false) {
+			return 'not-failed';
+		}
+
+		$metadata = $message['metadata'] ?? [];
+		if (is_array($metadata) === true && (string)($metadata['resentAs'] ?? '') !== '') {
+			return 'already-resent';
+		}
+
+		return null;
+	}//end resendRefusal()
+
+	/**
+	 * Send a failed message again through the normal send() and its checks.
+	 *
+	 * A template row repeats its template with the stored parameters; any
+	 * other row repeats its text. On success the new row carries
+	 * `metadata.resendOf` and the failed row `metadata.resentAs`; the failed
+	 * row keeps its delivery status.
+	 *
+	 * @param array<string, mixed> $message The failed row (refusals already checked).
+	 * @param array<string, mixed> $contact The contact, loaded through the RBAC.
+	 * @param string $actor Acting user id.
+	 *
+	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
+	 *
+	 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function resend(array $message, array $contact, string $actor): array {
+		$channel = (string)($message['channel'] ?? '');
+
+		$outcome = $this->send(
+			route: new MessageRoute(contact: $contact),
+			content: $this->resendContent(message: $message, channel: $channel),
+			actor: $actor
+		);
+
+		$newId = (string)($outcome['messageId'] ?? '');
+		if ($outcome['status'] === 'sent' && $newId !== '') {
+			$this->linkResend(original: $message, newId: $newId);
+		}
+
+		return $outcome;
+	}//end resend()
+
+	/**
+	 * The content to send a failed row again: its WhatsApp template, else its text.
+	 *
+	 * @param array<string, mixed> $message The failed row.
+	 * @param string               $channel Its channel.
+	 *
+	 * @return MessageContent
+	 */
+	private function resendContent(array $message, string $channel): MessageContent {
+		$templateId = $this->resendTemplateId(message: $message, channel: $channel);
+		$body = '';
+		$parameters = [];
+		$template = null;
+		if ($templateId === '') {
+			$body = (string)($message['body'] ?? '');
+		}
+
+		if ($templateId !== '') {
+			$parameters = array_values(array_map('strval', (array)($message['templateParameters'] ?? [])));
+			$template = $templateId;
+		}
+
+		return new MessageContent(channel: $channel, body: $body, templateId: $template, parameters: $parameters);
+	}//end resendContent()
+
+	/**
+	 * The template a failed row is sent again with: its own on WhatsApp, '' otherwise.
+	 *
+	 * @param array<string, mixed> $message The failed row.
+	 * @param string               $channel Its channel.
+	 *
+	 * @return string
+	 */
+	private function resendTemplateId(array $message, string $channel): string {
+		$templateId = (string)($message['templateId'] ?? '');
+		if ($channel !== 'whatsapp' || $templateId === '') {
+			$templateId = '';
+		}
+
+		return $templateId;
+	}//end resendTemplateId()
+
+	/**
+	 * Link a failed row and the row that sent it again, both ways.
+	 *
+	 * @param array<string, mixed> $original The failed row.
+	 * @param string $newId The new row's id.
+	 *
+	 * @return void
+	 */
+	private function linkResend(array $original, string $newId): void {
+		$originalId = (string)($original['id'] ?? ($original['uuid'] ?? ''));
+		$this->mergeMetadata(row: $original, rowId: $originalId, fields: ['resentAs' => $newId]);
+
+		$new = $this->loadMessage(messageId: $newId);
+		if ($new !== null) {
+			$this->mergeMetadata(row: $new, rowId: $newId, fields: ['resendOf' => $originalId]);
+		}
+	}//end linkResend()
+
+	/**
+	 * Save a message row with fields added to its metadata.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 * @param string $rowId Its id.
+	 * @param array<string, string> $fields Metadata fields to add.
+	 *
+	 * @return void
+	 */
+	private function mergeMetadata(array $row, string $rowId, array $fields): void {
+		$objectService = $this->objectService();
+		if ($objectService === null || $rowId === '') {
+			return;
+		}
+
+		$metadata = $row['metadata'] ?? [];
+		if (is_array($metadata) === false) {
+			$metadata = [];
+		}
+
+		$row['metadata'] = array_merge($metadata, $fields);
+		try {
+			$objectService->saveObject(
+				object: $row,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerSlug(), schema: $this->messageSchema()),
+					uuid: $rowId
+				)
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'MessagingService.resend: could not link the resent message',
+				['messageId' => $rowId, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end mergeMetadata()
+
+	/**
+	 * The channelMessage schema slug.
+	 *
+	 * @return string Slug.
+	 */
+	private function messageSchema(): string {
+		return $this->resolveSchemaSlug(key: 'message_schema', default: 'channelMessage');
+	}//end messageSchema()
 
 	/**
 	 * Run the zero-cost connectivity test for a provider through the OR leaf.
@@ -262,14 +457,28 @@ class MessagingService {
 			return ['reachable' => false, 'cause' => 'no-source-configured'];
 		}
 
-		if (class_exists(self::DISPATCH_LEAF_CLASS) === false) {
+		$leaf = $this->dispatchLeaf();
+		if ($leaf === null) {
 			return ['reachable' => false, 'cause' => 'leaf-unavailable'];
+		}
+
+		return $this->testDispatch(leaf: $leaf, source: $source);
+	}//end runProviderTest()
+
+	/**
+	 * The OR dispatch leaf, or null when OpenRegister does not provide it.
+	 *
+	 * @return MessageDispatchProvider|null
+	 */
+	private function dispatchLeaf(): MessageDispatchProvider|null {
+		if (class_exists(self::DISPATCH_LEAF_CLASS) === false) {
+			return null;
 		}
 
 		try {
 			$leaf = $this->container->get(self::DISPATCH_LEAF_CLASS);
 		} catch (Throwable $e) {
-			return ['reachable' => false, 'cause' => 'leaf-unavailable'];
+			return null;
 		}
 
 		// Narrow with instanceof against the stubbed contract rather than method_exists:
@@ -277,9 +486,21 @@ class MessagingService {
 		// OpenRegister is absent) but one phpstan can narrow from, so the dispatch
 		// call below is genuinely type-checked instead of resolving to stdClass.
 		if (($leaf instanceof MessageDispatchProvider) === false) {
-			return ['reachable' => false, 'cause' => 'leaf-unavailable'];
+			return null;
 		}
 
+		return $leaf;
+	}//end dispatchLeaf()
+
+	/**
+	 * Send the zero-cost test request through the leaf and read the answer.
+	 *
+	 * @param MessageDispatchProvider $leaf   The OR dispatch leaf.
+	 * @param string                  $source The provider's source id.
+	 *
+	 * @return array{reachable: bool, mock?: bool, cause?: string} Test result.
+	 */
+	private function testDispatch(MessageDispatchProvider $leaf, string $source): array {
 		$path = (self::SOURCE_TEST_PATHS[$source] ?? '/messages');
 		$body = ['validate' => true, 'recipients' => ['+31600000000'], 'body' => 'pipelinq connectivity test'];
 
@@ -290,13 +511,24 @@ class MessagingService {
 			return ['reachable' => false, 'cause' => 'dispatch-error'];
 		}
 
+		return $this->providerTestResult(result: $result);
+	}//end testDispatch()
+
+	/**
+	 * Read a test dispatch's answer: unreachable with its cause, or reachable (and whether it is a mock).
+	 *
+	 * @param array<string, mixed> $result The leaf's dispatch result.
+	 *
+	 * @return array{reachable: bool, mock?: bool, cause?: string} Test result.
+	 */
+	private function providerTestResult(array $result): array {
 		if (($result['unavailable'] ?? false) === true) {
 			return ['reachable' => false, 'cause' => (string)($result['cause'] ?? 'unknown')];
 		}
 
 		$response = $result['response'] ?? [];
 		return ['reachable' => true, 'mock' => $this->looksLikeMock(response: $response)];
-	}//end runProviderTest()
+	}//end providerTestResult()
 
 	/**
 	 * The inbound webhook URLs to paste into the provider console.
@@ -357,7 +589,7 @@ class MessagingService {
 					'filters' => [
 						'status' => 'approved',
 						'register' => $register,
-						'schema' => $this->schemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
+						'schema' => $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
 					],
 				]
 			);
@@ -430,35 +662,6 @@ class MessagingService {
 	}//end objectService()
 
 	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The pipelinq register slug (app-config overridable).
 	 *
 	 * Fails closed on a blanked override. Passing the built-in slug as
@@ -469,33 +672,11 @@ class MessagingService {
 	 * empty value, so the query silently inherits whatever register context an
 	 * earlier call in the same request left on the shared service instance.
 	 * Normalising '' back to the built-in slug, exactly as the sibling
-	 * schemaSlug() already does, keeps every call scoped.
+	 * resolveSchemaSlug() already does, keeps every call scoped.
 	 *
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'pipelinq';
+		return $this->resolveSchemaSlug(key: 'register', default: 'pipelinq');
 	}//end registerSlug()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end schemaSlug()
 }//end class

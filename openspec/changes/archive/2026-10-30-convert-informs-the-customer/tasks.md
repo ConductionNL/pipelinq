@@ -1,0 +1,4 @@
+- [x] informCustomer on convert-to-case (controller), portalName on availability
+- [x] Dialog checkbox and hint, section posts it
+- [x] Zuiddrecht set portal_name
+- [x] PHPUnit SemanticHandoffController, vitest convertToCaseDialog

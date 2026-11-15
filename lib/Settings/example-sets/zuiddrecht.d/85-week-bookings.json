@@ -1,0 +1,263 @@
+{
+	"$comment": "pipelinq's other bookings this week in the Zuiddrecht set, after the rows PqAfspraken draws on its first page: the board counts 23 appointments this week and shows 8 per page, so these sixteen fill pages two and three. They start after Friday 15:30, the last row the board draws, so the first page keeps the board's rows in its order. Their customers are residents no other board opens (not Sanne de Vries, whose PqKlant lists her own appointments), and one of them is Pieter's and two wait for a deposit, so the Mine and Unconfirmed chips read the board's 4 and 3.",
+	"objects": [
+		{
+			"key": "booking-week-01",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-hoekstra.id}}",
+				"serviceId": "{{object:dienst-document-ophalen.id}}",
+				"startAt": "{{datetime:2 16:15}}",
+				"endAt": "{{datetime:2 16:30}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "ID-kaart ophalen",
+				"location": "Balie 1, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-02",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-pvandijk.id}}",
+				"serviceId": "{{object:dienst-aanvraag-paspoort.id}}",
+				"startAt": "{{datetime:3 08:45}}",
+				"endAt": "{{datetime:3 09:00}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Paspoort aanvragen",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-03",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-degraaf.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:3 09:30}}",
+				"endAt": "{{datetime:3 10:00}}",
+				"status": "confirmed",
+				"source": "phone",
+				"subject": "Bezwaar tegen de WOZ-waarde",
+				"location": "Balie 3, stadskantoor",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-04",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-henksmit.id}}",
+				"serviceId": "{{object:dienst-bouwadviseur.id}}",
+				"startAt": "{{datetime:3 11:00}}",
+				"endAt": "{{datetime:3 11:30}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Dakkapel aan de achterkant",
+				"location": "Vergaderruimte 1.12",
+				"assignee": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-05",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-ryilmaz.id}}",
+				"serviceId": "{{object:dienst-document-ophalen.id}}",
+				"startAt": "{{datetime:3 14:00}}",
+				"endAt": "{{datetime:3 14:15}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Rijbewijs ophalen",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-06",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-kuiper.id}}",
+				"serviceId": "{{object:dienst-huwelijk-melden.id}}",
+				"startAt": "{{datetime:4 09:00}}",
+				"endAt": "{{datetime:4 09:30}}",
+				"status": "pending-deposit",
+				"source": "portal",
+				"subject": "Huwelijk melden",
+				"location": "Balie 4, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"depositAmount": 25
+			}
+		},
+		{
+			"key": "booking-week-07",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-jpeters.id}}",
+				"serviceId": "{{object:dienst-aanvraag-paspoort.id}}",
+				"startAt": "{{datetime:4 10:15}}",
+				"endAt": "{{datetime:4 10:30}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "ID-kaart aanvragen",
+				"location": "Balie 1, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-08",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-abakker.id}}",
+				"serviceId": "{{object:dienst-intake-schuldhulp.id}}",
+				"startAt": "{{datetime:4 13:30}}",
+				"endAt": "{{datetime:4 14:30}}",
+				"status": "confirmed",
+				"source": "phone",
+				"subject": "Intake schuldhulp",
+				"location": "Vergaderruimte 1.12",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-09",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-hoekstra.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:4 15:00}}",
+				"endAt": "{{datetime:4 15:30}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Parkeervergunning, bezoekerspas",
+				"location": "Balie 3, stadskantoor",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-10",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-pvandijk.id}}",
+				"serviceId": "{{object:dienst-document-ophalen.id}}",
+				"startAt": "{{datetime:5 09:00}}",
+				"endAt": "{{datetime:5 09:15}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Paspoort ophalen",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-11",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-henksmit.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:5 10:00}}",
+				"endAt": "{{datetime:5 10:30}}",
+				"status": "confirmed",
+				"source": "phone",
+				"subject": "Afvalpas aanvragen",
+				"location": "Balie 1, stadskantoor",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-12",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-degraaf.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:5 11:30}}",
+				"endAt": "{{datetime:5 12:00}}",
+				"status": "pending-deposit",
+				"source": "portal",
+				"subject": "Verhuizing doorgeven",
+				"location": "Balie 4, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"depositAmount": 25
+			}
+		},
+		{
+			"key": "booking-week-13",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-kuiper.id}}",
+				"serviceId": "{{object:dienst-rijbewijs-verlengen.id}}",
+				"startAt": "{{datetime:6 08:30}}",
+				"endAt": "{{datetime:6 08:45}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Rijbewijs verlengen",
+				"location": "Balie 2, stadskantoor",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-14",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-ryilmaz.id}}",
+				"serviceId": "{{object:dienst-gesprek-medewerker.id}}",
+				"startAt": "{{datetime:6 09:45}}",
+				"endAt": "{{datetime:6 10:15}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "Uittreksel BRP",
+				"location": "Balie 3, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-15",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-jpeters.id}}",
+				"serviceId": "{{object:dienst-bouwadviseur.id}}",
+				"startAt": "{{datetime:6 13:00}}",
+				"endAt": "{{datetime:6 13:30}}",
+				"status": "confirmed",
+				"source": "phone",
+				"subject": "Schuur in de achtertuin",
+				"location": "Vergaderruimte 1.12",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "booking-week-16",
+			"register": "pipelinq",
+			"schema": "appointmentBooking",
+			"data": {
+				"customerId": "{{object:client-abakker.id}}",
+				"serviceId": "{{object:dienst-document-ophalen.id}}",
+				"startAt": "{{datetime:6 15:30}}",
+				"endAt": "{{datetime:6 15:45}}",
+				"status": "confirmed",
+				"source": "portal",
+				"subject": "ID-kaart ophalen",
+				"location": "Balie 1, stadskantoor",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		}
+	]
+}

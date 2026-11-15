@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -31,7 +32,7 @@ use Psr\Log\LoggerInterface;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class SchemaMapService {
+class SchemaMapService implements SchemaMapServiceInterface {
 	/**
 	 * Schema config key to entity type mapping.
 	 *

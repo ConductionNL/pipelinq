@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.4
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.4
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 /**
  * Guards the posTransaction `refund` transition (manager only).
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.4
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.4
  */
 class PosTransactionRefundGuard implements LifecycleGuardInterface {
 	/**
@@ -64,7 +64,7 @@ class PosTransactionRefundGuard implements LifecycleGuardInterface {
 	 *  of the LifecycleGuardInterface signature; the refund verdict depends only
 	 *  on the caller's manager status.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.4
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.4
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($this->policy->isManager(userId: $userId) === false) {

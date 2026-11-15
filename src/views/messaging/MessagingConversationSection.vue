@@ -18,10 +18,10 @@
   - since OpenRegister has no native cross-schema join) and lets the agent
   - pick which contact person to converse with via a picker.
   -
-  - @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+  - @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
   -->
 <template>
-	<section class="messaging-conversation">
+	<section class="messaging-conversation cn-board-form">
 		<header class="messaging-conversation__head">
 			<h3>
 				{{ t('pipelinq', 'Messages') }}
@@ -32,7 +32,7 @@
 				</span>
 			</h3>
 			<NcButton
-				variant="primary"
+				variant="secondary"
 				:disabled="!effectiveContactId"
 				@click="openComposer">
 				{{ t('pipelinq', 'Send message') }}
@@ -55,7 +55,7 @@
 				:description="
 					t(
 						'pipelinq',
-						'No contacts linked to this client yet — add a contact to enable messaging.',
+						'No contacts are linked to this client yet. Add a contact to send messages.',
 					)
 				" />
 		</div>
@@ -65,7 +65,7 @@
 				{{ t('pipelinq', 'SMS consent:') }}
 				<strong :class="consentClass(preflightConsent.sms)">{{
 					/**
-					 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+					 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 					 */
 					consentLabel(preflightConsent.sms)
 				}}</strong>
@@ -87,7 +87,7 @@
 					{{
 						preflight && preflight.whatsappSessionOpen
 							? t('pipelinq', 'Open (24h window)')
-							: t('pipelinq', 'Closed — template required')
+							: t('pipelinq', 'Closed, template required')
 					}}
 				</strong>
 			</span>
@@ -111,7 +111,7 @@
 					}}</span>
 					<span class="messaging-conversation__direction">{{
 						/**
-						 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+						 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 						 */
 						directionLabel(message.direction)
 					}}</span>
@@ -127,6 +127,27 @@
 				<p class="messaging-conversation__body">
 					{{ message.body || '—' }}
 				</p>
+				<div
+					v-if="canResend(message)"
+					class="messaging-conversation__resend">
+					<NcButton
+						variant="secondary"
+						:disabled="resending === message.id"
+						data-testid="messaging-resend"
+						@click="resend(message)">
+						{{
+							resending === message.id
+								? t('pipelinq', 'Sending…')
+								: t('pipelinq', 'Send again')
+						}}
+					</NcButton>
+					<span
+						v-if="resendErrors[message.id]"
+						class="messaging-conversation__status--error"
+						role="alert">
+						{{ resendErrors[message.id] }}
+					</span>
+				</div>
 			</li>
 		</ul>
 
@@ -134,24 +155,44 @@
 			v-if="showComposer"
 			:contactId="effectiveContactId"
 			:clientId="effectiveClientId"
+			:clientName="(clientRecord && clientRecord.name) || ''"
+			:recipientName="(selectedContact && selectedContact.name) || ''"
+			:recipientPhone="(selectedContact && selectedContact.phone) || ''"
 			:preflight="preflightForModal"
+			:initialChannel="composerChannel"
+			:placeholderValues="placeholderValues"
+			:language="contactLanguage"
 			@sent="onSent"
-			@close="showComposer = false" />
+			@close="closeComposer" />
 	</section>
 </template>
 
 <script>
 import axios from '@nextcloud/axios'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
+import { formatLocalTimestamp } from '../../services/localeUtils.js'
+import { PAGE_REFRESH_CHANNEL } from '../../services/pageRefreshOnCreate.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+/** Event-bus channel: open the composer for an entity (`{ entityId }`), sent by the client page's contact strip. */
+const COMPOSE_CHANNEL = 'pipelinq:messaging:compose'
 
 const EMPTY_PREFLIGHT = {
 	channels: { sms: false, whatsapp: false },
 	whatsappSessionOpen: false,
 	consent: { sms: 'unknown', whatsapp: 'unknown' },
 	templates: [],
+}
+
+/**
+ * @param {string} id The message.
+ * @return {string} The URL that sends it again.
+ */
+function resendUrl(id) {
+	return generateUrl('/apps/pipelinq/api/messaging/messages/{id}/resend', { id })
 }
 
 export default {
@@ -194,12 +235,17 @@ export default {
 			resolvedClientId: '',
 			preflight: null,
 			showComposer: false,
+			composerChannel: '',
+			contactRecord: null,
+			clientRecord: null,
+			resending: '',
+			resendErrors: {},
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -207,7 +253,7 @@ export default {
 
 		/** The contactId every fetch/send in this component is keyed on. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveContactId() {
 			return this.entityType === 'contact'
@@ -217,7 +263,7 @@ export default {
 
 		/** The clientId passed to the composer for the send-request audit trail. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		effectiveClientId() {
 			return this.entityType === 'client'
@@ -226,13 +272,58 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		contactOptions() {
 			return this.linkedContacts.map((c) => ({
 				id: c.id,
 				label: c.name || c.id,
 			}))
+		},
+
+		/**
+		 * The selected contact, from the page or from the client's contacts.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		selectedContact() {
+			if (this.entityType === 'contact') {
+				return this.contactRecord
+			}
+			return (
+				this.linkedContacts.find((c) => c.id === this.selectedContactId)
+				|| null
+			)
+		},
+
+		/**
+		 * Saved reply placeholder values this section holds.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		placeholderValues() {
+			return {
+				'contact.name':
+					(this.selectedContact && this.selectedContact.name) || '',
+
+				'client.name': (this.clientRecord && this.clientRecord.name) || '',
+			}
+		},
+
+		/**
+		 * The contact's correspondence language.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		contactLanguage() {
+			const contact = this.selectedContact
+			return (
+				(contact && (contact.correspondenceLanguage || contact.language))
+				|| ''
+			)
 		},
 
 		preflightConsent() {
@@ -242,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		preflightForModal() {
 			return this.preflight || EMPTY_PREFLIGHT
@@ -250,7 +341,7 @@ export default {
 
 		/** Most recently active conversation thread for the current contact, if any. */
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		latestConversation() {
 			if (this.conversations.length === 0) {
@@ -276,9 +367,11 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 	 */
 	async mounted() {
+		subscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		subscribe(COMPOSE_CHANNEL, this.onComposeRequested)
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
 			await Promise.all([
@@ -291,10 +384,30 @@ export default {
 		}
 	},
 
+	beforeUnmount() {
+		unsubscribe(PAGE_REFRESH_CHANNEL, this.onPageRefresh)
+		unsubscribe(COMPOSE_CHANNEL, this.onComposeRequested)
+	},
+
 	methods: {
 		/**
+		 * A page refresh, sent too when a contact is created on the page:
+		 * on a client, fetch its contacts again so a contact added on the
+		 * Contacts tab shows here without a reload (round-5 cloud check,
+		 * item 2).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
+		 */
+		async onPageRefresh() {
+			if (this.entityType === 'client') {
+				await this.fetchLinkedContacts()
+			}
+		},
+
+		/**
 		 * @param {string} status The conversation status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		conversationStatusLabel(status) {
 			const labels = {
@@ -313,7 +426,7 @@ export default {
 
 		/**
 		 * @param {string} status The delivery status.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		deliveryStatusClass(status) {
 			if (status === 'failed' || status === 'expired') {
@@ -336,7 +449,7 @@ export default {
 
 		/**
 		 * @param {string} state The consent state.
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentClass(state) {
 			if (state === 'opted-in') {
@@ -348,19 +461,10 @@ export default {
 			return 'messaging-conversation__consent--warn'
 		},
 
-		formatDate(value) {
-			if (!value) {
-				return '—'
-			}
-			const parsed = new Date(value)
-			if (Number.isNaN(parsed.getTime())) {
-				return value
-			}
-			return parsed.toLocaleString()
-		},
+		formatDate: formatLocalTimestamp,
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async resolveContactClient() {
 			try {
@@ -368,24 +472,33 @@ export default {
 					'contact',
 					this.entityId,
 				)
+				this.contactRecord = contact || null
 				this.resolvedClientId = (contact && contact.client) || ''
+				await this.fetchClient(this.resolvedClientId)
 			} catch {
 				this.resolvedClientId = ''
 			}
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * Fetch the client's contacts. A refetch keeps the selected contact when it is still linked.
+		 *
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
 		 */
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
+			this.fetchClient(this.entityId)
 			try {
 				this.linkedContacts =
 					(await this.objectStore.fetchCollection('contact', {
 						client: this.entityId,
 						_limit: 100,
 					})) || []
-				if (this.linkedContacts.length > 0) {
+				const stillLinked = this.linkedContacts.some(
+					(c) => c.id === this.selectedContactId,
+				)
+				if (this.linkedContacts.length > 0 && !stillLinked) {
 					this.selectedContactId = this.linkedContacts[0].id
 				}
 			} catch {
@@ -396,8 +509,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
 		 */
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
@@ -424,7 +537,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async fetchConversations() {
 			if (!this.effectiveContactId) {
@@ -443,7 +556,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		async fetchPreflight() {
 			if (!this.effectiveContactId) {
@@ -464,23 +577,186 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * Read the client's name for the saved reply placeholders.
+		 *
+		 * @param {string} clientId The client id, or empty.
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		async fetchClient(clientId) {
+			if (!clientId) {
+				this.clientRecord = null
+				return
+			}
+			try {
+				this.clientRecord =
+					(await this.objectStore.fetchObject('client', clientId)) || null
+			} catch {
+				this.clientRecord = null
+			}
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		openComposer() {
 			if (!this.effectiveContactId) {
 				return
 			}
+			this.composerChannel = ''
 			this.showComposer = true
 		},
 
 		/**
-		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		closeComposer() {
+			this.showComposer = false
+			this.composerChannel = ''
+		},
+
+		/**
+		 * Whether a row offers Send again: an outbound WhatsApp or SMS that
+		 * failed or expired and was not sent again yet.
+		 *
+		 * @param {object} message A channelMessage row.
+		 * @return {boolean}
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		canResend(message) {
+			const metadata = (message && message.metadata) || {}
+			return (
+				!!message
+				&& message.direction === 'outbound'
+				&& ['sms', 'whatsapp'].includes(message.channel)
+				&& ['failed', 'expired'].includes(message.deliveryStatus)
+				&& !metadata.resentAs
+			)
+		},
+
+		/**
+		 * Send a failed message again. A closed WhatsApp window opens the
+		 * composer on WhatsApp for an approved template; any other refusal
+		 * shows the server's reason on the row.
+		 *
+		 * @param {object} message The failed row.
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		async resend(message) {
+			if (this.resending) {
+				return
+			}
+			this.resending = message.id
+			this.resendErrors = { ...this.resendErrors, [message.id]: '' }
+			const status = await this.requestResend(message)
+			this.showResendOutcome(message, status)
+		},
+
+		/**
+		 * Ask the server to send the message again.
+		 *
+		 * @param {object} message The message.
+		 * @return {Promise<string>} The status it answered, `failed` when none.
+		 */
+		async requestResend(message) {
+			try {
+				const { data } = await axios.post(resendUrl(message.id))
+				return (data && data.status) || 'failed'
+			} catch (error) {
+				return error?.response?.data?.status || 'failed'
+			} finally {
+				this.resending = ''
+			}
+		},
+
+		/**
+		 * Reload when it was sent, open the WhatsApp composer when a template
+		 * is required, else show the reason on the row.
+		 *
+		 * @param {object} message The message.
+		 * @param {string} status The resend status.
+		 */
+		showResendOutcome(message, status) {
+			if (status === 'sent') {
+				this.onSent()
+				return
+			}
+			if (status === 'template-required') {
+				this.composerChannel = 'whatsapp'
+				this.showComposer = true
+				return
+			}
+			this.resendErrors = {
+				...this.resendErrors,
+				[message.id]: this.resendReason(status),
+			}
+		},
+
+		/**
+		 * The text for a refused Send again.
+		 *
+		 * @param {string} status The server's status.
+		 * @return {string}
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		resendReason(status) {
+			const reasons = {
+				'consent-missing': t(
+					'pipelinq',
+					'Not sent: the contact has not given consent for this channel.',
+				),
+
+				'budget-exceeded': t(
+					'pipelinq',
+					'Not sent: the messaging budget for this period is used up.',
+				),
+
+				'no-provider': t(
+					'pipelinq',
+					'Not sent: no provider is set up for this channel.',
+				),
+
+				'template-invalid': t(
+					'pipelinq',
+					'Not sent: the template is no longer approved.',
+				),
+
+				'already-resent': t(
+					'pipelinq',
+					'This message was already sent again.',
+				),
+
+				'not-failed': t(
+					'pipelinq',
+					'This message did not fail, so it is not sent again.',
+				),
+			}
+			return (
+				reasons[status]
+				|| t('pipelinq', 'Sending failed again. Try again later.')
+			)
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-07-06-outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		onSent() {
 			this.showComposer = false
 			this.fetchMessages()
 			this.fetchConversations()
 			this.fetchPreflight()
+			emit('cn:timeline:changed', { objectId: this.entityId, source: 'messaging' })
+		},
+
+		/**
+		 * Open the composer when the contact strip asks for it on this entity.
+		 *
+		 * @param {object} payload `{ entityId }`.
+		 * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+		 */
+		onComposeRequested(payload) {
+			if (payload && payload.entityId === this.entityId) {
+				this.openComposer()
+			}
 		},
 	},
 }
@@ -504,6 +780,15 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+/* Board look (PqKlant, PqOrganisatie "Berichten"): the title is a card
+   title, 17/700 on its normal line, and `cn-board-form` draws the contact
+   picker's label above a 40px field and "Send message" 40px. */
+.cn-look-board .messaging-conversation h3 {
+	font-size: 17px;
+	font-weight: 700;
+	line-height: normal;
 }
 
 .messaging-conversation__badge {
@@ -545,6 +830,14 @@ export default {
 
 .messaging-conversation__consent--error {
 	color: var(--color-error-text, var(--color-error));
+}
+
+.messaging-conversation__resend {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
 }
 
 .messaging-conversation__list {

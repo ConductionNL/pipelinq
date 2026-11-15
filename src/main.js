@@ -3,12 +3,13 @@
 
 import {
 	buildManifest,
+	buildManifestRoutes,
 	CnPageRenderer,
 	defaultPageTypes,
-	mergeManifestDelta,
 	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
+	useObjectStore as useLibraryObjectStore,
 } from '@conduction/nextcloud-vue'
 // The `import/no-unresolved` disables on these subpath imports are gone: the
 // flat config does not register that rule, so each comment was itself an
@@ -22,7 +23,7 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // runtimeChunk, so the barrel's 3-hop re-exports of these functions resolve to
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
-import axios from '@nextcloud/axios'
+import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
 	loadTranslations,
@@ -40,7 +41,11 @@ import menuLayout from './menu-layout.json'
 import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
+import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
+import { loadPersistedOverrides } from './services/persistedOverrides.js'
+import { contactWriteBackPlugin } from './store/plugins/contactWriteBack.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
+import { translateIndexPageLabels } from './utils/indexPageLabels.js'
 import {
 	applyHomePage,
 	applyMenuModules,
@@ -48,13 +53,16 @@ import {
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
-import { seedPageAppConfig } from './utils/pageAppConfig.js'
+import { menuRuntime, seedMenuRuntime } from './utils/menuRuntime.js'
+import { pageAppConfig, seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
+	navTheming,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
+import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -154,29 +162,54 @@ const fragments = fragmentCtx
 const structureProfile = resolveStructureProfile(
 	loadState('pipelinq', STRUCTURE_SETTING, ''),
 )
+const enabledModules = resolveMenuModules(
+	loadState('pipelinq', MODULES_SETTING, ''),
+	simpleMenuLayout,
+)
 const profileFile =
 	structureProfile === STRUCTURE_FULL
 		? menuLayout
-		: applyMenuModules(
-				simpleMenuLayout,
-				resolveMenuModules(
-					loadState('pipelinq', MODULES_SETTING, ''),
-					simpleMenuLayout,
-				),
-			)
+		: applyMenuModules(simpleMenuLayout, enabledModules)
 const { manifest: profiledManifest, homePage } = applyHomePage(
-	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile),
+	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
+		theming: navTheming(getCapabilities()),
+	}),
 	profileFile.home,
 )
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
 // Dashboard and detail pages read `@config.<key>` tokens (the reporting
-// currency, the pipeline target) from the `config` initial state.
-const mergedManifest = seedPageAppConfig(
-	structureProfile === STRUCTURE_FULL
-		? profiledManifest
-		: holdUnreachableTours(profiledManifest),
-	loadState('pipelinq', 'config', {}),
+// currency, the pipeline target) from the `config` initial state, and where
+// the installed case app keeps its cases from `case_target`; the VAT class
+// labels follow the rates set on the admin page.
+// An object-list widget's Add button text stays English source text in the
+// manifest: CnObjectListWidget translates it through the app's translate.
+const mergedManifest = seedVatClassLabels(
+	seedPageAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+		pageAppConfig(
+			loadState('pipelinq', 'config', {}),
+			loadState('pipelinq', 'case_target', {}),
+		),
+	),
+	loadState('pipelinq', 'config', {}).vat_rates,
+	(text) => t('pipelinq', text),
+)
+// The index pages' chips, count line and header buttons, in the same way.
+translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
+// The Advanced page's status pills and menu structure panel read the menu as
+// it is set from `runtime.menu`.
+seedMenuRuntime(
+	mergedManifest,
+	menuRuntime({
+		profile: structureProfile,
+		profileFile: simpleMenuLayout,
+		enabled: enabledModules,
+		manifest: mergedManifest,
+		translate: (text) => t('pipelinq', text),
+	}),
 )
 
 /**
@@ -189,7 +222,7 @@ const mergedManifest = seedPageAppConfig(
  * @param {object} manifest The bundled manifest (with `pages[]`).
  * @return {Array<object>} vue-router 3 routes config.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -198,6 +231,10 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
+	// An index page declaring `splitView` opens a row beside the list at a
+	// second address (`<route>/split/:id`); the library builds that record.
+	routes.push(...buildManifestRoutes(manifest, { component: RoutePageRenderer, props: true })
+		.filter((record) => record.meta?.cnSplitOf))
 	// vue-router matches in declaration order, so a param route like `/pos/:id`
 	// would otherwise swallow a static sibling like `/pos/tender-types` on a
 	// direct (non-SPA) load. Manifest page order isn't guaranteed — manifest.d
@@ -212,6 +249,9 @@ function routesFromManifest(manifest) {
 	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
 		routes.push({ path: '/', redirect: { name: homePage } })
 	}
+	// The cash register audit log moved from /kassakoppeling/audit; old links still land.
+	routes.push({ path: '/kassakoppeling/audit', redirect: '/cash-register-audit' })
+	routes.push({ path: '/kassakoppeling/audit/:id', redirect: (to) => `/cash-register-audit/${encodeURIComponent(to.params.id)}` })
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —
@@ -220,59 +260,6 @@ function routesFromManifest(manifest) {
 	// its v4 replacement.
 	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 	return routes
-}
-
-/**
- * Load the persisted buildiq app-override delta and merge it over the
- * build-time manifest (ADR-041 round-trip: App.vue's persistManifestDelta PUTs
- * edits to this store; this loader brings them back at boot). The GET returns
- * the LAYERED delta (shared admin delta ⊕ the calling user's own delta), or
- * `{}` when no override exists. Fail-soft: any error, buildiq not
- * installed, endpoint unreachable, malformed delta — falls back to the
- * build-time manifest, so an override can never prevent the app from booting.
- *
- * @param {object} manifest The build-time merged manifest.
- * @return {Promise<object>} The manifest with persisted overrides applied.
- *
- * @spec exclude Bug fix closing the ADR-041 persist/load round-trip; the
- *               delta contract is owned by buildiq's
- *               layered-versioned-app-deltas specs.
- */
-async function loadPersistedOverrides(manifest) {
-	try {
-		const { data } = await axios.get(
-			generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
-			{ timeout: 8000 },
-		)
-		if (
-			data !== null
-			&& typeof data === 'object'
-			&& !Array.isArray(data)
-			&& Object.keys(data).length > 0
-		) {
-			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(
-				manifest,
-				data,
-			)
-			if (orphanedDeltaPaths.length > 0) {
-				console.warn(
-					'[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):',
-					orphanedDeltaPaths,
-				)
-			}
-			return merged
-		}
-	} catch (error) {
-		// A 404 is the ordinary "buildiq is not installed" answer, not a fault —
-		// warning on it puts an AxiosError in every console on every boot.
-		if (error?.response?.status !== 404) {
-			console.warn(
-				'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
-				error,
-			)
-		}
-	}
-	return manifest
 }
 
 tryLoadTranslations()
@@ -293,6 +280,13 @@ const registryProp = { ...registry }
 // the store be used before the Vue instance exists.
 setActivePinia(pinia)
 registerObjectTypes()
+// Manifest detail pages save through the library's default object store, not
+// pipelinq's own, so the contact write-back listens there too: a client's
+// name, email or phone edited in its Edit dialog reaches the Nextcloud Contact
+// (round3-review-points).
+if (typeof useLibraryObjectStore === 'function') {
+	contactWriteBackPlugin().setup(useLibraryObjectStore())
+}
 
 /**
  * The router base for THIS page load.
@@ -330,6 +324,9 @@ function mountApp(manifest) {
 		history: createWebHistory(routerBase()),
 		routes: routesFromManifest(manifest),
 	})
+	// A new deal line item refreshes the page, so the Line items count follows
+	// (round3-review-points).
+	installPageRefreshOnCreate(window)
 	// Vue 3: `createApp(...).mount()` replaces `new Vue(...).$mount()`, and
 	// `h()` takes props as a FLAT second argument — the Vue 2 `{ props: { … } }`
 	// nesting is silently ignored, which would leave CnAppRoot with no manifest

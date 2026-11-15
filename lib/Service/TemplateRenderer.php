@@ -27,8 +27,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-template-013
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-deeplink-014
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-TEMPLATE-013
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-DEEPLINK-014
  */
 
 declare(strict_types=1);
@@ -63,6 +63,37 @@ class TemplateRenderer {
 	}//end __construct()
 
 	/**
+	 * Give `{{preferredName}}` a value: the preferred name, or the full name
+	 * when the person has stated none.
+	 *
+	 * The full name is read from `fullName`, then `name`, as the caller
+	 * supplied them. With neither, the variable stays empty, as any unknown
+	 * variable does.
+	 *
+	 * @param array $variables Substitution variables.
+	 *
+	 * @return array The variables, with `preferredName` filled where it can be.
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	private function withPreferredName(array $variables): array {
+		if (trim((string)($variables['preferredName'] ?? '')) !== '') {
+			return $variables;
+		}
+
+		foreach (['fullName', 'name'] as $key) {
+			$fullName = trim((string)($variables[$key] ?? ''));
+			if ($fullName !== '') {
+				$variables['preferredName'] = $fullName;
+				return $variables;
+			}
+		}
+
+		return $variables;
+	}//end withPreferredName()
+
+	/**
 	 * Render a template.
 	 *
 	 * @param array $template The OR-array form of the BerichtenboxTemplate
@@ -73,8 +104,10 @@ class TemplateRenderer {
 	 *
 	 * @throws RuntimeException If the body fails XHTML strict validation.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function render(array $template, array $variables): array {
+		$variables = $this->withPreferredName(variables: $variables);
 		$deepLink = null;
 		$requires = (bool)($template['requiresDeepLink'] ?? false);
 		if ($requires === true) {
@@ -146,6 +179,8 @@ class TemplateRenderer {
 	 * @param array $variables Vars.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	private function renderString(string $source, array $variables): string {
 		// Triple-brace (raw) first so the double-brace pass doesn't see it.

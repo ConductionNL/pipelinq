@@ -10,9 +10,9 @@
   - hosting it puts both in its header and calls `openAddDialog()`. Read-only
   - when the transaction is `settled` or `refunded`.
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.2
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.5
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.6
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.5
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.6
   -->
 <template>
 	<div class="tender-panel">
@@ -79,7 +79,7 @@
 					{{ formatEur(Math.abs(validation.variance)) }}
 				</div>
 				<div v-else>
-					{{ t('pipelinq', 'Payment balanced — ready to settle.') }}
+					{{ t('pipelinq', 'Payment balanced, ready to settle.') }}
 				</div>
 			</div>
 
@@ -113,6 +113,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import AddTenderDialog from '../../modals/AddTenderDialog.vue'
+import { posRecordId } from '../../services/posRecordId.js'
 import { formatEur } from '../../services/posTotals.js'
 
 export default {
@@ -135,6 +136,9 @@ export default {
 		return {
 			tenders: [],
 			tenderTypes: [],
+			// Tender type names looked up one by one, keyed by id, for a
+			// tender whose type is not in the list (pipelinq-audit-admin-forms-pos).
+			typeNames: {},
 			validation: {
 				tenderSum: 0,
 				transactionTotal: 0,
@@ -151,7 +155,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
 		 */
 		canEdit() {
 			return (
@@ -189,34 +193,97 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the tenders and the tender types, then name every tender's type.
+	 *
+	 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+	 */
 	async mounted() {
 		await Promise.all([this.loadTenders(), this.loadTenderTypes()])
+		await this.resolveTypeNames()
 	},
 
 	methods: {
 		formatEur,
-		tenderId(tender) {
-			if (tender?.['@self']?.id) {
-				return tender['@self'].id
-			}
-			return tender?.id || tender?.uuid || ''
-		},
+		tenderId: posRecordId,
 
+		/**
+		 * The tender type's name, never its uuid.
+		 *
+		 * @param {object} tender The tender.
+		 * @return {string} The name, or a placeholder while it loads.
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
 		tenderTypeLabel(tender) {
 			const id = tender?.tenderType || ''
 			const found = this.tenderTypes.find((t) => this.idOf(t) === id)
 			if (found) {
-				return found.name || found.code || id
+				return found.name || found.code || t('pipelinq', 'Unknown')
 			}
-			return id || t('pipelinq', 'Unknown')
+			return this.unlistedTypeLabel(id)
 		},
 
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
+		/**
+		 * Show the loaded tenders, and the validation when the server sent one.
+		 *
+		 * @param {object|undefined} data The answer.
+		 */
+		showTenders(data) {
+			this.tenders = data?.results || []
+			if (data?.validation) {
+				this.validation = data.validation
 			}
-			return type?.id || type?.uuid || ''
 		},
+
+		/**
+		 * The label of a tender type that is not listed: the name looked up
+		 * for it, an ellipsis while it is looked up, or Unknown.
+		 *
+		 * @param {string} id The tender type id, or ''.
+		 * @return {string} The label.
+		 */
+		unlistedTypeLabel(id) {
+			if (id && this.typeNames[id] !== undefined) {
+				return this.typeNames[id] || t('pipelinq', 'Unknown')
+			}
+			return id ? '…' : t('pipelinq', 'Unknown')
+		},
+
+		/**
+		 * Look up the name of every tender type the list did not bring, one
+		 * request per type. A failed lookup reads Unknown.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
+		async resolveTypeNames() {
+			const known = new Set(this.tenderTypes.map((type) => this.idOf(type)))
+			const missing = [
+				...new Set(this.tenders.map((tender) => tender?.tenderType || '')),
+			].filter(
+				(id) => id && !known.has(id) && this.typeNames[id] === undefined,
+			)
+			await Promise.all(
+				missing.map(async (id) => {
+					const url = generateUrl(
+						'/apps/pipelinq/api/pos/tender-types/{id}',
+						{
+							id,
+						},
+					)
+					const name = await axios
+						.get(url)
+						.then(
+							(response) =>
+								response?.data?.name || response?.data?.code || '',
+						)
+						.catch(() => '')
+					this.typeNames = { ...this.typeNames, [id]: name }
+				}),
+			)
+		},
+
+		idOf: posRecordId,
 
 		/**
 		 * Load the tenders and the server's validation summary.
@@ -237,10 +304,7 @@ export default {
 					{ id: this.transactionId },
 				)
 				const response = await axios.get(url)
-				this.tenders = response?.data?.results || []
-				if (response?.data?.validation) {
-					this.validation = response.data.validation
-				}
+				this.showTenders(response?.data)
 			} catch (error) {
 				this.errorMessage =
 					error?.response?.data?.error
@@ -273,9 +337,15 @@ export default {
 			this.showAdd = true
 		},
 
+		/**
+		 * Close the dialog, reload the tenders and name a new tender's type.
+		 *
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
 		async onTenderAdded() {
 			this.showAdd = false
 			await this.loadTenders()
+			await this.resolveTypeNames()
 			this.$emit('changed')
 		},
 
@@ -286,7 +356,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
 		 */
 		removeTender(tender) {
 			if (!this.tenderId(tender)) {
@@ -300,7 +370,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.2
 		 */
 		async performRemoveTender() {
 			const tender = this.pendingRemoveTender
@@ -329,7 +399,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .tender-panel {
 	display: flex;
 	flex-direction: column;
@@ -342,11 +414,7 @@ export default {
 }
 
 .tender-panel__table th {
-	text-align: start;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	padding: 6px 8px;
-	border-bottom: 1px solid var(--color-border);
+	@include table-head-cell;
 }
 
 .tender-panel__table td {

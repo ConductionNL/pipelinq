@@ -44,6 +44,7 @@
           },
           "nextcloudUserId": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud userId this actor resolves to; written onto ticket.assignee / task.assigneeUserId.",
             "maxLength": 128,
             "facetable": true,

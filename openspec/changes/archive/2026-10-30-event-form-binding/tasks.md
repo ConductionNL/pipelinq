@@ -1,0 +1,4 @@
+- [x] register.d: campaignEvent.formBinding (1.2.0)
+- [x] Manifest: "Edit form" navigate action on the event-form card
+- [x] Tests: campaignEvents.spec.js
+- [x] l10n nl/en

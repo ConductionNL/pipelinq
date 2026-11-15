@@ -60,6 +60,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingClientName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 
@@ -125,9 +127,52 @@ import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { NcButton, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { populateFormWatcher } from '../../utils/formFields.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The name's error, or ''.
+ */
+function nameError(form) {
+	return !form.form.name.trim() ? t('pipelinq', 'Name is required') : ''
+}
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The client's error, or ''.
+ */
+function clientError(form) {
+	return !form.selectedClient ? t('pipelinq', 'Client is required') : ''
+}
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The e-mail address's error, or ''.
+ */
+function emailError(form) {
+	return form.form.email && !EMAIL_REGEX.test(form.form.email) ? t('pipelinq', 'Invalid email format') : ''
+}
+
+/**
+ * @param {object} form The contact form.
+ * @return {string} The phone number's error, or ''.
+ */
+function phoneError(form) {
+	return form.form.phone && !PHONE_REGEX.test(form.form.phone) ? t('pipelinq', 'Invalid phone format') : ''
+}
+
+/**
+ * The check of each validated field: the error it shows, or '' when the field is fine.
+ */
+const FIELD_CHECKS = new Map([
+	['name', nameError],
+	['client', clientError],
+	['email', emailError],
+	['phone', phoneError],
+])
 
 export default {
 	name: 'ContactForm',
@@ -174,6 +219,7 @@ export default {
 			// Inline-create plumbing: the picker hands control to the full
 			// client dialog and resumes with whatever it resolves.
 			clientDialogOpen: false,
+			pendingClientName: '',
 			resolveCreate: null,
 			searchTimeout: null,
 		}
@@ -181,14 +227,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-46
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-43
 		 */
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
@@ -199,22 +245,12 @@ export default {
 	},
 
 	watch: {
-		contact: {
-			immediate: true,
-			/**
-			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
-			 */
-			handler(val) {
-				if (val && Object.keys(val).length > 0) {
-					this.populateForm(val)
-				}
-			},
-		},
+		/** @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42 */
+		contact: populateFormWatcher(),
 
 		/**
 		 * @param {string} val Identifier of the newly selected client.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
 		 */
 		selectedClient(val) {
 			this.form.client = val
@@ -222,7 +258,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
 	 */
 	mounted() {
 		if (this.preSelectedClient) {
@@ -234,7 +270,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} data The contact to load into the form.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
 		 */
 		populateForm(data) {
 			this.form = {
@@ -265,10 +301,13 @@ export default {
 		 * and it is minted server-side, so the typed name opens the full create
 		 * dialog rather than being saved on its own.
 		 *
+		 * @param {string} term The name typed into the picker, prefilled in the dialog.
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @spec openspec/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
-		createClient() {
+		createClient(term) {
+			this.pendingClientName = term || ''
 			return new Promise((resolve) => {
 				this.resolveCreate = resolve
 				this.clientDialogOpen = true
@@ -277,14 +316,15 @@ export default {
 
 		/**
 		 * @param {string} id The created client's uuid.
+		 * @param {object} [created] The created client, when the dialog hands it over.
 		 * @return {void}
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
-		onClientCreated(id) {
+		onClientCreated(id, created) {
 			this.clientDialogOpen = false
 			const resolve = this.resolveCreate
 			this.resolveCreate = null
-			if (resolve) resolve(id ? { id } : null)
+			if (resolve) resolve(id ? { ...(created || {}), id } : null)
 		},
 
 		/**
@@ -300,43 +340,17 @@ export default {
 
 		/**
 		 * @param {string} field Name of the field to validate.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
 		 */
 		validateField(field) {
-			switch (field) {
-				case 'name':
-					if (!this.form.name.trim()) {
-						this.errors.name = t('pipelinq', 'Name is required')
-					} else {
-						this.errors.name = ''
-					}
-					break
-				case 'client':
-					if (!this.selectedClient) {
-						this.errors.client = t('pipelinq', 'Client is required')
-					} else {
-						this.errors.client = ''
-					}
-					break
-				case 'email':
-					if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-						this.errors.email = t('pipelinq', 'Invalid email format')
-					} else {
-						this.errors.email = ''
-					}
-					break
-				case 'phone':
-					if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-						this.errors.phone = t('pipelinq', 'Invalid phone format')
-					} else {
-						this.errors.phone = ''
-					}
-					break
+			const check = FIELD_CHECKS.get(field)
+			if (check) {
+				this.errors[field] = check(this)
 			}
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-51
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-51
 		 */
 		validateAll() {
 			this.validateField('name')
@@ -347,7 +361,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-47
 		 */
 		onSave() {
 			if (!this.validateAll()) {
@@ -363,28 +377,11 @@ export default {
 }
 </script>
 
+<style scoped src="../fieldGroupLayout.css"></style>
+
 <style scoped>
 .contact-form {
 	max-width: 800px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .field-error {
