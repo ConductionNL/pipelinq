@@ -103,16 +103,28 @@ class PortalMailService {
 			return false;
 		}
 
+		return $this->delivered(recipient: $recipient, content: ['subject' => $subject, 'body' => $body]);
+	}//end send()
+
+	/**
+	 * Hand a plain-text mail to the mailer; a failure is logged and answers false.
+	 *
+	 * @param string                                $recipient The valid recipient email.
+	 * @param array{subject: string, body: string} $content   The localised subject and plain-text body.
+	 *
+	 * @return bool True when accepted for delivery.
+	 */
+	private function delivered(string $recipient, array $content): bool {
 		try {
 			$message = $this->mailer->createMessage();
 			$message->setTo([$recipient]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
+			$message->setSubject($content['subject']);
+			$message->setPlainBody($content['body']);
 			$failed = $this->mailer->send($message);
 			return empty($failed) === true;
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: mail send failed', ['exception' => $e->getMessage()]);
 			return false;
 		}
-	}//end send()
+	}//end delivered()
 }//end class
