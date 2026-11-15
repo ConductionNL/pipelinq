@@ -42,7 +42,8 @@ describe('the My work page', () => {
 		for (const w of page.config.widgets) {
 			const filter = w.content.filter || w.content.source?.filter
 			if (!filter) continue // the bar, the banner and the saved views carry their own sources
-			const own = filter.assignee ?? filter.assigneeUserId
+			// A call review belongs to the agent whose call it is (contact-moments-call-review).
+			const own = filter.assignee ?? filter.assigneeUserId ?? filter.agent
 			expect(own, w.id).toBe('@me')
 		}
 	})

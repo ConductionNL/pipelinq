@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 /**
  * WeeklyReviewNumbers: one week of counting, in one read per collection.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 class WeeklyReviewNumbers {
 
@@ -43,7 +43,7 @@ class WeeklyReviewNumbers {
 	 *
 	 * @param ListObjectStore $store Register-scoped object plumbing.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -58,12 +58,12 @@ class WeeklyReviewNumbers {
 	 *
 	 * @return array<string, mixed> `sent`, `clicks` and one highlight line.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function mail(string $from, string $to): array {
 		$sent = 0;
 		foreach ($this->store->findAll(schemaSlug: $this->store->schemaSlug('blast_schema', 'blast')) as $blast) {
-			if ($this->inWeek(value: ($blast['sentAt'] ?? ''), from: $from, to: $to) === true) {
+			if ($this->inWeek(value: ($blast['sentAt'] ?? ''), week: [$from, $to]) === true) {
 				$sent++;
 			}
 		}
@@ -71,7 +71,7 @@ class WeeklyReviewNumbers {
 		$clicks = 0;
 		foreach ($this->store->findAll(schemaSlug: $this->store->schemaSlug('touchpoint_schema', 'touchpoint')) as $touchpoint) {
 			$isClick = ((string)($touchpoint['kind'] ?? '') === 'click');
-			if ($isClick === true && $this->inWeek(value: ($touchpoint['occurredAt'] ?? ''), from: $from, to: $to) === true) {
+			if ($isClick === true && $this->inWeek(value: ($touchpoint['occurredAt'] ?? ''), week: [$from, $to]) === true) {
 				$clicks++;
 			}
 		}
@@ -92,14 +92,14 @@ class WeeklyReviewNumbers {
 	 *
 	 * @return array<string, mixed> `published`, `views` and one highlight line.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function social(string $from, string $to): array {
 		$published = 0;
 		$views = 0;
 		$schema = $this->store->schemaSlug('socialPublication_schema', 'socialPublication');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $publication) {
-			if ($this->inWeek(value: ($publication['publishedAt'] ?? ''), from: $from, to: $to) === false) {
+			if ($this->inWeek(value: ($publication['publishedAt'] ?? ''), week: [$from, $to]) === false) {
 				continue;
 			}
 
@@ -125,41 +125,60 @@ class WeeklyReviewNumbers {
 	 * @return array<string, mixed> `clicks`, `impressions`, one highlight line
 	 *         and the week's queries, most-shown first.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function search(string $from, string $to): array {
-		$clicks = 0;
-		$impressions = 0;
-		$byQuery = [];
+		$tally = ['clicks' => 0, 'impressions' => 0, 'byQuery' => []];
 		$schema = $this->store->schemaSlug('searchQueryDaily_schema', 'searchQueryDaily');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $row) {
-			if ($this->inWeek(value: ($row['date'] ?? ''), from: $from, to: $to) === false) {
-				continue;
-			}
-
-			$clicks += (int)($row['clicks'] ?? 0);
-			$impressions += (int)($row['impressions'] ?? 0);
-
-			$query = trim((string)($row['query'] ?? ''));
-			if ($query !== '') {
-				$byQuery[$query] = (($byQuery[$query] ?? 0) + (int)($row['impressions'] ?? 0));
+			if ($this->inWeek(value: ($row['date'] ?? ''), week: [$from, $to]) === true) {
+				$tally = $this->withSearchRow(tally: $tally, row: $row);
 			}
 		}
 
+		return $this->searchFigures(tally: $tally);
+	}//end search()
+
+	/**
+	 * The tally with one search row: its clicks and impressions, and its
+	 * impressions under its (trimmed, non-blank) query.
+	 *
+	 * @param array{clicks: int, impressions: int, byQuery: array<string, int>} $tally The tally so far.
+	 * @param array<string, mixed>                                               $row   The search row.
+	 *
+	 * @return array{clicks: int, impressions: int, byQuery: array<string, int>}
+	 */
+	private function withSearchRow(array $tally, array $row): array {
+		$tally['clicks'] += (int)($row['clicks'] ?? 0);
+		$tally['impressions'] += (int)($row['impressions'] ?? 0);
+
+		$query = trim((string)($row['query'] ?? ''));
+		if ($query !== '') {
+			$tally['byQuery'][$query] = (($tally['byQuery'][$query] ?? 0) + (int)($row['impressions'] ?? 0));
+		}
+
+		return $tally;
+	}//end withSearchRow()
+
+	/**
+	 * The week's search figures: the totals, a highlight when the site was
+	 * shown at all, and the queries by impressions as ideas.
+	 *
+	 * @param array{clicks: int, impressions: int, byQuery: array<string, int>} $tally The tally.
+	 *
+	 * @return array{clicks: int, impressions: int, highlights: array<int, string>, ideas: array<int, string>}
+	 */
+	private function searchFigures(array $tally): array {
+		$byQuery = $tally['byQuery'];
 		arsort($byQuery);
 
 		$highlights = [];
-		if ($impressions > 0) {
-			$highlights[] = sprintf('Search showed the site %d times and brought %d visits.', $impressions, $clicks);
+		if ($tally['impressions'] > 0) {
+			$highlights[] = sprintf('Search showed the site %d times and brought %d visits.', $tally['impressions'], $tally['clicks']);
 		}
 
-		return [
-			'clicks' => $clicks,
-			'impressions' => $impressions,
-			'highlights' => $highlights,
-			'ideas' => array_keys($byQuery),
-		];
-	}//end search()
+		return ['clicks' => $tally['clicks'], 'impressions' => $tally['impressions'], 'highlights' => $highlights, 'ideas' => array_keys($byQuery)];
+	}//end searchFigures()
 
 	/**
 	 * What the competitors did, and what they wrote about.
@@ -173,14 +192,14 @@ class WeeklyReviewNumbers {
 	 * @return array<string, mixed> `moves`, one highlight line, and the
 	 *         titles worth writing about, most relevant first.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function watch(string $from, string $to): array {
 		$moves = 0;
 		$byTitle = [];
 		$schema = $this->store->schemaSlug('watchEvent_schema', 'watchEvent');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $event) {
-			if ($this->inWeek(value: ($event['seenAt'] ?? ''), from: $from, to: $to) === false) {
+			if ($this->inWeek(value: ($event['seenAt'] ?? ''), week: [$from, $to]) === false) {
 				continue;
 			}
 
@@ -208,7 +227,7 @@ class WeeklyReviewNumbers {
 	 *
 	 * @return bool True when it holds at least one row.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function readable(string $schemaSlug): bool {
 		return ($this->store->findAll(schemaSlug: $schemaSlug) !== []);
@@ -218,12 +237,12 @@ class WeeklyReviewNumbers {
 	 * Whether a date-ish value falls inside the week.
 	 *
 	 * @param mixed $value A date or date-time string.
-	 * @param string $from Week start, inclusive.
-	 * @param string $to Week end, inclusive.
+	 * @param array{0: string, 1: string} $week Week start and end, both inclusive.
 	 *
 	 * @return bool True when it counts.
 	 */
-	private function inWeek(mixed $value, string $from, string $to): bool {
+	private function inWeek(mixed $value, array $week): bool {
+		[$from, $to] = $week;
 		if (is_string($value) === false || trim($value) === '') {
 			return false;
 		}

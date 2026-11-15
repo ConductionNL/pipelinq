@@ -39,7 +39,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+ * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
  */
 
 declare(strict_types=1);
@@ -47,19 +47,23 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
+use OCA\Pipelinq\Service\Social\MeteredRead;
+use OCA\Pipelinq\Service\Social\NetworkTotals;
 use OCA\Pipelinq\Service\Social\SocialAdapterCall;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
 use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
+use OCA\Pipelinq\Util\ConfiguredTenantId;
+use OCA\Pipelinq\Service\Support\SocialSpendBudget;
 use OCP\IAppConfig;
 
 /**
  * The daily metrics pull, the normalisation and the engagement ranking.
  *
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+ * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The pull is a join across
  *  publications, accounts, adapters, the broker and the spend budget; each is
@@ -71,21 +75,9 @@ use OCP\IAppConfig;
  *  definition, and the alternative PHPMD is asking for, a factory injected
  *  into every adapter, would add a collaborator that constructs a struct.
  */
-class SocialMetricsService {
-	/**
-	 * How each network is named on screen.
-	 *
-	 * @var array<string, string>
-	 */
-	private const NETWORK_LABELS = [
-		'mastodon' => 'Mastodon',
-		'bluesky' => 'Bluesky',
-		'linkedin' => 'LinkedIn',
-		'instagram' => 'Instagram',
-		'facebook' => 'Facebook',
-		'threads' => 'Threads',
-		'x' => 'X',
-	];
+class SocialMetricsService implements SocialMetricsServiceInterface {
+	use ConfiguredTenantId;
+	use SocialSpendBudget;
 
 	/**
 	 * Constructor.
@@ -119,7 +111,7 @@ class SocialMetricsService {
 	 *
 	 * @return array{publications: int, accounts: int, failed: int} What the run did.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function pullAll(): array {
 		$updated = 0;
@@ -148,7 +140,7 @@ class SocialMetricsService {
 	 *
 	 * @return bool True when fresh numbers were stored.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function pullOne(array $publication): bool {
 		$externalId = trim((string)($publication['externalId'] ?? ''));
@@ -158,43 +150,92 @@ class SocialMetricsService {
 			return false;
 		}
 
+		$read = $this->meteredReadFor(account: $account, externalId: $externalId);
+		if ($read === null) {
+			return false;
+		}
+
+		$result = $this->read(read: $read, account: $account);
+		if ($result->accepted === false) {
+			return $this->rejectPull(result: $result, accountId: $accountId);
+		}
+
+		return $this->storeMetrics(
+			publication: $publication,
+			reading: [
+				'metrics' => $read->adapter->normaliseMetrics(payload: $result->body, externalId: $externalId),
+				'rawMetrics' => $result->body,
+				'cost' => $read->adapter->costPerRead(),
+			]
+		);
+	}//end pullOne()
+
+	/**
+	 * The metered metrics read for a publication, or null when the network cannot report one.
+	 *
+	 * @param array<string, mixed> $account The social account.
+	 * @param string $externalId The publication's external id.
+	 *
+	 * @return MeteredRead|null The read.
+	 */
+	private function meteredReadFor(array $account, string $externalId): MeteredRead|null {
 		$adapter = $this->registry->forNetwork(network: (string)($account['network'] ?? ''));
 		if ($adapter === null) {
-			return false;
+			return null;
 		}
 
 		$call = $adapter->metricsCall(externalId: $externalId, account: $account);
 		if ($call === null) {
 			// This network reports nothing Pipelinq can reach. That is not a
 			// failure and it does not clear the numbers already stored.
-			return false;
+			return null;
 		}
 
-		$result = $this->read(call: $call, adapter: $adapter, account: $account);
-		if ($result->accepted === false) {
-			if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
-				$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
-			}
+		return new MeteredRead(call: $call, adapter: $adapter);
+	}//end meteredReadFor()
 
-			// The previous numbers are kept. An unreadable pull is not a drop
-			// to zero, which would read as a post that lost its engagement.
-			return false;
+	/**
+	 * Handle a refused pull: flag the account for relinking when asked; always false.
+	 *
+	 * The previous numbers are kept. An unreadable pull is not a drop
+	 * to zero, which would read as a post that lost its engagement.
+	 *
+	 * @param SocialGatewayResult $result The refused result.
+	 * @param string $accountId The account id.
+	 *
+	 * @return bool Always false.
+	 */
+	private function rejectPull(SocialGatewayResult $result, string $accountId): bool {
+		if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
+			$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
 		}
 
-		$publication['metrics'] = $adapter->normaliseMetrics(payload: $result->body, externalId: $externalId);
-		$publication['rawMetrics'] = $result->body;
+		return false;
+	}//end rejectPull()
+
+	/**
+	 * Store the normalised and raw metrics and the read cost on the publication.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param array{metrics: array<string, mixed>, rawMetrics: array<string, mixed>, cost: float} $reading Metrics, raw metrics, cost.
+	 *
+	 * @return bool True when the publication was saved.
+	 */
+	private function storeMetrics(array $publication, array $reading): bool {
+		$publication['metrics'] = $reading['metrics'];
+		$publication['rawMetrics'] = $reading['rawMetrics'];
 		$publication['metricsAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $adapter->costPerRead());
+		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $reading['cost']);
 
 		return ($this->publications->save(publication: $publication) !== null);
-	}//end pullOne()
+	}//end storeMetrics()
 
 	/**
 	 * Refresh the follower count on every connected account that can report one.
 	 *
 	 * @return int How many accounts were updated.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function refreshFollowerCounts(): int {
 		$updated = 0;
@@ -206,7 +247,7 @@ class SocialMetricsService {
 				continue;
 			}
 
-			$result = $this->read(call: $call, adapter: $adapter, account: $account);
+			$result = $this->read(read: new MeteredRead(call: $call, adapter: $adapter), account: $account);
 			if ($result->accepted === false) {
 				continue;
 			}
@@ -233,7 +274,7 @@ class SocialMetricsService {
 	 *
 	 * @return array<int, array<string, mixed>> The ranked rows.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 	 */
 	public function ranking(string $network = '', int $limit = 50): array {
 		$followers = [];
@@ -283,101 +324,15 @@ class SocialMetricsService {
 	public function networkTotals(int $days = 30): array {
 		$since = (new DateTimeImmutable('-' . max(1, $days) . ' days'))->getTimestamp();
 
-		$totals = [];
+		$totals = new NetworkTotals(since: $since);
 		foreach ($this->publications->findAll() as $publication) {
-			$network = (string)($publication['network'] ?? '');
-			if ($network === '' || $this->publishedSince(publication: $publication, since: $since) === false) {
-				continue;
-			}
-
-			$totals[$network] = $this->addPublication(row: ($totals[$network] ?? $this->emptyTotal(network: $network)), publication: $publication);
+			$totals->add(publication: $publication);
 		}
 
-		foreach ($this->accounts->listAccounts()['data'] as $account) {
-			$network = (string)($account['network'] ?? '');
-			if (isset($totals[$network]) === true) {
-				$totals[$network]['followers'] += (int)($account['followerCount'] ?? 0);
-			}
-		}
+		$totals->addFollowers(accounts: $this->accounts->listAccounts()['data']);
 
-		$rows = [];
-		foreach ($totals as $row) {
-			$engagement = ($row['likes'] + $row['comments'] + $row['shares']);
-			$row['engagementPercent'] = null;
-			if ($row['views'] > 0) {
-				$row['engagementPercent'] = round((100 * $engagement / $row['views']), 1);
-			}
-
-			$rows[] = $row;
-		}
-
-		usort(
-			$rows,
-			static fn (array $left, array $right): int => ($right['published'] <=> $left['published'])
-		);
-
-		return $rows;
+		return $totals->rows();
 	}//end networkTotals()
-
-	/**
-	 * Whether a publication went out at or after a moment.
-	 *
-	 * @param array<string, mixed> $publication The publication.
-	 * @param int $since The moment, as a Unix timestamp.
-	 *
-	 * @return bool True when it is published and not older than `$since`.
-	 */
-	private function publishedSince(array $publication, int $since): bool {
-		if (($publication['status'] ?? '') !== SocialPublicationStore::PUBLISHED) {
-			return false;
-		}
-
-		$publishedAt = strtotime((string)($publication['publishedAt'] ?? ''));
-
-		return $publishedAt !== false && $publishedAt >= $since;
-	}//end publishedSince()
-
-	/**
-	 * A network's row before any publication is added.
-	 *
-	 * @param string $network The network.
-	 *
-	 * @return array<string, mixed> The empty row.
-	 */
-	private function emptyTotal(string $network): array {
-		return [
-			'network' => $network,
-			'label' => (self::NETWORK_LABELS[$network] ?? ucfirst($network)),
-			'published' => 0,
-			'views' => 0,
-			'likes' => 0,
-			'comments' => 0,
-			'shares' => 0,
-			'followers' => 0,
-		];
-	}//end emptyTotal()
-
-	/**
-	 * Add one publication's numbers to its network's row.
-	 *
-	 * @param array<string, mixed> $row The network's row so far.
-	 * @param array<string, mixed> $publication The publication.
-	 *
-	 * @return array<string, mixed> The row with the publication added.
-	 */
-	private function addPublication(array $row, array $publication): array {
-		$metrics = ($publication['metrics'] ?? []);
-		if (is_array($metrics) === false) {
-			$metrics = [];
-		}
-
-		$row['published']++;
-		foreach (['views', 'likes', 'comments', 'shares'] as $key) {
-			$row[$key] += (int)($metrics[$key] ?? 0);
-		}
-
-		return $row;
-	}//end addPublication()
 
 	/**
 	 * One ranking row: the publication, its engagement and its rate.
@@ -387,7 +342,7 @@ class SocialMetricsService {
 	 *
 	 * @return array<string, mixed> The ranking row.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 	 */
 	public function rankRow(array $publication, array $followers): array {
 		$metrics = ($publication['metrics'] ?? []);
@@ -431,48 +386,25 @@ class SocialMetricsService {
 	 * read, so an exhausted hard stop costs nothing at all rather than one more
 	 * read than it should have.
 	 *
-	 * @param SocialAdapterCall $call The request.
-	 * @param SocialNetworkAdapter $adapter The adapter, for its read cost.
+	 * @param MeteredRead          $read    The request and the adapter, for its read cost.
 	 * @param array<string, mixed> $account The account, for its credential and owner.
 	 *
 	 * @return SocialGatewayResult What came back.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
-	private function read(SocialAdapterCall $call, SocialNetworkAdapter $adapter, array $account): SocialGatewayResult {
+	private function read(MeteredRead $read, array $account): SocialGatewayResult {
+		$adapter = $read->adapter;
 		$cost = $adapter->costPerRead();
-		if ($cost > 0.0) {
-			$allowed = $this->budget->canSend(
-				tenantId: $this->tenantId(),
-				providerId: $adapter->network(),
-				estimatedCostEur: $cost,
-			);
-			if ($allowed === false) {
-				return SocialGatewayResult::failed(
-					code: SocialGatewayResult::BUDGET_EXHAUSTED,
-					reason: 'The spend budget for ' . $adapter->network() . ' is reached, so nothing was read.',
-				);
-			}
+		$stop = $this->budgetStop(adapter: $adapter, cost: $cost);
+		if ($stop !== null) {
+			return $stop;
 		}
 
-		$owner = trim((string)($account['ownerUserId'] ?? ''));
-		$acting = null;
-		if ($owner !== '') {
-			$acting = $owner;
-		}
-
-		$result = $this->gateway->request(
-			credentialRef: (string)($account['credentialRef'] ?? ''),
-			method: $call->method,
-			path: $call->path,
-			headers: $call->requestHeaders(),
-			body: $call->body(),
-			actingUserId: $acting,
-		);
-
+		$result = $this->brokered(call: $read->call, account: $account);
 		if ($cost > 0.0 && $result->accepted === true) {
 			$this->budget->recordSend(
-				tenantId: $this->tenantId(),
+				tenantId: $this->getTenantId(),
 				providerId: $adapter->network(),
 				costEur: $cost,
 			);
@@ -482,17 +414,46 @@ class SocialMetricsService {
 	}//end read()
 
 	/**
-	 * The tenant the spend budget is kept for, matching every other metered
-	 * channel in this app.
+	 * The refusal when a charged read would pass the spend budget; null when it may go.
 	 *
-	 * @return string The tenant id.
+	 * @param SocialNetworkAdapter $adapter The adapter.
+	 * @param float                $cost    What one read costs.
+	 *
+	 * @return SocialGatewayResult|null
 	 */
-	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
+	private function budgetStop(SocialNetworkAdapter $adapter, float $cost): ?SocialGatewayResult {
+		if ($this->withinBudget(adapter: $adapter, cost: $cost) === true) {
+			return null;
 		}
 
-		return 'default';
-	}//end tenantId()
+		return SocialGatewayResult::failed(
+			code: SocialGatewayResult::BUDGET_EXHAUSTED,
+			reason: 'The spend budget for ' . $adapter->network() . ' is reached, so nothing was read.',
+		);
+	}//end budgetStop()
+
+	/**
+	 * Hand the read to the broker as the account's owner, when it has one.
+	 *
+	 * @param SocialAdapterCall    $call    The request.
+	 * @param array<string, mixed> $account The account, for its credential and owner.
+	 *
+	 * @return SocialGatewayResult
+	 */
+	private function brokered(SocialAdapterCall $call, array $account): SocialGatewayResult {
+		$owner = trim((string)($account['ownerUserId'] ?? ''));
+		$acting = null;
+		if ($owner !== '') {
+			$acting = $owner;
+		}
+
+		return $this->gateway->request(
+			credentialRef: (string)($account['credentialRef'] ?? ''),
+			method: $call->method,
+			path: $call->path,
+			headers: $call->requestHeaders(),
+			body: $call->body(),
+			actingUserId: $acting,
+		);
+	}//end brokered()
 }//end class

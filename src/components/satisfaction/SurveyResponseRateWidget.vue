@@ -8,7 +8,7 @@ The rate is responses out of delivered invitations; suppressed and failed
 invitations were never delivered, so they are counted beside the rate and
 kept out of it. Each channel gets its own line.
 
-@spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+@spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 -->
 <template>
 	<div class="survey-response-rate">
@@ -122,7 +122,7 @@ export default {
 		 * The periods to choose from.
 		 *
 		 * @return {Array<{days: number, label: string}>} The periods.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 		 */
 		periods() {
 			return [
@@ -137,7 +137,7 @@ export default {
 		 * Whether any invitation falls in the period.
 		 *
 		 * @return {boolean} True with data.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 		 */
 		hasData() {
 			const f = this.figures
@@ -148,7 +148,7 @@ export default {
 		 * The per-channel lines.
 		 *
 		 * @return {Array<object>} One row per channel.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 		 */
 		channels() {
 			const by = this.figures.byChannel || {}
@@ -165,7 +165,7 @@ export default {
 		 * Read the figures for the chosen period.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 		 */
 		async load() {
 			this.loading = true
@@ -202,7 +202,7 @@ export default {
 		 *
 		 * @param {string} channel The stored channel.
 		 * @return {string} The label.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 		 */
 		channelLabel(channel) {
 			const labels = {

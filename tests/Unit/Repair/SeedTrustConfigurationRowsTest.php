@@ -176,4 +176,68 @@ final class SeedTrustConfigurationRowsTest extends TestCase {
 
 		$this->assertCount(0, $objectService->saved);
 	}//end testNoOpWhenOpenRegisterMissing()
+	/**
+	 * The step names what it seeds.
+	 *
+	 * @return void
+	 */
+	public function testTheStepIsNamed(): void {
+		self::assertStringContainsString('trust-tier rows', $this->buildStep(new RecordingObjectService())->getName());
+	}//end testTheStepIsNamed()
+
+	/**
+	 * An ObjectService that cannot be resolved is warned about and nothing is seeded.
+	 *
+	 * @return void
+	 */
+	public function testAnUnavailableObjectServiceSkipsTheSeed(): void {
+		$appManager = $this->createStub(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['openregister']);
+		$container = $this->createStub(ContainerInterface::class);
+		$container->method('get')->willThrowException(new \RuntimeException('not bound'));
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('warning')->with('OpenRegister ObjectService unavailable — skipping trust-configuration seed.');
+		$output->expects(self::never())->method('info');
+
+		(new SeedTrustConfigurationRows($appManager, $container, new NullLogger()))->run($output);
+	}//end testAnUnavailableObjectServiceSkipsTheSeed()
+
+	/**
+	 * A row whose save fails is warned about by its key; the rest still run and the tally is reported.
+	 *
+	 * @return void
+	 */
+	public function testAFailingRowIsWarnedAndTheRunContinues(): void {
+		$failing = new class {
+			/** @var int */
+			public int $attempts = 0;
+
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				return [];
+			}
+
+			public function saveObject(array $object, array $extend = [], mixed $register = null, mixed $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->attempts++;
+				throw new \RuntimeException('write refused');
+			}
+		};
+		$appManager = $this->createStub(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['openregister']);
+		$container = $this->createStub(ContainerInterface::class);
+		$container->method('get')->willReturn($failing);
+		$warnings = [];
+		$output = $this->createMock(IOutput::class);
+		$output->method('warning')->willReturnCallback(static function (string $message) use (&$warnings): void {
+			$warnings[] = $message;
+		});
+		$output->expects(self::once())->method('info')->with('Trust-configuration seed complete: 0 seeded, 0 already present.');
+
+		(new SeedTrustConfigurationRows($appManager, $container, new NullLogger()))->run($output);
+
+		self::assertSame(3, $failing->attempts, 'every row is attempted');
+		self::assertCount(3, $warnings);
+		self::assertStringStartsWith('Trust-configuration seed failed for ', $warnings[0]);
+		self::assertStringEndsWith(': write refused', $warnings[0]);
+	}//end testAFailingRowIsWarnedAndTheRunContinues()
+
 }//end class

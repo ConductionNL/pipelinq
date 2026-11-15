@@ -194,4 +194,56 @@ class MigrateContactMomentDirectionTest extends TestCase {
 
 		$step->run($this->createMock(IOutput::class));
 	}//end testUnconfiguredSurfaceIsSkipped()
+
+	/**
+	 * A row is accepted whether it is an array or a JsonSerializable object, and
+	 * anything else — or an object serialising to a non-array — is skipped.
+	 *
+	 * @return void
+	 */
+	public function testRowsAreReadFromArraysAndJsonSerializableObjects(): void {
+		$serialisable = new class implements \JsonSerializable {
+			/**
+			 * The contact moment this object stands for.
+			 *
+			 * @return array<string, mixed> The row.
+			 */
+			public function jsonSerialize(): array {
+				return ['id' => 'obj-1', 'channelMetadata' => (object) ['richting' => 'uitgaand']];
+			}
+		};
+		$notArray = new class implements \JsonSerializable {
+			/**
+			 * A row whose serialisation is not an array, so the step must skip it.
+			 *
+			 * @return string The non-array serialisation.
+			 */
+			public function jsonSerialize(): string {
+				return 'not-a-row';
+			}
+		};
+		$rows = [
+			['id' => 'arr-1', 'channelMetadata' => ['richting' => 'inkomend']],
+			$serialisable,
+			$notArray,
+			'a bare string is not a row',
+		];
+
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturn($rows);
+		$saved = [];
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): ?object {
+				$saved[] = $object;
+				return null;
+			}
+		);
+
+		[$step] = $this->build(objectService: $objectService);
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame(['arr-1', 'obj-1'], array_column($saved, 'id'));
+		$this->assertSame(['inbound', 'outbound'], array_column($saved, 'direction'));
+	}//end testRowsAreReadFromArraysAndJsonSerializableObjects()
+
 }//end class

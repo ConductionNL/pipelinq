@@ -26,6 +26,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -74,6 +75,20 @@ class PointsLedgerOperationIdTest extends TestCase {
 	private bool $queryThrows = false;
 
 	/**
+	 * The account locks the service takes.
+	 *
+	 * @var InMemoryLockingProvider|null
+	 */
+	private ?InMemoryLockingProvider $locks = null;
+
+	/**
+	 * Runs once while a ledger entry is being saved, to interleave a second movement.
+	 *
+	 * @var \Closure|null
+	 */
+	private ?\Closure $duringSave = null;
+
+	/**
 	 * The service over an in-memory ledger.
 	 *
 	 * The object service answers as OpenRegister does: saveObject returns an
@@ -115,6 +130,12 @@ class PointsLedgerOperationIdTest extends TestCase {
 				string|int|null $schema=null,
 				?string $uuid=null
 			): ObjectEntity {
+				if ($this->duringSave !== null) {
+					$interleave = $this->duringSave;
+					$this->duringSave = null;
+					$interleave();
+				}
+
 				$id = 'entry-' . (count($this->entries) + 1);
 				$this->entries[$id] = $object;
 				return $this->entity(uuid: $id);
@@ -153,6 +174,7 @@ class PointsLedgerOperationIdTest extends TestCase {
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			objectService: $objects,
 			aggregationRunner: $this->createMock(originalClassName: AggregationRunner::class),
+			locking: ($this->locks ??= new InMemoryLockingProvider()),
 		);
 	}//end service()
 
@@ -232,6 +254,42 @@ class PointsLedgerOperationIdTest extends TestCase {
 		$this->assertSame(expected: -250, actual: $this->entries['entry-1']['count']);
 		$this->assertSame(expected: 0, actual: $this->accounts['anna']['currentBalance']);
 	}//end testARetriedDebitAfterSpendingReturnsTheFirstEntry()
+
+	/**
+	 * A second debit on the same account while the first is being written is
+	 * refused, so two debits cannot both pass the balance check on one balance.
+	 *
+	 * @return void
+	 */
+	public function testAConcurrentDebitCannotSpendTheSameBalance(): void {
+		$ledger = $this->service();
+		$second = 'not run';
+		$this->duringSave = function () use ($ledger, &$second): void {
+			try {
+				$ledger->debitPoints(accountId: 'anna', amount: 80, redemptionId: 'R-2', sourceDocument: [], processedBy: 'redemption-service');
+				$second = 'debited';
+			} catch (RuntimeException $e) {
+				$second = $e->getMessage();
+			}
+		};
+
+		$ledger->debitPoints(accountId: 'anna', amount: 80, redemptionId: 'R-1', sourceDocument: [], processedBy: 'redemption-service');
+
+		$this->assertSame(expected: 'Another points movement on this account is in progress; try again.', actual: $second);
+		$this->assertCount(expectedCount: 1, haystack: $this->entries);
+		$this->assertSame(expected: 20, actual: $this->accounts['anna']['currentBalance']);
+		$this->assertSame(expected: [], actual: $this->locks?->held);
+
+		// Once the first debit is done the lock is free and the balance check sees 20.
+		try {
+			$ledger->debitPoints(accountId: 'anna', amount: 80, redemptionId: 'R-3', sourceDocument: [], processedBy: 'redemption-service');
+			$this->fail(message: 'A debit above the remaining balance must be refused.');
+		} catch (RuntimeException $e) {
+			$this->assertSame(expected: 'Insufficient balance.', actual: $e->getMessage());
+		}
+
+		$this->assertSame(expected: [], actual: $this->locks?->held);
+	}//end testAConcurrentDebitCannotSpendTheSameBalance()
 
 	/**
 	 * REQ-LOY-011-03: a reused operation id with another amount is refused.

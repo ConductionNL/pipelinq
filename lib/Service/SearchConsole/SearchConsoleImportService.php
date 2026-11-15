@@ -25,29 +25,27 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
-use DateTimeImmutable;
-use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
  * SearchConsoleImportService: fetch, upsert, report.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
-class SearchConsoleImportService {
+class SearchConsoleImportService implements SearchConsoleImportServiceInterface {
 
 	/**
 	 * App-config key holding the property list (site URLs), one per line
@@ -116,7 +114,7 @@ class SearchConsoleImportService {
 	 * @param GoogleServiceAccountAuth $auth Service account token minting.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function __construct(
 		private IClientService $clientService,
@@ -133,10 +131,10 @@ class SearchConsoleImportService {
 	 *
 	 * @return array<int, string> Site URLs such as `https://example.org/` or `sc-domain:example.org`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function properties(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::PROPERTIES_KEY, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PROPERTIES_KEY, '');
 		$parts = preg_split('/[\r\n,]+/', $raw);
 		if ($parts === false) {
 			return [];
@@ -158,7 +156,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function hasKey(): bool {
 		return $this->key() !== null;
@@ -169,7 +167,7 @@ class SearchConsoleImportService {
 	 *
 	 * @return string The email, empty without a key.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function serviceAccountEmail(): string {
 		$key = $this->key();
@@ -185,10 +183,10 @@ class SearchConsoleImportService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function lastImportAt(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, self::LAST_IMPORT_KEY, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, self::LAST_IMPORT_KEY, '');
 	}//end lastImportAt()
 
 	/**
@@ -198,31 +196,68 @@ class SearchConsoleImportService {
 	 *
 	 * @return array{properties: int, rows: int, errors: array<string, string>} Counts and per-property failures.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function importRecent(int $days = 3): array {
-		$result = ['properties' => 0, 'rows' => 0, 'errors' => []];
 		$key = $this->key();
 		$properties = $this->properties();
 		if ($key === null || $properties === []) {
 			$this->logger->debug('SearchConsoleImportService: no key or no properties configured, skipping');
-			return $result;
+			return ['properties' => 0, 'rows' => 0, 'errors' => []];
 		}
 
-		$today = (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC'));
-		$from = $today->modify('-' . max(0, $days) . ' days')->format('Y-m-d');
-		$to = $today->format('Y-m-d');
+		$window = $this->windowEndingToday(days: $days);
 
 		try {
 			$token = $this->auth->accessToken(key: $key, scope: self::SCOPE);
 		} catch (Throwable $e) {
-			$result['errors']['*'] = $e->getMessage();
-			return $result;
+			return ['properties' => 0, 'rows' => 0, 'errors' => ['*' => $e->getMessage()]];
 		}
 
+		$result = $this->importAll(read: new SearchConsoleRead(token: $token, window: $window), properties: $properties);
+		$this->stampWhenImported(result: $result, window: $window);
+
+		return $result;
+	}//end importRecent()
+
+	/**
+	 * The window of `$days` days back ending today (UTC).
+	 *
+	 * @param int $days How many days back from today, inclusive of today.
+	 *
+	 * @return ImportWindow
+	 */
+	private function windowEndingToday(int $days): ImportWindow {
+		return new ImportWindow(timestamp: $this->time->getTime(), days: $days);
+	}//end windowEndingToday()
+
+	/**
+	 * Keep the import moment when at least one property was imported.
+	 *
+	 * @param array{properties: int, rows: int, errors: array<string, string>} $result The run's counts.
+	 * @param ImportWindow                                                      $window The window it read.
+	 *
+	 * @return void
+	 */
+	private function stampWhenImported(array $result, ImportWindow $window): void {
+		if ($result['properties'] > 0) {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::LAST_IMPORT_KEY, $window->today()->format('Y-m-d\TH:i:s\Z'));
+		}
+	}//end stampWhenImported()
+
+	/**
+	 * Import every property, a failing one reported without stopping the others.
+	 *
+	 * @param SearchConsoleRead  $read       The token and the window.
+	 * @param array<int, string> $properties The configured properties.
+	 *
+	 * @return array{properties: int, rows: int, errors: array<string, string>}
+	 */
+	private function importAll(SearchConsoleRead $read, array $properties): array {
+		$result = ['properties' => 0, 'rows' => 0, 'errors' => []];
 		foreach ($properties as $property) {
 			try {
-				$result['rows'] += $this->importProperty(property: $property, from: $from, to: $to, token: $token);
+				$result['rows'] += $this->importProperty(read: $read, property: $property);
 				$result['properties']++;
 			} catch (Throwable $e) {
 				$this->logger->warning(
@@ -233,29 +268,23 @@ class SearchConsoleImportService {
 			}
 		}
 
-		if ($result['properties'] > 0) {
-			$this->appConfig->setValueString(Application::APP_ID, self::LAST_IMPORT_KEY, $today->format('Y-m-d\TH:i:s\Z'));
-		}
-
 		return $result;
-	}//end importRecent()
+	}//end importAll()
 
 	/**
 	 * Import one property over a window.
 	 *
-	 * @param string $property The site URL or `sc-domain:` property.
-	 * @param string $from Window start `YYYY-MM-DD`.
-	 * @param string $to Window end `YYYY-MM-DD`, inclusive.
-	 * @param string $token A bearer token for the read-only scope.
+	 * @param SearchConsoleRead $read     The bearer token for the read-only scope and the window.
+	 * @param string            $property The site URL or `sc-domain:` property.
 	 *
 	 * @return int Rows upserted.
 	 *
 	 * @throws Throwable When the API refuses.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
-	public function importProperty(string $property, string $from, string $to, string $token): int {
-		$rows = $this->fetchRows(token: $token, property: $property, from: $from, to: $to);
+	public function importProperty(SearchConsoleRead $read, string $property): int {
+		$rows = $this->fetchRows(read: $read, property: $property);
 		$importedAt = gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime());
 		$saved = 0;
 		foreach ($rows as $row) {
@@ -266,7 +295,7 @@ class SearchConsoleImportService {
 
 		$this->logger->info(
 			'SearchConsoleImportService: property imported',
-			['property' => $property, 'from' => $from, 'to' => $to, 'rows' => $saved]
+			['property' => $property, 'from' => $read->window->firstDay(), 'to' => $read->window->lastDay(), 'rows' => $saved]
 		);
 
 		return $saved;
@@ -275,58 +304,23 @@ class SearchConsoleImportService {
 	/**
 	 * Fetch every row of the window, paging with `startRow` until a short page.
 	 *
-	 * @param string $token Bearer token.
-	 * @param string $property The property.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param SearchConsoleRead $read     The bearer token and the window.
+	 * @param string            $property The property.
 	 *
 	 * @return array<int, array<string, mixed>> Normalised rows: date, query, page, clicks, impressions, ctr, position.
 	 *
-	 * @throws \RuntimeException When the API answers with an error.
+	 * @throws Throwable When the API answers with an error (from the property endpoint).
 	 */
-	private function fetchRows(string $token, string $property, string $from, string $to): array {
-		$url = str_replace('{site}', rawurlencode($property), self::API_URL);
-		$client = $this->clientService->newClient();
+	private function fetchRows(SearchConsoleRead $read, string $property): array {
+		$endpoint = new PropertyEndpoint(
+			client: $this->clientService->newClient(),
+			url: str_replace('{site}', rawurlencode($property), self::API_URL)
+		);
 		$rows = [];
 		$startRow = 0;
 		while ($startRow < self::MAX_ROWS) {
-			$response = $client->post(
-				$url,
-				[
-					'headers' => ['Authorization' => ('Bearer ' . $token), 'Accept' => 'application/json'],
-					'json' => [
-						'startDate' => $from,
-						'endDate' => $to,
-						'dimensions' => ['date', 'query', 'page'],
-						'rowLimit' => self::ROW_LIMIT,
-						'startRow' => $startRow,
-						'dataState' => 'all',
-					],
-					'timeout' => 60,
-				]
-			);
-
-			$decoded = json_decode((string)$response->getBody(), true);
-			if (is_array($decoded) === false) {
-				throw new RuntimeException('Search Console: the API answered with something that is not JSON');
-			}
-
-			if (isset($decoded['error']) === true) {
-				throw new RuntimeException('Search Console: ' . $this->errorMessage(error: $decoded['error']));
-			}
-
-			$page = ($decoded['rows'] ?? []);
-			if (is_array($page) === false) {
-				$page = [];
-			}
-
-			foreach ($page as $raw) {
-				$row = $this->normaliseRow(raw: $raw);
-				if ($row !== null) {
-					$rows[] = $row;
-				}
-			}
-
+			$page = $endpoint->page(options: self::requestOptions(read: $read, startRow: $startRow));
+			$rows = array_merge($rows, $this->normalisedRows(page: $page));
 			if (count($page) < self::ROW_LIMIT) {
 				break;
 			}
@@ -338,19 +332,46 @@ class SearchConsoleImportService {
 	}//end fetchRows()
 
 	/**
-	 * The message of an API error object, or the error itself as a string.
+	 * The query request for one page of the window.
 	 *
-	 * @param mixed $error The `error` member of the API answer.
+	 * @param SearchConsoleRead $read     The bearer token and the window.
+	 * @param int               $startRow The first row of the page.
 	 *
-	 * @return string
+	 * @return array<string, mixed>
 	 */
-	private function errorMessage(mixed $error): string {
-		if (is_array($error) === true) {
-			return (string)($error['message'] ?? 'error');
+	private static function requestOptions(SearchConsoleRead $read, int $startRow): array {
+		return [
+			'headers' => ['Authorization' => ('Bearer ' . $read->token), 'Accept' => 'application/json'],
+			'json' => [
+				'startDate' => $read->window->firstDay(),
+				'endDate' => $read->window->lastDay(),
+				'dimensions' => ['date', 'query', 'page'],
+				'rowLimit' => self::ROW_LIMIT,
+				'startRow' => $startRow,
+				'dataState' => 'all',
+			],
+			'timeout' => 60,
+		];
+	}//end requestOptions()
+
+	/**
+	 * The rows of a page that normalise, in order.
+	 *
+	 * @param array<int|string, mixed> $page The raw rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function normalisedRows(array $page): array {
+		$rows = [];
+		foreach ($page as $raw) {
+			$row = $this->normaliseRow(raw: $raw);
+			if ($row !== null) {
+				$rows[] = $row;
+			}
 		}
 
-		return (string)$error;
-	}//end errorMessage()
+		return $rows;
+	}//end normalisedRows()
 
 	/**
 	 * Turn one API row (`keys: [date, query, page]`) into a flat record.
@@ -387,7 +408,7 @@ class SearchConsoleImportService {
 	 * @return array<string, string>|null
 	 */
 	private function key(): ?array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::KEY_KEY, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_KEY, '');
 		if ($raw === '') {
 			return null;
 		}

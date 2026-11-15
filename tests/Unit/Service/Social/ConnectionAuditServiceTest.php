@@ -21,6 +21,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Social;
 
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
+use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
+use OCA\Pipelinq\Service\Competitor\FediverseWatchReader;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\ConnectionAuditService;
@@ -273,4 +275,80 @@ class ConnectionAuditServiceTest extends TestCase {
 		$this->assertSame(1, $summary['unknown']);
 		$this->assertSame(0, $summary['answered']);
 	}//end testAnAuditedPairIsStoredAndCounted()
+
+	/**
+	 * A Bluesky pair: both lists read from the AppView with their method and
+	 * query, handles matched case-insensitively; and the reasons when one or
+	 * both lists cannot be read, or the account has no handle.
+	 *
+	 * @return void
+	 */
+	public function testABlueskyPairAndItsReasons(): void {
+		$calls = [];
+		$answers = [
+			'getFollows' => EgressResult::success(body: '{"follows":[{"handle":"Voorbeeld.bsky.social"},"x",{"handle":""}]}'),
+			'getFollowers' => EgressResult::success(body: '{"followers":"none"}'),
+		];
+		$this->egress->method('readUrl')->willReturnCallback(
+			static function (string $configKey, string $url, array $config = []) use (&$calls, &$answers): EgressResult {
+				$calls[] = [$configKey, $url, $config];
+				return $answers[substr($url, (strrpos($url, '.') + 1))];
+			}
+		);
+		$pair = static fn (ConnectionAuditService $audit, string $handle): array => $audit->audit(
+			account: ['id' => 'acct-b', 'network' => 'bluesky', 'handle' => $handle],
+			client: ['id' => 'client-1'],
+			profile: ['network' => 'bluesky', 'handle' => '@voorbeeld.bsky.social', 'url' => 'https://bsky.app/profile/voorbeeld']
+		);
+
+		$row = $pair($this->audit, ' @conduction.nl ');
+		$this->assertSame(['yes', 'unknown', 'The Bluesky AppView did not answer the followers list.'], [$row['weFollowThem'], $row['theyFollowUs'], $row['reason']]);
+		$this->assertSame(
+			[
+				[CompetitorWatchService::SOURCE_KEY, FediverseWatchReader::BLUESKY_APPVIEW . '/xrpc/app.bsky.graph.getFollows', ['query' => ['actor' => 'conduction.nl', 'limit' => '200']]],
+				[CompetitorWatchService::SOURCE_KEY, FediverseWatchReader::BLUESKY_APPVIEW . '/xrpc/app.bsky.graph.getFollowers', ['query' => ['actor' => 'conduction.nl', 'limit' => '200']]],
+			],
+			$calls
+		);
+		$this->assertSame(['accountId' => 'acct-b', 'network' => 'bluesky', 'clientId' => 'client-1', 'counterpartHandle' => '@voorbeeld.bsky.social', 'counterpartUrl' => 'https://bsky.app/profile/voorbeeld'], array_slice($row, 0, 5));
+		$this->assertSame(gmdate('Y-m-d\TH:i:s\Z', 1788600000), $row['seenAt']);
+
+		$answers['getFollows'] = EgressResult::failed(failure: EgressResult::REFUSED, reason: 'no', status: 500);
+		$row = $pair($this->audit, 'conduction.nl');
+		$this->assertSame(['unknown', 'unknown', 'The Bluesky AppView did not answer the following list.'], [$row['weFollowThem'], $row['theyFollowUs'], $row['reason']]);
+
+		$answers['getFollowers'] = EgressResult::success(body: '{"followers":[{"handle":"other.bsky.social"}]}');
+		$row = $pair($this->audit, 'conduction.nl');
+		$this->assertSame(['unknown', 'no', 'The Bluesky AppView did not answer the following list.'], [$row['weFollowThem'], $row['theyFollowUs'], $row['reason']]);
+
+		$calls = [];
+		$row = $pair($this->audit, '  ');
+		$this->assertSame(['unknown', 'unknown', 'The connected Bluesky account has no handle.'], [$row['weFollowThem'], $row['theyFollowUs'], $row['reason']]);
+		$this->assertSame([], $calls);
+	}//end testABlueskyPairAndItsReasons()
+
+	/**
+	 * Mastodon: a handle without an instance and a failed lookup each name their reason.
+	 *
+	 * @return void
+	 */
+	public function testMastodonLookupReasons(): void {
+		$calls = [];
+		$this->egress->method('readUrl')->willReturnCallback(
+			static function (string $configKey, string $url, array $config = []) use (&$calls): EgressResult {
+				$calls[] = [$url, $config];
+				return EgressResult::success(body: '{"acct":"conduction"}');
+			}
+		);
+		$pair = fn (string $handle): array => $this->audit->audit(
+			account: ['id' => 'acct-1', 'network' => 'mastodon', 'handle' => $handle],
+			client: ['id' => 'client-1'],
+			profile: ['network' => 'mastodon', 'handle' => 'v@x.org', 'url' => '']
+		);
+
+		$this->assertSame('The connected Mastodon handle does not name an instance.', $pair('@conduction')['reason']);
+		$this->assertSame([], $calls);
+		$this->assertSame('The instance mastodon.nl did not answer the account lookup.', $pair(' @conduction@mastodon.nl')['reason']);
+		$this->assertSame([['https://mastodon.nl/api/v1/accounts/lookup', ['query' => ['acct' => 'conduction@mastodon.nl']]], ['https://mastodon.nl/api/v1/accounts/lookup', ['query' => ['acct' => 'conduction@mastodon.nl']]]], $calls);
+	}//end testMastodonLookupReasons()
 }//end class

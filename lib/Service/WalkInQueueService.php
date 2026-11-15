@@ -31,10 +31,15 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\AppointmentServiceLookup;
+use OCA\Pipelinq\Service\Support\ByteTruncate;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Service\Support\WithoutSelf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -59,9 +64,14 @@ use RuntimeException;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class WalkInQueueService {
+class WalkInQueueService implements WalkInQueueServiceInterface {
 	use EntityIdOf;
 	use NullablePayloadToArray;
+	use ConfiguredRegisterId;
+	use AppointmentServiceLookup;
+	use InjectedObjectService;
+	use ByteTruncate;
+	use WithoutSelf;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -178,6 +188,7 @@ class WalkInQueueService {
 			'displayName' => $this->truncate(value: $displayName, max: 255),
 			'arrivedAt' => $nowIso,
 			'status' => 'waiting',
+			'queueNumber' => $this->nextQueueNumber(today: substr($nowIso, 0, 10)),
 		];
 
 		if ($customerId !== '') {
@@ -587,6 +598,57 @@ class WalkInQueueService {
 	}//end listByStatus()
 
 	/**
+	 * The next queue number of the day: one more than the highest number a
+	 * ticket that arrived today carries, so the first visitor of a day gets 1.
+	 *
+	 * @param string $today The day, `Y-m-d` (UTC, as `arrivedAt` is stored).
+	 *
+	 * @return int The number for the next ticket.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/appointment-booking/spec.md#requirement-a-walk-in-visitor-gets-a-queue-number
+	 */
+	private function nextQueueNumber(string $today): int {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::TICKET_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return 1;
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: [
+					'filters' => ['arrivedAt' => ['gte' => $today . 'T00:00:00+00:00']],
+					'register' => $register,
+					'schema' => $schema,
+					'limit' => self::QUEUE_PAGE_SIZE,
+					'order' => ['arrivedAt' => 'DESC'],
+				]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: walk-in queue number lookup failed', ['exception' => $e->getMessage()]);
+			return 1;
+		}
+
+		if (is_array($rows) === false) {
+			return 1;
+		}
+
+		$highest = 0;
+		foreach ($rows as $row) {
+			$ticket = $this->toArray(object: $row);
+			// The day is checked here too: a backend that ignores the filter
+			// must not carry yesterday's numbers into today.
+			if ($ticket === null || substr((string)($ticket['arrivedAt'] ?? ''), 0, 10) !== $today) {
+				continue;
+			}
+
+			$highest = max($highest, (int)($ticket['queueNumber'] ?? 0));
+		}
+
+		return ($highest + 1);
+	}//end nextQueueNumber()
+
+	/**
 	 * Load a WalkInTicket by id, throwing when not found.
 	 *
 	 * @param string $ticketId Ticket UUID.
@@ -638,24 +700,7 @@ class WalkInQueueService {
 			return null;
 		}
 
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: walk-in service load failed', ['service' => $serviceId]);
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findServiceObject(serviceId: $serviceId, failure: 'Pipelinq: walk-in service load failed');
 	}//end loadServiceQuiet()
 
 	/**
@@ -808,37 +853,6 @@ class WalkInQueueService {
 	}//end ticketAsArray()
 
 	/**
-	 * Strip OpenRegister metadata before re-saving.
-	 *
-	 * @param array<string, mixed> $payload Ticket payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function stripSelf(array $payload): array {
-		if (array_key_exists('@self', $payload) === true) {
-			unset($payload['@self']);
-		}
-
-		return $payload;
-	}//end stripSelf()
-
-	/**
-	 * Truncate a string to a maximum length.
-	 *
-	 * @param string $value Raw value.
-	 * @param int $max Maximum length.
-	 *
-	 * @return string
-	 */
-	private function truncate(string $value, int $max): string {
-		if (strlen($value) <= $max) {
-			return $value;
-		}
-
-		return substr($value, 0, $max);
-	}//end truncate()
-
-	/**
 	 * Compose a UTC ISO-8601 timestamp from a date + local HH:MM time.
 	 *
 	 * The AvailabilityService publishes free slots in the resource's local
@@ -878,49 +892,4 @@ class WalkInQueueService {
 	private function nowIso(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 	}//end nowIso()
-
-	/**
-	 * The pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

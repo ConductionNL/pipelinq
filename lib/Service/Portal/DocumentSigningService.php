@@ -22,14 +22,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-005
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-005
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DocumentSigningServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
@@ -42,20 +43,13 @@ use OCP\Security\ISecureRandom;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class DocumentSigningService {
+class DocumentSigningService implements DocumentSigningServiceInterface {
 	/**
 	 * App-config key holding the per-instance signing secret.
 	 *
 	 * @var string
 	 */
 	private const SIGNING_KEY = 'portal_document_signing_key';
-
-	/**
-	 * Default token TTL in minutes.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_TTL_MINUTES = 5;
 
 	/**
 	 * Constructor.
@@ -102,6 +96,17 @@ class DocumentSigningService {
 			'expiresAt' => $expiresAt,
 		];
 
+		return $this->signedUrl(payload: $payload);
+	}//end generateUrl()
+
+	/**
+	 * The signed token for a payload and its download path.
+	 *
+	 * @param array{objectId: string, objectType: string, accountId: string, issuedAt: int, expiresAt: int} $payload The token payload.
+	 *
+	 * @return array{token: string, path: string, expiresAt: int} The signed material.
+	 */
+	private function signedUrl(array $payload): array {
 		$encoded = $this->base64UrlEncode(data: json_encode($payload));
 		$signature = $this->base64UrlEncode(data: $this->sign(encoded: $encoded));
 		$token = $encoded . '.' . $signature;
@@ -109,9 +114,9 @@ class DocumentSigningService {
 		return [
 			'token' => $token,
 			'path' => '/portal/api/documents/' . $token . '/download',
-			'expiresAt' => $expiresAt,
+			'expiresAt' => $payload['expiresAt'],
 		];
-	}//end generateUrl()
+	}//end signedUrl()
 
 	/**
 	 * Validate a token: verify the signature, then the expiry.
@@ -169,10 +174,10 @@ class DocumentSigningService {
 	 * @return string The signing key.
 	 */
 	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SIGNING_KEY, '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SIGNING_KEY, '');
 		if ($key === '') {
 			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SIGNING_KEY, $key, false, true);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SIGNING_KEY, $key, false, true);
 		}
 
 		return $key;

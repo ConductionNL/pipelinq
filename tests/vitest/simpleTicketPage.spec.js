@@ -123,11 +123,17 @@ describe('the full structure', () => {
 		// (website-submissions-link-to-client, shown while the ticket has no
 		// client), Make a letter (work-letter-from-filinq-template, shown only
 		// with filinq) and Assign to me (detail-pages-read-at-a-glance), which
-		// sets the assignee and changes no status.
+		// sets the assignee and changes no status. Review this call
+		// (contact-moments-call-review) shows for the call review group on a
+		// ticket with a recording. Then Lock and Unlock (platform-record-lock),
+		// one of which shows at a time.
 		expect(full.config.headerActions.map((action) => action.id)).toEqual([
 			'link-to-client',
 			'make-letter',
 			'assign-to-me',
+			'review-call',
+			'lock-record',
+			'unlock-record',
 		])
 		expect(full.config.sideColumn).toBeUndefined()
 	})
@@ -405,8 +411,9 @@ describe('the body', () => {
 	const widgetIds = simple.widgets.map((widget) => widget.id)
 
 	it('is one tabs widget over the full width, with at most five tabs showing', () => {
-		expect(simple.layout).toHaveLength(1)
-		expect(simple.layout[0]).toMatchObject({
+		// Above the strip only the locked line (platform-record-lock), which shows on a locked ticket.
+		expect(simple.layout.map((cell) => cell.widgetId)).toEqual(['ticket-locked', 'ticket-panels'])
+		expect(simple.layout[1]).toMatchObject({
 			widgetId: 'ticket-panels',
 			gridX: 0,
 			gridWidth: 12,
@@ -428,8 +435,10 @@ describe('the body', () => {
 			(tab) => tab.widgetIds || [tab.widgetId],
 		)
 		// The strip itself is the page's own, given the board's four tabs.
+		// A banner the simple layout places above the strip is not a tab.
+		const placed = simple.layout.map((cell) => cell.widgetId)
 		const children = full.config.widgets.filter(
-			(widget) => widget.id !== 'ticket-panels',
+			(widget) => widget.id !== 'ticket-panels' && !placed.includes(widget.id),
 		)
 		for (const widget of children) {
 			expect(tabbed, widget.id).toContain(widget.id)
@@ -483,6 +492,7 @@ describe('the body', () => {
 			'Contact moments',
 			'Related',
 			'Decisions',
+			'Call',
 			'History',
 		])
 		expect(panels.content.tabs[1].widgetIds).toEqual([

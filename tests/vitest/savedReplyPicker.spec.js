@@ -141,11 +141,8 @@ describe('saved reply helpers', () => {
 
 	it('opens the Mail composer with the encoded address, subject and body', () => {
 		const url = composeUrl(
-			'jan@example.nl',
-			'Uw vraag & meer',
-			'Regel 1\nRegel 2',
-			true,
-			(p) => '/index.php' + p,
+			{ address: 'jan@example.nl', subject: 'Uw vraag & meer', body: 'Regel 1\nRegel 2' },
+			{ enabled: true, generateUrl: (p) => '/index.php' + p },
 		)
 		expect(url.startsWith('/index.php/apps/mail/compose?uri=')).toBe(true)
 		const mailto = decodeURIComponent(url.split('?uri=')[1])
@@ -156,7 +153,7 @@ describe('saved reply helpers', () => {
 
 	it('falls back to a mailto link when Mail is not enabled', () => {
 		expect(
-			composeUrl('jan@example.nl', 'Hoi', 'Tekst', false, () => 'never'),
+			composeUrl({ address: 'jan@example.nl', subject: 'Hoi', body: 'Tekst' }, { enabled: false, generateUrl: () => 'never' }),
 		).toBe('mailto:jan@example.nl?subject=Hoi&body=Tekst')
 	})
 })

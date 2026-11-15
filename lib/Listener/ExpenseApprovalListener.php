@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
  */
 
 declare(strict_types=1);
@@ -26,12 +26,14 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Event\ExpenseApprovedEvent;
-use OCA\Pipelinq\Service\ApSyncNotifier;
-use OCA\Pipelinq\Service\SchemaMapService;
-use OCA\Pipelinq\Service\ShillinqApService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ApSyncNotifierInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqApServiceInterface;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -79,7 +81,7 @@ use Throwable;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges the schema map,
  *  Shillinq AP service, admin notifier, event dispatcher, OR ObjectService,
@@ -88,6 +90,8 @@ use Throwable;
  */
 class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	use EntityAccessorTrait;
+	use ConfiguredSchemaObjectRead;
+	use ConfiguredSchemaObjectWrite;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -97,11 +101,32 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	public const HANDLER_KEY = 'expense-approval';
 
 	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'expense_schema';
+
+	/**
+	 * Log line when the deferred re-read fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to re-read expense for deferred AP dispatch';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist expense AP sync status';
+
+	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ShillinqApService $apService The Shillinq AP service.
-	 * @param ApSyncNotifier $notifier The admin failure notifier.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
+	 * @param ShillinqApServiceInterface $apService The Shillinq AP service.
+	 * @param ApSyncNotifierInterface $notifier The admin failure notifier.
 	 * @param IEventDispatcher $eventDispatcher The event dispatcher (for ExpenseApprovedEvent fan-out).
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
@@ -109,9 +134,9 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
-		private ShillinqApService $apService,
-		private ApSyncNotifier $notifier,
+		private SchemaMapServiceInterface $schemaMapService,
+		private ShillinqApServiceInterface $apService,
+		private ApSyncNotifierInterface $notifier,
 		private IEventDispatcher $eventDispatcher,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
@@ -129,12 +154,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false
@@ -144,27 +164,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 		}
 
 		try {
-			$dispatchable = $this->resolveDispatchable(event: $event);
-			if ($dispatchable === null) {
-				return;
-			}
-
-			[$uuid] = $dispatchable;
-
-			// See the class docblock: our own persist() re-enters this listener
-			// with a payload that passes every check above.
-			if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
-				return;
-			}
-
-			$this->deferral->defer(
-				jobClass: DeferredObjectListenerJob::class,
-				entry: [
-					'handler' => self::HANDLER_KEY,
-					'uuid' => $uuid,
-				],
-				dedupeKey: self::HANDLER_KEY . '|' . $uuid
-			);
+			$this->queueApDispatch(event: $event);
 		} catch (Throwable $e) {
 			// CRITICAL: never throw — approval workflow must not be affected.
 			$this->logger->warning(
@@ -175,13 +175,46 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	}//end handle()
 
 	/**
+	 * Queue the AP dispatch of a dispatchable expense, unless this pass is the deferred one.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The event.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function queueApDispatch(ObjectCreatedEvent|ObjectUpdatedEvent $event): void {
+		$dispatchable = $this->resolveDispatchable(event: $event);
+		if ($dispatchable === null) {
+			return;
+		}
+
+		[$uuid] = $dispatchable;
+
+		// See the class docblock: our own persist() re-enters this listener
+		// with a payload that passes every check above.
+		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
+			return;
+		}
+
+		$this->deferral->defer(
+			jobClass: DeferredObjectListenerJob::class,
+			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid],
+			dedupeKey: self::HANDLER_KEY . '|' . $uuid
+		);
+	}//end queueApDispatch()
+
+	/**
 	 * Re-emit the approval event and dispatch the AP webhook, recording outcome.
 	 *
 	 * @param array<string, mixed> $entry The entry captured at dispatch time.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');
@@ -340,70 +373,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 		}
 
 		// Fallback: direct compare against app-config expense_schema (REQ-AP-002).
-		$expenseSchema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
+		$expenseSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
 		return $expenseSchema !== '' && $schemaId === $expenseSchema;
 	}//end isExpense()
-
-	/**
-	 * Read the expense's current data.
-	 *
-	 * @param string $uuid The expense UUID.
-	 *
-	 * @return array<string, mixed>|null The expense data, or null when it is gone.
-	 */
-	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return null;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to re-read expense for deferred AP dispatch',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetch()
-
-	/**
-	 * Persist the mutated expense data back to OpenRegister.
-	 *
-	 * @param string $uuid The expense UUID.
-	 * @param array<string, mixed> $data The mutated expense data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist expense AP sync status',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

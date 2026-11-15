@@ -23,7 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Merge;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\OpenRegister\Service\Object\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Service\Merge\MergedAwayStamp;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;

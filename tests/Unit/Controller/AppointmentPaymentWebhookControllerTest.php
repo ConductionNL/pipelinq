@@ -272,4 +272,55 @@ class AppointmentPaymentWebhookControllerTest extends TestCase {
 		$this->assertSame(expected: 'deferred', actual: $data['outcome']);
 
 	}//end testCallbackReturns200WhenDepositHandlerThrows()
+
+	/**
+	 * Golden: every answer's exact body and log line, and what reaches the deposit service.
+	 *
+	 * @return void
+	 */
+	public function testEveryAnswerIsExact(): void {
+		$secret = 'shared';
+		$this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
+		$cases = [
+			'bad signature' => ['{"bookingId":"b-1","status":"paid"}', 'wrong', null, [422, ['error' => 'Invalid webhook signature']], [['warning', 'AppointmentPaymentWebhookController: invalid signature', ['ip' => '10.0.0.1']]], []],
+			'empty body' => ['', null, null, [422, ['error' => 'Invalid webhook signature']], [['warning', 'AppointmentPaymentWebhookController: invalid signature', ['ip' => '10.0.0.1']]], []],
+			'not an object' => ['"paid"', null, null, [400, ['error' => 'Invalid payload']], [], []],
+			'blank booking' => ['{"bookingId":"  ","status":"paid"}', null, null, [400, ['error' => 'bookingId and status are required']], [], []],
+			'trimmed fields' => ['{"bookingId":" b-2 ","status":" failed "}', null, 'released', [200, ['ok' => true, 'outcome' => 'released']], [], [['b-2', 'failed']]],
+			'handler fails' => ['{"bookingId":"b-3","status":"paid"}', null, new \RuntimeException('db down'), [200, ['ok' => true, 'outcome' => 'deferred']], [['warning', 'AppointmentPaymentWebhookController: callback handler failed', ['booking' => 'b-3']]], [['b-3', 'paid']]],
+		];
+		foreach ($cases as $name => [$body, $signature, $outcome, $answer, $logs, $calls]) {
+			$request = $this->createMock(IRequest::class);
+			$request->method('getHeader')->willReturn($signature ?? hash_hmac('sha256', $body, $secret));
+			$request->method('getRemoteAddress')->willReturn('10.0.0.1');
+			$deposit = $this->createMock(AppointmentDepositService::class);
+			$seen = [];
+			$deposit->method('handlePaymentCallback')->willReturnCallback(
+				static function (string $bookingId, string $status) use ($outcome, &$seen): string {
+					$seen[] = [$bookingId, $status];
+					if ($outcome instanceof \Throwable) {
+						throw $outcome;
+					}
+
+					return (string)$outcome;
+				}
+			);
+			$lines = [];
+			$logger = $this->createMock(LoggerInterface::class);
+			$logger->method('warning')->willReturnCallback(
+				static function (string $message, array $context = []) use (&$lines): void {
+					$lines[] = ['warning', $message, $context];
+				}
+			);
+			$this->request = $request;
+			$this->deposit = $deposit;
+			$this->logger = $logger;
+
+			$response = $this->buildController(rawBody: $body)->callback();
+
+			$this->assertSame($answer, [$response->getStatus(), $response->getData()], $name);
+			$this->assertSame($logs, $lines, $name.' logs');
+			$this->assertSame($calls, $seen, $name.' calls');
+		}
+	}//end testEveryAnswerIsExact()
 }//end class

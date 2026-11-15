@@ -238,7 +238,8 @@
             "type": "callbackRequest",
             "subject": "Bel terug",
             "deadline": "2026-11-04T10:00:00+00:00",
-            "priority": "normal"
+            "priority": "normal",
+            "assigneeUserId": "agent"
         },
         "trace": [
             {
@@ -249,7 +250,8 @@
                     "type": "callbackRequest",
                     "subject": "Bel terug",
                     "deadline": "2026-11-04T10:00:00+00:00",
-                    "priority": "normal"
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
                 }
             }
         ]
@@ -372,7 +374,8 @@
             "type": "callbackRequest",
             "subject": "Bel terug",
             "deadline": "2026-11-04T10:00:00+00:00",
-            "priority": "normal"
+            "priority": "normal",
+            "assigneeUserId": "agent"
         },
         "trace": [
             {
@@ -383,7 +386,8 @@
                     "type": "callbackRequest",
                     "subject": "Bel terug",
                     "deadline": "2026-11-04T10:00:00+00:00",
-                    "priority": "normal"
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
                 }
             }
         ]
@@ -429,7 +433,8 @@
                     "type": "callbackRequest",
                     "subject": "Bel terug",
                     "deadline": "2026-11-04T10:00:00+00:00",
-                    "priority": "normal"
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
                 }
             }
         ]
@@ -449,7 +454,8 @@
                     "type": "callbackRequest",
                     "subject": "Bel terug",
                     "deadline": "2026-11-04T10:00:00+00:00",
-                    "priority": "normal"
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
                 }
             },
             {

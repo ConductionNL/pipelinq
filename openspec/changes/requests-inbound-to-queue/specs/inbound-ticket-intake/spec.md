@@ -120,3 +120,14 @@ cannot run. Each routed ticket SHALL record which rule matched.
 - WHEN mail arrives in a ticket mailbox
 - THEN the ticket lands in the Queue with no category
 - AND the Routing rules page offers to switch routing on
+
+### Requirement: An agent answers a social media message from its ticket (REQ-ITQ-006)
+
+The ticket of a Facebook or Instagram message SHALL let an agent write a reply that is sent on the same conversation and logged on the ticket.
+
+#### Scenario: Replying to a Facebook message
+
+- GIVEN a ticket that came from a Facebook page message
+- WHEN an agent writes a reply on the ticket and sends it
+- THEN the visitor receives the reply in the same Facebook conversation
+- AND the reply is logged on the ticket

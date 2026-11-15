@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,9 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCA\Pipelinq\Lifecycle\SessionUser;
-use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,7 +48,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  */
 class SchedulesController extends Controller {
 	/**
@@ -78,17 +78,17 @@ class SchedulesController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ScheduledTaskService $scheduledTaskService Schedule service.
+	 * @param ScheduledTaskServiceInterface $scheduledTaskService Schedule service.
 	 * @param SessionUser $sessionUser The session user and their admin membership.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ScheduledTaskService $scheduledTaskService,
+		private ScheduledTaskServiceInterface $scheduledTaskService,
 		private SessionUser $sessionUser,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -98,7 +98,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse Paginated task envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -140,7 +140,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The created task (201) or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -154,15 +154,36 @@ class SchedulesController extends Controller {
 			'subject' => (string)$this->request->getParam('subject', ''),
 			'deadline' => (string)$this->request->getParam('deadline', ''),
 		];
-		if (in_array($required['type'], ScheduledTaskService::VALID_TYPES, true) === false
-			|| $required['subject'] === ''
-			|| $required['deadline'] === ''
-		) {
+		if ($this->hasRequiredFields(required: $required) === false) {
 			return $this->invalidInput();
 		}
 
 		$data = $this->buildScheduledTaskData(required: $required, userId: $userId);
 
+		return $this->storeScheduledTask(data: $data);
+	}//end create()
+
+	/**
+	 * Whether the type is valid and the subject and deadline are given.
+	 *
+	 * @param array{type: string, subject: string, deadline: string} $required The required fields.
+	 *
+	 * @return bool True when the request can be stored.
+	 */
+	private function hasRequiredFields(array $required): bool {
+		return (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
+			|| $required['subject'] === ''
+			|| $required['deadline'] === '') === false;
+	}//end hasRequiredFields()
+
+	/**
+	 * Create the scheduled task and answer 201, or an invalid-input or failure response.
+	 *
+	 * @param array<string, mixed> $data The scheduled task data.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function storeScheduledTask(array $data): JSONResponse {
 		try {
 			return new JSONResponse($this->scheduledTaskService->createScheduledTask($data), Http::STATUS_CREATED);
 		} catch (\InvalidArgumentException $e) {
@@ -170,7 +191,7 @@ class SchedulesController extends Controller {
 		} catch (Throwable $e) {
 			return $this->failed(action: 'create', error: $e);
 		}
-	}//end create()
+	}//end storeScheduledTask()
 
 	/**
 	 * List tasks due within a window.
@@ -179,7 +200,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse Items envelope (always 200 when not erroring).
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function pending(): JSONResponse {
@@ -218,7 +239,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The task or 404.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -254,7 +275,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse The updated task or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -289,7 +310,7 @@ class SchedulesController extends Controller {
 	 *
 	 * @return JSONResponse 204 on success or an error envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function destroy(string $id): JSONResponse {
@@ -309,7 +330,7 @@ class SchedulesController extends Controller {
 	/**
 	 * Assemble the scheduled-task payload from request params.
 	 *
-	 * Scopes the assignee to self and drops the assignee group for non-admins,
+	 * Assigns a non-admin's task to themselves and drops the assignee group,
 	 * and strips blank optional fields so they do not clobber schema defaults.
 	 *
 	 * @param array{type: string, subject: string, deadline: string} $required The validated type, subject and deadline.
@@ -320,8 +341,9 @@ class SchedulesController extends Controller {
 	private function buildScheduledTaskData(array $required, string $userId): array {
 		$isAdmin = $this->sessionUser->isAdmin($userId);
 		$requestedAssignee = (string)$this->request->getParam('assigneeUserId', '');
-		// Non-admins may not assign tasks to other users; silently scope to self.
-		if ($isAdmin === false && $requestedAssignee !== '' && $requestedAssignee !== $userId) {
+		// Non-admins may not assign tasks to others and cannot assign a group,
+		// so their task is always their own: a task keeps at least one assignee.
+		if ($isAdmin === false) {
 			$requestedAssignee = $userId;
 		}
 

@@ -34,7 +34,7 @@ export const INDUSTRY_SECTORS = [
  *
  * @param {unknown} value The stored industry.
  * @return {string[]} The sectors.
- * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function industryList(value) {
 	if (Array.isArray(value)) {
@@ -51,7 +51,7 @@ export function industryList(value) {
  * @param {string} instanceDefault The instance default language.
  * @param {string} userLanguage The current user's language.
  * @return {string} The tag, or ''.
- * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 export function defaultLanguage(available, instanceDefault, userLanguage) {
 	if (available.includes(userLanguage)) {
@@ -62,4 +62,73 @@ export function defaultLanguage(available, instanceDefault, userLanguage) {
 		return base
 	}
 	return available.includes(instanceDefault) ? instanceDefault : ''
+}
+
+/**
+ * The client form's fields in form order, each with its empty value.
+ */
+const CLIENT_FORM_DEFAULTS = {
+	name: '',
+	type: null,
+	email: '',
+	phone: '',
+	website: '',
+	address: '',
+	notes: '',
+	industry: [],
+	labels: [],
+	accountOwner: null,
+	correspondenceLanguage: '',
+	timezone: null,
+}
+
+/**
+ * An empty client form, with lists of its own.
+ *
+ * @return {object} The form.
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+ */
+export function emptyClientForm() {
+	return { ...CLIENT_FORM_DEFAULTS, industry: [], labels: [] }
+}
+
+/**
+ * The values a new client form starts with, from a prefill such as the fields
+ * Paste or scan proposed: only the form's own fields, only non-empty strings,
+ * so the form keeps its defaults (owner, language) for the rest.
+ *
+ * @param {object|null} values The prefill.
+ * @return {object} The fields to put over the empty form.
+ * @spec openspec/changes/clients-contact-capture/specs/client-contact-capture/spec.md#scenario-a-sales-rep-scans-a-card-at-a-fair
+ */
+export function prefilledClientFields(values) {
+	const fields = {}
+	if (!values || typeof values !== 'object') {
+		return fields
+	}
+	for (const field of Object.keys(CLIENT_FORM_DEFAULTS)) {
+		const value = values[field]
+		if (typeof value === 'string' && value.trim() !== '') {
+			fields[field] = value
+		}
+	}
+	return fields
+}
+
+/**
+ * The client form filled from a stored client: a missing value becomes the
+ * field's empty value, the industry becomes a list and the labels a copy.
+ *
+ * @param {object} data The client to load into the form.
+ * @return {object} The form.
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+ */
+export function clientFormFrom(data) {
+	const form = {}
+	for (const [field, empty] of Object.entries(CLIENT_FORM_DEFAULTS)) {
+		form[field] = data[field] || empty
+	}
+	form.industry = industryList(data.industry)
+	form.labels = Array.isArray(data.labels) ? [...data.labels] : []
+	return form
 }

@@ -355,4 +355,32 @@ class ContactDataBuilderTest extends TestCase {
 		$this->assertSame(expected: ['+31600000000'], actual: array_column($result['phones'], 'value'));
 		$this->assertCount(expectedCount: 2, haystack: $result['socialProfiles']);
 	}//end testTypedItemsBuildWithoutWarnings()
+
+	/**
+	 * Golden: the network type is matched case-insensitively, an http URL is a url, an untyped
+	 * item is `other`, and an empty value is dropped.
+	 *
+	 * @return void
+	 */
+	public function testSocialProfileEdgeCasesAreExact(): void {
+		$result = $this->builder->buildClientImportData(
+			[
+				'FN' => 'Jane',
+				'X-SOCIALPROFILE' => [
+					['type' => 'LinkedIn', 'value' => 'http://linkedin.com/in/jane'],
+					'janedoe',
+					['type' => 'x', 'value' => ''],
+				],
+			],
+			'uid-edge'
+		);
+
+		$this->assertSame(
+			expected: [
+				['network' => 'linkedin', 'handle' => '', 'url' => 'http://linkedin.com/in/jane', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+				['network' => 'other', 'handle' => 'janedoe', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+			],
+			actual: $result['socialProfiles']
+		);
+	}//end testSocialProfileEdgeCasesAreExact()
 }//end class

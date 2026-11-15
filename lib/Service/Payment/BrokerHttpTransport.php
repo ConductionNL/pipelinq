@@ -142,24 +142,8 @@ class BrokerHttpTransport implements HttpTransport {
 	 * @spec openspec/changes/pos-psp-keys-via-broker/tasks.md#task-1-brokerhttptransport
 	 */
 	public function request(string $method, string $url, array $headers = [], ?string $body = null): array {
-		$empty = [
-			'status' => 0,
-			'body' => [],
-			'raw' => '',
-		];
-
-		if (self::isAvailable() === false) {
-			// Fail closed. There is no direct-cURL fallback here on purpose: falling back
-			// would mean falling back to an app-held key, which no longer exists.
-			$this->logger->error(
-				'Pipelinq POS payment: the OpenRegister credential broker is not available; refusing to call the PSP.'
-			);
-			return $empty;
-		}
-
-		if ($this->credentialId === '') {
-			$this->logger->error('Pipelinq POS payment: no broker credential configured for this provider.');
-			return $empty;
+		if ($this->brokerUsable() === false) {
+			return self::NO_RESPONSE;
 		}
 
 		try {
@@ -174,33 +158,79 @@ class BrokerHttpTransport implements HttpTransport {
 				$this->actingUserId
 			);
 		} catch (Throwable $e) {
-			// The broker never puts the secret in its exception messages, and neither do
-			// we: only the method and path are logged, never the body (which can carry
-			// card/customer data) and never the credential.
-			$this->logger->warning(
-				'Pipelinq POS payment: broker call failed',
-				[
-					'method' => $method,
-					'path' => $this->toPath(url: $url),
-				]
+			$this->logFailedCall(method: $method, url: $url);
+			return self::NO_RESPONSE;
+		}
+
+		return $this->toReply(response: $response);
+	}//end request()
+
+	/**
+	 * Log a failed broker call.
+	 *
+	 * The broker never puts the secret in its exception messages, and neither do we:
+	 * only the method and path are logged, never the body (which can carry card/customer
+	 * data) and never the credential.
+	 *
+	 * @param string $method The HTTP method.
+	 * @param string $url    The full URL the adapter wanted to call.
+	 *
+	 * @return void
+	 */
+	private function logFailedCall(string $method, string $url): void {
+		$this->logger->warning(
+			'Pipelinq POS payment: broker call failed',
+			[
+				'method' => $method,
+				'path' => $this->toPath(url: $url),
+			]
+		);
+	}//end logFailedCall()
+
+	/**
+	 * Whether the broker is installed and a credential is configured (each refusal is logged).
+	 *
+	 * Fails closed. There is no direct-cURL fallback here on purpose: falling back would
+	 * mean falling back to an app-held key, which no longer exists.
+	 *
+	 * @return bool True when the call may go to the broker.
+	 */
+	private function brokerUsable(): bool {
+		if (self::isAvailable() === false) {
+			$this->logger->error(
+				'Pipelinq POS payment: the OpenRegister credential broker is not available; refusing to call the PSP.'
 			);
-			return $empty;
-		}//end try
+			return false;
+		}
 
-		$status = (int)($response['status'] ?? 0);
+		if ($this->credentialId === '') {
+			$this->logger->error('Pipelinq POS payment: no broker credential configured for this provider.');
+			return false;
+		}
+
+		return true;
+	}//end brokerUsable()
+
+	/**
+	 * The transport reply of a broker response: its status, decoded JSON body and raw body.
+	 *
+	 * @param array<string, mixed> $response The broker response.
+	 *
+	 * @return array{status: int, body: array<string, mixed>, raw: string}
+	 */
+	private function toReply(array $response): array {
 		$raw = (string)($response['body'] ?? '');
-
 		$decoded = json_decode($raw, true);
 		if (is_array($decoded) === false) {
 			$decoded = [];
 		}
 
 		return [
-			'status' => $status,
+			'status' => (int)($response['status'] ?? 0),
 			'body' => $decoded,
 			'raw' => $raw,
 		];
-	}//end request()
+	}//end toReply()
 
 	/**
 	 * Reduce a full URL to the path + query the broker expects.

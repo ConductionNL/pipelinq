@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,10 +28,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\AnalyticsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,25 +43,25 @@ use Psr\Log\LoggerInterface;
  * Controller for the Klantbeeld 360 cross-module analytics summary plus
  * the dashboard analytics overview/trends/funnels endpoints.
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
- * @spec openspec/changes/dashboard/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
  */
 class AnalyticsController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param AnalyticsService $analyticsService Analytics summary service.
+	 * @param AnalyticsServiceInterface $analyticsService Analytics summary service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private AnalyticsService $analyticsService,
+		private AnalyticsServiceInterface $analyticsService,
 		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -73,7 +73,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The overview payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function overview(): JSONResponse {
@@ -88,7 +88,7 @@ class AnalyticsController extends Controller {
 			return $refusal;
 		}
 
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			return new JSONResponse($this->analyticsService->getOverview(period: $period));
@@ -128,7 +128,7 @@ class AnalyticsController extends Controller {
 			return $refusal;
 		}
 
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			$filter = $this->request->getParam('filter', []);
@@ -157,7 +157,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The trend payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function trends(): JSONResponse {
@@ -173,7 +173,7 @@ class AnalyticsController extends Controller {
 		}
 
 		$metric = (string)$this->request->getParam('metric', '');
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			return new JSONResponse($this->analyticsService->getTrends(metric: $metric, period: $period));
@@ -204,7 +204,7 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The funnel payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function funnels(): JSONResponse {

@@ -141,6 +141,7 @@ import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { getUserLocale } from '../../services/localeUtils.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
 import { formatEur } from '../../services/posTotals.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 const BOOKKEEPING_STATUS_LABELS = {
 	pending: 'Waiting for shillinq',
@@ -164,33 +165,11 @@ export default {
 		NcNoteCard,
 	},
 
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/**
-		 * The Z-report, from the detail page.
-		 *
-		 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
-		 */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The Z-report id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-	},
 
 	data() {
 		return {

@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "CampaignService::vocabularies": []
+                "CampaignServiceInterface::vocabularies": []
             }
         ]
     },
@@ -73,7 +73,7 @@
                 ]
             },
             {
-                "CampaignService::save": [
+                "CampaignServiceInterface::save": [
                     {
                         "uid": "mallory",
                         "userId": "mallory",
@@ -123,7 +123,7 @@
                 ]
             },
             {
-                "CampaignService::save": [
+                "CampaignServiceInterface::save": [
                     {
                         "uid": "mallory",
                         "userId": "mallory",
@@ -171,7 +171,7 @@
                 ]
             },
             {
-                "CampaignReportService::forCampaign": [
+                "CampaignReportServiceInterface::forCampaign": [
                     "sample-id",
                     "sample-from",
                     "sample-to"
@@ -212,7 +212,7 @@
                 ]
             },
             {
-                "LandingPageProvisioningService::createFor": [
+                "LandingPageProvisioningServiceInterface::createFor": [
                     "sample-id",
                     "sample-portal",
                     "sample-route"

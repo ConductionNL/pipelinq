@@ -26,14 +26,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\Social\ConnectionAuditService;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -42,17 +42,17 @@ use Throwable;
 /**
  * Console entry point for the connection audit.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
  */
 class ConnectionAuditCommand extends Command {
 
 	/**
 	 * Constructor.
 	 *
-	 * @param ConnectionAuditService $audit The audit service.
+	 * @param ConnectionAuditServiceInterface $audit The audit service.
 	 */
 	public function __construct(
-		private ConnectionAuditService $audit,
+		private ConnectionAuditServiceInterface $audit,
 	) {
 		parent::__construct();
 	}//end __construct()
@@ -62,7 +62,7 @@ class ConnectionAuditCommand extends Command {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:marketing:connection-audit')
@@ -77,7 +77,7 @@ class ConnectionAuditCommand extends Command {
 	 *
 	 * @return int The exit code.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $input is part of the
 	 *  Command::execute() contract; this command takes no options.

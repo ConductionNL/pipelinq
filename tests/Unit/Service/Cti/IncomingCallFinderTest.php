@@ -49,6 +49,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
  * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
  * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  *
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  */

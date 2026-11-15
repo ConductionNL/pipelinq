@@ -98,6 +98,28 @@ class WorkBuckets {
 	}//end decorate()
 
 	/**
+	 * How many of the items fall in each lens (tickets, leads, tasks).
+	 *
+	 * @param array<int, array<string, mixed>> $items The work items.
+	 *
+	 * @return array{tickets: int, leads: int, tasks: int} The counts.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	public function countsByLens(array $items): array {
+		$counts = ['tickets' => 0, 'leads' => 0, 'tasks' => 0];
+		foreach ($items as $item) {
+			foreach (array_keys($counts) as $lens) {
+				if ($this->inLens(kind: $item['kind'], lens: $lens) === true) {
+					$counts[$lens]++;
+				}
+			}
+		}
+
+		return $counts;
+	}//end countsByLens()
+
+	/**
 	 * Whether a lens (`all`, `tickets`, `leads`, `tasks`; '' for all) keeps a kind.
 	 *
 	 * @param string $kind The item's kind.

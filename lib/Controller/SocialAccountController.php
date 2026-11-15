@@ -33,17 +33,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ConnectionReportService;
-use OCA\Pipelinq\Service\SocialAccountService;
+use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,28 +55,30 @@ use OCP\IUserSession;
 /**
  * REST controller for social accounts.
  *
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 class SocialAccountController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialAccountService $accounts The account lifecycle.
+	 * @param SocialAccountServiceInterface $accounts The account lifecycle.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy, for the list routes.
-	 * @param ConnectionReportService $connectionReports Reports each network's readiness to integriq's connection registry.
+	 * @param ConnectionReportServiceInterface $connectionReports Reports each network's readiness to integriq's connection registry.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialAccountService $accounts,
+		private readonly SocialAccountServiceInterface $accounts,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly ConnectionReportService $connectionReports,
+		private readonly ConnectionReportServiceInterface $connectionReports,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -87,7 +90,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse `{data[], readiness{}}`.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	#[NoAdminRequired]
@@ -110,7 +113,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse `{account}`, 403 or 404.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -136,7 +139,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse 201 with the account, or 400 naming the problem.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-personal-account-belongs-to-the-person-who-connected-it
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -164,7 +167,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse `{connect}`, or a refusal naming what is missing.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	#[NoAdminRequired]
 	public function connect(string $id): JSONResponse {
@@ -190,7 +193,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse `{account}`, or a refusal.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	#[NoAdminRequired]
 	public function attach(string $id): JSONResponse {
@@ -216,7 +219,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse `{account}`, or a refusal.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	#[NoAdminRequired]
 	public function revoke(string $id): JSONResponse {
@@ -235,7 +238,7 @@ class SocialAccountController extends Controller {
 	 *
 	 * @return JSONResponse `{account}`, 403 or 404.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
 	#[NoAdminRequired]
 	public function sync(string $id): JSONResponse {
@@ -257,21 +260,6 @@ class SocialAccountController extends Controller {
 	}//end sync()
 
 	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
-
-	/**
 	 * Where the network's consent screen comes back to. A path on this
 	 * instance only: OpenRegister reduces anything else to its own fallback.
 	 *
@@ -280,7 +268,7 @@ class SocialAccountController extends Controller {
 	 * @return string The return path.
 	 */
 	private function returnUrl(string $accountId): string {
-		return '/apps/' . Application::APP_ID . '/social-accounts/' . rawurlencode($accountId);
+		return '/apps/' . AppIdentity::APP_ID . '/social-accounts/' . rawurlencode($accountId);
 	}//end returnUrl()
 
 	/**
@@ -327,7 +315,7 @@ class SocialAccountController extends Controller {
 	 */
 	private function collectBody(): array {
 		$body = [];
-		foreach (SocialAccountService::CLIENT_WRITABLE as $key) {
+		foreach (SocialAccountServiceInterface::CLIENT_WRITABLE as $key) {
 			$value = $this->request->getParam($key);
 			if ($value !== null) {
 				$body[$key] = (string)$value;

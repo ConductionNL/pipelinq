@@ -306,4 +306,39 @@ class ContactMomentFilingServiceTest extends TestCase {
 		$this->assertSame([], $marker['alsoOnCases']);
 		$this->assertSame(0, $marker['hiddenCount']);
 	}//end testAContactMomentOnOneCaseIsNotShared()
+
+	/**
+	 * Every unfile answer is exact, and so is the payload written.
+	 *
+	 * @return void
+	 */
+	public function testUnfileAnswersAndPayloadAreExact(): void {
+		$service = $this->service();
+		$this->assertSame(['status' => 404, 'error' => 'That contact moment could not be read.'], $service->unfileFromCase(momentId: 'cm-1', caseId: 'c-1'));
+
+		$this->stored = ['id' => 'cm-1', 'title' => 'Call', 'caseReferences' => ['c-1', 'c-2', 'c-3'], 'primaryCaseReference' => 'c-1', 'caseReference' => 'c-1', 'caseFilings' => 'broken'];
+		$this->assertSame(['status' => 404, 'error' => 'This contact moment is not filed on c-9.'], $service->unfileFromCase(momentId: 'cm-1', caseId: ' c-9 '));
+		$this->assertSame(['status' => 409, 'error' => 'Removing the primary case needs the next primary named in the same act.'], $service->unfileFromCase(momentId: 'cm-1', caseId: 'c-1', newPrimary: '  '));
+		$this->assertSame(['status' => 409, 'error' => 'The new primary has to be one of the remaining cases; c-1 is not.'], $service->unfileFromCase(momentId: 'cm-1', caseId: 'c-1', newPrimary: ' c-1 '));
+		$this->assertSame([], $this->saved);
+
+		$answer = $service->unfileFromCase(momentId: 'cm-1', caseId: 'c-1', newPrimary: ' c-3 ');
+		$this->assertSame(200, $answer['status']);
+		$at = $this->saved[0]['caseFilings'][0]['at'];
+		$this->assertNotFalse(\DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $at));
+		$this->assertSame(
+			['id' => 'cm-1', 'title' => 'Call', 'caseReferences' => ['c-2', 'c-3'], 'primaryCaseReference' => 'c-3', 'caseReference' => 'c-3', 'caseFilings' => [['case' => 'c-1', 'act' => 'unfiled', 'by' => 'maria', 'at' => $at]]],
+			$this->saved[0]
+		);
+
+		$this->stored = ['id' => 'cm-1', 'caseReferences' => ['c-2', 'c-3'], 'primaryCaseReference' => 'c-3', 'caseFilings' => [['case' => 'c-1', 'act' => 'unfiled']]];
+		$service->unfileFromCase(momentId: 'cm-1', caseId: 'c-2', newPrimary: 'ignored');
+		$this->assertSame(['c-3'], $this->saved[1]['caseReferences']);
+		$this->assertSame('c-3', $this->saved[1]['primaryCaseReference']);
+		$this->assertSame(['c-1', 'c-2'], array_column($this->saved[1]['caseFilings'], 'case'));
+
+		$this->stored = ['id' => 'cm-1', 'caseReferences' => ['c-3'], 'primaryCaseReference' => 'c-3'];
+		$this->assertSame(['status' => 409, 'error' => 'A contact moment has to stay on at least one case.'], $service->unfileFromCase(momentId: 'cm-1', caseId: 'c-3'));
+		$this->assertCount(2, $this->saved);
+	}//end testUnfileAnswersAndPayloadAreExact()
 }//end class
