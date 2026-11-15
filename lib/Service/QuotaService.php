@@ -80,21 +80,25 @@ class QuotaService implements QuotaServiceInterface {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-01
 	 */
 	public function getQuota(string $ownerId, string $periodId, string $level): ?array {
-		$rows = $this->findObjects(
-			schemaKey: 'salesQuota_schema',
-			filters: [
-				'owner_id' => $ownerId,
-				'period_id' => $periodId,
-				'level' => $level,
-			]
+		return self::firstRow(
+			rows: $this->findObjects(schemaKey: 'salesQuota_schema', filters: ['owner_id' => $ownerId, 'period_id' => $periodId, 'level' => $level])
 		);
+	}//end getQuota()
 
+	/**
+	 * The first row, or null when there is none.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function firstRow(array $rows): ?array {
 		if ($rows === []) {
 			return null;
 		}
 
 		return $rows[0];
-	}//end getQuota()
+	}//end firstRow()
 
 	/**
 	 * Resolve the quota amount for an owner/period/level.
@@ -108,13 +112,23 @@ class QuotaService implements QuotaServiceInterface {
 	 *   exercised through the features that call it
 	 */
 	public function getQuotaAmount(string $ownerId, string $periodId, string $level): ?float {
-		$quota = $this->getQuota(ownerId: $ownerId, periodId: $periodId, level: $level);
+		return self::amountOf(quota: $this->getQuota(ownerId: $ownerId, periodId: $periodId, level: $level));
+	}//end getQuotaAmount()
+
+	/**
+	 * The amount of a quota row, or null when it is unset.
+	 *
+	 * @param array<string, mixed>|null $quota The quota row, or null.
+	 *
+	 * @return float|null
+	 */
+	private static function amountOf(?array $quota): ?float {
 		if ($quota === null || isset($quota['quota_amount']) === false) {
 			return null;
 		}
 
 		return (float)$quota['quota_amount'];
-	}//end getQuotaAmount()
+	}//end amountOf()
 
 	/**
 	 * Compute projected attainment: closed_won + commit + 0.5 * best_case.
@@ -151,12 +165,23 @@ class QuotaService implements QuotaServiceInterface {
 			return false;
 		}
 
+		return $this->belowThresholds(attainmentPercent: (($projected / $quota) * 100), daysRemaining: $daysRemaining);
+	}//end isAtRisk()
+
+	/**
+	 * Whether attainment is below the configured percent and fewer than the configured days remain.
+	 *
+	 * @param float $attainmentPercent Projected attainment as a percent of quota.
+	 * @param int   $daysRemaining     Days remaining in the period.
+	 *
+	 * @return bool
+	 */
+	private function belowThresholds(float $attainmentPercent, int $daysRemaining): bool {
 		$thresholdPercent = $this->getAtRiskPercent();
 		$thresholdDays = $this->getAtRiskDays();
 
-		$attainmentPercent = ($projected / $quota) * 100;
 		return $attainmentPercent < $thresholdPercent && $daysRemaining < $thresholdDays;
-	}//end isAtRisk()
+	}//end belowThresholds()
 
 	/**
 	 * Build an advisory quota-hierarchy report for a period.
