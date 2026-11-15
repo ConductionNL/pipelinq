@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\BulkBatchDefaults.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\BulkBatchDefaults.
  *
  * Mirrors OpenRegister's value object from openregister #9108: the register and schema a bulk save defaults to.
  * Same constructor and defaults.
@@ -20,7 +20,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 use OCA\OpenRegister\Db\Register;
 use OCA\OpenRegister\Db\Schema;

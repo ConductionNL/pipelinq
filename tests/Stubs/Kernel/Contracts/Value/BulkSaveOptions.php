@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\BulkSaveOptions.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions.
  *
  * Mirrors OpenRegister's value object from openregister #9108: what saveObjects() takes besides the objects.
  * Same constructor and defaults.
@@ -20,7 +20,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 if (class_exists(BulkSaveOptions::class) === false) {
 	/**
