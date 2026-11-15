@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Upl;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\UplListImporterInterface;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\Http\Client\IClientService;
@@ -103,7 +103,7 @@ class UplListImporter implements UplListImporterInterface {
 	 * @spec openspec/changes/product-service-catalogue-public/tasks.md
 	 */
 	public function sourceUrl(): string {
-		$url = trim($this->appConfig->getValueString(Application::APP_ID, 'upl_list_url', ''));
+		$url = trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'upl_list_url', ''));
 		if ($url === '') {
 			return self::DEFAULT_URL;
 		}
@@ -153,8 +153,8 @@ class UplListImporter implements UplListImporterInterface {
 		$rows = $this->parser->parse(csv: $csv);
 		$objectService = $this->uplObjectService();
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER);
-		$schema = $this->appConfig->getValueString(Application::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', self::DEFAULT_REGISTER);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
 		$target = [$objectService, $register, $schema];
 		$stored = $this->storedByUri(target: $target);
 

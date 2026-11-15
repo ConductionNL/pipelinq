@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Middleware;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Middleware\Support\ApiPathAliases;
 use OCA\Pipelinq\Middleware\Support\StandardProtocolPaths;
 use OCP\App\IAppManager;
@@ -145,7 +145,7 @@ class ApiContractMiddleware extends Middleware {
 			return $response;
 		}
 
-		$response->addHeader(name: 'API-Version', value: $this->appManager->getAppVersion(appId: Application::APP_ID));
+		$response->addHeader(name: 'API-Version', value: $this->appManager->getAppVersion(appId: AppIdentity::APP_ID));
 		$this->announceSuccessor(response: $response);
 		if ($response instanceof JSONResponse) {
 			$this->decorateError(response: $response);

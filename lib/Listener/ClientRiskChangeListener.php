@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientRiskServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -110,8 +110,8 @@ class ClientRiskChangeListener implements IEventListener {
 	private function clientOf(ObjectEntity $entity, array $before): string {
 		$after  = $entity->getObject();
 		$schema = (string) $entity->getSchema();
-		$contractSchema = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
-		$surveySchema   = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
+		$contractSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contract_schema', '');
+		$surveySchema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyResponse_schema', '');
 
 		$statusChanged = ($before['status'] ?? null) !== ($after['status'] ?? null);
 		$becameDetractor = ($after['classification'] ?? null) === 'detractor' && ($before['classification'] ?? null) !== 'detractor';
