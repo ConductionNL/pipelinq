@@ -53,8 +53,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Register;
 use OCA\OpenRegister\Db\Schema;
-use OCA\OpenRegister\Service\Object\LockRequest;
-use OCA\OpenRegister\Service\Object\UnlockRequest;
+use OCA\OpenRegister\Kernel\Contracts\Value\LockRequest;
+use OCA\OpenRegister\Kernel\Contracts\Value\UnlockRequest;
 use OCP\IUser;
 
 if (class_exists(ObjectService::class) === false) {

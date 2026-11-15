@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\UnlockRequest.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\UnlockRequest.
  *
  * Mirrors OpenRegister's value object from openregister #9095: what unlockObject() takes.
  * Same constructor and defaults.
  *
  * @category Test
- * @package  OCA\Pipelinq\Tests\Stubs\Service\Object
+ * @package  OCA\Pipelinq\Tests\Stubs\Kernel\Contracts\Value
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,7 +20,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 if (class_exists(UnlockRequest::class) === false) {
 	/**
