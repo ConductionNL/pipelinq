@@ -100,13 +100,24 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 	 */
 	public function drain(string $register, string $schema, string $keyProperty, array $openFilter, bool $apply): array {
 		$run = new HeldDrainRun(register: $register, schema: $schema, keyProperty: $keyProperty, openFilter: $openFilter, apply: $apply);
+		return $this->drained(run: $run);
+
+	}//end drain()
+
+	/**
+	 * Drain every open object of a run's held schema.
+	 *
+	 * @param HeldDrainRun $run The drain, its schema, filter and mode set.
+	 *
+	 * @return array<string, mixed> The run's report.
+	 */
+	private function drained(HeldDrainRun $run): array {
 		foreach ($this->openObjects(run: $run) as $held) {
 			$this->drainOne(run: $run, held: $held);
 		}
 
 		return $run->report;
-
-	}//end drain()
+	}//end drained()
 
 	/**
 	 * Report one held object as unmapped or as what would be delivered, or deliver it.
