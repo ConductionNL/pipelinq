@@ -34,6 +34,7 @@ use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\AppointmentServiceLookup;
 use OCA\Pipelinq\Util\Base64UrlDecode;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
@@ -77,6 +78,7 @@ class PortalController extends Controller {
 	use NullablePayloadToArray;
 	use ConfiguredRegisterId;
 	use Base64UrlDecode;
+	use AppointmentServiceLookup;
 
 	/**
 	 * Signing-key app-config key (per-instance HMAC secret, ADR-005).
@@ -712,24 +714,7 @@ class PortalController extends Controller {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadService(string $serviceId): ?array {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: 'service_schema');
-		if ($register === '' || $schema === '' || $serviceId === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq portal: service load failed', ['service' => $serviceId]);
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findServiceObject(serviceId: $serviceId, failure: 'Pipelinq portal: service load failed');
 	}//end loadService()
 
 	/**
@@ -1139,17 +1124,6 @@ class PortalController extends Controller {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key The app-config key (e.g. `booking_schema`).
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

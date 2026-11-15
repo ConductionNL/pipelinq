@@ -31,9 +31,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\AppointmentServiceLookup;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -65,6 +65,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	use EntityIdOf;
 	use NullablePayloadToArray;
 	use ConfiguredRegisterId;
+	use AppointmentServiceLookup;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -693,24 +694,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			return null;
 		}
 
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: walk-in service load failed', ['service' => $serviceId]);
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findServiceObject(serviceId: $serviceId, failure: 'Pipelinq: walk-in service load failed');
 	}//end loadServiceQuiet()
 
 	/**
@@ -933,17 +917,6 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	private function nowIso(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 	}//end nowIso()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

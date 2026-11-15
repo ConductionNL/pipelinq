@@ -69,6 +69,14 @@ class ConfiguredRegisterIdTest extends TestCase {
 
 			/**
 			 * @param string $key The schema key.
+			 * @return string
+			 */
+			public function schema(string $key): string {
+				return $this->schemaId(key: $key);
+			}
+
+			/**
+			 * @param string $key The schema key.
 			 * @return array{0: string, 1: string}
 			 */
 			public function ids(string $key): array {
@@ -84,8 +92,10 @@ class ConfiguredRegisterIdTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->never())->method('warning');
 
-		$host = self::host(['register' => 'r1'], $logger, $this->createMock(IAppConfig::class));
+		$host = self::host(['register' => 'r1', 'service_schema' => 's1'], $logger, $this->createMock(IAppConfig::class));
 		$this->assertSame('r1', $host->register());
+		$this->assertSame('s1', $host->schema(key: 'service_schema'));
+		$this->assertSame('', $host->schema(key: 'other_schema'));
 	}//end testConfiguredRegisterIsReturnedSilently()
 
 	/**

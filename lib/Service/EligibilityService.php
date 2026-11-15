@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -635,17 +634,6 @@ class EligibilityService implements EligibilityServiceInterface {
 
 		return $out;
 	}//end normaliseSkillList()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key, e.g. `service_schema`.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

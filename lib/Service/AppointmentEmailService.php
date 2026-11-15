@@ -990,17 +990,6 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	}//end nowIso()
 
 	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.
 	 *
 	 * @return object The ObjectService instance.

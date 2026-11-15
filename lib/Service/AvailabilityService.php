@@ -30,7 +30,6 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -1354,17 +1353,6 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			->modify(sprintf('+%d seconds', $seconds));
 		return $dateTime->format('Y-m-d\TH:i:sP');
 	}//end isoOffsetSeconds()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key, e.g. `resource_schema`.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

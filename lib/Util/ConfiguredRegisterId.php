@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\Util;
 use OCA\Pipelinq\Kernel\AppIdentity;
 
 /**
- * Reads the 'register' app-config value and logs a warning when it is empty.
- * The host class provides IAppConfig `$appConfig` and LoggerInterface
- * `$logger` properties.
+ * Reads the 'register' app-config value, logging a warning when it is empty,
+ * and schema ids by app-config key. The host class provides IAppConfig
+ * `$appConfig` and LoggerInterface `$logger` properties.
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
@@ -57,4 +57,17 @@ trait ConfiguredRegisterId {
 
 		return $registerId;
 	}//end registerId()
+
+	/**
+	 * Resolve a schema id by app-config key.
+	 *
+	 * @param string $key App-config key.
+	 *
+	 * @return string
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function schemaId(string $key): string {
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+	}//end schemaId()
 }//end trait
