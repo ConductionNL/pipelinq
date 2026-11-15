@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -51,6 +52,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	use LoggedRegisterSchemaIds;
 	use SerialisedPayload;
 	use InjectedObjectService;
+	use ConfiguredObjectSave;
 
 	/**
 	 * Constructor.
@@ -941,20 +943,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function persistCard(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('GiftCard schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(schemaKey: 'giftCard_schema'), payload: $payload, uuid: $uuid, label: 'GiftCard');
 	}//end persistCard()
 
 	/**

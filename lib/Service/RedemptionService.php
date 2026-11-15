@@ -29,6 +29,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\ConfiguredSchemaCount;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
@@ -51,6 +52,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	use LoggedRegisterSchemaIds;
 	use ConfiguredSchemaCount;
 	use InjectedObjectService;
+	use ConfiguredObjectSave;
 
 	/**
 	 * Constructor.
@@ -541,20 +543,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function persist(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('Redemption schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(schemaKey: 'redemption_schema'), payload: $payload, uuid: $uuid, label: 'Redemption');
 	}//end persist()
 
 	/**

@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\ConfiguredSchemaCount;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
@@ -45,6 +46,7 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	use LoggedRegisterSchemaIds;
 	use ConfiguredSchemaCount;
 	use InjectedObjectService;
+	use ConfiguredObjectSave;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
@@ -228,19 +230,6 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function persist(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config(schemaKey: 'loyaltyProgramme_schema');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('LoyaltyProgramme schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(schemaKey: 'loyaltyProgramme_schema'), payload: $payload, uuid: $uuid, label: 'LoyaltyProgramme');
 	}//end persist()
 }//end class
