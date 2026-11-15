@@ -818,16 +818,12 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return array<int, array<string, mixed>> Matching rows.
 	 */
 	private function findDeliveries(array $filters): array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $this->getRegisterSlug(), schema: $this->getBlastDeliverySchemaSlug());
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
 		$rows = $this->findAllDeliveries(objectService: $objectService, filters: $filters, register: $register, schema: $schema);
 		return $this->deliveryArrays(rows: $rows);

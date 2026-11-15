@@ -40,6 +40,7 @@ use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -73,6 +74,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	use ContainerObjectService;
 	use SavedPayloadId;
 	use PageCount;
+	use ObjectServiceTarget;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -1713,16 +1715,12 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return iterable<mixed> The candidate rows.
 	 */
 	private function consentRecordCandidates(ConsentRecordKey $key): iterable {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getConsentRecordSchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $this->getRegisterSlug(), schema: $this->getConsentRecordSchemaSlug());
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
 		return $this->queryConsentRows(objectService: $objectService, filters: $key->filters(register: $register, schema: $schema));
 	}//end consentRecordCandidates()

@@ -36,6 +36,7 @@ use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -58,6 +59,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	use PayloadToArray;
 	use ContainerObjectService;
 	use SavedPayloadId;
+	use ObjectServiceTarget;
 
 	/**
 	 * Interval in seconds (5 minutes).
@@ -237,16 +239,15 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @return array<int, array<string, mixed>> Sending blasts.
 	 */
 	private function loadSendingBlasts(): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', 'blast');
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(
+			register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq'),
+			schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', 'blast')
+		);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
 		return $this->payloadsOf(
 			rows: $this->sendingRows(
