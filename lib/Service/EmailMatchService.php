@@ -704,20 +704,28 @@ class EmailMatchService implements EmailMatchServiceInterface {
 	 * @spec openspec/specs/email-calendar-sync/spec.md
 	 */
 	public function writeStatus(string $userId, int $linked, int $scanned, ?string $error = null): void {
-		$payload = [
-			'lastRunAt' => gmdate('c'),
-			'linked' => $linked,
-			'scanned' => $scanned,
-			'error' => $error,
-		];
+		$payload = ['lastRunAt' => gmdate('c'), 'linked' => $linked, 'scanned' => $scanned, 'error' => $error];
 
+		$this->storeStatus(userId: $userId, payload: $payload);
+
+	}//end writeStatus()
+
+	/**
+	 * Store a user's last-run status as JSON in the app config.
+	 *
+	 * @param string               $userId  The user id.
+	 * @param array<string, mixed> $payload The status: lastRunAt, linked, scanned, error.
+	 *
+	 * @return void
+	 */
+	private function storeStatus(string $userId, array $payload): void {
 		$this->appConfig->setValueString(
 			AppIdentity::APP_ID,
 			$this->statusKeyFor(userId: $userId),
 			json_encode($payload, JSON_UNESCAPED_UNICODE)
 		);
 
-	}//end writeStatus()
+	}//end storeStatus()
 
 	/**
 	 * Extract the addresses to match from a Mail message metadata row.
