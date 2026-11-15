@@ -43,6 +43,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LeadStagePlacer;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -58,6 +59,7 @@ use Throwable;
  * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
  */
 class BackfillLeadRelations implements IRepairStep {
+	use SerialisedPayload;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -112,31 +114,6 @@ class BackfillLeadRelations implements IRepairStep {
 	}//end actingAdmin()
 
 	/**
-	 * Normalise an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by findAll().
-	 *
-	 * @return array<string,mixed>|null The array form, or null when unusable.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return null;
-		}
-
-		return null;
-	}//end toArray()
-
-	/**
 	 * Read every row of one schema.
 	 *
 	 * RBAC is off for the same reason the writes turn it off: on the CLI there
@@ -173,7 +150,7 @@ class BackfillLeadRelations implements IRepairStep {
 
 		$out = [];
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->serialisedPayload(value: $row);
 			if ($data !== null) {
 				$out[] = $data;
 			}

@@ -43,6 +43,7 @@ use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
 use OCA\Pipelinq\Service\UnsubscribeMail;
+use OCA\Pipelinq\Util\CastSerialisedToArray;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
@@ -78,6 +79,7 @@ class MailTransportService {
 	use ConfiguredBlastDeliverySchemaSlug;
 	use SavedPayloadId;
 	use ConfiguredMailTransportSchemaSlug;
+	use CastSerialisedToArray;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -866,31 +868,6 @@ class MailTransportService {
 			return null;
 		}
 	}//end getObjectService()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) into a plain array.
-	 *
-	 * @param mixed $value The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true) {
-			if (method_exists($value, 'jsonSerialize') === true) {
-				return (array)$value->jsonSerialize();
-			}
-
-			if (method_exists($value, 'getObject') === true) {
-				return (array)$value->getObject();
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Current UTC instant, ISO 8601.

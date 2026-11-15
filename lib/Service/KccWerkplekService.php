@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,6 +51,8 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekService implements KccWerkplekServiceInterface {
+	use SerialisedPayload;
+
 	/**
 	 * Request statuses considered "open" for the inbox (REQ-KWP-020).
 	 *
@@ -166,22 +169,12 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true) {
+		$serialised = $this->serialisedPayload(value: $object);
+		if ($serialised === null && is_object($object) === true) {
 			return (array)$object;
 		}
 
-		return [];
+		return ($serialised ?? []);
 	}//end toArray()
 
 	/**

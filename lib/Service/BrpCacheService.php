@@ -30,6 +30,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,6 +42,8 @@ use Throwable;
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */
 class BrpCacheService implements BrpCacheServiceInterface {
+	use SerialisedToArray;
+
 	/**
 	 * Default TTL in hours (24h per design.md).
 	 */
@@ -119,7 +122,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$latest = null;
 		foreach (($results ?? []) as $object) {
-			$arr = self::toArray(object: $object);
+			$arr = $this->toArray(value: $object);
 			if ($this->isUnexpired(row: $arr, now: $now) === false) {
 				continue;
 			}
@@ -201,7 +204,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 			register: $register,
 			schema: $schema,
 		);
-		return self::toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end set()
 
 	/**
@@ -238,7 +241,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 			$expired = $now->modify('-1 second')->format(DATE_ATOM);
 			$count = 0;
 			foreach (($results ?? []) as $object) {
-				$arr = self::toArray(object: $object);
+				$arr = $this->toArray(value: $object);
 				$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
 				if ($uuid === '') {
 					continue;
@@ -283,30 +286,6 @@ class BrpCacheService implements BrpCacheServiceInterface {
 
 		return self::DEFAULT_TTL_HOURS;
 	}//end getConfiguredTtlHours()
-
-	/**
-	 * Normalise an OR object (entity or array) to an array.
-	 *
-	 * @param mixed $object OR object (entity or array) to normalise.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private static function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serial = $object->jsonSerialize();
-			if (is_array($serial) === true) {
-				return $serial;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Resolve [register, schema].
