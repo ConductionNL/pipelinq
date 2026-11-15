@@ -34,14 +34,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
 
-use OCA\Pipelinq\Service\Portal\QuestionDetailService;
+use OCA\Pipelinq\Kernel\Contracts\QuestionDetailServiceInterface;
 
 /**
  * Declares what an external portal subject may see and do in pipelinq.
@@ -71,7 +71,7 @@ use OCA\Pipelinq\Service\Portal\QuestionDetailService;
  * supertype it also carries the OTHER kinds' properties — the per-collection
  * `fields` whitelist below is what stops them leaking across kinds.
  *
- * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 class PortalContributionProvider {
 	/**
@@ -148,12 +148,12 @@ class PortalContributionProvider {
 	 * container hands in the question detail service when it can, and the
 	 * manifest never needs it. Only the two question reads use it.
 	 *
-	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
+	 * @param QuestionDetailServiceInterface|null $questionDetail Reads one question's timeline and items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function __construct(
-		private readonly ?QuestionDetailService $questionDetail = null,
+		private readonly ?QuestionDetailServiceInterface $questionDetail = null,
 	) {
 	}//end __construct()
 
@@ -168,7 +168,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, string> The audience identifiers.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getAudiences(): array {
@@ -183,7 +183,7 @@ class PortalContributionProvider {
 	 *
 	 * @return string The primary audience identifier.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function getAudience(): string {
 		return 'client';
@@ -204,7 +204,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>|null The manifest, or null when not contributing.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getContribution(array $subject): ?array {
@@ -248,7 +248,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The client manifest.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function clientContribution(): array {
 		return [
@@ -575,7 +575,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The customer manifest.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function customerContribution(): array {
 		// NOTE: the citizen "My privacy requests" collection + "Submit a privacy
@@ -586,60 +586,79 @@ class PortalContributionProvider {
 		// pointed at OR's register is a portal follow-up, not part of this change.
 		return [
 			'label' => self::GROUP_CUSTOMER,
-			'pages' => [
-				[
-					'id' => 'customerLoyalty',
-					'label' => 'Mijn klantenkaart',
-					'group' => self::GROUP_CUSTOMER,
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'customerLoyalty'],
-						['type' => 'detail', 'collection' => 'customerLoyalty'],
-					],
-				],
-				[
-					'id' => 'customerBookings',
-					'label' => 'Mijn afspraken',
-					'group' => self::GROUP_CUSTOMER,
-					'blocks' => [
-						['type' => 'collection', 'collection' => 'customerBookings'],
-						['type' => 'detail', 'collection' => 'customerBookings'],
-					],
-				],
-			],
-			'collections' => [
-				[
-					'id' => 'customerLoyalty',
-					'register' => self::REGISTER,
-					'schema' => 'customerLoyaltyAccount',
-					'scopeField' => 'customerId',
-					'scopeClaim' => 'customerUid',
-					'label' => 'Mijn klantenkaart',
-					'listable' => true,
-				],
-				[
-					'id' => 'customerBookings',
-					'register' => self::REGISTER,
-					'schema' => 'appointmentBooking',
-					'scopeField' => 'customerId',
-					'scopeClaim' => 'customerUid',
-					'label' => 'Mijn afspraken',
-					'listable' => true,
-					'minTrust' => 'substantial',
-					'fields' => [
-						'serviceId',
-						'startAt',
-						'endAt',
-						'status',
-						'notes',
-						'depositAmount',
-						'depositPaidAt',
-					],
-				],
-			],
+			'pages' => $this->customerPages(),
+			'collections' => $this->customerCollections(),
 			'actions' => [],
 			'notifications' => [],
 		];
 	}//end customerContribution()
+
+	/**
+	 * The customer's loyalty-card and appointments pages.
+	 *
+	 * @return array<int, array<string, mixed>> The page declarations.
+	 */
+	private function customerPages(): array {
+		return [
+			[
+				'id' => 'customerLoyalty',
+				'label' => 'Mijn klantenkaart',
+				'group' => self::GROUP_CUSTOMER,
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'customerLoyalty'],
+					['type' => 'detail', 'collection' => 'customerLoyalty'],
+				],
+			],
+			[
+				'id' => 'customerBookings',
+				'label' => 'Mijn afspraken',
+				'group' => self::GROUP_CUSTOMER,
+				'blocks' => [
+					['type' => 'collection', 'collection' => 'customerBookings'],
+					['type' => 'detail', 'collection' => 'customerBookings'],
+				],
+			],
+		];
+	}//end customerPages()
+
+	/**
+	 * The customer's loyalty-account and booking collections, scoped by the
+	 * customer's Nextcloud contact UID.
+	 *
+	 * @return array<int, array<string, mixed>> The collection declarations.
+	 */
+	private function customerCollections(): array {
+		return [
+			[
+				'id' => 'customerLoyalty',
+				'register' => self::REGISTER,
+				'schema' => 'customerLoyaltyAccount',
+				'scopeField' => 'customerId',
+				'scopeClaim' => 'customerUid',
+				'label' => 'Mijn klantenkaart',
+				'listable' => true,
+			],
+			[
+				'id' => 'customerBookings',
+				'register' => self::REGISTER,
+				'schema' => 'appointmentBooking',
+				'scopeField' => 'customerId',
+				'scopeClaim' => 'customerUid',
+				'label' => 'Mijn afspraken',
+				'listable' => true,
+				'minTrust' => 'substantial',
+				'fields' => [
+					'serviceId',
+					'startAt',
+					'endAt',
+					'status',
+					'notes',
+					'depositAmount',
+					'depositPaidAt',
+				],
+			],
+		];
+	}//end customerCollections()
 
 	/**
 	 * Manifest for the `citizen` audience (a resident on the municipal portal).
@@ -679,7 +698,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The collection declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsCollection(): array {
 		return [
@@ -733,97 +752,18 @@ class PortalContributionProvider {
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
 	 * @spec openspec/changes/a-resident-asks-a-question-without-a-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-that-is-not-about-a-dossier
 	 * @spec openspec/changes/a-contact-question-is-required-and-dated/specs/dossier-questions/spec.md#requirement-a-question-asked-on-the-contact-page-needs-its-text-and-is-dated
 	 */
 	private function questionActions(): array {
-		$actions = [
-			[
-				'id' => 'askQuestion',
-				'type' => 'create',
-				'label' => 'Stel een vraag',
-				'register' => self::REGISTER,
-				'schema' => 'ticket',
-				// A question: the same kind and channel `myQuestions` lists.
-				'defaults' => ['ticketType' => 'request', 'channel' => 'portal'],
-				'scopeField' => 'portalSubject',
-				'fields' => ['title', 'description'],
-				// The ticket schema mandates neither, and portaliq honours a
-				// field config's `required` only for a field the schema
-				// mandates, so the action names them here.
-				'requiredFields' => ['title', 'description'],
-				'fieldConfigs' => [
-					'title' => ['label' => 'Onderwerp', 'required' => true, 'placeholder' => 'Waar gaat uw vraag over?'],
-					'description' => ['label' => 'Uw vraag', 'required' => true, 'size' => 'full'],
-				],
-				// The moment it was asked: "Gesteld" on Mijn vragen. Portaliq
-				// stamps it when it writes the ticket.
-				'createdAtField' => 'occurredAt',
-				// The portal confirms receipt by mail, naming the subject only.
-				'confirmationMail' => 'contact-confirmation',
-				'topicField' => 'title',
-				'submitLabel' => 'Vraag versturen',
-				'successMessage' => 'Wij hebben uw vraag ontvangen. U vindt hem terug bij Mijn vragen.',
-			],
-		];
+		$questions = new PortalQuestionActions();
+		$actions = [$questions->ask()];
 		if ($this->isOpenCatalogiInstalled() === true) {
-			$actions[] = [
-				'id' => 'askAboutDossier',
-				'label' => 'Stel een vraag over dit dossier',
-				'endpoint' => '/index.php/apps/pipelinq/api/portal/questions',
-				'method' => 'POST',
-				// Shown on the resident's dossier page (hydra woo-citizen-journey
-				// C7): portaliq proves the dossier is the resident's through
-				// opencatalogi's own scope and forwards its id as `collectionId`.
-				// The receiver checks the owner again.
-				'attachTo' => ['app' => 'opencatalogi', 'schema' => 'collection'],
-				'rowField' => 'collectionId',
-				'fields' => ['question', 'title'],
-				// The question is what the form is for, and the receiver refuses
-				// one without it. An endpoint action names its required fields
-				// here: portaliq honours a field config's `required` only for a
-				// field a schema mandates.
-				'requiredFields' => ['question'],
-				'fieldConfigs' => [
-					'title' => ['label' => 'Onderwerp', 'size' => 'large', 'placeholder' => 'Waar gaat uw vraag over?'],
-					'question' => [
-						'label' => 'Uw vraag',
-						'required' => true,
-						'size' => 'full',
-						'help' => 'De medewerker ziet welke documenten in uw dossier staan. Uw aantekeningen ziet de medewerker niet.',
-					],
-				],
-				'submitLabel' => 'Vraag versturen',
-				'successMessage' => 'Uw vraag is verstuurd. U krijgt bericht als er een antwoord is.',
-			];
+			$actions[] = $questions->askAboutDossier();
 		}
 
-		$actions[] = [
-			'id' => 'replyToQuestion',
-			'label' => 'Reageren op het antwoord',
-			'endpoint' => '/index.php/apps/pipelinq/api/portal/questions/reply',
-			'method' => 'POST',
-			// ON THE QUESTION'S DETAIL (question-detail-on-the-portal): attached
-			// to pipelinq's own `myQuestions` only, so the form asks the reply
-			// text on the question the resident opened. Portaliq proves the
-			// question is theirs through that collection's scope and stamps its
-			// id into `ticket`; the receiver checks the owner again.
-			'attachTo' => ['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'],
-			'rowField' => 'ticket',
-			// Offered only while the employee waits for the resident. Portaliq
-			// leaves it off any other question and refuses it there with 409.
-			'rowWhen' => ['field' => 'status', 'in' => ['awaiting_customer']],
-			'fields' => ['ticket', 'message'],
-			'requiredFields' => ['message'],
-			'fieldConfigs' => [
-				'ticket' => ['visible' => false, 'required' => true],
-				'message' => ['label' => 'Uw reactie', 'required' => true, 'size' => 'full'],
-			],
-			'submitLabel' => 'Reactie versturen',
-			'successMessage' => 'Uw reactie is verstuurd.',
-		];
-
+		$actions[] = $questions->reply();
 		return $actions;
 	}//end questionActions()
 
@@ -833,7 +773,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The page declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsPage(): array {
 		return [
@@ -866,7 +806,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two collections.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketCollections(): array {
 		return [
@@ -917,7 +857,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two create actions.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketActions(): array {
 		return [
@@ -963,7 +903,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The two pages.
 	 *
-	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function ownTicketPages(): array {
 		return [
@@ -1023,7 +963,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	public function questionTimeline(string $id): array {
 		$detail = $this->questionDetail();
@@ -1042,7 +982,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The items.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
 	 */
 	public function questionDossierItems(string $id): array {
 		$detail = $this->questionDetail();
@@ -1058,11 +998,11 @@ class PortalContributionProvider {
 	 *
 	 * Protected so a test can hand in a double.
 	 *
-	 * @return QuestionDetailService|null The service, or null when it cannot be built.
+	 * @return QuestionDetailServiceInterface|null The service, or null when it cannot be built.
 	 *
-	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
-	protected function questionDetail(): ?QuestionDetailService {
+	protected function questionDetail(): ?QuestionDetailServiceInterface {
 		return $this->questionDetail;
 	}//end questionDetail()
 }//end class

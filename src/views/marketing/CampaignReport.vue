@@ -12,7 +12,7 @@
   model here re-reads nothing, because all three models are already in the
   response.
 
-  @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+  @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 -->
 <template>
 	<div class="campaign-report" :class="{ 'campaign-report--embedded': embedded }">
@@ -118,6 +118,9 @@
 							<th v-if="!embedded" scope="col" class="campaign-report__num">
 								{{ t('pipelinq', 'Submissions') }}
 							</th>
+							<th v-if="!embedded" scope="col" class="campaign-report__num">
+								{{ t('pipelinq', 'Attended') }}
+							</th>
 							<th scope="col" class="campaign-report__num">
 								{{ t('pipelinq', 'Leads') }}
 							</th>
@@ -136,6 +139,9 @@
 							<td class="campaign-report__num">{{ row.visits }}</td>
 							<td v-if="!embedded" class="campaign-report__num">
 								{{ row.submissions }}
+							</td>
+							<td v-if="!embedded" class="campaign-report__num">
+								{{ row.attended }}
 							</td>
 							<td class="campaign-report__num">{{ row.leads }}</td>
 						</tr>
@@ -267,7 +273,7 @@ export default {
 		 * Whether the report is a section of one campaign's page.
 		 *
 		 * @return {boolean} True with a campaignId.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		embedded() {
 			return this.campaignId !== ''
@@ -277,7 +283,7 @@ export default {
 		 * The headline tiles in board order, each a label over its value.
 		 *
 		 * @return {Array<object>} key, label and value per tile.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		tileList() {
 			const tiles = this.tiles
@@ -318,7 +324,7 @@ export default {
 		 * The campaigns to pick from.
 		 *
 		 * @return {Array<object>} id and label per option.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		campaignOptions() {
 			return this.campaigns.map((row) => ({
@@ -331,7 +337,7 @@ export default {
 		 * The three attribution models.
 		 *
 		 * @return {Array<object>} model and label per option.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 		 */
 		modelOptions() {
 			return ATTRIBUTION_MODELS.map((model) => ({
@@ -344,7 +350,7 @@ export default {
 		 * The headline numbers.
 		 *
 		 * @return {object} The tiles.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		tiles() {
 			return summaryTiles(this.report)
@@ -354,7 +360,7 @@ export default {
 		 * The per-channel rows.
 		 *
 		 * @return {Array<object>} The rows.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		channels() {
 			return channelRows(this.report)
@@ -365,7 +371,7 @@ export default {
 		 * nothing: all three arrived in the one response.
 		 *
 		 * @return {Array<object>} The rows.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-is-computed-at-report-time-in-three-models
 		 */
 		modelSplit() {
 			return modelRows(this.report, this.model?.model || 'last')
@@ -375,7 +381,7 @@ export default {
 		 * The lead rows, each labelled with what it closed on.
 		 *
 		 * @return {Array<object>} The rows.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 		 */
 		leads() {
 			return leadRows(this.report)
@@ -388,10 +394,38 @@ export default {
 
 	methods: {
 		/**
+		 * List the campaigns to pick from; a failure leaves none and says why.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		async loadCampaigns() {
+			try {
+				this.campaigns = await fetchCampaigns(100)
+			} catch (e) {
+				this.campaigns = []
+				this.error =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Could not load the campaigns.')
+			}
+		},
+
+		/**
+		 * @return {object|null} The campaign the address names, else the first.
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 */
+		wantedCampaign() {
+			const wanted = this.$route?.query?.campaign
+			return this.campaignOptions.find((option) => option.id === wanted)
+				|| this.campaignOptions[0]
+				|| null
+		},
+
+		/**
 		 * Read the campaigns, then the report for the one in the route or
 		 * the first one there is.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		async load() {
 			this.loading = true
@@ -402,20 +436,8 @@ export default {
 				await this.fetchReport()
 				return
 			}
-			try {
-				this.campaigns = await fetchCampaigns(100)
-			} catch (e) {
-				this.campaigns = []
-				this.error =
-					e?.response?.data?.error
-					|| this.t('pipelinq', 'Could not load the campaigns.')
-			}
-
-			const wanted = this.$route?.query?.campaign
-			this.campaign =
-				this.campaignOptions.find((option) => option.id === wanted)
-				|| this.campaignOptions[0]
-				|| null
+			await this.loadCampaigns()
+			this.campaign = this.wantedCampaign()
 
 			if (!this.campaign) {
 				this.loading = false
@@ -428,7 +450,7 @@ export default {
 		/**
 		 * GET /api/campaigns/{id}/report, once.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		async fetchReport() {
 			if (!this.campaign) {
@@ -455,7 +477,7 @@ export default {
 		/**
 		 * @param {number} amount An amount in euro.
 		 * @return {string} The amount, formatted.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		money(amount) {
 			return `€ ${Number(amount || 0).toLocaleString(undefined, {
@@ -470,7 +492,7 @@ export default {
 		 *
 		 * @param {number|null} amount An amount, or null.
 		 * @return {string} The amount or the phrase.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		moneyOrAbsent(amount) {
 			if (amount === null || amount === undefined) {
@@ -484,7 +506,7 @@ export default {
 		 *
 		 * @param {number|null} count A count, or null.
 		 * @return {string} The count or the phrase.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		countOrAbsent(count) {
 			if (count === null || count === undefined) {
@@ -496,7 +518,7 @@ export default {
 		/**
 		 * @param {string} channel A stored channel key.
 		 * @return {string} Its label, or the key as stored when it has none.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		channelLabel(channel) {
 			return enumLabel(CAMPAIGN_CHANNEL_LABELS, channel, (text) => this.t('pipelinq', text))
@@ -505,7 +527,7 @@ export default {
 		/**
 		 * @param {number} ratio A ratio between 0 and 1.
 		 * @return {string} A percentage with one decimal.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		percent(ratio) {
 			return `${(Number(ratio || 0) * 100).toFixed(1)}%`

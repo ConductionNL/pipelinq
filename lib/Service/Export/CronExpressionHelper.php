@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
 
 declare(strict_types=1);
@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use DateTimeImmutable;
+use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
 
 /**
  * Validates and describes 5-field UNIX cron expressions and @-shortcuts.
@@ -42,9 +43,9 @@ use DateTimeImmutable;
  * @SuppressWarnings(PHPMD.ElseExpression)           The else mirrors the cron range/step
  *  parser's two symmetric branches and reads clearer than an early return here.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class CronExpressionHelper {
+class CronExpressionHelper implements CronExpressionHelperInterface {
 	/**
 	 * Supported @-shortcuts mapped to their 5-field equivalents.
 	 *
@@ -96,7 +97,7 @@ class CronExpressionHelper {
 	 *
 	 * @return bool True when valid.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function isValid(string $expression): bool {
 		$expression = trim($expression);
@@ -151,7 +152,7 @@ class CronExpressionHelper {
 	 *
 	 * @return string The human-readable description.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function describe(string $expression, string $locale = 'en'): string {
 		$fields = $this->fieldsOf(expression: $expression);
@@ -206,7 +207,7 @@ class CronExpressionHelper {
 	 *
 	 * @return bool True when the schedule fires at this minute.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
 	 */
 	public function isDue(string $expression, \DateTimeInterface $when): bool {
 		$fields = $this->fieldsOf(expression: $expression);
@@ -240,30 +241,61 @@ class CronExpressionHelper {
 			return null;
 		}
 
-		$start = (new DateTimeImmutable('now', $from->getTimezone()))->setTimestamp($from->getTimestamp());
-		$when  = $start->setTime((int)$start->format('G'), (int)$start->format('i'))->modify('+1 minute');
-		$limit = $start->modify('+'.$horizonDays.' days');
-
+		[$when, $limit] = $this->searchWindow(from: $from, horizonDays: $horizonDays);
 		while ($when <= $limit) {
-			if ($this->dayMatches(fields: $fields, when: $when) === false) {
-				$when = $when->modify('+1 day')->setTime(0, 0);
-				continue;
-			}
-
-			if ($this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === false) {
-				$when = $when->setTime((int)$when->format('G'), 0)->modify('+1 hour');
-				continue;
-			}
-
-			if ($this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true) {
+			$next = $this->nextCandidate(fields: $fields, when: $when);
+			if ($next === null) {
 				return $when;
 			}
 
-			$when = $when->modify('+1 minute');
+			$when = $next;
 		}
 
 		return null;
 	}//end nextRunAfter()
+
+	/**
+	 * Where the search starts (the next whole minute after the start, in its
+	 * time zone) and where it gives up.
+	 *
+	 * @param \DateTimeInterface $from        The start.
+	 * @param int                $horizonDays How many days to search.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+	 */
+	private function searchWindow(\DateTimeInterface $from, int $horizonDays): array {
+		$start = (new DateTimeImmutable('now', $from->getTimezone()))->setTimestamp($from->getTimestamp());
+		$when  = $start->setTime((int)$start->format('G'), (int)$start->format('i'))->modify('+1 minute');
+
+		return [$when, $start->modify('+'.$horizonDays.' days')];
+	}//end searchWindow()
+
+	/**
+	 * The next moment worth trying after a candidate that does not match:
+	 * the next day at midnight when the day is wrong, the next whole hour
+	 * when the hour is wrong, the next minute otherwise; null when the
+	 * candidate matches.
+	 *
+	 * @param array<int, string> $fields The five cron fields.
+	 * @param DateTimeImmutable  $when   The candidate.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function nextCandidate(array $fields, DateTimeImmutable $when): ?DateTimeImmutable {
+		if ($this->dayMatches(fields: $fields, when: $when) === false) {
+			return $when->modify('+1 day')->setTime(0, 0);
+		}
+
+		if ($this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === false) {
+			return $when->setTime((int)$when->format('G'), 0)->modify('+1 hour');
+		}
+
+		if ($this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true) {
+			return null;
+		}
+
+		return $when->modify('+1 minute');
+	}//end nextCandidate()
 
 	/**
 	 * The five fields of a valid expression, or null.

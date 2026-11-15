@@ -384,6 +384,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -744,6 +751,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -767,6 +781,13 @@
                     "id": "saved-1-0",
                     "register": "pipelinq",
                     "schema": "blast"
+                }
+            },
+            {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
                 }
             },
             {
@@ -1066,6 +1087,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -1089,6 +1117,13 @@
                     "id": "saved-1-0",
                     "register": "pipelinq",
                     "schema": "blast"
+                }
+            },
+            {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
                 }
             },
             {
@@ -1352,6 +1387,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -1553,6 +1595,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -1722,6 +1771,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -1869,6 +1925,13 @@
                     "id": "b-1",
                     "register": "pipelinq",
                     "schema": "blast"
+                }
+            },
+            {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
                 }
             },
             {
@@ -2115,6 +2178,13 @@
                 }
             },
             {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
+                }
+            },
+            {
                 "saveObject": {
                     "object": {
                         "uuid": "b-1",
@@ -2248,6 +2318,13 @@
                     "id": "b-1",
                     "register": "pipelinq",
                     "schema": "blast"
+                }
+            },
+            {
+                "find": {
+                    "id": "t-1",
+                    "register": "pipelinq",
+                    "schema": "campaignTemplate"
                 }
             },
             {

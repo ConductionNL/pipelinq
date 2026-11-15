@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
-use Throwable;
 
 /**
  * Mollie payment adapter.
@@ -57,6 +56,35 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	}//end getName()
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @return string The display name.
+	 */
+	protected function label(): string {
+		return 'Mollie';
+	}//end label()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return array<string, string> The bearer authorisation header.
+	 */
+	protected function authHeaders(): array {
+		return ['Authorization' => 'Bearer ' . $this->credential(key: 'apiKey')];
+	}//end authHeaders()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @param int $status The HTTP status.
+	 *
+	 * @return string The message, pointing at the API key.
+	 */
+	protected function connectionHttpError(int $status): string {
+		return 'Mollie gaf HTTP ' . $status . ' terug — controleer de API key';
+	}//end connectionHttpError()
+
+	/**
 	 * Initiate a Mollie payment.
 	 *
 	 * @param array<string, mixed> $transactionData The transaction data.
@@ -73,67 +101,59 @@ class MollieAdapter extends AbstractPaymentAdapter {
 			return $this->failedInitiate(message: 'Mollie API key not configured');
 		}
 
-		$cents = $this->toCents(amount: $amount);
-		if ($cents <= 0) {
+		$payment = new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount));
+		if ($payment->cents <= 0) {
 			return $this->failedInitiate(message: 'Invalid amount');
 		}
 
-		$reference = (string)($transactionData['reference'] ?? '');
-		$label = 'transactie';
-		if ($reference !== '') {
-			$label = $reference;
+		$rawBody = (string)json_encode($this->paymentPayload(payment: $payment, paymentMethod: $paymentMethod));
+		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/payments', context: 'initiate failed'), body: $rawBody);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedInitiate(message: $error);
 		}
 
-		$description = sprintf('Pipelinq POS %s', $label);
+		return $this->pending(sessionId: (string)($response['body']['id'] ?? ''), redirectUrl: $this->checkoutUrl(body: $response['body']));
+	}//end initiate()
 
-		$payload = [
+	/**
+	 * The Mollie create-payment request body.
+	 *
+	 * @param PspPayment $payment       The payment.
+	 * @param string     $paymentMethod The normalised method name.
+	 *
+	 * @return array<string, mixed> The request body.
+	 */
+	private function paymentPayload(PspPayment $payment, string $paymentMethod): array {
+		return [
 			'amount' => [
 				'currency' => 'EUR',
-				'value' => $this->centsToDecimal(cents: $cents),
+				'value' => $this->centsToDecimal(cents: $payment->cents),
 			],
-			'description' => $description,
+			'description' => $payment->description(),
 			'method' => $this->mapMethod(method: $paymentMethod),
 			'metadata' => [
-				'reference' => $reference,
-				'transactionId' => (string)($transactionData['id'] ?? ''),
+				'reference' => $payment->reference(),
+				'transactionId' => $payment->transactionId(),
 				'app' => 'pipelinq',
 			],
 		];
+	}//end paymentPayload()
 
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: self::BASE_URL . '/payments',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'initiate failed', e: $e);
-			return $this->failedInitiate(message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedInitiate(message: 'Mollie returned HTTP ' . $response['status']);
-		}
-
-		$body = $response['body'];
-		$sessionId = (string)($body['id'] ?? '');
-		$redirectUrl = null;
+	/**
+	 * The hosted checkout URL in a create-payment reply, when it has one.
+	 *
+	 * @param array<string, mixed> $body The reply body.
+	 *
+	 * @return string|null The checkout URL.
+	 */
+	private function checkoutUrl(array $body): ?string {
 		if (isset($body['_links']['checkout']['href']) === true) {
-			$redirectUrl = (string)$body['_links']['checkout']['href'];
+			return (string)$body['_links']['checkout']['href'];
 		}
 
-		return [
-			'sessionId' => $sessionId,
-			'redirectUrl' => $redirectUrl,
-			'status' => 'pending',
-		];
-	}//end initiate()
+		return null;
+	}//end checkoutUrl()
 
 	/**
 	 * Capture is a no-op for Mollie — settles via webhook.
@@ -152,30 +172,15 @@ class MollieAdapter extends AbstractPaymentAdapter {
 			return $this->failedCapture(sessionId: $sessionId, message: 'Mollie API key or session missing');
 		}
 
-		try {
-			$response = $this->transport()->request(
-				method: 'GET',
-				url: self::BASE_URL . '/payments/' . urlencode($sessionId),
-				headers: ['Authorization' => 'Bearer ' . $apiKey],
-				body: null
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'capture failed', e: $e);
-			return $this->failedCapture(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedCapture(sessionId: $sessionId, message: 'Mollie returned HTTP ' . $response['status']);
+		$call = new PspCall(url: self::BASE_URL . '/payments/' . urlencode($sessionId), context: 'capture failed');
+		$response = $this->send(call: $call, body: null);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedCapture(sessionId: $sessionId, message: $error);
 		}
 
 		$status = (string)($response['body']['status'] ?? 'pending');
-		$mapped = $this->mapStatus(providerStatus: $status);
-
-		return [
-			'sessionId' => $sessionId,
-			'status' => $mapped,
-			'error' => null,
-		];
+		return $this->settled(sessionId: $sessionId, status: $this->mapStatus(providerStatus: $status));
 	}//end capture()
 
 	/**
@@ -194,41 +199,15 @@ class MollieAdapter extends AbstractPaymentAdapter {
 			return $this->failedRefund(sessionId: $sessionId, message: 'Mollie API key or session missing');
 		}
 
-		$description = 'Refund via Pipelinq POS';
-		if ($reason !== '') {
-			$description = $reason;
+		$rawBody = (string)json_encode(['description' => $this->refundReason(reason: $reason)]);
+		$call = new PspCall(url: self::BASE_URL . '/payments/' . urlencode($sessionId) . '/refunds', context: 'refund failed');
+		$response = $this->send(call: $call, body: $rawBody);
+		$error = $this->replyError(response: $response);
+		if ($error !== null) {
+			return $this->failedRefund(sessionId: $sessionId, message: $error);
 		}
 
-		$payload = ['description' => $description];
-		$rawBody = (string)json_encode($payload);
-
-		try {
-			$response = $this->transport()->request(
-				method: 'POST',
-				url: self::BASE_URL . '/payments/' . urlencode($sessionId) . '/refunds',
-				headers: [
-					'Authorization' => 'Bearer ' . $apiKey,
-					'Content-Type' => 'application/json',
-				],
-				body: $rawBody
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'refund failed', e: $e);
-			return $this->failedRefund(sessionId: $sessionId, message: 'Verbinding met betalingsprovider verbroken');
-		}//end try
-
-		if ($response['status'] < 200 || $response['status'] >= 300) {
-			return $this->failedRefund(sessionId: $sessionId, message: 'Mollie returned HTTP ' . $response['status']);
-		}
-
-		$refundId = (string)($response['body']['id'] ?? '');
-
-		return [
-			'sessionId' => $sessionId,
-			'refundId' => $refundId,
-			'status' => 'refunded',
-			'error' => null,
-		];
+		return $this->refunded(sessionId: $sessionId, refundId: (string)($response['body']['id'] ?? ''));
 	}//end refund()
 
 	/**
@@ -285,40 +264,12 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function testConnection(): array {
-		$apiKey = $this->credential(key: 'apiKey');
-		if ($apiKey === '') {
-			return [
-				'status' => 'error',
-				'message' => 'API key niet ingesteld',
-			];
+		if ($this->credential(key: 'apiKey') === '') {
+			return $this->notConfigured(message: 'API key niet ingesteld');
 		}
 
-		try {
-			$response = $this->transport()->request(
-				method: 'GET',
-				url: self::BASE_URL . '/methods',
-				headers: ['Authorization' => 'Bearer ' . $apiKey],
-				body: null
-			);
-		} catch (Throwable $e) {
-			$this->logProviderError(context: 'testConnection failed', e: $e);
-			return [
-				'status' => 'error',
-				'message' => 'Verbinding met Mollie mislukt',
-			];
-		}//end try
-
-		if ($response['status'] >= 200 && $response['status'] < 300) {
-			return [
-				'status' => 'ok',
-				'message' => 'Verbinding met Mollie succesvol',
-			];
-		}
-
-		return [
-			'status' => 'error',
-			'message' => 'Mollie gaf HTTP ' . $response['status'] . ' terug — controleer de API key',
-		];
+		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/methods', context: 'testConnection failed'), body: null);
+		return $this->connectionVerdict(response: $response);
 	}//end testConnection()
 
 	/**

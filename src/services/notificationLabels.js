@@ -20,7 +20,7 @@
  * The translator is passed in, so the module stays free of a Nextcloud
  * runtime and the l10n check still sees every string as a literal.
  *
- * @spec openspec/changes/simple-tour-and-readable-labels/specs/notifications/spec.md
+ * @spec openspec/specs/notifications/spec.md
  */
 
 /**
@@ -28,7 +28,7 @@
  *
  * @param {function(string, string): string} t The translator.
  * @return {Object<string, string>} Translated labels, keyed `<schema>.<rule>`.
- * @spec openspec/changes/simple-tour-and-readable-labels/specs/notifications/spec.md
+ * @spec openspec/specs/notifications/spec.md
  */
 export function notificationLabels(t) {
 	return {

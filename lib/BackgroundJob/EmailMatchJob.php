@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\EmailMatchService;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IUser;
@@ -58,13 +58,13 @@ class EmailMatchJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param EmailMatchService $emailMatchService Matching service.
+	 * @param EmailMatchServiceInterface $emailMatchService Matching service.
 	 * @param IUserManager $userManager User manager.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private EmailMatchService $emailMatchService,
+		private EmailMatchServiceInterface $emailMatchService,
 		private IUserManager $userManager,
 		private LoggerInterface $logger,
 	) {
@@ -92,24 +92,14 @@ class EmailMatchJob extends TimedJob {
 
 		$this->userManager->callForAllUsers(
 			function (IUser $user) use (&$totalLinked, &$totalScanned, &$userErrors): void {
-				$userId = $user->getUID();
-				try {
-					$result = $this->emailMatchService->runForUser(userId: $userId);
-					$totalLinked += (int)$result['linked'];
-					$totalScanned += (int)$result['scanned'];
-				} catch (Throwable $e) {
+				$counts = $this->matchUser(userId: $user->getUID());
+				if ($counts === null) {
 					$userErrors++;
-					$this->emailMatchService->writeStatus(
-						userId: $userId,
-						linked: 0,
-						scanned: 0,
-						error: 'Match run failed'
-					);
-					$this->logger->warning(
-						'Pipelinq: email match job failed for user',
-						['userId' => $userId]
-					);
+					return;
 				}
+
+				$totalLinked += $counts['linked'];
+				$totalScanned += $counts['scanned'];
 			}
 		);
 
@@ -123,4 +113,30 @@ class EmailMatchJob extends TimedJob {
 		);
 
 	}//end run()
+
+	/**
+	 * Run the matching pass for one user; a failure is recorded on the user's status and logged.
+	 *
+	 * @param string $userId The user id.
+	 *
+	 * @return array{linked: int, scanned: int}|null The user's counts, or null when the run failed.
+	 */
+	private function matchUser(string $userId): ?array {
+		try {
+			$result = $this->emailMatchService->runForUser(userId: $userId);
+			return ['linked' => (int)$result['linked'], 'scanned' => (int)$result['scanned']];
+		} catch (Throwable $e) {
+			$this->emailMatchService->writeStatus(
+				userId: $userId,
+				linked: 0,
+				scanned: 0,
+				error: 'Match run failed'
+			);
+			$this->logger->warning(
+				'Pipelinq: email match job failed for user',
+				['userId' => $userId]
+			);
+			return null;
+		}
+	}//end matchUser()
 }//end class

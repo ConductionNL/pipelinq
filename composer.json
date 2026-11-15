@@ -34,6 +34,12 @@
         "vimeo/psalm": "^5.26"
     },
     "scripts": {
+        "coverage:publish": [
+            "@putenv XDEBUG_MODE=coverage",
+            "@php -d pcov.enabled=1 vendor/bin/phpunit -c phpunit.xml --do-not-fail-on-risky --coverage-clover=coverage/clover.xml",
+            "npm run test:coverage",
+            "@php scripts/coverage-publish.php"
+        ],
         "lint": "find . -name \\*.php -not -path './vendor/*' -not -path './build/*' -print0 | xargs -0 -n1 php -l",
         "cs:check": "php-cs-fixer fix --dry-run --diff",
         "cs:fix": "php-cs-fixer fix",

@@ -27,14 +27,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\SocialPostService;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -43,21 +43,21 @@ use Throwable;
 /**
  * Publish scheduled social posts whose moment has arrived.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 class SocialPublishJob extends TimedJob {
 	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param SocialPostService $posts The publishing service.
+	 * @param SocialPostServiceInterface $posts The publishing service.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SocialPostService $posts,
+		private readonly SocialPostServiceInterface $posts,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -76,7 +76,7 @@ class SocialPublishJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The TimedJob contract
 	 *  passes an argument this job does not take.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	protected function run($argument): void {
 		try {

@@ -125,11 +125,12 @@ class TemplateControllerTest extends TestCase {
 	/**
 	 * Build the controller over the real ComplianceService.
 	 *
-	 * @param array<string, mixed> $params The request body.
+	 * @param array<string, mixed> $params     The request body.
+	 * @param bool                 $privileged Whether the caller holds CRM rights.
 	 *
 	 * @return TemplateController The controller under test.
 	 */
-	private function controller(array $params): TemplateController {
+	private function controller(array $params, bool $privileged = true): TemplateController {
 		$this->objects = ($this->objects ?? new TemplateStoreDouble());
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -168,7 +169,7 @@ class TemplateControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
-		$policy->method('isPrivileged')->willReturn(true);
+		$policy->method('isPrivileged')->willReturn($privileged);
 
 		// The articles expansion passes the body through: no article is picked.
 		$articles = $this->createMock(ArticleService::class);
@@ -205,6 +206,21 @@ class TemplateControllerTest extends TestCase {
 		$this->assertCount(1, $this->objects->saved);
 		$this->assertSame('reply@example.nl', ($this->objects->saved[0]['replyTo'] ?? null));
 	}//end testCreateStoresTheReplyTo()
+
+	/**
+	 * A signed-in user without CRM rights cannot create a template, and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testCreateIsRefusedForAnUnprivilegedCaller(): void {
+		$response = $this->controller(
+			['name' => 'Renewal reminder', 'channel' => 'email', 'bodyHtml' => self::BODY, 'footerOverride' => self::ADDRESS],
+			privileged: false
+		)->create();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame([], $this->objects->saved);
+	}//end testCreateIsRefusedForAnUnprivilegedCaller()
 
 	/**
 	 * Saving an existing template stores a changed reply-to.

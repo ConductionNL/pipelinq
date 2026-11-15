@@ -36,7 +36,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ namespace OCA\Pipelinq\Flow;
 
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
-use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
+use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\WorkflowEngine\IManager;
@@ -58,7 +58,7 @@ use UnexpectedValueException;
  *     runtime and suppressed as an undefined class in psalm.xml, so psalm
  *     cannot verify the implements-relationship here.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
 class CompetitorWatchRunNode implements IFlowNode {
 
@@ -81,14 +81,14 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @param IL10N $l10n Palette strings.
 	 * @param IURLGenerator $urls Palette icon.
-	 * @param CompetitorWatchService $watches The service that does the work.
+	 * @param CompetitorWatchServiceInterface $watches The service that does the work.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function __construct(
 		private readonly IL10N $l10n,
 		private readonly IURLGenerator $urls,
-		private readonly CompetitorWatchService $watches,
+		private readonly CompetitorWatchServiceInterface $watches,
 	) {
 	}//end __construct()
 
@@ -97,7 +97,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function getId(): string {
 		return self::NODE_ID;
@@ -108,7 +108,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function getDisplayName(): string {
 		return $this->l10n->t('Run due competitor watches');
@@ -119,7 +119,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function getDescription(): string {
 		return $this->l10n->t(
@@ -132,7 +132,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @return string The icon URL.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function getIcon(): string {
 		return $this->urls->imagePath('pipelinq', 'app-dark.svg');
@@ -146,7 +146,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @return bool Whether the node is offered in this scope.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		return in_array($scope, [IManager::SCOPE_ADMIN, IManager::SCOPE_USER], true);
@@ -161,7 +161,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @throws UnexpectedValueException When the limit is not a positive number.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function validateConfig(array $config): void {
 		if (array_key_exists('limit', $config) === false) {
@@ -188,7 +188,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 *
 	 * @return array One item carrying the summary.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
 	public function execute(FlowNodeCall $call): array {
 		$items = $call->items;
@@ -196,12 +196,35 @@ class CompetitorWatchRunNode implements IFlowNode {
 		$context = $call->context;
 
 		$this->validateConfig(config: $config);
-		$limit = CompetitorWatchService::DEFAULT_LIMIT;
+		$summary = $this->watches->runDue(limit: self::limitOf(config: $config), actingUserId: $this->actingUser(context: $context));
+
+		return self::withSummary(items: $items, summary: $summary);
+	}//end execute()
+
+	/**
+	 * How many watches one firing may run: the configured limit, or the default.
+	 *
+	 * @param array $config The validated step configuration.
+	 *
+	 * @return int The limit.
+	 */
+	private static function limitOf(array $config): int {
 		if (array_key_exists('limit', $config) === true) {
-			$limit = (int)$config['limit'];
+			return (int)$config['limit'];
 		}
 
-		$summary = $this->watches->runDue(limit: $limit, actingUserId: $this->actingUser(context: $context));
+		return CompetitorWatchServiceInterface::DEFAULT_LIMIT;
+	}//end limitOf()
+
+	/**
+	 * The items with the run summary added; one summary item when there are none.
+	 *
+	 * @param array $items   The input items.
+	 * @param array $summary The run summary.
+	 *
+	 * @return array The output items.
+	 */
+	private static function withSummary(array $items, array $summary): array {
 		if ($items === []) {
 			return [['json' => [self::OUTCOME_KEY => $summary]]];
 		}
@@ -216,7 +239,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 		}
 
 		return $out;
-	}//end execute()
+	}//end withSummary()
 
 	/**
 	 * The identity the run acts as, only so hermiq's own egress guard can be

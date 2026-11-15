@@ -33,8 +33,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Mcp;
 
 use OCA\OpenRegister\Mcp\IMcpScannableServices;
-use OCA\Pipelinq\Service\LeadService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Service\ServiceRegistrar;
 
 /**
  * PipelinqScannableServices
@@ -56,10 +55,7 @@ class PipelinqScannableServices implements IMcpScannableServices {
 	 *   (Requirement: Hand-written service tools take precedence over derived tools)
 	 */
 	public function getScannableServiceClasses(): array {
-		return [
-			LeadService::class,
-			TicketService::class,
-		];
+		return ServiceRegistrar::MCP_SCANNABLE_SERVICES;
 
 	}//end getScannableServiceClasses()
 }//end class

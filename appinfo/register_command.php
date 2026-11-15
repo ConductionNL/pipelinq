@@ -19,6 +19,7 @@ use OCA\Pipelinq\Command\PortalCleanupCommand;
 use OCA\Pipelinq\Command\ReferencesAuditCommand;
 use OCA\Pipelinq\Command\SearchConsoleImportCommand;
 use OCA\Pipelinq\Command\SeedDemoDataCommand;
+use OCA\Pipelinq\Command\UplImportCommand;
 use OCP\Server;
 
 /*
@@ -31,3 +32,4 @@ $application->add(Server::get(CompetitorWatchRunCommand::class));
 $application->add(Server::get(ConnectionAuditCommand::class));
 $application->add(Server::get(ReferencesAuditCommand::class));
 $application->add(Server::get(EnquiryDrainCommand::class));
+$application->add(Server::get(UplImportCommand::class));

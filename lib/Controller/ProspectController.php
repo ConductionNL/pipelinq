@@ -23,9 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProspectDiscoveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -42,17 +42,17 @@ class ProspectController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ProspectDiscoveryService $discoveryService The discovery service.
+	 * @param ProspectDiscoveryServiceInterface $discoveryService The discovery service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ProspectDiscoveryService $discoveryService,
+		private ProspectDiscoveryServiceInterface $discoveryService,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

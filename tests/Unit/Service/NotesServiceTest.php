@@ -241,4 +241,36 @@ class NotesServiceTest extends TestCase {
 
 		$this->service->deleteAllNotes('pipelinq_client', '123');
 	}//end testDeleteAllNotesDelegates()
+	/**
+	 * Every note shape, exactly: the read asks for 200 comments from the
+	 * start; an author that is no user keeps the id as name; without a
+	 * session user no note is one's own; newest first.
+	 *
+	 * @return void
+	 */
+	public function testEveryNoteShape(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+		$known = $this->createMock(IComment::class);
+		$known->method('getId')->willReturn('7');
+		$known->method('getMessage')->willReturn('Bel terug');
+		$known->method('getActorId')->willReturn('jan');
+		$known->method('getCreationDateTime')->willReturn(new \DateTime('2026-02-01T09:00:00+00:00'));
+		$gone = $this->createMock(IComment::class);
+		$gone->method('getId')->willReturn('8');
+		$gone->method('getMessage')->willReturn('Gedaan');
+		$gone->method('getActorId')->willReturn('oud-account');
+		$gone->method('getCreationDateTime')->willReturn(new \DateTime('2026-02-02T09:00:00+00:00'));
+		$this->commentsManager->expects($this->once())->method('getForObject')->with('pipelinq_lead', 'l-1', 200, 0)->willReturn([$known, $gone]);
+		$jan = $this->createMock(IUser::class);
+		$jan->method('getDisplayName')->willReturn('Jan de Vries');
+		$this->userManager->method('get')->willReturnCallback(static fn (string $uid): ?IUser => ($uid === 'jan' ? $jan : null));
+
+		$this->assertSame(
+			[
+				['id' => 8, 'message' => 'Gedaan', 'authorId' => 'oud-account', 'authorName' => 'oud-account', 'timestamp' => '2026-02-02T09:00:00+00:00', 'isOwn' => false],
+				['id' => 7, 'message' => 'Bel terug', 'authorId' => 'jan', 'authorName' => 'Jan de Vries', 'timestamp' => '2026-02-01T09:00:00+00:00', 'isOwn' => false],
+			],
+			$this->service->getNotes('pipelinq_lead', 'l-1')
+		);
+	}//end testEveryNoteShape()
 }//end class

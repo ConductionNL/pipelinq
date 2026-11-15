@@ -33,7 +33,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Service;
 
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * Write a contact's standing survey opt-out.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
 class SurveyOptOutService {
 	/**
@@ -81,36 +81,36 @@ class SurveyOptOutService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function record(string $contactRef): void {
 		$contactRef = trim($contactRef);
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 		if ($contactRef === '' || $register === '' || $schema === '') {
 			return;
 		}
 
-		foreach ($this->contactRows(register: $register, schema: $schema, contactRef: $contactRef) as $row) {
+		$where = ['register' => $register, 'schema' => $schema];
+		foreach ($this->contactRows(where: $where, contactRef: $contactRef) as $row) {
 			$row['surveyOptOut'] = true;
-			$this->write(register: $register, schema: $schema, row: $row);
+			$this->write(where: $where, row: $row);
 		}
 	}//end record()
 
 	/**
 	 * The contact rows one uid resolves to, as plain arrays.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The contact schema id.
+	 * @param array{register: string, schema: string} $where The register id and contact schema id.
 	 * @param string $contactRef The contact uid.
 	 *
 	 * @return array<int, array<string, mixed>> The rows, or [] when the read failed.
 	 */
-	private function contactRows(string $register, string $schema, string $contactRef): array {
+	private function contactRows(array $where, string $contactRef): array {
 		try {
 			$found = $this->objectService->findAll(
 				[
-					'filters' => ['register' => $register, 'schema' => $schema, 'contactsUid' => $contactRef],
+					'filters' => $where + ['contactsUid' => $contactRef],
 					'limit' => self::LIMIT,
 				]
 			);
@@ -141,18 +141,17 @@ class SurveyOptOutService {
 	/**
 	 * Save one contact row, logging rather than throwing on failure.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The contact schema id.
+	 * @param array{register: string, schema: string} $where The register id and contact schema id.
 	 * @param array<string, mixed> $row The row to write.
 	 *
 	 * @return void
 	 */
-	private function write(string $register, string $schema, array $row): void {
+	private function write(array $where, array $row): void {
 		try {
 			$this->objectService->saveObject(
 				object: $row,
-				register: $register,
-				schema: $schema,
+				register: $where['register'],
+				schema: $where['schema'],
 				uuid: (string)($row['id'] ?? $row['uuid'] ?? ''),
 			);
 		} catch (Throwable $e) {

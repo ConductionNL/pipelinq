@@ -4,6 +4,16 @@
 // Dashboard date range → analytics API period mapping. Kept free of
 // store/router imports so it stays unit-testable in isolation.
 
+/** The periods a preset can name. */
+const PERIODS = ['week', 'month', 'quarter', 'year']
+
+/** The longest span, in days, each period below a year covers. */
+const SPAN_PERIODS = [
+	[10, 'week'],
+	[45, 'month'],
+	[180, 'quarter'],
+]
+
 /**
  * Map the dashboard-level date range (`cnDashboardDateRange` value,
  * `{ from, to, preset }` or null) onto the analytics API `period`
@@ -16,15 +26,28 @@
  * @spec openspec/specs/dashboard/spec.md
  */
 export function rangeToPeriod(range) {
-	const periods = ['week', 'month', 'quarter', 'year']
 	if (!range) return 'month'
-	if (periods.includes(range.preset)) return range.preset
+	if (PERIODS.includes(range.preset)) return range.preset
+	const days = spanInDays(range)
+	return days === null ? 'month' : periodForSpan(days)
+}
+
+/**
+ * @param {{from: string, to: string}} range A custom range.
+ * @return {number|null} Its length in days, or null when it cannot be read or ends before it starts.
+ */
+function spanInDays(range) {
 	const from = Date.parse(range.from)
 	const to = Date.parse(range.to)
-	if (Number.isNaN(from) || Number.isNaN(to) || to <= from) return 'month'
-	const spanDays = (to - from) / 86400000
-	if (spanDays <= 10) return 'week'
-	if (spanDays <= 45) return 'month'
-	if (spanDays <= 180) return 'quarter'
-	return 'year'
+	if (Number.isNaN(from) || Number.isNaN(to) || to <= from) return null
+	return (to - from) / 86400000
+}
+
+/**
+ * @param {number} spanDays A span in days.
+ * @return {string} The shortest period that covers it.
+ */
+function periodForSpan(spanDays) {
+	const match = SPAN_PERIODS.find(([longest]) => spanDays <= longest)
+	return match ? match[1] : 'year'
 }

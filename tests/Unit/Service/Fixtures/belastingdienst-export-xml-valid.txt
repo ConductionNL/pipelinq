@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KassakoppelingExport>
+  <Metadata>
+    <ExportDate>2026-02-01T00:00:00+00:00</ExportDate>
+    <EntryCount>6</EntryCount>
+    <DateRange from="2026-01-01" to="2026-01-31"/>
+    <RegisterList>R1, R2</RegisterList>
+    <ChainIntegrity>valid</ChainIntegrity>
+    <SignatureAlgorithm>HMAC-SHA256</SignatureAlgorithm>
+  </Metadata>
+  <Entries>
+    <Entry>
+      <id>e3</id>
+      <timestamp>2026-01-02T10:00:00Z</timestamp>
+      <operatorId></operatorId>
+      <registerNumber>R2</registerNumber>
+      <action></action>
+      <amount>150</amount>
+      <itemCount>0</itemCount>
+      <taxAmount>0</taxAmount>
+      <transactionUuid></transactionUuid>
+      <description>A &amp; &lt;b&gt;</description>
+      <signature></signature>
+      <previousHash></previousHash>
+      <currentHash></currentHash>
+      <verified>true</verified>
+      <exportedAt></exportedAt>
+    </Entry>
+    <Entry>
+      <id>u1</id>
+      <timestamp>2026-01-01T09:00:00Z</timestamp>
+      <operatorId></operatorId>
+      <registerNumber>R1</registerNumber>
+      <action></action>
+      <amount>0</amount>
+      <itemCount>0</itemCount>
+      <taxAmount>21</taxAmount>
+      <transactionUuid></transactionUuid>
+      <description></description>
+      <signature></signature>
+      <previousHash></previousHash>
+      <currentHash></currentHash>
+      <verified>false</verified>
+      <exportedAt></exportedAt>
+    </Entry>
+  </Entries>
+</KassakoppelingExport>

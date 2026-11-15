@@ -21,12 +21,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ProspectDiscoveryServiceInterface;
+
 /**
  * Orchestrator for prospect discovery.
  *
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
-class ProspectDiscoveryService {
+class ProspectDiscoveryService implements ProspectDiscoveryServiceInterface {
 	/**
 	 * Default cache TTL in seconds (1 hour) when unconfigured.
 	 *
@@ -71,7 +73,7 @@ class ProspectDiscoveryService {
 	 * @return array The discovery results.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
-	 * @spec                                        openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
+	 * @spec                                        openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
 	public function discover(bool $refresh=false, int $limit=10): array {
 		$result        = $this->collect(refresh: $refresh, limit: $limit);
@@ -89,7 +91,7 @@ class ProspectDiscoveryService {
 	 * @return array The discovery results.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
-	 * @spec                                        openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
+	 * @spec                                        openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
 	private function collect(bool $refresh, int $limit): array {
 		if ($this->icpConfig->isConfigured() === false) {
@@ -186,7 +188,7 @@ class ProspectDiscoveryService {
 	 * @param string $key The cache key.
 	 *
 	 * @return array|null The cached data or null.
-	 * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
 	protected function getFromCache(string $key): ?array {
 		if (function_exists(function: 'apcu_fetch') === false) {
@@ -210,7 +212,7 @@ class ProspectDiscoveryService {
 	 * @param array $data The data to cache.
 	 *
 	 * @return void
-	 * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
 	protected function setInCache(string $key, array $data): void {
 		if (function_exists(function: 'apcu_store') === true) {

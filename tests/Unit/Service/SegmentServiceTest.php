@@ -941,4 +941,63 @@ class SegmentServiceTest extends TestCase {
 		$this->assertArrayHasKey('error', $result);
 		$this->assertSame('Invalid name', $result['error']);
 	}//end testUpdateSegmentRejectsBlankName()
+	/**
+	 * A bare condition reads as an AND group of one: it validates and evaluates as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/segment-groups-its-rules/design.md
+	 */
+	public function testBareLeafRulesReadAsOneAndGroup(): void {
+		$leaf = ['field' => 'industry', 'operator' => 'equals', 'value' => 'horeca'];
+
+		$this->assertNull($this->service->validateRules($leaf, 'contact'));
+		$this->assertTrue($this->service->evaluateRules($leaf, ['industry' => 'horeca']));
+		$this->assertFalse($this->service->evaluateRules($leaf, ['industry' => 'retail']));
+		$this->assertSame(
+			$this->service->evaluateRules(['type' => 'AND', 'children' => [$leaf]], ['industry' => 'retail']),
+			$this->service->evaluateRules($leaf, ['industry' => 'retail'])
+		);
+	}//end testBareLeafRulesReadAsOneAndGroup()
+
+	/**
+	 * A list of conditions reads as an AND group: every one must hold, and each is validated.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/segment-groups-its-rules/design.md
+	 */
+	public function testLeafListRulesReadAsOneAndGroup(): void {
+		$list = [
+			['field' => 'industry', 'operator' => 'equals', 'value' => 'horeca'],
+			['field' => 'lastName', 'operator' => 'contains', 'value' => 'bakker'],
+		];
+
+		$this->assertNull($this->service->validateRules($list, 'contact'));
+		$this->assertTrue($this->service->evaluateRules($list, ['industry' => 'horeca', 'lastName' => 'Bakker-Jansen']));
+		$this->assertFalse($this->service->evaluateRules($list, ['industry' => 'horeca', 'lastName' => 'Slager']));
+
+		$error = $this->service->validateRules([$list[0], ['field' => 'not_a_field', 'operator' => 'equals', 'value' => 'x']], 'contact');
+		$this->assertStringContainsString('$.children[1]', (string)$error);
+	}//end testLeafListRulesReadAsOneAndGroup()
+
+	/**
+	 * A tree five groups deep is accepted; six groups deep is refused before anything is read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/segment-groups-its-rules/design.md
+	 */
+	public function testTreeDeeperThanFiveGroupsIsRefused(): void {
+		$tree = ['field' => 'industry', 'operator' => 'equals', 'value' => 'horeca'];
+		for ($level = 0; $level < 5; $level++) {
+			$tree = ['type' => ($level % 2 === 0 ? 'and' : 'OR'), 'children' => [$tree]];
+		}
+
+		$this->assertNull($this->service->validateRules($tree, 'contact'));
+		$this->assertSame(
+			'$.children[0].children[0].children[0].children[0].children[0]: the rule tree is deeper than 5 groups.',
+			$this->service->validateRules(['type' => 'AND', 'children' => [$tree]], 'contact')
+		);
+	}//end testTreeDeeperThanFiveGroupsIsRefused()
 }//end class

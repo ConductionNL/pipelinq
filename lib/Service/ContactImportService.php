@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -37,6 +38,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactImportService {
 	use ResultToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -69,7 +71,7 @@ class ContactImportService {
 			ncContact: $ncContact,
 			uid: $uid
 		);
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($schemaId === '') {
 			throw new RuntimeException('Pipelinq: app-config "client_schema" is not configured.');
 		}
@@ -96,7 +98,7 @@ class ContactImportService {
 			uid: $uid,
 			clientId: $clientId
 		);
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 		if ($schemaId === '') {
 			throw new RuntimeException('Pipelinq: app-config "contact_schema" is not configured.');
 		}
@@ -124,7 +126,7 @@ class ContactImportService {
 	 */
 	private function saveAndSerialize(array $data, string $schemaId): array {
 		$objectService = $this->getObjectService();
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '' || $schemaId === '') {
 			throw new RuntimeException('Pipelinq: register or schema is not configured for the contact import.');
 		}
@@ -142,9 +144,11 @@ class ContactImportService {
 		// is found by. Found => UPDATE that object; not found => create.
 		$existingUuid = $this->findExistingByContactsUid(
 			objectService: $objectService,
-			registerId: $registerId,
-			schemaId: $schemaId,
-			contactsUid: (string)($data['contactsUid'] ?? '')
+			filters: [
+				'register' => $registerId,
+				'schema' => $schemaId,
+				'contactsUid' => (string)($data['contactsUid'] ?? ''),
+			]
 		);
 
 		$created = $objectService->saveObject(
@@ -167,37 +171,38 @@ class ContactImportService {
 	 * cost of that is the duplicate this method exists to avoid, which is
 	 * better than losing the import outright.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
-	 * @param string $contactsUid The addressbook contact UID.
+	 * @param object                                                      $objectService The OpenRegister object service.
+	 * @param array{register: string, schema: string, contactsUid: string} $filters       The register id, schema id and addressbook contact UID.
 	 *
 	 * @return string|null The existing uuid, or null to create.
 	 */
-	private function findExistingByContactsUid(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		string $contactsUid,
-	): ?string {
-		if ($contactsUid === '') {
+	private function findExistingByContactsUid(object $objectService, array $filters): ?string {
+		if ($filters['contactsUid'] === '') {
 			return null;
 		}
 
+		$rows = $this->findRowsByContactsUid(objectService: $objectService, filters: $filters);
+		if ($rows === null) {
+			return null;
+		}
+
+		return $this->firstRowUuid(rows: $rows);
+	}//end findExistingByContactsUid()
+
+	/**
+	 * Find at most one object carrying the contactsUid; null when the lookup fails.
+	 *
+	 * @param object                                                      $objectService The OpenRegister ObjectService.
+	 * @param array{register: string, schema: string, contactsUid: string} $filters       The register id, schema id and Contacts UID.
+	 *
+	 * @return array<int, mixed>|null The rows.
+	 */
+	private function findRowsByContactsUid(object $objectService, array $filters): array|null {
 		try {
 			// Register/schema go INSIDE `filters`: prepareFindAllConfig() reads
 			// them from there and nowhere else, and a top-level pair silently
 			// resolves no context and answers [].
-			$rows = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $schemaId,
-						'contactsUid' => $contactsUid,
-					],
-					'limit' => 1,
-				]
-			);
+			$rows = $objectService->findAll(['filters' => $filters, 'limit' => 1]);
 		} catch (Throwable $e) {
 			// No logger on this class, and adding one for a swallowed lookup is
 			// not worth the constructor change: the caller creates, which is the
@@ -207,12 +212,19 @@ class ContactImportService {
 			return null;
 		}
 
-		foreach ((array)$rows as $row) {
-			$array = $row;
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$array = $row->jsonSerialize();
-			}
+		return (array)$rows;
+	}//end findRowsByContactsUid()
 
+	/**
+	 * The uuid of the first row that has one.
+	 *
+	 * @param array<int, mixed> $rows The rows (arrays or serialisable entities).
+	 *
+	 * @return string|null The uuid, or null when no row has one.
+	 */
+	private function firstRowUuid(array $rows): string|null {
+		foreach ($rows as $row) {
+			$array = $this->serialisedRow(row: $row);
 			if (is_array($array) === false) {
 				continue;
 			}
@@ -224,14 +236,21 @@ class ContactImportService {
 		}
 
 		return null;
-	}//end findExistingByContactsUid()
+	}//end firstRowUuid()
 
 	/**
-	 * Get the OpenRegister ObjectService via the container.
+	 * A row as returned, or its jsonSerialize() output for a serialisable entity.
 	 *
-	 * @return object The object service.
+	 * @param mixed $row The row.
+	 *
+	 * @return mixed The serialised row.
 	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
+	private function serialisedRow(mixed $row): mixed {
+		$array = $row;
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			$array = $row->jsonSerialize();
+		}
+
+		return $array;
+	}//end serialisedRow()
 }//end class

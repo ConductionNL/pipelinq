@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IUserSession;
  * Reads the user from the session and asks the group manager about admin
  * membership.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  */
 class SessionUser {
 	/**
@@ -54,7 +54,7 @@ class SessionUser {
 	 *
 	 * @return string The UID, or an empty string without a session.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	public function uid(): string {
 		$user = $this->userSession->getUser();
@@ -72,7 +72,7 @@ class SessionUser {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
 	 */
 	public function isAdmin(string $uid): bool {
 		return $this->groupManager->isAdmin($uid);

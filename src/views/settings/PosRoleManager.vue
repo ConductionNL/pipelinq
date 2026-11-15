@@ -30,7 +30,7 @@
 				{{ t('pipelinq', 'New role') }}
 			</NcButton>
 		</template>
-		<PosRoleList :key="reloadKey" @edit="openRole" @create="openNew" />
+		<PosRoleList :key="reloadKey" @edit="openRecord" @create="openNew" />
 
 		<PosRoleFormDialog
 			v-if="dialogOpen"
@@ -45,6 +45,7 @@ import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
 import PosRoleList from '../pos/PosRoleList.vue'
+import recordDialogMixin from '../../mixins/recordDialogMixin.js'
 
 export default {
 	name: 'PosRoleManager',
@@ -56,47 +57,6 @@ export default {
 		PosRoleFormDialog,
 	},
 
-	data() {
-		return {
-			dialogOpen: false,
-			editingId: '',
-			// Bumped on close so the list refetches and shows the saved row.
-			reloadKey: 0,
-		}
-	},
-
-	methods: {
-		/**
-		 * Open an existing role in the dialog.
-		 *
-		 * @param {string} id The role uuid.
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
-		 */
-		openRole(id) {
-			this.editingId = id
-			this.dialogOpen = true
-		},
-
-		/**
-		 * Open an empty role form.
-		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
-		 */
-		openNew() {
-			this.editingId = ''
-			this.dialogOpen = true
-		},
-
-		/**
-		 * Close the dialog and re-render the list so a save or delete shows up.
-		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
-		 */
-		closeDialog() {
-			this.dialogOpen = false
-			this.editingId = ''
-			this.reloadKey++
-		},
-	},
+	mixins: [recordDialogMixin],
 }
 </script>

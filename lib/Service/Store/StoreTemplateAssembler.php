@@ -30,7 +30,8 @@ namespace OCA\Pipelinq\Service\Store;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\StoreTemplateAssemblerInterface;
 use OCA\Pipelinq\Service\RegisterResolverService;
 use OCA\Pipelinq\Service\Settings\SchemaSlugMap;
 use OCP\IAppConfig;
@@ -38,7 +39,7 @@ use OCP\IAppConfig;
 /**
  * Offers local configuration for a store item and assembles its components.
  */
-class StoreTemplateAssembler {
+class StoreTemplateAssembler implements StoreTemplateAssemblerInterface {
 
 	/**
 	 * The schemas a store item of each kind may carry.
@@ -153,7 +154,7 @@ class StoreTemplateAssembler {
 	 */
 	private function objectsOf(string $slug): array {
 		$registerId = $this->registerResolver->resolve();
-		$schemaId   = $this->appConfig->getValueString(Application::APP_ID, (SchemaSlugMap::SLUG_TO_CONFIG_KEY[$slug] ?? ''), '');
+		$schemaId   = $this->appConfig->getValueString(AppIdentity::APP_ID, (SchemaSlugMap::SLUG_TO_CONFIG_KEY[$slug] ?? ''), '');
 		if ($registerId === '' || $schemaId === '') {
 			return [];
 		}

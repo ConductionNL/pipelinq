@@ -4,7 +4,7 @@
   -
   - POS role admin list (pos-staff-pin-permissions REQ-PSP-001).
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.1
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.1
   -->
 <template>
 	<div class="pos-role-list">
@@ -66,7 +66,7 @@ export default {
 		 *
 		 * @param {boolean} value Whether the role has the right.
 		 * @return {string} "Yes" or "No".
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.1
 		 */
 		yesNo(value) {
 			return value === true ? t('pipelinq', 'Yes') : t('pipelinq', 'No')
@@ -81,7 +81,7 @@ export default {
 		 * PosRoleManager opens the form in a dialog.
 		 *
 		 * @param {object} row The role row.
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		openRole(row) {
 			this.$emit('edit', row.id)
@@ -90,7 +90,7 @@ export default {
 		/**
 		 * Ask the host to open an empty form.
 		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		createNew() {
 			this.$emit('create')

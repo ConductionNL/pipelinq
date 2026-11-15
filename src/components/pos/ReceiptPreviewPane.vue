@@ -54,7 +54,7 @@ export default {
 		 * The text widget's settings: the receipt as typed, read from the object below.
 		 *
 		 * @return {object} The widget content.
-		 * @spec openspec/changes/adopt-library-receipt-text/specs/pos-receipt-engine/spec.md#requirement-the-receipt-preview-shows-the-text-as-typed
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-the-receipt-preview-shows-the-text-as-typed
 		 */
 		receiptContent() {
 			return RECEIPT_CONTENT
@@ -64,7 +64,7 @@ export default {
 		 * The receipt text, or a line that says there is none.
 		 *
 		 * @return {{receipt: string}} The object the widget reads.
-		 * @spec openspec/changes/adopt-library-receipt-text/specs/pos-receipt-engine/spec.md#requirement-the-receipt-preview-shows-the-text-as-typed
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-the-receipt-preview-shows-the-text-as-typed
 		 */
 		receiptData() {
 			return { receipt: this.content || t('pipelinq', 'No preview available') }

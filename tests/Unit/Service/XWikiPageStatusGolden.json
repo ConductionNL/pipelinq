@@ -1,0 +1,54 @@
+{
+    "page": {
+        "page": {
+            "id": "main:Kennis bank.Pas.WebHome",
+            "title": "Paspoort",
+            "modified": "2026-01-01",
+            "space": "Kennis%20bank",
+            "content": "<html><body><div id=\"xwikicontent\"><p>Hallo</p></div></body></html>",
+            "url": "https://wiki.test/bin/view/Kennis%20bank/Pas/WebHome"
+        },
+        "calls": [
+            [
+                "cache get"
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://wiki.test/rest/wikis/main%20wiki/spaces/Kennis%20bank/spaces/Pas/pages/WebHome?media=xml",
+                {
+                    "timeout": 10,
+                    "connect_timeout": 3,
+                    "headers": {
+                        "Accept": "application/xml"
+                    }
+                }
+            ],
+            [
+                "newClient"
+            ],
+            [
+                "get",
+                "https://wiki.test/bin/view/Kennis%20bank/Pas/WebHome",
+                {
+                    "timeout": 10,
+                    "connect_timeout": 3
+                }
+            ],
+            [
+                "cache set",
+                {
+                    "id": "main:Kennis bank.Pas.WebHome",
+                    "title": "Paspoort",
+                    "modified": "2026-01-01",
+                    "space": "Kennis%20bank",
+                    "content": "<html><body><div id=\"xwikicontent\"><p>Hallo</p></div></body></html>",
+                    "url": "https://wiki.test/bin/view/Kennis%20bank/Pas/WebHome"
+                },
+                300
+            ]
+        ]
+    }
+}

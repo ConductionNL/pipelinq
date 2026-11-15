@@ -28,22 +28,24 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 
 /**
  * CampaignLinkDecorator: campaign slug, UTM map and the anchor rewrite.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
  */
 class CampaignLinkDecorator {
+	use SavedPayloadId;
 
 	/**
 	 * App-config key for the per-tenant switch. `true` (the default) adds
@@ -79,7 +81,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -91,10 +93,10 @@ class CampaignLinkDecorator {
 	 *
 	 * @return bool True unless `blast.utm_auto` is `false`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function isEnabled(): bool {
-		$raw = strtolower(trim($this->appConfig->getValueString(Application::APP_ID, self::AUTO_CONFIG_KEY, 'true')));
+		$raw = strtolower(trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::AUTO_CONFIG_KEY, 'true')));
 		return in_array($raw, ['false', '0', 'no', 'off'], true) === false;
 	}//end isEnabled()
 
@@ -109,14 +111,14 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The slug, empty only when every source is empty.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function campaignFor(array $blast, array $template = [], array $campaign = []): string {
 		$candidates = [
 			(string)($campaign['utmCampaign'] ?? ''),
 			(string)($blast['name'] ?? ''),
 			(string)($template['name'] ?? ''),
-			$this->blastId(blast: $blast),
+			$this->extractId(payload: $blast),
 		];
 		foreach ($candidates as $candidate) {
 			$slug = self::slugify(value: $candidate);
@@ -145,14 +147,14 @@ class CampaignLinkDecorator {
 	 *
 	 * @return array<string, string> `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function utmFor(array $blast, array $template = [], array $campaign = []): array {
 		return [
 			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource', fallback: self::CHANNEL_DEFAULT),
 			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium', fallback: self::CHANNEL_DEFAULT),
 			'utm_campaign' => $this->campaignFor(blast: $blast, template: $template, campaign: $campaign),
-			'utm_content' => $this->blastId(blast: $blast),
+			'utm_content' => $this->extractId(payload: $blast),
 		];
 	}//end utmFor()
 
@@ -184,7 +186,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The body, unchanged when the setting is off or nothing qualified.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function decorate(string $html, array $blast, array $template = [], array $campaign = []): string {
 		if ($html === '' || $this->isEnabled() === false) {
@@ -225,7 +227,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string|null The decorated URL, or null to keep the original.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public function decorateUrl(string $url, array $utm): ?string {
 		$trimmed = trim($url);
@@ -258,7 +260,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The slug, empty when nothing survives.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function slug(string $value): string {
 		return self::slugify(value: $value);
@@ -271,7 +273,7 @@ class CampaignLinkDecorator {
 	 *
 	 * @return string The slug, empty when nothing survives.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
 	 */
 	public static function slugify(string $value): string {
 		$clean = $value;
@@ -361,31 +363,6 @@ class CampaignLinkDecorator {
 
 		return $additions;
 	}//end missingParameters()
-
-	/**
-	 * The blast's id from `uuid`, `id`, `slug` or the `@self` envelope.
-	 *
-	 * @param array<string, mixed> $blast The blast row.
-	 *
-	 * @return string The id or empty.
-	 */
-	private function blastId(array $blast): string {
-		$sources = [$blast];
-		if (is_array($blast['@self'] ?? null) === true) {
-			$sources[] = $blast['@self'];
-		}
-
-		foreach ($sources as $source) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($source[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end blastId()
 
 	/**
 	 * Split a string on the first occurrence of a separator.
