@@ -239,24 +239,23 @@ class CampaignService implements CampaignServiceInterface {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
 	 */
 	public function save(array $payload, ?string $id = null, string $uid = ''): array {
-		[$existing, $failure] = $this->existingCampaign(id: $id);
-		if ($failure !== null) {
-			return $failure;
-		}
-
-		return $this->saveOver(existing: $existing, edit: ['payload' => $payload, 'id' => $id, 'uid' => $uid]);
+		return $this->saveEdit(edit: ['payload' => $payload, 'id' => $id, 'uid' => $uid]);
 	}//end save()
 
 	/**
-	 * Validate the edit's name and vocabulary, then store it over the existing campaign.
+	 * Read the campaign being updated, validate the edit's name and vocabulary, then store it over that campaign.
 	 *
-	 * @param array<string, mixed>|null $existing The existing campaign, or null for a new one.
 	 * @param array{payload: array<string, mixed>, id: string|null, uid: string} $edit The campaign fields, the campaign id
 	 *                                                                                (null to create) and the acting user.
 	 *
 	 * @return array{error: string, value: string, allowed: array<int, string>, campaign: array<string, mixed>|null}
 	 */
-	private function saveOver(array|null $existing, array $edit): array {
+	private function saveEdit(array $edit): array {
+		[$existing, $failure] = $this->existingCampaign(id: $edit['id']);
+		if ($failure !== null) {
+			return $failure;
+		}
+
 		$payload = $edit['payload'];
 		$name = trim((string)($payload['name'] ?? ($existing['name'] ?? '')));
 		if ($name === '') {
@@ -270,7 +269,7 @@ class CampaignService implements CampaignServiceInterface {
 
 		$record = $this->campaignRecord(existing: $existing, edit: ['payload' => $payload, 'name' => $name, 'uid' => $edit['uid']]);
 		return $this->storeCampaign(record: $record, id: $edit['id']);
-	}//end saveOver()
+	}//end saveEdit()
 
 	/**
 	 * The campaign being updated, or a not-found failure; [null, null] for a new campaign.
@@ -344,15 +343,27 @@ class CampaignService implements CampaignServiceInterface {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 	 */
 	public function recordLandingPage(string $id, array $landingPage, string $formId): ?array {
+		return $this->saveLanding(id: $id, landing: ['landingPage' => $landingPage, 'formRef' => $formId]);
+	}//end recordLandingPage()
+
+	/**
+	 * Stamp a landing page answer on a stored campaign and save it.
+	 *
+	 * @param string               $id      The campaign id.
+	 * @param array<string, mixed> $landing `landingPage` and `formRef`.
+	 *
+	 * @return array<string, mixed>|null The saved campaign, or null when it is gone or the write failed.
+	 */
+	private function saveLanding(string $id, array $landing): ?array {
 		$campaign = $this->find(id: $id);
 		if ($campaign === null) {
 			return null;
 		}
 
-		$campaign = self::withLanding(campaign: $campaign, landing: ['landingPage' => $landingPage, 'formRef' => $formId]);
+		$campaign = self::withLanding(campaign: $campaign, landing: $landing);
 
 		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $campaign, id: $id);
-	}//end recordLandingPage()
+	}//end saveLanding()
 
 	/**
 	 * The campaign as written back with its landing page: the answer stamped
