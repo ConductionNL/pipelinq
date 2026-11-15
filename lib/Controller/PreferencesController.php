@@ -65,12 +65,15 @@ class PreferencesController extends Controller {
 	 * @spec            openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-1
 	 */
 	public function getPreference(string $key): JSONResponse {
-		$target = $this->preferenceTarget(key: $key);
-		if ($target instanceof JSONResponse) {
-			return $target;
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		[$user, $safeKey] = $target;
+		$safeKey = $this->sanitizeKey(key: $key);
+		if ($safeKey === '') {
+			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
 		$value = $this->config->getUserValue(
 			userId: $user->getUID(),
@@ -99,12 +102,15 @@ class PreferencesController extends Controller {
 	 * @spec            openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-2
 	 */
 	public function setPreference(string $key, string $value = ''): JSONResponse {
-		$target = $this->preferenceTarget(key: $key);
-		if ($target instanceof JSONResponse) {
-			return $target;
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		[$user, $safeKey] = $target;
+		$safeKey = $this->sanitizeKey(key: $key);
+		if ($safeKey === '') {
+			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
 		if ($value === '') {
 			$this->config->deleteUserValue(
@@ -125,27 +131,6 @@ class PreferencesController extends Controller {
 
 		return new JSONResponse(data: ['value' => $value]);
 	}//end setPreference()
-
-	/**
-	 * The session user and the sanitised key, or the 401/400 that refuses them.
-	 *
-	 * @param string $key The raw key.
-	 *
-	 * @return array{0: \OCP\IUser, 1: string}|JSONResponse
-	 */
-	private function preferenceTarget(string $key): array|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
-		}
-
-		$safeKey = $this->sanitizeKey(key: $key);
-		if ($safeKey === '') {
-			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
-		}
-
-		return [$user, $safeKey];
-	}//end preferenceTarget()
 
 	/**
 	 * Restrict keys to a safe charset so callers cannot reach arbitrary

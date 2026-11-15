@@ -35,8 +35,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Controller\Support\KeyedServiceResult;
-use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -53,8 +51,6 @@ use OCP\IUserSession;
  * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 class ArticleController extends Controller {
-	use KeyedServiceResult;
-
 	/**
 	 * Constructor.
 	 *
@@ -225,7 +221,15 @@ class ArticleController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function render(array $result): JSONResponse {
-		return $this->keyedResult(result: $result, key: 'article');
+		if (($result['error'] ?? '') === 'Not found') {
+			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if (isset($result['error']) === true) {
+			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+		}
+
+		return new JSONResponse(['article' => ($result['article'] ?? null)]);
 	}//end render()
 
 	/**
@@ -247,9 +251,21 @@ class ArticleController extends Controller {
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectBody(): array {
-		$fields = new RequestFields(request: $this->request);
+		$body = [];
+		foreach (['title', 'slug', 'summary', 'body', 'heroImage', 'language', 'portalPageRef'] as $key) {
+			$value = $this->request->getParam($key);
+			if ($value !== null) {
+				$body[$key] = (string)$value;
+			}
+		}
 
-		return $fields->strings(keys: ['title', 'slug', 'summary', 'body', 'heroImage', 'language', 'portalPageRef'])
-			+ $fields->arrays(keys: ['links', 'tags']);
+		foreach (['links', 'tags'] as $key) {
+			$value = $this->request->getParam($key);
+			if (is_array($value) === true) {
+				$body[$key] = $value;
+			}
+		}
+
+		return $body;
 	}//end collectBody()
 }//end class

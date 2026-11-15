@@ -28,7 +28,6 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
 use OCA\Pipelinq\Controller\Support\PosControllerResponses;
-use OCA\Pipelinq\Controller\Support\PosUserAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -53,7 +52,6 @@ use Psr\Log\LoggerInterface;
  */
 class PosRefundController extends Controller {
 	use PosControllerResponses;
-	use PosUserAction;
 
 	/**
 	 * Constructor.
@@ -85,8 +83,13 @@ class PosRefundController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function confirm(string $id): JSONResponse {
-		return $this->runAsUser(
-			action: fn (string $uid): array => $this->service->confirmRefund(id: $id, userId: $uid),
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		return $this->run(
+			action: fn (): array => $this->service->confirmRefund(id: $id, userId: $uid),
 			label: 'confirm'
 		);
 	}//end confirm()
@@ -102,12 +105,14 @@ class PosRefundController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {
-		return $this->runAsUser(
-			action: fn (string $uid): array => $this->service->rejectRefund(
-				id: $id,
-				reason: (string)$this->request->getParam('reason', ''),
-				userId: $uid
-			),
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$reason = (string)$this->request->getParam('reason', '');
+		return $this->run(
+			action: fn (): array => $this->service->rejectRefund(id: $id, reason: $reason, userId: $uid),
 			label: 'reject'
 		);
 	}//end reject()

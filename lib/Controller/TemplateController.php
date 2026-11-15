@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Controller\Support\MarketingCallerGate;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
@@ -48,8 +47,6 @@ use OCP\IUserSession;
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
  */
 class TemplateController extends Controller {
-	use MarketingCallerGate;
-
 	/**
 	 * Constructor.
 	 *
@@ -130,9 +127,14 @@ class TemplateController extends Controller {
 	public function show(string $id): JSONResponse {
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		$template = $this->visibleTemplate(templateId: $id);
-		if ($template instanceof JSONResponse) {
-			return $template;
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $id);
+		if ($template === null) {
+			return $this->notFound();
 		}
 
 		return new JSONResponse($template);
@@ -178,9 +180,14 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
-		$template = $this->visibleTemplate(templateId: $id);
-		if ($template instanceof JSONResponse) {
-			return $template;
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $id);
+		if ($template === null) {
+			return $this->notFound();
 		}
 
 		$ids = ($template['articleIds'] ?? []);
@@ -304,9 +311,14 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function validate(string $id): JSONResponse {
-		$template = $this->visibleTemplate(templateId: $id);
-		if ($template instanceof JSONResponse) {
-			return $template;
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $id);
+		if ($template === null) {
+			return $this->notFound();
 		}
 
 		$channel = (string)$this->request->getParam('channel', (string)($template['channel'] ?? 'email'));
@@ -314,27 +326,6 @@ class TemplateController extends Controller {
 
 		return new JSONResponse(['valid' => ($error === null), 'error' => $error]);
 	}//end validate()
-
-	/**
-	 * The template for a CRM user, or the refusal or the generic 404.
-	 *
-	 * @param string $templateId Template UUID or slug.
-	 *
-	 * @return array<string, mixed>|JSONResponse
-	 */
-	private function visibleTemplate(string $templateId): array|JSONResponse {
-		$uid = $this->crmGate()->privilegedUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$template = $this->complianceService->getTemplateById(templateId: $templateId);
-		if ($template === null) {
-			return $this->notFound();
-		}
-
-		return $template;
-	}//end visibleTemplate()
 
 	/**
 	 * Collect a sanitised template body from the fields the request carries.
@@ -445,4 +436,22 @@ class TemplateController extends Controller {
 
 		return new JSONResponse($result['template'] ?? null, $successStatus);
 	}//end renderResult()
+
+	/**
+	 * Generic 404 response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+	}//end notFound()
+
+	/**
+	 * The caller check shared by the marketing controllers.
+	 *
+	 * @return CrmCallerGate The gate.
+	 */
+	private function crmGate(): CrmCallerGate {
+		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
+	}//end crmGate()
 }//end class

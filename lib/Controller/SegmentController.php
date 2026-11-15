@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Controller\Support\MarketingCallerGate;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
@@ -46,8 +45,6 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
  */
 class SegmentController extends Controller {
-	use MarketingCallerGate;
-
 	/**
 	 * Constructor.
 	 *
@@ -327,7 +324,13 @@ class SegmentController extends Controller {
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectSegmentBody(): array {
-		$rules = $this->requestedRules();
+		$rules = $this->request->getParam('rules');
+		if (is_string($rules) === true) {
+			$decoded = json_decode($rules, true);
+			if (is_array($decoded) === true) {
+				$rules = $decoded;
+			}
+		}
 
 		return [
 			'name' => (string)$this->request->getParam('name', ''),
@@ -345,22 +348,6 @@ class SegmentController extends Controller {
 	 * @return array<string, mixed> The rule tree, or an empty array when absent/malformed.
 	 */
 	private function collectRulesBody(): array {
-		$rules = $this->requestedRules();
-
-		if (is_array($rules) === true) {
-			return $rules;
-		}
-
-		return [];
-	}//end collectRulesBody()
-
-	/**
-	 * The `rules` param, decoded when it arrives as a JSON-encoded string
-	 * that holds an object or array; otherwise as sent.
-	 *
-	 * @return mixed
-	 */
-	private function requestedRules(): mixed {
 		$rules = $this->request->getParam('rules');
 		if (is_string($rules) === true) {
 			$decoded = json_decode($rules, true);
@@ -369,8 +356,12 @@ class SegmentController extends Controller {
 			}
 		}
 
-		return $rules;
-	}//end requestedRules()
+		if (is_array($rules) === true) {
+			return $rules;
+		}
+
+		return [];
+	}//end collectRulesBody()
 
 	/**
 	 * Render the update result.
@@ -414,4 +405,22 @@ class SegmentController extends Controller {
 		];
 		return new JSONResponse($payload, Http::STATUS_CREATED);
 	}//end renderCreate()
+
+	/**
+	 * Generic 404 response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+	}//end notFound()
+
+	/**
+	 * The caller check shared by the marketing controllers.
+	 *
+	 * @return CrmCallerGate The gate.
+	 */
+	private function crmGate(): CrmCallerGate {
+		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
+	}//end crmGate()
 }//end class
