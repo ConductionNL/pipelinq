@@ -372,7 +372,16 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 		}
 
 		$operation = static fn () => $objectService->saveObject(['phoneE164' => $e164], [], $register, $schema, $id);
-		return $this->runPhoneWrite(objectService: $objectService, operation: $operation, id: $id);
+		try {
+			$this->execAsSystem(objectService: $objectService, operation: $operation);
+			return 'updated';
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI contact matcher: updateObject failed',
+				['exceptionClass' => get_class($e), 'exception' => $e->getMessage(), 'id' => $id]
+			);
+			return 'skipped';
+		}
 	}//end normaliseRecord()
 
 	/**
@@ -401,30 +410,6 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 
 		return $normalised['e164'];
 	}//end targetE164()
-
-	/**
-	 * Run one phone write as system, logging a failure.
-	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param callable $operation The write operation.
-	 * @param string $id The object id, for the log.
-	 *
-	 * @return 'updated'|'skipped'
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
-	 */
-	private function runPhoneWrite(object $objectService, callable $operation, string $id): string {
-		try {
-			$this->execAsSystem(objectService: $objectService, operation: $operation);
-			return 'updated';
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CTI contact matcher: updateObject failed',
-				['exceptionClass' => get_class($e), 'exception' => $e->getMessage(), 'id' => $id]
-			);
-			return 'skipped';
-		}
-	}//end runPhoneWrite()
 
 	/**
 	 * Execute an OpenRegister write under the scoped system-operation context.

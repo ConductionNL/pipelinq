@@ -84,6 +84,19 @@ class ForecastService implements ForecastServiceInterface {
 			'partial' => (bool)($snapshot['partial'] ?? false),
 		];
 
+		return $this->withOverrides(rollUp: $result, scope: $scope);
+	}//end computeRollUp()
+
+	/**
+	 * The roll-up with the latest commit and best-case overrides applied.
+	 *
+	 * @param array<string, mixed> $rollUp The roll-up before overrides.
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The owner, fiscal period and hierarchy level.
+	 *
+	 * @return array<string, mixed> The override-applied roll-up.
+	 */
+	private function withOverrides(array $rollUp, array $scope): array {
+		$result = $rollUp;
 		foreach (['commit', 'best_case'] as $category) {
 			$result = $this->withOverride(
 				rollUp: $result,
@@ -95,7 +108,7 @@ class ForecastService implements ForecastServiceInterface {
 		}
 
 		return $result;
-	}//end computeRollUp()
+	}//end withOverrides()
 
 	/**
 	 * The snapshot's four amounts, with the commit and best-case originals and empty override slots.

@@ -332,7 +332,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 		$name = $section['name'];
 		$target = $section['target'];
 		$data = $this->values->resolvePlaceholders(data: $definition['data']);
-		$data = $this->linkReferences(data: $data, definition: $definition, uuids: $run['uuids'], ticketType: $target->ticketType);
+		$data = $this->linkReferences(data: $data, seed: ['definition' => $definition, 'uuids' => $run['uuids'], 'ticketType' => $target->ticketType]);
 
 		$existingUuid = $section['index'][(string)$data[$section['lookupField']]][0] ?? null;
 		if ($existingUuid !== null) {
@@ -460,8 +460,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
 			[$removed[$section], $retained[$section]] = $this->removeSection(
 				target: $target,
-				lookupField: $lookupField,
-				definitions: ($definitions[$section] ?? [])
+				section: ['lookupField' => $lookupField, 'definitions' => ($definitions[$section] ?? [])]
 			);
 		}
 
@@ -475,17 +474,18 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * value guard against duplicates from historic runs.
 	 *
 	 * @param DemoSeedTarget $target The section's register and schema.
-	 * @param string $lookupField The field carrying the demo marker.
-	 * @param array<int, array<string, mixed>> $definitions The section's demo definitions.
+	 * @param array{lookupField: string, definitions: array<int, array<string, mixed>>} $section The field carrying the demo
+	 *                                                                                       marker and the section's demo definitions.
 	 *
 	 * @return array{0: int, 1: int} The removed and retained counts.
 	 */
-	private function removeSection(DemoSeedTarget $target, string $lookupField, array $definitions): array {
+	private function removeSection(DemoSeedTarget $target, array $section): array {
+		$lookupField = $section['lookupField'];
 		$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
 		$removed = 0;
 		$retained = 0;
 
-		foreach ($definitions as $definition) {
+		foreach ($section['definitions'] as $definition) {
 			$lookupValue = (string)($definition['data'][$lookupField] ?? '');
 			// Guard: only ever delete objects carrying the demo marker.
 			if (str_starts_with($lookupValue, self::DEMO_PREFIX) === false) {
@@ -736,15 +736,20 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * On a ticket the parent-request link is `parentTicket` (the legacy
 	 * contactmoment field was `request`).
 	 *
+	 * The seed carries `definition` (the full definition, which may carry
+	 * clientKey/contactKey/pipelineKey/requestKey), `uuids` (the already-seeded
+	 * uuid map, section:key => uuid) and `ticketType` (the ticket subtype, or
+	 * null for own-schema sections).
+	 *
 	 * @param array<string, mixed> $data Definition data.
-	 * @param array<string, mixed> $definition Full definition (may carry clientKey/contactKey/pipelineKey/requestKey).
-	 * @param array<string, string> $uuids Already-seeded uuid map (section:key => uuid).
-	 * @param string|null $ticketType Ticket subtype, or null for own-schema sections.
+	 * @param array<string, mixed> $seed The definition, uuid map and ticket subtype.
 	 *
 	 * @return array<string, mixed> Data with relation fields set.
 	 */
-	private function linkReferences(array $data, array $definition, array $uuids, ?string $ticketType = null): array {
-		foreach ($this->referenceLinks(definition: $definition, ticketType: $ticketType) as [$keyName, $section, $field]) {
+	private function linkReferences(array $data, array $seed): array {
+		$definition = $seed['definition'];
+		$uuids = $seed['uuids'];
+		foreach ($this->referenceLinks(definition: $definition, ticketType: $seed['ticketType']) as [$keyName, $section, $field]) {
 			$data = $this->values->linkReference(
 				data: $data,
 				definition: $definition,
