@@ -31,6 +31,7 @@ use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\PosTransitionErrors;
 use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\PosObjectFetch;
@@ -43,7 +44,6 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use ReflectionClass;
 use RuntimeException;
 
 /**
@@ -91,6 +91,26 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	use RandomUuid;
 	use PosObjectFetch;
 	use RegisterSchemaObjects;
+	use PosTransitionErrors;
+
+	/**
+	 * The 403 message of an RBAC transition denial without a message of its own.
+	 */
+	private const TRANSITION_FORBIDDEN = 'Geen toegang tot deze transactie.';
+
+	/**
+	 * Message markers of a guard's access denial (→ 403).
+	 *
+	 * @var array<int, string>
+	 */
+	private const TRANSITION_ACCESS_MARKERS = ['gemachtigd', 'beheerder', 'mag deze transactie', 'mag een transactie'];
+
+	/**
+	 * Message markers of an invalid-state or other precondition failure (→ 422).
+	 *
+	 * @var array<int, string>
+	 */
+	private const TRANSITION_PRECONDITION_MARKERS = ['not allowed from', 'not declared', 'artikel'];
 
 	/**
 	 * CloudEvent type emitted on confirmation.
@@ -1209,102 +1229,6 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			$this->saveTransaction(id: $id, transaction: $transaction);
 		}
 	}//end sanitizeForTransition()
-
-	/**
-	 * Map a TransitionEngine throwable to the correct OCS exception.
-	 *
-	 * Authorization denials (NotAuthorizedException / guard deny) → 403; an
-	 * invalid-state transition → 422; everything else is rethrown for the
-	 * controller's generic 500 handler. Matching is by class short-name + message
-	 * so the app does not hard-depend on OR's exception classes at compile time.
-	 *
-	 * @param \Throwable $e The engine throwable.
-	 *
-	 * @return \Throwable The mapped OCS exception (or the original on no match).
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function mapTransitionError(\Throwable $e): \Throwable {
-		$short = (new ReflectionClass($e))->getShortName();
-		$message = $e->getMessage();
-
-		// Per-object RBAC denial from the engine → 403.
-		if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
-			return $this->forbiddenFor(message: $message);
-		}
-
-		// Guard authorization denials (HookStoppedException carrying the guard's
-		// deny message) → 403. The POS access / refund guards phrase denials with
-		// these Dutch markers; an IDOR attempt therefore surfaces as 403.
-		if ($this->isAccessDenial(message: $message) === true) {
-			return new OCSForbiddenException($message);
-		}
-
-		return $this->mapByMessage(e: $e, message: $message);
-	}//end mapTransitionError()
-
-	/**
-	 * The 403 for an RBAC denial, carrying the engine's message when it has one.
-	 *
-	 * @param string $message The engine's message.
-	 *
-	 * @return OCSForbiddenException
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function forbiddenFor(string $message): OCSForbiddenException {
-		$forbidden = 'Geen toegang tot deze transactie.';
-		if ($message !== '') {
-			$forbidden = $message;
-		}
-
-		return new OCSForbiddenException($forbidden);
-	}//end forbiddenFor()
-
-	/**
-	 * Map a non-authorization transition failure by its message: 422, 404, or the original.
-	 *
-	 * @param \Throwable $e The original failure.
-	 * @param string $message Its message.
-	 *
-	 * @return \Throwable
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function mapByMessage(\Throwable $e, string $message): \Throwable {
-		// Invalid-state transition or other guard precondition → 422.
-		if (stripos($message, 'not allowed from') !== false
-			|| stripos($message, 'not declared') !== false
-			|| stripos($message, 'artikel') !== false
-		) {
-			return new OCSBadRequestException($message);
-		}
-
-		if (stripos($message, 'not found') !== false) {
-			return new OCSNotFoundException($message);
-		}
-
-		return $e;
-	}//end mapByMessage()
-
-	/**
-	 * Whether a transition-engine error message is an access (authz) denial.
-	 *
-	 * @param string $message The error message.
-	 *
-	 * @return bool Whether it represents an access denial (→ HTTP 403).
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function isAccessDenial(string $message): bool {
-		foreach (['gemachtigd', 'beheerder', 'mag deze transactie', 'mag een transactie'] as $marker) {
-			if (stripos($message, $marker) !== false) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end isAccessDenial()
 
 	/**
 	 * Emit the pipelinq.PosTransaction.confirmed CloudEvent (fire-and-forget).
