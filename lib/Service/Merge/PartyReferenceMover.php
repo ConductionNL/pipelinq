@@ -71,15 +71,30 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	public function move(string $partyType, string $fromUuid, string $intoUuid): array {
 		$moved = [];
 		foreach ($this->referencesOf(partyType: $partyType) as $reference) {
-			[$schema, $property] = $reference;
-			foreach ($this->rowsReferring(reference: $reference, uuid: $fromUuid) as $rowUuid) {
-				$this->objects->patchObject(objectId: $rowUuid, data: [$property => $intoUuid], _rbac: false, _multitenancy: false);
-				$moved[] = ['schema' => $schema, 'uuid' => $rowUuid, 'property' => $property];
-			}
+			array_push($moved, ...$this->movedRows(reference: $reference, merge: ['from' => $fromUuid, 'into' => $intoUuid]));
 		}
 
 		return $moved;
 	}//end move()
+
+	/**
+	 * Point every row of one reference at the record that stays.
+	 *
+	 * @param array{0: string, 1: string}       $reference The schema and the property holding the reference.
+	 * @param array{from: string, into: string} $merge     The merged-away record and the record that stays.
+	 *
+	 * @return list<array{schema: string, uuid: string, property: string}> The rows moved.
+	 */
+	private function movedRows(array $reference, array $merge): array {
+		[$schema, $property] = $reference;
+		$moved = [];
+		foreach ($this->rowsReferring(reference: $reference, uuid: $merge['from']) as $rowUuid) {
+			$this->objects->patchObject(objectId: $rowUuid, data: [$property => $merge['into']], _rbac: false, _multitenancy: false);
+			$moved[] = ['schema' => $schema, 'uuid' => $rowUuid, 'property' => $property];
+		}
+
+		return $moved;
+	}//end movedRows()
 
 	/**
 	 * Point the rows a merge moved back at the merged-away record.
@@ -102,17 +117,30 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 			}
 
 			$entry = $this->ledgerEntry(row: $row);
-			if ($entry['uuid'] === '' || $entry['property'] === '' || $this->stillPointsAt(entry: $entry, uuid: $intoUuid) === false) {
-				$result['skipped'][] = $entry;
-				continue;
-			}
-
-			$this->objects->patchObject(objectId: $entry['uuid'], data: [$entry['property'] => $fromUuid], _rbac: false, _multitenancy: false);
-			$result['restored'][] = $entry;
+			$result[$this->restoredOrSkipped(entry: $entry, merge: ['from' => $fromUuid, 'into' => $intoUuid])][] = $entry;
 		}
 
 		return $result;
 	}//end restore()
+
+	/**
+	 * Point one moved row back at the merged-away record, unless it is
+	 * incomplete or no longer points at the record that stays.
+	 *
+	 * @param array{schema: string, uuid: string, property: string} $entry The ledger entry.
+	 * @param array{from: string, into: string}                     $merge The merged-away record and the record that stayed.
+	 *
+	 * @return 'restored'|'skipped' `skipped` when the row was left alone.
+	 */
+	private function restoredOrSkipped(array $entry, array $merge): string {
+		if ($entry['uuid'] === '' || $entry['property'] === '' || $this->stillPointsAt(entry: $entry, uuid: $merge['into']) === false) {
+			return 'skipped';
+		}
+
+		$this->objects->patchObject(objectId: $entry['uuid'], data: [$entry['property'] => $merge['from']], _rbac: false, _multitenancy: false);
+
+		return 'restored';
+	}//end restoredOrSkipped()
 
 	/**
 	 * A ledger row as its schema, uuid and property, each '' when missing.

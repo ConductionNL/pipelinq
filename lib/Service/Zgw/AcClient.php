@@ -250,12 +250,8 @@ class AcClient {
 		}
 
 		$bucket = $this->freshBucket(endpoint: $endpoint, endpointId: $endpointId);
-		if ($bucket === null) {
-			return false;
-		}
 
-		$list = $bucket['scopes'][$resourceUrl] ?? $bucket['scopes']['*'] ?? [];
-		return in_array($scope, $list, true);
+		return $bucket !== null && in_array($scope, ($bucket['scopes'][$resourceUrl] ?? $bucket['scopes']['*'] ?? []), true);
 	}//end hasScope()
 
 	/**
@@ -337,12 +333,24 @@ class AcClient {
 			return;
 		}
 
-		throw new InsufficientScopeException(
+		throw self::insufficientScope(scope: $scope, resourceUrl: $resourceUrl);
+	}//end require()
+
+	/**
+	 * The refusal for a scope the client does not hold.
+	 *
+	 * @param string $scope       Required scope.
+	 * @param string $resourceUrl Target resource URL.
+	 *
+	 * @return InsufficientScopeException The exception to throw.
+	 */
+	private static function insufficientScope(string $scope, string $resourceUrl): InsufficientScopeException {
+		return new InsufficientScopeException(
 			scope: $scope,
 			caseTypeUrl: $resourceUrl,
 			additionalInfo: 'Vraag de gemeente-beheerder om de juiste autorisatie te verlenen op het AC.'
 		);
-	}//end require()
+	}//end insufficientScope()
 
 	/**
 	 * Inject a pre-built scope cache (testing helper).

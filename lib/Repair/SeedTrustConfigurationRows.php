@@ -188,34 +188,15 @@ class SeedTrustConfigurationRows implements IRepairStep {
 	private function seedRows(mixed $objectService, IOutput $output): array {
 		$counts = ['seeded' => 0, 'skipped' => 0];
 		foreach (self::TRUST_ROWS as $row) {
-			$outcome = $this->seedRow(objectService: $objectService, row: $row, output: $output);
-			if ($outcome !== null) {
-				$counts[$outcome]++;
+			try {
+				$counts[$this->insertIfMissing(objectService: $objectService, row: $row)]++;
+			} catch (\Throwable $e) {
+				$this->reportSeedFailure(output: $output, failure: ['row' => $row, 'error' => $e->getMessage()]);
 			}
 		}
 
 		return $counts;
 	}//end seedRows()
-
-	/**
-	 * Seed one trust row, reporting a failure.
-	 *
-	 * @param mixed $objectService The OR ObjectService.
-	 * @param array<string, mixed> $row The trust row.
-	 * @param IOutput $output The output interface.
-	 *
-	 * @return 'seeded'|'skipped'|null The counter to raise, or null when the row failed.
-	 *
-	 * @spec openspec/specs/master-data-management/spec.md
-	 */
-	private function seedRow(mixed $objectService, array $row, IOutput $output): string|null {
-		try {
-			return $this->insertIfMissing(objectService: $objectService, row: $row);
-		} catch (\Throwable $e) {
-			$this->reportSeedFailure(output: $output, row: $row, e: $e);
-			return null;
-		}
-	}//end seedRow()
 
 	/**
 	 * Insert a trust row unless it already exists.
@@ -251,27 +232,27 @@ class SeedTrustConfigurationRows implements IRepairStep {
 	/**
 	 * Report a failed trust row on the output and in the log.
 	 *
-	 * @param IOutput $output The output interface.
-	 * @param array<string, mixed> $row The trust row.
-	 * @param \Throwable $e The failure.
+	 * @param IOutput                                        $output  The output interface.
+	 * @param array{row: array<string, mixed>, error: string} $failure The trust row and the failure's message.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/master-data-management/spec.md
 	 */
-	private function reportSeedFailure(IOutput $output, array $row, \Throwable $e): void {
+	private function reportSeedFailure(IOutput $output, array $failure): void {
+		$row = $failure['row'];
 		$output->warning(
 			sprintf(
 				'Trust-configuration seed failed for %s/%s/%s: %s',
 				$row['entityType'],
 				$row['attribute'],
 				$row['sourceSystem'],
-				$e->getMessage()
+				$failure['error']
 			)
 		);
 		$this->logger->warning(
 			'Pipelinq MDM: trust-configuration seed row failed',
-			['row' => $row, 'exception' => $e->getMessage()]
+			['row' => $row, 'exception' => $failure['error']]
 		);
 	}//end reportSeedFailure()
 

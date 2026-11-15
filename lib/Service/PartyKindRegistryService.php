@@ -208,17 +208,29 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 			return ['allowed' => false, 'reason' => $refusal];
 		}
 
-		if ($this->holdsOne(kind: $kind) === false) {
+		return $this->slotAnswer(record: ['recordType' => $recordType, 'recordId' => $recordId], slot: ['kind' => $kind, 'party' => $party]);
+	}//end mayLink()
+
+	/**
+	 * Refuse a kind that holds one party when another party already holds it on the record.
+	 *
+	 * @param array{recordType: string, recordId: string} $record The trimmed record type and the record.
+	 * @param array{kind: string, party: string}          $slot   The trimmed kind and the party being linked.
+	 *
+	 * @return array{allowed: bool, reason: string} The answer.
+	 */
+	private function slotAnswer(array $record, array $slot): array {
+		if ($this->holdsOne(kind: $slot['kind']) === false) {
 			return ['allowed' => true, 'reason' => ''];
 		}
 
-		$holder = self::otherHolder(links: $this->linksOn(recordType: $recordType, recordId: $recordId), slot: ['kind' => $kind, 'party' => $party]);
+		$holder = self::otherHolder(links: $this->linksOn(recordType: $record['recordType'], recordId: $record['recordId']), slot: $slot);
 		if ($holder !== null) {
-			return self::slotTaken(kind: $kind, holder: $holder);
+			return self::slotTaken(kind: $slot['kind'], holder: $holder);
 		}
 
 		return ['allowed' => true, 'reason' => ''];
-	}//end mayLink()
+	}//end slotAnswer()
 
 	/**
 	 * Why a kind may not be linked to a record type at all; '' when it may.

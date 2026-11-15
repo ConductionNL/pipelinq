@@ -375,8 +375,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 		$name = $section['name'];
 		$run['uuids'][$name . ':' . $found['key']] = $found['uuid'];
 		$run['skipped'][$name]++;
-		$existing = ($section['rows'][$found['uuid']] ?? []);
-		if ($this->relinkExisting(target: $section['target'], existing: $existing, data: $found['data'], uuid: $found['uuid']) === true) {
+		if ($this->relinkExisting(found: $found, section: $section) === true) {
 			$run['relinked'][$name]++;
 		}
 
@@ -390,24 +389,23 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * run resolved a value for them. Everything else the user changed on the
 	 * demo object stays as it is.
 	 *
-	 * @param DemoSeedTarget $target Where the object lives.
-	 * @param array<string, mixed> $existing The stored object, as scanned.
-	 * @param array<string, mixed> $data The resolved seed payload.
-	 * @param string $uuid The stored object's uuid.
+	 * @param array<string, mixed> $found   The stored object's uuid and the resolved seed payload (`data`).
+	 * @param array<string, mixed> $section The section: where its objects live (`target`) and its scanned `rows` by uuid.
 	 *
 	 * @return bool True when the object was re-pointed.
 	 *
 	 * @spec openspec/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
 	 */
-	private function relinkExisting(DemoSeedTarget $target, array $existing, array $data, string $uuid): bool {
-		$patch = $this->relinkPatch(existing: $existing, data: $data);
+	private function relinkExisting(array $found, array $section): bool {
+		$existing = ($section['rows'][$found['uuid']] ?? []);
+		$patch = $this->relinkPatch(existing: $existing, data: $found['data']);
 		if ($patch === [] || $existing === []) {
 			return false;
 		}
 
 		$payload = $existing;
 		unset($payload['@self']);
-		$this->writer->save(target: $target, data: array_merge($payload, $patch), uuid: $uuid);
+		$this->writer->save(target: $section['target'], data: array_merge($payload, $patch), uuid: $found['uuid']);
 		return true;
 	}//end relinkExisting()
 

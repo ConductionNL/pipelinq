@@ -114,12 +114,24 @@ class CampaignLinkDecorator {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function campaignFor(array $blast, array $template = [], array $campaign = []): string {
-		$candidates = [
-			(string)($campaign['utmCampaign'] ?? ''),
-			(string)($blast['name'] ?? ''),
-			(string)($template['name'] ?? ''),
-			$this->extractId(payload: $blast),
-		];
+		return self::firstSlug(
+			candidates: [
+				(string)($campaign['utmCampaign'] ?? ''),
+				(string)($blast['name'] ?? ''),
+				(string)($template['name'] ?? ''),
+				$this->extractId(payload: $blast),
+			]
+		);
+	}//end campaignFor()
+
+	/**
+	 * The first candidate that slugifies to something.
+	 *
+	 * @param array<int, string> $candidates The values, in order of preference.
+	 *
+	 * @return string The slug, empty when every candidate is.
+	 */
+	private static function firstSlug(array $candidates): string {
 		foreach ($candidates as $candidate) {
 			$slug = self::slugify(value: $candidate);
 			if ($slug !== '') {
@@ -128,7 +140,7 @@ class CampaignLinkDecorator {
 		}
 
 		return '';
-	}//end campaignFor()
+	}//end firstSlug()
 
 	/**
 	 * The four parameters a blast link carries.
@@ -151,8 +163,8 @@ class CampaignLinkDecorator {
 	 */
 	public function utmFor(array $blast, array $template = [], array $campaign = []): array {
 		return [
-			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource', fallback: self::CHANNEL_DEFAULT),
-			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium', fallback: self::CHANNEL_DEFAULT),
+			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource'),
+			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium'),
 			'utm_campaign' => $this->campaignFor(blast: $blast, template: $template, campaign: $campaign),
 			'utm_content' => $this->extractId(payload: $blast),
 		];
@@ -163,17 +175,16 @@ class CampaignLinkDecorator {
 	 *
 	 * @param array<string, mixed> $campaign The campaign row, may be empty.
 	 * @param string $key The campaign property holding the value.
-	 * @param string $fallback What a blast without a campaign uses.
 	 *
 	 * @return string The value.
 	 */
-	private function fromCampaign(array $campaign, string $key, string $fallback): string {
+	private function fromCampaign(array $campaign, string $key): string {
 		$value = strtolower(trim((string)($campaign[$key] ?? '')));
 		if ($value !== '') {
 			return $value;
 		}
 
-		return $fallback;
+		return self::CHANNEL_DEFAULT;
 	}//end fromCampaign()
 
 	/**
@@ -201,6 +212,18 @@ class CampaignLinkDecorator {
 			return $html;
 		}
 
+		return $this->rewritten(html: $html, utm: $utm);
+	}//end decorate()
+
+	/**
+	 * Decorate every `<a href>` of a body with the parameters.
+	 *
+	 * @param string $html The body.
+	 * @param array<string, string> $utm The non-empty parameters.
+	 *
+	 * @return string The rewritten body, or the body itself when the rewrite failed.
+	 */
+	private function rewritten(string $html, array $utm): string {
 		$rewritten = preg_replace_callback(
 			'/<a\b([^>]*?)\shref=(["\'])(.*?)\2([^>]*)>/i',
 			function (array $matches) use ($utm): string {
@@ -214,7 +237,7 @@ class CampaignLinkDecorator {
 		}
 
 		return $rewritten;
-	}//end decorate()
+	}//end rewritten()
 
 	/**
 	 * Decorate one URL, or answer null when it must be left alone.

@@ -131,7 +131,7 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 			return [[], (string)($client['name'] ?? '')];
 		}
 
-		return [$this->proposalsFor(clientId: $clientId, client: $client, company: $company), null];
+		return [$this->proposalsFor(subject: ['clientId' => $clientId, 'client' => $client], company: $company), null];
 	}//end proposeForClient()
 
 	/**
@@ -155,15 +155,16 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 	/**
 	 * One proposal per found field that is filled and differs from the client's value.
 	 *
-	 * @param string $clientId The client id.
-	 * @param array<string, mixed> $client The client.
-	 * @param array<string, mixed> $company The company register's record.
+	 * @param array{clientId: string, client: array<string, mixed>} $subject The client id and the client.
+	 * @param array<string, mixed>                                  $company The company register's record.
 	 *
 	 * @return list<array<string, mixed>>
 	 *
 	 * @spec openspec/specs/client-management/spec.md
 	 */
-	private function proposalsFor(string $clientId, array $client, array $company): array {
+	private function proposalsFor(array $subject, array $company): array {
+		$clientId = $subject['clientId'];
+		$client = $subject['client'];
 		$proposals = [];
 		foreach ($this->found(company: $company) as $field => $value) {
 			$current = (string)($client[$field] ?? '');

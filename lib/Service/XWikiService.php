@@ -403,19 +403,39 @@ class XWikiService implements XWikiServiceInterface {
 			return $cached;
 		}
 
+		return $this->fetchedPages(space: $space, query: ['limit' => $limit, 'offset' => $offset, 'cacheKey' => $cacheKey]);
+	}//end getPages()
+
+	/**
+	 * Fetch one window of a space's pages from xWiki and cache it; an empty
+	 * result, uncached, when xWiki or the space is not set.
+	 *
+	 * @param string                                          $space The xWiki space name.
+	 * @param array{limit: int, offset: int, cacheKey: string} $query The clamped window and its cache key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function fetchedPages(string $space, array $query): array {
 		$base = $this->getBaseUrl();
-		$payload = $this->emptyResult(limit: $limit, offset: $offset);
+		$payload = $this->emptyResult(limit: $query['limit'], offset: $query['offset']);
 		if ($base === '' || $space === '') {
 			return $payload;
 		}
 
 		$wiki = 'xwiki';
-		$url = sprintf('%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d', $base, $wiki, rawurlencode($space), $limit, $offset);
+		$url = sprintf(
+			'%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d',
+			$base,
+			$wiki,
+			rawurlencode($space),
+			$query['limit'],
+			$query['offset']
+		);
 		$payload['results'] = $this->parsePageSummaries(xml: $this->fetchXml(url: $url), space: $space);
 		$payload['total'] = count($payload['results']);
-		$this->toCache(key: $cacheKey, value: $payload);
+		$this->toCache(key: $query['cacheKey'], value: $payload);
 		return $payload;
-	}//end getPages()
+	}//end fetchedPages()
 
 	/**
 	 * Fetch rendered HTML for a single page.

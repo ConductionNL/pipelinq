@@ -153,18 +153,28 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 		string $programmeId,
 		array $existingLinks,
 	): array {
-		$domainObjectType = trim($domainObjectType);
-		$domainObjectRef = trim($domainObjectRef);
+		return $this->claimAnswer(
+			existingLinks: $existingLinks,
+			claim: ['domainObjectType' => trim($domainObjectType), 'domainObjectRef' => trim($domainObjectRef), 'programme' => $programmeId]
+		);
+	}//end mayLink()
 
-		if ($domainObjectType === '' || $domainObjectRef === '' || trim($programmeId) === '') {
+	/**
+	 * Refuse an incomplete claim, else answer it against the existing links.
+	 *
+	 * @param array<int, array<string, mixed>> $existingLinks Every work item already written.
+	 * @param array<string, string>            $claim         The trimmed `domainObjectType` and `domainObjectRef`,
+	 *                                                        and the `programme` it would be linked to.
+	 *
+	 * @return array{allowed: bool, reason: string} The answer.
+	 */
+	private function claimAnswer(array $existingLinks, array $claim): array {
+		if ($claim['domainObjectType'] === '' || $claim['domainObjectRef'] === '' || trim($claim['programme']) === '') {
 			return ['allowed' => false, 'reason' => 'A programme, an object type and an object are required.'];
 		}
 
-		return $this->existingLinkAnswer(
-			existingLinks: $existingLinks,
-			claim: ['domainObjectType' => $domainObjectType, 'domainObjectRef' => $domainObjectRef, 'programme' => $programmeId]
-		);
-	}//end mayLink()
+		return $this->existingLinkAnswer(existingLinks: $existingLinks, claim: $claim);
+	}//end claimAnswer()
 
 	/**
 	 * Refuse a work item that is already linked to a programme, allow it otherwise.
@@ -220,37 +230,61 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function presentWorkItem(array $workItem, array $resolvedTitles = [], array $installedApps = []): array {
-		$type = (string)($workItem['domainObjectType'] ?? '');
-		$ref = (string)($workItem['domainObjectRef'] ?? '');
-		$app = trim(explode(':', $type)[0]);
+		$row = self::workItemRow(workItem: $workItem);
 
-		$title = ($resolvedTitles[$ref] ?? '');
-		$resolved = ($title !== '');
+		$title = ($resolvedTitles[$row['domainObjectRef']] ?? '');
+		$row['resolved'] = ($title !== '');
 
-		if ($resolved === false && $installedApps !== [] && in_array($app, $installedApps, true) === false) {
+		if ($row['resolved'] === false && $installedApps !== [] && in_array($row['app'], $installedApps, true) === false) {
 			// The owning app is not here. The item stays listed, with what we
 			// know of it, because an item that vanished and a programme with
 			// no items look identical otherwise.
 			$title = trim((string)($workItem['title'] ?? ''));
 		}
 
-		// The reference is the last resort: a row with no readable label at
-		// all is worse than one labelled by the id it points at.
-		$label = $ref;
-		if ($title !== '') {
-			$label = $title;
-		}
+		return self::labelled(row: $row, title: $title);
+	}//end presentWorkItem()
+
+	/**
+	 * The row of a work item, labelled by its reference and not yet resolved.
+	 *
+	 * @param array<string, mixed> $workItem The stored work item.
+	 *
+	 * @return array{id: string, programme: string, domainObjectType: string, domainObjectRef: string, app: string, title: string, resolved: bool}
+	 */
+	private static function workItemRow(array $workItem): array {
+		$type = (string)($workItem['domainObjectType'] ?? '');
+		$ref = (string)($workItem['domainObjectRef'] ?? '');
 
 		return [
 			'id' => (string)($workItem['id'] ?? $workItem['uuid'] ?? ''),
 			'programme' => (string)($workItem['programme'] ?? ''),
 			'domainObjectType' => $type,
 			'domainObjectRef' => $ref,
-			'app' => $app,
-			'title' => $label,
-			'resolved' => $resolved,
+			'app' => trim(explode(':', $type)[0]),
+			'title' => $ref,
+			'resolved' => false,
 		];
-	}//end presentWorkItem()
+	}//end workItemRow()
+
+	/**
+	 * The row labelled by a title, if it has one.
+	 *
+	 * The reference is the last resort: a row with no readable label at
+	 * all is worse than one labelled by the id it points at.
+	 *
+	 * @param array<string, mixed> $row   The work item row.
+	 * @param mixed                $title The title found for it, or ''.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private static function labelled(array $row, mixed $title): array {
+		if ($title !== '') {
+			$row['title'] = $title;
+		}
+
+		return $row;
+	}//end labelled()
 
 	/**
 	 * How far along a programme is, and where the figure came from.
@@ -430,21 +464,7 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 		string $domainObjectRef,
 		string $title = '',
 	): array {
-		$answer = $this->mayLink(
-			domainObjectType: $domainObjectType,
-			domainObjectRef: $domainObjectRef,
-			programmeId: $programmeId,
-			existingLinks: $this->workItemsReferencing(
-				domainObjectType: $domainObjectType,
-				domainObjectRef: $domainObjectRef,
-			),
-		);
-
-		if ($answer['allowed'] === false) {
-			return ['status' => 409, 'error' => $answer['reason']];
-		}
-
-		return $this->savedWorkItem(
+		return $this->linkedWorkItem(
 			workItem: [
 				'programme' => trim($programmeId),
 				'domainObjectType' => trim($domainObjectType),
@@ -453,6 +473,31 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			]
 		);
 	}//end linkWork()
+
+	/**
+	 * Write a work item unless its object is already linked: 409 when it is.
+	 *
+	 * @param array<string, string> $workItem The trimmed work item.
+	 *
+	 * @return array{status: int, error?: string, workItem?: array<string, mixed>}
+	 */
+	private function linkedWorkItem(array $workItem): array {
+		$answer = $this->mayLink(
+			domainObjectType: $workItem['domainObjectType'],
+			domainObjectRef: $workItem['domainObjectRef'],
+			programmeId: $workItem['programme'],
+			existingLinks: $this->workItemsReferencing(
+				domainObjectType: $workItem['domainObjectType'],
+				domainObjectRef: $workItem['domainObjectRef'],
+			),
+		);
+
+		if ($answer['allowed'] === false) {
+			return ['status' => 409, 'error' => $answer['reason']];
+		}
+
+		return $this->savedWorkItem(workItem: $workItem);
+	}//end linkedWorkItem()
 
 	/**
 	 * Write a work item: 201 with the item, or 500 when it could not be saved.

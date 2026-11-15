@@ -71,12 +71,8 @@ class ContactImportService {
 			ncContact: $ncContact,
 			uid: $uid
 		);
-		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
-		if ($schemaId === '') {
-			throw new RuntimeException('Pipelinq: app-config "client_schema" is not configured.');
-		}
 
-		return $this->saveAndSerialize(data: $data, schemaId: $schemaId);
+		return $this->savedAs(data: $data, schemaKey: 'client_schema');
 	}//end importAsClient()
 
 	/**
@@ -98,13 +94,28 @@ class ContactImportService {
 			uid: $uid,
 			clientId: $clientId
 		);
-		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
+
+		return $this->savedAs(data: $data, schemaKey: 'contact_schema');
+	}//end importAsContact()
+
+	/**
+	 * Save object data under the schema an app-config key names.
+	 *
+	 * @param array  $data      The object data.
+	 * @param string $schemaKey The app-config key holding the schema id.
+	 *
+	 * @return array The serialized saved object.
+	 *
+	 * @throws RuntimeException When the key is not configured.
+	 */
+	private function savedAs(array $data, string $schemaKey): array {
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($schemaId === '') {
-			throw new RuntimeException('Pipelinq: app-config "contact_schema" is not configured.');
+			throw new RuntimeException('Pipelinq: app-config "' . $schemaKey . '" is not configured.');
 		}
 
 		return $this->saveAndSerialize(data: $data, schemaId: $schemaId);
-	}//end importAsContact()
+	}//end savedAs()
 
 	/**
 	 * Save object data and return the serialized result.
