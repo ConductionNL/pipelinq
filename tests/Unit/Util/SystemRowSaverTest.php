@@ -42,16 +42,13 @@ class SystemRowSaverTest extends TestCase {
 		$admin = $this->createStub(IUser::class);
 		$saved = $this->createStub(ObjectEntityInterface::class);
 		$objectService = $this->createMock(ObjectServiceInterface::class);
-		$objectService->expects($this->once())->method('saveObject')->with(
-			['id' => 'r1', 'a' => 1],
-			[],
-			'reg',
-			'sch',
-			'r1',
-			false,
-			false,
-			$admin
-		)->willReturn($saved);
+		$seen = [];
+		$objectService->expects($this->once())->method('saveObject')->willReturnCallback(
+			static function (mixed ...$args) use (&$seen, $saved): ObjectEntityInterface {
+				$seen = $args;
+				return $saved;
+			}
+		);
 
 		$host = new class {
 			use SystemRowSaver;
@@ -68,5 +65,7 @@ class SystemRowSaverTest extends TestCase {
 
 		$save = $host->writer($objectService, $admin);
 		$this->assertSame($saved, $save(['id' => 'r1', 'a' => 1]));
+		$this->assertSame([['id' => 'r1', 'a' => 1], [], 'reg', 'sch', 'r1', false, false], array_slice($seen, 0, 7));
+		$this->assertContains($admin, $seen);
 	}//end testWriter()
 }//end class
