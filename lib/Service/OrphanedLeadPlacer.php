@@ -72,18 +72,30 @@ final class OrphanedLeadPlacer {
 			return [];
 		}
 
-		$stage = $this->closedStageFor(pipeline: $target, status: (string)($lead['status'] ?? ''));
+		return $this->movedTo(target: $target, move: ['status' => (string)($lead['status'] ?? ''), 'now' => $now]);
+	}//end forOrphanedLead()
+
+	/**
+	 * The fields that put a lead on the target pipeline, in the stage its status belongs in.
+	 *
+	 * @param array<string, mixed>                $target The default lead pipeline.
+	 * @param array{status: string, now: ?string} $move   The lead status and the ISO 8601 entry time (null means now).
+	 *
+	 * @return array<string, mixed> The fields to merge into the lead.
+	 */
+	private function movedTo(array $target, array $move): array {
+		$stage = $this->closedStageFor(pipeline: $target, status: $move['status']);
 		$stage ??= $this->placer->firstOpenStage(pipeline: $target);
 
 		$patch = ['pipeline' => (string)$target['id']];
 		if ($stage !== null) {
 			$patch['stage'] = $stage['name'];
 			$patch['stageOrder'] = $stage['order'];
-			$patch['stageEnteredAt'] = $this->placer->entryMoment(iso: $now);
+			$patch['stageEnteredAt'] = $this->placer->entryMoment(iso: $move['now']);
 		}
 
 		return $patch;
-	}//end forOrphanedLead()
+	}//end movedTo()
 
 	/**
 	 * Whether a lead's pipeline id names a pipeline that is not stored; a lead without one is not orphaned.

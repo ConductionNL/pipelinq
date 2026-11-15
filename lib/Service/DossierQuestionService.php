@@ -154,19 +154,32 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$snapshot = $this->snapshot(collectionId: $collectionId, collection: $collection);
-		$asked = [
-			'title' => $this->subjectLine(title: $title, snapshot: $snapshot),
-			'description' => $question,
-			'portalSubject' => $subjectRef,
-		];
+		return $this->filedQuestion(
+			snapshot: $this->snapshot(collectionId: $collectionId, collection: $collection),
+			asked: ['title' => $title, 'description' => $question, 'portalSubject' => $subjectRef]
+		);
+	}//end ask()
+
+	/**
+	 * Save the ticket of a resident's question about a dossier.
+	 *
+	 * @param array<string, mixed>                                              $snapshot The dossier snapshot.
+	 * @param array{title: string, description: string, portalSubject: string} $asked    The optional subject line, question and
+	 *                                                                                   portal subject.
+	 *
+	 * @return array<string, mixed> The new ticket's id and status.
+	 *
+	 * @throws \RuntimeException When the ticket cannot be saved.
+	 */
+	private function filedQuestion(array $snapshot, array $asked): array {
+		$asked['title'] = $this->subjectLine(title: $asked['title'], snapshot: $snapshot);
 		$saved = $this->tickets->save(schemaKey: self::TICKET, data: $this->questionTicket(asked: $asked, snapshot: $snapshot));
 
 		return [
 			'id' => $this->idOf(object: $saved),
 			'status' => (string)($saved['status'] ?? 'new'),
 		];
-	}//end ask()
+	}//end filedQuestion()
 
 	/**
 	 * The new ticket of a resident's question.
