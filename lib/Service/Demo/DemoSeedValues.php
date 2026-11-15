@@ -150,14 +150,27 @@ class DemoSeedValues {
 	 * @spec openspec/changes/services-and-resources-at-a-glance/tasks.md#4-example-data
 	 */
 	public function linkListReferences(array $data, string $listField, array $uuids, array $link): array {
-		if (is_array($data[$listField] ?? null) === false) {
+		return $this->withLinkedList(data: $data, list: ['field' => $listField, 'link' => [...$link, $uuids]]);
+	}//end linkListReferences()
+
+	/**
+	 * The data with each entry of its list field linked, when that field is a list.
+	 *
+	 * @param array<string, mixed>                                                                   $data Definition data.
+	 * @param array{field: string, link: array{0: string, 1: string, 2: string, 3: array<string, string>}} $list The list field and the link.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withLinkedList(array $data, array $list): array {
+		$field = $list['field'];
+		if (is_array($data[$field] ?? null) === false) {
 			return $data;
 		}
 
-		$data[$listField] = $this->linkedEntries(entries: $data[$listField], link: [...$link, $uuids]);
+		$data[$field] = $this->linkedEntries(entries: $data[$field], link: $list['link']);
 
 		return $data;
-	}//end linkListReferences()
+	}//end withLinkedList()
 
 	/**
 	 * The list entries with their relation field set from the seeded uuid map

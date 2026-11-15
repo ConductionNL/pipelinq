@@ -80,12 +80,8 @@ class LetterLog implements LetterLogInterface
      */
     public function log(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string
     {
-        return $this->logLetter(
-            letter: new LoggedLetter(
-                clientId: $clientId, contactId: $contactId, ticketId: $ticketId,
-                templateName: $templateName, path: $path,
-            )
-        );
+        $letter = new LoggedLetter(clientId: $clientId, contactId: $contactId, ticketId: $ticketId, templateName: $templateName, path: $path);
+        return $this->logLetter(letter: $letter);
 
     }//end log()
 
