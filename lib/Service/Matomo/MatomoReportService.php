@@ -136,7 +136,7 @@ class MatomoReportService implements MatomoReportServiceInterface {
 
 		$out = ['connected' => true, 'reason' => '', 'from' => $from, 'to' => $to];
 		foreach (self::REPORTS as $name => $method) {
-			$out[$name] = $this->fetch(method: $method, from: $from, to: $to);
+			$out[$name] = $this->fetch(method: $method, range: ($from . ',' . $to));
 		}
 
 		$out['campaigns'] = $this->matchCampaigns(rows: (array)$out['campaigns']);
@@ -230,12 +230,11 @@ class MatomoReportService implements MatomoReportServiceInterface {
 	 * One report, as rows.
 	 *
 	 * @param string $method The Matomo API method.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param string $range  The window as `start,end`.
 	 *
 	 * @return array<int|string, mixed> The rows, or an empty list.
 	 */
-	private function fetch(string $method, string $from, string $to): array {
+	private function fetch(string $method, string $range): array {
 		$result = $this->egress->read(
 			configKey: self::SOURCE_KEY,
 			endpoint: self::ENDPOINT,
@@ -245,7 +244,7 @@ class MatomoReportService implements MatomoReportServiceInterface {
 					'method' => $method,
 					'idSite' => $this->siteId(),
 					'period' => 'range',
-					'date' => ($from . ',' . $to),
+					'date' => $range,
 					'format' => 'JSON',
 					'filter_limit' => '100',
 				],
