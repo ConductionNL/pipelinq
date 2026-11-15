@@ -173,12 +173,7 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function report(string $id, ?string $from = null, ?string $to = null): JSONResponse {
-		$denied = $this->privilege->refusal();
-		if ($denied !== null) {
-			return $denied;
-		}
-
-		return self::reportResponse(record: $this->report->forCampaign(campaignId: $id, from: $from, to: $to));
+		return ($this->privilege->refusal() ?? self::reportResponse(record: $this->report->forCampaign(campaignId: $id, from: $from, to: $to)));
 	}//end report()
 
 	/**
@@ -213,12 +208,8 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function createLandingPage(string $id, string $portal = '', string $route = ''): JSONResponse {
-		$denied = $this->privilege->refusal();
-		if ($denied !== null) {
-			return $denied;
-		}
-
-		return self::landingPageResponse(result: $this->landingPages->createFor(campaignId: $id, portal: $portal, route: $route));
+		return ($this->privilege->refusal()
+			?? self::landingPageResponse(result: $this->landingPages->createFor(campaignId: $id, portal: $portal, route: $route)));
 	}//end createLandingPage()
 
 	/**
