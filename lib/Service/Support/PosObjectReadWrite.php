@@ -48,7 +48,23 @@ trait PosObjectReadWrite {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		return $this->savedInto(location: $this->config(schemaKey: $schemaKey), object: ['id' => $id, 'data' => $object]);
+	}//end saveObjectFor()
+
+	/**
+	 * Persist an object into a register and schema under its UUID, without its `@self`.
+	 *
+	 * @param array{0: string, 1: string}                 $location The register and the schema.
+	 * @param array{id: string, data: array<string, mixed>} $object   The object UUID (empty to create) and its data.
+	 *
+	 * @return array<string, mixed> The saved object.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function savedInto(array $location, array $object): array {
+		[$register, $schema] = $location;
+		$id = $object['id'];
+		$object = $object['data'];
 
 		unset($object['@self']);
 
@@ -61,5 +77,5 @@ trait PosObjectReadWrite {
 		);
 
 		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
+	}//end savedInto()
 }//end trait
