@@ -35,6 +35,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\Upl\UplListImporter
  * @uses   \OCA\Pipelinq\Service\Upl\UplListParser
+ * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
  */
 class UplListImporterTest extends TestCase {
 
