@@ -124,7 +124,7 @@ class PortalQuestionController extends Controller {
 			return new JSONResponse(['error' => 'invalid_request'], Http::STATUS_BAD_REQUEST);
 		}
 
-		return $this->fileQuestion(subjectRef: $subjectRef, collectionId: $collectionId, question: $question);
+		return $this->fileQuestion(subjectRef: $subjectRef);
 	}//end ask()
 
 	/**
@@ -140,20 +140,18 @@ class PortalQuestionController extends Controller {
 	}//end isInvalidQuestion()
 
 	/**
-	 * File the question: 201 with the ticket, 404 (throttled) for a dossier not theirs, 503 when it cannot be saved.
+	 * File the request's question: 201 with the ticket, 404 (throttled) for a dossier not theirs, 503 when it cannot be saved.
 	 *
-	 * @param string $subjectRef   The resident's subject reference.
-	 * @param string $collectionId The dossier collection id.
-	 * @param string $question     The question text.
+	 * @param string $subjectRef The resident's subject reference.
 	 *
 	 * @return JSONResponse
 	 */
-	private function fileQuestion(string $subjectRef, string $collectionId, string $question): JSONResponse {
+	private function fileQuestion(string $subjectRef): JSONResponse {
 		try {
 			$result = $this->questions->ask(
 				subjectRef: $subjectRef,
-				collectionId: $collectionId,
-				question: $question,
+				collectionId: $this->text(name: 'collectionId'),
+				question: $this->text(name: 'question'),
 				title: $this->text(name: 'title')
 			);
 		} catch (RuntimeException $e) {
