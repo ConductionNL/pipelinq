@@ -33,6 +33,10 @@ use RuntimeException;
  * A client's history can be summarised on request (REQ-CIN-002).
  *
  * @covers \OCA\Pipelinq\Service\ClientHistorySummaryService
+ * @uses \OCA\Pipelinq\Repair\UnifyClientContactIdentity
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-2.1
  */
