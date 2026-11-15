@@ -254,7 +254,8 @@ class CampaignService implements CampaignServiceInterface {
 			return $check;
 		}
 
-		return $this->storeCampaign(record: $this->campaignRecord(existing: $existing, payload: $payload, name: $name, uid: $uid), id: $id, name: $name);
+		$record = $this->campaignRecord(existing: $existing, edit: ['payload' => $payload, 'name' => $name, 'uid' => $uid]);
+		return $this->storeCampaign(record: $record, id: $id);
 	}//end save()
 
 	/**
@@ -280,19 +281,19 @@ class CampaignService implements CampaignServiceInterface {
 	 * The record to store: the existing campaign overlaid with the payload, the name and frozen slug.
 	 *
 	 * @param array<string, mixed>|null $existing The existing campaign, or null for a new one.
-	 * @param array<string, mixed> $payload The submitted payload.
-	 * @param string $name The trimmed name.
-	 * @param string $uid The acting user id.
+	 * @param array{payload: array<string, mixed>, name: string, uid: string} $edit The submitted payload, the trimmed name
+	 *                                                                             and the acting user id.
 	 *
 	 * @return array<string, mixed> The record.
 	 */
-	private function campaignRecord(array|null $existing, array $payload, string $name, string $uid): array {
-		$record = array_merge(($existing ?? []), $payload);
+	private function campaignRecord(array|null $existing, array $edit): array {
+		$name = $edit['name'];
+		$record = array_merge(($existing ?? []), $edit['payload']);
 		$record['name'] = $name;
 		$record['utmCampaign'] = $this->frozenSlug(existing: $existing, name: $name);
 		if ($existing === null) {
 			$record['createdAt'] = gmdate('Y-m-d\TH:i:sP');
-			$record['createdBy'] = $uid;
+			$record['createdBy'] = $edit['uid'];
 		}
 
 		unset($record['@self'], $record['id'], $record['uuid'], $record['slug']);
@@ -303,16 +304,15 @@ class CampaignService implements CampaignServiceInterface {
 	/**
 	 * Store the campaign and answer with it, or with a write failure.
 	 *
-	 * @param array<string, mixed> $record The record to store.
+	 * @param array<string, mixed> $record The record to store, carrying the campaign name.
 	 * @param string|null $id The campaign id, or null to create.
-	 * @param string $name The campaign name.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 */
-	private function storeCampaign(array $record, string|null $id, string $name): array {
+	private function storeCampaign(array $record, string|null $id): array {
 		$saved = $this->store->save(schemaSlug: $this->schemaSlug(), payload: $record, id: $id);
 		if ($saved === null) {
-			return $this->failure(error: 'write_failed', value: $name, allowed: []);
+			return $this->failure(error: 'write_failed', value: $record['name'], allowed: []);
 		}
 
 		return ['error' => '', 'value' => '', 'allowed' => [], 'campaign' => $saved];
