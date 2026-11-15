@@ -481,8 +481,17 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return [];
 		}
 
-		$entity = $this->findPublic(uuid: $uuid, register: $register, schema: $schema, schemaKey: $schemaKey);
-		if ($this->outOfScope(entity: $entity, register: $register, schema: $schema) === true) {
+		try {
+			$entity = $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'SurveyResponseService: an object on the public path could not be read',
+				['schemaKey' => $schemaKey, 'uuid' => $uuid, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		if ($this->outOfScope(entity: $entity, location: new RegisterSchema(register: $register, schema: $schema)) === true) {
 			return [];
 		}
 
@@ -490,41 +499,17 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 	}//end readPublic()
 
 	/**
-	 * Find an object on the public path, or null when it cannot be read.
-	 *
-	 * @param string $uuid The object uuid.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param string $schemaKey The app-config key of the schema, for the log.
-	 *
-	 * @return mixed
-	 */
-	private function findPublic(string $uuid, string $register, string $schema, string $schemaKey) {
-		try {
-			return $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SurveyResponseService: an object on the public path could not be read',
-				['schemaKey' => $schemaKey, 'uuid' => $uuid, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-	}//end findPublic()
-
-	/**
 	 * Whether the entity is missing or lives outside the expected register and schema.
 	 *
-	 * @param mixed $entity The found entity, or null.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param mixed          $entity   The found entity, or null.
+	 * @param RegisterSchema $location The register and schema ids.
 	 *
 	 * @return bool
 	 */
-	private function outOfScope($entity, string $register, string $schema): bool {
+	private function outOfScope($entity, RegisterSchema $location): bool {
 		return $entity === null
-			|| (string)$entity->getRegister() !== $register
-			|| (string)$entity->getSchema() !== $schema;
+			|| (string)$entity->getRegister() !== $location->register
+			|| (string)$entity->getSchema() !== $location->schema;
 	}//end outOfScope()
 
 	/**
