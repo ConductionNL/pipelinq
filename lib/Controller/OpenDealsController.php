@@ -104,7 +104,7 @@ class OpenDealsController extends Controller {
 			return new JSONResponse(['error' => 'Name one contact or client'], Http::STATUS_BAD_REQUEST);
 		}
 
-		return $this->openDealsFor(field: $field, partyId: $partyId, register: $target[0], leadSchema: $target[1]);
+		return $this->openDealsFor(party: [$field, $partyId], target: $target);
 	}//end index()
 
 	/**
@@ -129,16 +129,16 @@ class OpenDealsController extends Controller {
 	/**
 	 * The open-deal summary of a party the caller may read.
 	 *
-	 * @param string $field The party field.
-	 * @param string $partyId The party's id.
-	 * @param string $register The register id.
-	 * @param string $leadSchema The lead schema id.
+	 * @param array{0: string, 1: string} $party  The party field and the party's id.
+	 * @param array{0: string, 1: string} $target The register id and the lead schema id.
 	 *
 	 * @return JSONResponse `{openDealCount, openDealValue}` or an error.
 	 *
 	 * @spec openspec/specs/client-management/spec.md
 	 */
-	private function openDealsFor(string $field, string $partyId, string $register, string $leadSchema): JSONResponse {
+	private function openDealsFor(array $party, array $target): JSONResponse {
+		[$field, $partyId] = $party;
+		[$register, $leadSchema] = $target;
 		$partySchema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PARTIES[$field], '');
 		if ($this->canRead(id: $partyId, register: $register, schema: $partySchema) === false) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
@@ -152,7 +152,7 @@ class OpenDealsController extends Controller {
 			return new JSONResponse(['error' => 'Deals unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		return new JSONResponse($this->summarise(rows: $rows, field: $field, partyId: $partyId));
+		return new JSONResponse($this->summarise(rows: $rows, party: $party));
 	}//end openDealsFor()
 
 	/**
@@ -160,13 +160,13 @@ class OpenDealsController extends Controller {
 	 *
 	 * Each row is checked again rather than trusted to match the query.
 	 *
-	 * @param iterable<mixed> $rows    The rows OpenRegister returned.
-	 * @param string          $field   The lead field naming the party.
-	 * @param string          $partyId The party id.
+	 * @param iterable<mixed>             $rows  The rows OpenRegister returned.
+	 * @param array{0: string, 1: string} $party The lead field naming the party, and the party id.
 	 *
 	 * @return array{openDealCount: int, openDealValue: float}
 	 */
-	private function summarise(iterable $rows, string $field, string $partyId): array {
+	private function summarise(iterable $rows, array $party): array {
+		[$field, $partyId] = $party;
 		$count = 0;
 		$value = 0.0;
 		foreach ($rows as $row) {
