@@ -35,6 +35,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Fake OR ObjectService for the coverage tests: answers find() from a queue
@@ -101,7 +103,9 @@ class TxCovObjectService {
 	 *
 	 * @return mixed The configured answer.
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): mixed {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
 		$this->findCalls[] = $id;
 		if (array_key_exists($id, $this->findById) === true) {
 			$answer = $this->findById[$id];
@@ -147,11 +151,14 @@ class TxCovObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->saveCalls[] = ['object' => $object, 'schema' => $schema, 'uuid' => $uuid];
 		return $object;
 	}//end saveObject()

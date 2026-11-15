@@ -31,6 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Sla\SlaPolicyChange;
@@ -104,9 +107,7 @@ class SlaPolicyController extends Controller {
 			$objectService = $this->container->get(ObjectService::class);
 			$saved = $objectService->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			$this->auditLog(change: new SlaPolicyChange(payload: $payload, register: $register, schema: $schema), existing: null);
 			return new JSONResponse($this->serialise(saved: $saved));
@@ -176,7 +177,10 @@ class SlaPolicyController extends Controller {
 			$objectService = $this->container->get(ObjectService::class);
 			$existing = $this->findExistingPolicy(objectService: $objectService, change: $change);
 
-			$saved = $objectService->saveObject(object: $change->payload, extend: [], register: $change->register, schema: $change->schema, uuid: $change->id);
+			$saved = $objectService->saveObject(
+				object: $change->payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $change->register, schema: $change->schema), uuid: $change->id)
+			);
 			$this->auditLog(change: $change, existing: $existing);
 			return new JSONResponse($this->serialise(saved: $saved));
 		} catch (Throwable $e) {
@@ -201,8 +205,7 @@ class SlaPolicyController extends Controller {
 		try {
 			$existing = $objectService->find(
 				id: $change->id,
-				register: $change->register,
-				schema: $change->schema,
+				options: new ObjectFindOptions(register: $change->register, schema: $change->schema)
 			);
 		} catch (Throwable $e) {
 			$this->logger->debug(

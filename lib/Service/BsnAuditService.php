@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
@@ -160,9 +162,7 @@ class BsnAuditService implements BsnAuditServiceInterface {
 		[$register, $schema] = $this->config();
 		$saved = $this->getObjectService()->saveObject(
 			object: $record,
-			extend: [],
-			register: $register,
-			schema: $schema,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 
 		if (is_array($saved) === true) {
@@ -358,7 +358,10 @@ class BsnAuditService implements BsnAuditServiceInterface {
 		$arr['bsnHash'] = $target['bsnHash'];
 		$arr['action'] = 'brp-rtbf-pseudonymised';
 		$arr['outcome'] = 'pseudonymised';
-		$this->getObjectService()->saveObject(object: $arr, extend: [], register: $target['register'], schema: $target['schema'], uuid: $uuid);
+		$this->getObjectService()->saveObject(
+			object: $arr,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']), uuid: $uuid)
+		);
 		return true;
 	}//end rewriteRecord()
 

@@ -71,17 +71,29 @@ class PhysicalAddressRenderer implements PhysicalAddressRendererInterface {
 			return $body;
 		}
 
-		$rendered = $this->formatted(address: $address, format: $format);
+		return $this->withAddress(body: $body, address: ['text' => $this->formatted(address: $address, format: $format), 'format' => $format]);
+	}//end render()
+
+	/**
+	 * The body with the formatted address in place of its token, or appended.
+	 *
+	 * @param string                               $body    The HTML or plain-text body.
+	 * @param array{text: string, format: string} $address The formatted address and the body format.
+	 *
+	 * @return string The body with the address in place.
+	 */
+	private function withAddress(string $body, array $address): string {
+		$rendered = $address['text'];
 		if ($this->hasToken(body: $body) === true) {
 			return strtr($body, array_fill_keys(self::TOKENS, $rendered));
 		}
 
-		if ($format === 'html') {
+		if ($address['format'] === 'html') {
 			return $this->withParagraph(body: $body, paragraph: '<p>' . $rendered . '</p>');
 		}
 
 		return rtrim($body) . "\n\n" . $rendered;
-	}//end render()
+	}//end withAddress()
 
 	/**
 	 * The address as it goes into the body: escaped with line breaks for HTML.

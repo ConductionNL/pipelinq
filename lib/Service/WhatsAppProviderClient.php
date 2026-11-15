@@ -139,14 +139,28 @@ class WhatsAppProviderClient {
 		string $body,
 		array $mediaIds = [],
 	): array {
-		$payload = ['messaging_product' => 'whatsapp', 'to' => $phoneNumber, 'type' => 'text', 'text' => ['body' => $body]];
-		if ($mediaIds !== []) {
-			$payload['type'] = 'image';
-			$payload['image'] = ['id' => $mediaIds[0]];
-		}
+		$payload = self::freeFormPayload(phoneNumber: $phoneNumber, content: ['body' => $body, 'mediaIds' => $mediaIds]);
 
 		return $this->sent(channelProvider: $channelProvider, request: ['action' => 'send-text', 'payload' => $payload]);
 	}//end sendFreeForm()
+
+	/**
+	 * The free-form message body: text, or an image when media is attached.
+	 *
+	 * @param string                                       $phoneNumber Recipient E.164.
+	 * @param array{body: string, mediaIds: array<int, string>} $content     The message body and optional uploaded media ids.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function freeFormPayload(string $phoneNumber, array $content): array {
+		$payload = ['messaging_product' => 'whatsapp', 'to' => $phoneNumber, 'type' => 'text', 'text' => ['body' => $content['body']]];
+		if ($content['mediaIds'] !== []) {
+			$payload['type'] = 'image';
+			$payload['image'] = ['id' => $content['mediaIds'][0]];
+		}
+
+		return $payload;
+	}//end freeFormPayload()
 
 	/**
 	 * The template message body: its name, language and one text parameter
@@ -246,14 +260,24 @@ class WhatsAppProviderClient {
 			return false;
 		}
 
-		$compare = $signature;
+		$expected = hash_hmac('sha256', $rawBody, $secret);
+		return hash_equals($expected, self::signatureHex(signature: $signature));
+	}//end verifySignature()
+
+	/**
+	 * The hex digest of a signature header, without its `sha256=` prefix.
+	 *
+	 * @param string $signature Header value (sha256=...).
+	 *
+	 * @return string The digest.
+	 */
+	private static function signatureHex(string $signature): string {
 		if (str_starts_with($signature, 'sha256=') === true) {
-			$compare = substr($signature, 7);
+			return substr($signature, 7);
 		}
 
-		$expected = hash_hmac('sha256', $rawBody, $secret);
-		return hash_equals($expected, $compare);
-	}//end verifySignature()
+		return $signature;
+	}//end signatureHex()
 
 	/**
 	 * Dispatch a call via the OpenRegister MessageDispatchProvider leaf.

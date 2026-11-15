@@ -25,6 +25,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OrganisationEnrichmentServiceInterface;
 use OCP\IAppConfig;
@@ -242,7 +245,10 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 		unset($data['@self']);
 
 		[$register, $schema] = $this->config();
-		$this->objectService->saveObject(object: $data, register: $register, schema: $schema, uuid: $clientId);
+		$this->objectService->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $clientId)
+		);
 		return count($fields);
 	}//end applyToClient()
 
@@ -312,7 +318,7 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 
 		[$register, $schema] = $this->config();
 		try {
-			$object = $this->objectService->find(id: $clientId, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: client not read for enrichment', ['exception' => $e->getMessage()]);
 			return null;

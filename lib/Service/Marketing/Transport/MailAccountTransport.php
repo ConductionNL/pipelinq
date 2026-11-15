@@ -103,7 +103,7 @@ final class MailAccountTransport implements TransportInterface {
 			return $this->lookupFailed(mail: $mail, failure: $account);
 		}
 
-		return $this->sendViaOutbox(outboxService: $services['outbox'], account: $account, mail: $mail);
+		return $this->sendViaOutbox(via: ['outbox' => $services['outbox'], 'account' => $account], mail: $mail);
 	}//end send()
 
 	/**
@@ -184,13 +184,13 @@ final class MailAccountTransport implements TransportInterface {
 	/**
 	 * Build a `LocalMessage`, save it to the outbox, and send it.
 	 *
-	 * @param object $outboxService Resolved `OutboxService`.
-	 * @param object $account Resolved `Account`.
-	 * @param RenderedMail $mail The rendered mail to send.
+	 * @param array{outbox: object, account: object} $via  The resolved `OutboxService` and `Account`.
+	 * @param RenderedMail                          $mail The rendered mail to send.
 	 *
 	 * @return SendResult The outcome.
 	 */
-	private function sendViaOutbox(object $outboxService, object $account, RenderedMail $mail): SendResult {
+	private function sendViaOutbox(array $via, RenderedMail $mail): SendResult {
+		['outbox' => $outboxService, 'account' => $account] = $via;
 		if (class_exists(self::MAIL_CLASSES['localMessage']) === false) {
 			return new SendResult(accepted: false, error: 'mail-app-not-available');
 		}

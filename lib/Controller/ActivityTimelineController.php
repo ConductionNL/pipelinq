@@ -106,7 +106,7 @@ class ActivityTimelineController extends Controller {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find($entityId, []);
+			$object = $objectService->find($entityId);
 			if ($object === null) {
 				return false;
 			}

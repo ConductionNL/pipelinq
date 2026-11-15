@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Service\Support\PageCount;
+use OCA\Pipelinq\Service\Marketing\ListPage;
 
 /**
  * MailingListService — CRUD and validation for mailing lists.
@@ -42,8 +42,6 @@ use OCA\Pipelinq\Service\Support\PageCount;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
 class MailingListService implements MailingListServiceInterface {
-	use PageCount;
-
 	/**
 	 * Opt-in mode requiring a confirmed link before a mailing is sent.
 	 *
@@ -103,20 +101,8 @@ class MailingListService implements MailingListServiceInterface {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 	 */
 	public function listMailingLists(int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
-		$all = $this->loadAll();
-		$total = count($all);
-
-		return [
-			'data' => array_slice($all, (($page - 1) * $limit), $limit),
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		$window = new ListPage(page: max(1, $page), limit: min(100, max(1, $limit)));
+		return $window->slice(rows: $this->loadAll());
 	}//end listMailingLists()
 
 	/**

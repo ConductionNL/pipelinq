@@ -51,6 +51,10 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
@@ -208,7 +212,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$object = null;
 		}
@@ -322,7 +326,9 @@ class PosTenderService implements PosTenderServiceInterface {
 
 		try {
 			// The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to delete tender type',
@@ -596,7 +602,9 @@ class PosTenderService implements PosTenderServiceInterface {
 
 		try {
 			// The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
-			$this->getObjectService()->deleteObject(uuid: $tenderId, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $tenderId, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to delete tender',
@@ -1138,10 +1146,10 @@ class PosTenderService implements PosTenderServiceInterface {
 		try {
 			$saved = $this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1168,10 +1176,10 @@ class PosTenderService implements PosTenderServiceInterface {
 		try {
 			$saved = $this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1201,7 +1209,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$object = null;
 		}
@@ -1246,7 +1254,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			return null;
 		}

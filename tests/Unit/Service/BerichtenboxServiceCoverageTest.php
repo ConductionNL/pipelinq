@@ -39,6 +39,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Error paths and branches of the Berichtenbox state machine: the dispatch
@@ -120,7 +122,10 @@ class BerichtenboxServiceCoverageTest extends TestCase {
 	 */
 	private function captureSaves(?string $failOnSchema = null): void {
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null) use ($failOnSchema): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($failOnSchema): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				if ($failOnSchema !== null && $schema === $failOnSchema) {
 					throw new RuntimeException('save refused');
 				}
@@ -497,7 +502,13 @@ class BerichtenboxServiceCoverageTest extends TestCase {
 	 */
 	public function testHandleInboundReplyUnknownParent(): void {
 		$this->objects->expects($this->once())->method('find')
-			->with('p-404', $this->anything(), $this->anything(), 'reg-1', 'sch-msg')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'p-404',
+				'_extend' => $this->anything(),
+				'files' => $this->anything(),
+				'register' => 'reg-1',
+				'schema' => 'sch-msg',
+			]))
 			->willThrowException(new RuntimeException('not found'));
 
 		$this->expectException(RuntimeException::class);

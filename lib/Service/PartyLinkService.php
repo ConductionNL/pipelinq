@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
 use OCA\Pipelinq\Util\PartyObjectRead;
@@ -229,9 +231,10 @@ class PartyLinkService implements PartyLinkServiceInterface {
 		try {
 			$this->objectService->saveObject(
 				object: $object,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
 			);
 
 			return true;

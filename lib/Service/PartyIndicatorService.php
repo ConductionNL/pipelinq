@@ -47,6 +47,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCA\Pipelinq\Service\Support\JsonSerializableRows;
@@ -327,9 +329,10 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 		try {
 			$this->objectService->saveObject(
 				object: $data,
-				register: $this->registerId(),
-				schema: $target['schema'],
-				uuid: $target['uuid'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerId(), schema: $target['schema']),
+					uuid: $target['uuid']
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

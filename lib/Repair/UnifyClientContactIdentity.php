@@ -50,6 +50,8 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
@@ -554,10 +556,10 @@ class UnifyClientContactIdentity implements IRepairStep {
 					->setSchema($schema)
 					->saveObject(
 						object: $payload,
-						extend: [],
-						register: $register,
-						schema: $schema,
-						uuid: $objectId
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $register, schema: $schema),
+							uuid: $objectId
+						)
 					)
 			);
 		} catch (\Throwable $e) {
@@ -650,7 +652,10 @@ class UnifyClientContactIdentity implements IRepairStep {
 				operation: static fn () => $objectService
 					->setRegister($register)
 					->setSchema($schema)
-					->saveObject(object: $payload, extend: [], register: $register, schema: $schema, uuid: $momentId)
+					->saveObject(object: $payload, options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $momentId
+					))
 			);
 			return 1;
 		} catch (\Throwable $e) {
@@ -743,7 +748,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 				operation: static fn () => $objectService
 					->setRegister($register)
 					->setSchema($schema)
-					->saveObject(object: $record, extend: [], register: $register, schema: $schema, uuid: null)
+					->saveObject(object: $record, options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

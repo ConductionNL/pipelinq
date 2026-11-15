@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * fetchOne finds or throws; saveObjectFor strips @self and saves by id.
@@ -48,7 +50,9 @@ class PosObjectReadWriteTest extends TestCase {
 			 * @param string $schema   Schema.
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register, string $schema): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($id === 'boom') {
 					throw new \RuntimeException('x');
 				}
@@ -64,8 +68,12 @@ class PosObjectReadWriteTest extends TestCase {
 			 * @param string               $uuid     Uuid.
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
-				$this->calls[] = func_get_args();
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$this->calls[] = [$object, $extend, $register, $schema, $uuid];
 				return $object + ['uuid' => $uuid];
 			}
 		};

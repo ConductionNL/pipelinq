@@ -90,25 +90,28 @@ class PortalSessionManager implements PortalSessionManagerInterface {
 		bool $mfaPending = false,
 	): array {
 		$plain = $this->tokens->randomToken();
-		$expiry = $this->time->getDateTime();
-		$expiry->modify('+' . max(1, $ttlHours) . ' hours');
+		$record = ['accountId' => $accountId, 'tenantId' => $tenantId, 'tokenHash' => $this->tokens->hash(plain: $plain)];
+		$client = ['ipHash' => $ipHash, 'userAgentHash' => $userAgentHash];
 
-		$session = $this->repository->save(
-			self::SCHEMA,
-			[
-				'accountId' => $accountId,
-				'tenantId' => $tenantId,
-				'tokenHash' => $this->tokens->hash(plain: $plain),
-				'ipHash' => $ipHash,
-				'userAgentHash' => $userAgentHash,
-				'expiresAt' => $expiry->format(DATE_ATOM),
-				'revoked' => false,
-				'mfaPending' => $mfaPending,
-			]
-		);
+		$session = $this->repository->save(self::SCHEMA, $record + $client + $this->sessionTerms(ttlHours: $ttlHours, mfaPending: $mfaPending));
 
 		return ['token' => $plain, 'session' => $session];
 	}//end createSession()
+
+	/**
+	 * The expiry, revocation and MFA fields of a new session.
+	 *
+	 * @param int  $ttlHours   Session TTL in hours.
+	 * @param bool $mfaPending Whether MFA still has to be satisfied.
+	 *
+	 * @return array{expiresAt: string, revoked: false, mfaPending: bool}
+	 */
+	private function sessionTerms(int $ttlHours, bool $mfaPending): array {
+		$expiry = $this->time->getDateTime();
+		$expiry->modify('+' . max(1, $ttlHours) . ' hours');
+
+		return ['expiresAt' => $expiry->format(DATE_ATOM), 'revoked' => false, 'mfaPending' => $mfaPending];
+	}//end sessionTerms()
 
 	/**
 	 * Validate a presented bearer token within a tenant.

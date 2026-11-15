@@ -31,6 +31,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * REQ-LOY-011: a retried movement is written once.
@@ -123,13 +124,11 @@ class PointsLedgerOperationIdTest extends TestCase {
 
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (
-				array $object,
-				?array $extend=[],
-				string|int|null $register=null,
-				string|int|null $schema=null,
-				?string $uuid=null
-			): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->duringSave !== null) {
 					$interleave = $this->duringSave;
 					$this->duringSave = null;

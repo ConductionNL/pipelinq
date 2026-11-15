@@ -37,6 +37,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The agent agrees a coaching point of a review of their call.
@@ -129,17 +130,17 @@ class CallReviewControllerTest extends TestCase {
 		$stored->setUuid('r1');
 		$stored->setObject(['status' => 'shared']);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(
-				$this->callback(static function (array $object): bool {
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static function (array $object): bool {
 					return $object['coachingPoints'][0] === ['text' => 'Name the next step', 'agreedAt' => self::NOW]
 						&& $object['coachingPoints'][1] === ['text' => 'Close warmly']
 						&& isset($object['@self']) === false;
 				}),
-				$this->anything(),
-				'7',
-				'42',
-				'r1'
-			)
+				'extend' => $this->anything(),
+				'register' => '7',
+				'schema' => '42',
+				'uuid' => 'r1',
+			]))
 			->willReturn($stored);
 
 		$response = $controller->agree(id: 'r1', index: 0);

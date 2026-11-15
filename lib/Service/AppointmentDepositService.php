@@ -37,6 +37,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Service\Support\ByteTruncate;
@@ -621,7 +624,10 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 		}
 
 		try {
-			$objectService->saveObject(object: $data, extend: [], register: $register, schema: $schema, uuid: $bookingId);
+			$objectService->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $bookingId)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: depositPaidAt save failed', ['booking' => $bookingId]);
 		}
@@ -639,7 +645,7 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	 */
 	private function loadStampedBooking(mixed $objectService, string $bookingId, string $register, string $schema): array|null {
 		try {
-			$booking = $objectService->find(id: $bookingId, register: $register, schema: $schema);
+			$booking = $objectService->find(id: $bookingId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: depositPaidAt load failed', ['booking' => $bookingId]);
 			return null;

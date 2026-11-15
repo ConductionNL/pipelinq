@@ -133,9 +133,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 		array $sourceDocument,
 		string $processedBy,
 	): array {
-		if ($amount <= 0) {
-			throw new RuntimeException('Credit amount must be positive.');
-		}
+		self::assertPositive(amount: $amount, message: 'Credit amount must be positive.');
 
 		return $this->appendOnce(
 			movement: new LedgerMovement(accountId: $accountId, type: 'credit', signedCount: $amount, lifetimeDelta: $amount),
@@ -165,9 +163,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 		array $sourceDocument,
 		string $processedBy,
 	): array {
-		if ($amount <= 0) {
-			throw new RuntimeException('Debit amount must be positive.');
-		}
+		self::assertPositive(amount: $amount, message: 'Debit amount must be positive.');
 
 		$movement = new LedgerMovement(accountId: $accountId, type: 'debit', signedCount: -$amount, lifetimeDelta: 0);
 		$sourceDocument['redemptionId'] = $redemptionId;
@@ -219,9 +215,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-005-01
 	 */
 	public function expirePoints(string $accountId, int $amount, string $reason): array {
-		if ($amount <= 0) {
-			throw new RuntimeException('Expiry amount must be positive.');
-		}
+		self::assertPositive(amount: $amount, message: 'Expiry amount must be positive.');
 
 		return $this->appendOnce(
 			movement: new LedgerMovement(accountId: $accountId, type: 'expiry', signedCount: -$amount, lifetimeDelta: 0),
@@ -268,9 +262,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 		string $redemptionId,
 		string $processedBy,
 	): array {
-		if ($amount <= 0) {
-			throw new RuntimeException('Refund amount must be positive.');
-		}
+		self::assertPositive(amount: $amount, message: 'Refund amount must be positive.');
 
 		return $this->appendOnce(
 			movement: new LedgerMovement(accountId: $accountId, type: 'refund', signedCount: $amount, lifetimeDelta: 0),
@@ -336,15 +328,43 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	 * @spec exclude phpmd mechanical refactor
 	 */
 	public function getLedgerHistory(string $accountId, ?string $from = null, ?string $to = null): array {
+		return $this->historyIn(accountId: $accountId, window: ['from' => $from, 'to' => $to]);
+	}//end getLedgerHistory()
+
+	/**
+	 * The ledger history of an account within an optional window, oldest first.
+	 *
+	 * @param string                                  $accountId The account UUID.
+	 * @param array{from: string|null, to: string|null} $window    ISO-8601 inclusive bounds on the timestamp, or null.
+	 *
+	 * @return array<int, array<string, mixed>> The ledger entries, oldest first.
+	 */
+	private function historyIn(string $accountId, array $window): array {
 		$rows = $this->accountEntries(accountId: $accountId);
 
 		$filtered = array_filter(
 			$rows,
-			fn (array $entry): bool => $this->isWithinWindow(entry: $entry, from: $from, to: $to)
+			fn (array $entry): bool => self::isWithinWindow(entry: $entry, window: $window)
 		);
 
 		return self::oldestFirst(entries: $filtered);
-	}//end getLedgerHistory()
+	}//end historyIn()
+
+	/**
+	 * Refuse an amount that is not positive.
+	 *
+	 * @param int    $amount  The amount.
+	 * @param string $message The refusal.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the amount is zero or negative.
+	 */
+	private static function assertPositive(int $amount, string $message): void {
+		if ($amount <= 0) {
+			throw new RuntimeException($message);
+		}
+	}//end assertPositive()
 
 	/**
 	 * The entries ordered by timestamp, oldest first, as a list.
@@ -414,19 +434,18 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	/**
 	 * Whether a ledger entry's timestamp falls within an optional [from, to] window.
 	 *
-	 * @param array<string, mixed> $entry The ledger entry.
-	 * @param ?string $from ISO-8601 lower bound (inclusive), or null.
-	 * @param ?string $to ISO-8601 upper bound (inclusive), or null.
+	 * @param array<string, mixed>                      $entry  The ledger entry.
+	 * @param array{from: string|null, to: string|null} $window ISO-8601 inclusive bounds, or null.
 	 *
 	 * @return bool
 	 */
-	private function isWithinWindow(array $entry, ?string $from, ?string $to): bool {
+	private static function isWithinWindow(array $entry, array $window): bool {
 		$timestamp = (string)($entry['timestamp'] ?? '');
-		if ($from !== null && $timestamp < $from) {
+		if ($window['from'] !== null && $timestamp < $window['from']) {
 			return false;
 		}
 
-		if ($to !== null && $timestamp > $to) {
+		if ($window['to'] !== null && $timestamp > $window['to']) {
 			return false;
 		}
 
@@ -453,17 +472,30 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 		// Collect all accounts for the programme then fetch their ledgers.
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
+		return $this->entriesOfAccounts(accounts: $accounts, filter: ['type' => $type, 'from' => $from, 'to' => $to]);
+	}//end getLedgerEntriesForProgramme()
+
+	/**
+	 * The ledger entries of one type within a window, account by account.
+	 *
+	 * @param array<int, array<string, mixed>>                        $accounts The accounts.
+	 * @param array{type: string, from: string|null, to: string|null} $filter   The entry type and the ISO-8601 inclusive bounds.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function entriesOfAccounts(array $accounts, array $filter): array {
+		$window = ['from' => $filter['from'], 'to' => $filter['to']];
 		$entries = [];
 		foreach ($accounts as $account) {
 			$accountId = (string)($account['accountId'] ?? $account['@self']['id'] ?? $account['uuid'] ?? '');
 			if ($accountId !== '') {
-				$history = $this->getLedgerHistory(accountId: $accountId, from: $from, to: $to);
-				array_push($entries, ...self::ofType(entries: $history, type: $type));
+				$history = $this->historyIn(accountId: $accountId, window: $window);
+				array_push($entries, ...self::ofType(entries: $history, type: $filter['type']));
 			}
 		}
 
 		return $entries;
-	}//end getLedgerEntriesForProgramme()
+	}//end entriesOfAccounts()
 
 	/**
 	 * The entries of one type, in their order.
@@ -573,7 +605,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 
 		try {
 			return $this->getObjectService()->findAll(
-				config: $this->operationQuery(movement: $movement, register: $register, schema: $schema)
+				config: $this->operationQuery(movement: $movement, target: [$register, $schema])
 			);
 		} catch (\Throwable $e) {
 			throw new RuntimeException('Operation '.$this->operationId.' could not be checked against the ledger.', 0, $e);
@@ -583,21 +615,20 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	/**
 	 * The query for the first entry of the account with the current operation id.
 	 *
-	 * @param LedgerMovement $movement The movement about to be written.
-	 * @param string $register The register id.
-	 * @param string $schema The ledger schema id.
+	 * @param LedgerMovement              $movement The movement about to be written.
+	 * @param array{0: string, 1: string} $target   The register id and the ledger schema id.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#requirement-a-retried-movement-is-written-once-req-loy-011
 	 */
-	private function operationQuery(LedgerMovement $movement, string $register, string $schema): array {
+	private function operationQuery(LedgerMovement $movement, array $target): array {
 		return [
 			'filters' => [
 				'accountId' => $movement->accountId,
 				'operationId' => $this->operationId,
-				'register' => $register,
-				'schema' => $schema,
+				'register' => $target[0],
+				'schema' => $target[1],
 			],
 			'limit' => 1,
 		];

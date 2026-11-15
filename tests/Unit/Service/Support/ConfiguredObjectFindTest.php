@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 
 use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * A configured find answers the row; gaps, misses and failures are null.
@@ -59,7 +60,9 @@ class ConfiguredObjectFindTest extends TestCase {
 					 * @param string $schema   Schema.
 					 * @return object|null
 					 */
-					public function find(string $id, string $register, string $schema): ?object {
+					public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+						$register = $options?->register;
+						$schema = $options?->schema;
 						if ($id === 'boom') {
 							throw new \RuntimeException('down');
 						}

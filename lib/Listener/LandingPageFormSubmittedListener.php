@@ -47,6 +47,7 @@ use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
 use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
+use OCA\Pipelinq\Service\Marketing\SubmitterParties;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -338,33 +339,25 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @return string The contact id, or an empty string when the write failed.
 	 */
 	private function matchOrCreateContact(string $email, array $values): string {
-		foreach ([$email, trim((string)($values['email'] ?? ''))] as $candidate) {
-			if ($candidate === '') {
-				continue;
-			}
-
-			$rows = $this->store->findAll(schemaSlug: self::CONTACT_SCHEMA_SLUG, filters: ['email' => $candidate]);
-			if ($rows !== []) {
-				return $this->store->idOf(payload: $rows[0]);
-			}
-		}
+		$candidates = array_filter(
+			[$email, trim((string)($values['email'] ?? ''))],
+			static fn (string $candidate): bool => $candidate !== ''
+		);
 
 		$name = trim((string)($values['name'] ?? ''));
 		if ($name === '') {
 			$name = $email;
 		}
 
-		$saved = $this->store->save(
-			schemaSlug: self::CONTACT_SCHEMA_SLUG,
-			payload: [
+		return $this->parties()->contactId(
+			candidates: array_values($candidates),
+			newContact: [
 				'name' => $name,
 				'email' => $email,
 				'source' => self::SOURCE,
 				'marketingConsent' => false,
-			],
+			]
 		);
-
-		return $this->store->idOf(payload: $saved);
 	}//end matchOrCreateContact()
 
 	/**
@@ -438,17 +431,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			return '';
 		}
 
-		$rows = $this->store->findAll(schemaSlug: self::CLIENT_SCHEMA_SLUG, filters: ['name' => $organisation]);
-		if ($rows !== []) {
-			return $this->store->idOf(payload: $rows[0]);
-		}
-
-		$saved = $this->store->save(
-			schemaSlug: self::CLIENT_SCHEMA_SLUG,
-			payload: ['name' => $organisation, 'type' => 'organization', 'notes' => 'Created from a landing page submission.'],
-		);
-
-		return $this->store->idOf(payload: $saved);
+		return $this->parties()->clientId(organisation: $organisation, notes: 'Created from a landing page submission.');
 	}//end matchOrCreateClient()
 
 	/**
@@ -503,13 +486,17 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @return array<string, string> The block, absent keys empty.
 	 */
 	private function utmBlock(array $utm): array {
-		$block = [];
-		foreach (['campaign', 'source', 'medium', 'term', 'content'] as $key) {
-			$block[$key] = trim((string)($utm[$key] ?? ''));
-		}
-
-		return $block;
+		return $this->parties()->utmBlock(utm: $utm);
 	}//end utmBlock()
+
+	/**
+	 * The submitter's contact and client records.
+	 *
+	 * @return SubmitterParties
+	 */
+	private function parties(): SubmitterParties {
+		return new SubmitterParties(store: $this->store);
+	}//end parties()
 
 	/**
 	 * A readable description of where the lead came from.

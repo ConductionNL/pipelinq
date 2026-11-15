@@ -202,13 +202,25 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function isDueForReminder(array $booking, string $windowStartIso, string $windowEndIso): bool {
+		return self::startsWithin(booking: $booking, window: [$windowStartIso, $windowEndIso]);
+	}//end isDueForReminder()
+
+	/**
+	 * Whether a booking awaiting its reminder starts inside the window.
+	 *
+	 * @param array<string, mixed>        $booking The booking.
+	 * @param array{0: string, 1: string} $window  The ISO window start and end, inclusive.
+	 *
+	 * @return bool
+	 */
+	private static function startsWithin(array $booking, array $window): bool {
 		$startAt = (string)($booking['startAt'] ?? '');
 		if (self::awaitsReminder(booking: $booking) === false || $startAt === '') {
 			return false;
 		}
 
-		return ($startAt >= $windowStartIso && $startAt <= $windowEndIso);
-	}//end isDueForReminder()
+		return ($startAt >= $window[0] && $startAt <= $window[1]);
+	}//end startsWithin()
 
 	/**
 	 * Whether a booking is confirmed and has had no reminder yet.

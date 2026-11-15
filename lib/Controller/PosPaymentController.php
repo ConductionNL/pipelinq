@@ -436,15 +436,7 @@ class PosPaymentController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->session->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->session->getUser());
 	}//end requireUserId()
 
 	/**

@@ -34,6 +34,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
@@ -1416,7 +1419,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	 */
 	private function findTransactionData(PosTransactionStore $store, string $id): array {
 		try {
-			$found = $store->objectService->find(id: $id, register: $store->register, schema: $store->schema);
+			$found = $store->objectService->find(id: $id, options: new ObjectFindOptions(register: $store->register, schema: $store->schema));
 		} catch (Throwable $e) {
 			throw new OCSNotFoundException('Transaction not found');
 		}
@@ -1586,10 +1589,10 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$saved = $objectService->saveObject(
 				object: $current,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

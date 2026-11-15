@@ -31,6 +31,7 @@ use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A title stored as a translation map is rewritten to one plain string; everything else is left alone.
@@ -88,6 +89,7 @@ class NormaliseTicketTitleTest extends TestCase {
 		);
 		$this->objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($onSave) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				// Positional: object, extend, register, schema, uuid, _rbac, _multitenancy, silent, _validation, uploadedFiles, currentUser.
 				if ($onSave !== null) {
 					$onSave($args[0]);

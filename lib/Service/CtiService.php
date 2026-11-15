@@ -24,6 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\CallTranscriptionJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
@@ -637,7 +640,10 @@ class CtiService implements CtiServiceInterface {
 			[$register, $schema] = $target;
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$uuid = $this->firstId(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema, 'user_id' => $presence['user_id']]);
-			$objectService->saveObject($this->presencePayload(presence: $presence), [], $register, $schema, $uuid);
+			$objectService->saveObject(
+				$this->presencePayload(presence: $presence),
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid)
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('CTI syncPresence failed', ['exception' => $e->getMessage(), 'userId' => $presence['user_id']]);
 		}//end try
@@ -814,7 +820,10 @@ class CtiService implements CtiServiceInterface {
 		$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		$uuid = $this->firstId(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]);
 
-		$saved = $objectService->saveObject($config, [], $register, $schema, $uuid);
+		$saved = $objectService->saveObject(
+			$config,
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid)
+		);
 		return $this->toArray(value: $saved);
 	}//end writeConfig()
 
@@ -1002,7 +1011,9 @@ class CtiService implements CtiServiceInterface {
 	 */
 	private function deleteLogEntry(EventLogPurge $purge, string $id): bool {
 		try {
-			$purge->objectService->deleteObject(register: $purge->register, schema: $purge->schema, uuid: $id);
+			$purge->objectService->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $purge->register, schema: $purge->schema))
+			);
 			return true;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1041,10 +1052,7 @@ class CtiService implements CtiServiceInterface {
 					'processing_error' => $verdict['processingError'],
 					'signature_valid' => $verdict['signatureValid'],
 				],
-				[],
-				$register,
-				$schema,
-				null
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

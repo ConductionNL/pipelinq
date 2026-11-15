@@ -28,6 +28,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for ComplianceService — segment compliance gating, per-channel
@@ -103,7 +105,9 @@ class ComplianceServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}
 
@@ -155,7 +159,10 @@ class ComplianceServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The saved payload.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}

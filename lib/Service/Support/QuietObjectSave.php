@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Throwable;
 
 /**
@@ -57,9 +59,10 @@ trait QuietObjectSave {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning($failure, ['id' => $id, 'exception' => $e->getMessage()]);

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
 use OCA\Pipelinq\Util\SerialisedPayload;
@@ -135,8 +136,10 @@ class ProductStockController extends Controller {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			return $objectService->find(
 				id: $id,
-				register: $this->slug(key: 'register', default: 'pipelinq'),
-				schema: $this->slug(key: 'product_schema', default: 'product')
+				options: new ObjectFindOptions(
+					register: $this->slug(key: 'register', default: 'pipelinq'),
+					schema: $this->slug(key: 'product_schema', default: 'product')
+				)
 			);
 		} catch (Throwable $e) {
 			return null;

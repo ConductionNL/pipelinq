@@ -70,6 +70,18 @@ final class CoachingPointAgreement {
 			return self::REFUSED_NOT_THE_AGENT;
 		}
 
+		return self::reviewRefusal(review: $review, index: $index);
+	}//end refusal()
+
+	/**
+	 * Why the review's point may not be agreed by its own agent, or null when it may.
+	 *
+	 * @param array<string, mixed> $review The review's data.
+	 * @param int                  $index  The coaching point's position, from 0.
+	 *
+	 * @return string|null REFUSED_NOT_SHARED, REFUSED_NO_SUCH_POINT or null.
+	 */
+	private static function reviewRefusal(array $review, int $index): ?string {
 		if (in_array((string)($review['status'] ?? 'draft'), ['shared', 'agreed'], true) === false) {
 			return self::REFUSED_NOT_SHARED;
 		}
@@ -79,7 +91,7 @@ final class CoachingPointAgreement {
 		}
 
 		return null;
-	}//end refusal()
+	}//end reviewRefusal()
 
 	/**
 	 * Whether the coaching points are a list holding a point at the position.
@@ -111,11 +123,24 @@ final class CoachingPointAgreement {
 			return $points;
 		}
 
-		$agreedAt = (string)($points[$index]['agreedAt'] ?? '');
-		if ($agreedAt === '') {
-			$points[$index]['agreedAt'] = $now;
-		}
+		$points[$index] = self::agreedOnce(point: $points[$index], now: $now);
 
 		return $points;
 	}//end agree()
+
+	/**
+	 * A coaching point agreed at a moment, unless it was agreed before.
+	 *
+	 * @param array<string, mixed> $point The coaching point.
+	 * @param string               $now   The moment of agreement, ISO 8601.
+	 *
+	 * @return array<string, mixed> The point.
+	 */
+	private static function agreedOnce(array $point, string $now): array {
+		if ((string)($point['agreedAt'] ?? '') === '') {
+			$point['agreedAt'] = $now;
+		}
+
+		return $point;
+	}//end agreedOnce()
 }//end class

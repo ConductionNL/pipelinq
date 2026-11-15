@@ -135,13 +135,26 @@ class SystemTagService implements SystemTagServiceInterface {
 	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-11
 	 */
 	public function renameTag(string $objectType, int $tagId, string $newName): array {
-		$newName = trim($newName);
-		if ($newName === '') {
+		return $this->applyRename(objectType: $objectType, tag: ['id' => $tagId, 'name' => self::nonEmptyName(name: $newName)]);
+	}//end renameTag()
+
+	/**
+	 * The trimmed tag name.
+	 *
+	 * @param string $name The requested name.
+	 *
+	 * @return string The trimmed name.
+	 *
+	 * @throws InvalidArgumentException When the name is empty.
+	 */
+	private static function nonEmptyName(string $name): string {
+		$name = trim($name);
+		if ($name === '') {
 			throw new InvalidArgumentException('Tag name cannot be empty');
 		}
 
-		return $this->applyRename(objectType: $objectType, tag: ['id' => $tagId, 'name' => $newName]);
-	}//end renameTag()
+		return $name;
+	}//end nonEmptyName()
 
 	/**
 	 * Rename a tag to a validated, trimmed name and log it.

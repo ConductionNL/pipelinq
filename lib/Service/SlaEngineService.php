@@ -36,6 +36,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
@@ -1213,7 +1216,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 		}
 
 		try {
-			return $store['service']->find(id: $id, register: $store['register'], schema: $schema);
+			return $store['service']->find(id: $id, options: new ObjectFindOptions(register: $store['register'], schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: target object load failed',
@@ -1318,9 +1321,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return $this->savedUuid(saved: $saved);
 		} catch (Throwable $e) {

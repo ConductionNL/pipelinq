@@ -171,7 +171,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .viewTableContainer {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large, 8px);
@@ -186,10 +188,7 @@ export default {
 
 .viewTable th,
 .viewTable td {
-	padding: 12px;
-	text-align: start;
-	vertical-align: middle;
-	border-bottom: 1px solid var(--color-border);
+	@include table-body-cell;
 }
 
 .viewTable th {

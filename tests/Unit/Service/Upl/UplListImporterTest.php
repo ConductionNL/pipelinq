@@ -29,12 +29,14 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Creates what is new, updates what changed, leaves the rest, and refuses when it cannot read what is stored.
  *
  * @covers \OCA\Pipelinq\Service\Upl\UplListImporter
  * @uses   \OCA\Pipelinq\Service\Upl\UplListParser
+ * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
  */
 class UplListImporterTest extends TestCase {
 
@@ -79,7 +81,10 @@ class UplListImporterTest extends TestCase {
 				return $this->stored;
 			}
 
-			public function saveObject(array $object, mixed $register = null, mixed $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($object['uri'] === $this->failUri) {
 					throw new RuntimeException('validation failed');
 				}

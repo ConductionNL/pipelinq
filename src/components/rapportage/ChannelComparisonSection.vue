@@ -88,9 +88,8 @@ export default {
 	},
 
 	methods: {
-		async fetchData() {
-			this.loading = true
-			try {
+		fetchData() {
+			return this.loadInto('channelRows', async () => {
 				const [channelsResp, slaResp] = await Promise.all([
 					axios.get(
 						generateUrl('/apps/pipelinq/api/rapportage/channels'),
@@ -105,7 +104,7 @@ export default {
 				])
 				const distribution = channelsResp.data.distribution ?? {}
 				const slaTargets = slaResp.data.targets ?? {}
-				this.channelRows = Object.entries(distribution).map(
+				return Object.entries(distribution).map(
 					([channel, total]) => {
 						const target = slaTargets[channel]?.target_percent ?? 90
 						const compliance = total > 0 ? target : 0
@@ -125,11 +124,7 @@ export default {
 						}
 					},
 				)
-			} catch {
-				this.channelRows = []
-			} finally {
-				this.loading = false
-			}
+			})
 		},
 	},
 }

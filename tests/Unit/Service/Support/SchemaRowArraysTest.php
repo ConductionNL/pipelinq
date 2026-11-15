@@ -30,6 +30,7 @@ use Psr\Log\LoggerInterface;
  * Matching rows come back as arrays; no service or a failed read is [].
  *
  * @covers \OCA\Pipelinq\Service\Support\SchemaRowArrays
+ * @uses \OCA\Pipelinq\Util\SchemaRowQuery
  */
 class SchemaRowArraysTest extends TestCase {
 

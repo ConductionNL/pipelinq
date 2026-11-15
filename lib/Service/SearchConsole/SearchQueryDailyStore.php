@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\IAppConfig;
@@ -98,9 +100,10 @@ class SearchQueryDailyStore {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $existingId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $existingId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

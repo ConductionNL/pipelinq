@@ -28,6 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\CallReview;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CallTranscriptionServiceInterface;
 use OCA\Pipelinq\Service\TicketService;
@@ -321,10 +324,12 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 		try {
 			$found = $this->ticketService->getObjectService()->find(
 				id: $ticketId,
-				register: $this->ticketService->getRegisterId(),
-				schema: $this->ticketService->getSchemaId(),
+				options: new ObjectFindOptions(
+					register: $this->ticketService->getRegisterId(),
+					schema: $this->ticketService->getSchemaId()
+				),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('CallTranscriptionService: the contact moment could not be read', ['ticket' => $ticketId, 'exception' => $e->getMessage()]);
@@ -355,11 +360,15 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 		try {
 			$this->ticketService->getObjectService()->saveObject(
 				object: $object,
-				register: $this->ticketService->getRegisterId(),
-				schema: $this->ticketService->getSchemaId(),
-				uuid: (string) $ticket['id'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->ticketService->getRegisterId(),
+							schema: $this->ticketService->getSchemaId()
+						),
+					uuid: (string) $ticket['id']
+				),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error('CallTranscriptionService: the transcript could not be stored', ['ticket' => $ticket['id'], 'exception' => $e->getMessage()]);

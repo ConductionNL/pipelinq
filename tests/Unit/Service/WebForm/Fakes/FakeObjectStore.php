@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes;
 
 use Throwable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * Stored rows by schema id; findAll narrows by schema and by property filters on array rows.
@@ -104,7 +105,11 @@ class FakeObjectStore {
 	 *
 	 * @return bool True.
 	 */
-	public function deleteObject(string $uuid, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false, mixed $currentUser = null): bool {
+	public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
+		$currentUser = $deletion->currentUser;
 		if ($this->deleteThrow !== null) {
 			throw $this->deleteThrow;
 		}

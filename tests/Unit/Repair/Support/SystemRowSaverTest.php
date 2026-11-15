@@ -27,6 +27,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Repair\Support\SystemRowSaver;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The writer saves by the row's id as the admin, with RBAC and multitenancy off.
@@ -45,6 +46,7 @@ class SystemRowSaverTest extends TestCase {
 		$seen = [];
 		$objectService->expects($this->once())->method('saveObject')->willReturnCallback(
 			static function (mixed ...$args) use (&$seen, $saved): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$seen = $args;
 				return $saved;
 			}

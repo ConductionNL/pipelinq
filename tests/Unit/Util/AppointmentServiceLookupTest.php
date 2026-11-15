@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Util;
 use OCA\Pipelinq\Util\AppointmentServiceLookup;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * A Service is read from the configured schema; gaps are null, failures log.
@@ -86,7 +87,9 @@ class AppointmentServiceLookupTest extends TestCase {
 					 * @param string $schema   Schema.
 					 * @return array<string, string>
 					 */
-					public function find(string $id, string $register, string $schema): array {
+					public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+						$register = $options?->register;
+						$schema = $options?->schema;
 						if ($id === 'broken') {
 							throw new \RuntimeException('down');
 						}

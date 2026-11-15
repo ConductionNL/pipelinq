@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
 use OCA\Pipelinq\Service\Support\SerialisedCast;
@@ -331,10 +332,7 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 		try {
 			$object = $this->container->get(self::OBJECT_SERVICE)->find(
 				id: $clientId,
-				register: $location->register,
-				schema: $location->schema,
-				_rbac: true,
-				_multitenancy: true,
+				options: new ObjectFindOptions(register: $location->register, schema: $location->schema)
 			);
 		} catch (NotAuthorizedException $e) {
 			return ['status' => 403, 'message' => 'Forbidden'];

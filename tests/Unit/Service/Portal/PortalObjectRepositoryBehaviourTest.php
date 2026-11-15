@@ -34,6 +34,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The repository pins every read and write to the portal register and the
@@ -227,7 +228,15 @@ class PortalObjectRepositoryBehaviourTest extends TestCase {
 	public function testFindIsPinnedAndReturnsAnArray(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('a-1', $this->anything(), $this->anything(), 'portal-reg', 'acc-schema', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'a-1',
+					'_extend' => $this->anything(),
+					'files' => $this->anything(),
+					'register' => 'portal-reg',
+					'schema' => 'acc-schema',
+					'_rbac' => false,
+					'_multitenancy' => false,
+				]))
 			->willReturn($this->entity(['id' => 'a-1', 'email' => 'x@example.org']));
 
 		$this->assertSame(
@@ -324,7 +333,13 @@ class PortalObjectRepositoryBehaviourTest extends TestCase {
 	public function testASaveRunsAsTheServiceAccountAndDropsSelf(): void {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['email' => 'x@example.org'], [], 'portal-reg', 'acc-schema', 'a-1')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['email' => 'x@example.org'],
+					'extend' => [],
+					'register' => 'portal-reg',
+					'schema' => 'acc-schema',
+					'uuid' => 'a-1',
+				]))
 			->willReturnCallback(
 				function (): ObjectEntityInterface {
 					// The write happens while the service account is active.

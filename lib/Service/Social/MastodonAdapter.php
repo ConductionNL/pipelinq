@@ -40,12 +40,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Service\Social\Support\PostMetricsCall;
+
 /**
  * Mastodon, per instance.
  *
  * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 class MastodonAdapter extends AbstractSocialAdapter {
+	use PostMetricsCall;
+
 	/**
 	 * The network name, matching the schema enum.
 	 *
@@ -126,11 +130,7 @@ class MastodonAdapter extends AbstractSocialAdapter {
 	 *  status by its own id, so the account is not part of the path.
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {
-		if (trim($externalId) === '') {
-			return null;
-		}
-
-		return new SocialAdapterCall(method: 'GET', path: '/api/v1/statuses/' . rawurlencode($externalId));
+		return $this->postMetricsGet(externalId: $externalId, path: '/api/v1/statuses/' . rawurlencode($externalId));
 	}//end metricsCall()
 
 	/**

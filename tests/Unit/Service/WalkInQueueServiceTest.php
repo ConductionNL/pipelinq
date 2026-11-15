@@ -30,6 +30,7 @@ use OCA\Pipelinq\Service\WalkInQueueService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for WalkInQueueService.
@@ -128,13 +129,11 @@ class WalkInQueueServiceTest extends TestCase {
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-1']]);
 			}
@@ -183,13 +182,11 @@ class WalkInQueueServiceTest extends TestCase {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-anon']]);
 			}
@@ -241,13 +238,11 @@ class WalkInQueueServiceTest extends TestCase {
 		$captured = null;
 		$capturedUuid = null;
 		$object->expects($this->once())->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured, &$capturedUuid): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured, &$capturedUuid): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				$capturedUuid = $uuid;
 				return self::entity(['@self' => ['id' => $uuid]]);
@@ -299,13 +294,11 @@ class WalkInQueueServiceTest extends TestCase {
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-called']]);
 			}
@@ -339,13 +332,11 @@ class WalkInQueueServiceTest extends TestCase {
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 't-gone']]);
 			}
@@ -457,13 +448,11 @@ class WalkInQueueServiceTest extends TestCase {
 
 		$saved = [];
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saved): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved[] = ['uuid' => $uuid, 'payload' => $payload];
 				return self::entity(['@self' => ['id' => $uuid]]);
 			}
@@ -575,13 +564,11 @@ class WalkInQueueServiceTest extends TestCase {
 
 		$writes = 0;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$writes): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$writes): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$writes++;
 				return self::entity(['@self' => ['id' => (string)$uuid]]);
 			}

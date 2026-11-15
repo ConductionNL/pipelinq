@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing\Transport;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCA\Pipelinq\Service\Support\CastSerialisedToArray;
@@ -225,8 +226,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 		try {
 			$source = $objectService->find(
 				id: $this->connectorSourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+				options: new ObjectFindOptions(register: $registerSlug, schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

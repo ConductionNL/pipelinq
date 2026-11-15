@@ -42,6 +42,9 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
@@ -535,13 +538,12 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			// writes, as in the other repair/CLI object writers.
 			$saved = $run->source->objectService->saveObject(
 				$case,
-				[],
-				self::OR_REGISTER,
-				self::OR_SCHEMA,
-				null,
+				new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::OR_REGISTER, schema: self::OR_SCHEMA),
+					actor: new SaveActor(currentUser: $this->resolveActingUser())
+				),
 				_rbac: false,
-				_multitenancy: false,
-				currentUser: $this->resolveActingUser()
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -580,13 +582,13 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 
 			$source->objectService->saveObject(
 				$payload,
-				[],
-				$source->registerId,
-				$source->requestSchema,
-				(string)($request['id'] ?? ($request['uuid'] ?? '')),
+				new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $source->registerId, schema: $source->requestSchema),
+					uuid: (string)($request['id'] ?? ($request['uuid'] ?? '')),
+					actor: new SaveActor(currentUser: $this->resolveActingUser())
+				),
 				_rbac: false,
-				_multitenancy: false,
-				currentUser: $this->resolveActingUser()
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			// Not a failure: the case exists and carries the source uuid, so the

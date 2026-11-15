@@ -29,6 +29,7 @@ use OCP\IL10N;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for ContactmomentService.
@@ -154,13 +155,11 @@ class ContactmomentServiceTest extends TestCase {
 		// an entity rather than the array it was handed.
 		$saves = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			static function (
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saves): ObjectEntityInterface {
+			static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema];
 
 				$entity = new ObjectEntity();
@@ -330,15 +329,11 @@ class ContactmomentServiceTest extends TestCase {
 
 		$this->saves = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-			): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
 
 				$entity = new ObjectEntity();

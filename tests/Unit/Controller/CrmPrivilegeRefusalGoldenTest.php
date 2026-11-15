@@ -77,6 +77,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Controller\WeeklyReviewController
  * @covers \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
  * @uses \OCA\Pipelinq\Controller\CtiDialRules
+ * @uses \OCA\Pipelinq\Controller\KvkSearchController
  */
 class CrmPrivilegeRefusalGoldenTest extends TestCase {
 	use ComparesGolden;

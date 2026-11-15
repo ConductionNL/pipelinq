@@ -59,6 +59,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -699,7 +702,10 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 		}
 
 		try {
-			$objectService->saveObject(object: $entry, extend: [], register: $register, schema: $schema, uuid: $uuid);
+			$objectService->saveObject(
+				object: $entry,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $uuid)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'TimeBillingHandoffService: failed to persist time entry billing status',
@@ -728,7 +734,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 		}
 
 		try {
-			$entity = $objectService->find(id: $clientId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			return null;
 		}

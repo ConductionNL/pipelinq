@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 use OCA\Pipelinq\Service\Support\QuietObjectSave;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Saves by id into the given schema; no service skips, a failure logs.
@@ -92,12 +93,15 @@ class QuietObjectSaveTest extends TestCase {
 			 * @param string               $uuid     Uuid.
 			 * @return void
 			 */
-			public function saveObject(array $object, string $register, string $schema, string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === 'locked') {
 					throw new \RuntimeException('busy');
 				}
 
-				$this->calls[] = func_get_args();
+				$this->calls[] = [$object, $register, $schema, $uuid];
 			}
 		};
 		$logger = $this->createMock(LoggerInterface::class);

@@ -36,6 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\FormDestinationBackfillInterface;
 use OCA\Pipelinq\Service\CampaignService;
@@ -290,9 +292,10 @@ class FormDestinationBackfill implements FormDestinationBackfillInterface {
 		try {
 			$objects->saveObject(
 				object: $form['data'],
-				register: self::FORM_REGISTER,
-				schema: self::FORM_SCHEMA,
-				uuid: $formId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::FORM_REGISTER, schema: self::FORM_SCHEMA),
+					uuid: $formId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

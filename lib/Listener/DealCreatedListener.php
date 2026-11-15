@@ -31,6 +31,7 @@ use OCA\Pipelinq\Kernel\Contracts\LeadRotationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead;
 use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
+use OCA\Pipelinq\Listener\Support\DefersObjectWork;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -73,6 +74,7 @@ use Psr\Log\LoggerInterface;
 class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	use ConfiguredSchemaObjectRead;
 	use ConfiguredSchemaObjectWrite;
+	use DefersObjectWork;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -161,14 +163,7 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 			return;
 		}
 
-		$this->deferral->defer(
-			jobClass: DeferredObjectListenerJob::class,
-			entry: [
-				'handler' => self::HANDLER_KEY,
-				'uuid' => $uuid,
-			],
-			dedupeKey: self::HANDLER_KEY . '|' . $uuid
-		);
+		$this->deferObjectWork(uuid: $uuid);
 	}//end handle()
 
 	/**

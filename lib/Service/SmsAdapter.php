@@ -27,6 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
@@ -768,8 +771,10 @@ class SmsAdapter implements SmsAdapterInterface {
 		try {
 			$found = $objectService->find(
 				id: $messageId,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+				)
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -854,7 +859,10 @@ class SmsAdapter implements SmsAdapterInterface {
 	private function openConversation(object $objectService, array $conversation, string $schema): string {
 		try {
 			$object = $conversation + ['lastInboundAt' => $this->nowIso()];
-			$saved = $objectService->saveObject(object: $object, register: $this->getRegisterSlug(), schema: $schema, uuid: null);
+			$saved = $objectService->saveObject(
+				object: $object,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema))
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning('SmsAdapter.findOrOpenConversation: open failed', ['exception' => $e->getMessage()]);
 			return '';

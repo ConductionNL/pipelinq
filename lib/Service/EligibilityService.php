@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -522,8 +523,7 @@ class EligibilityService implements EligibilityServiceInterface {
 		try {
 			$result = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

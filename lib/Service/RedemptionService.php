@@ -28,6 +28,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
@@ -497,7 +499,9 @@ class RedemptionService implements RedemptionServiceInterface {
 		}
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $redemptionId, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $redemptionId, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: redemption rollback delete failed',

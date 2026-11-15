@@ -24,6 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 /**
  * Saves a payload into the register and schema that the host's config()
  * resolves, under the given id or a freshly generated UUID. The host class
@@ -54,10 +57,10 @@ trait PosObjectUpsert {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $uuid
+			)
 		);
 
 		return $this->toArray(object: $saved);

@@ -120,6 +120,19 @@ class CostEstimationService {
 	): float {
 		$channelRow = $this->rowAt(table: $this->loadTable(), keys: [$vendor, $channel]);
 		$catRow = $this->categoryRow(channelRow: $channelRow, category: $category);
+
+		return $this->categoryPrice(catRow: $catRow, country: $country);
+	}//end estimate()
+
+	/**
+	 * The price a category entry gives a country: a flat number, or the per-country price.
+	 *
+	 * @param mixed  $catRow  The category's entry.
+	 * @param string $country ISO 3166-1 alpha-2 country code.
+	 *
+	 * @return float Estimated EUR cost (0.0 when nothing matches).
+	 */
+	private function categoryPrice(mixed $catRow, string $country): float {
 		if (is_array($catRow) === false) {
 			if (is_numeric($catRow) === true) {
 				return (float)$catRow;
@@ -129,7 +142,7 @@ class CostEstimationService {
 		}
 
 		return $this->countryPrice(catRow: $catRow, country: $country);
-	}//end estimate()
+	}//end categoryPrice()
 
 	/**
 	 * The table entry for a category (falling back to the channel default), or null when the vendor or channel is missing.

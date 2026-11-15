@@ -36,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for the reads and the report of the AVG to DSAR migration.
@@ -220,7 +221,10 @@ final class MigrateAvgVerzoekenToOrDsarRunTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $data, array $extend, $register, $schema): ObjectEntity {
+			function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$source = (string)($data['notes'] ?? '');
 				foreach ($this->failingWrites as $id) {
 					if ((string)$schema === 'dataSubjectRequest' && str_contains($source, '"' . $id . '"') === true) {

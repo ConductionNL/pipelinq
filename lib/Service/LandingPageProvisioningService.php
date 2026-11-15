@@ -124,22 +124,37 @@ class LandingPageProvisioningService implements LandingPageProvisioningServiceIn
 			return $this->failure(error: 'not_found');
 		}
 
-		$targetPortal = $this->portalFor(requested: $portal);
+		return $this->placedFor(
+			order: new LandingPageOrder(campaignId: $campaignId, campaign: $campaign),
+			requested: ['portal' => $portal, 'route' => $route]
+		);
+	}//end createFor()
+
+	/**
+	 * Place the campaign's landing page on the requested portal and route.
+	 *
+	 * @param LandingPageOrder                     $order     The campaign.
+	 * @param array{portal: string, route: string} $requested The portal and route asked for; empty picks the default.
+	 *
+	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
+	 */
+	private function placedFor(LandingPageOrder $order, array $requested): array {
+		$targetPortal = $this->portalFor(requested: $requested['portal']);
 		if ($targetPortal === '') {
 			return $this->failure(error: 'unknown_portal');
 		}
 
-		$targetRoute = $this->routeFor(campaign: $campaign, requested: $route);
+		$targetRoute = $this->routeFor(campaign: $order->campaign, requested: $requested['route']);
 
 		if ($this->isPortaliqInstalled() === false) {
 			return $this->failure(error: self::ERROR_PORTALIQ_MISSING);
 		}
 
 		return $this->dispatchAndRecord(
-			order: new LandingPageOrder(campaignId: $campaignId, campaign: $campaign),
+			order: $order,
 			placement: new LandingPlacement(portal: $targetPortal, route: $targetRoute)
 		);
-	}//end createFor()
+	}//end placedFor()
 
 	/**
 	 * The requested portal, trimmed, else the configured one; '' when neither is set.

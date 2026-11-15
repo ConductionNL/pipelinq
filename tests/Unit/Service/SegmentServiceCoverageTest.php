@@ -28,6 +28,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Signal double with a fixed catalogue and no real collaborators.
@@ -91,6 +93,7 @@ class CoverageSignalService extends SegmentSignalService {
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
  */
 class SegmentServiceCoverageTest extends TestCase {
 
@@ -210,7 +213,9 @@ class SegmentServiceCoverageTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Row.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($this->failFind === true) {
 					throw new RuntimeException('find exploded');
 				}
@@ -243,7 +248,10 @@ class SegmentServiceCoverageTest extends TestCase {
 			 *
 			 * @return array<string, mixed> Saved row.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->failSave === true) {
 					throw new RuntimeException('save exploded');
 				}

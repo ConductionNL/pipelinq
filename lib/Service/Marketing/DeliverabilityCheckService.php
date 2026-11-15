@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
@@ -141,8 +142,10 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 		try {
 			return $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->getMailTransportSchemaSlug()
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info('DeliverabilityCheckService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);

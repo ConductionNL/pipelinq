@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
@@ -325,7 +326,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			$register = $this->ticketService->getRegisterId();
 			$schema = $this->ticketService->getSchemaId();
 
-			$row = $service->find(id: $interactionId, register: $register, schema: $schema);
+			$row = $service->find(id: $interactionId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			if ($row === null) {
 				return '';
 			}

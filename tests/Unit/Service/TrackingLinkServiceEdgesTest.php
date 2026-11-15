@@ -32,6 +32,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A token is only accepted whole, signed, decodable and unexpired.
@@ -40,6 +42,8 @@ use RuntimeException;
  * @uses \OCA\Pipelinq\Util\PayloadToArray
  * @uses \OCA\Pipelinq\Util\EntityPayload
  * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses \OCA\Pipelinq\Util\ObjectServiceTarget
  */
 class TrackingLinkServiceEdgesTest extends TestCase {
 
@@ -119,7 +123,9 @@ class TrackingLinkServiceEdgesTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, $register = null, $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($this->failFind === true) {
 					throw new RuntimeException('gone');
 				}
@@ -137,7 +143,10 @@ class TrackingLinkServiceEdgesTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->failSave === true) {
 					throw new RuntimeException('refused');

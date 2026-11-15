@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
@@ -153,10 +155,10 @@ class ContactImportService {
 
 		$created = $objectService->saveObject(
 			$data,
-			[],
-			$registerId,
-			$schemaId,
-			$existingUuid
+			new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+				uuid: $existingUuid
+			)
 		);
 
 		return $this->serializeResult(result: $created);

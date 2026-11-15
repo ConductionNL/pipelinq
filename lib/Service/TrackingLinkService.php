@@ -39,6 +39,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
 use OCA\Pipelinq\Util\Base64UrlDecode;
@@ -533,7 +535,10 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 		}
 
 		try {
-			$objectService->saveObject(object: $payload, register: $register, schema: $schema, uuid: $id);
+			$objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'TrackingLinkService.saveDelivery: save failed',

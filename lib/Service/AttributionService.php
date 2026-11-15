@@ -27,6 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
@@ -490,8 +493,7 @@ class AttributionService implements AttributionServiceInterface {
 		try {
 			return $objectService->find(
 				id: $id,
-				register: $register,
-				schema: $schemaSlug,
+				options: new ObjectFindOptions(register: $register, schema: $schemaSlug)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(
@@ -583,9 +585,10 @@ class AttributionService implements AttributionServiceInterface {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schemaSlug,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schemaSlug),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
