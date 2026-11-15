@@ -521,21 +521,20 @@ class TicketService implements TicketServiceInterface {
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
-		$entry = new ContactmomentEntry(
-			client: trim($client),
-			channel: trim($channel),
-			title: trim($title),
-			direction: trim($direction),
-			outcome: $outcome,
-			notes: $notes
-		);
+		$fields = [
+			'client' => trim($client),
+			'channel' => trim($channel),
+			'title' => trim($title),
+			'direction' => trim($direction),
+		];
 
-		$refusal = $this->contactmomentRefusal(entry: $entry);
+		$refusal = $this->contactmomentRefusal(fields: $fields);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		return $this->saveContactmoment(payload: $this->contactmomentPayload(entry: $entry));
+		$payload = $this->contactmomentPayload(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
+		return $this->saveContactmoment(payload: $payload);
 	}//end logContactmoment()
 
 	/**
@@ -562,12 +561,12 @@ class TicketService implements TicketServiceInterface {
 	/**
 	 * The refusal for an invalid logContactmoment() argument or an unconfigured app.
 	 *
-	 * @param ContactmomentEntry $entry The trimmed arguments.
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
 	 *
 	 * @return array<string, mixed>|null The error envelope, or null when the contactmoment may be saved.
 	 */
-	private function contactmomentRefusal(ContactmomentEntry $entry): ?array {
-		$refusal = $this->contactmomentArgumentError(entry: $entry);
+	private function contactmomentRefusal(array $fields): ?array {
+		$refusal = $this->contactmomentArgumentError(fields: $fields);
 		if ($refusal !== null || $this->isConfigured() === true) {
 			return $refusal;
 		}
@@ -587,18 +586,18 @@ class TicketService implements TicketServiceInterface {
 	 * optional in the SIGNATURE only, so an existing caller gets a named
 	 * refusal instead of a TypeError.
 	 *
-	 * @param ContactmomentEntry $entry The trimmed arguments.
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
 	 *
 	 * @return array<string, mixed>|null The error envelope, or null when every argument is valid.
 	 */
-	private function contactmomentArgumentError(ContactmomentEntry $entry): ?array {
-		foreach ($entry->requiredFields() as $name => $value) {
+	private function contactmomentArgumentError(array $fields): ?array {
+		foreach ($fields as $name => $value) {
 			if ($value === '') {
 				return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument ' . $name . ' is missing.');
 			}
 		}
 
-		if (in_array($entry->direction, self::DIRECTIONS, true) === false) {
+		if (in_array($fields['direction'], self::DIRECTIONS, true) === false) {
 			return $this->mcp->error(
 				code: 'invalid_arguments',
 				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
@@ -611,20 +610,19 @@ class TicketService implements TicketServiceInterface {
 	/**
 	 * The contactmoment ticket payload; empty optional fields are left out.
 	 *
-	 * @param ContactmomentEntry $entry The trimmed arguments; notes are stored as the description.
+	 * @param array<string, string>      $fields   The trimmed required arguments.
+	 * @param array<string, string|null> $optional The outcome and the notes (as `description`).
 	 *
 	 * @return array<string, mixed> The payload.
 	 */
-	private function contactmomentPayload(ContactmomentEntry $entry): array {
-		$payload = $entry->requiredFields();
+	private function contactmomentPayload(array $fields, array $optional): array {
+		$payload = $fields;
 		$payload['occurredAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
-		if ($entry->outcome !== null && $entry->outcome !== '') {
-			$payload['outcome'] = $entry->outcome;
-		}
-
-		if ($entry->notes !== null && $entry->notes !== '') {
-			$payload['description'] = $entry->notes;
+		foreach ($optional as $name => $value) {
+			if ($value !== null && $value !== '') {
+				$payload[$name] = $value;
+			}
 		}
 
 		return $payload;
