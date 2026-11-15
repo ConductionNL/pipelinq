@@ -204,26 +204,23 @@ class CampaignLinkDecorator {
 			return $html;
 		}
 
-		$utm = array_filter(
-			$this->utmFor(blast: $blast, template: $template, campaign: $campaign),
-			static fn (string $value): bool => $value !== ''
-		);
+		return $this->rewritten(html: $html, utm: $this->utmFor(blast: $blast, template: $template, campaign: $campaign));
+	}//end decorate()
+
+	/**
+	 * Decorate every `<a href>` of a body with the non-empty parameters.
+	 *
+	 * @param string $html The body.
+	 * @param array<string, string> $utm The parameters.
+	 *
+	 * @return string The rewritten body, or the body itself when no parameter is set or the rewrite failed.
+	 */
+	private function rewritten(string $html, array $utm): string {
+		$utm = array_filter($utm, static fn (string $value): bool => $value !== '');
 		if ($utm === []) {
 			return $html;
 		}
 
-		return $this->rewritten(html: $html, utm: $utm);
-	}//end decorate()
-
-	/**
-	 * Decorate every `<a href>` of a body with the parameters.
-	 *
-	 * @param string $html The body.
-	 * @param array<string, string> $utm The non-empty parameters.
-	 *
-	 * @return string The rewritten body, or the body itself when the rewrite failed.
-	 */
-	private function rewritten(string $html, array $utm): string {
 		$rewritten = preg_replace_callback(
 			'/<a\b([^>]*?)\shref=(["\'])(.*?)\2([^>]*)>/i',
 			function (array $matches) use ($utm): string {
