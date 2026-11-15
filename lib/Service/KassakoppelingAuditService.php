@@ -44,6 +44,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -81,6 +82,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 	use CastingPayloadToArray;
 	use InjectedObjectService;
 	use RegisterSchemaObjects;
+	use ObjectArrayReads;
 
 	/**
 	 * Schemas in scope for the audit log.
@@ -236,17 +238,12 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 	public function getEntry(string $id): array {
 		[$register, $schema] = $this->config();
 
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
+		$entry = $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
+		if ($entry === null) {
 			throw new OCSNotFoundException('Audit entry niet gevonden.');
 		}
 
-		return $this->toArray(object: $object);
+		return $entry;
 	}//end getEntry()
 
 	/**

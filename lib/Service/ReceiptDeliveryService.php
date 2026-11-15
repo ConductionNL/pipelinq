@@ -660,17 +660,11 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	private function loadTransactionWithLines(string $id): array {
 		[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransaction_schema');
 
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
+		$transaction = $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
+		if ($transaction === null) {
 			throw new OCSNotFoundException('Transactie niet gevonden.');
 		}
 
-		$transaction = $this->toArray(object: $object);
 		$transaction['lines'] = $this->loadLines(transactionId: $id);
 
 		return $transaction;
