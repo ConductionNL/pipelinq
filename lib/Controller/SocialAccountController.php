@@ -45,6 +45,7 @@ use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
+use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -327,14 +328,6 @@ class SocialAccountController extends Controller {
 	 * @return array<string, mixed> The sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (SocialAccountServiceInterface::CLIENT_WRITABLE as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
-
-		return $body;
+		return (new RequestFields(request: $this->request))->strings(keys: SocialAccountServiceInterface::CLIENT_WRITABLE);
 	}//end collectBody()
 }//end class
