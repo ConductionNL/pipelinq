@@ -265,16 +265,30 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 	 *   audit are all unspecified
 	 */
 	public function save(string $schemaSlug, array $data, ?string $id = null): array {
+		return $this->saveTo(target: ['schemaSlug' => $schemaSlug, 'id' => $id], data: $data);
+	}//end save()
+
+	/**
+	 * Persist a portal object in a schema as the portal service account.
+	 *
+	 * @param array{schemaSlug: string, id: ?string} $target The schema slug and the object id for an update.
+	 * @param array<string, mixed>                    $data   The object payload.
+	 *
+	 * @return array<string, mixed> The saved object as an array.
+	 *
+	 * @throws RuntimeException If persistence fails.
+	 */
+	private function saveTo(array $target, array $data): array {
 		// Never trust a client-derived self envelope.
 		unset($data['@self']);
 
 		$register = $this->registerId();
-		$schema = $this->schemaId(schemaSlug: $schemaSlug);
+		$schema = $this->schemaId(schemaSlug: $target['schemaSlug']);
 
-		$save = $this->saveCall(data: $data, target: ['register' => $register, 'schema' => $schema, 'uuid' => $id]);
+		$save = $this->saveCall(data: $data, target: ['register' => $register, 'schema' => $schema, 'uuid' => $target['id']]);
 
-		return $this->toArray(object: $this->savedAsServiceAccount(save: $save, schemaSlug: $schemaSlug));
-	}//end save()
+		return $this->toArray(object: $this->savedAsServiceAccount(save: $save, schemaSlug: $target['schemaSlug']));
+	}//end saveTo()
 
 	/**
 	 * The ObjectService save of a payload, to run later.
