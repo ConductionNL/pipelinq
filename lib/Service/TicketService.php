@@ -245,7 +245,24 @@ class TicketService implements TicketServiceInterface {
 			return [];
 		}
 
-		$filters = array_merge(
+		$query = ['filters' => $this->typeFilters(ticketType: $ticketType, extraFilters: $extraFilters), 'limit' => $limit];
+		if ($sort !== []) {
+			$query['sort'] = $sort;
+		}
+
+		return $this->findAllLogged(query: $query, ticketType: $ticketType);
+	}//end findByType()
+
+	/**
+	 * The register, schema and subtype filters, with the extra filters merged in.
+	 *
+	 * @param string               $ticketType   One of the TYPE_* constants.
+	 * @param array<string, mixed> $extraFilters Additional OR filters merged in.
+	 *
+	 * @return array<string, mixed> The filters.
+	 */
+	private function typeFilters(string $ticketType, array $extraFilters): array {
+		return array_merge(
 			[
 				'register' => $this->getRegisterId(),
 				'schema' => $this->getSchemaId(),
@@ -253,14 +270,7 @@ class TicketService implements TicketServiceInterface {
 			],
 			$extraFilters
 		);
-
-		$query = ['filters' => $filters, 'limit' => $limit];
-		if ($sort !== []) {
-			$query['sort'] = $sort;
-		}
-
-		return $this->findAllLogged(query: $query, ticketType: $ticketType);
-	}//end findByType()
+	}//end typeFilters()
 
 	/**
 	 * The tickets matching the query, none (logged) when OpenRegister fails.
@@ -311,19 +321,45 @@ class TicketService implements TicketServiceInterface {
 			throw new RuntimeException('Ticket register or schema not configured.');
 		}
 
+		return $this->saveTyped(payload: $this->typedPayload(ticketType: $ticketType, payload: $payload), uuid: $uuid);
+	}//end save()
+
+	/**
+	 * The sanitised payload with its facet fields checked and the subtype forced on.
+	 *
+	 * @param string               $ticketType One of the TYPE_* constants.
+	 * @param array<string, mixed> $payload    The ticket fields.
+	 *
+	 * @return array<string, mixed> The payload to write.
+	 *
+	 * @throws InvalidArgumentException When assertFacetFields() refuses the payload.
+	 */
+	private function typedPayload(string $ticketType, array $payload): array {
 		$payload = $this->sanitizeForSave(payload: $payload);
 
 		$this->assertFacetFields(ticketType: $ticketType, payload: $payload);
 
 		$payload['ticketType'] = $ticketType;
 
+		return $payload;
+	}//end typedPayload()
+
+	/**
+	 * Write a typed ticket to the configured register and schema.
+	 *
+	 * @param array<string, mixed> $payload The payload to write.
+	 * @param string|null          $uuid    Existing ticket uuid, or null to create.
+	 *
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface The saved ticket.
+	 */
+	private function saveTyped(array $payload, ?string $uuid): object {
 		return $this->getObjectService()->saveObject(
 			object: $payload,
 			register: $this->getRegisterId(),
 			schema: $this->getSchemaId(),
 			uuid: $uuid,
 		);
-	}//end save()
+	}//end saveTyped()
 
 	/**
 	 * Refuse a write that omits a property its facet requires.
@@ -528,14 +564,25 @@ class TicketService implements TicketServiceInterface {
 			'direction' => trim($direction),
 		];
 
+		return $this->loggedContactmoment(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
+	}//end logContactmoment()
+
+	/**
+	 * Refuse missing or invalid required fields, else save the contactmoment.
+	 *
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields   The trimmed required fields.
+	 * @param array{outcome: string|null, description: string|null}                    $optional The optional outcome and notes.
+	 *
+	 * @return array<string, mixed> The ticket id, or the MCP error.
+	 */
+	private function loggedContactmoment(array $fields, array $optional): array {
 		$refusal = $this->contactmomentRefusal(fields: $fields);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$payload = $this->contactmomentPayload(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
-		return $this->saveContactmoment(payload: $payload);
-	}//end logContactmoment()
+		return $this->saveContactmoment(payload: $this->contactmomentPayload(fields: $fields, optional: $optional));
+	}//end loggedContactmoment()
 
 	/**
 	 * Save a contactmoment and answer with its id, or the MCP error.

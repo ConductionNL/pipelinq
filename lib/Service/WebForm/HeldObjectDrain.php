@@ -136,20 +136,20 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 			return;
 		}
 
-		$this->deliver(run: $run, held: $held, form: $form);
+		$this->deliver(run: $run, delivery: ['held' => $held, 'form' => $form]);
 
 	}//end drainOne()
 
 	/**
 	 * Submit one held object and, once its destination exists, delete it.
 	 *
-	 * @param HeldDrainRun         $run  The drain.
-	 * @param array<string, mixed> $held The held object.
-	 * @param array<string, mixed> $form Its published form.
+	 * @param HeldDrainRun                                                     $run      The drain.
+	 * @param array{held: array<string, mixed>, form: array<string, mixed>} $delivery The held object and its published form.
 	 *
 	 * @return void
 	 */
-	private function deliver(HeldDrainRun $run, array $held, array $form): void {
+	private function deliver(HeldDrainRun $run, array $delivery): void {
+		['held' => $held, 'form' => $form] = $delivery;
 		$heldId = (string)$held['id'];
 		$payload = $held;
 		unset($payload['id'], $payload['@self']);
