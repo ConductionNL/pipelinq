@@ -32,7 +32,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientRiskServiceInterface;
 use OCA\Pipelinq\Util\LockedRecord;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -183,8 +183,8 @@ class ClientRiskService implements ClientRiskServiceInterface {
 	 * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.3
 	 */
 	public function recompute(string $clientId, ?DateTimeImmutable $now = null): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($clientId === '' || $register === '' || $schema === '') {
 			return false;
 		}
@@ -217,8 +217,8 @@ class ClientRiskService implements ClientRiskServiceInterface {
 	 */
 	public function recomputeAll(?DateTimeImmutable $now = null): array {
 		$tally    = ['written' => 0, 'unchanged' => 0];
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '') {
 			return $tally;
 		}
@@ -363,7 +363,7 @@ class ClientRiskService implements ClientRiskServiceInterface {
 	 * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.2
 	 */
 	public function weight(string $signal): int {
-		$configured = trim($this->appConfig->getValueString(Application::APP_ID, self::WEIGHT_KEY_PREFIX.$signal, ''));
+		$configured = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::WEIGHT_KEY_PREFIX.$signal, ''));
 		if ($configured !== '' && ctype_digit($configured) === true) {
 			return (int) $configured;
 		}
@@ -545,8 +545,8 @@ class ClientRiskService implements ClientRiskServiceInterface {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function rows(string $schemaKey, array $filters, string $default = '', int $offset = 0): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, $default);
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, $default);
 		if ($register === '' || $schema === '') {
 			return [];
 		}

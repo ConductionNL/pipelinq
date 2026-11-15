@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BookingFiguresServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -444,7 +444,7 @@ class BookingFiguresService implements BookingFiguresServiceInterface {
 	 * @return string Empty when unconfigured; OpenRegister is then not called unscoped.
 	 */
 	private function registerId(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerId()
 
 	/**
@@ -455,6 +455,6 @@ class BookingFiguresService implements BookingFiguresServiceInterface {
 	 * @return string
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 }//end class

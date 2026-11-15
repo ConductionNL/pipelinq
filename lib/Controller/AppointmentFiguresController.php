@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Controller\Support\PrivilegedAppointmentCaller;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BookingFiguresServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\AppFramework\Controller;
@@ -51,7 +51,7 @@ class AppointmentFiguresController extends Controller {
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
