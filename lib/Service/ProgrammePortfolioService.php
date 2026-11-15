@@ -187,7 +187,9 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 	 */
 	private function existingLinkAnswer(array $existingLinks, array $claim): array {
 		foreach ($existingLinks as $link) {
-			if (self::linksSameWork(link: $link, work: $claim) === false) {
+			$sameWork = ((string)($link['domainObjectType'] ?? '') === $claim['domainObjectType']
+				&& (string)($link['domainObjectRef'] ?? '') === $claim['domainObjectRef']);
+			if ($sameWork === false) {
 				continue;
 			}
 
@@ -203,19 +205,6 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 
 		return ['allowed' => true, 'reason' => ''];
 	}//end existingLinkAnswer()
-
-	/**
-	 * Whether an existing work item points at the same object.
-	 *
-	 * @param array<string, mixed>  $link The existing work item.
-	 * @param array<string, string> $work The trimmed `domainObjectType` (`<app>:<schema>`) and `domainObjectRef` (object uuid).
-	 *
-	 * @return bool
-	 */
-	private static function linksSameWork(array $link, array $work): bool {
-		return ((string)($link['domainObjectType'] ?? '') === $work['domainObjectType']
-			&& (string)($link['domainObjectRef'] ?? '') === $work['domainObjectRef']);
-	}//end linksSameWork()
 
 	/**
 	 * Present a work item, resolved or not.
@@ -575,16 +564,27 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return false;
 		}
 
-		return $this->landed(
-			save: fn (): mixed => $this->objectService->saveObject(
-				object: $object,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
-			),
-			schemaKey: $schemaKey
-		);
+		$save = $this->saveCall(object: $object, target: ['register' => $register, 'schema' => $schema, 'uuid' => $uuid]);
+
+		return $this->landed(save: $save, schemaKey: $schemaKey);
 	}//end write()
+
+	/**
+	 * The ObjectService save of an object, to run later.
+	 *
+	 * @param array<string, mixed>                                  $object The object.
+	 * @param array{register: string, schema: string, uuid: ?string} $target The register and schema ids, and the uuid for an update.
+	 *
+	 * @return \Closure The save; it returns the saved object.
+	 */
+	private function saveCall(array $object, array $target): \Closure {
+		return fn (): mixed => $this->objectService->saveObject(
+			object: $object,
+			register: $target['register'],
+			schema: $target['schema'],
+			uuid: $target['uuid'],
+		);
+	}//end saveCall()
 
 	/**
 	 * Run a save; a failure is logged and answers false.
