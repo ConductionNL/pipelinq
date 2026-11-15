@@ -390,39 +390,39 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 		// the TimeApprovalListener pattern) so a mid-call failure is never
 		// ambiguous with "never attempted".
 		$entries = $this->markPending(entries: $entries, batchId: $batchId);
+		$batch = ['entries' => $entries, 'clientName' => $clientName, 'clientId' => $clientId];
 
 		$intakeService = $this->resolveIntakeService();
 		if ($intakeService === null) {
 			$outcome = ['status' => 'failed', 'batchId' => $batchId, 'message' => 'The shillinq time-intake service could not be resolved.'];
-			return $this->failBatch(entries: $entries, clientName: $clientName, clientId: $clientId, outcome: $outcome);
+			return $this->failBatch(batch: $batch, outcome: $outcome);
 		}
 
 		$payload = ['batchId' => $batchId, 'organisationRef' => $organisationRef] + $this->buildPayload(period: $period, entries: $entries);
 
-		$outcome = $this->callIntake(intakeService: $intakeService, payload: $payload, clientName: $clientName);
-		return $this->settleBatch(outcome: $outcome, entries: $entries, clientName: $clientName, clientId: $clientId);
+		$outcome = $this->callIntake(intakeService: $intakeService, request: ['payload' => $payload, 'clientName' => $clientName]);
+		return $this->settleBatch(outcome: $outcome, batch: $batch);
 	}//end dispatchBatch()
 
 	/**
 	 * Settle a batch after the intake call: failed, conflict/unmapped, or synced.
 	 *
 	 * @param array<string, mixed> $outcome The intake result or failure outcome.
-	 * @param array<int, array<string, mixed>> $entries The batch entries.
-	 * @param string $clientName The client's display name.
-	 * @param string $clientId The client UUID.
+	 * @param array{entries: array<int, array<string, mixed>>, clientName: string, clientId: string} $batch The batch entries,
+	 *                                                                                               the client's name and UUID.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 */
-	private function settleBatch(array $outcome, array $entries, string $clientName, string $clientId): array {
+	private function settleBatch(array $outcome, array $batch): array {
 		if (($outcome['status'] ?? '') === 'failed') {
-			return $this->failBatch(entries: $entries, clientName: $clientName, clientId: $clientId, outcome: $outcome);
+			return $this->failBatch(batch: $batch, outcome: $outcome);
 		}
 
 		if (isset($outcome['status']) === true) {
 			return $outcome;
 		}
 
-		return $this->markSynced(entries: $entries, outcome: $outcome);
+		return $this->markSynced(entries: $batch['entries'], outcome: $outcome);
 	}//end settleBatch()
 
 	/**
@@ -448,16 +448,15 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	/**
 	 * Mark a batch failed, notify administrators and return the failed outcome.
 	 *
-	 * @param array<int, array<string, mixed>> $entries The batch entries.
-	 * @param string $clientName The client's display name.
-	 * @param string $clientId The client UUID.
+	 * @param array{entries: array<int, array<string, mixed>>, clientName: string, clientId: string} $batch The batch entries,
+	 *                                                                                               the client's name and UUID.
 	 * @param array<string, mixed> $outcome The failed outcome carrying the batch id.
 	 *
 	 * @return array<string, mixed> The failed outcome.
 	 */
-	private function failBatch(array $entries, string $clientName, string $clientId, array $outcome): array {
-		$this->markFailed(entries: $entries);
-		$this->notifier->notifyFailure(clientName: $clientName, clientId: $clientId, batchId: $outcome['batchId']);
+	private function failBatch(array $batch, array $outcome): array {
+		$this->markFailed(entries: $batch['entries']);
+		$this->notifier->notifyFailure(clientName: $batch['clientName'], clientId: $batch['clientId'], batchId: $outcome['batchId']);
 		return $outcome;
 	}//end failBatch()
 
@@ -468,12 +467,12 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	 * or `unmapped` outcome with the batch id and message.
 	 *
 	 * @param object $intakeService The shillinq time-intake service.
-	 * @param array<string, mixed> $payload The intake request body.
-	 * @param string $clientName The client's display name.
+	 * @param array{payload: array<string, mixed>, clientName: string} $request The intake request body and the client's display name.
 	 *
 	 * @return array<string, mixed> The intake result or the failure outcome.
 	 */
-	private function callIntake(object $intakeService, array $payload, string $clientName): array {
+	private function callIntake(object $intakeService, array $request): array {
+		$payload = $request['payload'];
 		$batchId = $payload['batchId'];
 		try {
 			$result = $intakeService->ingest(administrationId: $this->resolveAdministrationId(), personId: $this->actingUserId(), body: $payload);
@@ -483,7 +482,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 			// harmless, so it is treated the same as a transport failure.
 			return ['status' => 'failed', 'batchId' => $batchId, 'message' => $e->getMessage()];
 		} catch (\RuntimeException $e) {
-			return $this->runtimeOutcome(message: $e->getMessage(), batchId: $batchId, clientName: $clientName);
+			return $this->runtimeOutcome(message: $e->getMessage(), about: ['batchId' => $batchId, 'clientName' => $request['clientName']]);
 		} catch (Throwable $e) {
 			return ['status' => 'failed', 'batchId' => $batchId, 'message' => $e->getMessage()];
 		}//end try
@@ -495,12 +494,12 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	 * Translate an intake runtime error into a `conflict` or `unmapped` outcome.
 	 *
 	 * @param string $message The exception message.
-	 * @param string $batchId The deterministic batch id.
-	 * @param string $clientName The client's display name.
+	 * @param array{batchId: string, clientName: string} $about The deterministic batch id and the client's display name.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 */
-	private function runtimeOutcome(string $message, string $batchId, string $clientName): array {
+	private function runtimeOutcome(string $message, array $about): array {
+		$batchId = $about['batchId'];
 		if (str_starts_with($message, 'Conflict:') === true) {
 			// 409 — batch in-flight. Entries stay `pending` from the
 			// mark-then-act above; retried later, never a new batchId.
@@ -513,7 +512,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 		return [
 			'status' => 'unmapped',
 			'batchId' => $batchId,
-			'message' => sprintf('%s (client: %s)', $message, $clientName),
+			'message' => sprintf('%s (client: %s)', $message, $about['clientName']),
 		];
 	}//end runtimeOutcome()
 
