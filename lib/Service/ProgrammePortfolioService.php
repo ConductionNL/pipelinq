@@ -455,10 +455,8 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 	): array {
 		return $this->linkedWorkItem(
 			workItem: [
-				'programme' => trim($programmeId),
-				'domainObjectType' => trim($domainObjectType),
-				'domainObjectRef' => trim($domainObjectRef),
-				'title' => trim($title),
+				'programme' => trim($programmeId), 'domainObjectType' => trim($domainObjectType),
+				'domainObjectRef' => trim($domainObjectRef), 'title' => trim($title),
 			]
 		);
 	}//end linkWork()

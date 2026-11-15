@@ -387,13 +387,25 @@ class KeywordAnalysisService {
 		}
 
 		$haystacks = $this->haystacksOf(pages: $pages);
-		$entries = array_filter(
-			$this->byQuery(rows: $rows),
-			static fn (array $entry): bool => ($entry['impressions'] < $minImpressions) === false
-		);
+		$entries = self::withImpressions(entries: $this->byQuery(rows: $rows), minImpressions: $minImpressions);
 
 		return self::mostImpressionsFirst(findings: $this->gapsAmong(entries: $entries, haystacks: $haystacks));
 	}//end contentGaps()
+
+	/**
+	 * The query entries with at least the impressions to qualify.
+	 *
+	 * @param array<int|string, array<string, mixed>> $entries        The query entries.
+	 * @param int                                     $minImpressions Impressions a query needs.
+	 *
+	 * @return array<int|string, array<string, mixed>> The qualifying entries.
+	 */
+	private static function withImpressions(array $entries, int $minImpressions): array {
+		return array_filter(
+			$entries,
+			static fn (array $entry): bool => ($entry['impressions'] < $minImpressions) === false
+		);
+	}//end withImpressions()
 
 	/**
 	 * The gap findings of the qualifying queries.
