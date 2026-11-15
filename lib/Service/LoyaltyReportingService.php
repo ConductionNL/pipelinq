@@ -157,14 +157,14 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 		$totals = $this->accountTotals(accounts: $accounts);
-		[$debits, $points] = $this->ledgerPoints(programmeId: $programmeId, from: $from, to: $to);
+		[$debits, $points] = $this->ledgerPoints(query: ['programmeId' => $programmeId, 'from' => $from, 'to' => $to]);
 
 		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
 		$pointValue = (float)($programme['pointValue'] ?? 0.01);
 
 		return ['activeAccounts' => $totals['activeAccounts']]
 			+ $points
-			+ $this->valueKpis(totals: $totals, debits: $debits, pointValue: $pointValue)
+			+ $this->valueKpis(totals: $totals + ['pointValue' => $pointValue], debits: $debits)
 			+ ['period' => ['from' => $from, 'to' => $to]];
 	}//end getKpis()
 
@@ -197,67 +197,53 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	/**
 	 * Read the credit, debit and expiry ledger entries and sum their points.
 	 *
-	 * @param string $programmeId The programme UUID.
-	 * @param string|null $from ISO date lower bound (inclusive).
-	 * @param string|null $to ISO date upper bound (inclusive).
+	 * The point KPIs are issued, redeemed and expired points with breakage and redemption rates.
+	 *
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The programme UUID and inclusive ISO date window.
 	 *
 	 * @return array{0: array<int, array<string, mixed>>, 1: array<string, int|float>} The debit entries and the point KPIs.
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
-	private function ledgerPoints(string $programmeId, string|null $from, string|null $to): array {
-		$credits = $this->ledgerEntries(programmeId: $programmeId, type: 'credit', from: $from, to: $to);
-		$debits = $this->ledgerEntries(programmeId: $programmeId, type: 'debit', from: $from, to: $to);
-		$expiries = $this->ledgerEntries(programmeId: $programmeId, type: 'expiry', from: $from, to: $to);
+	private function ledgerPoints(array $query): array {
+		$credits = $this->ledgerEntries(query: $query, type: 'credit');
+		$debits = $this->ledgerEntries(query: $query, type: 'debit');
+		$expiries = $this->ledgerEntries(query: $query, type: 'expiry');
 
-		$pointsIssued = (int)array_sum(array_map(fn (array $e): int => (int)($e['count'] ?? 0), $credits));
-		$pointsRedeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $debits));
-		$pointsExpired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $expiries));
+		$issued = (int)array_sum(array_map(fn (array $e): int => (int)($e['count'] ?? 0), $credits));
+		$redeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $debits));
+		$expired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $expiries));
 
-		return [$debits, $this->pointKpis(issued: $pointsIssued, redeemed: $pointsRedeemed, expired: $pointsExpired)];
+		return [
+			$debits,
+			[
+				'pointsIssued' => $issued,
+				'pointsRedeemed' => $redeemed,
+				'pointsExpired' => $expired,
+				'breakagePercent' => $this->percentOf(part: $expired, whole: $issued),
+				'redemptionRate' => $this->percentOf(part: $redeemed, whole: $issued),
+			],
+		];
 	}//end ledgerPoints()
 
 	/**
 	 * Read the ledger entries of one type for a programme and date window.
 	 *
-	 * @param string $programmeId The programme UUID.
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The programme UUID and inclusive ISO date window.
 	 * @param string $type The ledger entry type (credit, debit or expiry).
-	 * @param string|null $from ISO date lower bound (inclusive).
-	 * @param string|null $to ISO date upper bound (inclusive).
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
-	private function ledgerEntries(string $programmeId, string $type, string|null $from, string|null $to): array {
+	private function ledgerEntries(array $query, string $type): array {
 		return $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
+			programmeId: $query['programmeId'],
 			type: $type,
-			from: $from,
-			to: $to
+			from: $query['from'],
+			to: $query['to']
 		);
 	}//end ledgerEntries()
-
-	/**
-	 * The point KPIs: issued, redeemed and expired points with breakage and redemption rates.
-	 *
-	 * @param int $issued Points issued.
-	 * @param int $redeemed Points redeemed.
-	 * @param int $expired Points expired.
-	 *
-	 * @return array{pointsIssued: int, pointsRedeemed: int, pointsExpired: int, breakagePercent: float, redemptionRate: float}
-	 *
-	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
-	 */
-	private function pointKpis(int $issued, int $redeemed, int $expired): array {
-		return [
-			'pointsIssued' => $issued,
-			'pointsRedeemed' => $redeemed,
-			'pointsExpired' => $expired,
-			'breakagePercent' => $this->percentOf(part: $expired, whole: $issued),
-			'redemptionRate' => $this->percentOf(part: $redeemed, whole: $issued),
-		];
-	}//end pointKpis()
 
 	/**
 	 * A part as a percentage of a whole, rounded to two decimals; 0.0 when the whole is not positive.
@@ -281,15 +267,16 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	/**
 	 * The cost, tier and liability KPIs.
 	 *
-	 * @param array{activeAccounts: int, tierDistribution: array<string, int>, outstandingPoints: int} $totals The account totals.
+	 * @param array<string, mixed> $totals The account totals (activeAccounts, tierDistribution,
+	 *                                     outstandingPoints) and pointValue, the euro value of one point.
 	 * @param array<int, array<string, mixed>> $debits The debit ledger entries.
-	 * @param float $pointValue The euro value of one point.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
-	private function valueKpis(array $totals, array $debits, float $pointValue): array {
+	private function valueKpis(array $totals, array $debits): array {
+		$pointValue = $totals['pointValue'];
 		$estimatedLiability = round($totals['outstandingPoints'] * $pointValue, 2);
 		$programmeCostPercent = $this->estimateProgrammeCostPercent(debits: $debits);
 
@@ -465,7 +452,7 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 			];
 		}
 
-		return $this->inactivityForecast(accounts: $accounts, months: $this->policyMonths(policy: $policy), days: $days);
+		return $this->inactivityForecast(accounts: $accounts, window: ['months' => $this->policyMonths(policy: $policy), 'days' => $days]);
 	}//end getExpiryForecast()
 
 	/**
@@ -508,14 +495,14 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	 * Forecast the points of accounts that pass the inactivity cutoff within the window.
 	 *
 	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
-	 * @param int $months The inactivity window in months.
-	 * @param int $days Window size in days.
+	 * @param array{months: int, days: int} $window The inactivity window in months, and the window size in days.
 	 *
 	 * @return array{points: int, accounts: int, until: string}
 	 *
 	 * @spec exclude phpmd mechanical refactor
 	 */
-	private function inactivityForecast(array $accounts, int $months, int $days): array {
+	private function inactivityForecast(array $accounts, array $window): array {
+		['months' => $months, 'days' => $days] = $window;
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$cutoff = $now->modify('-' . max(0, $months - ((int)round($days / 30))) . ' months');
 

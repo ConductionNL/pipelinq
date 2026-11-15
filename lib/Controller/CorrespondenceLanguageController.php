@@ -32,7 +32,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
-use OCA\Pipelinq\Util\ServiceResultResponse;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;

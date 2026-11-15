@@ -30,9 +30,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\L10N\IFactory;
 use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -99,47 +101,97 @@ class ReportMailDelivery {
 	 */
 	public function deliverFiles(array $job, string $userId, array $files): array {
 		$user = $this->userManager->get($userId);
-		if ($user === null) {
-			return self::outcome(userId: $userId, status: self::FAILED, reason: 'The recipient does not exist.');
+		$problem = self::recipientProblem(user: $user);
+		if ($problem !== '') {
+			return self::outcome(userId: $userId, status: self::FAILED, reason: $problem);
 		}
 
-		$address = trim((string)$user->getEMailAddress());
-		if ($address === '') {
-			return self::outcome(userId: $userId, status: self::FAILED, reason: 'The recipient has no email address.');
-		}
-
-		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $this->l10nFactory->getUserLanguage($user));
-		$name = (string)($job['name'] ?? '');
-
-		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$address => $user->getDisplayName()]);
-			$message->setSubject($l->t('Report: %1$s', [$name]));
-			$message->setPlainBody(
-				$l->t('Attached is the report %1$s, as scheduled. You receive it because you are a recipient of this report in Pipelinq.', [$name])
-			);
-			foreach ($files as $file) {
-				$message->attach(
-					$this->mailer->createAttachment($file['contents'], $file['filename'], $file['mimeType'])
-				);
-			}
-
-			$refused = $this->mailer->send($message);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: a report mail could not be sent',
-				['userId' => $userId, 'job' => $name, 'exception' => $e->getMessage()]
-			);
-			return self::outcome(userId: $userId, status: self::FAILED, reason: $e->getMessage());
-		}//end try
-
-		// The mailer answers the addresses it could not deliver to.
-		if ($refused !== []) {
-			return self::outcome(userId: $userId, status: self::FAILED, reason: 'The mail server refused the recipient.');
+		$failure = $this->sendReport(user: $user, report: ['userId' => $userId, 'name' => (string)($job['name'] ?? ''), 'files' => $files]);
+		if ($failure !== null) {
+			return self::outcome(userId: $userId, status: self::FAILED, reason: $failure);
 		}
 
 		return self::outcome(userId: $userId, status: self::DELIVERED, reason: '');
 	}//end deliverFiles()
+
+	/**
+	 * Mail the report to a recipient in their language; why it failed, or null when it went.
+	 *
+	 * @param IUser                                                     $user   The recipient, who has an email address.
+	 * @param array{userId: string, name: string, files: list<array<string, string>>} $report The recipient id, report name and files.
+	 *
+	 * @return string|null The reason it failed, or null.
+	 */
+	private function sendReport(IUser $user, array $report): ?string {
+		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $this->l10nFactory->getUserLanguage($user));
+		$name = $report['name'];
+
+		try {
+			$mail = [
+				'subject' => $l->t('Report: %1$s', [$name]),
+				'body' => $l->t(
+					'Attached is the report %1$s, as scheduled. You receive it because you are a recipient of this report in Pipelinq.',
+					[$name]
+				),
+				'files' => $report['files'],
+			];
+			$refused = $this->mailer->send($this->composedMail(user: $user, mail: $mail));
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: a report mail could not be sent',
+				['userId' => $report['userId'], 'job' => $name, 'exception' => $e->getMessage()]
+			);
+			return $e->getMessage();
+		}//end try
+
+		// The mailer answers the addresses it could not deliver to.
+		if ($refused !== []) {
+			return 'The mail server refused the recipient.';
+		}
+
+		return null;
+	}//end sendReport()
+
+	/**
+	 * Why a recipient cannot be mailed, or '' when it can.
+	 *
+	 * @param IUser|null $user The recipient, null when it does not exist.
+	 *
+	 * @return string The reason, or ''.
+	 */
+	private static function recipientProblem(?IUser $user): string {
+		if ($user === null) {
+			return 'The recipient does not exist.';
+		}
+
+		if (trim((string)$user->getEMailAddress()) === '') {
+			return 'The recipient has no email address.';
+		}
+
+		return '';
+	}//end recipientProblem()
+
+	/**
+	 * The report mail to one recipient, with every file attached.
+	 *
+	 * @param IUser                                                     $user The recipient, who has an email address.
+	 * @param array{subject: string, body: string, files: list<array<string, string>>} $mail The subject, body and files.
+	 *
+	 * @return IMessage The message.
+	 */
+	private function composedMail(IUser $user, array $mail): IMessage {
+		$message = $this->mailer->createMessage();
+		$message->setTo([trim((string)$user->getEMailAddress()) => $user->getDisplayName()]);
+		$message->setSubject($mail['subject']);
+		$message->setPlainBody($mail['body']);
+		foreach ($mail['files'] as $file) {
+			$message->attach(
+				$this->mailer->createAttachment($file['contents'], $file['filename'], $file['mimeType'])
+			);
+		}
+
+		return $message;
+	}//end composedMail()
 
 	/**
 	 * A delivery outcome.

@@ -137,7 +137,12 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 		}
 
 		$this->berichtenbox->queueOutboundMessage(
-			message: $this->caseStatusMessage(newData: $newData, newStatus: $newStatus, bsn: $bsn),
+			message: new CaseStatusMessage(
+				caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
+				interactionId: (string)($newData['interactionId'] ?? null),
+				status: $newStatus,
+				bsn: $bsn
+			),
 			options: $this->statusMessageOptions(newData: $newData)
 		);
 	}//end queueStatusChange()
@@ -195,29 +200,6 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			['caseId' => (string)($newData['id'] ?? '')]
 		);
 	}//end logNoBsn()
-
-	/**
-	 * Build the case status message for the updated case.
-	 *
-	 * @param array  $newData   The updated case.
-	 * @param string $newStatus The trigger status.
-	 * @param string $bsn       The burger's BSN.
-	 *
-	 * @return CaseStatusMessage
-	 */
-	private function caseStatusMessage(
-		array $newData,
-		string $newStatus,
-		#[\SensitiveParameter]
-		string $bsn,
-	): CaseStatusMessage {
-		return new CaseStatusMessage(
-			caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
-			interactionId: (string)($newData['interactionId'] ?? null),
-			status: $newStatus,
-			bsn: $bsn
-		);
-	}//end caseStatusMessage()
 
 	/**
 	 * Build the message options (template variables and attachments) for the updated case.

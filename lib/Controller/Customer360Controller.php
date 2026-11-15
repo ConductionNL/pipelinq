@@ -207,25 +207,24 @@ class Customer360Controller extends Controller {
 			return self::ACCESS_FAILED;
 		}
 
-		return $this->readClientAccess(clientId: $clientId, register: $register, schema: $schema);
+		return $this->readClientAccess(clientId: $clientId, scope: ['register' => $register, 'schema' => $schema]);
 	}//end clientAccess()
 
 	/**
 	 * Read the client with RBAC on and classify the outcome.
 	 *
-	 * @param string $clientId The client UUID.
-	 * @param string $register The register.
-	 * @param string $schema The client schema.
+	 * @param string                $clientId The client UUID.
+	 * @param array<string, string> $scope    The register and the client schema.
 	 *
 	 * @return string One of the ACCESS_* constants.
 	 */
-	private function readClientAccess(string $clientId, string $register, string $schema): string {
+	private function readClientAccess(string $clientId, array $scope): string {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
+				register: $scope['register'],
+				schema: $scope['schema'],
 				_rbac: true,
 				_multitenancy: true,
 			);

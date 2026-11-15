@@ -392,24 +392,7 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
-		$now = new DateTimeImmutable();
-		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY);
-		$scored = $this->score(survey: $survey, answers: $answers);
-
-		$response = array_merge(
-			[
-				'surveyRef' => (string)($invitation['surveyRef'] ?? ''),
-				'invitationRef' => $this->uuidOf(row: $invitation),
-				'clientRef' => (string)($invitation['clientRef'] ?? ''),
-				'contactRef' => (string)($invitation['contactRef'] ?? ''),
-				'linkedEntityType' => (string)($invitation['linkedEntityType'] ?? ''),
-				'linkedEntityId' => (string)($invitation['linkedEntityId'] ?? ''),
-				'answers' => $answers,
-				'submittedAt' => $now->format(DateTimeInterface::ATOM),
-			],
-			$scored
-		);
-
+		$response = $this->newResponse(invitation: $invitation, answers: $answers);
 		$responseId = $this->writeResponse(response: $response);
 		if ($responseId === '') {
 			return ['status' => 500, 'error' => 'The response could not be saved.'];
@@ -419,13 +402,7 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 
 		// The invitation is closed FIRST, so a second submission arriving
 		// while the follow-up is still being raised finds the token spent.
-		$invitation['status'] = 'responded';
-		$invitation['respondedAt'] = $now->format(DateTimeInterface::ATOM);
-		$invitation['responseRef'] = $responseId;
-		$this->dispatchService->write(
-			invitation: $invitation,
-			uuid: $this->uuidOf(row: $invitation),
-		);
+		$this->closeInvitation(invitation: $invitation, response: $response);
 
 		if ($optOut === true) {
 			$this->optOut->record(contactRef: (string)($invitation['contactRef'] ?? ''));
@@ -438,6 +415,52 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 
 		return ['status' => 201, 'response' => $response];
 	}//end submit()
+
+	/**
+	 * The response to an open invitation, scored against its survey and stamped now.
+	 *
+	 * @param array<string, mixed> $invitation The open invitation.
+	 * @param array<string, mixed> $answers    The answers.
+	 *
+	 * @return array<string, mixed> The unsaved response.
+	 */
+	private function newResponse(array $invitation, array $answers): array {
+		$now = new DateTimeImmutable();
+		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), schemaKey: self::SURVEY_SCHEMA_KEY);
+		$scored = $this->score(survey: $survey, answers: $answers);
+
+		return array_merge(
+			[
+				'surveyRef' => (string)($invitation['surveyRef'] ?? ''),
+				'invitationRef' => $this->uuidOf(row: $invitation),
+				'clientRef' => (string)($invitation['clientRef'] ?? ''),
+				'contactRef' => (string)($invitation['contactRef'] ?? ''),
+				'linkedEntityType' => (string)($invitation['linkedEntityType'] ?? ''),
+				'linkedEntityId' => (string)($invitation['linkedEntityId'] ?? ''),
+				'answers' => $answers,
+				'submittedAt' => $now->format(DateTimeInterface::ATOM),
+			],
+			$scored
+		);
+	}//end newResponse()
+
+	/**
+	 * Mark the invitation responded at the response's submission time.
+	 *
+	 * @param array<string, mixed> $invitation The invitation.
+	 * @param array<string, mixed> $response   The saved response, with its id.
+	 *
+	 * @return void
+	 */
+	private function closeInvitation(array $invitation, array $response): void {
+		$invitation['status'] = 'responded';
+		$invitation['respondedAt'] = $response['submittedAt'];
+		$invitation['responseRef'] = $response['id'];
+		$this->dispatchService->write(
+			invitation: $invitation,
+			uuid: $this->uuidOf(row: $invitation),
+		);
+	}//end closeInvitation()
 
 	/**
 	 * Read one object on the public path, only from pipelinq's register and
@@ -458,8 +481,17 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return [];
 		}
 
-		$entity = $this->findPublic(uuid: $uuid, register: $register, schema: $schema, schemaKey: $schemaKey);
-		if ($this->outOfScope(entity: $entity, register: $register, schema: $schema) === true) {
+		try {
+			$entity = $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'SurveyResponseService: an object on the public path could not be read',
+				['schemaKey' => $schemaKey, 'uuid' => $uuid, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		if ($this->outOfScope(entity: $entity, location: new RegisterSchema(register: $register, schema: $schema)) === true) {
 			return [];
 		}
 
@@ -467,41 +499,17 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 	}//end readPublic()
 
 	/**
-	 * Find an object on the public path, or null when it cannot be read.
-	 *
-	 * @param string $uuid The object uuid.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param string $schemaKey The app-config key of the schema, for the log.
-	 *
-	 * @return mixed
-	 */
-	private function findPublic(string $uuid, string $register, string $schema, string $schemaKey) {
-		try {
-			return $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SurveyResponseService: an object on the public path could not be read',
-				['schemaKey' => $schemaKey, 'uuid' => $uuid, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-	}//end findPublic()
-
-	/**
 	 * Whether the entity is missing or lives outside the expected register and schema.
 	 *
-	 * @param mixed $entity The found entity, or null.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param mixed          $entity   The found entity, or null.
+	 * @param RegisterSchema $location The register and schema ids.
 	 *
 	 * @return bool
 	 */
-	private function outOfScope($entity, string $register, string $schema): bool {
+	private function outOfScope($entity, RegisterSchema $location): bool {
 		return $entity === null
-			|| (string)$entity->getRegister() !== $register
-			|| (string)$entity->getSchema() !== $schema;
+			|| (string)$entity->getRegister() !== $location->register
+			|| (string)$entity->getSchema() !== $location->schema;
 	}//end outOfScope()
 
 	/**

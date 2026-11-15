@@ -35,7 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\Sla\MergesBreachEvents;
-use OCA\Pipelinq\Util\SlaTrackedObjectStore;
+use OCA\Pipelinq\Listener\Support\SlaTrackedObjectStore;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;

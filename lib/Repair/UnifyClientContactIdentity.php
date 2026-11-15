@@ -55,7 +55,7 @@ use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
-use OCA\Pipelinq\Util\SystemRunner;
+use OCA\Pipelinq\Repair\Support\SystemRunner;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;

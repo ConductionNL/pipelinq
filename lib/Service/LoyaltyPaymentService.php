@@ -67,6 +67,22 @@ class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 		}
 
 		$balance = $this->spendableBalance(accountId: $accountId, points: $points);
+
+		return $this->spend(spend: ['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId], balance: $balance);
+	}//end payWithPoints()
+
+	/**
+	 * Debit the points against the sale and answer with what was spent and what is left.
+	 *
+	 * @param array{accountId: string, points: int, posTransactionId: string} $spend   The account, the points and the sale.
+	 * @param array{balance: int, programmeId: string}                         $balance The account's balance and programme.
+	 *
+	 * @return array{points: int, amount: float, currentBalance: int}
+	 *
+	 * @throws RuntimeException When the programme gives points no value.
+	 */
+	private function spend(array $spend, array $balance): array {
+		['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId] = $spend;
 		$pointValue = $this->pointValueOf(programmeId: $balance['programmeId']);
 
 		$source = ['posTransactionId' => $posTransactionId, 'kind' => 'pos-payment'];
@@ -78,7 +94,7 @@ class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 			'amount'         => round($points * $pointValue, 2),
 			'currentBalance' => $balance['balance'] - $points,
 		];
-	}//end payWithPoints()
+	}//end spend()
 
 	/**
 	 * The account's balance and programme, when it holds at least the points.

@@ -129,6 +129,20 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	public function submitByKey(string $key, array $payload, ?string $idempotencyKey = null): array {
 		$this->refuseHoneypot(payload: $payload);
 
+		return $this->submit(form: $this->publishedForm(key: $key), payload: $payload, idempotencyKey: $idempotencyKey);
+
+	}//end submitByKey()
+
+	/**
+	 * The published form a key names.
+	 *
+	 * @param string $key The form's key (the website's `source`).
+	 *
+	 * @return array<string, mixed> The published form body with its `id`.
+	 *
+	 * @throws WebFormSubmitException 400 when no form is published for the key, 503 when forms cannot be read.
+	 */
+	private function publishedForm(string $key): array {
 		try {
 			$form = $this->finder->publishedByKey(key: $key);
 		} catch (Throwable $e) {
@@ -143,9 +157,9 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 			throw new WebFormSubmitException(message: self::REFUSED, status: 400);
 		}
 
-		return $this->submit(form: $form, payload: $payload, idempotencyKey: $idempotencyKey);
+		return $form;
 
-	}//end submitByKey()
+	}//end publishedForm()
 
 	/**
 	 * Submit answers into the destination of a form already resolved (a Nextcloud Forms binding, the drain).
@@ -162,16 +176,9 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-the-website-enquiry-form-keeps-campaign-values-req-moc-003
 	 */
 	public function submit(array $form, array $payload, ?string $idempotencyKey = null): array {
-		$writes = $this->finder->writesOf(form: $form);
-		if ($writes === []) {
-			// Publishing is refused without a destination, so this is a form
-			// changed behind the check: the site owner's problem, not the visitor's.
-			$this->logger->error('Pipelinq: published website form has no destination.', ['form' => ($form['id'] ?? '')]);
-			throw new WebFormSubmitException(message: self::TRY_LATER, status: 503);
-		}
-
+		$writes = $this->destinationWrites(form: $form);
 		$answers = $this->withFallbacks(answers: $this->clean(payload: $payload), form: $form);
-		$this->refuseEmpty(answers: $answers, form: $form, writes: $writes);
+		$this->refuseEmpty(answers: $answers, wanted: $this->wantedFields(form: $form, writes: $writes));
 
 		try {
 			$answer = $this->container->get(self::SUBMIT_SERVICE)->submitAll(
@@ -188,6 +195,40 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 		// The submit is stored; its campaign values become a touchpoint, best effort.
 		$this->touches?->record(form: $form, payload: $payload, idempotencyKey: $idempotencyKey);
 
+		return self::visitorAnswer(answer: $answer);
+
+	}//end submit()
+
+	/**
+	 * The writes of a form's destination.
+	 *
+	 * @param array<string, mixed> $form The published form body with its `id`.
+	 *
+	 * @return array<int, array<string, mixed>> The writes, never empty.
+	 *
+	 * @throws WebFormSubmitException 503 when the form has no destination.
+	 */
+	private function destinationWrites(array $form): array {
+		$writes = $this->finder->writesOf(form: $form);
+		if ($writes === []) {
+			// Publishing is refused without a destination, so this is a form
+			// changed behind the check: the site owner's problem, not the visitor's.
+			$this->logger->error('Pipelinq: published website form has no destination.', ['form' => ($form['id'] ?? '')]);
+			throw new WebFormSubmitException(message: self::TRY_LATER, status: 503);
+		}
+
+		return $writes;
+
+	}//end destinationWrites()
+
+	/**
+	 * What the visitor is told about a stored submit.
+	 *
+	 * @param mixed $answer The submit service's answer.
+	 *
+	 * @return array<string, mixed> The answer: reference, id, receivedAt, confirmation.
+	 */
+	private static function visitorAnswer(mixed $answer): array {
 		return [
 			'reference' => (string)($answer['reference'] ?? ''),
 			'id' => (string)($answer['id'] ?? ''),
@@ -195,7 +236,7 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 			'confirmation' => (array)($answer['confirmation'] ?? []),
 		];
 
-	}//end submit()
+	}//end visitorAnswer()
 
 	/**
 	 * Refuse a submit whose honeypot carries a value.
@@ -342,24 +383,14 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	 * filled (a message or an email address). Without it, at least one mapped
 	 * field must carry an answer.
 	 *
-	 * @param array<string, mixed>             $answers The answers.
-	 * @param array<string, mixed>             $form    The form.
-	 * @param array<int, array<string, mixed>> $writes  The form's writes.
+	 * @param array<string, mixed> $answers The answers.
+	 * @param array<int, string>   $wanted  The fields of which one must be answered.
 	 *
 	 * @return void
 	 *
 	 * @throws WebFormSubmitException 400 when nothing to act on was sent.
 	 */
-	private function refuseEmpty(array $answers, array $form, array $writes): void {
-		$wanted = array_map('strval', (array)($form['requireAnyOf'] ?? []));
-		if ($wanted === []) {
-			foreach ($writes as $write) {
-				foreach ((array)($write['mapping']['fields'] ?? []) as $field) {
-					$wanted[] = (string)($field['field'] ?? '');
-				}
-			}
-		}
-
+	private function refuseEmpty(array $answers, array $wanted): void {
 		foreach ($wanted as $field) {
 			if (array_key_exists($field, $answers) === true) {
 				return;
@@ -369,6 +400,28 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 		throw new WebFormSubmitException(message: self::REFUSED, status: 400);
 
 	}//end refuseEmpty()
+
+	/**
+	 * The fields of which one must be filled: the form's `requireAnyOf`, else every mapped field.
+	 *
+	 * @param array<string, mixed>             $form   The form.
+	 * @param array<int, array<string, mixed>> $writes The form's writes.
+	 *
+	 * @return array<int, string> The field names.
+	 */
+	private function wantedFields(array $form, array $writes): array {
+		$wanted = array_map('strval', (array)($form['requireAnyOf'] ?? []));
+		if ($wanted === []) {
+			foreach ($writes as $write) {
+				foreach ((array)($write['mapping']['fields'] ?? []) as $field) {
+					$wanted[] = (string)($field['field'] ?? '');
+				}
+			}
+		}
+
+		return $wanted;
+
+	}//end wantedFields()
 
 	/**
 	 * The refusal a failed submit becomes.

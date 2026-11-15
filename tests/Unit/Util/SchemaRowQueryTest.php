@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Util;
 
-use OCA\Pipelinq\Util\SchemaRowArrays;
+use OCA\Pipelinq\Service\Support\SchemaRowArrays;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -30,7 +30,7 @@ use Psr\Log\LoggerInterface;
  * Filters go ahead of the register and schema; failures log and are null.
  *
  * @covers \OCA\Pipelinq\Util\SchemaRowQuery
- * @covers \OCA\Pipelinq\Util\SchemaRowArrays
+ * @covers \OCA\Pipelinq\Service\Support\SchemaRowArrays
  */
 class SchemaRowQueryTest extends TestCase {
 

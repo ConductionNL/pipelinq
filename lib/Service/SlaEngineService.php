@@ -138,8 +138,23 @@ class SlaEngineService implements SlaEngineServiceInterface {
 	 */
 	public function resolvePolicyForObject(string $objectType, string $objectId, array $metadata): ?array {
 		unset($objectId);
+		$policies = $this->activePoliciesOrNull();
+		if ($policies === null) {
+			return null;
+		}
+
+		$query = new SlaPolicyQuery(objectType: $objectType, metadata: $metadata, now: $this->now());
+		return $this->bestPolicy(policies: $policies, query: $query);
+	}//end resolvePolicyForObject()
+
+	/**
+	 * The active policies, or null (logged) when they cannot be loaded.
+	 *
+	 * @return array<int, array<string, mixed>>|null
+	 */
+	private function activePoliciesOrNull(): ?array {
 		try {
-			$policies = $this->loadActivePolicies();
+			return $this->loadActivePolicies();
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'SlaEngineService: failed to load active policies',
@@ -147,8 +162,17 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			);
 			return null;
 		}
+	}//end activePoliciesOrNull()
 
-		$query = new SlaPolicyQuery(objectType: $objectType, metadata: $metadata, now: $this->now());
+	/**
+	 * The best matching policy for a query, logged; null when none matches.
+	 *
+	 * @param array<int, array<string, mixed>> $policies Active policies.
+	 * @param SlaPolicyQuery                   $query    The object.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function bestPolicy(array $policies, SlaPolicyQuery $query): ?array {
 		$candidates = $this->candidatePolicies(policies: $policies, query: $query);
 		if ($candidates === []) {
 			return null;
@@ -161,13 +185,13 @@ class SlaEngineService implements SlaEngineServiceInterface {
 			'SlaEngineService: policy resolved',
 			[
 				'policyId' => $chosen['id'] ?? $chosen['@self']['slug'] ?? null,
-				'objectType' => $objectType,
+				'objectType' => $query->objectType,
 				'tier' => $query->tier,
 				'candidates' => count($candidates),
 			]
 		);
 		return $chosen;
-	}//end resolvePolicyForObject()
+	}//end bestPolicy()
 
 	/**
 	 * Compute initial deadlines for every target on a policy.
@@ -413,21 +437,33 @@ class SlaEngineService implements SlaEngineServiceInterface {
 
 		$heat = $this->hottestTarget(targets: $newTargets);
 		$object = new SlaTrackedObject(type: $objectType, id: $objectId);
-		$newLevel = $alreadyFired;
-		$eventIds = [];
-
+		$escalations = [];
 		foreach ($this->dueSteps(chain: $chain, heat: $heat, alreadyFired: $alreadyFired) as $level => $step) {
-			$escalation = new SlaEscalation(policy: $policy, object: $object, step: $step, level: $level);
+			$escalations[$level] = new SlaEscalation(policy: $policy, object: $object, step: $step, level: $level);
+		}
+
+		return ['level' => (array_key_last($escalations) ?? $alreadyFired), 'eventIds' => $this->fireAll(escalations: $escalations, heat: $heat)];
+	}//end executeEscalations()
+
+	/**
+	 * Fire due escalations in level order; the UUIDs of the breach events written.
+	 *
+	 * @param array<int, SlaEscalation> $escalations The due escalations, keyed by level.
+	 * @param SlaHeat                   $heat        The heat they fire at.
+	 *
+	 * @return array<int, string>
+	 */
+	private function fireAll(array $escalations, SlaHeat $heat): array {
+		$eventIds = [];
+		foreach ($escalations as $escalation) {
 			$eventId = $this->fireEscalation(escalation: $escalation, heat: $heat);
 			if ($eventId !== null) {
 				$eventIds[] = $eventId;
 			}
+		}
 
-			$newLevel = $level;
-		}//end foreach
-
-		return ['level' => $newLevel, 'eventIds' => $eventIds];
-	}//end executeEscalations()
+		return $eventIds;
+	}//end fireAll()
 
 	/**
 	 * The escalation steps not yet fired whose trigger the hottest target has reached, keyed by level.

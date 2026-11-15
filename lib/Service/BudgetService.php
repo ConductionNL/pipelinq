@@ -35,7 +35,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
-use OCA\Pipelinq\Util\SchemaRowArrays;
+use OCA\Pipelinq\Service\Support\SchemaRowArrays;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

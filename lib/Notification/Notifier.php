@@ -139,8 +139,7 @@ class Notifier implements INotifier {
 
 		$this->applyNotificationSubject(
 			notification: $notification,
-			l: $l,
-			params: $params
+			context: ['l' => $l, 'params' => $params]
 		);
 
 		$notification->setIcon(
@@ -172,18 +171,15 @@ class Notifier implements INotifier {
 	 * Apply the subject text to a notification based on its subject type.
 	 *
 	 * @param INotification $notification The notification.
-	 * @param object $l The l10n translator.
-	 * @param array $params The subject parameters.
+	 * @param array{l: object, params: array<string, mixed>} $context The l10n translator and the subject parameters.
 	 *
 	 * @return void
 	 *
 	 * @throws UnknownNotificationException If the subject is not recognized.
 	 */
-	private function applyNotificationSubject(INotification $notification, object $l, array $params): void {
-		$title = $params['title'] ?? '';
-		$context = [
-			'l' => $l,
-			'params' => $params,
+	private function applyNotificationSubject(INotification $notification, array $context): void {
+		$title = $context['params']['title'] ?? '';
+		$context += [
 			'title' => $title,
 			'richParams' => $this->buildRichParams(notification: $notification, title: $title),
 		];

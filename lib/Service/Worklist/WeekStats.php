@@ -89,7 +89,7 @@ final class WeekStats {
 		$todayTs   = $today->getTimestamp();
 		$nowTs     = $now->getTimestamp();
 
-		$tally = $this->tally(tickets: $tickets, from: $from, todayTs: $todayTs, nowTs: $nowTs);
+		$tally = $this->tally(tickets: $tickets, window: ['from' => $from, 'todayTs' => $todayTs, 'nowTs' => $nowTs]);
 
 		return $this->figures(weekStart: $weekStart, tally: $tally);
 	}//end of()
@@ -97,22 +97,20 @@ final class WeekStats {
 	/**
 	 * Count the week's tickets.
 	 *
-	 * @param array<int, array<string, mixed>> $tickets The tickets, as stored.
-	 * @param int                              $from    Monday 00:00 of this week.
-	 * @param int                              $todayTs Today 00:00.
-	 * @param int                              $nowTs   Now.
+	 * @param array<int, array<string, mixed>>               $tickets The tickets, as stored.
+	 * @param array{from: int, todayTs: int, nowTs: int} $window  Monday 00:00 of this week, today 00:00 and now.
 	 *
 	 * @return array{answered: int, todayCount: int, converted: int, withDue: int, inTime: int, answerTimes: array<int, int>}
 	 */
-	private function tally(array $tickets, int $from, int $todayTs, int $nowTs): array {
+	private function tally(array $tickets, array $window): array {
 		$tally = ['answered' => 0, 'todayCount' => 0, 'converted' => 0, 'withDue' => 0, 'inTime' => 0, 'answerTimes' => []];
 		foreach ($tickets as $ticket) {
-			$resolved = $this->resolvedInWindow(ticket: $ticket, from: $from, nowTs: $nowTs);
+			$resolved = $this->resolvedInWindow(ticket: $ticket, window: $window);
 			if ($resolved === null) {
 				continue;
 			}
 
-			$tally = $this->countTicket(tally: $tally, ticket: $ticket, resolved: $resolved, todayTs: $todayTs);
+			$tally = $this->countTicket(tally: $tally, answer: ['ticket' => $ticket, 'resolved' => $resolved, 'todayTs' => $window['todayTs']]);
 		}
 
 		return $tally;
@@ -121,15 +119,14 @@ final class WeekStats {
 	/**
 	 * A ticket's resolve time when it falls between the week's start and now, otherwise null.
 	 *
-	 * @param array<string, mixed> $ticket The ticket.
-	 * @param int                  $from   Monday 00:00 of this week.
-	 * @param int                  $nowTs  Now.
+	 * @param array<string, mixed>                       $ticket The ticket.
+	 * @param array{from: int, todayTs: int, nowTs: int} $window Monday 00:00 of this week, today 00:00 and now.
 	 *
 	 * @return int|null
 	 */
-	private function resolvedInWindow(array $ticket, int $from, int $nowTs): int|null {
+	private function resolvedInWindow(array $ticket, array $window): int|null {
 		$resolved = $this->timestamp(value: ($ticket['resolvedAt'] ?? null));
-		if ($resolved === null || $resolved < $from || $resolved > $nowTs) {
+		if ($resolved === null || $resolved < $window['from'] || $resolved > $window['nowTs']) {
 			return null;
 		}
 
@@ -139,15 +136,13 @@ final class WeekStats {
 	/**
 	 * Count one ticket resolved this week.
 	 *
-	 * @param array<string, mixed> $tally    The counts so far.
-	 * @param array<string, mixed> $ticket   The ticket.
-	 * @param int                  $resolved When it was resolved.
-	 * @param int                  $todayTs  Today 00:00.
+	 * @param array<string, mixed> $tally  The counts so far.
+	 * @param array{ticket: array<string, mixed>, resolved: int, todayTs: int} $answer The ticket, when it was resolved, and today 00:00.
 	 *
 	 * @return array<string, mixed> The counts.
 	 */
-	private function countTicket(array $tally, array $ticket, int $resolved, int $todayTs): array {
-		$status = (string)($ticket['status'] ?? '');
+	private function countTicket(array $tally, array $answer): array {
+		$status = (string)($answer['ticket']['status'] ?? '');
 		if ($status === self::CONVERTED_STATUS) {
 			$tally['converted']++;
 			return $tally;
@@ -157,23 +152,22 @@ final class WeekStats {
 			return $tally;
 		}
 
-		$tally = $this->countAnswered(tally: $tally, resolved: $resolved, todayTs: $todayTs);
-		$tally = $this->countDeadline(tally: $tally, ticket: $ticket, resolved: $resolved);
-		return $this->countAnswerTime(tally: $tally, ticket: $ticket, resolved: $resolved);
+		$tally = $this->countAnswered(tally: $tally, answer: $answer);
+		$tally = $this->countDeadline(tally: $tally, answer: $answer);
+		return $this->countAnswerTime(tally: $tally, answer: $answer);
 	}//end countTicket()
 
 	/**
 	 * Count an answered ticket, and whether it was answered today.
 	 *
-	 * @param array<string, mixed> $tally    The counts so far.
-	 * @param int                  $resolved When it was resolved.
-	 * @param int                  $todayTs  Today 00:00.
+	 * @param array<string, mixed> $tally  The counts so far.
+	 * @param array{ticket: array<string, mixed>, resolved: int, todayTs: int} $answer The ticket, when it was resolved, and today 00:00.
 	 *
 	 * @return array<string, mixed> The counts.
 	 */
-	private function countAnswered(array $tally, int $resolved, int $todayTs): array {
+	private function countAnswered(array $tally, array $answer): array {
 		$tally['answered']++;
-		if ($resolved >= $todayTs) {
+		if ($answer['resolved'] >= $answer['todayTs']) {
 			$tally['todayCount']++;
 		}
 
@@ -183,17 +177,16 @@ final class WeekStats {
 	/**
 	 * Count an answered ticket against its deadline.
 	 *
-	 * @param array<string, mixed> $tally    The counts so far.
-	 * @param array<string, mixed> $ticket   The ticket.
-	 * @param int                  $resolved When it was resolved.
+	 * @param array<string, mixed> $tally  The counts so far.
+	 * @param array{ticket: array<string, mixed>, resolved: int, todayTs: int} $answer The ticket and when it was resolved.
 	 *
 	 * @return array<string, mixed> The counts.
 	 */
-	private function countDeadline(array $tally, array $ticket, int $resolved): array {
-		$deadline = $this->timestamp(value: ($ticket['slaDeadline'] ?? null));
+	private function countDeadline(array $tally, array $answer): array {
+		$deadline = $this->timestamp(value: ($answer['ticket']['slaDeadline'] ?? null));
 		if ($deadline !== null) {
 			$tally['withDue']++;
-			if ($resolved <= $deadline) {
+			if ($answer['resolved'] <= $deadline) {
 				$tally['inTime']++;
 			}
 		}
@@ -204,14 +197,14 @@ final class WeekStats {
 	/**
 	 * Record an answered ticket's answer time.
 	 *
-	 * @param array<string, mixed> $tally    The counts so far.
-	 * @param array<string, mixed> $ticket   The ticket.
-	 * @param int                  $resolved When it was resolved.
+	 * @param array<string, mixed> $tally  The counts so far.
+	 * @param array{ticket: array<string, mixed>, resolved: int, todayTs: int} $answer The ticket and when it was resolved.
 	 *
 	 * @return array<string, mixed> The counts.
 	 */
-	private function countAnswerTime(array $tally, array $ticket, int $resolved): array {
-		$occurred = $this->timestamp(value: ($ticket['occurredAt'] ?? null));
+	private function countAnswerTime(array $tally, array $answer): array {
+		$resolved = $answer['resolved'];
+		$occurred = $this->timestamp(value: ($answer['ticket']['occurredAt'] ?? null));
 		if ($occurred !== null && $occurred <= $resolved) {
 			$tally['answerTimes'][] = ($resolved - $occurred);
 		}

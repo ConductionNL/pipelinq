@@ -98,7 +98,21 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 			return $this->failedInitiate(message: 'Adyen API key or merchantAccount not configured');
 		}
 
-		$payment = new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount));
+		return $this->submitPayment(
+			payment: new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount)),
+			paymentMethod: $paymentMethod
+		);
+	}//end initiate()
+
+	/**
+	 * Send a payment to Adyen's /payments; an amount of zero or less is refused first.
+	 *
+	 * @param PspPayment $payment       The payment.
+	 * @param string     $paymentMethod The method (card).
+	 *
+	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
+	 */
+	private function submitPayment(PspPayment $payment, string $paymentMethod): array {
 		if ($payment->cents <= 0) {
 			return $this->failedInitiate(message: 'Invalid amount');
 		}
@@ -111,7 +125,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 		}
 
 		return $this->pending(sessionId: (string)($response['body']['pspReference'] ?? ''), redirectUrl: null);
-	}//end initiate()
+	}//end submitPayment()
 
 	/**
 	 * The Adyen /payments request body; a transaction without a reference gets a generated one.

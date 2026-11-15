@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Pipelinq\AppInfo\Application;
@@ -85,9 +86,7 @@ class ClientRiskChangeListener implements IEventListener {
 			return;
 		}
 
-		$after    = $entity->getObject();
-		$schema   = (string) $entity->getSchema();
-		$clientId = $this->clientOf(schema: $schema, before: $before, after: $after);
+		$clientId = $this->clientOf(entity: $entity, before: $before);
 		if ($clientId === '') {
 			return;
 		}
@@ -103,13 +102,14 @@ class ClientRiskChangeListener implements IEventListener {
 	 * The client to recompute: a contract's whose status changed, or a survey
 	 * answer's that became a detractor; '' for anything else.
 	 *
-	 * @param string              $schema The saved object's schema id.
+	 * @param ObjectEntity        $entity The saved object.
 	 * @param array<string,mixed> $before The object before the save.
-	 * @param array<string,mixed> $after  The object after the save.
 	 *
 	 * @return string
 	 */
-	private function clientOf(string $schema, array $before, array $after): string {
+	private function clientOf(ObjectEntity $entity, array $before): string {
+		$after  = $entity->getObject();
+		$schema = (string) $entity->getSchema();
 		$contractSchema = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
 		$surveySchema   = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
 

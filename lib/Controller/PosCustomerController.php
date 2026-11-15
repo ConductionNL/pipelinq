@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
-use OCA\Pipelinq\Util\PosControllerResponses;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

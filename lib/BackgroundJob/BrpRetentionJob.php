@@ -91,21 +91,19 @@ class BrpRetentionJob extends TimedJob {
 			[$register, $personSchema, $contactSchema] = $config;
 
 			$objects = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+			$sweep = new BrpRetentionSweep(
+				objects: $objects,
+				register: $register,
+				personSchema: $personSchema,
+				contactSchema: $contactSchema,
+				now: new DateTimeImmutable('now', new DateTimeZone('UTC'))
+			);
 
 			$records = $objects->findAll(config: ['filters' => ['register' => $register, 'schema' => $personSchema]]);
 
 			$deleted = 0;
 			foreach (($records ?? []) as $record) {
-				$arr = $this->recordToArray(rec: $record);
-				$wasDeleted = $this->deleteExpiredPerson(
-					objects: $objects,
-					record: $arr,
-					register: $register,
-					personSchema: $personSchema,
-					contactSchema: $contactSchema,
-					now: $now
-				);
+				$wasDeleted = $this->deleteExpiredPerson(sweep: $sweep, record: $this->recordToArray(rec: $record));
 				$deleted += (int)$wasDeleted;
 			}//end foreach
 
@@ -155,36 +153,25 @@ class BrpRetentionJob extends TimedJob {
 	 * Delete a BrpPersoon record when its retention window has elapsed and
 	 * reset the linked contact.
 	 *
-	 * @param object $objects OR ObjectService.
+	 * @param BrpRetentionSweep $sweep The retention pass.
 	 * @param array<string, mixed> $record Persoon record data.
-	 * @param string $register Register slug.
-	 * @param string $personSchema BrpPersoon schema slug.
-	 * @param string $contactSchema Contact schema slug.
-	 * @param DateTimeImmutable $now Current time (UTC).
 	 *
 	 * @return bool True when a record was deleted.
 	 */
-	private function deleteExpiredPerson(
-		object $objects,
-		array $record,
-		string $register,
-		string $personSchema,
-		string $contactSchema,
-		DateTimeImmutable $now,
-	): bool {
-		if ($this->isRetentionExpired(record: $record, now: $now) === false) {
+	private function deleteExpiredPerson(BrpRetentionSweep $sweep, array $record): bool {
+		if ($this->isRetentionExpired(record: $record, now: $sweep->now) === false) {
 			return false;
 		}
 
 		$uuid = (string)($record['@self']['id'] ?? $record['id'] ?? '');
 		$contactId = (string)($record['gekoppeldContact'] ?? '');
 
-		if ($this->deletePerson(objects: $objects, register: $register, personSchema: $personSchema, uuid: $uuid) === false) {
+		if ($this->deletePerson(sweep: $sweep, uuid: $uuid) === false) {
 			return false;
 		}
 
-		if ($contactId !== '' && $contactSchema !== '') {
-			$this->resetContact(objects: $objects, register: $register, contactSchema: $contactSchema, contactId: $contactId, persoonUuid: $uuid);
+		if ($contactId !== '' && $sweep->contactSchema !== '') {
+			$this->resetContact(sweep: $sweep, link: ['contactId' => $contactId, 'persoonUuid' => $uuid]);
 		}
 
 		return true;
@@ -216,17 +203,15 @@ class BrpRetentionJob extends TimedJob {
 	/**
 	 * Delete the person object; false (logged) when the delete fails.
 	 *
-	 * @param object $objects The OpenRegister ObjectService.
-	 * @param string $register The register.
-	 * @param string $personSchema The BRP person schema.
+	 * @param BrpRetentionSweep $sweep The retention pass.
 	 * @param string $uuid The person uuid.
 	 *
 	 * @return bool True when deleted.
 	 */
-	private function deletePerson(object $objects, string $register, string $personSchema, string $uuid): bool {
+	private function deletePerson(BrpRetentionSweep $sweep, string $uuid): bool {
 		try {
-			$objects->setRegister($register)
-				->setSchema($personSchema)
+			$sweep->objects->setRegister($sweep->register)
+				->setSchema($sweep->personSchema)
 				->deleteObject(uuid: $uuid);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -245,20 +230,18 @@ class BrpRetentionJob extends TimedJob {
 	 * Contact.brpPersoonId is preserved (per spec — it may become a dangling pointer);
 	 * verifiedBSN is set to false.
 	 *
-	 * @param object $objects OR ObjectService.
-	 * @param string $register Register ID.
-	 * @param string $contactSchema Contact schema ID.
-	 * @param string $contactId Contact UUID.
-	 * @param string $persoonUuid Recently-deleted BrpPersoon UUID.
+	 * @param BrpRetentionSweep $sweep The retention pass.
+	 * @param array{contactId: string, persoonUuid: string} $link The contact UUID and the recently-deleted BrpPersoon UUID.
 	 *
 	 * @return void
 	 */
-	private function resetContact(object $objects, string $register, string $contactSchema, string $contactId, string $persoonUuid): void {
+	private function resetContact(BrpRetentionSweep $sweep, array $link): void {
+		$contactId = $link['contactId'];
 		try {
-			$existing = $objects->find(
+			$existing = $sweep->objects->find(
 				id: $contactId,
-				register: $register,
-				schema: $contactSchema,
+				register: $sweep->register,
+				schema: $sweep->contactSchema,
 			);
 			$existingArr = $this->recordToArray(rec: $existing);
 
@@ -266,17 +249,17 @@ class BrpRetentionJob extends TimedJob {
 				return;
 			}
 
-			if ((string)($existingArr['brpPersonId'] ?? '') !== $persoonUuid) {
+			if ((string)($existingArr['brpPersonId'] ?? '') !== $link['persoonUuid']) {
 				return;
 			}
 
 			$existingArr['verifiedBSN'] = false;
 			// Per spec REQ-BSN-008-01: brpPersoonId stays (dangling pointer to deleted record).
-			$objects->saveObject(
+			$sweep->objects->saveObject(
 				object: $existingArr,
 				extend: [],
-				register: $register,
-				schema: $contactSchema,
+				register: $sweep->register,
+				schema: $sweep->contactSchema,
 				uuid: $contactId,
 			);
 		} catch (Throwable $e) {

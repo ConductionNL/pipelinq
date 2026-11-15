@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
-use OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;

@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
-use OCA\Pipelinq\Util\CentsAsDecimal;
+use OCA\Pipelinq\Service\Support\CentsAsDecimal;
 use Psr\Log\LoggerInterface;
 use Throwable;
 

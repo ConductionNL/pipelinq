@@ -192,7 +192,7 @@ class NotesController extends Controller {
 		}
 
 		try {
-			return $this->objectInScope(objectType: $objectType, objectId: $objectId, schemaKey: $schemaKey, ticketType: $ticketType);
+			return $this->objectInScope(objectType: $objectType, objectId: $objectId);
 		} catch (\OCP\DB\Exception|\OCP\AppFramework\Db\DoesNotExistException $e) {
 			// Expected "not found" path — return false without noise.
 			return false;
@@ -206,15 +206,17 @@ class NotesController extends Controller {
 	/**
 	 * Whether the object is found in the scope of its type (and, for tickets, carries the subtype).
 	 *
-	 * @param string      $objectType The pipelinq object type.
-	 * @param string      $objectId   The OR object UUID.
-	 * @param string|null $schemaKey  The app-config key of the type's schema, or null for tickets.
-	 * @param string|null $ticketType The ticket subtype, or null for non-ticket types.
+	 * The type's schema key (null for tickets) and ticket subtype (null for
+	 * non-ticket types) come from the type maps.
+	 *
+	 * @param string $objectType The pipelinq object type.
+	 * @param string $objectId   The OR object UUID.
 	 *
 	 * @return bool
 	 */
-	private function objectInScope(string $objectType, string $objectId, string|null $schemaKey, string|null $ticketType): bool {
-		[$registerId, $schemaId] = $this->resolveScope(schemaKey: $schemaKey);
+	private function objectInScope(string $objectType, string $objectId): bool {
+		$ticketType = (self::OBJECT_TYPE_TO_TICKET_TYPE[$objectType] ?? null);
+		[$registerId, $schemaId] = $this->resolveScope(schemaKey: (self::OBJECT_TYPE_TO_SCHEMA_KEY[$objectType] ?? null));
 
 		if ($registerId === '' || $schemaId === '') {
 			// Settings not yet configured — fail closed.

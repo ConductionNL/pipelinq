@@ -246,25 +246,24 @@ class FullExportService implements FullExportServiceInterface {
 			return null;
 		}
 
-		return $this->allRows(slug: $slug, register: $register, schema: $schema);
+		return $this->allRows(slug: $slug, filters: ['register' => $register, 'schema' => $schema]);
 	}//end rowsOf()
 
 	/**
 	 * Every object of a configured schema, page by page, read past per-user rules.
 	 *
-	 * @param string $slug The schema slug, for the error.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param string                $slug    The schema slug, for the error.
+	 * @param array<string, string> $filters The register and schema ids.
 	 *
 	 * @return list<array<string, mixed>> The objects.
 	 *
 	 * @throws RuntimeException When a page cannot be read.
 	 */
-	private function allRows(string $slug, string $register, string $schema): array {
+	private function allRows(string $slug, array $filters): array {
 		$rows   = [];
 		$offset = 0;
 		do {
-			$page = $this->pageOf(slug: $slug, register: $register, schema: $schema, offset: $offset);
+			$page = $this->pageOf(slug: $slug, config: ['filters' => $filters, 'limit' => self::PAGE_SIZE, 'offset' => $offset]);
 			foreach ($page as $object) {
 				$rows[] = $this->toArray(object: $object);
 			}
@@ -279,19 +278,17 @@ class FullExportService implements FullExportServiceInterface {
 	/**
 	 * One page of a schema's objects.
 	 *
-	 * @param string $slug The schema slug, for the error.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param int $offset The page offset.
+	 * @param string               $slug   The schema slug, for the error.
+	 * @param array<string, mixed> $config The findAll config: filters, limit and offset.
 	 *
 	 * @return array<mixed> The objects on the page.
 	 *
 	 * @throws RuntimeException When the page cannot be read.
 	 */
-	private function pageOf(string $slug, string $register, string $schema, int $offset): array {
+	private function pageOf(string $slug, array $config): array {
 		try {
 			return $this->objectService->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::PAGE_SIZE, 'offset' => $offset],
+				config: $config,
 				_rbac: false,
 				_multitenancy: false
 			);

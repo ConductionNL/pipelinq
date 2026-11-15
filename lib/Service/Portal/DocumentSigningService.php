@@ -96,6 +96,17 @@ class DocumentSigningService implements DocumentSigningServiceInterface {
 			'expiresAt' => $expiresAt,
 		];
 
+		return $this->signedUrl(payload: $payload);
+	}//end generateUrl()
+
+	/**
+	 * The signed token for a payload and its download path.
+	 *
+	 * @param array{objectId: string, objectType: string, accountId: string, issuedAt: int, expiresAt: int} $payload The token payload.
+	 *
+	 * @return array{token: string, path: string, expiresAt: int} The signed material.
+	 */
+	private function signedUrl(array $payload): array {
 		$encoded = $this->base64UrlEncode(data: json_encode($payload));
 		$signature = $this->base64UrlEncode(data: $this->sign(encoded: $encoded));
 		$token = $encoded . '.' . $signature;
@@ -103,9 +114,9 @@ class DocumentSigningService implements DocumentSigningServiceInterface {
 		return [
 			'token' => $token,
 			'path' => '/portal/api/documents/' . $token . '/download',
-			'expiresAt' => $expiresAt,
+			'expiresAt' => $payload['expiresAt'],
 		];
-	}//end generateUrl()
+	}//end signedUrl()
 
 	/**
 	 * Validate a token: verify the signature, then the expiry.

@@ -176,7 +176,7 @@ class AppointmentCalendarLeafProvider {
 			return [];
 		}
 
-		$events = $this->leafEventsFor(calendarSyncId: $calendarSyncId, resourceId: $resourceId, date: $date);
+		$events = $this->leafEventsFor(calendarSyncId: $calendarSyncId, logContext: ['resource' => $resourceId, 'date' => $date]);
 		if (is_array($events) === false) {
 			return [];
 		}
@@ -203,13 +203,12 @@ class AppointmentCalendarLeafProvider {
 	/**
 	 * The leaf-synced events of a calendar, or null when the leaf cannot answer.
 	 *
-	 * @param string $calendarSyncId The resource's calendar link.
-	 * @param string $resourceId     Resource UUID/slug (logged).
-	 * @param string $date           ISO date (logged).
+	 * @param string                $calendarSyncId The resource's calendar link.
+	 * @param array<string, string> $logContext     Resource and date, logged on failure.
 	 *
 	 * @return mixed The leaf's answer, or null.
 	 */
-	private function leafEventsFor(string $calendarSyncId, string $resourceId, string $date): mixed {
+	private function leafEventsFor(string $calendarSyncId, array $logContext): mixed {
 		$leaf = $this->resolveLeaf();
 		if ($leaf === null || method_exists($leaf, 'getEventsForObject') === false) {
 			return null;
@@ -221,7 +220,7 @@ class AppointmentCalendarLeafProvider {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: calendar leaf getEventsForObject failed',
-				['resource' => $resourceId, 'date' => $date]
+				$logContext
 			);
 			return null;
 		}
@@ -291,11 +290,14 @@ class AppointmentCalendarLeafProvider {
 	 * @return void
 	 */
 	private function pushEventsForBooking(object $leaf, string $bookingId, array $booking): void {
-		$service = $this->loadServiceQuiet(serviceId: (string)($booking['serviceId'] ?? ''));
-		$summary = $this->buildSummary(booking: $booking, service: $service);
-		$body = $this->buildDescription(booking: $booking, service: $service);
-
-		$target = ['register' => $this->registerNumeric(), 'schema' => $this->schemaNumeric(key: self::BOOKING_SCHEMA_KEY), 'booking' => $bookingId];
+		$event = $this->eventBase(booking: $booking);
+		$push = new BookingEventPush(
+			leaf: $leaf,
+			register: $this->registerNumeric(),
+			schema: $this->schemaNumeric(key: self::BOOKING_SCHEMA_KEY),
+			bookingId: $bookingId,
+			event: $event
+		);
 
 		// Reschedule contract: drop existing VEVENTs first so the move
 		// semantics hold (the leaf's `unlinkEventsForObject` removes the
@@ -303,36 +305,47 @@ class AppointmentCalendarLeafProvider {
 		$this->dropExistingEvents(leaf: $leaf, bookingUuid: $bookingId);
 
 		foreach ($this->resourcesFromBooking(booking: $booking) as $resourceId) {
-			$base = [
-				'summary' => $summary,
-				'dtstart' => (string)($booking['startAt'] ?? ''),
-				'dtend' => (string)($booking['endAt'] ?? ''),
-				'description' => $body,
-			];
-			if ($this->pushResourceEvent(leaf: $leaf, target: $target, base: $base, resourceId: $resourceId) === false) {
+			if ($this->pushResourceEvent(push: $push, resourceId: $resourceId) === false) {
 				return;
 			}
 		}
 	}//end pushEventsForBooking()
 
 	/**
+	 * The VEVENT payload of a Booking without attendees.
+	 *
+	 * @param array<string, mixed> $booking The confirmed Booking.
+	 *
+	 * @return array<string, string> Keys: summary, dtstart, dtend, description.
+	 */
+	private function eventBase(array $booking): array {
+		$service = $this->loadServiceQuiet(serviceId: (string)($booking['serviceId'] ?? ''));
+
+		return [
+			'summary' => $this->buildSummary(booking: $booking, service: $service),
+			'dtstart' => (string)($booking['startAt'] ?? ''),
+			'dtend' => (string)($booking['endAt'] ?? ''),
+			'description' => $this->buildDescription(booking: $booking, service: $service),
+		];
+	}//end eventBase()
+
+	/**
 	 * Push the VEVENT for one staff resource of a Booking.
 	 *
-	 * @param object               $leaf       The calendar leaf.
-	 * @param array<string, mixed> $target     Keys: register, schema (numeric ids), booking (UUID).
-	 * @param array<string, mixed> $base       The event payload without attendees.
-	 * @param string               $resourceId Resource UUID/slug.
+	 * @param BookingEventPush $push       What every event of the Booking shares.
+	 * @param string           $resourceId Resource UUID/slug.
 	 *
 	 * @return bool False when the leaf cannot create events, so the push stops.
 	 */
-	private function pushResourceEvent(object $leaf, array $target, array $base, string $resourceId): bool {
+	private function pushResourceEvent(BookingEventPush $push, string $resourceId): bool {
 		$resource = $this->loadResource(resourceId: $resourceId);
 		if ($resource === null) {
 			return true;
 		}
 
-		$payload = $base;
+		$payload = $push->event;
 		$payload['attendees'] = $this->attendeesFor(resource: $resource);
+		$leaf = $push->leaf;
 
 		try {
 			if (method_exists($leaf, 'createEvent') === false) {
@@ -341,11 +354,11 @@ class AppointmentCalendarLeafProvider {
 			}
 
 			// @phpstan-ignore-next-line dynamic leaf seam (OR CalendarEventService).
-			$leaf->createEvent($target['register'], $target['schema'], $target['booking'], $payload['summary'], $payload);
+			$leaf->createEvent($push->register, $push->schema, $push->bookingId, $payload['summary'], $payload);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: calendar leaf createEvent failed',
-				['booking' => $target['booking'], 'resource' => $resourceId]
+				['booking' => $push->bookingId, 'resource' => $resourceId]
 			);
 		}
 
@@ -632,7 +645,7 @@ class AppointmentCalendarLeafProvider {
 
 		$blocks = [];
 		foreach ($events as $event) {
-			$block = $this->eventToBlock(event: $event, dayStart: $dayStart, dayEnd: $dayEnd);
+			$block = $this->eventToBlock(event: $event, day: [$dayStart, $dayEnd]);
 			if ($block !== null) {
 				$blocks[] = $block;
 			}
@@ -649,12 +662,12 @@ class AppointmentCalendarLeafProvider {
 	 * PHPMD's complexity threshold.
 	 *
 	 * @param mixed $event The leaf VEVENT entry (array or jsonSerialize'able).
-	 * @param int $dayStart Day-start unix timestamp.
-	 * @param int $dayEnd Day-end unix timestamp.
+	 * @param array{0: int, 1: int} $day Day-start and day-end unix timestamps.
 	 *
 	 * @return array{startTime: string, endTime: string}|null
 	 */
-	private function eventToBlock(mixed $event, int $dayStart, int $dayEnd): ?array {
+	private function eventToBlock(mixed $event, array $day): ?array {
+		[$dayStart, $dayEnd] = $day;
 		$data = $this->toArray(object: $event);
 		if ($data === null) {
 			return null;

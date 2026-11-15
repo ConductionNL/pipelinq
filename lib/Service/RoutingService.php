@@ -255,7 +255,10 @@ class RoutingService implements RoutingServiceInterface {
 		$objectService = $this->getObjectService();
 
 		return $this->openRequestCount(userId: $userId)
-			+ $this->openLeadCount(objectService: $objectService, registerId: $registerId, leadSchemaId: $leadSchemaId, userId: $userId);
+			+ $this->openLeadCount(
+				objectService: $objectService,
+				filters: ['register' => $registerId, 'schema' => $leadSchemaId, 'assignee' => $userId]
+			);
 	}//end getAgentWorkload()
 
 	/**
@@ -293,26 +296,22 @@ class RoutingService implements RoutingServiceInterface {
 	/**
 	 * Count the agent's open leads server-side; 0 when no lead schema is set or the count fails (logged).
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $registerId The register id.
-	 * @param string $leadSchemaId The lead schema id.
-	 * @param string $userId The agent's user id.
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $filters      The register, the lead schema and the agent's user id as `assignee`.
 	 *
 	 * @return int The number of open leads.
 	 */
-	private function openLeadCount(object $objectService, string $registerId, string $leadSchemaId, string $userId): int {
-		if ($leadSchemaId === '') {
+	private function openLeadCount(object $objectService, array $filters): int {
+		if ($filters['schema'] === '') {
 			return 0;
 		}
 
 		try {
-			return $objectService->count(
-				['filters' => ['register' => $registerId, 'schema' => $leadSchemaId, 'assignee' => $userId, 'status' => 'open']]
-			);
+			return $objectService->count(['filters' => $filters + ['status' => 'open']]);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'RoutingService: failed to count open leads',
-				['exception' => $e->getMessage(), 'userId' => $userId]
+				['exception' => $e->getMessage(), 'userId' => $filters['assignee']]
 			);
 			return 0;
 		}
@@ -343,7 +342,7 @@ class RoutingService implements RoutingServiceInterface {
 			return [];
 		}
 
-		$skills = $this->loadActiveSkills(registerId: $registerId, skillSchemaId: $skillSchemaId, category: $category);
+		$skills = $this->loadActiveSkills(scope: ['register' => $registerId, 'schema' => $skillSchemaId], category: $category);
 		$matchingSkillsById = $this->collectMatchingSkills(skills: $skills, category: $category);
 		if ($matchingSkillsById === []) {
 			return [];
@@ -357,21 +356,16 @@ class RoutingService implements RoutingServiceInterface {
 	/**
 	 * Load all active skills, returning an empty list on failure.
 	 *
-	 * @param string $registerId The configured register ID.
-	 * @param string $skillSchemaId The skill schema ID.
-	 * @param string $category The category (for error context only).
+	 * @param array<string, string> $scope    The configured register and the skill schema.
+	 * @param string                $category The category (for error context only).
 	 *
 	 * @return array<int, array<string, mixed>> The active skills as plain arrays (empty on error).
 	 */
-	private function loadActiveSkills(string $registerId, string $skillSchemaId, string $category): array {
+	private function loadActiveSkills(array $scope, string $category): array {
 		try {
 			$skills = $this->getObjectService()->findAll(
 				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $skillSchemaId,
-						'isActive' => true,
-					],
+					'filters' => $scope + ['isActive' => true],
 					'limit' => 999,
 				]
 			);

@@ -234,20 +234,32 @@ class ArticleService implements ArticleServiceInterface {
 			return ['error' => 'That slug is already in use'];
 		}
 
-		$now = $this->nowIso();
-		$record = array_merge(
-			$clean,
-			[
-				'title' => $title,
-				'slug' => $slug,
-				'status' => 'draft',
-				'author' => $authorUid,
-				'agentAuthored' => ($agent !== ''),
-				'agentAuthoredBy' => $agent,
-				'createdAt' => $now,
-				'updatedAt' => $now,
-			]
+		return $this->saveDraft(
+			record: array_merge(
+				$clean,
+				[
+					'title' => $title,
+					'slug' => $slug,
+					'status' => 'draft',
+					'author' => $authorUid,
+					'agentAuthored' => ($agent !== ''),
+					'agentAuthoredBy' => $agent,
+				]
+			)
 		);
+	}//end createArticle()
+
+	/**
+	 * Stamp a new article's creation time and save it.
+	 *
+	 * @param array<string, mixed> $record The article to create.
+	 *
+	 * @return array{article?: array<string, mixed>, error?: string}
+	 */
+	private function saveDraft(array $record): array {
+		$now = $this->nowIso();
+		$record['createdAt'] = $now;
+		$record['updatedAt'] = $now;
 
 		$saved = $this->store->save(schemaSlug: $this->articleSchemaSlug(), payload: $record);
 		if ($saved === null) {
@@ -255,7 +267,7 @@ class ArticleService implements ArticleServiceInterface {
 		}
 
 		return ['article' => $saved];
-	}//end createArticle()
+	}//end saveDraft()
 
 	/**
 	 * Patch an article's editable fields.
@@ -279,11 +291,8 @@ class ArticleService implements ArticleServiceInterface {
 			return ['error' => $clean];
 		}
 
-		$merged = array_merge($existing, $clean);
-		$merged['updatedAt'] = $this->nowIso();
-		$merged['agentAuthored'] = ($agent !== '');
-		$merged['agentAuthoredBy'] = $agent;
-		return $this->savedOver(existing: $existing, merged: $merged);
+		$stamp = ['updatedAt' => $this->nowIso(), 'agentAuthored' => ($agent !== ''), 'agentAuthoredBy' => $agent];
+		return $this->savedOver(existing: $existing, merged: array_merge($existing, $clean, $stamp));
 	}//end updateArticle()
 
 	/**

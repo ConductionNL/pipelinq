@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Util\CentsAsDecimal;
+use OCA\Pipelinq\Service\Support\CentsAsDecimal;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;

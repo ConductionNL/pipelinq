@@ -404,21 +404,15 @@ class XWikiService implements XWikiServiceInterface {
 		}
 
 		$base = $this->getBaseUrl();
+		$payload = $this->emptyResult(limit: $limit, offset: $offset);
 		if ($base === '' || $space === '') {
-			return $this->emptyResult(limit: $limit, offset: $offset);
+			return $payload;
 		}
 
 		$wiki = 'xwiki';
 		$url = sprintf('%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d', $base, $wiki, rawurlencode($space), $limit, $offset);
-		$xml = $this->fetchXml(url: $url);
-		$results = $this->parsePageSummaries(xml: $xml, space: $space);
-
-		$payload = [
-			'results' => $results,
-			'total' => count($results),
-			'limit' => $limit,
-			'offset' => $offset,
-		];
+		$payload['results'] = $this->parsePageSummaries(xml: $this->fetchXml(url: $url), space: $space);
+		$payload['total'] = count($payload['results']);
 		$this->toCache(key: $cacheKey, value: $payload);
 		return $payload;
 	}//end getPages()

@@ -202,11 +202,11 @@ class AvailabilityService implements AvailabilityServiceInterface {
 				continue;
 			}
 
-			if ($this->overlapsAny(startMin: $slotStartMin, endMin: $slotEndMin, blocks: $blocked) === true) {
+			if ($this->overlapsAny(slot: ['startMin' => $slotStartMin, 'endMin' => $slotEndMin], blocks: $blocked) === true) {
 				continue;
 			}
 
-			$free[] = $this->slotRow(startMin: $slotStartMin, endMin: $slotEndMin, duration: $duration);
+			$free[] = $this->slotRow(startMin: $slotStartMin, endMin: $slotEndMin);
 		}
 
 		return $free;
@@ -216,16 +216,15 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	 * One free slot as the API answers it.
 	 *
 	 * @param int $startMin Slot start in minutes from midnight.
-	 * @param int $endMin   Slot end in minutes from midnight.
-	 * @param int $duration Service duration in minutes.
+	 * @param int $endMin   Slot end in minutes from midnight; the service duration after the start.
 	 *
 	 * @return array{startTime: string, endTime: string, durationMinutes: int}
 	 */
-	private function slotRow(int $startMin, int $endMin, int $duration): array {
+	private function slotRow(int $startMin, int $endMin): array {
 		return [
 			'startTime' => $this->minutesToHHMM(minutes: $startMin),
 			'endTime' => $this->minutesToHHMM(minutes: $endMin),
-			'durationMinutes' => $duration,
+			'durationMinutes' => ($endMin - $startMin),
 		];
 	}//end slotRow()
 
@@ -431,8 +430,20 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return [];
 		}
 
-		$start = $this->minutesFromHHMM(time: $startTime);
-		$end = $this->minutesFromHHMM(time: $endTime);
+		$range = [$this->minutesFromHHMM(time: $startTime), $this->minutesFromHHMM(time: $endTime)];
+		return self::alignedStarts(range: $range, intervalMinutes: $intervalMinutes);
+	}//end alignToSlots()
+
+	/**
+	 * The slot starts inside a range, aligned to the interval.
+	 *
+	 * @param array{0: int, 1: int} $range           Start and end in minutes from midnight.
+	 * @param int                   $intervalMinutes Slot interval, above 0.
+	 *
+	 * @return array<int, int> Slot starts in minutes from midnight.
+	 */
+	private static function alignedStarts(array $range, int $intervalMinutes): array {
+		[$start, $end] = $range;
 		if ($end <= $start) {
 			return [];
 		}
@@ -445,7 +456,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		return $slots;
-	}//end alignToSlots()
+	}//end alignedStarts()
 
 	/**
 	 * Delete the availability-cache entry for a resource on a date.
@@ -517,20 +528,21 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		$rows = $this->findRows(schema: $schema, filters: ['resourceId' => $resourceId]);
-		return $this->deleteCacheRows(rows: $rows, register: $register, schema: $schema, resourceId: $resourceId);
+		return $this->deleteCacheRows(
+			rows: $rows,
+			scope: new AvailabilityCacheScope(register: $register, schema: $schema, resourceId: $resourceId)
+		);
 	}//end invalidateResource()
 
 	/**
 	 * Delete cache rows, counting the ones that went.
 	 *
-	 * @param array<int, array<string, mixed>> $rows       The cache rows.
-	 * @param string                           $register   The register id.
-	 * @param string                           $schema     The availability-cache schema id.
-	 * @param string                           $resourceId Resource UUID.
+	 * @param array<int, array<string, mixed>> $rows  The cache rows.
+	 * @param AvailabilityCacheScope           $scope The register, cache schema and resource.
 	 *
 	 * @return int How many rows were deleted.
 	 */
-	private function deleteCacheRows(array $rows, string $register, string $schema, string $resourceId): int {
+	private function deleteCacheRows(array $rows, AvailabilityCacheScope $scope): int {
 		$deleted = 0;
 		foreach ($rows as $row) {
 			$uuid = $this->idOf(object: $row);
@@ -538,7 +550,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 				continue;
 			}
 
-			$deleted += $this->deleteCacheRow(uuid: $uuid, register: $register, schema: $schema, resourceId: $resourceId);
+			$deleted += $this->deleteCacheRow(uuid: $uuid, scope: $scope);
 		}
 
 		return $deleted;
@@ -547,21 +559,19 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	/**
 	 * Delete one cache row, logging a failed delete.
 	 *
-	 * @param string $uuid       The row's uuid.
-	 * @param string $register   The register id.
-	 * @param string $schema     The availability-cache schema id.
-	 * @param string $resourceId Resource UUID.
+	 * @param string                 $uuid  The row's uuid.
+	 * @param AvailabilityCacheScope $scope The register, cache schema and resource.
 	 *
 	 * @return int 1 when the row was deleted, otherwise 0.
 	 */
-	private function deleteCacheRow(string $uuid, string $register, string $schema, string $resourceId): int {
+	private function deleteCacheRow(string $uuid, AvailabilityCacheScope $scope): int {
 		try {
-			$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(uuid: $uuid, register: $scope->register, schema: $scope->schema);
 			return 1;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: availability cache row could not be deleted',
-				['resource' => $resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
+				['resource' => $scope->resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
 			);
 			return 0;
 		}
@@ -612,23 +622,22 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return [];
 		}
 
-		$rows = $this->findAllRows(register: $register, schema: $schema, filters: $filters);
+		$rows = $this->findAllRows(filters: array_merge(['register' => $register, 'schema' => $schema], $filters), schema: $schema);
 		return $this->rowArrays(rows: $rows);
 	}//end findRows()
 
 	/**
 	 * Run the findAll for one schema, logging a failed read.
 	 *
-	 * @param string                $register The register id.
-	 * @param string                $schema   The schema id.
-	 * @param array<string, string> $filters  Equality filters.
+	 * @param array<string, string> $filters The register and schema ids, then equality filters.
+	 * @param string                $schema  The schema id, for the log.
 	 *
 	 * @return mixed The rows, or an empty array when the read failed.
 	 */
-	private function findAllRows(string $register, string $schema, array $filters): mixed {
+	private function findAllRows(array $filters, string $schema): mixed {
 		try {
 			return $this->getObjectService()->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+				config: ['filters' => $filters]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -682,14 +691,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		$nowIso = $this->nowIso();
 
 		if ($entry !== null) {
-			$expiresAt = (string)($entry['expiresAt'] ?? '');
-			$isStale = ($expiresAt === '' || strtotime($expiresAt) < strtotime($nowIso));
-			return [
-				'freeBlocks' => $this->normaliseFreeBlocks(blocks: ($entry['freeBlocks'] ?? [])),
-				'generatedAt' => (string)($entry['generatedAt'] ?? ''),
-				'expiresAt' => $expiresAt,
-				'stale' => $isStale,
-			];
+			return $this->cachedSnapshot(entry: $entry, nowIso: $nowIso);
 		}
 
 		$free = $this->computeAvailability(
@@ -697,17 +699,47 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			date: $date,
 			serviceDurationMinutes: $duration
 		);
-		$entry = [
-			'resourceId' => $resourceId,
-			'date' => $date,
-			'freeBlocks' => $free,
-			'generatedAt' => $nowIso,
-			'expiresAt' => $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS),
+
+		return $this->storedSnapshot(
+			entry: ['resourceId' => $resourceId, 'date' => $date, 'freeBlocks' => $free],
+			nowIso: $nowIso
+		);
+	}//end getOrComputeCache()
+
+	/**
+	 * The snapshot of a cached entry, flagged stale once past its `expiresAt`.
+	 *
+	 * @param array<string, mixed> $entry  The cache entry.
+	 * @param string               $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function cachedSnapshot(array $entry, string $nowIso): array {
+		$expiresAt = (string)($entry['expiresAt'] ?? '');
+		$isStale = ($expiresAt === '' || strtotime($expiresAt) < strtotime($nowIso));
+		return [
+			'freeBlocks' => $this->normaliseFreeBlocks(blocks: ($entry['freeBlocks'] ?? [])),
+			'generatedAt' => (string)($entry['generatedAt'] ?? ''),
+			'expiresAt' => $expiresAt,
+			'stale' => $isStale,
 		];
+	}//end cachedSnapshot()
+
+	/**
+	 * Persist a freshly computed entry, stamped now with its expiry, and answer its snapshot.
+	 *
+	 * @param array{resourceId: string, date: string, freeBlocks: mixed} $entry  The computed entry.
+	 * @param string                                                     $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function storedSnapshot(array $entry, string $nowIso): array {
+		$entry['generatedAt'] = $nowIso;
+		$entry['expiresAt'] = $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS);
 		$this->persistCacheEntry(entry: $entry);
 
 		return array_diff_key($entry, ['resourceId' => true, 'date' => true]) + ['stale' => false];
-	}//end getOrComputeCache()
+	}//end storedSnapshot()
 
 	/**
 	 * Load a Resource by id/slug, scoped to the pipelinq register/schema.
@@ -1154,13 +1186,14 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	/**
 	 * True when [startMin, endMin) overlaps any block.
 	 *
-	 * @param int $startMin Slot start (minutes from midnight).
-	 * @param int $endMin Slot end (minutes from midnight).
+	 * @param array{startMin: int, endMin: int} $slot Slot start and end (minutes from midnight).
 	 * @param array<int, array{startMin: int, endMin: int}> $blocks Blocked ranges.
 	 *
 	 * @return bool
 	 */
-	private function overlapsAny(int $startMin, int $endMin, array $blocks): bool {
+	private function overlapsAny(array $slot, array $blocks): bool {
+		$startMin = $slot['startMin'];
+		$endMin = $slot['endMin'];
 		foreach ($blocks as $block) {
 			$blockStart = $block['startMin'];
 			$blockEnd = $block['endMin'];

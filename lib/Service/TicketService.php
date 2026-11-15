@@ -259,6 +259,18 @@ class TicketService implements TicketServiceInterface {
 			$query['sort'] = $sort;
 		}
 
+		return $this->findAllLogged(query: $query, ticketType: $ticketType);
+	}//end findByType()
+
+	/**
+	 * The tickets matching the query, none (logged) when OpenRegister fails.
+	 *
+	 * @param array<string, mixed> $query      The findAll query.
+	 * @param string               $ticketType The subtype, for the log.
+	 *
+	 * @return array<int, mixed> The matching ticket rows.
+	 */
+	private function findAllLogged(array $query, string $ticketType): array {
 		try {
 			return $this->getObjectService()->findAll($query);
 		} catch (\Throwable $e) {
@@ -268,7 +280,7 @@ class TicketService implements TicketServiceInterface {
 			);
 			return [];
 		}
-	}//end findByType()
+	}//end findAllLogged()
 
 	/**
 	 * Create or update a ticket of one subtype.
@@ -509,32 +521,19 @@ class TicketService implements TicketServiceInterface {
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
-		$client = trim($client);
-		$channel = trim($channel);
-		$title = trim($title);
-		$direction = trim($direction);
+		$fields = [
+			'client' => trim($client),
+			'channel' => trim($channel),
+			'title' => trim($title),
+			'direction' => trim($direction),
+		];
 
-		$refusal = $this->contactmomentArgumentError(client: $client, channel: $channel, title: $title, direction: $direction);
+		$refusal = $this->contactmomentRefusal(fields: $fields);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		if ($this->isConfigured() === false) {
-			return $this->mcp->error(
-				code: 'not_configured',
-				message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
-			);
-		}
-
-		$payload = $this->contactmomentPayload(
-			client: $client,
-			channel: $channel,
-			title: $title,
-			direction: $direction,
-			outcome: $outcome,
-			notes: $notes
-		);
-
+		$payload = $this->contactmomentPayload(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
 		return $this->saveContactmoment(payload: $payload);
 	}//end logContactmoment()
 
@@ -560,6 +559,25 @@ class TicketService implements TicketServiceInterface {
 	}//end saveContactmoment()
 
 	/**
+	 * The refusal for an invalid logContactmoment() argument or an unconfigured app.
+	 *
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when the contactmoment may be saved.
+	 */
+	private function contactmomentRefusal(array $fields): ?array {
+		$refusal = $this->contactmomentArgumentError(fields: $fields);
+		if ($refusal !== null || $this->isConfigured() === true) {
+			return $refusal;
+		}
+
+		return $this->mcp->error(
+			code: 'not_configured',
+			message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+		);
+	}//end contactmomentRefusal()
+
+	/**
 	 * The refusal for the first missing or invalid logContactmoment() argument.
 	 *
 	 * Direction is required on a contactmoment (REQ-CMD-001) and is
@@ -568,21 +586,18 @@ class TicketService implements TicketServiceInterface {
 	 * optional in the SIGNATURE only, so an existing caller gets a named
 	 * refusal instead of a TypeError.
 	 *
-	 * @param string $client    The trimmed client UUID.
-	 * @param string $channel   The trimmed channel.
-	 * @param string $title     The trimmed title.
-	 * @param string $direction The trimmed direction.
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
 	 *
 	 * @return array<string, mixed>|null The error envelope, or null when every argument is valid.
 	 */
-	private function contactmomentArgumentError(string $client, string $channel, string $title, string $direction): ?array {
-		foreach (['client' => $client, 'channel' => $channel, 'title' => $title, 'direction' => $direction] as $name => $value) {
+	private function contactmomentArgumentError(array $fields): ?array {
+		foreach ($fields as $name => $value) {
 			if ($value === '') {
 				return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument ' . $name . ' is missing.');
 			}
 		}
 
-		if (in_array($direction, self::DIRECTIONS, true) === false) {
+		if (in_array($fields['direction'], self::DIRECTIONS, true) === false) {
 			return $this->mcp->error(
 				code: 'invalid_arguments',
 				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
@@ -595,37 +610,19 @@ class TicketService implements TicketServiceInterface {
 	/**
 	 * The contactmoment ticket payload; empty optional fields are left out.
 	 *
-	 * @param string      $client    The client UUID.
-	 * @param string      $channel   The channel.
-	 * @param string      $title     The title.
-	 * @param string      $direction The direction.
-	 * @param string|null $outcome   The optional outcome.
-	 * @param string|null $notes     The optional notes, stored as the description.
+	 * @param array<string, string>      $fields   The trimmed required arguments.
+	 * @param array<string, string|null> $optional The outcome and the notes (as `description`).
 	 *
 	 * @return array<string, mixed> The payload.
 	 */
-	private function contactmomentPayload(
-		string $client,
-		string $channel,
-		string $title,
-		string $direction,
-		?string $outcome,
-		?string $notes,
-	): array {
-		$payload = [
-			'client' => $client,
-			'channel' => $channel,
-			'title' => $title,
-			'direction' => $direction,
-			'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
-		];
+	private function contactmomentPayload(array $fields, array $optional): array {
+		$payload = $fields;
+		$payload['occurredAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
-		if ($outcome !== null && $outcome !== '') {
-			$payload['outcome'] = $outcome;
-		}
-
-		if ($notes !== null && $notes !== '') {
-			$payload['description'] = $notes;
+		foreach ($optional as $name => $value) {
+			if ($value !== null && $value !== '') {
+				$payload[$name] = $value;
+			}
 		}
 
 		return $payload;

@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Util;
 
+use OCA\Pipelinq\Tests\Unit\Listener\Support\ConfiguredSchemaObjectReadTest;
 use OCA\Pipelinq\Util\ContainerObjectFind;
 use OCA\Pipelinq\Util\ContainerObjectSave;
 use PHPUnit\Framework\TestCase;

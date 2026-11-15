@@ -304,7 +304,7 @@ class IntegriqConsentClient {
 		$address = $recipient['address'];
 		if (trim($address) === '') {
 			// No address to ask about: integriq cannot answer, so fail closed.
-			return $this->unavailable(channel: $ask->channel, category: $ask->category, why: 'the contact has no address on this channel');
+			return $this->unavailable(ask: $ask, why: 'the contact has no address on this channel');
 		}
 
 		$decisions = $this->decide(
@@ -312,7 +312,7 @@ class IntegriqConsentClient {
 			recipients: [array_filter($recipient, static fn (string $value): bool => $value !== '')]
 		);
 
-		return ($decisions[$address] ?? $this->unavailable(channel: $ask->channel, category: $ask->category, why: 'no answer for this recipient'));
+		return ($decisions[$address] ?? $this->unavailable(ask: $ask, why: 'no answer for this recipient'));
 	}//end askOne()
 
 	/**
@@ -458,7 +458,7 @@ class IntegriqConsentClient {
 					$reason = 'integriq did not answer for this recipient';
 				}
 
-				$decisions[$address] = $this->unavailable(channel: $ask->channel, category: $ask->category, why: $reason);
+				$decisions[$address] = $this->unavailable(ask: $ask, why: $reason);
 				continue;
 			}
 
@@ -558,14 +558,13 @@ class IntegriqConsentClient {
 	/**
 	 * The fail-closed answer: exempt goes out without a link, the rest is refused and logged.
 	 *
-	 * @param string $channel  The channel, for the log.
-	 * @param string $category The category.
-	 * @param string $why      What went wrong, for the log.
+	 * @param ConsentAsk $ask The channel (for the log) and the category.
+	 * @param string     $why What went wrong, for the log.
 	 *
 	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
 	 */
-	private function unavailable(string $channel, string $category, string $why): array {
-		$exempt = self::isExempt(category: $category);
+	private function unavailable(ConsentAsk $ask, string $why): array {
+		$exempt = self::isExempt(category: $ask->category);
 		$outcome = 'not sent';
 		if ($exempt === true) {
 			$outcome = 'sent, the category is exempt';
@@ -575,8 +574,8 @@ class IntegriqConsentClient {
 			'Pipelinq: integriq could not say whether this person may be messaged; '.$outcome,
 			[
 				'app' => AppIdentity::APP_ID,
-				'channel' => $channel,
-				'category' => $category,
+				'channel' => $ask->channel,
+				'category' => $ask->category,
 				'code' => self::CODE_UNAVAILABLE,
 				'why' => $why,
 			]

@@ -29,7 +29,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
-use OCA\Pipelinq\Util\BsnHashRows;
+use OCA\Pipelinq\Service\Support\BsnHashRows;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;

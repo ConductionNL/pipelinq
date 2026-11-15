@@ -191,12 +191,12 @@ class RenewalEngineService implements RenewalEngineServiceInterface {
 	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
 	 */
 	public function processContract(array $contract, string $today): string {
-		$uuid = (string)($contract['id'] ?? ($contract['uuid'] ?? ''));
+		$uuid = $this->uuidOf(contract: $contract);
 
 		// Silent expiry: an expiring contract whose endDate has passed and whose
 		// renewal lead never resolved -> churned.
 		if ((string)($contract['status'] ?? '') === 'expiring') {
-			return $this->processExpiringContract(contract: $contract, today: $today, uuid: $uuid);
+			return $this->processExpiringContract(contract: $contract, today: $today);
 		}
 
 		// Window detection: flip active -> expiring and create the renewal lead.
@@ -221,15 +221,15 @@ class RenewalEngineService implements RenewalEngineServiceInterface {
 	 *
 	 * @param array<string,mixed> $contract The contract object.
 	 * @param string $today ISO date (Y-m-d) of evaluation.
-	 * @param string $uuid The contract UUID.
 	 *
 	 * @return string A short action code: 'churned-silent', 'noticed', or 'noop'.
 	 */
-	private function processExpiringContract(array $contract, string $today, string $uuid): string {
+	private function processExpiringContract(array $contract, string $today): string {
+		$uuid = $this->uuidOf(contract: $contract);
 		$endDate = (string)($contract['endDate'] ?? '');
 		$outcome = (string)($contract['renewalLeadOutcome'] ?? '');
 		if ($endDate !== '' && $today > $endDate && $outcome === '') {
-			$this->transition(contract: $contract, newStatus: 'churned', uuid: $uuid);
+			$this->transition(contract: $contract, newStatus: 'churned');
 			return 'churned-silent';
 		}
 
@@ -263,18 +263,17 @@ class RenewalEngineService implements RenewalEngineServiceInterface {
 	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
 	 */
 	public function reconcile(array $contract): string {
-		$uuid = (string)($contract['id'] ?? ($contract['uuid'] ?? ''));
 		$outcome = (string)($contract['renewalLeadOutcome'] ?? '');
 
 		if ($outcome === 'won') {
-			$this->transition(contract: $contract, newStatus: 'renewed', uuid: $uuid);
+			$this->transition(contract: $contract, newStatus: 'renewed');
 			$successor = $this->contractService->buildSuccessorDraft($contract);
 			$this->contractService->save($successor, null);
 			return 'renewed';
 		}
 
 		if ($outcome === 'lost') {
-			$this->transition(contract: $contract, newStatus: 'churned', uuid: $uuid);
+			$this->transition(contract: $contract, newStatus: 'churned');
 			return 'churned';
 		}
 
@@ -286,15 +285,25 @@ class RenewalEngineService implements RenewalEngineServiceInterface {
 	 *
 	 * @param array<string,mixed> $contract The contract.
 	 * @param string $newStatus The target status.
-	 * @param string $uuid The contract UUID.
 	 *
 	 * @return void
 	 */
-	private function transition(array $contract, string $newStatus, string $uuid): void {
+	private function transition(array $contract, string $newStatus): void {
 		$this->contractService->assertTransitionAllowed($contract, $newStatus, true);
 		$contract['status'] = $newStatus;
-		$this->contractService->save($contract, $uuid);
+		$this->contractService->save($contract, $this->uuidOf(contract: $contract));
 	}//end transition()
+
+	/**
+	 * The contract's id, else its uuid ('' when it has neither).
+	 *
+	 * @param array<string,mixed> $contract The contract.
+	 *
+	 * @return string The contract UUID.
+	 */
+	private function uuidOf(array $contract): string {
+		return (string)($contract['id'] ?? ($contract['uuid'] ?? ''));
+	}//end uuidOf()
 
 	/**
 	 * Create the renewal lead in the pipeline (lead-management) and return its UUID.

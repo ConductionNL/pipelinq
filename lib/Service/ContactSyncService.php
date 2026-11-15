@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
-use OCA\Pipelinq\Util\FirstValue;
+use OCA\Pipelinq\Service\Support\FirstValue;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\Contacts\IManager as IContactsManager;
@@ -223,16 +223,7 @@ class ContactSyncService implements ContactSyncServiceInterface {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function importContact(string $uid, string $addressBookKey, string $type = 'client', ?string $clientId = null): array {
-		if ($this->contactsManager->isEnabled() === false) {
-			throw new RuntimeException('Nextcloud Contacts is not available');
-		}
-
-		$ncContact = $this->findContactByUid(uid: $uid);
-
-		if ($ncContact === null) {
-			throw new RuntimeException('Contact not found in Nextcloud addressbook');
-		}
-
+		$ncContact = $this->requireContact(uid: $uid);
 		if ($type === 'client') {
 			return $this->contactImportService->importAsClient(
 				ncContact: $ncContact,
@@ -246,6 +237,29 @@ class ContactSyncService implements ContactSyncServiceInterface {
 			clientId: $clientId
 		);
 	}//end importContact()
+
+	/**
+	 * The Nextcloud contact with this UID.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return array The contact.
+	 *
+	 * @throws RuntimeException When Contacts is unavailable or the contact is not found.
+	 */
+	private function requireContact(string $uid): array {
+		if ($this->contactsManager->isEnabled() === false) {
+			throw new RuntimeException('Nextcloud Contacts is not available');
+		}
+
+		$ncContact = $this->findContactByUid(uid: $uid);
+
+		if ($ncContact === null) {
+			throw new RuntimeException('Contact not found in Nextcloud addressbook');
+		}
+
+		return $ncContact;
+	}//end requireContact()
 
 	/**
 	 * Sync a Pipelinq client or contact to Nextcloud Contacts.

@@ -200,7 +200,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 			return PHP_FLOAT_MAX;
 		}
 
-		$found = $this->completedRefunds(register: $register, schema: $schema, transactionId: $transactionId);
+		$found = $this->completedRefunds(filters: ['register' => $register, 'schema' => $schema, 'originalTransaction' => $transactionId]);
 		if ($found === []) {
 			return PHP_FLOAT_MAX;
 		}
@@ -211,25 +211,23 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	/**
 	 * Find the completed refunds of a transaction.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The refund schema id.
-	 * @param string $transactionId The original transaction UUID.
+	 * @param array<string, string> $filters The register id, the refund schema id and the original transaction UUID (`originalTransaction`).
 	 *
 	 * @return array<int, mixed> The findAll result as a one-element list, or an empty list when the lookup fails.
 	 *
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
-	private function completedRefunds(string $register, string $schema, string $transactionId): array {
+	private function completedRefunds(array $filters): array {
 		try {
 			return [$this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
 				config: [
-					'filters' => ['register' => $register, 'schema' => $schema, 'originalTransaction' => $transactionId, 'status' => 'completed'],
+					'filters' => $filters + ['status' => 'completed'],
 				]
 			)];
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: refund guard could not sum completed refunds (fail closed)',
-				['exception' => $e->getMessage(), 'transaction' => $transactionId]
+				['exception' => $e->getMessage(), 'transaction' => $filters['originalTransaction']]
 			);
 			return [];
 		}

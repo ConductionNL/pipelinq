@@ -34,6 +34,7 @@ use OCA\Pipelinq\Service\Cti\CallCompletion;
 use OCA\Pipelinq\Service\Cti\CallRecording;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\CtiWebhookDelivery;
+use OCA\Pipelinq\Service\Cti\EventLogPurge;
 use OCA\Pipelinq\Service\Cti\EventLogQuery;
 use OCA\Pipelinq\Service\Cti\PendingCall;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
@@ -157,24 +158,31 @@ class CtiService implements CtiServiceInterface {
 		// the delivery is the caller's problem, not the server's.
 		$event = $this->parseWebhook(adapter: $adapter, delivery: new CtiWebhookDelivery(platform: $platform, payload: $payload));
 
+		return $this->recordWebhook(event: $event, verdict: ['platform' => $platform, 'signatureValid' => $valid]);
+	}//end handleWebhook()
+
+	/**
+	 * Dispatch a parsed webhook event when its signature was valid, then log it.
+	 *
+	 * @param CtiWebhookResult                              $event   Normalised event.
+	 * @param array{platform: string, signatureValid: bool} $verdict The platform and whether the signature was valid.
+	 *
+	 * @return array{logged: bool, valid: bool, interactionId: string|null}
+	 */
+	private function recordWebhook(CtiWebhookResult $event, array $verdict): array {
 		$outcome = ['interactionId' => null, 'processingError' => 'Invalid signature'];
-		if ($valid === true) {
-			$outcome = $this->dispatchVerifiedEvent(platform: $platform, event: $event);
+		if ($verdict['signatureValid'] === true) {
+			$outcome = $this->dispatchVerifiedEvent(platform: $verdict['platform'], event: $event);
 		}
 
-		$this->logEvent(
-			platform: $platform,
-			event: $event,
-			signatureValid: $valid,
-			processingError: $outcome['processingError'],
-		);
+		$this->logEvent(event: $event, verdict: $verdict + ['processingError' => $outcome['processingError']]);
 
 		return [
 			'logged' => true,
-			'valid' => $valid,
+			'valid' => $verdict['signatureValid'],
 			'interactionId' => $outcome['interactionId'],
 		];
-	}//end handleWebhook()
+	}//end recordWebhook()
 
 	/**
 	 * The body a webhook signature is checked against: the raw body when the
@@ -416,6 +424,18 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): bool {
+		return $this->attachTo(interactionId: $interactionId, recording: new CallRecording(recordingUrl: $recordingUrl, expiresAt: $expiresAt));
+	}//end attachRecording()
+
+	/**
+	 * Attach a recording to a contactmoment ticket and queue its transcription.
+	 *
+	 * @param string        $interactionId Contactmoment ticket UUID.
+	 * @param CallRecording $recording     The recording URL and its retention expiry.
+	 *
+	 * @return bool True when the recording was written.
+	 */
+	private function attachTo(string $interactionId, CallRecording $recording): bool {
 		// 🔴 RETURNS WHETHER THE WRITE HAPPENED.
 		//
 		// This was `: void`, and swallowed BOTH the unconfigured-store early
@@ -431,16 +451,13 @@ class CtiService implements CtiServiceInterface {
 			return false;
 		}
 
-		$saved = $this->saveRecording(
-			interactionId: $interactionId,
-			recording: new CallRecording(recordingUrl: $recordingUrl, expiresAt: $expiresAt)
-		);
+		$saved = $this->saveRecording(interactionId: $interactionId, recording: $recording);
 		if ($saved === true) {
 			$this->queueTranscription(interactionId: $interactionId);
 		}
 
 		return $saved;
-	}//end attachRecording()
+	}//end attachTo()
 
 	/**
 	 * Queue the transcription of a call whose recording was just attached,
@@ -528,14 +545,31 @@ class CtiService implements CtiServiceInterface {
 		}
 
 		$config = $this->loadConfig();
-		$callerId = (string)($config['default_outbound_caller_id'] ?? '');
+		$call = new PendingCall(
+			direction: 'outbound',
+			fromNumber: (string)($config['default_outbound_caller_id'] ?? ''),
+			toNumber: $targetNumber,
+			agent: new CallAgent(userId: $userId, extension: $extension),
+		);
 
+		return $this->dialOut(platform: $platform, call: $call);
+	}//end originateCall()
+
+	/**
+	 * Let the platform's adapter place an outbound call and pre-create its contactmoment.
+	 *
+	 * @param string      $platform The active platform.
+	 * @param PendingCall $call     The outbound call: caller id, destination and agent.
+	 *
+	 * @return OriginateResult The outcome.
+	 */
+	private function dialOut(string $platform, PendingCall $call): OriginateResult {
 		try {
 			$adapter = $this->adapterRegistry->get($platform);
 			$callResult = $adapter->originateCall(
-				extension: $extension,
-				targetNumber: $targetNumber,
-				callerId: $callerId,
+				extension: $call->agent->extension,
+				targetNumber: $call->toNumber,
+				callerId: $call->fromNumber,
 			);
 		} catch (\Throwable $e) {
 			return new OriginateResult(
@@ -548,12 +582,7 @@ class CtiService implements CtiServiceInterface {
 		$interactionId = null;
 		if ($callResult->success === true) {
 			$interactionId = $this->createPendingContactmoment(
-				call: new PendingCall(
-					direction: 'outbound',
-					fromNumber: $callerId,
-					toNumber: $targetNumber,
-					agent: new CallAgent(userId: $userId, extension: $extension),
-				),
+				call: $call,
 				extra: [
 					'telephony_platform' => $platform,
 					'external_call_id' => ($callResult->externalCallId ?? ''),
@@ -568,7 +597,7 @@ class CtiService implements CtiServiceInterface {
 			error: $callResult->error,
 			platform: $platform,
 		);
-	}//end originateCall()
+	}//end dialOut()
 
 	/**
 	 * Sync presence state for an agent (single source of truth).
@@ -587,36 +616,49 @@ class CtiService implements CtiServiceInterface {
 			return;
 		}
 
+		$this->savePresence(
+			target: $target,
+			presence: ['user_id' => $userId, 'extension' => ($extension ?? ''), 'presence_state' => $presenceState, 'platform' => $platform]
+		);
+	}//end syncPresence()
+
+	/**
+	 * Store an agent's presence record over its existing one; a failure is logged.
+	 *
+	 * @param array{0: string, 1: string} $target The register and presence schema.
+	 * @param array{user_id: string, extension: string, presence_state: string, platform: string|null} $presence The reported presence.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
+	 */
+	private function savePresence(array $target, array $presence): void {
 		try {
 			[$register, $schema] = $target;
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$uuid = $this->firstId(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema, 'user_id' => $userId]);
-			$payload = $this->presencePayload(userId: $userId, presenceState: $presenceState, extension: $extension, platform: $platform);
-			$objectService->saveObject($payload, [], $register, $schema, $uuid);
+			$uuid = $this->firstId(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema, 'user_id' => $presence['user_id']]);
+			$objectService->saveObject($this->presencePayload(presence: $presence), [], $register, $schema, $uuid);
 		} catch (\Throwable $e) {
-			$this->logger->warning('CTI syncPresence failed', ['exception' => $e->getMessage(), 'userId' => $userId]);
+			$this->logger->warning('CTI syncPresence failed', ['exception' => $e->getMessage(), 'userId' => $presence['user_id']]);
 		}//end try
-	}//end syncPresence()
+	}//end savePresence()
 
 	/**
 	 * The agent presence record to store.
 	 *
-	 * @param string $userId NC user UID.
-	 * @param string $presenceState The presence state.
-	 * @param string|null $extension Agent extension.
-	 * @param string|null $platform Reporting platform; the active platform when null.
+	 * @param array{user_id: string, extension: string, presence_state: string, platform: string|null} $presence The reported presence.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
-	private function presencePayload(string $userId, string $presenceState, string|null $extension, string|null $platform): array {
+	private function presencePayload(array $presence): array {
 		return [
-			'user_id' => $userId,
-			'extension' => ($extension ?? ''),
-			'presence_state' => $presenceState,
+			'user_id' => $presence['user_id'],
+			'extension' => $presence['extension'],
+			'presence_state' => $presence['presence_state'],
 			'last_updated_at' => gmdate('Y-m-d\TH:i:s\Z'),
-			'platform' => ($platform ?? $this->activePlatform()),
+			'platform' => ($presence['platform'] ?? $this->activePlatform()),
 		];
 	}//end presencePayload()
 
@@ -640,26 +682,6 @@ class CtiService implements CtiServiceInterface {
 	}//end schemaTarget()
 
 	/**
-	 * Run ObjectService::findAll with the given filters and limit.
-	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param array<string, mixed> $filters The filters.
-	 * @param int $limit Maximum number of objects.
-	 *
-	 * @return mixed The findAll result.
-	 *
-	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
-	 */
-	private function findObjects(object $objectService, array $filters, int $limit) {
-		return $objectService->findAll(
-			[
-				'filters' => $filters,
-				'limit' => $limit,
-			]
-		);
-	}//end findObjects()
-
-	/**
 	 * The first object matching the filters, as a list of zero or one element.
 	 *
 	 * @param object $objectService The OR ObjectService.
@@ -670,7 +692,7 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	private function firstObject(object $objectService, array $filters): array {
-		$existing = $this->findObjects(objectService: $objectService, filters: $filters, limit: 1);
+		$existing = $objectService->findAll(['filters' => $filters, 'limit' => 1]);
 		if (is_array($existing) === true && count($existing) > 0) {
 			return [$existing[0]];
 		}
@@ -926,15 +948,16 @@ class CtiService implements CtiServiceInterface {
 	private function purgeBefore(array $target, string $cutoff): int {
 		[$register, $schema] = $target;
 		$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		$oldEntries = $this->findObjects(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema], limit: 1000);
+		$oldEntries = $objectService->findAll(['filters' => ['register' => $register, 'schema' => $schema], 'limit' => 1000]);
 
 		if (is_array($oldEntries) === false) {
 			return 0;
 		}
 
+		$purge = new EventLogPurge(objectService: $objectService, register: $register, schema: $schema, cutoff: $cutoff);
 		$deleted = 0;
 		foreach ($oldEntries as $entry) {
-			if ($this->purgeEntry(objectService: $objectService, entry: $entry, target: $target, cutoff: $cutoff) === true) {
+			if ($this->purgeEntry(purge: $purge, entry: $entry) === true) {
 				$deleted++;
 			}
 		}
@@ -945,19 +968,17 @@ class CtiService implements CtiServiceInterface {
 	/**
 	 * Delete one event-log entry when it was received before the cutoff.
 	 *
-	 * @param object $objectService The OR ObjectService.
+	 * @param EventLogPurge $purge The purge pass.
 	 * @param mixed $entry The event-log entry.
-	 * @param array{0: string, 1: string} $target The register and event-log schema.
-	 * @param string $cutoff The ISO-8601 cutoff.
 	 *
 	 * @return bool Whether the entry was deleted.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
-	private function purgeEntry(object $objectService, $entry, array $target, string $cutoff): bool {
+	private function purgeEntry(EventLogPurge $purge, $entry): bool {
 		$data = $this->toArray(value: $entry);
 		$receivedAt = (string)($data['received_at'] ?? '');
-		if ($receivedAt === '' || $receivedAt >= $cutoff) {
+		if ($receivedAt === '' || $receivedAt >= $purge->cutoff) {
 			return false;
 		}
 
@@ -966,24 +987,22 @@ class CtiService implements CtiServiceInterface {
 			return false;
 		}
 
-		return $this->deleteLogEntry(objectService: $objectService, target: $target, id: $id);
+		return $this->deleteLogEntry(purge: $purge, id: $id);
 	}//end purgeEntry()
 
 	/**
 	 * Delete one event-log entry, logging a failure.
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param array{0: string, 1: string} $target The register and event-log schema.
+	 * @param EventLogPurge $purge The purge pass.
 	 * @param string $id The entry id.
 	 *
 	 * @return bool Whether the entry was deleted.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
-	private function deleteLogEntry(object $objectService, array $target, string $id): bool {
-		[$register, $schema] = $target;
+	private function deleteLogEntry(EventLogPurge $purge, string $id): bool {
 		try {
-			$objectService->deleteObject(register: $register, schema: $schema, uuid: $id);
+			$purge->objectService->deleteObject(register: $purge->register, schema: $purge->schema, uuid: $id);
 			return true;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -997,19 +1016,12 @@ class CtiService implements CtiServiceInterface {
 	/**
 	 * Persist a webhook event in the CTI event log.
 	 *
-	 * @param string $platform Platform identifier.
 	 * @param CtiWebhookResult $event Normalised event.
-	 * @param bool $signatureValid Whether signature validation passed.
-	 * @param string|null $processingError Error captured during processing.
+	 * @param array{platform: string, signatureValid: bool, processingError: string|null} $verdict Platform, signature check, processing error.
 	 *
 	 * @return void
 	 */
-	private function logEvent(
-		string $platform,
-		CtiWebhookResult $event,
-		bool $signatureValid,
-		?string $processingError,
-	): void {
+	private function logEvent(CtiWebhookResult $event, array $verdict): void {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiEventLog_schema', '');
 		if ($register === '' || $schema === '') {
@@ -1021,13 +1033,13 @@ class CtiService implements CtiServiceInterface {
 			$objectService->saveObject(
 				[
 					'received_at' => gmdate('Y-m-d\TH:i:s\Z'),
-					'platform' => $platform,
+					'platform' => $verdict['platform'],
 					'event_type' => $event->eventType,
 					'external_call_id' => $event->externalCallId,
 					'payload_json' => $event->raw,
 					'processed_at' => gmdate('Y-m-d\TH:i:s\Z'),
-					'processing_error' => $processingError,
-					'signature_valid' => $signatureValid,
+					'processing_error' => $verdict['processingError'],
+					'signature_valid' => $verdict['signatureValid'],
 				],
 				[],
 				$register,

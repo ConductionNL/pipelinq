@@ -41,7 +41,7 @@ use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
-use OCA\Pipelinq\Util\PageCount;
+use OCA\Pipelinq\Service\Support\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;

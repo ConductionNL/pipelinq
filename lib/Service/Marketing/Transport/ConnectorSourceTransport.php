@@ -38,7 +38,7 @@ namespace OCA\Pipelinq\Service\Marketing\Transport;
 
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
-use OCA\Pipelinq\Util\CastSerialisedToArray;
+use OCA\Pipelinq\Service\Support\CastSerialisedToArray;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -147,21 +147,19 @@ final class ConnectorSourceTransport implements TransportInterface {
 		}
 
 		$body = $this->buildRequestBody(mail: $mail);
-		return $this->callSource(callService: $callService, source: $source, body: $body);
+		return $this->callSource(call: static fn (): mixed => $callService->call(source: $source, endpoint: '', method: 'POST', config: ['json' => $body]));
 	}//end sendToSource()
 
 	/**
 	 * POST the request body to the source, logging a failed call.
 	 *
-	 * @param mixed                       $callService OpenConnector's call service.
-	 * @param array<string, mixed>|object $source      The resolved Source entity.
-	 * @param array<string, mixed>        $body        The request body.
+	 * @param callable(): mixed $call OpenConnector's call of the source with the request body.
 	 *
 	 * @return SendResult The outcome.
 	 */
-	private function callSource(mixed $callService, array|object $source, array $body): SendResult {
+	private function callSource(callable $call): SendResult {
 		try {
-			$callLog = $callService->call(source: $source, endpoint: '', method: 'POST', config: ['json' => $body]);
+			$callLog = $call();
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ConnectorSourceTransport.send: connector call failed',
