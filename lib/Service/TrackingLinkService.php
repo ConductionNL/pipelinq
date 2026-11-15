@@ -369,16 +369,10 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	 */
 	private function reportToTraffic(string $kind, array $delivery, ?string $clickedUrl): void {
 		try {
-			$blastId = (string)($delivery['blastId'] ?? '');
-			$blast = null;
-			if ($blastId !== '') {
-				$blast = $this->blastService->getBlastById(blastId: $blastId);
-			}
-
 			$this->trafficEventEmitter->emitEmailEvent(
 				kind: $kind,
 				delivery: $delivery,
-				blast: ($blast ?? []),
+				blast: $this->blastOf(delivery: $delivery),
 				clickedUrl: $clickedUrl,
 			);
 		} catch (Throwable $e) {
@@ -388,6 +382,23 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 			);
 		}
 	}//end reportToTraffic()
+
+	/**
+	 * The blast a delivery belongs to, or an empty array when it names none or it is gone.
+	 *
+	 * @param array<string, mixed> $delivery The loaded blastDelivery row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function blastOf(array $delivery): array {
+		$blastId = (string)($delivery['blastId'] ?? '');
+		$blast = null;
+		if ($blastId !== '') {
+			$blast = $this->blastService->getBlastById(blastId: $blastId);
+		}
+
+		return ($blast ?? []);
+	}//end blastOf()
 
 	/**
 	 * Rewrite one `<a href="...">` match from `injectTracking()`.

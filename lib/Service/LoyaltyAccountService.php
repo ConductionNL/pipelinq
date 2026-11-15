@@ -94,11 +94,27 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			throw new RuntimeException('Opt-in is mandatory for loyalty account creation (REQ-LOY-010-01).');
 		}
 
+		return $this->persist(
+			payload: $this->newAccountPayload(
+				owner: ['customerId' => $customerId, 'programmeId' => $programmeId],
+				termsVersion: $termsVersion
+			),
+			uuid: null
+		);
+	}//end createAccount()
+
+	/**
+	 * The payload of a new, opted-in account for its owner.
+	 *
+	 * @param array{customerId: string, programmeId: string} $owner        The customer and programme.
+	 * @param string                                          $termsVersion The version of terms accepted.
+	 *
+	 * @return array<string, mixed> The account payload.
+	 */
+	private function newAccountPayload(array $owner, string $termsVersion): array {
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 
-		$payload = [
-			'customerId' => $customerId,
-			'programmeId' => $programmeId,
+		return $owner + [
 			'currentBalance' => 0,
 			'lifetimePoints' => 0,
 			'status' => 'active',
@@ -109,9 +125,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			'optInTermsVersion' => $termsVersion,
 			'anonymized' => false,
 		];
-
-		return $this->persist(payload: $payload, uuid: null);
-	}//end createAccount()
+	}//end newAccountPayload()
 
 	/**
 	 * Get an account by UUID.
@@ -167,12 +181,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		bool $optIn = true,
 		string $termsVersion = '1.0',
 	): array {
-		$existing = $this->findAccountByKlantAndProgramme(customerId: $customerId, programmeId: $programmeId);
-		if ($existing !== null) {
-			return $existing;
-		}
-
-		return $this->createAccount(
+		return $this->findAccountByKlantAndProgramme(customerId: $customerId, programmeId: $programmeId) ?? $this->createAccount(
 			customerId: $customerId,
 			programmeId: $programmeId,
 			optIn: $optIn,
@@ -322,22 +331,31 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		?string $tierAchievedOn = null,
 		?string $tierValidTo = null,
 	): ?array {
+		return $this->updated(
+			accountId: $accountId,
+			changes: ['currentTierId' => $tierId] + array_filter(
+				['tierAchievedOn' => $tierAchievedOn, 'tierValidTo' => $tierValidTo],
+				static fn (?string $value): bool => $value !== null
+			)
+		);
+	}//end setTier()
+
+	/**
+	 * Write changed fields onto a stored account.
+	 *
+	 * @param string               $accountId The account UUID.
+	 * @param array<string, mixed> $changes   The fields to set.
+	 *
+	 * @return array<string, mixed>|null The updated account, or null when not found.
+	 */
+	private function updated(string $accountId, array $changes): ?array {
 		$account = $this->getAccount(accountId: $accountId);
 		if ($account === null) {
 			return null;
 		}
 
-		$account['currentTierId'] = $tierId;
-		if ($tierAchievedOn !== null) {
-			$account['tierAchievedOn'] = $tierAchievedOn;
-		}
-
-		if ($tierValidTo !== null) {
-			$account['tierValidTo'] = $tierValidTo;
-		}
-
-		return $this->persist(payload: $account, uuid: $accountId);
-	}//end setTier()
+		return $this->persist(payload: array_replace($account, $changes), uuid: $accountId);
+	}//end updated()
 
 	/**
 	 * List all accounts for a programme (paginated; soft-cap 1000).
@@ -355,18 +373,23 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			return [];
 		}
 
+		return $this->accountRows(
+			filters: ['programmeId' => $programmeId, 'register' => $register, 'schema' => $schema],
+			page: ['limit' => $limit, 'offset' => $offset]
+		);
+	}//end listAccountsForProgramme()
+
+	/**
+	 * One page of accounts matching the filters; none when the lookup fails.
+	 *
+	 * @param array<string, string>           $filters The account filters.
+	 * @param array{limit: int, offset: int} $page    The page to read.
+	 *
+	 * @return array<int, array<string, mixed>> The accounts.
+	 */
+	private function accountRows(array $filters, array $page): array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => $limit,
-					'offset' => $offset,
-				]
-			);
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters] + $page);
 		} catch (\Throwable $e) {
 			return [];
 		}
@@ -377,7 +400,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		}
 
 		return array_map([$this, 'toArray'], $values);
-	}//end listAccountsForProgramme()
+	}//end accountRows()
 
 	/**
 	 * Persist an account (create when uuid is null, update otherwise).

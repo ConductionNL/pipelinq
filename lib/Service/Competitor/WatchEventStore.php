@@ -142,29 +142,49 @@ class WatchEventStore implements WatchEventStoreInterface {
 		}
 
 		$existing = $this->existing(watchId: $watchId, url: $url);
-
-		// The stored event is the BASE of the update, not something the new
-		// fields replace: `saveObject()` with a uuid replaces the object's
-		// data, so a payload without `relevanceScore` would erase a score
-		// hermiq wrote on an earlier run.
-		$base = ($existing ?? []);
-		unset($base['@self'], $base['id'], $base['uuid']);
 		$record = self::eventFields(watch: ['watchId' => $watchId] + $watch, item: ['url' => $url] + $item)
 			+ ['seenAt' => $this->seenAt(existing: $existing)];
 
+		return $this->writeEvent(existing: $existing, payload: array_merge(self::updateBase(existing: $existing), $record, $extra));
+	}//end upsert()
+
+	/**
+	 * The stored event's data that an update starts from, without its identity keys.
+	 *
+	 * The stored event is the BASE of the update, not something the new
+	 * fields replace: `saveObject()` with a uuid replaces the object's
+	 * data, so a payload without `relevanceScore` would erase a score
+	 * hermiq wrote on an earlier run.
+	 *
+	 * @param array<string, mixed>|null $existing The stored event, or null.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function updateBase(?array $existing): array {
+		$base = ($existing ?? []);
+		unset($base['@self'], $base['id'], $base['uuid']);
+
+		return $base;
+	}//end updateBase()
+
+	/**
+	 * Create the event, or update the stored one.
+	 *
+	 * @param array<string, mixed>|null $existing The stored event, or null.
+	 * @param array<string, mixed>      $payload  The event data to save.
+	 *
+	 * @return array{created: bool, event: array<string, mixed>|null}
+	 */
+	private function writeEvent(?array $existing, array $payload): array {
 		$id = null;
 		if ($existing !== null) {
 			$id = $this->store->idOf(payload: $existing);
 		}
 
-		$saved = $this->store->save(
-			schemaSlug: $this->schemaSlug(),
-			payload: array_merge($base, $record, $extra),
-			id: $id
-		);
+		$saved = $this->store->save(schemaSlug: $this->schemaSlug(), payload: $payload, id: $id);
 
 		return ['created' => ($existing === null), 'event' => $saved];
-	}//end upsert()
+	}//end writeEvent()
 
 	/**
 	 * The event's fields from its watch and item, trimmed and cut to their stored lengths.

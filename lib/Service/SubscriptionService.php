@@ -191,6 +191,20 @@ class SubscriptionService implements SubscriptionServiceInterface {
 		}
 
 		$run = new ListSignupRun(listId: $listId, email: strtolower(trim($email)));
+		$run->list = (array)$list;
+		$run->contactId = $contactId;
+		return $this->signupStatus(run: $run, honeypot: $honeypot);
+	}//end subscribe()
+
+	/**
+	 * Screen the address of a public signup and start its confirmation.
+	 *
+	 * @param ListSignupRun $run      The signup, its list and contact set.
+	 * @param string        $honeypot The decoy field; a non-empty value is a bot.
+	 *
+	 * @return array{status: string} `accepted` or `invalid`.
+	 */
+	private function signupStatus(ListSignupRun $run, string $honeypot): array {
 		if ($this->mailer->validateMailAddress($run->email) === false) {
 			return ['status' => 'invalid'];
 		}
@@ -198,18 +212,16 @@ class SubscriptionService implements SubscriptionServiceInterface {
 		if (trim($honeypot) !== '') {
 			$this->logger->info(
 				'SubscriptionService.subscribe: honeypot filled, discarding',
-				['listId' => $listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
+				['listId' => $run->listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
 			);
 			return ['status' => 'accepted'];
 		}
 
-		$run->existing = $this->findSubscription(listId: $listId, email: $run->email);
-		$run->list = (array)$list;
-		$run->contactId = $contactId;
+		$run->existing = $this->findSubscription(listId: $run->listId, email: $run->email);
 		$run->source = 'public-signup';
 		$this->startConfirmation(run: $run);
 		return ['status' => 'accepted'];
-	}//end subscribe()
+	}//end signupStatus()
 
 	/**
 	 * Confirm a membership from its signed link.
