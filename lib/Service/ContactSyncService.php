@@ -290,14 +290,12 @@ class ContactSyncService implements ContactSyncServiceInterface {
 	private function buildContactResults(array $results, array $linkedUids): array {
 		$contacts = [];
 		foreach ($results as $result) {
-			$uid = $result['UID'] ?? null;
-			if ($uid === null) {
+			if (($result['UID'] ?? null) === null) {
 				continue;
 			}
 
 			$contacts[] = $this->formatContactResult(
 				result: $result,
-				uid: $uid,
 				linkedUids: $linkedUids
 			);
 		}
@@ -308,13 +306,13 @@ class ContactSyncService implements ContactSyncServiceInterface {
 	/**
 	 * Format a single contact result entry.
 	 *
-	 * @param array $result The raw contact result.
-	 * @param string $uid The contact UID.
+	 * @param array $result The raw contact result, with its UID.
 	 * @param array $linkedUids The linked UIDs set.
 	 *
 	 * @return array The formatted contact entry.
 	 */
-	private function formatContactResult(array $result, string $uid, array $linkedUids): array {
+	private function formatContactResult(array $result, array $linkedUids): array {
+		$uid = (string)$result['UID'];
 		return [
 			'uid' => $uid,
 			'name' => $this->extractFirstValue(value: ($result['FN'] ?? '')),
