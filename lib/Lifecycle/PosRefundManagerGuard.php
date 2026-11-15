@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Lifecycle;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -57,6 +58,7 @@ use Psr\Log\LoggerInterface;
  */
 class PosRefundManagerGuard implements LifecycleGuardInterface {
 	use CastingPayloadToArray;
+	use ObjectArrayReads;
 
 	/**
 	 * A one-cent tolerance applied to the over-refund cap so floating-point
@@ -162,21 +164,13 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 			return null;
 		}
 
-		try {
-			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
+		return $this->foundAsArray(
+			find: fn (): mixed => $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $id,
 				register: $register,
 				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+			)
+		);
 	}//end fetchTransaction()
 
 	/**
