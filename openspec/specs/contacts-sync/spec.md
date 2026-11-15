@@ -260,7 +260,7 @@ The system MUST use a predictable address book for sync operations and support c
 
 ### Requirement: Group and Category Mapping [V1]
 
-The system SHOULD support mapping between Pipelinq client types/tags and vCard CATEGORIES to enable filtering in Nextcloud Contacts.
+The system SHALL support mapping between Pipelinq client types/tags and vCard CATEGORIES to enable filtering in Nextcloud Contacts.
 
 #### Scenario: Client type maps to vCard CATEGORIES
 - GIVEN a Pipelinq client with type "organization"
@@ -276,7 +276,7 @@ The system SHOULD support mapping between Pipelinq client types/tags and vCard C
 
 ### Requirement: Photo and Avatar Sync [V1]
 
-The system SHOULD support syncing profile photos between Pipelinq and Nextcloud Contacts.
+The system SHALL support syncing profile photos between Pipelinq and Nextcloud Contacts.
 
 #### Scenario: Nextcloud contact photo is available after import
 - GIVEN a Nextcloud contact has a PHOTO property in its vCard

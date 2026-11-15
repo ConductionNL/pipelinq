@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,10 +31,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\BlastService;
-use OCA\Pipelinq\Service\WebhookProcessorService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\JsonConfigArray;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -49,10 +54,14 @@ use Throwable;
  *   "unsubscribe propagates within minutes".
  * - Catches per-Blast errors: a failed Blast logs and the loop continues.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  */
-class BlastSendJob extends TimedJob {
+class BlastSendJob extends TimedJob implements BlastSendJobInterface {
+	use JsonConfigArray;
 	use PayloadToArray;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use ObjectServiceTarget;
 
 	/**
 	 * Interval in seconds (5 minutes).
@@ -78,18 +87,18 @@ class BlastSendJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container DI container for lazy OR.
-	 * @param BlastService $blastService Dispatch service.
-	 * @param WebhookProcessorService $webhookProcessor Webhook event processor.
+	 * @param BlastServiceInterface $blastService Dispatch service.
+	 * @param WebhookProcessorServiceInterface $webhookProcessor Webhook event processor.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private BlastService $blastService,
-		private WebhookProcessorService $webhookProcessor,
+		private BlastServiceInterface $blastService,
+		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -105,7 +114,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	protected function run(mixed $argument): void {
 		$this->logger->info('BlastSendJob: starting cycle');
@@ -127,7 +136,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @return int Total deliveries dispatched across all Blasts.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	public function dispatchSendingBlasts(): int {
 		$blasts = $this->loadSendingBlasts();
@@ -171,7 +180,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @return int Number of events drained.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	public function drainWebhookQueue(): int {
 		$queue = $this->readQueue();
@@ -214,7 +223,7 @@ class BlastSendJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function enqueueWebhookEvent(string $provider, array $event): void {
 		$queue = $this->readQueue();
@@ -232,25 +241,41 @@ class BlastSendJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> Sending blasts.
 	 */
 	private function loadSendingBlasts(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', 'pipelinq');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'blast_schema', 'blast');
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(
+			register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq'),
+			schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', 'blast')
+		);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
+		return $this->payloadsOf(
+			rows: $this->sendingRows(
+				objectService: $objectService,
+				filters: [
+					'status' => 'sending',
+					'register' => $register,
+					'schema' => $schema,
+				]
+			)
+		);
+	}//end loadSendingBlasts()
+
+	/**
+	 * The blast rows matching the filters, or [] when the read fails (logged).
+	 *
+	 * @param object                $objectService OpenRegister's ObjectService.
+	 * @param array<string, string> $filters       The status, register and schema filters.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function sendingRows(object $objectService, array $filters): iterable {
 		try {
 			$rows = $objectService->findAll(
 				config: [
-					'filters' => [
-						'status' => 'sending',
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => $filters,
 				]
 			);
 		} catch (Throwable $e) {
@@ -261,8 +286,19 @@ class BlastSendJob extends TimedJob {
 			return [];
 		}
 
+		return ($rows ?? []);
+	}//end sendingRows()
+
+	/**
+	 * The non-empty payloads of the rows.
+	 *
+	 * @param iterable<mixed> $rows The rows.
+	 *
+	 * @return array<int, array<string, mixed>> The payloads.
+	 */
+	private function payloadsOf(iterable $rows): array {
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$payload = $this->toArray(value: $row);
 			if ($payload !== []) {
 				$out[] = $payload;
@@ -270,7 +306,7 @@ class BlastSendJob extends TimedJob {
 		}
 
 		return $out;
-	}//end loadSendingBlasts()
+	}//end payloadsOf()
 
 	/**
 	 * Read the webhook queue from app config.
@@ -278,17 +314,7 @@ class BlastSendJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> Queue entries.
 	 */
 	private function readQueue(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::WEBHOOK_QUEUE_KEY, '');
-		if ($raw === '') {
-			return [];
-		}
-
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		return $decoded;
+		return $this->jsonConfigArray(key: self::WEBHOOK_QUEUE_KEY);
 	}//end readQueue()
 
 	/**
@@ -301,13 +327,13 @@ class BlastSendJob extends TimedJob {
 	private function writeQueue(array $queue): void {
 		if ($queue === []) {
 			try {
-				$this->appConfig->deleteKey(Application::APP_ID, self::WEBHOOK_QUEUE_KEY);
+				$this->appConfig->deleteKey(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY);
 			} catch (Throwable $e) {
 				$this->logger->info(
 					'BlastSendJob.writeQueue: deleteKey failed — falling back to empty array',
 					['exception' => $e->getMessage()]
 				);
-				$this->appConfig->setValueString(Application::APP_ID, self::WEBHOOK_QUEUE_KEY, '[]');
+				$this->appConfig->setValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, '[]');
 			}
 
 			return;
@@ -318,7 +344,7 @@ class BlastSendJob extends TimedJob {
 			return;
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, self::WEBHOOK_QUEUE_KEY, $encoded);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, $encoded);
 	}//end writeQueue()
 
 	/**
@@ -329,39 +355,6 @@ class BlastSendJob extends TimedJob {
 	 * @return string Identifier or empty.
 	 */
 	private function extractBlastId(array $blast): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($blast[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		if (isset($blast['@self']) === true && is_array($blast['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($blast['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
+		return $this->extractId(payload: $blast);
 	}//end extractBlastId()
-
-	/**
-	 * Lazy-resolve OpenRegister's ObjectService.
-	 *
-	 * @return object|null ObjectService or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastSendJob.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 }//end class

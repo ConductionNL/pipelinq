@@ -32,7 +32,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
@@ -43,6 +44,13 @@ use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
 use OCA\Pipelinq\Service\UnsubscribeMail;
+use OCA\Pipelinq\Service\Support\CastSerialisedToArray;
+use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Service\Support\ConfiguredMailTransportSchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Service\Support\QuietObjectSave;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Container\ContainerInterface;
@@ -70,6 +78,14 @@ use Throwable;
  *  at all. Re-measure by deleting this tag and running `composer phpmd`.
  */
 class MailTransportService {
+	use ConfiguredRegisterSlug;
+	use ConfiguredBlastDeliverySchemaSlug;
+	use SavedPayloadId;
+	use ConfiguredMailTransportSchemaSlug;
+	use CastSerialisedToArray;
+	use ContainerObjectServiceLookup;
+	use QuietObjectSave;
+
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -273,7 +289,7 @@ class MailTransportService {
 	 *
 	 * @return RenderedMail
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
 	 */
 	private function buildRenderedMail(array $template, array $delivery): RenderedMail {
@@ -359,7 +375,7 @@ class MailTransportService {
 	 *
 	 * @return string The body with the marker expanded.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	private function expandArticles(array $template, string $format): string {
 		$key = 'bodyText';
@@ -386,7 +402,7 @@ class MailTransportService {
 	 *
 	 * @return array<int, array<string, mixed>> The resolved articles.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	private function resolveTemplateArticles(array $template): array {
 		$ids = ($template['articleIds'] ?? []);
@@ -451,11 +467,11 @@ class MailTransportService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#3.2
 	 */
 	private function firstPartyTrackingEnabled(): bool {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'blast.first_party_tracking',
 			'false',
 		) === 'true';
@@ -470,7 +486,7 @@ class MailTransportService {
 	 *
 	 * @return string The rewritten HTML, or the original on failure.
 	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
+	 * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#3.2
 	 */
 	private function injectTrackingLinks(string $html, string $blastDeliveryId): string {
 		if ($html === '' || $blastDeliveryId === '') {
@@ -572,8 +588,10 @@ class MailTransportService {
 		try {
 			$found = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->getMailTransportSchemaSlug()
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info('MailTransportService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
@@ -689,13 +707,24 @@ class MailTransportService {
 	 * @param string $connectorSourceId The source id.
 	 *
 	 * @return int|null Rate limit (messages/second), or null when unset/unresolvable.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential resolve/parse guard
-	 *  clauses over the source lookup; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity) Same flat guard sequence; path count is a
-	 *  product of independent conditions, not nesting.
 	 */
 	private function readSourceRateLimit(string $connectorSourceId): ?int {
+		$source = $this->readConnectorSource(connectorSourceId: $connectorSourceId);
+		if ($source === null) {
+			return null;
+		}
+
+		return $this->rateLimitOf(source: $source);
+	}//end readSourceRateLimit()
+
+	/**
+	 * Read a `provider`-kind transport's OpenConnector source as an array.
+	 *
+	 * @param string $connectorSourceId The source id.
+	 *
+	 * @return array<string, mixed>|null The source, or null when it cannot be read.
+	 */
+	private function readConnectorSource(string $connectorSourceId): ?array {
 		if ($connectorSourceId === '') {
 			return null;
 		}
@@ -705,6 +734,23 @@ class MailTransportService {
 			return null;
 		}
 
+		$source = $this->findConnectorSource(objectService: $objectService, connectorSourceId: $connectorSourceId);
+		if ($source === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $source);
+	}//end readConnectorSource()
+
+	/**
+	 * Find a connector source in the register the connector declares, or null.
+	 *
+	 * @param object $objectService     The OpenRegister ObjectService.
+	 * @param string $connectorSourceId The source id.
+	 *
+	 * @return mixed The source entity, or null.
+	 */
+	private function findConnectorSource(object $objectService, string $connectorSourceId): mixed {
 		// The register is asked for, never assumed. A null here means the sender
 		// falls back to DEFAULT_RATE_LIMIT_PER_SECOND, which is exactly what an
 		// unread source used to produce silently: reading with a slug this instance
@@ -720,21 +766,27 @@ class MailTransportService {
 		}
 
 		try {
-			$source = $objectService->find(
+			return $objectService->find(
 				id: $connectorSourceId,
-				register: $registerSlug,
-				schema: ConnectorSourceRegister::SOURCE_SCHEMA
+				options: new ObjectFindOptions(register: $registerSlug, schema: ConnectorSourceRegister::SOURCE_SCHEMA)
 			);
 		} catch (Throwable $e) {
 			return null;
 		}
+	}//end findConnectorSource()
 
-		if ($source === null) {
-			return null;
-		}
-
-		$sourceArray = $this->toArray(value: $source);
-		$limitValue = ($sourceArray['rateLimitLimit'] ?? null);
+	/**
+	 * The per-second rate a source declares: its limit spread over its window.
+	 *
+	 * A non-positive or unreadable window counts as one second, and the rate
+	 * never drops below 1.
+	 *
+	 * @param array<string, mixed> $source The OpenConnector source.
+	 *
+	 * @return int|null Rate limit (messages/second), or null when no positive limit is declared.
+	 */
+	private function rateLimitOf(array $source): ?int {
+		$limitValue = ($source['rateLimitLimit'] ?? null);
 		if ($limitValue === null || is_numeric($limitValue) === false) {
 			return null;
 		}
@@ -744,7 +796,7 @@ class MailTransportService {
 			return null;
 		}
 
-		$windowValue = ($sourceArray['rateLimitWindow'] ?? null);
+		$windowValue = ($source['rateLimitWindow'] ?? null);
 		$window = 1;
 		if ($windowValue !== null && is_numeric($windowValue) === true) {
 			$window = (int)$windowValue;
@@ -755,7 +807,7 @@ class MailTransportService {
 		}
 
 		return max(1, (int)floor($limit / $window));
-	}//end readSourceRateLimit()
+	}//end rateLimitOf()
 
 	/**
 	 * Persist a `mailTransport` row.
@@ -766,21 +818,12 @@ class MailTransportService {
 	 * @return void
 	 */
 	private function saveObject(array $payload, string $id): void {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('MailTransportService.saveObject: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getMailTransportSchemaSlug(),
+			id: $id,
+			failure: 'MailTransportService.saveObject: save failed'
+		);
 	}//end saveObject()
 
 	/**
@@ -792,21 +835,12 @@ class MailTransportService {
 	 * @return void
 	 */
 	private function saveDelivery(array $payload, string $id): void {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getBlastDeliverySchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('MailTransportService.saveDelivery: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getBlastDeliverySchemaSlug(),
+			id: $id,
+			failure: 'MailTransportService.saveDelivery: save failed'
+		);
 	}//end saveDelivery()
 
 	/**
@@ -815,108 +849,8 @@ class MailTransportService {
 	 * @return object|null
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('MailTransportService.getObjectService: unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'MailTransportService.getObjectService: unavailable', errorKey: 'exception');
 	}//end getObjectService()
-
-	/**
-	 * The configured `pipelinq` register slug.
-	 *
-	 * @return string
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * The configured `mailTransport` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
-	}//end getMailTransportSchemaSlug()
-
-	/**
-	 * The configured `blastDelivery` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
-
-	/**
-	 * Extract a UUID/id/slug from an OpenRegister payload.
-	 *
-	 * @param array<string, mixed> $payload The payload.
-	 *
-	 * @return string The id, or '' when none is present.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($payload[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($self[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) into a plain array.
-	 *
-	 * @param mixed $value The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true) {
-			if (method_exists($value, 'jsonSerialize') === true) {
-				return (array)$value->jsonSerialize();
-			}
-
-			if (method_exists($value, 'getObject') === true) {
-				return (array)$value->getObject();
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Current UTC instant, ISO 8601.

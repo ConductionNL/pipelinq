@@ -44,6 +44,7 @@ use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory ObjectService double supporting filter-aware findAll + saveObject.
@@ -133,20 +134,21 @@ class FakeIngestObjectService {
 	 */
 	public function saveObject(
 		array|ObjectEntity $object,
-		?array $extend=[],
-		Register|string|int|null $register=null,
-		Schema|string|int|null $schema=null,
-		?string $uuid=null,
-		bool $_rbac=true,
-		bool $_multitenancy=true,
-		bool $silent=false,
-		bool $_validation=true,
-		?array $uploadedFiles=null,
-		?IUser $currentUser=null,
-		bool $failIfExists=false,
-		bool $_unowned=false,
-		bool $_dedupOverride=false,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): ObjectEntity {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
+		$silent = $options->policy->silent ?? false;
+		$_validation = $options->policy->validation ?? true;
+		$uploadedFiles = $options->uploadedFiles;
+		$currentUser = $options->actor->currentUser;
+		$failIfExists = $options->policy->failIfExists ?? false;
+		$_unowned = $options->actor->unowned ?? false;
+		$_dedupOverride = $options->policy->dedupOverride ?? false;
 		$this->saves[] = ['register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 		$data = $object;
 		if ($object instanceof ObjectEntity) {
@@ -416,4 +418,35 @@ class IngestProductVendorMasterTest extends TestCase {
 		$this->assertSame(expected: 'obj-1', actual: $os->store['obj-1']['productId']);
 		$this->assertSame(expected: 'goods', actual: $os->store['sup-1']['category']);
 	}//end testEverySaveGoesToTheConfiguredRegisterAndSchema()
+
+	/**
+	 * A supplier register or schema read that throws is logged as a failed vendor
+	 * ingest and costs only that vendor; the ingest itself does not throw.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingSupplierConfigReadIsLoggedAndSkipsTheVendor(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willThrowException(exception: new \RuntimeException('config down'));
+
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn(new FakeIngestObjectService());
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with('PVM ingest: vendor ingest failed', ['vendor' => 'Acme Supplies', 'exception' => 'config down']);
+
+		$repair = new IngestProductVendorMaster(
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			appConfig: $appConfig,
+			contactVcardService: $this->createMock(originalClassName: ContactVcardService::class),
+			container: $container,
+			logger: $logger,
+		);
+
+		$maps = $repair->ingest(export: ['vendors' => [['ref' => 'shil-v-1', 'name' => 'Acme Supplies']]]);
+
+		$this->assertSame(expected: ['products' => [], 'vendors' => []], actual: $maps);
+	}//end testAThrowingSupplierConfigReadIsLoggedAndSkipsTheVendor()
 }//end class

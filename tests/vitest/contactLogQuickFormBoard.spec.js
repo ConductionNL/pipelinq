@@ -22,7 +22,11 @@ vi.mock('../../src/store/modules/object.js', () => ({
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (u) => u }))
-vi.mock('@conduction/nextcloud-vue', () => ({ CnResourceSelect: { template: '<div />' } }))
+const clockStop = vi.hoisted(() => vi.fn())
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDurationField: { name: 'CnDurationField', props: { modelValue: String, timer: Boolean, autoStart: Boolean, inputLabel: String }, methods: { stop: clockStop }, template: '<div />' },
+	CnResourceSelect: { template: '<div />' },
+}))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@nextcloud/vue', () => ({
@@ -67,6 +71,18 @@ describe('the contact moment quick log', () => {
 		await subject(wrapper).find('input').trigger('blur')
 		expect(subject(wrapper).find('.helper').text()).toBe('Subject is required')
 		expect(subject(wrapper).attributes('data-error')).toBe('true')
+	})
+
+	it('runs the duration as a clock from the start and stops it on save (PqContactmoment)', async () => {
+		const wrapper = await mountForm()
+		const clock = wrapper.findComponent({ name: 'CnDurationField' })
+		expect(clock.props('timer')).toBe(true)
+		expect(clock.props('autoStart')).toBe(true)
+		expect(clock.props('inputLabel')).toBe('Duration')
+		const onSave = vi.spyOn(wrapper.vm, 'onSave').mockResolvedValue()
+		await wrapper.vm.stopClockAndSave()
+		expect(clockStop).toHaveBeenCalled()
+		expect(clockStop.mock.invocationCallOrder[0]).toBeLessThan(onSave.mock.invocationCallOrder[0])
 	})
 
 	it('lays paired fields in two columns that shrink with the card', () => {

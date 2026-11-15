@@ -181,10 +181,14 @@
 
 		<!-- Duration -->
 		<div class="form-group">
-			<NcTextField
-				:modelValue="form.duration"
-				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:modelValue="(v) => (form.duration = v)" />
+			<CnDurationField
+				ref="durationClock"
+				:modelValue="form.duration || null"
+				:inputLabel="t('pipelinq', 'Duration')"
+				timer
+				autoStart
+				data-testid="quicklog-duration"
+				@update:modelValue="(v) => (form.duration = v || '')" />
 		</div>
 
 		<!-- Notes -->
@@ -205,7 +209,7 @@
 			<NcButton
 				variant="primary"
 				:disabled="!isValid || saving"
-				@click="onSave">
+				@click="stopClockAndSave">
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
@@ -217,7 +221,7 @@
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDurationField, CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
@@ -225,12 +229,14 @@ import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
 import contactMomentDraftMixin from '../mixins/contactMomentDraftMixin.js'
 import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
 import { buildContactMoment } from '../services/contactMomentDraft.js'
+import { openRequestOptions } from '../services/contactMomentRequests.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
 	name: 'ContactmomentQuickLog',
 	components: {
 		ClientCreateDialog,
+		CnDurationField,
 		CnResourceSelect,
 		ContactCreateDialog,
 		NcButton,
@@ -305,24 +311,24 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * The open requests of the chosen client.
+		 *
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * @spec openspec/changes/specify-capability-rows/specs/contactmomenten/spec.md#requirement-a-contact-moment-is-filed-on-an-open-request
 		 */
 		requestSelectOptions() {
-			return this.requests.map((r) => ({
-				value: r.id,
-				label: r.title || r.id,
-			}))
+			return openRequestOptions(this.requests, this.form.client, this.form.parentTicket)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
 		errors() {
 			const errors = {}
@@ -340,7 +346,7 @@ export default {
 		 * not open with a complaint.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
 		shownErrors() {
 			return Object.fromEntries(Object.entries(this.errors).filter(([field]) => this.touched[field]))
@@ -363,7 +369,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
 		// Clients and contacts are no longer fetched here: CnResourceSelect
@@ -396,7 +402,18 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
+		 * Stop the running duration clock, so the saved duration is the time it shows, then save.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
+		 */
+		stopClockAndSave() {
+			this.$refs.durationClock?.stop()
+			return this.onSave()
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
 		 */
 		async onSave() {
 			if (!this.isValid) return

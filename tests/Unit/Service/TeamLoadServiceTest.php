@@ -180,4 +180,30 @@ class TeamLoadServiceTest extends TestCase {
 		$this->assertCount(expectedCount: 1, haystack: $rows);
 		$this->assertSame(expected: 6, actual: $rows[0]['maxConcurrent']);
 	}//end testOneRowPerColleague()
+	/**
+	 * Every profile row shape: an entity row is read through its serialised
+	 * form, an array row as it is, anything else is dropped.
+	 *
+	 * @return void
+	 */
+	public function testEveryProfileRowShape(): void {
+		$entity = new class implements \JsonSerializable {
+			/**
+			 * The serialised profile.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				return ['userId' => 'piet', 'maxConcurrent' => 2];
+			}
+		};
+		$rows = $this->service(
+			['register' => 'r', 'agentProfile_schema' => 's'],
+			['junk', $entity, ['userId' => 'anna'], 7, new \stdClass()],
+			['piet' => 2]
+		)->getTeamLoad();
+
+		$this->assertSame(['anna', 'piet'], array_column($rows, 'userId'));
+		$this->assertSame([true, 2], [$rows[1]['atCapacity'], $rows[1]['maxConcurrent']]);
+	}//end testEveryProfileRowShape()
 }//end class

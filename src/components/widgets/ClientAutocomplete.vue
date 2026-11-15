@@ -37,6 +37,7 @@
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextField } from '@nextcloud/vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import { jsonRequestHeaders } from '../../services/requestHeaders.js'
 import { initializeStores } from '../../store/store.js'
 
 export default {
@@ -56,7 +57,7 @@ export default {
 		placeholder: {
 			type: String,
 			/**
-			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
 			 */
 			default() {
 				return t('pipelinq', 'Search client…')
@@ -66,7 +67,7 @@ export default {
 		label: {
 			type: String,
 			/**
-			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
 			 */
 			default() {
 				return t('pipelinq', 'Client')
@@ -90,7 +91,7 @@ export default {
 	watch: {
 		/**
 		 * @param {string} newVal The incoming value.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
 		 */
 		value(newVal) {
 			this.selectedClient = newVal
@@ -98,7 +99,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
 	 */
 	async mounted() {
 		try {
@@ -111,7 +112,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
 		 */
 		onInput() {
 			if (this.selectedClient) {
@@ -124,7 +125,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
 		 */
 		async searchClients() {
 			if (!this.config?.client || !this.query || this.query.length < 2) {
@@ -134,31 +135,7 @@ export default {
 			}
 
 			try {
-				const typeConfig = this.config.client
-				const params = new URLSearchParams({
-					_search: this.query,
-					_limit: '10',
-				})
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema
-						+ '?'
-						+ params.toString(),
-				)
-
-				const response = await fetch(url, {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
-					},
-				})
-
-				if (!response.ok) throw new Error('Search failed')
-				const data = await response.json()
-				this.results = data.results || data || []
+				this.results = await this.fetchMatchingClients()
 				this.showDropdown = this.results.length > 0
 			} catch (err) {
 				console.error('ClientAutocomplete search error:', err)
@@ -168,8 +145,44 @@ export default {
 		},
 
 		/**
+		 * The URL of the first ten clients matching the query.
+		 *
+		 * @return {string} The URL.
+		 */
+		clientSearchUrl() {
+			const typeConfig = this.config.client
+			const params = new URLSearchParams({
+				_search: this.query,
+				_limit: '10',
+			})
+			return generateUrl(
+				'/apps/openregister/api/objects/'
+					+ typeConfig.register
+					+ '/'
+					+ typeConfig.schema
+					+ '?'
+					+ params.toString(),
+			)
+		},
+
+		/**
+		 * The clients matching the query.
+		 *
+		 * @return {Promise<Array<object>>} The matches.
+		 */
+		async fetchMatchingClients() {
+			const response = await fetch(this.clientSearchUrl(), {
+				headers: jsonRequestHeaders(),
+			})
+
+			if (!response.ok) throw new Error('Search failed')
+			const data = await response.json()
+			return data.results || data || []
+		},
+
+		/**
 		 * @param {object} client The client the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
 		 */
 		selectClient(client) {
 			this.selectedClient = client
@@ -180,7 +193,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
 		 */
 		clearSelection() {
 			this.selectedClient = null

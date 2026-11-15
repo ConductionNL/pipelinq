@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 
 declare(strict_types=1);
@@ -33,7 +33,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,10 +44,11 @@ use Psr\Log\LoggerInterface;
  * The configured portal, the blast's campaign slug, and the campaign's
  * sessions, page views, form submits, days and sources over a window.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 class CampaignSiteTraffic {
 	use PayloadToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Portaliq's register slug (contract section 3).
@@ -106,10 +108,10 @@ class CampaignSiteTraffic {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function portal(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
 	}//end portal()
 
 	/**
@@ -119,7 +121,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function campaignFor(array $blast): string {
 		return $this->decorator->campaignFor(blast: $blast);
@@ -130,7 +132,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function isPortaliqInstalled(): bool {
 		return class_exists(self::PORTALIQ_PROBE_CLASS);
@@ -144,7 +146,7 @@ class CampaignSiteTraffic {
 	 *
 	 * @return array<string, mixed> sessions, pageViews, formSubmits, days, sources.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function site(array $window, array $blast): array {
 		return $this->sum(rows: $this->rollups(window: $window), wanted: $this->wanted(blast: $blast));
@@ -349,14 +351,6 @@ class CampaignSiteTraffic {
 	 * @return object|null ObjectService or null when OR is unavailable.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CampaignPerformanceService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'CampaignPerformanceService: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
 }//end class

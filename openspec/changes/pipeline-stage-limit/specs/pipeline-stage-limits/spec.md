@@ -19,6 +19,13 @@ SHALL mark a stage that is full.
 - WHEN they set Limit 8 on the Proposal stage and save
 - THEN the board's Proposal column header shows the number of deals in it out of 8
 
+#### Scenario: A stage above its limit stays marked full
+
+- GIVEN Voorstel holds four leads and an administrator lowers its limit to 3
+- WHEN a user drags Bouwbedrijf Van Dijk into Voorstel
+- THEN the board says "Fase Voorstel is vol, 4 van 3. Bouwbedrijf Van Dijk staat terug in Gekwalificeerd."
+- AND the leads already in Voorstel stay there
+
 ### Requirement: No write puts an item into a full stage (REQ-PSL-002)
 
 The system SHALL refuse any create or update, from any screen or API, that would

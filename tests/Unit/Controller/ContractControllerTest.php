@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ContractController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractFiguresService;
 use OCA\Pipelinq\Service\ContractService;
@@ -44,6 +45,8 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * ContractController contract coverage.
@@ -163,14 +166,15 @@ class ContractControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $_render = true,
+				bool $_multitenancy = true
 			): ?array {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
 					return null;
@@ -223,11 +227,14 @@ class ContractControllerTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true
 			): array {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$key = ($uuid ?? ('new-' . (count($this->store) + 1)));
 				$object['id'] = $key;
 				$object['@self'] = ['id' => $key, 'register' => (string)$register, 'schema' => (string)$schema];
@@ -292,11 +299,14 @@ class ContractControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
+				?ObjectFindOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true
 			): ?array {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[(string)$id] ?? null);
 			}//end find()
 
@@ -331,11 +341,14 @@ class ContractControllerTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true
 			): array {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$key = ($uuid ?? 'new');
 				$object['id'] = $key;
 				$this->store[$key] = $object;
@@ -386,7 +399,10 @@ class ContractControllerTest extends TestCase {
 				container: $container,
 				logger: $logger,
 			),
-			userSession: $this->userSession,
+			privilege: new CrmPrivilegeCheck($this->userSession, new ObjectOwnerAccessPolicy(
+				groupManager: $this->groupManager,
+				appConfig: $this->createMock(IAppConfig::class)
+			)),
 			accessPolicy: new ObjectOwnerAccessPolicy(
 				groupManager: $this->groupManager,
 				appConfig: $this->createMock(IAppConfig::class)

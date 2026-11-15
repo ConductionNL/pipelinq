@@ -3,7 +3,7 @@
 <!--
   DeleteServiceDialog — confirmation prompt for deleting a Service.
   Extracted to its own file per ADR-004 (modal-isolation).
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<CnDialog width="confirm" :name="t('pipelinq', 'Delete service')" @closing="$emit('cancel')">

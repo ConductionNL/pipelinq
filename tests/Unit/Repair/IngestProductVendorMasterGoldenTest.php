@@ -31,6 +31,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every ingest path: what is looked up, what is saved (in the argument order
@@ -41,6 +42,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Repair\IngestProductVendorMaster
  * @covers \OCA\Pipelinq\Repair\Support\SourceRecordLink
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Repair\Support\SupplierTarget
  *
  * @spec openspec/specs/product-vendor-master/spec.md
  */
@@ -134,6 +136,14 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			'vendor, no source record schema'     => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'config' => ['sourceRecord_schema' => '']],
 			'vendor, source record save throws'   => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'throwOn' => 'schema-src'],
 			'vendor, contacts unavailable'        => ['export' => ['vendors' => [$vendor]], 'contactsDisabled' => true],
+			'vendor, not configured'              => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'config' => ['supplier_schema' => '']],
+			'vendor, contact match without uid'   => [
+				'export'   => ['vendors' => [$vendor]],
+				'contacts' => ['123' => [['FN' => 'No uid']], 'a@acme.test' => [['UID' => '']]],
+				'vcardUid' => 'uid-after-miss',
+			],
+			'vendor without ref or id'            => ['export' => ['vendors' => [['name' => 'Anon']]]],
+			'vendor, supplier save throws'        => ['export' => ['vendors' => [$vendor]], 'contacts' => $acme, 'throwOn' => 'schema-supplier'],
 			'both lists'                          => [
 				'export'   => ['products' => [$product, ['id' => 'sp-2', 'sku' => 'SKU-2']], 'vendors' => [$vendor]],
 				'contacts' => $acme,
@@ -253,6 +263,7 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			 * @return ObjectEntity The saved object, as OpenRegister returns it.
 			 */
 			public function saveObject(mixed ...$args): ObjectEntity {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->test->trace[] = ['saveObject' => $args];
 				$schema = ($args['schema'] ?? $args[1] ?? null);
 				if (($this->scenario['throwOn'] ?? null) === $schema) {

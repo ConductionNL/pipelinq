@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -62,7 +62,7 @@ class EscalationQueues {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
 	 */
 	public function all(): array {
-		$decoded = json_decode($this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''), true);
+		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''), true);
 		if (is_array($decoded) === false) {
 			return [];
 		}

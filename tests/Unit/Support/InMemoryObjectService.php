@@ -21,6 +21,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+
 /**
  * Rows by uuid, each remembering its schema.
  */
@@ -64,7 +68,9 @@ class InMemoryObjectService {
 		return $out;
 	}//end ofSchema()
 
-	public function find(string $id, $register = null, $schema = null): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$register = $options?->register;
+		$schema = $options?->schema;
 		$hit = ($this->rows[$id] ?? null);
 		if ($hit === null || ($schema !== null && $hit['schema'] !== $schema)) {
 			return null;
@@ -95,7 +101,10 @@ class InMemoryObjectService {
 		return $out;
 	}//end findAll()
 
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		if ($uuid !== null && $uuid !== '') {
 			$object['uuid'] = $uuid;
 		}
@@ -108,7 +117,10 @@ class InMemoryObjectService {
 		return $this->put(schema: (string)$schema, row: $object);
 	}//end updateObject()
 
-	public function deleteObject(string $uuid, $register = null, $schema = null): bool {
+	public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
 		unset($this->rows[$uuid]);
 		return true;
 	}//end deleteObject()

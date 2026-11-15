@@ -37,18 +37,23 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service for POS cash-drawer (shift / drop / count / diff) operations.
@@ -75,7 +80,12 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *
  * @spec openspec/specs/pos-cash-management/spec.md
  */
-class CashShiftService {
+class CashShiftService implements CashShiftServiceInterface {
+	use CastingPayloadToArray;
+	use RandomUuid;
+	use PosObjectReadWrite;
+	use InjectedObjectService;
+
 	/**
 	 * CloudEvent type emitted when a cash variance is approved.
 	 *
@@ -698,33 +708,6 @@ class CashShiftService {
 	}//end fetchDiff()
 
 	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException If the object is not found.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
-
-	/**
 	 * Fetch all objects of a schema linked to a shift.
 	 *
 	 * @param string $schemaKey The app-config schema key.
@@ -805,31 +788,6 @@ class CashShiftService {
 	}//end saveShift()
 
 	/**
-	 * Persist an object via the OR ObjectService for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID (empty to create).
-	 * @param array<string, mixed> $object The object data.
-	 *
-	 * @return array<string, mixed> The saved object.
-	 */
-	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		unset($object['@self']);
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
-
-		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
-
-	/**
 	 * Resolve the register + a schema config key into their stored IDs.
 	 *
 	 * @param string $schemaKey The app-config schema key (e.g. cashShift_schema).
@@ -839,8 +797,8 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Kassalade-register of -schema is niet geconfigureerd.');
@@ -848,17 +806,6 @@ class CashShiftService {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
@@ -877,35 +824,6 @@ class CashShiftService {
 	}//end getAggregationRunner()
 
 	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
-
-	/**
 	 * Current time as an ISO 8601 string.
 	 *
 	 * @return string The current timestamp.
@@ -913,17 +831,4 @@ class CashShiftService {
 	private function now(): string {
 		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 	}//end now()
-
-	/**
-	 * Generate a v4 UUID.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$data = random_bytes(16);
-		$data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
-		$data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
-
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end uuid()
 }//end class

@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Util;
  * else its getObject() array, and anything else becomes an empty array.
  */
 trait PayloadToArray {
-	use SerialisedPayload;
+	use EntityPayload;
 
 	/**
 	 * Normalise an OpenRegister entity or array to a plain array.
@@ -41,20 +41,6 @@ trait PayloadToArray {
 	 * @spec exclude result-shape plumbing shared by register reads, no behavioural spec surface.
 	 */
 	private function toArray(mixed $value): array {
-		$serialised = $this->serialisedPayload(value: $value);
-		if ($serialised !== null) {
-			return $serialised;
-		}
-
-		if (is_object($value) === false || method_exists($value, 'getObject') === false) {
-			return [];
-		}
-
-		$payload = $value->getObject();
-		if (is_array($payload) === true) {
-			return $payload;
-		}
-
-		return [];
+		return $this->entityPayload(value: $value) ?? [];
 	}//end toArray()
 }//end trait

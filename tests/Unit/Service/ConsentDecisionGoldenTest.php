@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Integriq\Event\OptOutChangeRequestedEvent;
 use OCA\Integriq\Event\OutboundSendDecisionRequestedEvent;
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -43,6 +44,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === false) {
 	class_alias(ConsentDecisionGoldenNotAnEvent::class, 'OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent');
@@ -67,8 +70,20 @@ if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === fa
  * @uses   \OCA\Pipelinq\Service\Consent\ConsentWish
  * @uses   \OCA\Pipelinq\Service\ContactAddressLookup
  * @uses   \OCA\Pipelinq\Support\FleetAppId
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md
+ * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses   \OCA\Pipelinq\Util\SchemaRowQuery
  */
 class ConsentDecisionGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/ConsentDecisionGolden.json';
@@ -339,8 +354,7 @@ class ConsentDecisionGoldenTest extends TestCase {
 			$messaging,
 			$this->createMock(ChannelProviderRepository::class),
 			$service,
-			$session,
-			$policy,
+			new CrmPrivilegeCheck($session, $policy),
 		);
 		$response = $controller->consent(...$scenario['args']);
 
@@ -526,7 +540,9 @@ class ConsentDecisionGoldenStore {
 	 *
 	 * @throws DoesNotExistException When there is no such object.
 	 */
-	public function find(string $id, $register = null, $schema = null): array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options?->register;
+		$schema = $options?->schema;
 		if ($schema === 'contact' && isset($this->contacts[$id]) === true) {
 			return $this->contacts[$id];
 		}
@@ -544,7 +560,10 @@ class ConsentDecisionGoldenStore {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$object['uuid'] = ($uuid ?? ('row-' . (count($this->written) + 1)));
 		if (isset($object['recordedAt']) === true) {
 			$object['recordedAt'] = '<now>';

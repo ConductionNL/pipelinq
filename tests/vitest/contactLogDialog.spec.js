@@ -38,6 +38,7 @@ vi.mock('@nextcloud/vue', () => ({
 	},
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDurationField: { name: 'CnDurationField', props: { modelValue: String, timer: Boolean, inputLabel: String }, emits: ['update:modelValue'], template: '<div />' },
 	CnDialog: { props: ['name', 'eyebrow', 'subtitle', 'width'], render() { return h('div', { 'data-eyebrow': this.eyebrow }, [this.$slots.default?.(), this.$slots.actions?.()]) } },
 }))
 
@@ -87,6 +88,19 @@ describe('ContactLogDialog', () => {
 		})
 		expect(new Date(payload.occurredAt).getHours()).toBe(10)
 		expect(w.emitted('close')).toHaveLength(1)
+	})
+
+	it('runs the duration as a clock and saves the time it shows (PqTicketContactLoggen)', async () => {
+		store.saveObject.mockClear()
+		const w = await open()
+		const clock = w.findComponent({ name: 'CnDurationField' })
+		expect(clock.props('timer')).toBe(true)
+		expect(clock.props('inputLabel')).toBe('Duration')
+		clock.vm.$emit('update:modelValue', 'PT4M23S')
+		await w.find('[data-testid="contact-log-subject"]').setValue('Teruggebeld')
+		await w.find('[data-testid="contact-log-save"]').trigger('click')
+		await flushPromises()
+		expect(store.saveObject.mock.calls[0][1].duration).toBe('PT4M23S')
 	})
 
 	it('initials the customer by first and last name, as the board ("SV")', async () => {

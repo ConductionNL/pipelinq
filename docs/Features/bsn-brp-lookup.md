@@ -43,12 +43,10 @@ via de REST-API `/api/brp/settings`:
 - Lijst toegestane groepen (default `behandelaar-burgerzaken`, `behandelaar-avg`).
 
 ### BRP Monitor
-Op de beheerpagina van Pipelinq (*Beheerinstellingen → Pipelinq*, sectie
-*BRP-monitor*) staan de cijfers van de laatste 24 uur: aantal lookups, hoeveel
-daarvan uit de cache kwamen, aantal fouten en gemiddelde responstijd. Daarnaast de mTLS-certificaat-status met een aftellende klok:
-- 🟢 OK
-- 🟡 verloopt binnen 30 dagen
-- 🔴 verloopt binnen 7 dagen (admin krijgt automatisch een NC-notificatie)
+De monitor staat in integriq, op de bron `brp-haalcentraal`: aanroepen, fouten
+en responstijden van de laatste 24 uur, en de verloopdatum van het
+mTLS-certificaat met meldingen op 30, 14 en 7 dagen. Pipelinq houdt zelf geen
+monitor meer bij; `bsnAuditRecord` blijft het wettelijke audit-spoor.
 
 ### Webhook voor BRP-mutaties
 HaalCentraal kan via `POST /api/brp/mutations` cache-invalidaties pushen. De
@@ -90,8 +88,6 @@ Webhook: POST /api/brp/mutations → BrpMutationWebhookListener
    └─ BsnAuditService.recordLookup (actie: brp-cache-invalidated)
 
 Cron:
-- BrpHealthCheckJob (1×/dag): cert-expiry → admin-notificatie wanneer < 30d
-- BrpMonitorJob (1×/dag): aggreatie van 24h audit-records voor BRP Monitor
 - BrpRetentionJob (1×/dag): verwijdert BrpPersoon waar retentieTot < now
 ```
 

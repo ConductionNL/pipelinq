@@ -429,6 +429,7 @@ import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
 import { previewTemplate } from '../services/articlesApi.js'
+import { mailPreviewDocument } from '../services/mailPreview.js'
 
 const STEPS = [
 	{ key: 'basics', label: 'Basics' },
@@ -699,17 +700,10 @@ export default {
 		 *
 		 * @return {string} The preview document.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#scenario-the-blast-preview-shows-the-embedded-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-the-blast-preview-shows-the-embedded-articles
 		 */
 		previewDocument() {
-			const csp =
-				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return (
-				'<!DOCTYPE html><html><head><meta charset="utf-8">'
-				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
-				+ `</head><body>${this.preview?.bodyHtml || ''}</body></html>`
-			)
+			return mailPreviewDocument(this.preview?.bodyHtml || '')
 		},
 
 		/**
@@ -719,79 +713,7 @@ export default {
 		 */
 		reviewRows() {
 			const none = this.t('pipelinq', 'None')
-			const audience =
-				this.audienceKind === 'list'
-					? this.t('pipelinq', 'Mailing list: {name}', {
-							name: this.selectedList?.name || '',
-						})
-					: this.t('pipelinq', 'Segment: {name}', {
-							name: this.selectedSegment?.name || '',
-						})
-			const channel =
-				this.channelOptions.find((o) => o.value === this.selectedChannel)
-					?.label || ''
-			const when =
-				this.scheduleMode === 'later' && this.scheduledForDate
-					? this.scheduledForDate.toLocaleString()
-					: this.t('pipelinq', 'As soon as the blast is created')
-			const ab = this.abEnabled
-				? this.t('pipelinq', 'Variant A {a}%, variant B {b}%', {
-						a: this.model.abSplitPercent,
-						b: 100 - this.model.abSplitPercent,
-					})
-				: this.t('pipelinq', 'Off')
-			return [
-				{
-					key: 'name',
-					step: 'basics',
-					label: this.t('pipelinq', 'Name'),
-					value: this.model.name.trim(),
-				},
-				{
-					key: 'channel',
-					step: 'basics',
-					label: this.t('pipelinq', 'Channel'),
-					value: channel,
-				},
-				{
-					key: 'audience',
-					step: 'audience',
-					label: this.t('pipelinq', 'Audience'),
-					value: audience,
-				},
-				{
-					key: 'template',
-					step: 'content',
-					label: this.t('pipelinq', 'Template'),
-					value: this.selectedTemplate?.name || none,
-				},
-				{
-					key: 'transport',
-					step: 'delivery',
-					label: this.t('pipelinq', 'Send through'),
-					value:
-						this.selectedTransport?.label
-						|| this.t('pipelinq', 'Default transport'),
-				},
-				{
-					key: 'source',
-					step: 'delivery',
-					label: this.t('pipelinq', 'Connector source'),
-					value: this.selectedConnectorSource?.label || none,
-				},
-				{
-					key: 'when',
-					step: 'delivery',
-					label: this.t('pipelinq', 'When'),
-					value: when,
-				},
-				{
-					key: 'ab',
-					step: 'ab',
-					label: this.t('pipelinq', 'A/B test'),
-					value: ab,
-				},
-			]
+			return [...this.basicsReviewRows(none), ...this.deliveryReviewRows(none)]
 		},
 	},
 
@@ -862,7 +784,7 @@ export default {
 
 		/**
 		 * @param {object|null} option The template just picked, or null.
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
@@ -929,6 +851,120 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The review rows of the basics, audience and content steps.
+		 *
+		 * @param {string} none What an unset choice reads.
+		 * @return {Array<object>} The rows.
+		 */
+		basicsReviewRows(none) {
+			return [
+				{
+					key: 'name',
+					step: 'basics',
+					label: this.t('pipelinq', 'Name'),
+					value: this.model.name.trim(),
+				},
+				{
+					key: 'channel',
+					step: 'basics',
+					label: this.t('pipelinq', 'Channel'),
+					value: this.reviewChannel(),
+				},
+				{
+					key: 'audience',
+					step: 'audience',
+					label: this.t('pipelinq', 'Audience'),
+					value: this.reviewAudience(),
+				},
+				{
+					key: 'template',
+					step: 'content',
+					label: this.t('pipelinq', 'Template'),
+					value: this.selectedTemplate?.name || none,
+				},
+			]
+		},
+
+		/**
+		 * The review rows of the delivery and A/B steps.
+		 *
+		 * @param {string} none What an unset choice reads.
+		 * @return {Array<object>} The rows.
+		 */
+		deliveryReviewRows(none) {
+			return [
+				{
+					key: 'transport',
+					step: 'delivery',
+					label: this.t('pipelinq', 'Send through'),
+					value:
+						this.selectedTransport?.label
+						|| this.t('pipelinq', 'Default transport'),
+				},
+				{
+					key: 'source',
+					step: 'delivery',
+					label: this.t('pipelinq', 'Connector source'),
+					value: this.selectedConnectorSource?.label || none,
+				},
+				{
+					key: 'when',
+					step: 'delivery',
+					label: this.t('pipelinq', 'When'),
+					value: this.reviewWhen(),
+				},
+				{
+					key: 'ab',
+					step: 'ab',
+					label: this.t('pipelinq', 'A/B test'),
+					value: this.reviewAb(),
+				},
+			]
+		},
+
+		/**
+		 * @return {string} The audience as the review reads it: the mailing list or the segment.
+		 */
+		reviewAudience() {
+			return this.audienceKind === 'list'
+				? this.t('pipelinq', 'Mailing list: {name}', {
+						name: this.selectedList?.name || '',
+					})
+				: this.t('pipelinq', 'Segment: {name}', {
+						name: this.selectedSegment?.name || '',
+					})
+		},
+
+		/**
+		 * @return {string} The chosen channel's label, or ''.
+		 */
+		reviewChannel() {
+			return this.channelOptions.find((o) => o.value === this.selectedChannel)
+				?.label || ''
+		},
+
+		/**
+		 * @return {string} When the blast goes out: the scheduled moment, or as soon as it is created.
+		 */
+		reviewWhen() {
+			return this.scheduleMode === 'later' && this.scheduledForDate
+				? this.scheduledForDate.toLocaleString()
+				: this.t('pipelinq', 'As soon as the blast is created')
+		},
+
+		/**
+		 * @return {string} The A/B split, or Off.
+		 */
+		reviewAb() {
+			return this.abEnabled
+				? this.t('pipelinq', 'Variant A {a}%, variant B {b}%', {
+						a: this.model.abSplitPercent,
+						b: 100 - this.model.abSplitPercent,
+					})
+				: this.t('pipelinq', 'Off')
+		},
+
 		/**
 		 * @param {string} key A step key.
 		 * @return {boolean} Whether that step is filled in well enough.
@@ -1199,7 +1235,7 @@ export default {
 		 * The template with its `{{articles}}` marker expanded by the same
 		 * call the send path makes, so the preview is what will send.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		async loadPreview() {
 			this.preview = null
@@ -1370,7 +1406,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .blast-wizard {
 	display: flex;
 	flex-direction: column;
@@ -1504,16 +1542,11 @@ export default {
 	height: 260px;
 	border: 1px solid var(--color-border-dark);
 	border-radius: var(--border-radius-large);
-	background: #fff;
+	background: var(--color-main-background, #fff);
 }
 
 .blast-wizard__preview-articles {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
+	@include plain-stacked-list;
 }
 
 .blast-wizard__preview-articles p {

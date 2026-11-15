@@ -1,0 +1,24 @@
+{
+	"pages": [
+		{
+			"id": "RetentionReview",
+			"_note": "platform-client-retention task 3.1/3.2 (design D5). Lists OpenRegister's destruction lists that hold clients or contact persons and offers Approve and Reject through OpenRegister's archival routes; it writes nothing itself.",
+			"route": "/retention-review",
+			"type": "custom",
+			"title": "Retention review",
+			"component": "RetentionReviewView",
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		}
+	],
+	"menu": [
+		{
+			"id": "RetentionReview",
+			"label": "Retention review",
+			"icon": "DeleteClockOutline",
+			"route": "RetentionReview",
+			"order": 216
+		}
+	]
+}

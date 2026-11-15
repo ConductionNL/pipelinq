@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
-use OCA\Pipelinq\Service\Export\SchemaEvolutionService;
+use OCA\Pipelinq\Kernel\Contracts\SchemaEvolutionServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -39,17 +39,17 @@ use Psr\Log\LoggerInterface;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
 class SchemaChangeListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaEvolutionService $evolution The schema-evolution service.
+	 * @param SchemaEvolutionServiceInterface $evolution The schema-evolution service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaEvolutionService $evolution,
+		private SchemaEvolutionServiceInterface $evolution,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -64,7 +64,7 @@ class SchemaChangeListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof SchemaUpdatedEvent) === false) {

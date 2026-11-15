@@ -38,6 +38,6 @@ foreach (['OutboundSendDecisionRequestedEvent', 'OptOutChangeRequestedEvent'] as
 }
 
 // OpenRegister's shared List-Unsubscribe helper (REQ-ERO-005).
-if (class_exists('\\OCA\\OpenRegister\\Service\\Notification\\UnsubscribeHeaders') === false) {
-	require_once __DIR__ . '/Stubs/Service/Notification/UnsubscribeHeaders.php';
+if (class_exists('\\OCA\\OpenRegister\\Notifications\\Service\\Notification\\UnsubscribeHeaders') === false) {
+	require_once __DIR__ . '/Stubs/Notifications/Service/Notification/UnsubscribeHeaders.php';
 }

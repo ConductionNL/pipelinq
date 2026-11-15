@@ -34,6 +34,8 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Controller\BrpController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
@@ -53,6 +55,8 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
@@ -123,6 +127,41 @@ class BrpControllerTest extends TestCase {
 		);
 
 	}//end testLookupIsRefusedForAnUnprivilegedCaller()
+
+	/**
+	 * Every refused lookup leaves one audit record naming the caller and the reason,
+	 * with the BSN only as a hash.
+	 *
+	 * @return void
+	 */
+	public function testEveryRefusedLookupIsAudited(): void {
+		$cases = [
+			'not privileged' => [['privileged' => false], 403, 'refused-unauthorised'],
+			'no purpose' => [['extraParams' => ['verzoekreden' => '', 'purposeBinding' => '']], 400, 'refused-missing-purpose'],
+			'invalid bsn' => [['bsnValid' => false], 400, 'refused-invalid-bsn'],
+		];
+
+		foreach ($cases as $label => [$options, $status, $outcome]) {
+			$records = new \ArrayObject();
+			$audit = $this->createMock(BsnAuditService::class);
+			$audit->method('recordLookup')->willReturnCallback(
+				static function (string $actor, LookupAudit $lookup) use ($records): string {
+					$records[] = [$actor, $lookup];
+					return 'audit-uuid';
+				}
+			);
+
+			$controller = $this->buildController(...[...$options, 'remotePerson' => [], 'audit' => $audit]);
+
+			$this->assertSame($status, $controller->lookup()->getStatus(), $label);
+			$this->assertCount(1, $records, $label);
+			[$actor, $lookup] = $records[0];
+			$this->assertSame('behandelaar1', $actor, $label);
+			$this->assertSame('brp-lookup-refused', $lookup->result->action, $label);
+			$this->assertSame($outcome, $lookup->result->outcome, $label);
+			$this->assertSame($status, $lookup->result->responseCode, $label);
+		}
+	}//end testEveryRefusedLookupIsAudited()
 
 	public function testLookupPersistsMetaIntoAuditRecord(): void {
 		$person = [
@@ -221,16 +260,16 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @return BrpController
 	 */
-	private function buildController(array $remotePerson, bool $privileged = true, array $extraParams = []): BrpController {
+	private function buildController(array $remotePerson, bool $privileged = true, array $extraParams = [], ?BsnAuditService $audit = null, bool $bsnValid = true): BrpController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static function (string $key, $default = null) use ($extraParams) {
-				$params = [
+				$params = $extraParams + [
 					'bsn' => self::DEMO_BSN,
 					'verzoekreden' => 'Adresverificatie',
 					'purposeBinding' => 'Wet BRP',
 					'basis' => 'Wet BRP art. 1.4',
-				] + $extraParams;
+				];
 				return $params[$key] ?? $default;
 			}
 		);
@@ -264,7 +303,7 @@ class BrpControllerTest extends TestCase {
 
 		$validation = $this->createMock(BsnValidationService::class);
 		$validation->method('validate')->willReturn(
-			['isFormalValid' => true, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
+			['isFormalValid' => $bsnValid, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
 		);
 
 		$cacheService = $this->createMock(BrpCacheService::class);
@@ -277,7 +316,7 @@ class BrpControllerTest extends TestCase {
 		$haalCentraal = $this->createMock(HaalCentraalClient::class);
 		$haalCentraal->method('lookupPersoon')->willReturn($remotePerson);
 
-		$audit = $this->createMock(BsnAuditService::class);
+		$audit ??= $this->createMock(BsnAuditService::class);
 		$optOut = $this->createMock(OptOutService::class);
 		$webhookListener = $this->createMock(BrpMutationWebhookListener::class);
 
@@ -317,19 +356,23 @@ class BrpControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				array|ObjectEntity $object,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				bool $_validation = true,
-				?array $uploadedFiles = null,
-				?IUser $currentUser = null,
-				bool $failIfExists = false,
+				bool $_multitenancy = true
 			): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$silent = $options->policy->silent ?? false;
+				$_validation = $options->policy->validation ?? true;
+				$uploadedFiles = $options->uploadedFiles;
+				$currentUser = $options->actor->currentUser;
+				$failIfExists = $options->policy->failIfExists ?? false;
+				$_unowned = $options->actor->unowned ?? false;
+				$_dedupOverride = $options->policy->dedupOverride ?? false;
+				$_owner = $options->actor->owner;
 				if (isset($object['verzoekreden']) === true && isset($this->holder['verzoek']) === false) {
 					$this->holder['verzoek'] = $object;
 				}
@@ -364,15 +407,16 @@ class BrpControllerTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				?ObjectFindOptions $options = null,
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $_render = true,
-				bool $_audit = true,
+				bool $_multitenancy = true
 			): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
+				$_audit = $options?->audit ?? true;
 				if ($schema !== 'schema-client' || $id !== 'client-sanne') {
 					return null;
 				}
@@ -973,19 +1017,23 @@ class BrpControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
+				array|ObjectEntity $object,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				bool $_validation = true,
-				?array $uploadedFiles = null,
-				?IUser $currentUser = null,
-				bool $failIfExists = false,
+				bool $_multitenancy = true
 			): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$silent = $options->policy->silent ?? false;
+				$_validation = $options->policy->validation ?? true;
+				$uploadedFiles = $options->uploadedFiles;
+				$currentUser = $options->actor->currentUser;
+				$failIfExists = $options->policy->failIfExists ?? false;
+				$_unowned = $options->actor->unowned ?? false;
+				$_dedupOverride = $options->policy->dedupOverride ?? false;
+				$_owner = $options->actor->owner;
 				$entity = new ObjectEntity();
 				$entity->setUuid(($uuid ?? 'saved-uuid'));
 				$entity->setRegister((string)$register);

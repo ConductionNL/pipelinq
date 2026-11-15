@@ -28,13 +28,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ChannelProviderRepository;
-use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
+use OCA\Pipelinq\Service\Messaging\ConsentChange;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
-use OCA\Pipelinq\Service\MessagingService;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -43,7 +44,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Outbound messaging controller.
@@ -83,21 +83,19 @@ class MessagingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param MessagingService $messagingService Send-surface orchestration.
-	 * @param ChannelProviderRepository $providerRepo Provider read-side.
-	 * @param ConsentService $consentService Consent records.
-	 * @param IUserSession $userSession User session.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param MessagingServiceInterface $messagingService Send-surface orchestration.
+	 * @param ChannelProviderRepositoryInterface $providerRepo Provider read-side.
+	 * @param ConsentServiceInterface $consentService Consent records.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private MessagingService $messagingService,
-		private ChannelProviderRepository $providerRepo,
-		private ConsentService $consentService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private MessagingServiceInterface $messagingService,
+		private ChannelProviderRepositoryInterface $providerRepo,
+		private ConsentServiceInterface $consentService,
+		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -122,18 +120,14 @@ class MessagingController extends Controller {
 			return new Response(Http::STATUS_BAD_REQUEST);
 		}
 
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Messaging sends on the organisation's behalf and reads contact
 		// consent state — a CRM capability, not an any-authenticated-user one.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($send['channel'] !== 'sms' && $send['channel'] !== 'whatsapp') {
+		if ($this->isMessagingChannel(channel: $send['channel']) === false) {
 			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
 		}
 
@@ -144,14 +138,26 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->dispatchSend(contact: $contact, send: $send);
+	}//end send()
+
+	/**
+	 * Send the message to the loaded contact and answer with the outcome.
+	 *
+	 * @param mixed $contact The loaded contact.
+	 * @param array<string, mixed> $send The typed send parameters.
+	 *
+	 * @return JSONResponse The send outcome.
+	 */
+	private function dispatchSend($contact, array $send): JSONResponse {
 		$outcome = $this->messagingService->send(
 			route: new MessageRoute(contact: $contact, providerHint: $send['providerHint'], clientId: $send['clientId'], inReplyTo: $send['inReplyTo']),
 			content: new MessageContent(channel: $send['channel'], body: $send['body'], templateId: $send['templateId'], parameters: $send['parameters']),
-			actor: $user->getUID()
+			actor: $this->privilege->actingUserId()
 		);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
-	}//end send()
+	}//end dispatchSend()
 
 	/**
 	 * Send a failed or expired outbound message again (REQ-MSR-006).
@@ -169,14 +175,12 @@ class MessagingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function resend(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
-		}
+		$uid = $this->privilege->actingUserId();
 
 		$message = $this->messagingService->loadMessage(messageId: $id);
 		if ($message === null) {
@@ -193,7 +197,7 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		$outcome = $this->messagingService->resend(message: $message, contact: $contact, actor: $user->getUID());
+		$outcome = $this->messagingService->resend(message: $message, contact: $contact, actor: $uid);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
 	}//end resend()
@@ -209,15 +213,11 @@ class MessagingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preflight(string $contactId = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// Same posture as send()/consent(): preflight reads a contact's
 		// messaging eligibility, which is CRM data.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$contact = $this->messagingService->loadContact(contactId: $contactId);
@@ -257,92 +257,119 @@ class MessagingController extends Controller {
 		string $evidence = '',
 		string $legalBasis = '',
 	): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		// Messaging sends on the organisation's behalf and reads contact
-		// consent state — a CRM capability, not an any-authenticated-user one.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		if ($channel !== 'sms' && $channel !== 'whatsapp') {
-			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($evidence === '' || $legalBasis === '') {
-			return new JSONResponse(['status' => 'evidence-and-legal-basis-required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($action !== 'opt-in' && $action !== 'opt-out') {
-			return new JSONResponse(['status' => 'invalid-action'], Http::STATUS_BAD_REQUEST);
-		}
-
-		// Per-object guard (no-admin-idor).
-		$contact = $this->messagingService->loadContact(contactId: $contactId);
-		if ($contact === null) {
-			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
-		}
-
-		$attributedEvidence = sprintf('%s (recorded by %s)', $evidence, $user->getUID());
-		$this->recordConsent(
-			action: $action,
-			contactId: $contactId,
-			channel: $channel,
-			source: $source,
-			evidence: $attributedEvidence,
-			legalBasis: $legalBasis
-		);
-
-		return new JSONResponse(
-			[
-				'status' => 'recorded',
-				'state' => $this->consentService->latestState(contactId: $contactId, channel: $channel),
-			]
+		return $this->consentResponse(
+			change: new ConsentChange(
+				contactId: $contactId, channel: $channel, action: $action,
+				source: $source, evidence: $evidence, legalBasis: $legalBasis
+			)
 		);
 	}//end consent()
 
 	/**
+	 * Guard, validate and record a consent change, answering with the recorded state.
+	 *
+	 * @param ConsentChange $change The requested change.
+	 *
+	 * @return JSONResponse The recorded state, or the refusal or error response.
+	 */
+	private function consentResponse(ConsentChange $change): JSONResponse {
+		// Messaging sends on the organisation's behalf and reads contact
+		// consent state — a CRM capability, not an any-authenticated-user one.
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$invalid = $this->consentRequestError(change: $change);
+		if ($invalid !== null) {
+			return $invalid;
+		}
+
+		// Per-object guard (no-admin-idor).
+		$contact = $this->messagingService->loadContact(contactId: $change->contactId);
+		if ($contact === null) {
+			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$this->recordConsent(change: $change->attributedTo(userId: $this->privilege->actingUserId()));
+
+		$state = $this->consentService->latestState(contactId: $change->contactId, channel: $change->channel);
+
+		return new JSONResponse(['status' => 'recorded', 'state' => $state]);
+	}//end consentResponse()
+
+	/**
+	 * The 400 response for an invalid consent request, or null when it is valid.
+	 *
+	 * @param ConsentChange $change The requested change.
+	 *
+	 * @return JSONResponse|null The error response, or null.
+	 */
+	private function consentRequestError(ConsentChange $change): JSONResponse|null {
+		if ($this->isMessagingChannel(channel: $change->channel) === false) {
+			return new JSONResponse(['status' => 'invalid-channel'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($change->evidence === '' || $change->legalBasis === '') {
+			return new JSONResponse(['status' => 'evidence-and-legal-basis-required'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->isConsentAction(action: $change->action) === false) {
+			return new JSONResponse(['status' => 'invalid-action'], Http::STATUS_BAD_REQUEST);
+		}
+
+		return null;
+	}//end consentRequestError()
+
+	/**
+	 * Whether the action is `opt-in` or `opt-out`.
+	 *
+	 * @param string $action The consent action.
+	 *
+	 * @return bool True for a supported action.
+	 */
+	private function isConsentAction(string $action): bool {
+		return ($action !== 'opt-in' && $action !== 'opt-out') === false;
+	}//end isConsentAction()
+
+	/**
+	 * Whether the channel is one messaging supports (`sms` or `whatsapp`).
+	 *
+	 * @param string $channel The channel.
+	 *
+	 * @return bool True for a supported channel.
+	 */
+	private function isMessagingChannel(string $channel): bool {
+		return ($channel !== 'sms' && $channel !== 'whatsapp') === false;
+	}//end isMessagingChannel()
+
+	/**
 	 * Append the consent record for a validated opt-in / opt-out action.
 	 *
-	 * @param string $action `opt-in` or `opt-out` (already validated).
-	 * @param string $contactId Contact UUID.
-	 * @param string $channel `sms` or `whatsapp`.
-	 * @param string $source Source enum.
-	 * @param string $evidence Attributed audit evidence.
-	 * @param string $legalBasis GDPR legal basis.
+	 * @param ConsentChange $change The validated, attributed change.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
-	private function recordConsent(
-		string $action,
-		string $contactId,
-		string $channel,
-		string $source,
-		string $evidence,
-		string $legalBasis,
-	): void {
-		if ($action === 'opt-in') {
+	private function recordConsent(ConsentChange $change): void {
+		if ($change->action === 'opt-in') {
 			$this->consentService->recordOptIn(
-				contactId: $contactId,
-				channel: $channel,
-				source: $source,
-				evidence: $evidence,
-				legalBasis: $legalBasis
+				contactId: $change->contactId,
+				channel: $change->channel,
+				source: $change->source,
+				evidence: $change->evidence,
+				legalBasis: $change->legalBasis
 			);
 			return;
 		}
 
 		$this->consentService->recordOptOut(
-			contactId: $contactId,
-			channel: $channel,
-			source: $source,
-			evidence: $evidence,
-			legalBasis: $legalBasis
+			contactId: $change->contactId,
+			channel: $change->channel,
+			source: $change->source,
+			evidence: $change->evidence,
+			legalBasis: $change->legalBasis
 		);
 	}//end recordConsent()
 
@@ -355,7 +382,7 @@ class MessagingController extends Controller {
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-002-zero-cost-provider-connectivity-test
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function testProvider(string $id = ''): JSONResponse {
 		$provider = $this->providerRepo->findById(id: $id);
 		if ($provider === null) {

@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,42 +28,40 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\AnalyticsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
  * Controller for the Klantbeeld 360 cross-module analytics summary plus
  * the dashboard analytics overview/trends/funnels endpoints.
  *
- * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
- * @spec openspec/changes/dashboard/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-06-14-klantbeeld-360/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
  */
 class AnalyticsController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param AnalyticsService $analyticsService Analytics summary service.
-	 * @param IUserSession $userSession Active user session.
-	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param AnalyticsServiceInterface $analyticsService Analytics summary service.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private AnalyticsService $analyticsService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $policy,
+		private AnalyticsServiceInterface $analyticsService,
+		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -75,38 +73,22 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The overview payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function overview(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+		$period = $this->privilegedPeriod();
+		if ($period instanceof JSONResponse) {
+			return $period;
 		}
-
-		// These endpoints take NO object selector — they aggregate across the
-		// whole instance and never pass a user to the service, so there is no
-		// object to own and nothing to scope. The question is therefore not
-		// "may this caller see THIS record" but "may this caller see
-		// company-wide CRM analytics at all", which is exactly what
-		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
 		try {
 			return new JSONResponse($this->analyticsService->getOverview(period: $period));
 		} catch (InvalidArgumentException) {
 			return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] overview failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
+			return $this->unavailable(action: 'overview', error: $e);
+		}
 	}//end overview()
 
 	/**
@@ -123,22 +105,10 @@ class AnalyticsController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function commercial(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+		$period = $this->privilegedPeriod();
+		if ($period instanceof JSONResponse) {
+			return $period;
 		}
-
-		// These endpoints take NO object selector — they aggregate across the
-		// whole instance and never pass a user to the service, so there is no
-		// object to own and nothing to scope. The question is therefore not
-		// "may this caller see THIS record" but "may this caller see
-		// company-wide CRM analytics at all", which is exactly what
-		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
 
 		try {
 			$filter = $this->request->getParam('filter', []);
@@ -150,12 +120,8 @@ class AnalyticsController extends Controller {
 		} catch (InvalidArgumentException) {
 			return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] commercial failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
+			return $this->unavailable(action: 'commercial', error: $e);
+		}
 	}//end commercial()
 
 	/**
@@ -167,27 +133,17 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The trend payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function trends(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		// These endpoints take NO object selector — they aggregate across the
-		// whole instance and never pass a user to the service, so there is no
-		// object to own and nothing to scope. The question is therefore not
-		// "may this caller see THIS record" but "may this caller see
-		// company-wide CRM analytics at all", which is exactly what
-		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$metric = (string)$this->request->getParam('metric', '');
-		$period = (string)$this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
+		$period = (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
 
 		try {
 			return new JSONResponse($this->analyticsService->getTrends(metric: $metric, period: $period));
@@ -203,12 +159,8 @@ class AnalyticsController extends Controller {
 
 			return new JSONResponse(['message' => $label], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] trends failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
+			return $this->unavailable(action: 'trends', error: $e);
+		}
 	}//end trends()
 
 	/**
@@ -218,33 +170,65 @@ class AnalyticsController extends Controller {
 	 *
 	 * @return JSONResponse The funnel payload, or an error envelope.
 	 *
-	 * @spec openspec/changes/dashboard/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function funnels(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		// These endpoints take NO object selector — they aggregate across the
-		// whole instance and never pass a user to the service, so there is no
-		// object to own and nothing to scope. The question is therefore not
-		// "may this caller see THIS record" but "may this caller see
-		// company-wide CRM analytics at all", which is exactly what
-		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
 			return new JSONResponse($this->analyticsService->getFunnels());
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[AnalyticsController] funnels failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
+			return $this->unavailable(action: 'funnels', error: $e);
+		}
 	}//end funnels()
+
+	/**
+	 * The 401/403 for a caller who may not see analytics, or null.
+	 *
+	 * These endpoints take NO object selector — they aggregate across the
+	 * whole instance and never pass a user to the service, so there is no
+	 * object to own and nothing to scope. The question is therefore not
+	 * "may this caller see THIS record" but "may this caller see
+	 * company-wide CRM analytics at all", which is exactly what
+	 * ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function refusal(): ?JSONResponse {
+		return $this->privilege->refusalWith(['message' => 'Unauthorized'], ['message' => 'Forbidden']);
+	}//end refusal()
+
+	/**
+	 * The requested period for a caller who may see analytics, or the refusal.
+	 *
+	 * @return string|JSONResponse
+	 */
+	private function privilegedPeriod(): string|JSONResponse {
+		$refusal = $this->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return (string)$this->request->getParam('period', AnalyticsServiceInterface::DEFAULT_PERIOD);
+	}//end privilegedPeriod()
+
+	/**
+	 * Log a failed read and answer with the static 500.
+	 *
+	 * @param string     $action The failed endpoint, for the log.
+	 * @param \Throwable $error  The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unavailable(string $action, \Throwable $error): JSONResponse {
+		$this->logger->warning(
+			message: '[AnalyticsController] ' . $action . ' failed',
+			context: ['error' => $error->getMessage()]
+		);
+		return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+	}//end unavailable()
 }//end class

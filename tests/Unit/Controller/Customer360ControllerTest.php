@@ -35,6 +35,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for Customer360Controller::summary() — auth, the per-object read guard
@@ -109,6 +110,7 @@ class Customer360ControllerTest extends TestCase {
 		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$args) use ($foundEntity, &$findCalls, $findThrows) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$findCalls[] = $args;
 				if ($findThrows !== null) {
 					throw $findThrows;

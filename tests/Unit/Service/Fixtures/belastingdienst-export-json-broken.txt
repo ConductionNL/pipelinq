@@ -1,0 +1,121 @@
+{
+    "exportMetadata": {
+        "exportDate": "2026-02-01T00:00:00+00:00",
+        "entryCount": 6,
+        "dateRange": {
+            "from": "2026-01-01",
+            "to": "2026-01-31"
+        },
+        "registerList": [
+            "R1",
+            "R2"
+        ],
+        "chainIntegrity": "invalid",
+        "chainStatus": "Broken at entry 7 on register R2",
+        "signatureAlgorithm": "HMAC-SHA256"
+    },
+    "entries": [
+        {
+            "id": "e3",
+            "timestamp": "2026-01-02T10:00:00Z",
+            "operatorId": "",
+            "registerNumber": "R2",
+            "action": "",
+            "amount": 150,
+            "itemCount": 0,
+            "taxAmount": 0,
+            "transactionUuid": "",
+            "description": "A & <b>",
+            "signature": "",
+            "previousHash": "",
+            "currentHash": "",
+            "verified": true,
+            "exportedAt": ""
+        },
+        {
+            "id": "u1",
+            "timestamp": "2026-01-01T09:00:00Z",
+            "operatorId": "",
+            "registerNumber": "R1",
+            "action": "",
+            "amount": 0,
+            "itemCount": 0,
+            "taxAmount": 21,
+            "transactionUuid": "",
+            "description": "",
+            "signature": "",
+            "previousHash": "",
+            "currentHash": "",
+            "verified": false,
+            "exportedAt": ""
+        },
+        {
+            "id": "e2",
+            "timestamp": "2026-01-01T08:00:00Z",
+            "operatorId": "",
+            "registerNumber": "R2",
+            "action": "",
+            "amount": 0,
+            "itemCount": 3,
+            "taxAmount": 0,
+            "transactionUuid": "",
+            "description": "",
+            "signature": "",
+            "previousHash": "",
+            "currentHash": "",
+            "verified": null,
+            "exportedAt": ""
+        },
+        {
+            "id": "e4",
+            "timestamp": "2026-01-03T08:00:00Z",
+            "operatorId": "",
+            "registerNumber": "R3",
+            "action": "",
+            "amount": 0,
+            "itemCount": 0,
+            "taxAmount": 0,
+            "transactionUuid": "",
+            "description": "",
+            "signature": "",
+            "previousHash": "",
+            "currentHash": "",
+            "verified": null,
+            "exportedAt": ""
+        },
+        {
+            "id": "e5",
+            "timestamp": "2026-01-01T07:00:00Z",
+            "operatorId": "op",
+            "registerNumber": "",
+            "action": "",
+            "amount": 0,
+            "itemCount": 0,
+            "taxAmount": 0,
+            "transactionUuid": "",
+            "description": "",
+            "signature": "",
+            "previousHash": "",
+            "currentHash": "",
+            "verified": null,
+            "exportedAt": ""
+        },
+        {
+            "id": "e6",
+            "timestamp": "2026-01-01T06:00:00Z",
+            "operatorId": "",
+            "registerNumber": "R1",
+            "action": "",
+            "amount": 0,
+            "itemCount": 0,
+            "taxAmount": 0,
+            "transactionUuid": "",
+            "description": "",
+            "signature": "",
+            "previousHash": "",
+            "currentHash": "",
+            "verified": null,
+            "exportedAt": ""
+        }
+    ]
+}

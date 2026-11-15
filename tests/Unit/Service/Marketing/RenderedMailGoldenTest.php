@@ -51,6 +51,15 @@ use ReflectionMethod;
  * @uses   \OCA\Pipelinq\Service\Marketing\ListObjectStore
  * @uses   \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer
  * @uses   \OCA\Pipelinq\Service\Marketing\RecipientNameReader
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  */
 class RenderedMailGoldenTest extends TestCase {
 

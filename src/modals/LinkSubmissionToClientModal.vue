@@ -166,6 +166,27 @@ async function firstMatch(schema, params) {
 	}
 }
 
+/**
+ * @param {string} ticketId The ticket.
+ * @return {Promise<object|null>} The ticket, or null when it cannot be read.
+ */
+async function readTicket(ticketId) {
+	try {
+		const { data } = await axios.get(`${collectionUrl('ticket')}/${encodeURIComponent(ticketId)}`)
+		return data
+	} catch {
+		return null
+	}
+}
+
+/**
+ * @param {object} match A matched client or contact.
+ * @return {{id: string, name: string}} Its id and name.
+ */
+function partyRef(match) {
+	return { id: String(match.id ?? match['@self']?.id), name: match.name }
+}
+
 export default {
 	name: 'LinkSubmissionToClientModal',
 
@@ -259,29 +280,44 @@ export default {
 		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
 		 */
 		async load() {
-			try {
-				const { data } = await axios.get(`${collectionUrl('ticket')}/${encodeURIComponent(this.ticketId)}`)
-				this.ticket = data
-			} catch {
-				this.ticket = null
-			}
+			this.ticket = await readTicket(this.ticketId)
 			if (this.ticket) {
-				const [client, contact] = await Promise.all([
-					this.party.organisation ? firstMatch('client', { name: this.party.organisation }) : null,
-					this.party.email ? firstMatch('contact', { email: this.party.email }) : null,
-				])
-				if (client) {
-					this.suggestedClient = { id: String(client.id ?? client['@self']?.id), name: client.name }
-					this.clientMode = 'existing'
-					this.clientId = this.suggestedClient.id
-				}
-				if (contact) {
-					this.suggestedContact = { id: String(contact.id ?? contact['@self']?.id), name: contact.name }
-					this.contactMode = 'existing'
-					this.contactId = this.suggestedContact.id
-				}
+				await this.suggestParties()
 			}
 			this.loading = false
+		},
+
+		/**
+		 * @return {Promise<Array<object|null>>} The client named like the submitted
+		 *   organisation and the contact with the submitted e-mail address, read together.
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+		 */
+		partyMatches() {
+			return Promise.all([
+				this.party.organisation ? firstMatch('client', { name: this.party.organisation }) : null,
+				this.party.email ? firstMatch('contact', { email: this.party.email }) : null,
+			])
+		},
+
+		/**
+		 * Suggest the existing client named like the submitted organisation
+		 * and the contact with the submitted e-mail address.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-a-colleague-links-a-submission-to-a-client-and-a-contact-in-one-step
+		 */
+		async suggestParties() {
+			const [client, contact] = await this.partyMatches()
+			if (client) {
+				this.suggestedClient = partyRef(client)
+				this.clientMode = 'existing'
+				this.clientId = this.suggestedClient.id
+			}
+			if (contact) {
+				this.suggestedContact = partyRef(contact)
+				this.contactMode = 'existing'
+				this.contactId = this.suggestedContact.id
+			}
 		},
 
 		/**

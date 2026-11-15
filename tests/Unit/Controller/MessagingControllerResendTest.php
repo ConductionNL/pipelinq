@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -43,6 +44,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * MessagingController::resend() coverage.
@@ -97,7 +100,9 @@ class MessagingControllerResendTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->rows[$id] ?? null);
 			}
 
@@ -111,7 +116,10 @@ class MessagingControllerResendTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$uuid = ($uuid ?? (string)($object['id'] ?? ('row-' . count($this->rows))));
 				$object['id'] = $uuid;
 				$this->rows[$uuid] = $object;
@@ -165,8 +173,7 @@ class MessagingControllerResendTest extends TestCase {
 			$service,
 			$this->createMock(ChannelProviderRepository::class),
 			$this->createMock(ConsentService::class),
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
 		);
 	}//end controller()
 

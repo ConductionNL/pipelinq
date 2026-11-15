@@ -40,7 +40,11 @@ describe('ClientDetail parts both client boards share', () => {
 
 	it('draws the contact strip and the six figures across the page, above the tabs and the side column', () => {
 		expect(config.band[0]).toEqual({ widgetId: 'client-contact-strip', span: 12, chrome: 'bare' })
-		expect(config.band.slice(1)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
+		// The merged-into line (decision 288) shows only on a merged-away client, under the strip.
+		expect(config.band[1]).toEqual({ widgetId: 'client-merged-away', span: 12, chrome: 'bare' })
+		// The locked line (platform-record-lock) shows only on a locked client, under that.
+		expect(config.band[2]).toEqual({ widgetId: 'client-locked', span: 12, chrome: 'bare' })
+		expect(config.band.slice(3)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
 		expect(widget('client-contact-strip').type).toBe('PartyContactStripWidget')
 		expect(config.layout.map((item) => item.widgetId)).toEqual(['client-panels'])
 		expect(config.layout[0].gridY).toBe(0)
@@ -71,9 +75,9 @@ describe('ClientDetail parts both client boards share', () => {
 })
 
 describe('ClientDetail side column order', () => {
-	it('ends as the boards do: history, e-mails, notes, the knowledge base, then related', () => {
+	it('ends as the boards do: history, e-mails, meetings, notes, the knowledge base, then related', () => {
 		expect(config.sideColumnOrder).toBe('declared')
 		const ids = config.sideColumn.map((entry) => (typeof entry === 'string' ? entry : entry.id))
-		expect(ids.slice(-5)).toEqual(['side-history', 'client-email', 'client-notes', 'side-knowledge', 'client-related'])
+		expect(ids.slice(-6)).toEqual(['side-history', 'client-email', 'client-calendar', 'client-notes', 'side-knowledge', 'client-related'])
 	})
 })

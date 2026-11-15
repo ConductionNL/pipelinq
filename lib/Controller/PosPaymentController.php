@@ -32,8 +32,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
+use OCA\Pipelinq\Controller\Support\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -42,8 +43,6 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -67,25 +66,28 @@ use Throwable;
  *  request + logger); splitting them would add indirection.
  *
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PosPaymentController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosPaymentService $service The payment service.
+	 * @param PosPaymentServiceInterface $service The payment service.
 	 * @param IUserSession $session The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosPaymentService $service,
+		private PosPaymentServiceInterface $service,
 		private IUserSession $session,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	// ---------------------------------------------------------------------
@@ -357,6 +359,17 @@ class PosPaymentController extends Controller {
 			);
 		}
 
+		return $this->webhookAnswer(result: $result);
+	}//end webhook()
+
+	/**
+	 * The answer to the provider for what the service made of the delivery.
+	 *
+	 * @param array<string, mixed> $result The service's verdict.
+	 *
+	 * @return JSONResponse 400 for an invalid signature, 503 when unmatched, else 200 with the verdict.
+	 */
+	private function webhookAnswer(array $result): JSONResponse {
 		$status = (string)($result['status'] ?? '');
 		if ($status === 'invalid') {
 			return new JSONResponse(
@@ -382,7 +395,7 @@ class PosPaymentController extends Controller {
 		}
 
 		return new JSONResponse($result);
-	}//end webhook()
+	}//end webhookAnswer()
 
 	// ---------------------------------------------------------------------
 	// Helpers.
@@ -414,20 +427,7 @@ class PosPaymentController extends Controller {
 	 * @return string
 	 */
 	private function readRawBody(): string {
-		$body = file_get_contents('php://input');
-		if (is_string($body) === true && $body !== '') {
-			return $body;
-		}
-
-		$params = $this->request->getParams();
-		if (is_array($params) === true && $params !== []) {
-			$encoded = json_encode($params);
-			if (is_string($encoded) === true) {
-				return $encoded;
-			}
-		}
-
-		return '';
+		return (new RequestBody(request: $this->request))->raw();
 	}//end readRawBody()
 
 	/**
@@ -436,15 +436,7 @@ class PosPaymentController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->session->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->session->getUser());
 	}//end requireUserId()
 
 	/**
@@ -474,14 +466,8 @@ class PosPaymentController extends Controller {
 	private function run(callable $action, string $label): JSONResponse {
 		try {
 			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (Throwable $e) {
-			return $this->serverError(label: $label, exception: $e);
+			return ($this->ocsErrorResponse(failure: $e) ?? $this->serverError(label: $label, exception: $e));
 		}//end try
 	}//end run()
 

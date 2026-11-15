@@ -18,29 +18,28 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\TeamLoadService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TeamLoadServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * The team's load.
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
  */
 class TeamLoadController extends Controller {
 
@@ -48,19 +47,17 @@ class TeamLoadController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request      The request.
-	 * @param TeamLoadService         $teamLoad     The team's load.
-	 * @param IUserSession            $userSession  The signed-in user.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Who may read across the team.
+	 * @param TeamLoadServiceInterface         $teamLoad     The team's load.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface         $logger       The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TeamLoadService $teamLoad,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $accessPolicy,
+		private readonly TeamLoadServiceInterface $teamLoad,
+		private readonly CrmPrivilegeCheck $privilege,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -71,17 +68,13 @@ class TeamLoadController extends Controller {
 	 *
 	 * @return JSONResponse `{ results: [...] }` (see TeamLoadService::getTeamLoad()), or an error.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.3
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {

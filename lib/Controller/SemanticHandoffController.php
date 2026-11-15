@@ -31,10 +31,16 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\SemanticHandoffService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,7 +48,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -74,9 +79,12 @@ use Throwable;
  *  handoff service + the OR object surface.
  *
  * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class SemanticHandoffController extends Controller {
+	use PayloadToArray;
+	use ConfiguredSchemaSlug;
+
 	/**
 	 * Canonical semantic kind URIs.
 	 */
@@ -104,27 +112,27 @@ class SemanticHandoffController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
+	 * @param SemanticHandoffServiceInterface $handoffService Kind resolution + emit wrapper.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig App config (register/schema slugs).
-	 * @param TicketService $ticketService Unified ticket resolver.
-	 * @param IUserSession $userSession User session.
+	 * @param TicketServiceInterface $ticketService Unified ticket resolver.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner authorization.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Writes the answer that tells the customer the case number.
 	 */
 	public function __construct(
 		IRequest $request,
-		private SemanticHandoffService $handoffService,
+		private SemanticHandoffServiceInterface $handoffService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private TicketService $ticketService,
-		private IUserSession $userSession,
+		private TicketServiceInterface $ticketService,
+		private CrmPrivilegeCheck $privilege,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -138,17 +146,13 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function requestAvailability(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// This controller already authorises per object further down via
 		// accessPolicy->mayAccess(); these two entry points reach the handoff
 		// surface before any object is resolved, so the privileged-group half
 		// of the same policy is the check available here.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$request = $this->loadRequestTicket(id: $id);
@@ -167,17 +171,17 @@ class SemanticHandoffController extends Controller {
 				'caseReference' => (string)($request['caseReference'] ?? ''),
 				'caseTypeSource' => [
 					'register' => $this->appConfig->getValueString(
-						app: Application::APP_ID,
+						app: AppIdentity::APP_ID,
 						key: 'handoff_case_type_register',
 						default: 'dossiq'
 					),
 					'schema' => $this->appConfig->getValueString(
-						app: Application::APP_ID,
+						app: AppIdentity::APP_ID,
 						key: 'handoff_case_type_schema',
 						default: 'caseType'
 					),
 				],
-				'portalName' => $this->appConfig->getValueString(app: Application::APP_ID, key: 'portal_name', default: ''),
+				'portalName' => $this->appConfig->getValueString(app: AppIdentity::APP_ID, key: 'portal_name', default: ''),
 			]
 		);
 	}//end requestAvailability()
@@ -196,22 +200,18 @@ class SemanticHandoffController extends Controller {
 	 * @return JSONResponse The conversion outcome.
 	 *
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 * @spec openspec/specs/request-management/spec.md#requirement-converting-can-tell-the-customer-the-case-number
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// This controller already authorises per object further down via
 		// accessPolicy->mayAccess(); these two entry points reach the handoff
 		// surface before any object is resolved, so the privileged-group half
 		// of the same policy is the check available here.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$request = $this->loadRequestTicket(id: $id);
@@ -219,11 +219,22 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->convertLoadedRequest(id: $id, request: $request);
+	}//end convertRequestToCase()
+
+	/**
+	 * Convert a loaded request ticket into a case.
+	 *
+	 * @param string               $id      Request-ticket UUID.
+	 * @param array<string, mixed> $request The request.
+	 *
+	 * @return JSONResponse The conversion outcome.
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+	 */
+	private function convertLoadedRequest(string $id, array $request): JSONResponse {
 		if ((string)($request['status'] ?? '') !== 'in_progress') {
-			return new JSONResponse(
-				['status' => 'invalid-status', 'message' => 'Conversion is only available from in_progress.'],
-				Http::STATUS_CONFLICT
-			);
+			return new JSONResponse(['status' => 'invalid-status', 'message' => 'Conversion is only available from in_progress.'], Http::STATUS_CONFLICT);
 		}
 
 		if ($this->handoffService->hasImplementer(kindUri: self::KIND_CASE) === false) {
@@ -237,6 +248,21 @@ class SemanticHandoffController extends Controller {
 
 		$keepOpen = filter_var($this->request->getParam('keepOpen', false), FILTER_VALIDATE_BOOLEAN);
 
+		return $this->handoffToCase(id: $id, request: $request, keepOpen: $keepOpen);
+	}//end convertLoadedRequest()
+
+	/**
+	 * Run the convert-to-case handoff and close the request on success.
+	 *
+	 * @param string               $id       Request-ticket UUID.
+	 * @param array<string, mixed> $request  The request.
+	 * @param bool                 $keepOpen Whether the request stays open.
+	 *
+	 * @return JSONResponse The conversion outcome.
+	 *
+	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+	 */
+	private function handoffToCase(string $id, array $request, bool $keepOpen): JSONResponse {
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
 			schema: $this->ticketSchema(),
@@ -245,14 +271,11 @@ class SemanticHandoffController extends Controller {
 		);
 
 		if ($result['ok'] !== true) {
-			return new JSONResponse(
-				['status' => 'handoff-failed', 'reason' => (string)$result['reason']],
-				Http::STATUS_BAD_GATEWAY
-			);
+			return new JSONResponse(['status' => 'handoff-failed', 'reason' => (string)$result['reason']], Http::STATUS_BAD_GATEWAY);
 		}
 
 		return $this->closeConvertedRequest(id: $id, request: $request, result: $result, keepOpen: $keepOpen);
-	}//end convertRequestToCase()
+	}//end handoffToCase()
 
 	/**
 	 * Store the case type the person chose on the request, where the handoff
@@ -273,7 +296,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'invalid-case-type'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['ticketType'] = TicketServiceInterface::TYPE_REQUEST;
 		$request['requestedCaseType'] = $caseType;
 		if ($this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request) === false) {
 			return new JSONResponse(['status' => 'handoff-failed', 'reason' => 'case-type-not-saved'], Http::STATUS_BAD_GATEWAY);
@@ -295,7 +318,7 @@ class SemanticHandoffController extends Controller {
 	private function closeConvertedRequest(string $id, array $request, array $result, bool $keepOpen): JSONResponse {
 		// Keep the discriminator pinned on the round-tripped payload so the
 		// write can never silently untype the ticket.
-		$request['ticketType'] = TicketService::TYPE_REQUEST;
+		$request['ticketType'] = TicketServiceInterface::TYPE_REQUEST;
 		if ($keepOpen === false) {
 			$request['status'] = 'converted';
 		}
@@ -335,17 +358,17 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function contractAvailability(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
+		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($this->mayActOnContract(uid: $user->getUID(), contract: $contract) === false) {
+		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -372,22 +395,70 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sendContractToInvoicing(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
+		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
 		// Authorize BEFORE the status gate: a stranger must not be able to
 		// distinguish "not yours" from "not active" on someone else's contract.
-		if ($this->mayActOnContract(uid: $user->getUID(), contract: $contract) === false) {
+		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
+		return $this->invoiceContract(id: $id, uid: $uid, contract: $contract);
+	}//end sendContractToInvoicing()
+
+	/**
+	 * Send an authorised contract through the invoicing handoff and record it.
+	 *
+	 * @param string               $id       Contract UUID.
+	 * @param string               $uid      The acting user id.
+	 * @param array<string, mixed> $contract The contract.
+	 *
+	 * @return JSONResponse The handoff outcome.
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+	 */
+	private function invoiceContract(string $id, string $uid, array $contract): JSONResponse {
+		$gate = $this->invoicingGate(contract: $contract);
+		if ($gate !== null) {
+			return $gate;
+		}
+
+		$result = $this->handoffService->handoff(
+			register: $this->registerSlug(),
+			schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'),
+			id: $id,
+			handoffId: self::HANDOFF_SEND_TO_INVOICING
+		);
+
+		if ($result['ok'] !== true) {
+			return new JSONResponse(['status' => 'handoff-failed', 'reason' => (string)$result['reason']], Http::STATUS_BAD_GATEWAY);
+		}
+
+		$this->recordInvoice(id: $id, uid: $uid, contract: $contract, result: $result);
+
+		return new JSONResponse(
+			['status' => 'sent', 'invoiceReference' => (string)$result['targetUuid'], 'correlationId' => (string)$result['correlationId']]
+		);
+	}//end invoiceContract()
+
+	/**
+	 * Why a contract cannot be sent to invoicing now, or null when it can.
+	 *
+	 * @param array<string, mixed> $contract The contract.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+	 */
+	private function invoicingGate(array $contract): JSONResponse|null {
 		if (in_array((string)($contract['status'] ?? ''), self::INVOICEABLE_STATUSES, true) === false) {
 			return new JSONResponse(
 				['status' => 'invalid-status', 'message' => 'Send to invoicing is only available on a running contract (active or expiring).'],
@@ -399,24 +470,26 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-available'], Http::STATUS_CONFLICT);
 		}
 
-		$result = $this->handoffService->handoff(
-			register: $this->registerSlug(),
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
-			id: $id,
-			handoffId: self::HANDOFF_SEND_TO_INVOICING
-		);
+		return null;
+	}//end invoicingGate()
 
-		if ($result['ok'] !== true) {
-			return new JSONResponse(
-				['status' => 'handoff-failed', 'reason' => (string)$result['reason']],
-				Http::STATUS_BAD_GATEWAY
-			);
-		}
-
+	/**
+	 * Stamp the invoice reference and history on the contract and save it.
+	 *
+	 * @param string               $id       Contract UUID.
+	 * @param string               $uid      The acting user id.
+	 * @param array<string, mixed> $contract The contract.
+	 * @param array<string, mixed> $result   The handoff result.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+	 */
+	private function recordInvoice(string $id, string $uid, array $contract, array $result): void {
 		$sentAt = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
 		$contract['invoicedAt'] = $sentAt;
-		$contract['invoicedBy'] = $user->getUID();
+		$contract['invoicedBy'] = $uid;
 		// Every send is kept, so this year's invoicing can be read back.
 		$history = $contract['invoiceHistory'] ?? [];
 		if (is_array($history) === false) {
@@ -426,24 +499,12 @@ class SemanticHandoffController extends Controller {
 		$history[] = [
 			'reference' => (string)$result['targetUuid'],
 			'sentAt' => $sentAt,
-			'sentBy' => $user->getUID(),
+			'sentBy' => $uid,
 			'amount' => (float)($contract['valuePerInterval'] ?? $contract['value'] ?? 0),
 		];
 		$contract['invoiceHistory'] = array_values($history);
-		$this->saveObject(
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
-			id: $id,
-			payload: $contract
-		);
-
-		return new JSONResponse(
-			[
-				'status' => 'sent',
-				'invoiceReference' => (string)$result['targetUuid'],
-				'correlationId' => (string)$result['correlationId'],
-			]
-		);
-	}//end sendContractToInvoicing()
+		$this->saveObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id, payload: $contract);
+	}//end recordInvoice()
 
 	/**
 	 * Load a request-type ticket by id (per-object guard + subtype guard).
@@ -461,7 +522,7 @@ class SemanticHandoffController extends Controller {
 			return null;
 		}
 
-		if ((string)($ticket['ticketType'] ?? '') !== TicketService::TYPE_REQUEST) {
+		if ((string)($ticket['ticketType'] ?? '') !== TicketServiceInterface::TYPE_REQUEST) {
 			return null;
 		}
 
@@ -519,8 +580,7 @@ class SemanticHandoffController extends Controller {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->registerSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->registerSlug(), schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -607,7 +667,7 @@ class SemanticHandoffController extends Controller {
 	 *
 	 * @return bool True on success.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	private function saveObject(string $schema, string $id, array $payload): bool {
 		$objectService = $this->objectService();
@@ -618,9 +678,10 @@ class SemanticHandoffController extends Controller {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->registerSlug(),
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerSlug(), schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -653,35 +714,6 @@ class SemanticHandoffController extends Controller {
 	}//end objectService()
 
 	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * The pipelinq register slug (app-config overridable).
 	 *
 	 * Fails closed on a blanked override. Passing the built-in slug as
@@ -692,33 +724,11 @@ class SemanticHandoffController extends Controller {
 	 * empty value, so the query silently inherits whatever register context an
 	 * earlier call in the same request left on the shared service instance.
 	 * Normalising '' back to the built-in slug, exactly as the sibling
-	 * schemaSlug() already does, keeps every call scoped.
+	 * resolveSchemaSlug() already does, keeps every call scoped.
 	 *
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'pipelinq';
+		return $this->resolveSchemaSlug(key: 'register', default: 'pipelinq');
 	}//end registerSlug()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end schemaSlug()
 }//end class

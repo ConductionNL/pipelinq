@@ -40,6 +40,8 @@
 			@add="createNew"
 			@rowClick="openJob"
 			@view="openJob" />
+		<!-- data-portability-full-export 3.1: administrators only; the section hides itself otherwise. -->
+		<FullExportSection />
 		<ExportTestRunModal
 			v-if="testRunJobId"
 			:jobId="testRunJobId"
@@ -50,10 +52,11 @@
 <script>
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import FullExportSection from '../../components/FullExportSection.vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 import { exportApi } from '../../services/exportApi.js'
 import { exportJobSecondaryLabels, exportPageTabs } from './exportPageTabs.js'
-import { exportSchedule, lastRunLine } from './exportRunText.js'
+import { exportSchedule, lastRunCell } from './exportRunText.js'
 
 /** A destination's type as its product name, under the destination's name. */
 const DESTINATION_TYPES = {
@@ -79,11 +82,105 @@ function scheduleSource(row) {
 	return written !== '' && exportSchedule(written) !== written ? written : ''
 }
 
+/**
+ * The columns that say what a job exports and where to.
+ *
+ * @return {Array<object>} The job, dataset and destination columns.
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
+ */
+function jobColumns() {
+	return [
+		{
+			key: 'name',
+			label: t('pipelinq', 'Job'),
+			secondary: '{format} · {mode}',
+			secondaryLabels: exportJobSecondaryLabels(t),
+			cellClass: 'cn-cell--strong',
+		},
+		{ key: 'sourceSchemas', label: t('pipelinq', 'Dataset'), widget: 'badge' },
+		{
+			key: 'destinationId',
+			label: t('pipelinq', 'Destination'),
+			widget: 'fkResolve',
+			widgetProps: {
+				register: 'pipelinq',
+				schema: 'exportDestination',
+				labelField: 'name',
+				secondaryTemplate: '{type}',
+				secondaryLabels: { type: DESTINATION_TYPES },
+			},
+		},
+	]
+}
+
+/**
+ * The columns that say when a job runs and how its last run went.
+ *
+ * @return {Array<object>} The schedule, last run and next run columns.
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
+ */
+function runColumns() {
+	return [
+		{
+			key: 'scheduleCron',
+			label: t('pipelinq', 'Schedule'),
+			formatter: 'exportSchedule',
+			secondary: (row) => scheduleSource(row),
+		},
+		{
+			key: 'lastRunStatus',
+			label: t('pipelinq', 'Last run'),
+			widget: 'badge',
+			widgetProps: { colorMap: { succeeded: 'success', partial: 'warning', failed: 'error' } },
+			secondary: (row) => lastRunCell(row),
+		},
+		{
+			key: 'nextRunAt',
+			hidden: true,
+			label: t('pipelinq', 'Next run'),
+			formatter: 'exportMoment',
+			emptyValue: t('pipelinq', 'Not scheduled'),
+		},
+	]
+}
+
+/**
+ * The switch that turns a job's schedule on or off.
+ *
+ * @param {object} vm The jobs page, which stores the switch.
+ * @return {object} The column.
+ * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-reads-its-schedule-in-words
+ */
+function enabledColumn(vm) {
+	return {
+		key: 'enabled',
+		label: t('pipelinq', 'Enabled'),
+		widget: 'switch',
+		widgetProps: {
+			checked: (row) => row.enabled === true,
+			onToggle: (row, on) => vm.setEnabled(row, on),
+			ariaLabel: (row) => t('pipelinq', 'Run {name} on its schedule', { name: row.name }),
+		},
+	}
+}
+
+/**
+ * @return {Array<object>} The quick filters: all, enabled, last run failed.
+ */
+function jobQuickFilters() {
+	return [
+		{ label: t('pipelinq', 'All'), filter: {}, default: true, showCount: true },
+		{ label: t('pipelinq', 'Enabled'), filter: { enabled: true }, showCount: true },
+		{ label: t('pipelinq', 'Last run failed'), filter: { lastRunStatus: 'failed' }, showCount: true },
+	]
+}
+
 export default {
 	name: 'ExportJobs',
 	components: {
 		CnIndexPage,
 		ExportTestRunModal,
+		FullExportSection,
 	},
 
 	data() {
@@ -101,63 +198,12 @@ export default {
 			],
 
 			columns: [
-				{
-					key: 'name',
-					label: t('pipelinq', 'Job'),
-					secondary: '{format} · {mode}',
-					secondaryLabels: exportJobSecondaryLabels(t),
-					cellClass: 'cn-cell--strong',
-				},
-				{ key: 'sourceSchemas', label: t('pipelinq', 'Dataset'), widget: 'badge' },
-				{
-					key: 'destinationId',
-					label: t('pipelinq', 'Destination'),
-					widget: 'fkResolve',
-					widgetProps: {
-						register: 'pipelinq',
-						schema: 'exportDestination',
-						labelField: 'name',
-						secondaryTemplate: '{type}',
-						secondaryLabels: { type: DESTINATION_TYPES },
-					},
-				},
-				{
-					key: 'scheduleCron',
-					label: t('pipelinq', 'Schedule'),
-					formatter: 'exportSchedule',
-					secondary: (row) => scheduleSource(row),
-				},
-				{
-					key: 'lastRunStatus',
-					label: t('pipelinq', 'Last run'),
-					widget: 'badge',
-					widgetProps: { colorMap: { succeeded: 'success', partial: 'warning', failed: 'error' } },
-					secondary: (row) => lastRunLine(row),
-				},
-				{
-					key: 'nextRunAt',
-					hidden: true,
-					label: t('pipelinq', 'Next run'),
-					formatter: 'exportMoment',
-					emptyValue: t('pipelinq', 'Not scheduled'),
-				},
-				{
-					key: 'enabled',
-					label: t('pipelinq', 'Enabled'),
-					widget: 'switch',
-					widgetProps: {
-						checked: (row) => row.enabled === true,
-						onToggle: (row, on) => this.setEnabled(row, on),
-						ariaLabel: (row) => t('pipelinq', 'Run {name} on its schedule', { name: row.name }),
-					},
-				},
+				...jobColumns(),
+				...runColumns(),
+				enabledColumn(this),
 			],
 
-			quickFilters: [
-				{ label: t('pipelinq', 'All'), filter: {}, default: true, showCount: true },
-				{ label: t('pipelinq', 'Enabled'), filter: { enabled: true }, showCount: true },
-				{ label: t('pipelinq', 'Last run failed'), filter: { lastRunStatus: 'failed' }, showCount: true },
-			],
+			quickFilters: jobQuickFilters(),
 		}
 	},
 

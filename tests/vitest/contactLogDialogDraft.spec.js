@@ -38,6 +38,7 @@ vi.mock('@nextcloud/vue', () => ({
 	},
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDurationField: { props: ['modelValue'], template: '<div />' },
 	CnDialog: { props: ['name', 'eyebrow', 'subtitle', 'width'], render() { return h('div', [this.$slots.default?.(), this.$slots.actions?.()]) } },
 }))
 

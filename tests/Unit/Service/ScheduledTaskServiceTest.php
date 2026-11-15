@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Service\LanguageService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\NotificationService;
@@ -38,8 +40,11 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
+use OCA\Pipelinq\Tests\Unit\Support\Autowire;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for ScheduledTaskService.
@@ -137,8 +142,9 @@ class ScheduledTaskServiceTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * Wire the service under test with NAMED arguments, so a future parameter
-	 * insertion cannot silently shift the wiring.
+	 * Wire the service under test from its leaf collaborators, matched by
+	 * parameter NAME, so a future parameter insertion cannot silently shift
+	 * the wiring.
 	 *
 	 * @param ObjectServiceInterface|null $objectService The OR double; a fresh
 	 *                                                   recording stub when null.
@@ -146,14 +152,17 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @return ScheduledTaskService The service under test.
 	 */
 	private function makeService(?ObjectServiceInterface $objectService = null): ScheduledTaskService {
-		return new ScheduledTaskService(
-			appConfig: $this->appConfig,
-			userSession: $this->userSession,
-			groupManager: $this->groupManager,
-			notificationService: $this->notificationService,
-			logger: $this->logger,
-			languageService: $this->languageService,
-			objectService: ($objectService ?? $this->makeObjectServiceStub()),
+		return Autowire::build(
+			class: ScheduledTaskService::class,
+			doubles: [
+				'appConfig' => $this->appConfig,
+				'userSession' => $this->userSession,
+				'groupManager' => $this->groupManager,
+				'notificationService' => $this->notificationService,
+				'logger' => $this->logger,
+				'languageService' => $this->languageService,
+				'objectService' => ($objectService ?? $this->makeObjectServiceStub()),
+			]
 		);
 	}//end makeService()
 
@@ -684,19 +693,23 @@ class RecordingObjectService extends ObjectService {
 	 * @return ObjectEntityInterface The stored object.
 	 */
 	public function saveObject(
-		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		array|ObjectEntity $object,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $silent = false,
-		bool $_validation = true,
-		?array $uploadedFiles = null,
-		?IUser $currentUser = null,
-		bool $failIfExists = false,
+		bool $_multitenancy = true
 	): ObjectEntityInterface {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
+		$silent = $options->policy->silent ?? false;
+		$_validation = $options->policy->validation ?? true;
+		$uploadedFiles = $options->uploadedFiles;
+		$currentUser = $options->actor->currentUser;
+		$failIfExists = $options->policy->failIfExists ?? false;
+		$_unowned = $options->actor->unowned ?? false;
+		$_dedupOverride = $options->policy->dedupOverride ?? false;
+		$_owner = $options->actor->owner;
 		$this->lastSaveArgs = [
 			'object' => $object,
 			'register' => $register,
@@ -724,15 +737,16 @@ class RecordingObjectService extends ObjectService {
 	 * @return bool Always true.
 	 */
 	public function deleteObject(
-		string $uuid,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_retentionSweep = false,
-		?IUser $currentUser = null,
-		bool $permanent = false,
+		bool $_retentionSweep = false
 	): bool {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
+		$currentUser = $deletion->currentUser;
+		$permanent = $deletion->permanent ?? false;
 		$this->deleted = true;
 
 		return true;

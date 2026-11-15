@@ -31,8 +31,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RapportageServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Service\Support\WinChanceWeightedValue;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -52,8 +55,10 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/lead-management/spec.md
  */
-class RapportageService {
+class RapportageService implements RapportageServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use WinChanceWeightedValue;
 
 	/**
 	 * Constructor.
@@ -77,7 +82,7 @@ class RapportageService {
 	 * @return array<int, array{stage: string, count: int, totalValue: float, weightedValue: float}>
 	 *
 	 * @spec openspec/specs/lead-management/spec.md
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public function getStageValues(?string $pipelineId = null): array {
 		$leads = $this->fetchLeads();
@@ -106,30 +111,6 @@ class RapportageService {
 	}//end getStageValues()
 
 	/**
-	 * A lead's value weighted by its win chance.
-	 *
-	 * The win chance is the lead's qualification score read as a percentage,
-	 * clamped to 0-100; a lead without a score counts as 0 (decided by Ruben,
-	 * 2026-10-06). The `probability` field is hidden on the lead form and
-	 * empty on real installs, so it never feeds a forecast. AnalyticsService
-	 * applies the same rule; keep the two in step.
-	 *
-	 * @param array<string, mixed> $lead The lead row.
-	 *
-	 * @return float The weighted value.
-	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
-	 */
-	private function winChanceWeightedValue(array $lead): float {
-		$score = ($lead['qualificationScore'] ?? null);
-		if (is_numeric($score) === false) {
-			return 0.0;
-		}
-
-		return ((float)($lead['value'] ?? 0) * (max(0.0, min(100.0, (float)$score)) / 100.0));
-	}//end winChanceWeightedValue()
-
-	/**
 	 * Source performance: total / won / conversion / avg-won-value per source.
 	 *
 	 * @param string|null $dateFrom Optional ISO 8601 lower bound (lead created date).
@@ -141,47 +122,78 @@ class RapportageService {
 	 */
 	public function getSourcePerformance(?string $dateFrom = null, ?string $dateTo = null): array {
 		$leads = $this->fetchLeads();
-		$byCreated = $this->filterByCreated(leads: $leads, from: $dateFrom, to: $dateTo);
+		$byCreated = $this->filterByCreated(leads: $leads, period: ['from' => $dateFrom, 'to' => $dateTo]);
 
 		$buckets = [];
 		foreach ($byCreated as $lead) {
-			$source = (string)($lead['source'] ?? 'unknown');
-			if ($source === '') {
-				$source = 'unknown';
-			}
-
-			if (isset($buckets[$source]) === false) {
-				$buckets[$source] = ['source' => $source, 'total' => 0, 'won' => 0, 'wonValueSum' => 0.0];
-			}
-
-			$buckets[$source]['total']++;
-			$status = (string)($lead['status'] ?? 'open');
-			if ($status === 'won') {
-				$buckets[$source]['won']++;
-				$buckets[$source]['wonValueSum'] += (float)($lead['value'] ?? 0);
-			}
+			$source = self::sourceOf(lead: $lead);
+			$buckets[$source] = self::addToSource(
+				bucket: ($buckets[$source] ?? ['source' => $source, 'total' => 0, 'won' => 0, 'wonValueSum' => 0.0]),
+				lead: $lead
+			);
 		}
 
-		$result = [];
-		foreach ($buckets as $row) {
-			$conversion = round(($row['won'] / $row['total']) * 100.0, 1);
-			$avgWon = 0.0;
-
-			if ($row['won'] > 0) {
-				$avgWon = round($row['wonValueSum'] / $row['won'], 2);
-			}
-
-			$result[] = [
-				'source' => $row['source'],
-				'total' => $row['total'],
-				'won' => $row['won'],
-				'conversionRate' => $conversion,
-				'avgWonValue' => $avgWon,
-			];
-		}
-
-		return $result;
+		return array_map(static fn (array $row): array => self::sourceRow(row: $row), array_values($buckets));
 	}//end getSourcePerformance()
+
+	/**
+	 * The lead's source, 'unknown' when it has none.
+	 *
+	 * @param array<string, mixed> $lead The lead.
+	 *
+	 * @return string
+	 */
+	private static function sourceOf(array $lead): string {
+		$source = (string)($lead['source'] ?? 'unknown');
+		if ($source === '') {
+			return 'unknown';
+		}
+
+		return $source;
+	}//end sourceOf()
+
+	/**
+	 * Count one lead in its source bucket, with its value when it was won.
+	 *
+	 * @param array<string, mixed> $bucket The source bucket so far.
+	 * @param array<string, mixed> $lead   The lead.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function addToSource(array $bucket, array $lead): array {
+		$bucket['total']++;
+		$status = (string)($lead['status'] ?? 'open');
+		if ($status === 'won') {
+			$bucket['won']++;
+			$bucket['wonValueSum'] += (float)($lead['value'] ?? 0);
+		}
+
+		return $bucket;
+	}//end addToSource()
+
+	/**
+	 * One source's row: totals, conversion rate and average won value.
+	 *
+	 * @param array<string, mixed> $row The source bucket.
+	 *
+	 * @return array{source: string, total: int, won: int, conversionRate: float, avgWonValue: float}
+	 */
+	private static function sourceRow(array $row): array {
+		$conversion = round(($row['won'] / $row['total']) * 100.0, 1);
+		$avgWon = 0.0;
+
+		if ($row['won'] > 0) {
+			$avgWon = round($row['wonValueSum'] / $row['won'], 2);
+		}
+
+		return [
+			'source' => $row['source'],
+			'total' => $row['total'],
+			'won' => $row['won'],
+			'conversionRate' => $conversion,
+			'avgWonValue' => $avgWon,
+		];
+	}//end sourceRow()
 
 	/**
 	 * Aging buckets — distributes open leads across the 4 fixed buckets.
@@ -204,36 +216,61 @@ class RapportageService {
 		];
 
 		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? 'open');
-			if ($status === 'won' || $status === 'lost') {
-				continue;
+			$key = $this->agingBucketOf(lead: $lead, now: $now);
+			if ($key !== null) {
+				$buckets[$key]['count']++;
+				$buckets[$key]['totalValue'] += (float)($lead['value'] ?? 0);
 			}
-
-			$modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
-			if ($modified === null) {
-				continue;
-			}
-
-			$days = (int)floor(($now - $modified) / 86400);
-			if ($days < 0) {
-				$days = 0;
-			}
-
-			$key = '0-7d';
-			if ($days > 30) {
-				$key = '30d+';
-			} elseif ($days > 14) {
-				$key = '15-30d';
-			} elseif ($days > 7) {
-				$key = '8-14d';
-			}
-
-			$buckets[$key]['count']++;
-			$buckets[$key]['totalValue'] += (float)($lead['value'] ?? 0);
-		}//end foreach
+		}
 
 		return array_values($buckets);
 	}//end getAgingBuckets()
+
+	/**
+	 * The aging bucket of an open lead by its last modification; null for a
+	 * closed lead or one without a modification date.
+	 *
+	 * @param array<string, mixed> $lead The lead.
+	 * @param int                  $now  The current Unix time.
+	 *
+	 * @return string|null
+	 */
+	private function agingBucketOf(array $lead, int $now): ?string {
+		$status = (string)($lead['status'] ?? 'open');
+		if ($status === 'won' || $status === 'lost') {
+			return null;
+		}
+
+		$modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
+		if ($modified === null) {
+			return null;
+		}
+
+		return self::bucketForDays(days: max(0, (int)floor(($now - $modified) / 86400)));
+	}//end agingBucketOf()
+
+	/**
+	 * The aging bucket of an age in days.
+	 *
+	 * @param int $days The age in whole days.
+	 *
+	 * @return string
+	 */
+	private static function bucketForDays(int $days): string {
+		if ($days > 30) {
+			return '30d+';
+		}
+
+		if ($days > 14) {
+			return '15-30d';
+		}
+
+		if ($days > 7) {
+			return '8-14d';
+		}
+
+		return '0-7d';
+	}//end bucketForDays()
 
 	/**
 	 * Win/loss summary for closed leads within the optional date range.
@@ -255,7 +292,7 @@ class RapportageService {
 			}
 		}
 
-		$closed = $this->filterByCreated(leads: $closed, from: $dateFrom, to: $dateTo);
+		$closed = $this->filterByCreated(leads: $closed, period: ['from' => $dateFrom, 'to' => $dateTo]);
 		$totals = $this->accumulateWinLossTotals(leads: $closed);
 
 		return $this->buildWinLossSummary(totals: $totals);
@@ -269,44 +306,57 @@ class RapportageService {
 	 * @return array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int}
 	 */
 	private function accumulateWinLossTotals(array $leads): array {
-		$wonCount = 0;
-		$lostCount = 0;
-		$wonValueSum = 0.0;
-		$lostValueSum = 0.0;
-		$daysSum = 0.0;
-		$daysCount = 0;
-
+		$totals = ['wonCount' => 0, 'lostCount' => 0, 'wonValueSum' => 0.0, 'lostValueSum' => 0.0, 'daysSum' => 0.0, 'daysCount' => 0];
 		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			$value = (float)($lead['value'] ?? 0);
+			$totals = self::addOutcome(totals: $totals, lead: $lead);
 
-			if ($status === 'won') {
-				$wonCount++;
-				$wonValueSum += $value;
+			$days = $this->daysToClose(lead: $lead);
+			if ($days !== null) {
+				$totals['daysSum'] += $days;
+				$totals['daysCount']++;
 			}
+		}
 
-			if ($status !== 'won') {
-				$lostCount++;
-				$lostValueSum += $value;
-			}
-
-			$created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
-			$modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
-			if ($created !== null && $modified !== null && $modified >= $created) {
-				$daysSum += (($modified - $created) / 86400);
-				$daysCount++;
-			}
-		}//end foreach
-
-		return [
-			'wonCount' => $wonCount,
-			'lostCount' => $lostCount,
-			'wonValueSum' => $wonValueSum,
-			'lostValueSum' => $lostValueSum,
-			'daysSum' => $daysSum,
-			'daysCount' => $daysCount,
-		];
+		return $totals;
 	}//end accumulateWinLossTotals()
+
+	/**
+	 * Count a closed lead as won or lost, with its value.
+	 *
+	 * @param array<string, mixed> $totals The totals so far.
+	 * @param array<string, mixed> $lead   The closed lead.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function addOutcome(array $totals, array $lead): array {
+		$value = (float)($lead['value'] ?? 0);
+		if ((string)($lead['status'] ?? '') === 'won') {
+			$totals['wonCount']++;
+			$totals['wonValueSum'] += $value;
+			return $totals;
+		}
+
+		$totals['lostCount']++;
+		$totals['lostValueSum'] += $value;
+		return $totals;
+	}//end addOutcome()
+
+	/**
+	 * Days from creation to the last modification; null when either is missing or out of order.
+	 *
+	 * @param array<string, mixed> $lead The lead.
+	 *
+	 * @return float|null
+	 */
+	private function daysToClose(array $lead): ?float {
+		$created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
+		$modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
+		if ($created === null || $modified === null || $modified < $created) {
+			return null;
+		}
+
+		return (($modified - $created) / 86400);
+	}//end daysToClose()
 
 	/**
 	 * Turn accumulated win/loss totals into the public summary shape.
@@ -354,22 +404,22 @@ class RapportageService {
 	 * Filter leads by `_dateCreated` within the optional bounds.
 	 *
 	 * @param array<int, array<string, mixed>> $leads The leads.
-	 * @param string|null $from ISO 8601 lower bound (inclusive).
-	 * @param string|null $to ISO 8601 upper bound (inclusive).
+	 * @param array{from: string|null, to: string|null} $period ISO 8601 lower and upper bounds (inclusive).
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function filterByCreated(array $leads, ?string $from, ?string $to): array {
+	private function filterByCreated(array $leads, array $period): array {
+		$from = $period['from'];
+		$to = $period['to'];
 		if (($from === null || $from === '') && ($to === null || $to === '')) {
 			return $leads;
 		}
 
-		$fromTs = $this->parseDateBound(value: $from);
-		$toTs = $this->parseDateBound(value: $to);
+		$bounds = ['fromTs' => $this->parseDateBound(value: $from), 'toTs' => $this->parseDateBound(value: $to)];
 
 		$result = [];
 		foreach ($leads as $lead) {
-			if ($this->isWithinCreatedBounds(lead: $lead, fromTs: $fromTs, toTs: $toTs) === true) {
+			if ($this->isWithinCreatedBounds(lead: $lead, bounds: $bounds) === true) {
 				$result[] = $lead;
 			}
 		}
@@ -401,12 +451,13 @@ class RapportageService {
 	 * Whether a lead's `_dateCreated` falls within the optional [from, to] bounds.
 	 *
 	 * @param array<string, mixed> $lead The lead row.
-	 * @param int|null $fromTs Lower bound (inclusive), or null.
-	 * @param int|null $toTs Upper bound (inclusive), or null.
+	 * @param array{fromTs: int|null, toTs: int|null} $bounds Lower and upper bounds (inclusive), each or null.
 	 *
 	 * @return bool
 	 */
-	private function isWithinCreatedBounds(array $lead, ?int $fromTs, ?int $toTs): bool {
+	private function isWithinCreatedBounds(array $lead, array $bounds): bool {
+		$fromTs = $bounds['fromTs'];
+		$toTs = $bounds['toTs'];
 		$created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
 		if ($created === null) {
 			return false;
@@ -465,8 +516,8 @@ class RapportageService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function fetchLeads(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -486,16 +537,4 @@ class RapportageService {
 
 		return $leads;
 	}//end fetchLeads()
-
-	/**
-	 * Resolve the OpenRegister ObjectService from the container.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-
-	}//end getObjectService()
 }//end class

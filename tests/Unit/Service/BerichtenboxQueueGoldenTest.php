@@ -46,6 +46,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every row queueOutboundMessage() saves, every collaborator call it makes
@@ -59,6 +60,15 @@ use Throwable;
  * @covers \OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage
  * @covers \OCA\Pipelinq\Service\Berichtenbox\MessageOptions
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  *
  * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
@@ -233,6 +243,7 @@ class BerichtenboxQueueGoldenTest extends TestCase {
 				$named[$param->getName()] = $args[$i];
 			}
 
+			$named = LegacyObjectArgs::flatten(args: $named);
 			$this->calls[] = ['call' => $target[1], 'args' => array_map(static fn (mixed $v): mixed => ($v instanceof DateTimeImmutable ? $v->format(DATE_ATOM) : $v), $named)];
 			return $answer($named);
 		};

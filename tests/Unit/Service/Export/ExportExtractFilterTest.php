@@ -38,6 +38,16 @@ use Psr\Container\ContainerInterface;
  *
  * @covers \OCA\Pipelinq\Service\Export\ExportDataService
  * @uses   \OCA\Pipelinq\Service\Export\AbstractExportService
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses \OCA\Pipelinq\Service\Export\SchemaExtractRun
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-006
  */

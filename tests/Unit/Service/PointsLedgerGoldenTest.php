@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every credit, debit, expiry, adjustment and refund: what is written to the
@@ -43,6 +44,15 @@ use Throwable;
  * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerMovement
  * @uses   \OCA\Pipelinq\Service\Loyalty\LedgerOrigin
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses \OCA\Pipelinq\Util\AnyPayloadToArray
+ * @uses \OCA\Pipelinq\Util\CastingPayloadToArray
+ * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
+ * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
+ * @uses \OCA\Pipelinq\Util\SerialisedToArray
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
@@ -110,6 +120,7 @@ class PointsLedgerGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$raw) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$object = $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args)['object'];
 				$raw['timestamp'] = $object['timestamp'];
 				$entity = $this->createMock(ObjectEntityInterface::class);
@@ -124,6 +135,7 @@ class PointsLedgerGoldenTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $objects,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 		$service->creditPoints(accountId: 'acc-1', amount: 40, ruleId: 'rule-1', sourceDocument: [], processedBy: 'alice');
 
@@ -210,7 +222,7 @@ class PointsLedgerGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($scenario) {
-				$named = $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args);
+				$named = LegacyObjectArgs::flatten(args: $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args));
 				$this->trace[] = ['saveObject' => $named];
 				if (($scenario['saveThrows'] ?? false) === true) {
 					throw new RuntimeException('save failed');
@@ -239,6 +251,7 @@ class PointsLedgerGoldenTest extends TestCase {
 			logger: $logger,
 			objectService: $objects,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		try {

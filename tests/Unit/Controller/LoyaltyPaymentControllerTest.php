@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\LoyaltyPaymentController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\LoyaltyPaymentService;
 use OCP\AppFramework\Http;
@@ -62,9 +63,9 @@ class LoyaltyPaymentControllerTest extends TestCase {
 			appName: 'pipelinq',
 			request: $request,
 			service: $service,
-			policy: $policy,
-			userSession: $session,
+			privilege: new CrmPrivilegeCheck($session, $policy),
 			l10n: $l10n
+		
 		);
 
 	}//end controller()

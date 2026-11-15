@@ -29,6 +29,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every result recordOptIn() and recordOptOut() give, every change they hand
@@ -270,7 +272,9 @@ class ConsentRecordGoldenStore {
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	public function find(string $id, $register = null, $schema = null): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$register = $options?->register;
+		$schema = $options?->schema;
 		$this->finds[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
 		if ($schema === 'contact') {
 			return ($this->contacts[$id] ?? null);
@@ -289,7 +293,10 @@ class ConsentRecordGoldenStore {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		if ($this->saveThrows === true) {
 			throw new RuntimeException('save failed');
 		}

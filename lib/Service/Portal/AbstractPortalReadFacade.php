@@ -22,12 +22,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
+
+use OCA\Pipelinq\Service\Portal\Support\NestedIdValue;
+use OCA\Pipelinq\Util\RowIdentity;
 
 /**
  * Base class for per-customer scoped read facades.
@@ -38,6 +41,11 @@ namespace OCA\Pipelinq\Service\Portal;
  *   audit are all unspecified
  */
 abstract class AbstractPortalReadFacade {
+	use NestedIdValue {
+		readId as protected;
+	}
+	use RowIdentity;
+
 	/**
 	 * Constructor.
 	 *
@@ -171,50 +179,15 @@ abstract class AbstractPortalReadFacade {
 	}//end getOneForAccount()
 
 	/**
-	 * Read a possibly-nested id value (string or {id|uuid}) into a string.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The id, or null.
-	 */
-	protected function readId(mixed $value): ?string {
-		if ($value === null || $value === '') {
-			return null;
-		}
-
-		if (is_array($value) === true) {
-			$id = ($value['id'] ?? $value['uuid'] ?? null);
-			if ($id === null) {
-				return null;
-			}
-
-			return (string)$id;
-		}
-
-		return (string)$value;
-	}//end readId()
-
-	/**
 	 * Extract the stable id from a raw object's `@self` envelope or top level.
 	 *
 	 * @param array<string, mixed> $object The raw object.
 	 *
 	 * @return string|null The id, or null.
+	 *
+	 * @spec exclude result-shape plumbing shared by register reads, no behavioural spec surface.
 	 */
 	protected function objectId(array $object): ?string {
-		$self = ($object['@self'] ?? []);
-		if (is_array($self) === true) {
-			$id = ($self['id'] ?? $self['uuid'] ?? null);
-			if ($id !== null) {
-				return (string)$id;
-			}
-		}
-
-		$id = ($object['id'] ?? $object['uuid'] ?? null);
-		if ($id === null) {
-			return null;
-		}
-
-		return (string)$id;
+		return $this->rowIdentity(row: $object);
 	}//end objectId()
 }//end class

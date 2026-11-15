@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -37,6 +38,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * MessagingController unit coverage.
@@ -78,8 +80,7 @@ class MessagingControllerTest extends TestCase {
 			$this->messagingService,
 			$this->providerRepo,
 			$this->consentService,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end setUp()
@@ -401,7 +402,9 @@ class MessagingControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null The contact, or null.
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === 'c1') {
 					return ['id' => 'c1', 'name' => 'Jan Jansen', 'phone' => '+31612345678'];
 				}
@@ -452,8 +455,7 @@ class MessagingControllerTest extends TestCase {
 			$service,
 			$providerRepo,
 			$consent,
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 		);
 
 		$response = $controller->preflight(contactId: 'c1');

@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -106,33 +106,39 @@ class AcClient {
 			return;
 		}
 
-		try {
-			$response = $this->api->callComponent(
-				componentUrl: $acUrl,
-				method: 'GET',
-				path: '/autorisaties',
-				client: $client
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ZGW AC: refreshScopes failed',
-				['endpoint' => $endpointId, 'err' => $e->getMessage()]
-			);
+		$results = $this->autorisaties(source: ['endpoint' => $endpointId, 'ac' => $acUrl], client: $client);
+		if ($results === null) {
 			return;
+		}
+
+		$scopes = $this->buildScopeMap(results: $results, clientIdentifier: (string)($client['clientIdentifier'] ?? ''));
+		$this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
+	}//end refreshScopes()
+
+	/**
+	 * The AC's authorisation entries for the client (its `results`, else the
+	 * bare body); null when the read fails (logged) or answers no list.
+	 *
+	 * @param array{endpoint: string, ac: string} $source The endpoint id and its AC.
+	 * @param array<string, mixed>                $client The ZGW client.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function autorisaties(array $source, array $client): ?array {
+		try {
+			$response = $this->api->callComponent(componentUrl: $source['ac'], method: 'GET', path: '/autorisaties', client: $client);
+		} catch (Throwable $e) {
+			$this->logger->warning('ZGW AC: refreshScopes failed', ['endpoint' => $source['endpoint'], 'err' => $e->getMessage()]);
+			return null;
 		}
 
 		$results = $response['body']['results'] ?? $response['body'];
 		if (is_array($results) === false) {
-			return;
+			return null;
 		}
 
-		$scopes = $this->buildScopeMap(
-			results: $results,
-			clientIdentifier: (string)($client['clientIdentifier'] ?? '')
-		);
-
-		$this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
-	}//end refreshScopes()
+		return $results;
+	}//end autorisaties()
 
 	/**
 	 * Build the `resourceUrl → [scope, ...]` map from `/autorisaties` results.
@@ -243,6 +249,20 @@ class AcClient {
 			return false;
 		}
 
+		$bucket = $this->freshBucket(endpoint: $endpoint, endpointId: $endpointId);
+
+		return $bucket !== null && in_array($scope, ($bucket['scopes'][$resourceUrl] ?? $bucket['scopes']['*'] ?? []), true);
+	}//end hasScope()
+
+	/**
+	 * The endpoint's cached scope bucket, refreshed when stale; null when missing or too old to trust.
+	 *
+	 * @param array<string, mixed> $endpoint   ZgwEndpoint payload.
+	 * @param string               $endpointId The endpoint's cache key.
+	 *
+	 * @return array<string, mixed>|null The bucket, or null (fail-closed).
+	 */
+	private function freshBucket(array $endpoint, string $endpointId): ?array {
 		// Lazy refresh on stale cache.
 		$bucket = $this->cache[$endpointId] ?? null;
 		if ($bucket === null || (time() - $bucket['refreshedAt']) > $this->refreshInterval()) {
@@ -255,17 +275,16 @@ class AcClient {
 		}
 
 		if ($bucket === null) {
-			return false;
+			return null;
 		}
 
 		// Hard cap: anything older than 2 * refresh interval is unsafe.
 		if ((time() - $bucket['refreshedAt']) > (2 * $this->refreshInterval())) {
-			return false;
+			return null;
 		}
 
-		$list = $bucket['scopes'][$resourceUrl] ?? $bucket['scopes']['*'] ?? [];
-		return in_array($scope, $list, true);
-	}//end hasScope()
+		return $bucket;
+	}//end freshBucket()
 
 	/**
 	 * Return all scopes granted on a specific resource URL.
@@ -314,12 +333,24 @@ class AcClient {
 			return;
 		}
 
-		throw new InsufficientScopeException(
+		throw self::insufficientScope(scope: $scope, resourceUrl: $resourceUrl);
+	}//end require()
+
+	/**
+	 * The refusal for a scope the client does not hold.
+	 *
+	 * @param string $scope       Required scope.
+	 * @param string $resourceUrl Target resource URL.
+	 *
+	 * @return InsufficientScopeException The exception to throw.
+	 */
+	private static function insufficientScope(string $scope, string $resourceUrl): InsufficientScopeException {
+		return new InsufficientScopeException(
 			scope: $scope,
 			caseTypeUrl: $resourceUrl,
 			additionalInfo: 'Vraag de gemeente-beheerder om de juiste autorisatie te verlenen op het AC.'
 		);
-	}//end require()
+	}//end insufficientScope()
 
 	/**
 	 * Inject a pre-built scope cache (testing helper).
@@ -342,7 +373,7 @@ class AcClient {
 	 * @return int
 	 */
 	private function refreshInterval(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'zgw.ac_refresh_interval', self::DEFAULT_REFRESH_S);
 		if ($value > 0) {
 			return $value;
 		}

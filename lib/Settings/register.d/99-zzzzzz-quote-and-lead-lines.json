@@ -1,0 +1,121 @@
+{
+    "$comment": "PqOfferte, PqLead: the lines of a quote and of a lead are edited as a table inside the quote and lead form (nextcloud-vue CnChildRecordsField). lines is an inverse relation: the lines stay their own salesQuoteLine and leadProduct objects, pointing at their parent through quote and lead, and the form saves them after the parent, never inside it. A quote line's total is worked out in the table and stored on the line; a lead line's total stays the server's calculation (discount as percent or amount). A lead line gains name, the product name the table shows. salesQuote 1.1.0 -> 1.2.0, lead 1.5.0 -> 1.6.0, leadProduct 1.1.0 -> 1.2.0.",
+    "components": {
+        "schemas": {
+            "salesQuote": {
+                "slug": "salesQuote",
+                "version": "1.2.0",
+                "properties": {
+                    "lines": {
+                        "type": "array",
+                        "title": "Lines",
+                        "description": "The products and lines of your own on this quote, before VAT.",
+                        "items": {
+                            "$ref": "salesQuoteLine"
+                        },
+                        "inversedBy": "quote",
+                        "columns": [
+                            "description",
+                            "quantity",
+                            "unitPrice",
+                            "discount"
+                        ],
+                        "computed": [
+                            {
+                                "key": "total",
+                                "label": "Line total",
+                                "formula": "quantity * unitPrice * (1 - discount / 100)",
+                                "format": "currency",
+                                "currency": "EUR",
+                                "decimals": 2,
+                                "store": true
+                            }
+                        ],
+                        "totals": [
+                            {
+                                "key": "subtotal",
+                                "label": "Subtotal excl. VAT",
+                                "sum": "total",
+                                "format": "currency",
+                                "currency": "EUR",
+                                "decimals": 2,
+                                "emphasis": true
+                            }
+                        ],
+                        "addFrom": {
+                            "schema": "product",
+                            "register": "pipelinq",
+                            "label": "Add product",
+                            "titleField": "name",
+                            "secondaryField": "sku",
+                            "map": {
+                                "product": "@id",
+                                "name": "name",
+                                "description": "name",
+                                "unitPrice": "unitPrice"
+                            }
+                        }
+                    }
+                }
+            },
+            "lead": {
+                "slug": "lead",
+                "version": "1.6.0",
+                "properties": {
+                    "lines": {
+                        "type": "array",
+                        "title": "Products on this lead",
+                        "description": "The products this deal is about. A line's total is worked out when the lead is saved.",
+                        "items": {
+                            "$ref": "leadProduct"
+                        },
+                        "inversedBy": "lead",
+                        "columns": [
+                            "name",
+                            "quantity",
+                            "unitPrice",
+                            "discount"
+                        ],
+                        "totals": [
+                            {
+                                "key": "value",
+                                "label": "Total of the lines",
+                                "sum": "total",
+                                "format": "currency",
+                                "currency": "EUR",
+                                "decimals": 2,
+                                "emphasis": true
+                            }
+                        ],
+                        "addFrom": {
+                            "schema": "product",
+                            "register": "pipelinq",
+                            "label": "Add product",
+                            "titleField": "name",
+                            "secondaryField": "sku",
+                            "freeRows": false,
+                            "map": {
+                                "product": "@id",
+                                "name": "name",
+                                "unitPrice": "unitPrice",
+                                "unit": "unit"
+                            }
+                        }
+                    }
+                }
+            },
+            "leadProduct": {
+                "slug": "leadProduct",
+                "version": "1.2.0",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Product",
+                        "description": "The product's name as it was when the line was added.",
+                        "maxLength": 255
+                    }
+                }
+            }
+        }
+    }
+}
