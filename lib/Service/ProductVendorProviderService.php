@@ -118,22 +118,30 @@ class ProductVendorProviderService {
 		);
 
 		if ($productData === null) {
-			$this->logger->warning(
-				'ProductVendorProviderService: product not found',
-				['productId' => $productId, 'consumer' => $consumerAppSlug]
-			);
-			return null;
+			return $this->productNotFound(productId: $productId, consumerAppSlug: $consumerAppSlug);
 		}
-
-		$isAuthorised = $authorisedConsumer || $this->isAuthorisedForPrivateFields(
-			consumerAppSlug: $consumerAppSlug
-		);
 
 		return $this->projectProductView(
 			product: $productData,
-			authorised: $isAuthorised,
+			authorised: $authorisedConsumer || $this->isAuthorisedForPrivateFields(consumerAppSlug: $consumerAppSlug),
 		);
 	}//end getProduct()
+
+	/**
+	 * Log a product that could not be found; there is nothing to project.
+	 *
+	 * @param string $productId       The stable productId.
+	 * @param string $consumerAppSlug Slug of the consuming app.
+	 *
+	 * @return array<string,mixed>|null Always null.
+	 */
+	private function productNotFound(string $productId, string $consumerAppSlug): ?array {
+		$this->logger->warning(
+			'ProductVendorProviderService: product not found',
+			['productId' => $productId, 'consumer' => $consumerAppSlug]
+		);
+		return null;
+	}//end productNotFound()
 
 	/**
 	 * Resolve the supplier commercial profile for a given contactsUid.
