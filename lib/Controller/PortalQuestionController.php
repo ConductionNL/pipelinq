@@ -159,12 +159,7 @@ class PortalQuestionController extends Controller {
 			return new JSONResponse(['error' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		if ($result === null) {
-			$this->registerRejected();
-			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse($result, Http::STATUS_CREATED);
+		return $this->answer(result: $result, status: Http::STATUS_CREATED);
 	}//end fileQuestion()
 
 	/**
@@ -197,13 +192,26 @@ class PortalQuestionController extends Controller {
 			return new JSONResponse(['error' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
+		return $this->answer(result: $result, status: Http::STATUS_OK);
+	}//end reply()
+
+	/**
+	 * The saved result, or the 404 for a target the subject may not reach
+	 * (registered as a rejected attempt).
+	 *
+	 * @param array<string, mixed>|null $result The service result.
+	 * @param int                       $status The success status.
+	 *
+	 * @return JSONResponse
+	 */
+	private function answer(?array $result, int $status): JSONResponse {
 		if ($result === null) {
 			$this->registerRejected();
 			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return new JSONResponse($result);
-	}//end reply()
+		return new JSONResponse($result, $status);
+	}//end answer()
 
 	/**
 	 * The verified subject reference, or the refusal to return.
