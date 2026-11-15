@@ -133,9 +133,9 @@ class ProductVendorProviderService {
 	 * @param string $productId       The stable productId.
 	 * @param string $consumerAppSlug Slug of the consuming app.
 	 *
-	 * @return array<string,mixed>|null Always null.
+	 * @return null Always.
 	 */
-	private function productNotFound(string $productId, string $consumerAppSlug): ?array {
+	private function productNotFound(string $productId, string $consumerAppSlug): null {
 		$this->logger->warning(
 			'ProductVendorProviderService: product not found',
 			['productId' => $productId, 'consumer' => $consumerAppSlug]
