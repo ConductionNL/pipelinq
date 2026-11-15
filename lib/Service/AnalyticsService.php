@@ -42,7 +42,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
-use OCA\Pipelinq\Util\WinChanceWeightedValue;
+use OCA\Pipelinq\Service\Support\WinChanceWeightedValue;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;

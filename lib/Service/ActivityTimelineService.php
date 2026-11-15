@@ -42,7 +42,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
-use OCA\Pipelinq\Util\NonEmptyString;
+use OCA\Pipelinq\Service\Support\NonEmptyString;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;

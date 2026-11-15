@@ -33,7 +33,7 @@ use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\PosObjectFetch;
-use OCA\Pipelinq\Util\RandomUuid;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;

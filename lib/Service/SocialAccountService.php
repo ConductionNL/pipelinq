@@ -54,7 +54,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\BrokerCredentialReader;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
-use OCA\Pipelinq\Util\ClientWritableFields;
+use OCA\Pipelinq\Service\Support\ClientWritableFields;
 use OCP\IGroupManager;
 
 /**

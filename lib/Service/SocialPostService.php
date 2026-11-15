@@ -59,9 +59,9 @@ use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Service\Social\SocialPublishOutcome;
 use OCA\Pipelinq\Service\Social\SocialPublishRequest;
-use OCA\Pipelinq\Util\ClientWritableFields;
+use OCA\Pipelinq\Service\Support\ClientWritableFields;
 use OCA\Pipelinq\Util\ConfiguredTenantId;
-use OCA\Pipelinq\Util\SocialSpendBudget;
+use OCA\Pipelinq\Service\Support\SocialSpendBudget;
 use OCP\IAppConfig;
 
 /**

@@ -49,7 +49,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
-use OCA\Pipelinq\Util\JsonSerializableRows;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use OCP\IUserSession;

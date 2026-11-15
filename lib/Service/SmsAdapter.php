@@ -37,7 +37,7 @@ use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
-use OCA\Pipelinq\Util\ChannelAdapterLookups;
+use OCA\Pipelinq\Service\Support\ChannelAdapterLookups;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;

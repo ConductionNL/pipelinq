@@ -49,7 +49,7 @@ use OCA\Pipelinq\Service\Payment\PosTransactionStore;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
-use OCA\Pipelinq\Util\RandomUuid;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;

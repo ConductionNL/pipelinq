@@ -47,7 +47,7 @@ use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
-use OCA\Pipelinq\Util\JsonSerializableRows;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;

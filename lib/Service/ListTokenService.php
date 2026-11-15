@@ -42,7 +42,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\Base64UrlDecode;
-use OCA\Pipelinq\Util\ConfiguredSigningKey;
+use OCA\Pipelinq\Service\Support\ConfiguredSigningKey;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;

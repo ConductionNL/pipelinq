@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OrphanedLeadRepairServiceInterface;
-use OCA\Pipelinq\Util\JsonSerializableRows;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;

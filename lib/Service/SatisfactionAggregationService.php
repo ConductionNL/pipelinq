@@ -40,7 +40,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SatisfactionAggregationServiceInterface;
-use OCA\Pipelinq\Util\JsonSerializableRows;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;

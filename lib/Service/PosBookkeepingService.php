@@ -56,7 +56,7 @@ use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
-use OCA\Pipelinq\Util\PosObjectReadWrite;
+use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;

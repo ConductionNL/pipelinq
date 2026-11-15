@@ -36,7 +36,7 @@ use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SlaSweepSourceInterface;
 use OCA\Pipelinq\Service\Sla\SlaSweepRun;
 use OCA\Pipelinq\Service\Sla\SlaSweepSurface;
-use OCA\Pipelinq\Util\SystemRunner;
+use OCA\Pipelinq\Repair\Support\SystemRunner;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;

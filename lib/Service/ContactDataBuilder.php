@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Util\FirstValue;
+use OCA\Pipelinq\Service\Support\FirstValue;
 
 /**
  * Service for building import data arrays from Nextcloud contact data.

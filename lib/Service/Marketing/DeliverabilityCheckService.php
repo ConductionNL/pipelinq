@@ -31,10 +31,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
-use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
+use OCA\Pipelinq\Service\Support\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
-use OCA\Pipelinq\Util\QuietObjectSave;
+use OCA\Pipelinq\Service\Support\QuietObjectSave;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;

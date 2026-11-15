@@ -35,7 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\SubscriptionService;
-use OCA\Pipelinq\Util\SubscriptionContactKey;
+use OCA\Pipelinq\Service\Support\SubscriptionContactKey;
 
 /**
  * SubscriptionQueryService — counts, listings and the blast audience.

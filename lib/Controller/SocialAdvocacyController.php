@@ -36,7 +36,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SocialAdvocacyServiceInterface;
-use OCA\Pipelinq\Util\ErrorAwareJsonAnswer;
+use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

@@ -23,7 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Util;
 
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
-use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
+use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

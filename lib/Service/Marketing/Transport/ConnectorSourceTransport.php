@@ -38,7 +38,7 @@ namespace OCA\Pipelinq\Service\Marketing\Transport;
 
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
-use OCA\Pipelinq\Util\CastSerialisedToArray;
+use OCA\Pipelinq\Service\Support\CastSerialisedToArray;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

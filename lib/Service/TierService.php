@@ -31,7 +31,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
 use OCA\Pipelinq\Util\InjectedObjectService;
-use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
+use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;

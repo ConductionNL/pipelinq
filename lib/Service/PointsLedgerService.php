@@ -37,7 +37,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
-use OCA\Pipelinq\Util\ConfiguredObjectSave;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;

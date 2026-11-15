@@ -38,7 +38,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyLeafProviderInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
-use OCA\Pipelinq\Util\ServiceResultResponse;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;

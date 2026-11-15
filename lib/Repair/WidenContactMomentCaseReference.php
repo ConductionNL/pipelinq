@@ -34,10 +34,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
-use OCA\Pipelinq\Util\ContactMomentRows;
+use OCA\Pipelinq\Repair\Support\ContactMomentRows;
 use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
-use OCA\Pipelinq\Util\SystemRowSaver;
+use OCA\Pipelinq\Repair\Support\SystemRowSaver;
 use OCP\IGroupManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
