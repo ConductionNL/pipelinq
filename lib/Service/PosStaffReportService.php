@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosRegisterSchemaIds;
@@ -51,6 +52,7 @@ class PosStaffReportService implements PosStaffReportServiceInterface {
 	use CastingPayloadToArray;
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
+	use RegisterSchemaObjects;
 
 	/**
 	 * The fiscally-final statuses that count toward the report.
@@ -304,15 +306,7 @@ class PosStaffReportService implements PosStaffReportServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 5000,
-				]
-			);
+			$results = $this->findPageIn(ids: [$register, $schema], limit: 5000);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: staff-sales report failed to load transactions',

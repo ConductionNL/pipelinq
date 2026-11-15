@@ -117,15 +117,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	public function listStaff(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 
-		$results = $this->getObjectService()->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-				],
-				'limit' => 2000,
-			]
-		);
+		$results = $this->findPageIn(ids: [$register, $schema], limit: 2000);
 
 		$out = [];
 		foreach ($results as $result) {

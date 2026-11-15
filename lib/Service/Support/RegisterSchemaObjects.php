@@ -54,6 +54,26 @@ trait RegisterSchemaObjects {
 	}//end findAllIn()
 
 	/**
+	 * Find up to a limit of the objects of a register and schema; what the ObjectService throws is not caught.
+	 *
+	 * @param array{0: string, 1: string} $ids   The [register, schema] ids.
+	 * @param int                         $limit The row limit.
+	 *
+	 * @return mixed The ObjectService result.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function findPageIn(array $ids, int $limit): mixed {
+		[$register, $schema] = $ids;
+		return $this->getObjectService()->findAll(
+			config: [
+				'filters' => ['register' => $register, 'schema' => $schema],
+				'limit' => $limit,
+			]
+		);
+	}//end findPageIn()
+
+	/**
 	 * Save an object into a register and schema; what the ObjectService throws is not caught.
 	 *
 	 * @param array{0: string, 1: string, 2: string|null} $target The register, schema and object uuid (null or '' to create).

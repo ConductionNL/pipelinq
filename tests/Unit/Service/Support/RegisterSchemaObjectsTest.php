@@ -87,6 +87,15 @@ class RegisterSchemaObjectsTest extends TestCase {
 			}
 
 			/**
+			 * @param array<int, string> $ids   The ids.
+			 * @param int                $limit The limit.
+			 * @return mixed
+			 */
+			public function page(array $ids, int $limit): mixed {
+				return $this->findPageIn(ids: $ids, limit: $limit);
+			}
+
+			/**
 			 * @param array<int, string|null> $target The target.
 			 * @param array<string, mixed>    $object The object.
 			 * @return mixed
@@ -105,6 +114,10 @@ class RegisterSchemaObjectsTest extends TestCase {
 			],
 			$store->configs
 		);
+
+		$store->configs = [];
+		$this->assertSame(['row'], $host->page(['r', 's'], 50));
+		$this->assertSame([['filters' => ['register' => 'r', 'schema' => 's'], 'limit' => 50]], $store->configs);
 
 		$this->assertSame([['a' => 1], [], 'r', 's', null], $host->save(['r', 's', null], ['a' => 1]));
 		$this->assertSame([['a' => 1], [], 'r', 's', 'u1'], $host->save(['r', 's', 'u1'], ['a' => 1]));
