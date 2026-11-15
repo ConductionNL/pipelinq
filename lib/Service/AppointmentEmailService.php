@@ -32,13 +32,18 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * AppointmentEmailService — composes confirmation + reminder emails.
@@ -56,8 +61,14 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  complexity; each method stays individually simple.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class AppointmentEmailService {
+class AppointmentEmailService implements AppointmentEmailServiceInterface {
+	use NullablePayloadToArray;
+	use ConfiguredRegisterId;
+	use InjectedObjectService;
+
 	/**
 	 * App-config key for the signing secret used on reschedule/cancel deep links.
 	 *
@@ -431,6 +442,31 @@ class AppointmentEmailService {
 	 * @return bool True when accepted for delivery.
 	 */
 	private function dispatch(string $recipient, string $subject, string $body, ?string $icsContent, ?array $unsubscribe = null): bool {
+		if ($this->isValidRecipient(recipient: $recipient) === false) {
+			return false;
+		}
+
+		try {
+			$message = $this->composeMessage(recipient: $recipient, subject: $subject, body: $body, icsContent: $icsContent);
+			$this->applySender(message: $message);
+			$this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: $unsubscribe);
+
+			$failed = $this->mailer->send($message);
+			return empty($failed) === true;
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq appointment email: dispatch failed', ['exception' => $e->getMessage()]);
+			return false;
+		}//end try
+	}//end dispatch()
+
+	/**
+	 * Whether the recipient is a valid address, logging when it is not.
+	 *
+	 * @param string $recipient The recipient address.
+	 *
+	 * @return bool
+	 */
+	private function isValidRecipient(string $recipient): bool {
 		if ($recipient === '' || $this->mailer->validateMailAddress($recipient) === false) {
 			$this->logger->warning(
 				'Pipelinq appointment email: no valid recipient',
@@ -439,38 +475,61 @@ class AppointmentEmailService {
 			return false;
 		}
 
-		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$recipient]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
+		return true;
+	}//end isValidRecipient()
 
-			if ($icsContent !== null && $icsContent !== '') {
-				$attachment = $this->mailer->createAttachment(
-					$icsContent,
-					'appointment.ics',
-					'text/calendar; method=REQUEST; charset=UTF-8'
-				);
-				$message->attach($attachment);
-			}
+	/**
+	 * Build the message: recipient, subject, body and the optional `.ics` attachment.
+	 *
+	 * @param string      $recipient  The recipient address.
+	 * @param string      $subject    Subject line.
+	 * @param string      $body       Plain-text body.
+	 * @param string|null $icsContent Optional `.ics` attachment body.
+	 *
+	 * @return \OCP\Mail\IMessage
+	 */
+	private function composeMessage(string $recipient, string $subject, string $body, string|null $icsContent): \OCP\Mail\IMessage {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$recipient]);
+		$message->setSubject($subject);
+		$message->setPlainBody($body);
+		$this->attachIcs(message: $message, icsContent: $icsContent);
 
-			$sender = $this->appConfig->getValueString(Application::APP_ID, 'appointment_email_sender', '');
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender]);
-			}
+		return $message;
+	}//end composeMessage()
 
-			$this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: $unsubscribe);
-
-			$failed = $this->mailer->send($message);
-			return empty($failed) === true;
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq appointment email: dispatch failed',
-				['exception' => $e->getMessage()]
+	/**
+	 * Attach the `.ics` body to the message when there is one.
+	 *
+	 * @param \OCP\Mail\IMessage $message    The message.
+	 * @param string|null        $icsContent Optional `.ics` attachment body.
+	 *
+	 * @return void
+	 */
+	private function attachIcs(\OCP\Mail\IMessage $message, string|null $icsContent): void {
+		if ($icsContent !== null && $icsContent !== '') {
+			$attachment = $this->mailer->createAttachment(
+				$icsContent,
+				'appointment.ics',
+				'text/calendar; method=REQUEST; charset=UTF-8'
 			);
-			return false;
-		}//end try
-	}//end dispatch()
+			$message->attach($attachment);
+		}
+	}//end attachIcs()
+
+	/**
+	 * Set the configured sender on the message when it is a valid address.
+	 *
+	 * @param \OCP\Mail\IMessage $message The message.
+	 *
+	 * @return void
+	 */
+	private function applySender(\OCP\Mail\IMessage $message): void {
+		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'appointment_email_sender', '');
+		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
+			$message->setFrom([$sender]);
+		}
+	}//end applySender()
 
 	/**
 	 * Ask integriq whether this appointment mail may go, as `reminder`.
@@ -487,11 +546,11 @@ class AppointmentEmailService {
 	private function askIntegriq(array $context): array {
 		$this->lastRefusal = null;
 		$decision = $this->integriq->decideOne(
-			channel: 'email',
-			category: IntegriqConsentClient::CATEGORY_REMINDER,
-			requiresConsent: false,
-			address: (string)$context['recipientEmail'],
-			contactRef: (string)($context['booking']['customerId'] ?? ''),
+			ask: new ConsentAsk(channel: 'email', category: IntegriqConsentClient::CATEGORY_REMINDER, requiresConsent: false),
+			recipient: [
+				'address' => (string)$context['recipientEmail'],
+				'contactRef' => (string)($context['booking']['customerId'] ?? ''),
+			],
 		);
 		if ($decision['send'] === true) {
 			return $decision;
@@ -544,7 +603,7 @@ class AppointmentEmailService {
 		$cancelLink = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/cancel')
 			. '?link=' . rawurlencode($cancelToken) . '&bookingId=' . rawurlencode($bookingId);
 
-		$organiser = $this->appConfig->getValueString(Application::APP_ID, 'appointment_email_sender', '');
+		$organiser = $this->appConfig->getValueString(AppIdentity::APP_ID, 'appointment_email_sender', '');
 
 		return [
 			'bookingId' => $bookingId,
@@ -569,28 +628,65 @@ class AppointmentEmailService {
 	 * @return void
 	 */
 	private function stamp(string $bookingId, string $field, array $extra = []): void {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::BOOKING_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
+		$scope = $this->bookingScope();
+		if ($scope === null) {
 			return;
 		}
 
-		try {
-			$found = $this->getObjectService()->find(
-				id: $bookingId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq appointment email: stamp lookup failed', ['booking' => $bookingId]);
-			return;
-		}
-
-		$data = $this->toArray(object: $found);
+		$data = $this->loadForStamp(scope: $scope, bookingId: $bookingId);
 		if ($data === null) {
 			return;
 		}
 
+		$data = $this->stamped(data: $data, field: $field, extra: $extra);
+		$this->saveStamped(scope: $scope, data: $data, bookingId: $bookingId, field: $field);
+	}//end stamp()
+
+	/**
+	 * The register and booking schema, or null when either is unconfigured.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function bookingScope(): array|null {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::BOOKING_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return [$register, $schema];
+	}//end bookingScope()
+
+	/**
+	 * Load the booking as an array, logging a failed lookup.
+	 *
+	 * @param array{0: string, 1: string} $scope     The register and booking schema.
+	 * @param string                      $bookingId The Booking UUID.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function loadForStamp(array $scope, string $bookingId): array|null {
+		[$register, $schema] = $scope;
+		try {
+			$found = $this->getObjectService()->find(id: $bookingId, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq appointment email: stamp lookup failed', ['booking' => $bookingId]);
+			return null;
+		}
+
+		return $this->toArray(object: $found);
+	}//end loadForStamp()
+
+	/**
+	 * The booking with the timestamp and extra fields set and `@self` dropped.
+	 *
+	 * @param array<string, mixed>  $data  The booking.
+	 * @param string                $field The timestamp field.
+	 * @param array<string, string> $extra More fields to set with it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function stamped(array $data, string $field, array $extra): array {
 		$data[$field] = $this->nowIso();
 		foreach ($extra as $key => $value) {
 			$data[$key] = $value;
@@ -600,21 +696,30 @@ class AppointmentEmailService {
 			unset($data['@self']);
 		}
 
+		return $data;
+	}//end stamped()
+
+	/**
+	 * Save the stamped booking, logging a failed save.
+	 *
+	 * @param array{0: string, 1: string} $scope     The register and booking schema.
+	 * @param array<string, mixed>        $data      The stamped booking.
+	 * @param string                      $bookingId The Booking UUID.
+	 * @param string                      $field     The timestamp field.
+	 *
+	 * @return void
+	 */
+	private function saveStamped(array $scope, array $data, string $bookingId, string $field): void {
+		[$register, $schema] = $scope;
 		try {
-			$this->getObjectService()->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $bookingId
-			);
+			$this->getObjectService()->saveObject(object: $data, extend: [], register: $register, schema: $schema, uuid: $bookingId);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq appointment email: stamp save failed',
 				['booking' => $bookingId, 'field' => $field]
 			);
 		}
-	}//end stamp()
+	}//end saveStamped()
 
 	/**
 	 * Resolve a customer's email — from the OR mirror first, then the NC Contacts manager.
@@ -622,16 +727,28 @@ class AppointmentEmailService {
 	 * @param array<string, mixed>|null $customer The customer mirror (or null).
 	 *
 	 * @return string
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback over candidate
-	 *  email fields then the Contacts manager; each branch is an independent early
-	 *  return.
 	 */
 	private function resolveCustomerEmail(?array $customer): string {
 		if ($customer === null) {
 			return '';
 		}
 
+		$value = $this->directCustomerEmail(customer: $customer);
+		if ($value !== '') {
+			return $value;
+		}
+
+		return $this->listedCustomerEmail(emails: ($customer['emails'] ?? null));
+	}//end resolveCustomerEmail()
+
+	/**
+	 * The first non-empty email field of the customer mirror.
+	 *
+	 * @param array<string, mixed> $customer The customer mirror.
+	 *
+	 * @return string
+	 */
+	private function directCustomerEmail(array $customer): string {
 		foreach (['email', 'emailAddress', 'mail'] as $key) {
 			$value = (string)($customer[$key] ?? '');
 			if ($value !== '') {
@@ -639,24 +756,47 @@ class AppointmentEmailService {
 			}
 		}
 
-		$emails = $customer['emails'] ?? null;
+		return '';
+	}//end directCustomerEmail()
+
+	/**
+	 * The first non-empty address in the customer's `emails` list.
+	 *
+	 * @param mixed $emails The customer's `emails`.
+	 *
+	 * @return string
+	 */
+	private function listedCustomerEmail(mixed $emails): string {
 		if (is_array($emails) === true) {
 			foreach ($emails as $entry) {
-				if (is_string($entry) === true && $entry !== '') {
-					return $entry;
-				}
-
-				if (is_array($entry) === true) {
-					$value = (string)($entry['value'] ?? $entry['address'] ?? '');
-					if ($value !== '') {
-						return $value;
-					}
+				$value = $this->emailEntryAddress(entry: $entry);
+				if ($value !== '') {
+					return $value;
 				}
 			}
 		}
 
 		return '';
-	}//end resolveCustomerEmail()
+	}//end listedCustomerEmail()
+
+	/**
+	 * The address of one `emails` entry: the string itself, or its `value` / `address`.
+	 *
+	 * @param mixed $entry The entry.
+	 *
+	 * @return string
+	 */
+	private function emailEntryAddress(mixed $entry): string {
+		if (is_string($entry) === true) {
+			return $entry;
+		}
+
+		if (is_array($entry) === true) {
+			return (string)($entry['value'] ?? $entry['address'] ?? '');
+		}
+
+		return '';
+	}//end emailEntryAddress()
 
 	/**
 	 * Resolve a customer's display name from the mirror.
@@ -773,7 +913,7 @@ class AppointmentEmailService {
 	 * @return string
 	 */
 	private function linkSecret(): string {
-		$secret = $this->appConfig->getValueString(Application::APP_ID, self::LINK_SECRET_KEY, '');
+		$secret = $this->appConfig->getValueString(AppIdentity::APP_ID, self::LINK_SECRET_KEY, '');
 		if ($secret !== '') {
 			return $secret;
 		}
@@ -782,10 +922,10 @@ class AppointmentEmailService {
 			$secret = bin2hex(random_bytes(32));
 		} catch (\Throwable $e) {
 			// Fallback: deterministic but unique-per-instance fallback.
-			$secret = hash('sha256', Application::APP_ID . '|' . (string)microtime(true));
+			$secret = hash('sha256', AppIdentity::APP_ID . '|' . (string)microtime(true));
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, self::LINK_SECRET_KEY, $secret);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::LINK_SECRET_KEY, $secret);
 		return $secret;
 	}//end linkSecret()
 
@@ -850,86 +990,4 @@ class AppointmentEmailService {
 	private function nowIso(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 	}//end nowIso()
-
-	/**
-	 * The pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
-	 * Normalise an OR entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

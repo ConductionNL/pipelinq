@@ -12,12 +12,12 @@
   dialog role. NcDialog provides all three.
 
   Lives in its own file per ADR-004 (modal-isolation): gate-13 reports any
-  <NcDialog> inlined in a component outside src/modals/ or src/dialogs/.
+  <CnDialog width="form"> inlined in a component outside src/modals/ or src/dialogs/.
 
   @spec openspec/specs/contact-relationship-mapping/spec.md
 -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Add contact role')" @closing="$emit('cancel')">
+	<CnDialog width="form" :name="t('pipelinq', 'Add contact role')" @closing="$emit('cancel')">
 		<div class="form-group">
 			<label for="add-contact-role-contact"
 				>{{ t('pipelinq', 'Contact') }} *</label
@@ -60,15 +60,16 @@
 				{{ t('pipelinq', 'Add') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'AddContactRoleDialog',
-	components: { NcButton, NcDialog, NcSelect },
+	components: { NcButton, CnDialog, NcSelect },
 	props: {
 		/** Selectable contacts, shape { id, name }. */
 		contactOptions: { type: Array, default: () => [] },

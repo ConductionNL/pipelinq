@@ -21,14 +21,15 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+ * @spec openspec/specs/product-catalog/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\VatRatesInterface;
 use OCP\IAppConfig;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/product-catalog/spec.md
  */
-class VatRates {
+class VatRates implements VatRatesInterface {
 	/**
 	 * The app-config key holding the JSON map.
 	 *
@@ -66,7 +67,7 @@ class VatRates {
 	 *
 	 * @return array<string,float> Rate per class, every class present.
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public static function parse(string $stored): array {
 		$rates = self::DEFAULTS;
@@ -100,9 +101,9 @@ class VatRates {
 	 *
 	 * @return array<string,float> Rate per class.
 	 *
-	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
+	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public function rates(): array {
-		return self::parse(stored: $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''));
+		return self::parse(stored: $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''));
 	}//end rates()
 }//end class

@@ -22,7 +22,8 @@
   - moved to pipelinq.conduction.nl/compare, which renders the same
   - `src/data/capabilityComparison.json` through the same helpers. What stays
   - here is one link to it, so the comparison is still one click from where a
-  - user used to find it.
+  - user used to find it. The library page draws that link (`compareUrl`), so
+  - it stands as the board draws it in the board look.
   -
   - The manifest `config` keys are declared as props here because
   - CnPageRenderer spreads `pages[].config` onto the dispatched component:
@@ -32,37 +33,22 @@
 
 <template>
 	<div class="features-roadmap">
-		<p class="features-roadmap__compare">
-			<a
-				class="features-roadmap__compare-link"
-				:href="comparisonUrl"
-				target="_blank"
-				rel="noopener noreferrer"
-				aria-describedby="features-roadmap-compare-hint">
-				{{ t('pipelinq', 'How pipelinq compares to other help desks') }}
-			</a>
-			<span
-				id="features-roadmap-compare-hint"
-				class="features-roadmap__compare-hint">
-				{{
-					t('pipelinq', 'Opens {host} in a new tab.', {
-						host: comparisonHost,
-					})
-				}}
-			</span>
-		</p>
-
 		<CnFeaturesAndRoadmapPage
 			:repo="repo"
 			:documentationUrl="documentationUrl"
 			:openbuiltUrl="openbuiltUrl"
 			:llmSkillsUrl="llmSkillsUrl"
-			:suggestUrl="suggestUrl" />
+			:suggestUrl="suggestUrl"
+			:categories="categories"
+			:board="board"
+			:compareUrl="comparisonUrl"
+			:compareLabel="compareLabel" />
 	</div>
 </template>
 
 <script>
 import { CnFeaturesAndRoadmapPage } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
 import { getLanguage, translate as t } from '@nextcloud/l10n'
 
 /**
@@ -90,9 +76,22 @@ export default {
 		llmSkillsUrl: { type: String, default: '' },
 		/** Suggest-a-feature CTA override, forwarded to the library page. */
 		suggestUrl: { type: String, default: '' },
+		/** Board look options (`subtitle`, ...), forwarded to the library page. */
+		board: { type: Object, default: null },
 	},
 
 	computed: {
+		/**
+		 * The curated list's groups, key to caption, in the page's order
+		 * (board PqRoadmap), or null to leave the features ungrouped.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/specs/roadmap-curated-list/spec.md#requirement-the-page-reads-the-curated-feature-list
+		 */
+		categories() {
+			return loadState('pipelinq', 'features_roadmap_categories', null)
+		},
+
 		/**
 		 * The comparison page on the public site, in the reader's language.
 		 *
@@ -111,17 +110,13 @@ export default {
 		},
 
 		/**
-		 * The host the link opens, named in the hint beside it.
+		 * The compare link's text, in the reader's language.
 		 *
-		 * @return {string} Host name, e.g. `pipelinq.conduction.nl`.
+		 * @return {string}
 		 * @spec openspec/specs/features-roadmap/spec.md#requirement-the-page-must-link-to-the-comparison-on-the-public-site
 		 */
-		comparisonHost() {
-			try {
-				return new URL(this.comparisonUrl).host
-			} catch {
-				return this.comparisonUrl
-			}
+		compareLabel() {
+			return t('pipelinq', 'How pipelinq compares to other help desks')
 		},
 	},
 
@@ -130,23 +125,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-.features-roadmap__compare {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 4px 12px;
-	margin: 0;
-	padding: 12px 12px 0;
-}
-
-.features-roadmap__compare-link {
-	color: var(--color-primary-element);
-	text-decoration: underline;
-}
-
-.features-roadmap__compare-hint {
-	color: var(--color-text-maxcontrast);
-}
-</style>

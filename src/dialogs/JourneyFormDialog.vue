@@ -9,15 +9,15 @@
   - and never compiled, which looks exactly like one whose trigger has not
   - fired yet.
   -
-  - @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+  - @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
   -->
 <template>
-	<NcDialog
+	<CnDialog
 		v-if="show"
+		width="form"
 		:name="
 			isEditing ? t('pipelinq', 'Edit journey') : t('pipelinq', 'New journey')
 		"
-		:open="true"
 		size="normal"
 		:closeOnClickOutside="false"
 		@closing="close()">
@@ -186,7 +186,7 @@
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="close()">
+			<NcButton @click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -200,15 +200,15 @@
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import { showWarning } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
 import {
 	NcButton,
-	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
@@ -216,6 +216,7 @@ import {
 } from '@nextcloud/vue'
 import { flowStatusMessage } from '../services/journeyLabels.js'
 import { fetchJourney, saveJourney } from '../services/journeysApi.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 /**
  * @return {object} A blank journey form.
@@ -249,40 +250,14 @@ export default {
 	name: 'JourneyFormDialog',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the host page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The journey being edited, or null to create one. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list; the detail page does not pass it. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -300,7 +275,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The id of the journey being edited, empty when creating one.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		journeyId() {
 			const item = this.item || {}
@@ -313,8 +288,8 @@ export default {
 		},
 
 		/**
-		 * @return {Array<object>} The four trigger kinds the schema declares.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @return {Array<object>} The trigger kinds the schema declares.
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		triggerOptions() {
 			return [
@@ -334,12 +309,20 @@ export default {
 					value: 'shillinqSignal',
 					label: this.t('pipelinq', 'A bookkeeping signal changed'),
 				},
+				{
+					value: 'addressChanged',
+					label: this.t('pipelinq', 'A resident or business got a new address'),
+				},
+				{
+					value: 'ticketClosed',
+					label: this.t('pipelinq', 'A ticket was closed'),
+				},
 			]
 		},
 
 		/**
 		 * @return {Array<object>} The four condition operators.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		operatorOptions() {
 			return [
@@ -352,7 +335,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The two actions.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		actionOptions() {
 			return [
@@ -366,7 +349,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The two send intents.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 		 */
 		intentOptions() {
 			return [
@@ -377,7 +360,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The three statuses.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		statusOptions() {
 			return [
@@ -388,29 +371,20 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Load the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
-			 */
-			handler(open) {
-				if (open) {
-					this.load()
-				}
-			},
-		},
-	},
-
 	methods: {
+		/**
+		 * Read the record each time the dialog opens.
+		 *
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 */
+		prepareOnOpen() {
+			this.load()
+		},
+
 		/**
 		 * Reset the form, seed the pickers, and read the journey when editing one.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		async load() {
 			Object.assign(this, blankState())
@@ -430,7 +404,7 @@ export default {
 		/**
 		 * Read the journey being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		async fetchJourney() {
 			try {
@@ -466,7 +440,7 @@ export default {
 		 * take it, the journey is still saved, so the dialog closes and says why
 		 * in a notification.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		async save() {
 			this.saving = true
@@ -517,7 +491,7 @@ export default {
 		 * @param {Array<object>} options The options.
 		 * @param {string} value The stored value.
 		 * @return {object} The option, falling back to the first.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 		 */
 		pick(options, value) {
 			return options.find((option) => option.value === value) || options[0]

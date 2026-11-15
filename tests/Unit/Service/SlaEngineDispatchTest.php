@@ -28,6 +28,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\BusinessHoursCalculator;
 use OCA\Pipelinq\Service\HolidayCalendarService;
+use OCA\Pipelinq\Service\Sla\SlaEscalation;
+use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCP\IAppConfig;
 use OCP\Notification\IManager as INotificationManager;
@@ -184,9 +186,13 @@ class SlaEngineDispatchTest extends TestCase {
 	private function dispatch(SlaEngineService $engine, string $channel, string $notify, array $step = []): array {
 		$method = new ReflectionMethod(SlaEngineService::class, 'dispatchNotification');
 		$method->setAccessible(true);
-		return $method->invokeArgs($engine,
-			[$channel, $notify, ['name' => 'Test policy'], 'request', 'req-1', 1, $step]
+		$escalation = new SlaEscalation(
+			policy: ['name' => 'Test policy'],
+			object: new SlaTrackedObject(type: 'request', id: 'req-1'),
+			step: [...$step, 'channel' => $channel, 'notify' => $notify],
+			level: 1,
 		);
+		return $method->invokeArgs($engine, [$escalation]);
 	}//end dispatch()
 
 	/**

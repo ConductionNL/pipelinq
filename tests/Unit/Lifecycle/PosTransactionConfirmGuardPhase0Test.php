@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Lifecycle;
 
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCP\IAppConfig;
@@ -97,7 +98,7 @@ class ConfirmGuardFakeSchema {
 /**
  * Fake SchemaMapper resolving a slug to a numeric id.
  */
-class ConfirmGuardFakeSchemaMapper {
+class ConfirmGuardFakeSchemaMapper extends SchemaMapper {
 	/**
 	 * Constructor.
 	 *
@@ -111,28 +112,29 @@ class ConfirmGuardFakeSchemaMapper {
 	/**
 	 * Resolve a slug to a fake schema.
 	 *
-	 * @param string $idOrSlug The slug.
-	 * @param array<int, string> $extend Unused.
-	 * @param int|null $register Unused.
-	 * @param bool $rbac Unused.
-	 * @param bool $tenant Unused.
+	 * Mirrors OpenRegister's SchemaMapper::find() shape, so a call in the old
+	 * five-argument form fails here the way it fails against OpenRegister.
+	 *
+	 * @param string|int $id The id, uuid or slug.
+	 * @param array<int, string>|null $_extend Unused.
+	 * @param bool $_rbac Unused.
+	 * @param bool $_multitenancy Unused.
 	 *
 	 * @return ConfirmGuardFakeSchema The resolved schema.
 	 *
 	 * @throws \RuntimeException When unknown.
 	 */
 	public function find(
-		string $idOrSlug,
-		array $extend = [],
-		?int $register = null,
-		bool $rbac = true,
-		bool $tenant = true,
+		string|int $id,
+		?array $_extend = [],
+		bool $_rbac = true,
+		bool $_multitenancy = true,
 	): ConfirmGuardFakeSchema {
-		if (isset($this->idsBySlug[$idOrSlug]) === false) {
-			throw new \RuntimeException('unknown slug ' . $idOrSlug);
+		if (isset($this->idsBySlug[(string)$id]) === false) {
+			throw new \RuntimeException('unknown slug ' . $id);
 		}
 
-		return new ConfirmGuardFakeSchema($this->idsBySlug[$idOrSlug]);
+		return new ConfirmGuardFakeSchema($this->idsBySlug[(string)$id]);
 	}//end find()
 }//end class
 

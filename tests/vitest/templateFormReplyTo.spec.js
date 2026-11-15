@@ -33,6 +33,15 @@ vi.mock('../../src/services/articlesApi.js', () => ({
 	fetchArticles: () => Promise.resolve([]),
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		render() {
+			return h('div', { class: 'nc-dialog' }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	},
 	CnMarkdownEditor: { render: () => null },
 }))
 // The block editor is tested on its own (mailBlockEditor.spec.js); here it

@@ -116,6 +116,20 @@ class RecipientNameReaderTest extends TestCase {
 	}//end testTheFullNameStandsIn()
 
 	/**
+	 * A list names a recipient by the full name, never the preferred one;
+	 * an unknown recipient has none.
+	 *
+	 * @return void
+	 */
+	public function testAListReadsTheFullName(): void {
+		$reader = $this->reader(rows: ['contact/c-1' => ['name' => 'Johannes Jansen', 'preferredName' => 'Jan']]);
+
+		$this->assertSame(expected: 'Johannes Jansen', actual: $reader->fullName('c-1'));
+		$this->assertSame(expected: '', actual: $reader->fullName('c-9'));
+		$this->assertSame(expected: '', actual: $reader->fullName(''));
+	}//end testAListReadsTheFullName()
+
+	/**
 	 * A recipient that is a client is found after the contact lookup misses,
 	 * whether that miss is a null or a refusal. An entity is read through
 	 * getObject().

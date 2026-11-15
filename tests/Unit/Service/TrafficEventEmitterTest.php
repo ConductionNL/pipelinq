@@ -328,4 +328,85 @@ class TrafficEventEmitterTest extends TestCase {
 
 		$this->assertSame([], $this->ingest->calls);
 	}//end testRefusesAnUnknownKind()
+	/**
+	 * Every logged ending, exactly: an unknown kind, no portal, no ingest
+	 * service, an ingest service without ingest(), an unresolvable one, an
+	 * accepted event, and one the portal did not take.
+	 *
+	 * @return void
+	 */
+	public function testEveryLoggedEnding(): void {
+		$logged = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		foreach (['warning', 'info', 'debug'] as $level) {
+			$logger->method($level)->willReturnCallback(
+				static function (string $message, array $context = []) use (&$logged, $level): void {
+					$logged[] = [$level, $message, $context];
+				}
+			);
+		}
+
+		$this->build(logger: $logger)->emitEmailEvent(kind: 'bounce', delivery: self::DELIVERY, blast: []);
+		$this->build(portal: ' ', logger: $logger)->emitEmailEvent(kind: 'open', delivery: self::DELIVERY, blast: []);
+		$this->build(available: false, logger: $logger)->emitEmailEvent(kind: 'open', delivery: self::DELIVERY, blast: []);
+		$this->build(unresolvable: true, logger: $logger)->emitEmailEvent(kind: 'open', delivery: self::DELIVERY, blast: []);
+		$this->build(logger: $logger)->emitEmailEvent(kind: 'open', delivery: self::DELIVERY, blast: []);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn(new \stdClass());
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('portal-x');
+		$emitter = new class ($container, $appConfig, $this->createMock(ITimeFactory::class), $logger) extends TrafficEventEmitter {
+			/**
+			 * The ingest service is installed.
+			 *
+			 * @return bool
+			 */
+			protected function isIngestServiceAvailable(): bool {
+				return true;
+			}//end isIngestServiceAvailable()
+		};
+		$emitter->emitEmailEvent(kind: 'open', delivery: self::DELIVERY, blast: []);
+
+		$refusing = new class {
+			/**
+			 * Refuse every event.
+			 *
+			 * @param string       $portalSlug The portal.
+			 * @param array<mixed> $events     The events.
+			 * @param array<mixed> $context    The context.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function ingest(string $portalSlug, array $events, array $context = []): array {
+				return ['accepted' => 1, 'refused' => [['reason' => 'x']]];
+			}//end ingest()
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($refusing);
+		$emitter = new class ($container, $appConfig, $this->createMock(ITimeFactory::class), $logger) extends TrafficEventEmitter {
+			/**
+			 * The ingest service is installed.
+			 *
+			 * @return bool
+			 */
+			protected function isIngestServiceAvailable(): bool {
+				return true;
+			}//end isIngestServiceAvailable()
+		};
+		$emitter->emitEmailEvent(kind: 'click', delivery: self::DELIVERY, blast: [], clickedUrl: 'https://x.nl');
+
+		$this->assertSame(
+			[
+				['warning', 'TrafficEventEmitter: unknown event kind', ['kind' => 'bounce']],
+				['debug', 'TrafficEventEmitter: no traffic portal configured, skipping', []],
+				['debug', 'TrafficEventEmitter: Portaliq ingest service not installed, skipping', []],
+				['warning', 'TrafficEventEmitter: reporting to Portaliq failed', ['kind' => 'open', 'portal' => 'gemeente-portal', 'exception' => 'not registered: ' . TrafficEventEmitter::INGEST_SERVICE_CLASS]],
+				['debug', 'TrafficEventEmitter: event reported', ['kind' => 'open', 'portal' => 'gemeente-portal']],
+				['warning', 'TrafficEventEmitter: ingest service has no ingest() method', []],
+				['info', 'TrafficEventEmitter: Portaliq did not accept the event', ['kind' => 'click', 'portal' => 'portal-x', 'accepted' => 1, 'refused' => [['reason' => 'x']]]],
+			],
+			$logged
+		);
+	}//end testEveryLoggedEnding()
 }//end class

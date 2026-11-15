@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Activity\Setting;
 
-use OCP\Activity\ActivitySettings;
 use OCP\IL10N;
 
 /**
@@ -29,7 +28,7 @@ use OCP\IL10N;
  *
  * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
  */
-class DealSetting extends ActivitySettings {
+class DealSetting extends PipelinqActivitySetting {
 	/**
 	 * Constructor.
 	 *
@@ -61,26 +60,6 @@ class DealSetting extends ActivitySettings {
 	}//end getName()
 
 	/**
-	 * Get the group identifier for this setting.
-	 *
-	 * @return string The group identifier.
-	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
-	 */
-	public function getGroupIdentifier(): string {
-		return 'pipelinq';
-	}//end getGroupIdentifier()
-
-	/**
-	 * Get the group name for this setting.
-	 *
-	 * @return string The group name.
-	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
-	 */
-	public function getGroupName(): string {
-		return $this->l->t('Pipelinq');
-	}//end getGroupName()
-
-	/**
 	 * Get the priority for this setting.
 	 *
 	 * @return int The priority.
@@ -91,36 +70,6 @@ class DealSetting extends ActivitySettings {
 	}//end getPriority()
 
 	/**
-	 * Whether the user can change the stream setting.
-	 *
-	 * @return bool True if changeable.
-	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
-	 */
-	public function canChangeStream(): bool {
-		return true;
-	}//end canChangeStream()
-
-	/**
-	 * Whether the stream is enabled by default.
-	 *
-	 * @return bool True if enabled by default.
-	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
-	 */
-	public function isDefaultEnabledStream(): bool {
-		return true;
-	}//end isDefaultEnabledStream()
-
-	/**
-	 * Whether the user can change the mail setting.
-	 *
-	 * @return bool True if changeable.
-	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
-	 */
-	public function canChangeMail(): bool {
-		return true;
-	}//end canChangeMail()
-
-	/**
 	 * Whether mail is enabled by default.
 	 *
 	 * @return bool True if enabled by default.
@@ -129,4 +78,13 @@ class DealSetting extends ActivitySettings {
 	public function isDefaultEnabledMail(): bool {
 		return true;
 	}//end isDefaultEnabledMail()
+
+	/**
+	 * The localization service the setting translates its names with.
+	 *
+	 * @return IL10N The localization service.
+	 */
+	protected function l10n(): IL10N {
+		return $this->l;
+	}//end l10n()
 }//end class

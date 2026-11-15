@@ -51,11 +51,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCP\DB\Exception;
-use OCP\IDBConnection;
-use OCP\Migration\IOutput;
+use OCA\Pipelinq\Repair\Support\InPlaceSchemaSlugRename;
 use OCP\Migration\IRepairStep;
-use Psr\Log\LoggerInterface;
 
 /**
  * Renames the time-entry schema slug in place, ahead of the register import.
@@ -64,39 +61,34 @@ use Psr\Log\LoggerInterface;
  *  migration. Pointing this at an existing spec would report conformance to a
  *  requirement that says nothing about it.
  */
-class RenameTimeEntrySchemaSlug implements IRepairStep {
+class RenameTimeEntrySchemaSlug extends InPlaceSchemaSlugRename implements IRepairStep {
 	/**
 	 * The slug this step migrates away from.
 	 *
 	 * @var string
 	 */
-	private const OLD_SLUG = 'timeEntry';
+	protected const OLD_SLUG = 'timeEntry';
 
 	/**
 	 * The namespaced slug the register fragment now declares.
 	 *
 	 * @var string
 	 */
-	private const NEW_SLUG = 'billingTimeEntry';
+	protected const NEW_SLUG = 'billingTimeEntry';
 
 	/**
-	 * The owning application, as stored on the schema row.
+	 * The output when no schema carries the old slug.
 	 *
 	 * @var string
 	 */
-	private const APPLICATION = 'pipelinq';
+	protected const ABSENT_NOTICE = 'RenameTimeEntrySchemaSlug: no time-entry schema on this install; nothing to do.';
 
 	/**
-	 * Constructor.
+	 * The log line when the old slug is carried by more than one schema.
 	 *
-	 * @param IDBConnection $db Database connection.
-	 * @param LoggerInterface $logger Logger.
+	 * @var string
 	 */
-	public function __construct(
-		private readonly IDBConnection $db,
-		private readonly LoggerInterface $logger,
-	) {
-	}//end __construct()
+	protected const DUPLICATE_NOTICE = 'RenameTimeEntrySchemaSlug: duplicate time-entry slugs; refusing to guess.';
 
 	/**
 	 * Human-readable step name.
@@ -110,100 +102,4 @@ class RenameTimeEntrySchemaSlug implements IRepairStep {
 	public function getName(): string {
 		return 'Namespace the pipelinq time-entry schema slug';
 	}//end getName()
-
-	/**
-	 * Rename the slug, unless doing so would be ambiguous.
-	 *
-	 * @param IOutput $output Repair output.
-	 *
-	 * @return void
-	 *
-	 * @spec exclude No canonical spec covers the fleet-wide slug collision
-	 *  migration. Pointing this at an existing spec would report conformance to a
-	 *  requirement that says nothing about it.
-	 */
-	public function run(IOutput $output): void {
-		$old = $this->schemaIds(slug: self::OLD_SLUG);
-		$new = $this->schemaIds(slug: self::NEW_SLUG);
-
-		if ($old === null || $new === null) {
-			$output->info('RenameTimeEntrySchemaSlug: schema table unreadable; leaving the slug alone.');
-			return;
-		}
-
-		if ($old === []) {
-			$output->info('RenameTimeEntrySchemaSlug: no time-entry schema on this install; nothing to do.');
-			return;
-		}
-
-		if ($new !== []) {
-			// Both slugs present: each may own objects, and renaming would collide
-			// with the English row. Abandoning either set of objects is not a call
-			// a repair step gets to make without being asked.
-			$this->logger->warning(
-				'RenameTimeEntrySchemaSlug: both slugs exist; refusing to merge them.',
-				['old' => $old, 'new' => $new]
-			);
-			$output->warning(
-				'RenameTimeEntrySchemaSlug: both `' . self::OLD_SLUG . '` and `' . self::NEW_SLUG
-				. '` exist; refusing to merge them. Resolve by hand.'
-			);
-			return;
-		}
-
-		if (count($old) > 1) {
-			$this->logger->warning(
-				'RenameTimeEntrySchemaSlug: duplicate time-entry slugs; refusing to guess.',
-				['ids' => $old]
-			);
-			$output->warning('RenameTimeEntrySchemaSlug: duplicate `' . self::OLD_SLUG . '` schemas; refusing to guess.');
-			return;
-		}
-
-		try {
-			$this->db->executeStatement(
-				'UPDATE `*PREFIX*openregister_schemas` SET slug = ? WHERE id = ?',
-				[self::NEW_SLUG, $old[0]]
-			);
-		} catch (Exception $e) {
-			// A failure here is safe: the import then creates a new schema rather
-			// than updating this one, which is the pre-existing behaviour. Loud,
-			// because the objects on the old schema stop being reachable.
-			$this->logger->error(
-				'RenameTimeEntrySchemaSlug: slug rename failed; the import will create a second schema.',
-				['id' => $old[0], 'exception' => $e->getMessage()]
-			);
-			$output->warning('RenameTimeEntrySchemaSlug: slug rename failed; see the log.');
-			return;
-		}
-
-		$output->info(
-			'RenameTimeEntrySchemaSlug: schema ' . $old[0] . ' renamed `'
-			. self::OLD_SLUG . '` -> `' . self::NEW_SLUG . '`; its objects stay attached.'
-		);
-	}//end run()
-
-	/**
-	 * Ids of this application's schemas carrying the given slug.
-	 *
-	 * @param string $slug The schema slug to look for.
-	 *
-	 * @return array<int, mixed>|null The ids, or null when the table cannot be read.
-	 */
-	private function schemaIds(string $slug): ?array {
-		try {
-			$rows = $this->db->executeQuery(
-				'SELECT id FROM `*PREFIX*openregister_schemas` WHERE slug = ? AND application = ?',
-				[$slug, self::APPLICATION]
-			)->fetchAll(\PDO::FETCH_COLUMN);
-
-			return array_values((array)$rows);
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'RenameTimeEntrySchemaSlug: could not read the schema table; skipping.',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end schemaIds()
 }//end class

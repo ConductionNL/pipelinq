@@ -4,17 +4,17 @@
   -
   - POS tender type create / edit modal (pos-split-tender REQ-PST-001).
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#8.2
-  - @spec openspec/changes/pos-split-tender/tasks.md#8.3
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.2
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.3
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="
 			isNew
 				? t('pipelinq', 'New tender type')
 				: t('pipelinq', 'Edit tender type')
 		"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="pos-tender-type-form">
@@ -85,26 +85,23 @@
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcDialog,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
+import { posRecordId } from '../services/posRecordId.js'
 
 export default {
 	name: 'PosTenderTypeFormDialog',
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
-		NcDialog,
+		CnDialog,
 		NcTextField,
 	},
 
@@ -181,12 +178,7 @@ export default {
 			}
 		},
 
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 	},
 }
 </script>

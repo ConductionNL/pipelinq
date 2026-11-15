@@ -496,6 +496,40 @@ class PosCustomerLinkServiceTest extends TestCase {
 	}//end testGetCustomerHistoryFiltersDraftsAndSorts()
 
 	/**
+	 * The history counts each sale's lines as its items; no stored count is read.
+	 *
+	 * @return void
+	 */
+	public function testGetCustomerHistoryCountsTheSalesLines(): void {
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => [
+				'register' => 'reg-1',
+				'posTransaction_schema' => 'posTransaction',
+				'posTransactionLine_schema' => 'posTransactionLine',
+			][$key] ?? $default
+		);
+		$this->objectService->method('findAll')->willReturnCallback(
+			static function (array $config): array {
+				$filters = $config['filters'];
+				if ($filters['schema'] === 'posTransactionLine') {
+					$lines = ['t1' => [['id' => 'l1']], 't3' => [['id' => 'l2'], ['id' => 'l3']]];
+					return $lines[$filters['transaction']] ?? [];
+				}
+
+				return [
+					['id' => 't1', 'status' => 'settled', 'confirmedAt' => '2026-09-12T10:00:00Z', 'itemCount' => 9],
+					['id' => 't3', 'status' => 'settled', 'confirmedAt' => '2026-03-03T10:00:00Z'],
+				];
+			}
+		);
+
+		$history = $this->service->getCustomerHistory(contactUuid: 'c1', limit: 10);
+
+		$this->assertSame(expected: [1, 2], actual: array_column($history, 'itemCount'));
+
+	}//end testGetCustomerHistoryCountsTheSalesLines()
+
+	/**
 	 * DetachCustomer refuses to mutate a closed (settled / confirmed) transaction.
 	 *
 	 * @return void

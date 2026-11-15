@@ -1,0 +1,30 @@
+{
+  "components": {
+    "schemas": {
+      "product": {
+        "slug": "product",
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Whether the product is for sale: a draft is not yet, an active product is, a discontinued one no longer is but stays readable on old deals and receipts. Inactive is the older word for discontinued.",
+            "enum": [
+              "active",
+              "draft",
+              "discontinued",
+              "inactive"
+            ],
+            "default": "active",
+            "facetable": true,
+            "x-enum-labels": {
+              "active": "Active",
+              "draft": "Draft",
+              "discontinued": "Discontinued",
+              "inactive": "Discontinued"
+            }
+          }
+        }
+      }
+    }
+  }
+}

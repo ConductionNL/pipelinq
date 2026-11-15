@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCA\Pipelinq\Service\PosStaffService;
@@ -72,8 +74,8 @@ class StaffFakeObjectService extends ObjectService {
 		int|string $id,
 		?array $_extend = [],
 		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_render = true,
@@ -159,10 +161,10 @@ class StaffFakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -171,6 +173,9 @@ class StaffFakeObjectService extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$key = (string)$uuid;
 		$object['id'] = $key;
@@ -198,8 +203,8 @@ class StaffFakeObjectService extends ObjectService {
 	 */
 	public function deleteObject(
 		string $uuid,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,

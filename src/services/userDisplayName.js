@@ -13,7 +13,7 @@
  * from the core autocomplete endpoint, which every signed-in user may call
  * (the provisioning API is admin-only). A uid nobody answers to stays as it is.
  *
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 
 import { reactive } from 'vue'
@@ -26,7 +26,7 @@ export const PENDING_LABEL = '…'
  *
  * @param {string} uid The uid.
  * @return {Promise<string>} The display name, or the uid when no user matches it exactly.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 export async function fetchUserDisplayName(uid) {
 	// Loaded on first use: @nextcloud/auth reads browser storage when it is
@@ -38,17 +38,40 @@ export async function fetchUserDisplayName(uid) {
 			import('@nextcloud/axios'),
 			import('@nextcloud/router'),
 		])
-	let me
-	try {
-		me = getCurrentUser()
-	} catch {
-		me = null
-	}
+	const me = signedInUser(getCurrentUser)
 	if (me && String(me.uid) === uid) {
 		return me.displayName || uid
 	}
+	return autocompleteName({ axios, generateOcsUrl }, uid)
+}
+
+/**
+ * The signed-in user, or null when the session cannot be read.
+ *
+ * @param {() => object|null} getCurrentUser Reads the session user.
+ * @return {object|null} The user.
+ * @spec openspec/specs/user-fields/spec.md
+ */
+function signedInUser(getCurrentUser) {
 	try {
-		const response = await axios.get(generateOcsUrl('core/autocomplete/get'), {
+		return getCurrentUser()
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Another user's display name from core autocomplete, on an exact uid
+ * match only; the uid when there is none or the lookup fails.
+ *
+ * @param {{axios: object, generateOcsUrl: (path: string) => string}} http The HTTP client and URL builder.
+ * @param {string} uid The user id.
+ * @return {Promise<string>} The name.
+ * @spec openspec/specs/user-fields/spec.md
+ */
+async function autocompleteName(http, uid) {
+	try {
+		const response = await http.axios.get(http.generateOcsUrl('core/autocomplete/get'), {
 			headers: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
 			params: {
 				search: uid,
@@ -58,14 +81,23 @@ export async function fetchUserDisplayName(uid) {
 				limit: 10,
 			},
 		})
-		const list = response?.data?.ocs?.data
-		const match = (Array.isArray(list) ? list : []).find(
-			(entry) => entry && String(entry.id) === uid,
-		)
-		return (match && match.label) || uid
+		return matchingLabel(response?.data?.ocs?.data, uid)
 	} catch {
 		return uid
 	}
+}
+
+/**
+ * @param {unknown} list The autocomplete entries.
+ * @param {string} uid The user id.
+ * @return {string} The label of the entry with that exact id, or the uid.
+ * @spec openspec/specs/user-fields/spec.md
+ */
+function matchingLabel(list, uid) {
+	const match = (Array.isArray(list) ? list : []).find(
+		(entry) => entry && String(entry.id) === uid,
+	)
+	return (match && match.label) || uid
 }
 
 /**
@@ -74,7 +106,7 @@ export async function fetchUserDisplayName(uid) {
  *
  * @param {(uid: string) => Promise<string>} [lookup] The lookup (injectable for tests).
  * @return {(value: unknown) => string} The formatter.
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 export function createUserDisplayNameFormatter(lookup = fetchUserDisplayName) {
 	const names = reactive({})
@@ -115,4 +147,95 @@ export function createUserDisplayNameFormatter(lookup = fetchUserDisplayName) {
 		}
 		return PENDING_LABEL
 	}
+}
+
+let assignableUsers = null
+
+/**
+ * The uids a record can be assigned to, from core autocomplete. One request
+ * serves every caller; a failed request answers an empty list and is retried
+ * on the next call.
+ *
+ * @param {number} [limit] How many users to ask for.
+ * @return {Promise<Array<string>>} The uids.
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function listAssignableUserIds(limit = 200) {
+	if (assignableUsers === null) {
+		assignableUsers = Promise.all([
+			import('@nextcloud/axios'),
+			import('@nextcloud/router'),
+		])
+			.then(([{ default: axios }, { generateOcsUrl }]) =>
+				axios.get(generateOcsUrl('core/autocomplete/get'), {
+					headers: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
+					params: {
+						search: '',
+						itemType: ' ',
+						itemId: ' ',
+						'shareTypes[]': 0,
+						limit,
+					},
+				}),
+			)
+			.then((response) => {
+				const list = response?.data?.ocs?.data
+				return (Array.isArray(list) ? list : [])
+					.map((entry) => (entry && entry.id ? String(entry.id) : ''))
+					.filter(Boolean)
+			})
+			.catch(() => {
+				assignableUsers = null
+				return []
+			})
+	}
+	return assignableUsers
+}
+
+/**
+ * Forget the assignable users, so the next call asks the server again.
+ *
+ * @spec openspec/specs/lead-management/spec.md
+ * @return {void}
+ */
+export function resetAssignableUsers() {
+	assignableUsers = null
+}
+
+const displayNames = new Map()
+
+/**
+ * A user's display name, asked once per uid for the page's lifetime.
+ *
+ * @param {string} uid The uid.
+ * @return {Promise<string>} The display name, or the uid.
+ * @spec openspec/specs/pipeline/spec.md
+ */
+export function cachedUserDisplayName(uid) {
+	const key = String(uid || '')
+	if (key === '') {
+		return Promise.resolve('')
+	}
+	if (!displayNames.has(key)) {
+		displayNames.set(key, fetchUserDisplayName(key).catch(() => key))
+	}
+	return displayNames.get(key)
+}
+
+/**
+ * The initials of a name: the first letters of its first and last word
+ * ("Pieter Jansen" PJ), or the first letter of a single word.
+ *
+ * @param {string} name The name.
+ * @return {string} One or two capitals, or ''.
+ * @spec openspec/specs/pipeline/spec.md
+ */
+export function initialsOf(name) {
+	const words = String(name || '').trim().split(/[\s._-]+/).filter(Boolean)
+	if (words.length === 0) {
+		return ''
+	}
+	const first = words[0].charAt(0)
+	const last = words.length > 1 ? words[words.length - 1].charAt(0) : ''
+	return (first + last).toUpperCase()
 }

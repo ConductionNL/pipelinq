@@ -1,0 +1,3 @@
+- [x] TeamLoadService: display name from the profile, else the Nextcloud user (IUserManager), else the user id
+- [x] TeamLoadService: one row per user id
+- [x] Tests: TeamLoadServiceTest testNameFromTheNextcloudUser, testOneRowPerColleague

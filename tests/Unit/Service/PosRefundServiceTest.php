@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\ObjectService;
@@ -39,6 +41,7 @@ use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Service\PosRefundService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
+use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -83,8 +86,8 @@ class FakeObjectService extends ObjectService {
 		int|string $id,
 		?array $_extend = [],
 		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_render = true,
@@ -149,10 +152,10 @@ class FakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -161,6 +164,9 @@ class FakeObjectService extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$key = (string)$uuid;
@@ -214,7 +220,7 @@ class FakeWebhookService extends WebhookService {
 	/**
 	 * @param array<string, mixed> $payload
 	 */
-	public function dispatchEvent(object $_event, string $eventName, array $payload): void {
+	public function dispatchEvent(Event $_event, string $eventName, array $payload): void {
 		$this->events[] = ['eventName' => $eventName, 'payload' => $payload];
 	}
 }

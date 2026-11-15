@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use OCA\Pipelinq\Repair\RenameLoyaltyAccountSchemaSlug;
+use OCP\DB\Exception as DbException;
 use OCP\DB\IResult;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -147,4 +148,160 @@ final class RenameLoyaltyAccountSchemaSlugTest extends TestCase {
 
 		$this->step->run($output);
 	}//end testRefusesWhenTheDutchSlugIsDuplicated()
+
+	/**
+	 * Golden: every outcome reports exactly the same output and log lines, in order.
+	 *
+	 * @return void
+	 */
+	public function testEveryOutcomeReportsExactly(): void {
+		$cases = [
+			'table unreadable' => [['klantLoyaltyAccount' => 'throw'], false, [
+				[
+					'log.warning',
+					'RenameLoyaltyAccountSchemaSlug: could not read the schema table; skipping.',
+					[
+						'exception' => 'table gone',
+					],
+				],
+				[
+					'output.info',
+					'RenameLoyaltyAccountSchemaSlug: schema table unreadable; leaving the slug alone.',
+				],
+			]],
+			'old slug absent' => [['customerLoyaltyAccount' => [7]], false, [
+				[
+					'output.info',
+					'RenameLoyaltyAccountSchemaSlug: no Dutch loyalty-account schema on this install; nothing to do.',
+				],
+			]],
+			'both slugs present' => [['klantLoyaltyAccount' => [4], 'customerLoyaltyAccount' => [5]], false, [
+				[
+					'log.warning',
+					'RenameLoyaltyAccountSchemaSlug: both slugs exist; refusing to merge them.',
+					[
+						'old' => [
+							4,
+						],
+						'new' => [
+							5,
+						],
+					],
+				],
+				[
+					'output.warning',
+					'RenameLoyaltyAccountSchemaSlug: both `klantLoyaltyAccount` and `customerLoyaltyAccount` exist; refusing to merge them. Resolve by hand.',
+				],
+			]],
+			'old slug duplicated' => [['klantLoyaltyAccount' => [4, 6]], false, [
+				[
+					'log.warning',
+					'RenameLoyaltyAccountSchemaSlug: duplicate Dutch slugs; refusing to guess.',
+					[
+						'ids' => [
+							4,
+							6,
+						],
+					],
+				],
+				[
+					'output.warning',
+					'RenameLoyaltyAccountSchemaSlug: duplicate `klantLoyaltyAccount` schemas; refusing to guess.',
+				],
+			]],
+			'rename fails' => [['klantLoyaltyAccount' => [4]], true, [
+				[
+					'statement',
+					[
+						'customerLoyaltyAccount',
+						4,
+					],
+				],
+				[
+					'log.error',
+					'RenameLoyaltyAccountSchemaSlug: slug rename failed; the import will create a second schema.',
+					[
+						'id' => 4,
+						'exception' => 'locked',
+					],
+				],
+				[
+					'output.warning',
+					'RenameLoyaltyAccountSchemaSlug: slug rename failed; see the log.',
+				],
+			]],
+			'rename succeeds' => [['klantLoyaltyAccount' => [4]], false, [
+				[
+					'statement',
+					[
+						'customerLoyaltyAccount',
+						4,
+					],
+				],
+				[
+					'output.info',
+					'RenameLoyaltyAccountSchemaSlug: schema 4 renamed `klantLoyaltyAccount` -> `customerLoyaltyAccount`; its objects stay attached.',
+				],
+			]],
+		];
+		foreach ($cases as $name => [$ids, $failUpdate, $expected]) {
+			$this->assertSame($expected, $this->recordOutcome($ids, $failUpdate), $name);
+		}
+	}//end testEveryOutcomeReportsExactly()
+
+	/**
+	 * Run the step against canned slug lookups and record what it reports.
+	 *
+	 * @param array<string, mixed> $ids        Ids per slug, or 'throw' to make that lookup fail.
+	 * @param bool                 $failUpdate Whether the rename statement fails.
+	 *
+	 * @return array<int, array<int, mixed>> The statements, log and output calls, in order.
+	 */
+	private function recordOutcome(array $ids, bool $failUpdate): array {
+		$calls = [];
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('executeQuery')->willReturnCallback(
+			function (string $sql, array $params) use ($ids): IResult {
+				$slugIds = ($ids[$params[0]] ?? []);
+				if ($slugIds === 'throw') {
+					throw new DbException('table gone');
+				}
+
+				$result = $this->createMock(IResult::class);
+				$result->method('fetchAll')->willReturn($slugIds);
+				return $result;
+			}
+		);
+		$db->method('executeStatement')->willReturnCallback(
+			function (string $sql, array $params) use ($failUpdate, &$calls): int {
+				$calls[] = ['statement', $params];
+				if ($failUpdate === true) {
+					throw new DbException('locked');
+				}
+
+				return 1;
+			}
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		foreach (['warning', 'error'] as $level) {
+			$logger->method($level)->willReturnCallback(
+				function (string $message, array $context = []) use ($level, &$calls): void {
+					$calls[] = ['log.'.$level, $message, $context];
+				}
+			);
+		}
+
+		$output = $this->createMock(IOutput::class);
+		foreach (['info', 'warning'] as $level) {
+			$output->method($level)->willReturnCallback(
+				function (string $message) use ($level, &$calls): void {
+					$calls[] = ['output.'.$level, $message];
+				}
+			);
+		}
+
+		(new RenameLoyaltyAccountSchemaSlug($db, $logger))->run($output);
+		return $calls;
+	}//end recordOutcome()
+
 }//end class

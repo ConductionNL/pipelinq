@@ -23,7 +23,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Service\ObjectEventHandlerService;
+use OCA\Pipelinq\Kernel\Contracts\ObjectEventHandlerServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 
@@ -32,16 +32,16 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-events/tasks.md#task-2
  */
 class ObjectEventListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ObjectEventHandlerService $handlerService The event handler service.
+	 * @param ObjectEventHandlerServiceInterface $handlerService The event handler service.
 	 */
 	public function __construct(
-		private ObjectEventHandlerService $handlerService,
+		private ObjectEventHandlerServiceInterface $handlerService,
 	) {
 	}//end __construct()
 
@@ -51,7 +51,7 @@ class ObjectEventListener implements IEventListener {
 	 * @param Event $event The event to handle.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-events/tasks.md#task-2
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatedEvent) {

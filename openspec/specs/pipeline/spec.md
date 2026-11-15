@@ -102,30 +102,11 @@ The system MUST support creating, reading, updating, and deleting pipelines. Pip
 
 ### Requirement: Pipeline Entity Types [MVP]
 
-Each pipeline MUST declare which entity types it supports. This controls which entities can be placed on the pipeline and which entities appear on the kanban board.
+A pipeline SHALL hold one kind of item: leads, requests or cases, chosen as Soort when the pipeline is made. There SHALL be no mixed pipeline and no Show filter. Board: pipelinq/PqPipelines.
 
-#### Scenario 7: Lead-only pipeline
-
-- GIVEN a pipeline with entityTypes: ["lead"]
-- WHEN a user creates a lead and selects this pipeline
-- THEN the lead MUST be assignable to this pipeline
-- AND when a user attempts to place a request on this pipeline, the system MUST reject it with "This pipeline does not support requests"
-
-#### Scenario 8: Request-only pipeline
-
-- GIVEN a pipeline with entityTypes: ["request"]
-- WHEN a user creates a request and selects this pipeline
-- THEN the request MUST be assignable to this pipeline
-- AND leads MUST NOT be assignable to this pipeline
-
-#### Scenario 9: Mixed pipeline
-
-- GIVEN a pipeline with entityTypes: ["lead", "request"]
-- WHEN the kanban board is rendered
-- THEN both leads and requests MUST appear as cards in their respective stage columns
-- AND the pipeline view MUST support a "Show" filter with options: "All", "Leads only", "Requests only"
-
----
+#### Scenario: A pipeline has one kind
+- WHEN an admin makes a pipeline and chooses Soort Verzoeken
+- THEN only requests can be placed on it, and the board shows request cards only
 
 ### Requirement: Default Pipelines [MVP]
 
@@ -786,7 +767,7 @@ Organizations MUST be able to maintain multiple active pipelines simultaneously,
 
 ### Requirement: Pipeline Template Creation [Enterprise] (REQ-PIPE-020)
 
-The system SHOULD allow admins to save an existing pipeline configuration as a reusable template. Templates accelerate onboarding by providing pre-built pipeline configurations that match common workflows (sales, service, hiring, procurement). Krayin ships with a default pipeline template; EspoCRM uses installable extension packs.
+The system SHALL allow admins to save an existing pipeline configuration as a reusable template. Templates accelerate onboarding by providing pre-built pipeline configurations that match common workflows (sales, service, hiring, procurement). Krayin ships with a default pipeline template; EspoCRM uses installable extension packs.
 
 #### Scenario: Save pipeline as template
 @e2e exclude Enterprise feature; not yet implemented
@@ -822,7 +803,7 @@ The system SHOULD allow admins to save an existing pipeline configuration as a r
 
 ### Requirement: Stage Automation on Transition [Enterprise] (REQ-PIPE-021)
 
-The system SHOULD support configurable automation actions triggered when a lead or request moves to a specific stage. This reduces manual work and ensures consistency in follow-up actions. EspoCRM implements this via its BPM engine; Krayin uses a workflow automation system with event-based triggers on lead stage changes.
+The system SHALL support configurable automation actions triggered when a lead or request moves to a specific stage. This reduces manual work and ensures consistency in follow-up actions. EspoCRM implements this via its BPM engine; Krayin uses a workflow automation system with event-based triggers on lead stage changes.
 
 #### Scenario: Auto-assign on stage transition
 @e2e exclude backend automation; covered by PHPUnit
@@ -917,7 +898,7 @@ The pipeline kanban and list views MUST support filtering and searching items to
 
 ### Requirement: Pipeline Access Control [V1] (REQ-PIPE-023)
 
-The system SHOULD enforce access control on pipelines to ensure users only see and interact with pipelines relevant to their role. Access control is managed via OpenRegister's RBAC system. EspoCRM uses team-based access with role-level restrictions; Krayin has a "bouncer" system with all/group/individual permission levels.
+The system SHALL enforce access control on pipelines to ensure users only see and interact with pipelines relevant to their role. Access control is managed via OpenRegister's RBAC system. EspoCRM uses team-based access with role-level restrictions; Krayin has a "bouncer" system with all/group/individual permission levels.
 
 #### Scenario: Admin-only pipeline configuration
 @e2e exclude access-control; covered by admin-settings spec
@@ -994,7 +975,7 @@ The Pipelinq dashboard MUST include pipeline-specific widgets that provide at-a-
 
 ### Requirement: Stage SLA and Deadline Tracking [Enterprise] (REQ-PIPE-025)
 
-The system SHOULD support configuring maximum time limits (SLAs) per stage so that leads and requests that exceed the expected duration are flagged for attention. SLA tracking is a common feature in government CRM contexts where response time commitments are contractual. EspoCRM offers SLA tracking in its Cases module; Krayin does not have built-in SLA.
+The system SHALL support configuring maximum time limits (SLAs) per stage so that leads and requests that exceed the expected duration are flagged for attention. SLA tracking is a common feature in government CRM contexts where response time commitments are contractual. EspoCRM offers SLA tracking in its Cases module; Krayin does not have built-in SLA.
 
 #### Scenario: Configure stage SLA
 @e2e exclude Enterprise feature; not yet implemented
@@ -1037,7 +1018,7 @@ The system SHOULD support configuring maximum time limits (SLAs) per stage so th
 
 ### Requirement: Pipeline Reporting [V1] (REQ-PIPE-026)
 
-The system SHOULD provide exportable pipeline reports that summarize pipeline performance over a configurable time period. Reports complement real-time analytics by providing historical snapshots for management review and tender compliance.
+The system SHALL provide exportable pipeline reports that summarize pipeline performance over a configurable time period. Reports complement real-time analytics by providing historical snapshots for management review and tender compliance.
 
 #### Scenario: Generate pipeline summary report
 @e2e exclude V1 reporting; not yet implemented
@@ -1077,7 +1058,7 @@ The system SHOULD provide exportable pipeline reports that summarize pipeline pe
 
 ### Requirement: Win/Loss Tracking [Enterprise] (REQ-PIPE-027)
 
-The system SHOULD track the outcome of closed leads with structured reason data to enable analysis of why deals are won or lost. This is a standard CRM feature in EspoCRM (close reason field on opportunities), Krayin (lost reason on leads), and all enterprise CRMs.
+The system SHALL track the outcome of closed leads with structured reason data to enable analysis of why deals are won or lost. This is a standard CRM feature in EspoCRM (close reason field on opportunities), Krayin (lost reason on leads), and all enterprise CRMs.
 
 #### Scenario: Record loss reason when moving to Lost stage
 @e2e exclude requires seed data and stage transition UI
@@ -1234,11 +1215,8 @@ The system MUST calculate and display weighted pipeline values to provide a real
 
 - GIVEN leads with expected close dates in the current quarter
 - WHEN the admin views the sales forecast
-- THEN the system MUST display a monthly breakdown:
-  - April 2026: EUR 80,000 weighted (5 deals)
-  - May 2026: EUR 120,000 weighted (3 deals)
-  - June 2026: EUR 50,000 weighted (7 deals)
-- AND leads without an expected close date MUST be grouped separately as "Unscheduled"
+- THEN the forecast page shows the quarter per owner, split into committed, best case and pipeline, as on board `PqForecast` (`specs/forecast-roll-up-and-categories`)
+- AND it shows no monthly breakdown and no "Unscheduled" group
 
 ---
 
@@ -1309,6 +1287,86 @@ be written as that user.
 - GIVEN an admin runs the setup action
 - WHEN the default pipelines are created
 - THEN they are written as that admin
+
+### Requirement: The pipelines list shows each pipeline with its stages
+
+The Pipelines page MUST open as cards, one per pipeline. Each card shows its name, its description, its number of stages, when it was made, and its stages as chips in order.
+
+#### Scenario: Verkoop
+
+- GIVEN pipeline Verkoop with six stages
+- WHEN the Pipelines page opens
+- THEN Verkoop's card reads "6 fases" and shows the chips Nieuw, Benaderd, Gekwalificeerd, Voorstel, Gewonnen and Verloren
+
+### Requirement: The pipeline board header offers Download
+
+The pipeline board header MUST offer Download, which writes the leads the board shows as a CSV file, beside the buildiq square and New lead.
+
+#### Scenario: download the board
+
+- GIVEN the Verkoop pipeline board with 14 open leads
+- WHEN the user chooses Download
+- THEN a CSV with those 14 leads is saved
+
+### Requirement: The pipeline board draws the board toolbar in the board look
+
+In the board look the pipeline board MUST draw the board toolbar: the chips, Filter and the view switch, then the pipeline select, the search, Pipeline settings and Columns, then the hint and the active filters with Clear all.
+
+#### Scenario: the active filters
+
+- GIVEN the Verkoop pipeline board in the board look
+- WHEN the user chooses the My leads chip
+- THEN the active filters read "Pipeline: Verkoop" and "My leads", and Filter shows 2
+
+#### Scenario: clear all
+
+- GIVEN the board with the My leads chip and a search
+- WHEN the user chooses Clear all
+- THEN the board shows every open lead of the pipeline it opens with
+
+### Requirement: The board look draws the kanban's lead cards as the board does
+
+In the board look each lead card MUST show its title, its value, its chance (the lead's own, else its stage's) in the stage's colour, and under a rule the days in its stage and its owner's initials; a stale lead MUST be outlined in the error colour.
+
+#### Scenario: a lead in Benaderd
+
+- GIVEN Zorggroep Merwede in stage Benaderd (30%), € 64.000, owned by Fatma Yildiz, 6 days in the stage
+- WHEN the board shows the Verkoop pipeline in the board look
+- THEN its card reads "€ 64.000", "30% kans", "6 dagen in fase" and "FY"
+
+### Requirement: The board look pipeline header keeps the board's rhythm
+
+In the board look the pipeline board MUST place its title and header buttons on one row, the buttons 40px high and 10px apart, with the count line 6px under that row, and the header MUST start 4px under a 24px content top.
+
+#### Scenario: the pipeline header in the board look
+
+- GIVEN the pipeline board in the board look
+- WHEN the page renders
+- THEN the title sits 28px under the content's top edge
+- AND Download and New lead are 40px high on the title's row
+- AND the count line sits 6px under that row
+
+### Requirement: The board look pipeline toolbar draws chips and a bare settings link
+
+In the board look the view chips MUST stand on the page without a band, and the pipeline settings control MUST be an underlined link without a button ground or margin, named "Pijplijninstellingen" in Dutch.
+
+#### Scenario: the toolbar in the board look
+
+- GIVEN the pipeline board in the board look, in Dutch
+- WHEN the toolbar renders
+- THEN the chips have no ground behind them
+- AND the settings link reads "Pijplijninstellingen" with no ground
+
+### Requirement: The board look stage heading and owner chip follow the board
+
+In the board look a stage heading MUST sit on a normal line with a 12px bold count pill and the stage total line 18px in under it, and a lead card MUST draw its owner as a 26px chip in the light primary.
+
+#### Scenario: a stage column in the board look
+
+- GIVEN the Verkoop pipeline with a stage holding four leads
+- WHEN the board renders the stage
+- THEN its count pill reads 4 in 12px bold
+- AND each card's owner chip is 26px in the light primary
 
 ## UI Reference
 

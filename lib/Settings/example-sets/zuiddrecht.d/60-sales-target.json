@@ -1,0 +1,10 @@
+{
+	"$comment": "pipelinq's sales target in the Zuiddrecht set: the open pipeline the sellers aim for this period, so PqVerkoopoverzicht's 'Dekking pijplijn' reads 2.1 x (open € 509.928 against € 242.800).",
+	"appConfig": [
+		{
+			"key": "pipeline_target",
+			"value": "242800",
+			"type": "int"
+		}
+	]
+}

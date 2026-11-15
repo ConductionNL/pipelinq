@@ -137,11 +137,9 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		await expect(rowA.locator('.pos-line-row__total')).toHaveText('€ 24,20')
 
 		let totals = await totalsText(page)
-		expect(totals, 'subtotal after case A').toContain('Subtotal € 20,00')
-		expect(totals, 'VAT 21% line after case A').toContain(
-			'VAT 21% (base € 20,00) € 4,20',
-		)
-		expect(totals, 'grand total after case A').toContain('Total € 24,20')
+		expect(totals, 'subtotal after case A').toContain('Excl. VAT € 20,00')
+		expect(totals, 'VAT 21% line after case A').toContain('VAT 21% € 4,20')
+		expect(totals, 'grand total after case A').toContain('Incl. VAT € 24,20')
 
 		// --- Case B: add 3 × €4.00 @ 9% (second rate bucket) ------------------
 		await page.getByRole('button', { name: /Add line/i }).click()
@@ -157,7 +155,7 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 
 		totals = await totalsText(page)
 		expect(totals, 'subtotal sums both lines (20 + 12)').toContain(
-			'Subtotal € 32,00',
+			'Excl. VAT € 32,00',
 		)
 		expect(totals, '21% bucket unchanged').toContain(
 			'VAT 21% (base € 20,00) € 4,20',
@@ -165,7 +163,7 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		expect(totals, '9% bucket present').toContain('VAT 9% (base € 12,00) € 1,08')
 		// grand total = 32.00 + 4.20 + 1.08 = 37.28
 		expect(totals, 'grand total = subtotal + both VAT buckets').toContain(
-			'Total € 37,28',
+			'Incl. VAT € 37,28',
 		)
 
 		// --- Case C: a discounted line on a fresh cart ------------------------
@@ -184,13 +182,11 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 
 		totals = await totalsText(page)
 		expect(totals, 'discounted subtotal is the net base').toContain(
-			'Subtotal € 90,00',
+			'Excl. VAT € 90,00',
 		)
 		expect(totals, 'discount line surfaced').toContain('Discount')
-		expect(totals, 'VAT on the discounted net').toContain(
-			'VAT 21% (base € 90,00) € 18,90',
-		)
-		expect(totals, 'discounted grand total').toContain('Total € 108,90')
+		expect(totals, 'VAT on the discounted net').toContain('VAT 21% € 18,90')
+		expect(totals, 'discounted grand total').toContain('Incl. VAT € 108,90')
 	})
 
 	/**
@@ -236,6 +232,8 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 			unitPrice: '10',
 		})
 		await page.locator('[data-testid="checkout"]').click()
+		// Checking out opens Payment received; the whole amount goes to the rest.
+		await page.locator('[data-testid="payment-confirm"]').click()
 		// The sale persisted and the app navigated to the new transaction detail.
 		await page.waitForURL(/pos\/[0-9a-f-]{36}/i, { timeout: 10000 })
 		const txId = page.url().match(/pos\/([0-9a-f-]{36})/i)![1]

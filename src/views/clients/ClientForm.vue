@@ -1,5 +1,157 @@
 <template>
-	<div class="client-form" data-testid="client-form">
+	<div v-if="boardLayout" class="client-form client-form--board" data-testid="client-form">
+		<fieldset class="client-form__type">
+			<legend>{{ t('pipelinq', 'Type') }}</legend>
+			<NcCheckboxRadioSwitch
+				v-for="option in typeOptions"
+				:key="option.value"
+				v-model="form.type"
+				type="radio"
+				:value="option.value"
+				name="client-type"
+				:data-testid="'client-type-' + option.value">
+				{{ option.label }}
+			</NcCheckboxRadioSwitch>
+		</fieldset>
+		<div class="client-form__field client-form__wide">
+			<label for="client-board-name" class="client-form__label">{{ t('pipelinq', 'Name') }}</label>
+			<NcTextField
+				id="client-board-name"
+				:label="t('pipelinq', 'Name')"
+				labelOutside
+				:modelValue="form.name"
+				:error="!!shownErrors.name"
+				:helperText="shownErrors.name"
+				:maxlength="255"
+				data-testid="client-name-input"
+				@update:modelValue="(v) => (form.name = v)" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-email" class="client-form__label">{{ t('pipelinq', 'Email') }}</label>
+			<NcTextField
+				id="client-board-email"
+				:label="t('pipelinq', 'Email')"
+				labelOutside
+				:modelValue="form.email"
+				:error="!!shownErrors.email"
+				:helperText="shownErrors.email"
+				type="email"
+				data-testid="client-email-input"
+				@update:modelValue="(v) => (form.email = v)" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-phone" class="client-form__label">{{ t('pipelinq', 'Phone') }}</label>
+			<NcTextField
+				id="client-board-phone"
+				:label="t('pipelinq', 'Phone')"
+				labelOutside
+				:modelValue="form.phone"
+				:error="!!shownErrors.phone"
+				:helperText="shownErrors.phone"
+				data-testid="client-phone-input"
+				@update:modelValue="(v) => (form.phone = v)" />
+		</div>
+		<div v-if="duplicate" class="client-form__wide client-form__duplicate" role="status" data-testid="client-duplicate">
+			<AlertOutline class="client-form__duplicate-icon" :size="20" data-testid="client-duplicate-icon" />
+			<span class="client-form__duplicate-body">
+				<strong>{{ t('pipelinq', 'Possible duplicate: {name} has the same {field}', { name: duplicate.name, field: duplicate.field }) }}</strong>
+				<span class="client-form__duplicate-actions">
+					<a :href="duplicate.href" data-testid="client-duplicate-open">{{ t('pipelinq', 'Open that client') }}</a>
+					<a href="#" data-testid="client-duplicate-save" @click.prevent="onSave">{{ t('pipelinq', 'Save anyway') }}</a>
+				</span>
+			</span>
+		</div>
+		<div class="client-form__field client-form__wide">
+			<label for="client-board-address" class="client-form__label">{{ t('pipelinq', 'Address') }}</label>
+			<NcTextField
+				id="client-board-address"
+				:label="t('pipelinq', 'Address')"
+				labelOutside
+				:modelValue="form.address"
+				data-testid="client-address-input"
+				@update:modelValue="(v) => (form.address = v)" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-industry" class="client-form__label">{{ t('pipelinq', 'Industry') }}</label>
+			<NcSelect
+				v-model="form.industry"
+				inputId="client-board-industry"
+				:inputLabel="t('pipelinq', 'Industry')"
+				labelOutside
+				multiple
+				:options="industryOptions"
+				:placeholder="t('pipelinq', 'Pick sectors')"
+				data-testid="client-industry-select" />
+		</div>
+		<div class="client-form__field">
+			<label for="client-board-website" class="client-form__label">{{ t('pipelinq', 'Website') }}</label>
+			<NcTextField
+				id="client-board-website"
+				:label="t('pipelinq', 'Website')"
+				labelOutside
+				:modelValue="form.website"
+				:error="!!shownErrors.website"
+				:helperText="shownErrors.website"
+				data-testid="client-website-input"
+				@update:modelValue="(v) => (form.website = v)" />
+		</div>
+		<div class="client-form__field client-form__wide">
+			<label for="client-board-notes" class="client-form__label">{{ t('pipelinq', 'Client notes') }}</label>
+			<NcTextArea
+				id="client-board-notes"
+				:label="t('pipelinq', 'Client notes')"
+				labelOutside
+				:modelValue="form.notes"
+				rows="3"
+				data-testid="client-notes-input"
+				@update:modelValue="(v) => (form.notes = v)" />
+		</div>
+		<details class="client-form__wide client-form__more">
+			<summary>{{ t('pipelinq', 'More details') }}</summary>
+			<div class="client-form__more-fields">
+				<div class="client-form__field">
+					<label for="client-board-account-owner" class="client-form__label">{{ t('pipelinq', 'Account owner') }}</label>
+					<NcSelect
+						v-model="form.accountOwner"
+						inputId="client-board-account-owner"
+						:inputLabel="t('pipelinq', 'Account owner')"
+						labelOutside
+						:options="userOptions"
+						:reduce="(option) => option.id"
+						label="displayName"
+						:filterable="false"
+						:loading="searchingUsers"
+						:placeholder="t('pipelinq', 'Search a user')"
+						data-testid="client-account-owner-select"
+						@search="searchUsers" />
+				</div>
+				<div class="client-form__field">
+					<label for="client-board-language" class="client-form__label">{{ t('pipelinq', 'Correspondence language') }}</label>
+					<NcSelect
+						v-model="form.correspondenceLanguage"
+						inputId="client-board-language"
+						:inputLabel="t('pipelinq', 'Correspondence language')"
+						labelOutside
+						:options="languageOptions"
+						:reduce="(option) => option.id"
+						label="label"
+						data-testid="client-language-select" />
+				</div>
+				<div class="client-form__field">
+					<label for="client-board-timezone" class="client-form__label">{{ t('pipelinq', 'Timezone') }}</label>
+					<NcSelect
+						v-model="form.timezone"
+						inputId="client-board-timezone"
+						:inputLabel="t('pipelinq', 'Timezone')"
+						labelOutside
+						:options="timezoneOptions"
+						:placeholder="t('pipelinq', 'Select a timezone')"
+						data-testid="client-timezone-select" />
+				</div>
+			</div>
+		</details>
+	</div>
+	<div v-else class="client-form" data-testid="client-form">
 		<div class="form-group">
 			<label for="client-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
@@ -84,6 +236,10 @@
 					:options="industryOptions"
 					:placeholder="t('pipelinq', 'Pick sectors')"
 					data-testid="client-industry-select" />
+			</div>
+			<!-- Labels from the shared list (shared-label-list). -->
+			<div class="form-group" data-testid="client-form-labels">
+				<LabelSelect v-model="form.labels" />
 			</div>
 			<div class="form-group">
 				<label for="client-account-owner">{{
@@ -172,12 +328,17 @@
 import axios from '@nextcloud/axios'
 import { getLanguage, translate } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
+import LabelSelect from '../../components/LabelSelect.vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
+import { findClientDuplicate } from '../../services/clientDuplicates.js'
 import {
+	clientFormFrom,
 	defaultLanguage,
+	emptyClientForm,
 	INDUSTRY_SECTORS,
-	industryList,
+	prefilledClientFields,
 } from '../../utils/clientFormFields.js'
 import { CLIENT_TYPE_LABELS, enumOptions } from '../../utils/enumLabels.js'
 
@@ -186,7 +347,46 @@ const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 const URL_REGEX = /^https?:\/\/.+\..+/
 
 /**
- * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+ * The fields checked against a format once filled in, in form order.
+ */
+const FORMAT_CHECKS = [
+	{ field: 'email', pattern: EMAIL_REGEX, message: () => t('pipelinq', 'Invalid email format') },
+	{ field: 'phone', pattern: PHONE_REGEX, message: () => t('pipelinq', 'Invalid phone format') },
+	{ field: 'website', pattern: URL_REGEX, message: () => t('pipelinq', 'Invalid URL format') },
+]
+
+/**
+ * What is wrong with the name, if anything.
+ *
+ * @param {string} name The name typed in.
+ * @return {string} The error, or ''.
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+ */
+function nameError(name) {
+	if (!name.trim()) {
+		return t('pipelinq', 'Name is required')
+	}
+	return name.length > 255 ? t('pipelinq', 'Name must be at most 255 characters') : ''
+}
+
+/**
+ * Add an error for each filled-in field that does not match its format.
+ *
+ * @param {object} errors The errors so far, added to in place.
+ * @param {object} form The form.
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+ */
+function addFormatErrors(errors, form) {
+	for (const check of FORMAT_CHECKS) {
+		const value = form[check.field]
+		if (value && !check.pattern.test(value)) {
+			errors[check.field] = check.message()
+		}
+	}
+}
+
+/**
+ * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
  */
 /**
  * The signed-in user, or null.
@@ -198,6 +398,29 @@ function currentUser() {
 	return window.OC?.getCurrentUser?.() || null
 }
 
+/**
+ * The signed-in user as the account owner picker's only option, or none.
+ *
+ * @return {Array<{id: string, displayName: string}>} The options.
+ * @spec exclude reads the session user, no behaviour of its own.
+ */
+function currentUserOptions() {
+	const user = currentUser()
+	return user ? [{ id: user.uid, displayName: user.displayName || user.uid }] : []
+}
+
+/**
+ * The time zones this browser knows, or none when it cannot list them.
+ *
+ * @return {string[]} The zone names.
+ * @spec exclude reads the browser's Intl support, no behaviour of its own.
+ */
+function supportedTimezones() {
+	return typeof Intl.supportedValuesOf === 'function'
+		? Intl.supportedValuesOf('timeZone')
+		: []
+}
+
 const TYPE_MAPPING = {
 	person: 'schema:Person',
 	organization: 'schema:Organization',
@@ -206,7 +429,11 @@ const TYPE_MAPPING = {
 export default {
 	name: 'ClientForm',
 	components: {
+		AlertOutline,
+		LabelSelect,
 		NcButton,
+		NcCheckboxRadioSwitch,
+		NcTextArea,
 		NcTextField,
 		NcSelect,
 	},
@@ -234,10 +461,25 @@ export default {
 			default: '',
 		},
 
+		/**
+		 * Values to start a new client with, e.g. the fields Paste or scan
+		 * proposed. Only the form's own fields are taken.
+		 */
+		initialValues: {
+			type: Object,
+			default: null,
+		},
+
 		showActions: {
 			type: Boolean,
 			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
+		},
+
+		/** Lay the form out as board PqKlantNieuw draws it, and warn about a likely duplicate. */
+		boardLayout: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -245,18 +487,14 @@ export default {
 
 	data() {
 		return {
+			/** A client that already has this e-mail address or name, or null. */
+			duplicate: null,
+			duplicateTimer: null,
 			form: {
+				...emptyClientForm(),
 				name: this.initialName || '',
-				type: null,
-				email: '',
-				phone: '',
-				website: '',
-				address: '',
-				notes: '',
-				industry: [],
 				accountOwner: currentUser()?.uid || null,
-				correspondenceLanguage: '',
-				timezone: null,
+				...prefilledClientFields(this.initialValues),
 			},
 
 			typeOptions: enumOptions(CLIENT_TYPE_LABELS, (text) =>
@@ -265,55 +503,40 @@ export default {
 
 			industryOptions: INDUSTRY_SECTORS,
 			languages: [],
-			userOptions: currentUser()
-				? [
-						{
-							id: currentUser().uid,
-							displayName:
-								currentUser().displayName || currentUser().uid,
-						},
-					]
-				: [],
+			userOptions: currentUserOptions(),
 
 			searchingUsers: false,
-			timezoneOptions:
-				typeof Intl.supportedValuesOf === 'function'
-					? Intl.supportedValuesOf('timeZone')
-					: [],
+			timezoneOptions: supportedTimezones(),
 		}
 	},
 
 	computed: {
+		/** @return {string} What the duplicate check looks at. */
+		duplicateKey() {
+			return `${(this.form.email || '').trim().toLowerCase()}|${(this.form.name || '').trim().toLowerCase()}`
+		},
+
 		/**
 		 * Derived from the form, like LeadForm, so an empty required field shows
 		 * its error from the start rather than only after it is edited.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
 		 */
 		errors() {
 			const errors = {}
-			if (!this.form.name.trim()) {
-				errors.name = t('pipelinq', 'Name is required')
-			} else if (this.form.name.length > 255) {
-				errors.name = t('pipelinq', 'Name must be at most 255 characters')
+			const name = nameError(this.form.name)
+			if (name) {
+				errors.name = name
 			}
 			if (!this.form.type) {
 				errors.type = t('pipelinq', 'Type is required')
 			}
-			if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-				errors.email = t('pipelinq', 'Invalid email format')
-			}
-			if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-				errors.phone = t('pipelinq', 'Invalid phone format')
-			}
-			if (this.form.website && !URL_REGEX.test(this.form.website)) {
-				errors.website = t('pipelinq', 'Invalid URL format')
-			}
+			addFormatErrors(errors, this.form)
 			return errors
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
 		 */
 		isValid() {
 			return Object.keys(this.errors).length === 0
@@ -323,7 +546,7 @@ export default {
 		 * The instance's languages, labelled in the user's own language.
 		 *
 		 * @return {Array<{id: string, label: string}>} The options.
-		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		languageOptions() {
 			let names = null
@@ -345,6 +568,19 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Look for a client with the same e-mail address or name once one is typed.
+		 *
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
+		 */
+		duplicateKey() {
+			clearTimeout(this.duplicateTimer)
+			if (!this.boardLayout || this.client?.id) {
+				return
+			}
+			this.duplicateTimer = setTimeout(() => this.checkDuplicate(), 400)
+		},
+
 		// Surface validity so a host (e.g. a parent NcDialog) can enable or
 		// disable its own submit button.
 		isValid: {
@@ -358,7 +594,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
+			 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
 			 */
 			handler(val) {
 				if (val && Object.keys(val).length > 0) {
@@ -374,30 +610,39 @@ export default {
 
 	methods: {
 		/**
+		 * Ask for a client that already has this e-mail address or this name.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
+		 */
+		async checkDuplicate() {
+			const key = this.duplicateKey
+			const found = await findClientDuplicate({ email: this.form.email, name: this.form.name })
+			if (key !== this.duplicateKey) {
+				return
+			}
+			this.duplicate = found
+				? {
+					...found,
+					field: found.field === 'email' ? translate('pipelinq', 'email address') : translate('pipelinq', 'name'),
+					href: this.$router ? this.$router.resolve({ name: 'ClientDetail', params: { id: found.id } }).href : '',
+				}
+				: null
+		},
+
+		/**
 		 * @param {object} data The contact to load into the form.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
-			this.form = {
-				name: data.name || '',
-				type: data.type || null,
-				email: data.email || '',
-				phone: data.phone || '',
-				website: data.website || '',
-				address: data.address || '',
-				notes: data.notes || '',
-				industry: industryList(data.industry),
-				accountOwner: data.accountOwner || null,
-				correspondenceLanguage: data.correspondenceLanguage || '',
-				timezone: data.timezone || null,
-			}
+			this.form = clientFormFrom(data)
 		},
 
 		/**
 		 * Load the languages the instance can write in, and preselect one
 		 * for a new client (D2).
 		 *
-		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		async loadLanguages() {
 			try {
@@ -421,7 +666,7 @@ export default {
 		 * Search Nextcloud users for the account owner picker (D4).
 		 *
 		 * @param {string} query What the user typed.
-		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 * @spec openspec/specs/client-management/spec.md
 		 */
 		async searchUsers(query) {
 			if (!query || query.length < 2) {
@@ -453,8 +698,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
-		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		onSave() {
 			this.markSaveAttempted()
@@ -472,19 +717,106 @@ export default {
 }
 </script>
 
+<style scoped src="../fieldGroupLayout.css"></style>
+
 <style scoped>
 .client-form {
 	max-width: 800px;
 }
 
-.form-group {
-	margin-bottom: 16px;
+.client-form--board {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	max-width: none;
 }
 
-.form-group label {
-	display: block;
+.client-form__wide,
+.client-form__type {
+	grid-column: 1 / -1;
+}
+
+/* The label above the field, as board PqKlantNieuw draws it. */
+.client-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.client-form__label {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.client-form__type {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 16px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.client-form__type legend {
+	width: 100%;
 	margin-bottom: 4px;
-	font-weight: bold;
+	padding: 0;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* The board's bordered warning notice: a 20px icon before the title, the
+   two links under it. */
+.client-form__duplicate {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 12px 14px;
+	border: 1px solid var(--cn-board-notice-border, #f0d9a8);
+	border-radius: 8px;
+	background: var(--cn-board-notice-bg, #fff4de);
+	color: var(--cn-board-notice-ink, var(--color-warning-text, #7a4f00));
+	font-size: 14px;
+}
+
+.client-form__duplicate-icon {
+	flex: none;
+}
+
+.client-form__duplicate-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.client-form--board :deep(#client-board-notes) {
+	min-height: 89.5px;
+}
+
+.client-form__duplicate-actions {
+	display: flex;
+	gap: 16px;
+}
+
+.client-form__duplicate-actions a {
+	color: inherit;
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+.client-form__more summary {
+	cursor: pointer;
+	font-size: 14px;
+	line-height: normal;
+	color: var(--color-text-maxcontrast);
+}
+
+.client-form__more-fields {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	margin-top: 12px;
 }
 
 .form-group textarea {
@@ -493,15 +825,6 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	resize: vertical;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .field-error {

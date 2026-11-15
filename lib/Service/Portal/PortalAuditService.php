@@ -19,13 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-010
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAuditService {
+class PortalAuditService implements PortalAuditServiceInterface {
 	/**
 	 * Schema slug for audit events.
 	 *
@@ -89,11 +90,24 @@ class PortalAuditService {
 			'eventType' => $eventType,
 			'outcome' => $outcome,
 			'occurredAt' => $this->time->getDateTime()->format(DATE_ATOM),
-			'targetObjectType' => ($details['targetObjectType'] ?? null),
-			'targetObjectId' => ($details['targetObjectId'] ?? null),
-			'ipHash' => ($details['ipHash'] ?? null),
-			'userAgentHash' => ($details['userAgentHash'] ?? null),
 		];
+
+		$this->write(record: $this->withDetails(record: $record, details: $details));
+	}//end log()
+
+	/**
+	 * The audit record with its promoted detail columns and any remaining structured details.
+	 *
+	 * @param array<string, mixed> $record  The event's own columns.
+	 * @param array<string, mixed> $details Event-specific structured detail.
+	 *
+	 * @return array<string, mixed> The full record.
+	 */
+	private function withDetails(array $record, array $details): array {
+		$record['targetObjectType'] = ($details['targetObjectType'] ?? null);
+		$record['targetObjectId'] = ($details['targetObjectId'] ?? null);
+		$record['ipHash'] = ($details['ipHash'] ?? null);
+		$record['userAgentHash'] = ($details['userAgentHash'] ?? null);
 
 		// Keep structured details that are not promoted to first-class columns.
 		$extra = $details;
@@ -102,15 +116,26 @@ class PortalAuditService {
 			$record['details'] = $extra;
 		}
 
+		return $record;
+	}//end withDetails()
+
+	/**
+	 * Save an audit record; a failure is logged, never thrown.
+	 *
+	 * @param array<string, mixed> $record The full record.
+	 *
+	 * @return void
+	 */
+	private function write(array $record): void {
 		try {
 			$this->repository->save(self::SCHEMA, $record);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Pipelinq portal: failed to write audit event',
-				['eventType' => $eventType, 'exception' => $e->getMessage()]
+				['eventType' => $record['eventType'], 'exception' => $e->getMessage()]
 			);
 		}
-	}//end log()
+	}//end write()
 
 	/**
 	 * List audit events for a single account (the account's own trail).
@@ -143,6 +168,20 @@ class PortalAuditService {
 		$events = $this->repository->findAll(self::SCHEMA, ['tenantId' => $tenantId]);
 		return $this->sortByOccurredAtDesc(events: $events);
 	}//end getForTenant()
+
+	/**
+	 * The latest audit events of every tenant, newest first, and how many
+	 * there are in all.
+	 *
+	 * @param int $limit The most events to return.
+	 *
+	 * @return array{events: array<int, array<string, mixed>>, total: int} The events and the total.
+		 * @spec openspec/changes/portal-tenants-on-one-admin-tab/specs/customer-portal/spec.md#requirement-the-admin-tab-shows-the-latest-portal-actions-across-portals
+	 */
+	public function getRecent(int $limit): array {
+		$events = $this->sortByOccurredAtDesc(events: $this->repository->findAll(self::SCHEMA));
+		return ['events' => array_slice($events, 0, max(1, $limit)), 'total' => count($events)];
+	}//end getRecent()
 
 	/**
 	 * Sort events by occurredAt descending (most recent first).

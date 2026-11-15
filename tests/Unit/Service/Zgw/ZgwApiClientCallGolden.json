@@ -1,0 +1,977 @@
+{
+    "get, plain": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "get with query": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken?page=2&zaaktype=https%3A%2F%2Fztc.example%2Fzt%2F1",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "get with query on a path with ?": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken?status=open&page=3",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "get, empty query": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "lowercase method": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "post with body and headers": {
+        "result": {
+            "status": 201,
+            "body": {
+                "uuid": "z-1"
+            },
+            "headers": {
+                "location": "https://zrc.example/z/1"
+            }
+        },
+        "calls": [
+            {
+                "call": "post",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/hal+json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326",
+                        "If-Match": "\"abc\"",
+                        "Content-Type": "application/json"
+                    },
+                    "timeout": 30,
+                    "body": "{\"omschrijving\":\"Zaak é/1\",\"url\":\"https://x/y\"}"
+                }
+            }
+        ],
+        "logged": []
+    },
+    "put without body": {
+        "result": {
+            "status": 200,
+            "body": [],
+            "headers": []
+        },
+        "calls": [
+            {
+                "call": "put",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "patch with empty body": {
+        "result": {
+            "status": 200,
+            "body": [],
+            "headers": []
+        },
+        "calls": [
+            {
+                "call": "request",
+                "method": "PATCH",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326",
+                        "Content-Type": "application/json"
+                    },
+                    "timeout": 30,
+                    "body": "[]"
+                }
+            }
+        ],
+        "logged": []
+    },
+    "delete": {
+        "result": {
+            "status": 204,
+            "body": [],
+            "headers": []
+        },
+        "calls": [
+            {
+                "call": "delete",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "non-json body": {
+        "result": {
+            "status": 200,
+            "body": {
+                "raw": "<html>oops</html>"
+            },
+            "headers": []
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "json scalar body": {
+        "result": {
+            "status": 200,
+            "body": {
+                "raw": "5"
+            },
+            "headers": []
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "unsupported method": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ZgwException",
+        "message": "ZGW: HEAD https://zrc.example/api/v1/zaken failed (status 0): ZGW: unsupported HTTP method \"HEAD\"",
+        "code": 0,
+        "previous": "OCA\\Pipelinq\\Service\\Zgw\\ZgwException",
+        "calls": [],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "HEAD",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 0,
+                    "msg": "ZGW: unsupported HTTP method \"HEAD\""
+                }
+            }
+        ]
+    },
+    "token lifespan from the client": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 120
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "token lifespan below the floor": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 60
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "secret missing": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ZgwException",
+        "message": "ZGW: unable to resolve client secret for \"pipelinq\"",
+        "code": 0,
+        "previous": null,
+        "calls": [],
+        "logged": []
+    },
+    "timeout from config": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 12
+                }
+            }
+        ],
+        "logged": []
+    },
+    "timeout zero falls back": {
+        "result": {
+            "status": 200,
+            "body": {
+                "count": 1,
+                "results": [
+                    {
+                        "url": "https://zrc.example/z/1"
+                    }
+                ]
+            },
+            "headers": {
+                "etag": "\"abc\"",
+                "content-type": "application/json",
+                "x-empty": ""
+            }
+        },
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": []
+    },
+    "401 clock skew in the body": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ClockSkewException",
+        "message": "ZGW: JWT clock-skew rejection from https://zrc.example/api/v1/zaken (status 401)",
+        "code": 0,
+        "previous": null,
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "GET",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 401,
+                    "msg": "Client error"
+                }
+            }
+        ]
+    },
+    "403 clock skew in the message": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ClockSkewException",
+        "message": "ZGW: JWT clock-skew rejection from https://zrc.example/api/v1/zaken (status 403)",
+        "code": 0,
+        "previous": null,
+        "calls": [
+            {
+                "call": "post",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326",
+                        "Content-Type": "application/json"
+                    },
+                    "timeout": 30,
+                    "body": "{\"a\":1}"
+                }
+            }
+        ],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "POST",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 403,
+                    "msg": "jwt nog niet geldig"
+                }
+            }
+        ]
+    },
+    "401 without skew": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ZgwException",
+        "message": "ZGW: GET https://zrc.example/api/v1/zaken failed (status 401): Unauthorized",
+        "code": 401,
+        "previous": "OCA\\Pipelinq\\Tests\\Unit\\Service\\Zgw\\ZgwApiClientCallGoldenFault",
+        "calls": [
+            {
+                "call": "get",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "GET",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 401,
+                    "msg": "Unauthorized"
+                }
+            }
+        ]
+    },
+    "404 not found": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ZgwResourceNotFoundException",
+        "message": "ZGW: resource not found at URL \"https://zrc.example/api/v1/zaken\"",
+        "code": 0,
+        "previous": null,
+        "calls": [
+            {
+                "call": "delete",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "DELETE",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 404,
+                    "msg": "Not found"
+                }
+            }
+        ]
+    },
+    "412 precondition": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\OptimisticLockException",
+        "message": "ZGW: 412 Precondition Failed on PATCH https://zrc.example/api/v1/zaken",
+        "code": 0,
+        "previous": null,
+        "calls": [
+            {
+                "call": "request",
+                "method": "PATCH",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326",
+                        "Content-Type": "application/json"
+                    },
+                    "timeout": 30,
+                    "body": "{\"x\":1}"
+                }
+            }
+        ],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "PATCH",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 412,
+                    "msg": "Precondition"
+                }
+            }
+        ]
+    },
+    "500 by code only": {
+        "threw": "OCA\\Pipelinq\\Service\\Zgw\\ZgwException",
+        "message": "ZGW: PUT https://zrc.example/api/v1/zaken failed (status 500): Server error",
+        "code": 500,
+        "previous": "OCA\\Pipelinq\\Tests\\Unit\\Service\\Zgw\\ZgwApiClientCallGoldenFault",
+        "calls": [
+            {
+                "call": "put",
+                "uri": "https://zrc.example/api/v1/zaken",
+                "options": {
+                    "headers": {
+                        "Authorization": {
+                            "header": {
+                                "typ": "JWT",
+                                "alg": "HS256",
+                                "client_identifier": "pipelinq"
+                            },
+                            "payload": {
+                                "iss": "pipelinq",
+                                "client_id": "pipelinq",
+                                "user_id": "u-1",
+                                "user_representation": "Agent One",
+                                "lifetime": 3600
+                            },
+                            "verified": true
+                        },
+                        "Accept": "application/json",
+                        "Accept-Crs": "EPSG:4326",
+                        "Content-Crs": "EPSG:4326"
+                    },
+                    "timeout": 30
+                }
+            }
+        ],
+        "logged": [
+            {
+                "message": "ZGW: HTTP transport error",
+                "context": {
+                    "method": "PUT",
+                    "url": "https://zrc.example/api/v1/zaken",
+                    "status": 500,
+                    "msg": "Server error"
+                }
+            }
+        ]
+    }
+}

@@ -290,4 +290,59 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 		$this->assertNotSame('', trim($this->node->getDescription()));
 		$this->assertNotSame('', trim($this->node->getIcon()));
 	}//end testThePaletteEntryIsFilledIn()
+
+	/**
+	 * The node is offered in every scope and names the keys it reads.
+	 *
+	 * @return void
+	 */
+	public function testIsOfferedEverywhereAndNamesItsKeys(): void {
+		$this->assertTrue($this->node->isAvailableForScope(0));
+		$this->assertTrue($this->node->isAvailableForScope(1));
+		$this->assertSame(['objectType', 'nameFrom', 'emailFrom', 'phoneFrom', 'output'], $this->node->configKeys());
+	}//end testIsOfferedEverywhereAndNamesItsKeys()
+
+	/**
+	 * A configuration without a name field is refused.
+	 *
+	 * @return void
+	 */
+	public function testRefusesAMissingNameField(): void {
+		$this->expectException(UnexpectedValueException::class);
+		$this->expectExceptionMessage('"nameFrom" must name the item field holding the name.');
+
+		$this->node->validateConfig(['objectType' => 'contact', 'nameFrom' => '  ', 'output' => 'uid']);
+	}//end testRefusesAMissingNameField()
+
+	/**
+	 * Dotted paths reach nested fields; a path ending on a non-scalar reads
+	 * as empty rather than as "Array".
+	 *
+	 * @return void
+	 */
+	public function testReadsNestedFieldsAndIgnoresNonScalars(): void {
+		$seen = null;
+		$this->vcards->expects($this->once())
+			->method('provisionContactFromForm')
+			->willReturnCallback(function (array $form) use (&$seen): array {
+				$seen = $form;
+				return ['contactsUid' => 'uid-9'];
+			});
+
+		$this->node->execute(
+			$this->items(['person' => ['name' => '  Jan Jansen ', 'email' => ['work' => 'jan@example.org']]]),
+			[
+				'objectType' => 'contact',
+				'nameFrom' => 'person.name',
+				'emailFrom' => 'person.email',
+				'output' => 'uid',
+			],
+			[]
+		);
+
+		$this->assertSame('Jan Jansen', $seen['name']);
+		$this->assertSame('', $seen['email']);
+		$this->assertSame('', $seen['phone']);
+		$this->assertSame('person', $seen['type']);
+	}//end testReadsNestedFieldsAndIgnoresNonScalars()
 }//end class

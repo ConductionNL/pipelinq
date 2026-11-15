@@ -18,22 +18,19 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosTransactionService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -52,27 +49,29 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.1
  */
 class PosTransactionController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosTransactionService $service The POS transaction service.
+	 * @param PosTransactionServiceInterface $service The POS transaction service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosTransactionService $service,
+		private PosTransactionServiceInterface $service,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -82,7 +81,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function confirm(string $id): JSONResponse {
@@ -104,7 +103,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function settle(string $id): JSONResponse {
@@ -126,7 +125,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function refund(string $id): JSONResponse {
@@ -149,7 +148,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function park(string $id): JSONResponse {
@@ -171,7 +170,7 @@ class PosTransactionController extends Controller {
 	 *
 	 * @return JSONResponse The updated transaction.
 	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.2
 	 */
 	#[NoAdminRequired]
 	public function resume(string $id): JSONResponse {
@@ -220,28 +219,6 @@ class PosTransactionController extends Controller {
 	}//end taxReport()
 
 	/**
-	 * Require an authenticated user, returning their UID.
-	 *
-	 * Returns a 401 JSONResponse when no user is in the session. Every
-	 * lifecycle endpoint calls this before acting; object-level access is then
-	 * scoped to this app's own posTransaction schema inside the service (a
-	 * transaction in another app/register resolves to a 404), preventing IDOR.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
-	}//end requireUserId()
-
-	/**
 	 * Run a lifecycle action with shared error handling.
 	 *
 	 * Maps the service's OCS exceptions to HTTP status codes (404 not found,
@@ -254,20 +231,9 @@ class PosTransactionController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function run(callable $action, string $label, string $key = 'transaction'): JSONResponse {
-		try {
-			return new JSONResponse([$key => $action()]);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('PosTransactionController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->posResponses()->run(
+			respond: fn (): JSONResponse => new JSONResponse([$key => $action()]),
+			logLabel: 'PosTransactionController::' . $label
+		);
 	}//end run()
 }//end class

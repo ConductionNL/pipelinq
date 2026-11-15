@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
 /**
  * CURL-backed HTTP transport.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 class CurlHttpTransport implements HttpTransport {
 	/**
@@ -66,15 +66,39 @@ class CurlHttpTransport implements HttpTransport {
 	 *
 	 * @return array{status: int, body: array<string, mixed>, raw: string}
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function request(string $method, string $url, array $headers = [], ?string $body = null): array {
-		// Tripwire. The adapters are handed AbstractPaymentAdapter::BROKER_MANAGED_SECRET
-		// in place of a real PSP key; BrokerHttpTransport strips the resulting auth header
-		// and the broker injects the real secret. If that placeholder ever reaches THIS
-		// transport, the call has been routed around the broker — sending it would put a
-		// meaningless bearer token on the wire and, worse, mean somebody has reintroduced
-		// a direct, app-authenticated PSP call. Fail loudly rather than send it.
+		if ($this->carriesBrokerPlaceholder(headers: $headers) === true || $this->curlMissing() === true) {
+			return self::NO_RESPONSE;
+		}
+
+		$handle = curl_init($url);
+		if ($handle === false) {
+			return self::NO_RESPONSE;
+		}
+
+		$this->setRequestOptions(handle: $handle, method: $method);
+		curl_setopt($handle, CURLOPT_HTTPHEADER, $this->headerLines(headers: $headers));
+		$this->setBody(handle: $handle, body: $body);
+		return $this->execute(handle: $handle);
+	}//end request()
+
+	/**
+	 * The tripwire: whether a header carries the broker-managed placeholder (logged as an error).
+	 *
+	 * The adapters are handed AbstractPaymentAdapter::BROKER_MANAGED_SECRET in place of a
+	 * real PSP key; BrokerHttpTransport strips the resulting auth header and the broker
+	 * injects the real secret. If that placeholder ever reaches THIS transport, the call has
+	 * been routed around the broker — sending it would put a meaningless bearer token on the
+	 * wire and, worse, mean somebody has reintroduced a direct, app-authenticated PSP call.
+	 * Fail loudly rather than send it.
+	 *
+	 * @param array<string, string> $headers The headers.
+	 *
+	 * @return bool True when the request must not be sent.
+	 */
+	private function carriesBrokerPlaceholder(array $headers): bool {
 		foreach ($headers as $value) {
 			if (is_string($value) === true
 				&& str_contains($value, AbstractPaymentAdapter::BROKER_MANAGED_SECRET) === true
@@ -83,46 +107,80 @@ class CurlHttpTransport implements HttpTransport {
 					'Pipelinq POS payment: refusing to send a PSP request directly — it carries the '
 					. 'broker-managed placeholder, which means it bypassed the credential broker.'
 				);
-				return [
-					'status' => 0,
-					'body' => [],
-					'raw' => '',
-				];
+				return true;
 			}
 		}
 
+		return false;
+	}//end carriesBrokerPlaceholder()
+
+	/**
+	 * Whether the cURL extension is missing (logged as a warning).
+	 *
+	 * @return bool True when cURL is not available.
+	 */
+	private function curlMissing(): bool {
 		if (function_exists('curl_init') === false) {
 			$this->logger->warning('Pipelinq POS payment: cURL not available');
-			return [
-				'status' => 0,
-				'body' => [],
-				'raw' => '',
-			];
+			return true;
 		}
 
-		$handle = curl_init($url);
-		if ($handle === false) {
-			return [
-				'status' => 0,
-				'body' => [],
-				'raw' => '',
-			];
-		}
+		return false;
+	}//end curlMissing()
 
+	/**
+	 * Set the method, return-transfer and timeout options.
+	 *
+	 * @param \CurlHandle $handle The cURL handle.
+	 * @param string      $method The HTTP method.
+	 *
+	 * @return void
+	 */
+	private function setRequestOptions(\CurlHandle $handle, string $method): void {
+		curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
+		curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($handle, CURLOPT_TIMEOUT, self::TIMEOUT);
+		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
+	}//end setRequestOptions()
+
+	/**
+	 * Set the raw request body, when there is one.
+	 *
+	 * @param \CurlHandle $handle The cURL handle.
+	 * @param string|null $body   The raw body.
+	 *
+	 * @return void
+	 */
+	private function setBody(\CurlHandle $handle, ?string $body): void {
+		if ($body !== null) {
+			curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
+		}
+	}//end setBody()
+
+	/**
+	 * The headers as `Name: value` lines.
+	 *
+	 * @param array<string, string> $headers The headers.
+	 *
+	 * @return array<int, string> The header lines.
+	 */
+	private function headerLines(array $headers): array {
 		$headerList = [];
 		foreach ($headers as $name => $value) {
 			$headerList[] = $name . ': ' . $value;
 		}
 
-		curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
-		curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($handle, CURLOPT_TIMEOUT, self::TIMEOUT);
-		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
-		curl_setopt($handle, CURLOPT_HTTPHEADER, $headerList);
-		if ($body !== null) {
-			curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
-		}
+		return $headerList;
+	}//end headerLines()
 
+	/**
+	 * Send the request and read the status and the JSON reply.
+	 *
+	 * @param \CurlHandle $handle The configured cURL handle.
+	 *
+	 * @return array{status: int, body: array<string, mixed>, raw: string}
+	 */
+	private function execute(\CurlHandle $handle): array {
 		$raw = curl_exec($handle);
 		$status = (int)curl_getinfo($handle, CURLINFO_HTTP_CODE);
 		$rawText = '';
@@ -132,18 +190,30 @@ class CurlHttpTransport implements HttpTransport {
 
 		curl_close($handle);
 
-		$decoded = [];
-		if ($rawText !== '') {
-			$maybe = json_decode($rawText, true);
-			if (is_array($maybe) === true) {
-				$decoded = $maybe;
-			}
-		}
-
 		return [
 			'status' => $status,
-			'body' => $decoded,
+			'body' => $this->decodeObject(rawText: $rawText),
 			'raw' => $rawText,
 		];
-	}//end request()
+	}//end execute()
+
+	/**
+	 * The reply decoded as a JSON array, or an empty array.
+	 *
+	 * @param string $rawText The raw reply.
+	 *
+	 * @return array<string, mixed> The decoded reply.
+	 */
+	private function decodeObject(string $rawText): array {
+		if ($rawText === '') {
+			return [];
+		}
+
+		$maybe = json_decode($rawText, true);
+		if (is_array($maybe) === true) {
+			return $maybe;
+		}
+
+		return [];
+	}//end decodeObject()
 }//end class

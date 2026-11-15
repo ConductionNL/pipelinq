@@ -35,7 +35,7 @@ test.describe('PipelinQ — visual baselines', () => {
 	 * Shot by URL rather than by nav click because the entry lives in the
 	 * FOOTER section, outside the scrollable nav that `shootByNav` clicks in.
 	 */
-	test('Store page (StoreGallery)', async ({ page }) => {
+	test('Store page (CnStorePage)', async ({ page }) => {
 		await shootSurface(page, `${APP}/store`, 'store.png')
 	})
 })

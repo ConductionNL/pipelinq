@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,8 +30,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Service\Portal\QuestionAnsweredNotice;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\QuestionAnsweredNoticeInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -42,20 +42,20 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  */
 class QuestionAnsweredListener implements IEventListener {
 
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService       $schemaMap Tells a ticket from any other object.
-	 * @param QuestionAnsweredNotice $notice    Writes the resident's message.
+	 * @param SchemaMapServiceInterface       $schemaMap Tells a ticket from any other object.
+	 * @param QuestionAnsweredNoticeInterface $notice    Writes the resident's message.
 	 * @param LoggerInterface        $logger    Records a notice that failed.
 	 */
 	public function __construct(
-		private readonly SchemaMapService $schemaMap,
-		private readonly QuestionAnsweredNotice $notice,
+		private readonly SchemaMapServiceInterface $schemaMap,
+		private readonly QuestionAnsweredNoticeInterface $notice,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -67,7 +67,7 @@ class QuestionAnsweredListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectUpdatedEvent === false) {

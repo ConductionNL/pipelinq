@@ -1,0 +1,2122 @@
+{
+    "teams only, open period": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 900000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.b",
+                "level": "rep",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 100000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-3",
+                    "d-4"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.c",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-5"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "team-east",
+                "level": "team",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 0.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "team-west",
+                "level": "team",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": 5000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": 10.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 400000.0,
+                    "quota": 900000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.b",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 150000.0,
+                    "quota": 100000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.c",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-east",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-west",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 1000.0,
+                    "quota": 5000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 551000.0,
+                    "quota": 10.0,
+                    "daysRemaining": 41
+                }
+            }
+        ]
+    },
+    "divisions, a team missing": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 900000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": true,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "rep.b",
+                "level": "rep",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 100000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-3",
+                    "d-4"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "rep.c",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-5"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "team-east",
+                "level": "team",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 0.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "team-west",
+                "level": "team",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": 5000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": true,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "division-north",
+                "level": "division",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 2000000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": true,
+                "missing_reps": [
+                    "team-gone"
+                ],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": true,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "division-south",
+                "level": "division",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-06-29",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": 10.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 1,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 400000.0,
+                    "quota": 900000.0,
+                    "daysRemaining": 1
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.b",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 150000.0,
+                    "quota": 100000.0,
+                    "daysRemaining": 1
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.c",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-east",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-west",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 1000.0,
+                    "quota": 5000.0,
+                    "daysRemaining": 1
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "division-north",
+                    "periodId": "Q2-2026",
+                    "level": "division"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 550000.0,
+                    "quota": 2000000.0,
+                    "daysRemaining": 1
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "division-south",
+                    "periodId": "Q2-2026",
+                    "level": "division"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 551000.0,
+                    "quota": 10.0,
+                    "daysRemaining": 1
+                }
+            }
+        ]
+    },
+    "closed period, no quotas": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "rep.b",
+                "level": "rep",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-3",
+                    "d-4"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "rep.c",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-5"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "team-east",
+                "level": "team",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "team-west",
+                "level": "team",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "division-north",
+                "level": "division",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-07-15",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": true,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.b",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.c",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-east",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-west",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "division-north",
+                    "periodId": "Q2-2026",
+                    "level": "division"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            }
+        ]
+    },
+    "a rep without deals, numeric team id": {
+        "snapshots": [
+            {
+                "period_id": "Q3-2026",
+                "as_of_date": "2026-07-01",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 91,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q3-2026",
+                "as_of_date": "2026-07-01",
+                "owner_id": "rep.z",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 1.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 91,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q3-2026",
+                "as_of_date": "2026-07-01",
+                "owner_id": "7",
+                "level": "team",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 1.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 91,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q3-2026",
+                "as_of_date": "2026-07-01",
+                "owner_id": "9",
+                "level": "division",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 91,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q3-2026",
+                "as_of_date": "2026-07-01",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 91,
+                "period_closed": false,
+                "at_risk": false
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q3-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.z",
+                    "periodId": "Q3-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 0.0,
+                    "quota": 1.0,
+                    "daysRemaining": 91
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "7",
+                    "periodId": "Q3-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 400000.0,
+                    "quota": 1.0,
+                    "daysRemaining": 91
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "9",
+                    "periodId": "Q3-2026",
+                    "level": "division"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q3-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            }
+        ]
+    },
+    "nobody": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 10.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 0.0,
+                    "quota": 10.0,
+                    "daysRemaining": 41
+                }
+            }
+        ]
+    },
+    "a team in no division": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 900000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.b",
+                "level": "rep",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 100000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-3",
+                    "d-4"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.c",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-5"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "team-east",
+                "level": "team",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": 0.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "team-west",
+                "level": "team",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": 5000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "division-north",
+                "level": "division",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": 2000000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": 10.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 400000.0,
+                    "quota": 900000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.b",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 150000.0,
+                    "quota": 100000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.c",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-east",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "team-west",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 1000.0,
+                    "quota": 5000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "division-north",
+                    "periodId": "Q2-2026",
+                    "level": "division"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 1000.0,
+                    "quota": 2000000.0,
+                    "daysRemaining": 41
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 1000.0,
+                    "quota": 10.0,
+                    "daysRemaining": 41
+                }
+            }
+        ]
+    },
+    "foreign rep first, then local reps": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.c",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-5"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.b",
+                "level": "rep",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-3",
+                    "d-4"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "t",
+                "level": "team",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 350000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false,
+                "exchange_rates": {
+                    "USD": {
+                        "rate": 1.0,
+                        "source": "none",
+                        "origin": null,
+                        "rateDate": null,
+                        "stale": false
+                    }
+                }
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.c",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.b",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "t",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 350000.0,
+                    "bestCase": 300000.0
+                }
+            }
+        ]
+    },
+    "reporting currency is USD": {
+        "snapshots": [
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.a",
+                "level": "rep",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 50000.0,
+                "quota_amount": null,
+                "currency": "USD",
+                "deal_snapshot_ids": [
+                    "d-1",
+                    "d-2"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.c",
+                "level": "rep",
+                "commit_amount": 0.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 1000.0,
+                "quota_amount": null,
+                "currency": "USD",
+                "deal_snapshot_ids": [
+                    "d-5"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "t",
+                "level": "team",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": null,
+                "currency": "USD",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "Q2-2026",
+                "as_of_date": "2026-05-20",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 200000.0,
+                "best_case_amount": 300000.0,
+                "pipeline_amount": 0.0,
+                "closed_won_amount": 51000.0,
+                "quota_amount": null,
+                "currency": "USD",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 41,
+                "period_closed": false,
+                "at_risk": false
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.a",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 50000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.c",
+                    "periodId": "Q2-2026",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 1000.0,
+                    "commit": 0.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "t",
+                    "periodId": "Q2-2026",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "Q2-2026",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 51000.0,
+                    "commit": 200000.0,
+                    "bestCase": 300000.0
+                }
+            }
+        ]
+    },
+    "unknown period": {
+        "snapshots": [
+            {
+                "period_id": "nonsense",
+                "as_of_date": "2026-05-20",
+                "owner_id": "rep.b",
+                "level": "rep",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 100000.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [
+                    "d-3",
+                    "d-4"
+                ],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "nonsense",
+                "as_of_date": "2026-05-20",
+                "owner_id": "t",
+                "level": "team",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": null,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": false,
+                "at_risk": false
+            },
+            {
+                "period_id": "nonsense",
+                "as_of_date": "2026-05-20",
+                "owner_id": "company",
+                "level": "company",
+                "commit_amount": 150000.0,
+                "best_case_amount": 0.0,
+                "pipeline_amount": 350000.0,
+                "closed_won_amount": 0.0,
+                "quota_amount": 10.0,
+                "currency": "EUR",
+                "deal_snapshot_ids": [],
+                "partial": false,
+                "missing_reps": [],
+                "days_remaining": 0,
+                "period_closed": false,
+                "at_risk": false
+            }
+        ],
+        "quotaCalls": [
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "rep.b",
+                    "periodId": "nonsense",
+                    "level": "rep"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 150000.0,
+                    "quota": 100000.0,
+                    "daysRemaining": 0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "t",
+                    "periodId": "nonsense",
+                    "level": "team"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "getQuotaAmount",
+                "args": {
+                    "ownerId": "company",
+                    "periodId": "nonsense",
+                    "level": "company"
+                }
+            },
+            {
+                "method": "projectedAttainment",
+                "args": {
+                    "closedWon": 0.0,
+                    "commit": 150000.0,
+                    "bestCase": 0.0
+                }
+            },
+            {
+                "method": "isAtRisk",
+                "args": {
+                    "projected": 150000.0,
+                    "quota": 10.0,
+                    "daysRemaining": 0
+                }
+            }
+        ]
+    }
+}

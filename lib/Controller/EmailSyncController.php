@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\EmailMatchService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,19 +50,19 @@ class EmailSyncController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param EmailMatchService $emailMatchService Matching service.
+	 * @param EmailMatchServiceInterface $emailMatchService Matching service.
 	 * @param IUserSession $userSession User session.
 	 * @param IL10N $l10n Localization service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private EmailMatchService $emailMatchService,
+		private EmailMatchServiceInterface $emailMatchService,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -95,6 +95,25 @@ class EmailSyncController extends Controller {
 	}//end getSettings()
 
 	/**
+	 * List the current user's own Nextcloud Mail accounts the matcher can read.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	public function getAccounts(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		return new JSONResponse(['accounts' => $this->emailMatchService->listAccounts(userId: $user->getUID())]);
+
+	}//end getAccounts()
+
+	/**
 	 * Persist the current user's matching settings.
 	 *
 	 * @return JSONResponse
@@ -109,23 +128,68 @@ class EmailSyncController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
 		}
 
+		$account = $this->accountOrRefusal(userId: $user->getUID());
+		if ($account instanceof JSONResponse) {
+			return $account;
+		}
+
+		return $this->savedSettings(userId: $user->getUID(), account: $account);
+
+	}//end saveSettings()
+
+	/**
+	 * The requested mail account, when it is 0 (none) or one the user owns; else the 400.
+	 *
+	 * @param string $userId The user.
+	 *
+	 * @return int|JSONResponse The account id, or the refusal.
+	 */
+	private function accountOrRefusal(string $userId): int|JSONResponse {
+		$account = $this->accountParam();
+		if ($account === null
+			|| ($account > 0 && $this->emailMatchService->ownsAccount(userId: $userId, accountId: $account) === false)
+		) {
+			return new JSONResponse(['error' => $this->l10n->t('Invalid account')], Http::STATUS_BAD_REQUEST);
+		}
+
+		return $account;
+	}//end accountOrRefusal()
+
+	/**
+	 * The `account` parameter as a non-negative id, or null when it is missing or not one.
+	 *
+	 * @return int|null The account id.
+	 */
+	private function accountParam(): ?int {
 		$accountParam = $this->request->getParam('account');
 		if ($accountParam === null || is_numeric($accountParam) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Invalid account')], Http::STATUS_BAD_REQUEST);
+			return null;
 		}
 
 		$account = (int)$accountParam;
 		if ($account < 0) {
-			return new JSONResponse(['error' => $this->l10n->t('Invalid account')], Http::STATUS_BAD_REQUEST);
+			return null;
 		}
 
+		return $account;
+	}//end accountParam()
+
+	/**
+	 * Store the requested settings, keeping the matching cursor, and answer what is stored.
+	 *
+	 * @param string $userId  The user.
+	 * @param int    $account The validated account id.
+	 *
+	 * @return JSONResponse The stored settings, or the 500.
+	 */
+	private function savedSettings(string $userId, int $account): JSONResponse {
 		$enabled = (bool)$this->request->getParam('enabled', false);
 		$excluded = $this->request->getParam('excludedAddresses', []);
 
 		try {
-			$current = $this->emailMatchService->getSettings(userId: $user->getUID());
+			$current = $this->emailMatchService->getSettings(userId: $userId);
 			$this->emailMatchService->writeSettings(
-				userId: $user->getUID(),
+				userId: $userId,
 				settings: [
 					'account' => $account,
 					'enabled' => $enabled,
@@ -133,7 +197,7 @@ class EmailSyncController extends Controller {
 					'cursor' => $current['cursor'],
 				]
 			);
-			$settings = $this->emailMatchService->getSettings(userId: $user->getUID());
+			$settings = $this->emailMatchService->getSettings(userId: $userId);
 			return new JSONResponse($this->responseShape(settings: $settings));
 		} catch (Throwable $e) {
 			$this->logger->error('EmailSyncController::saveSettings failed', ['exception' => $e]);
@@ -142,8 +206,7 @@ class EmailSyncController extends Controller {
 				Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}//end try
-
-	}//end saveSettings()
+	}//end savedSettings()
 
 	/**
 	 * Run the matching job once for the current user.

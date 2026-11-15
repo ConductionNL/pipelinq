@@ -134,7 +134,7 @@ class DashboardControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+	 * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
 	 */
 	public function testPageNamesWhereTheInstalledCaseAppKeepsItsCases(): void {
 		$this->assertSame(
@@ -149,7 +149,7 @@ class DashboardControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+	 * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
 	 */
 	public function testPageNamesNoCaseTargetWithoutACaseApp(): void {
 		$this->assertSame([], $this->caseTargetFor(location: null));

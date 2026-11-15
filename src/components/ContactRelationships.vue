@@ -6,6 +6,19 @@
 			v-else-if="relationships.length === 0"
 			:description="t('pipelinq', 'No relationships yet.')" />
 
+		<dl
+			v-else-if="compact"
+			class="contact-relationships__compact"
+			data-testid="relationships-compact">
+			<div
+				v-for="rel in relationships"
+				:key="rel.id"
+				class="contact-relationships__compact-row">
+				<dt>{{ rel.type }}</dt>
+				<dd>{{ getEntityName(rel.toContact) }}</dd>
+			</div>
+		</dl>
+
 		<div v-else>
 			<div
 				v-for="group in groupedRelationships"
@@ -71,7 +84,14 @@
 		</div>
 
 		<div class="contact-relationships__footer">
-			<NcButton variant="secondary" @click="showAddDialog = true">
+			<NcButton
+				:variant="compact ? 'tertiary' : 'secondary'"
+				:class="{ 'contact-relationships__add--pill': compact }"
+				data-testid="relationships-add"
+				@click="showAddDialog = true">
+				<template v-if="compact" #icon>
+					<Plus :size="16" />
+				</template>
 				{{ t('pipelinq', 'Add relationship') }}
 			</NcButton>
 		</div>
@@ -201,7 +221,9 @@
 import { openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
+import { editedRelationshipPair, linkedEntityName, newRelationshipPair, relationshipKind } from '../services/relationshipPayloads.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 const DEFAULT_RELATIONSHIP_TYPES = [
@@ -305,6 +327,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcSelect,
+		Plus,
 		RemoveRelationshipDialog,
 	},
 
@@ -318,6 +341,16 @@ export default {
 			type: String,
 			required: true,
 			validator: (value) => ['contact', 'client'].includes(value),
+		},
+
+		/**
+		 * One line per relationship (its type, then the other party) and a
+		 * pill to add one, for the Overview of a contact page. The full table
+		 * with edit and remove is the Relationships tab.
+		 */
+		compact: {
+			type: Boolean,
+			default: false,
 		},
 
 		entityName: {
@@ -350,14 +383,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
 		 */
 		typeOptions() {
 			return DEFAULT_RELATIONSHIP_TYPES.map((t) => ({
@@ -370,7 +403,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
 		 */
 		strengthOptions() {
 			return [
@@ -381,7 +414,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
 		 */
 		groupedRelationships() {
 			const groups = {}
@@ -405,13 +438,18 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the relationships.
+	 *
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
+	 */
 	async mounted() {
 		await this.fetchRelationships()
 	},
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
 		 */
 		async fetchRelationships() {
 			this.loading = true
@@ -440,20 +478,11 @@ export default {
 		/**
 		 * @param {string} entityId Identifier of the linked entity.
 		 * @param {string} entityType Logical type of the linked entity (client, contact, …).
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
 		 */
 		async loadEntityName(entityId, entityType) {
-			try {
-				const type = entityType === 'client' ? 'client' : 'contact'
-				const entity = await this.objectStore.fetchObject(type, entityId)
-				if (entity) {
-					this.entityNameCache[entityId] = entity.name || entityId
-				} else {
-					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
-				}
-			} catch {
-				this.entityNameCache[entityId] = entityId
-			}
+			const type = entityType === 'client' ? 'client' : 'contact'
+			this.entityNameCache[entityId] = await linkedEntityName(this.objectStore, { id: entityId, type })
 		},
 
 		getEntityName(entityId) {
@@ -462,7 +491,7 @@ export default {
 
 		/**
 		 * @param {object} rel The relationship row to test.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
 		 */
 		isEnded(rel) {
 			if (!rel.endDate) {
@@ -474,7 +503,7 @@ export default {
 		/**
 		 * @param {object} rel The relationship row whose entity to open.
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
 		 */
 		navigateToEntity(rel, event) {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
@@ -487,7 +516,7 @@ export default {
 
 		/**
 		 * @param {string} typeValue The relationship type the user picked.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
 		 */
 		onTypeSelect(typeValue) {
 			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
@@ -502,7 +531,7 @@ export default {
 
 		/**
 		 * @param {string} query The search term typed by the user.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
 		 */
 		async searchEntities(query) {
 			if (this.searchTimeout) {
@@ -543,94 +572,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
 		 */
 		async saveRelationship() {
 			if (!this.addForm.toContact || !this.addForm.type) {
 				return
 			}
 
-			// Check for duplicate
-			if (!this.editingRelationship) {
-				const existing = this.relationships.find(
-					(r) =>
-						r.toContact === this.addForm.toContact
-						&& r.type === this.addForm.type,
-				)
-				if (existing) {
-					showError(t('pipelinq', 'This relationship already exists'))
-					return
-				}
+			if (this.isDuplicateRelationship()) {
+				showError(t('pipelinq', 'This relationship already exists'))
+				return
 			}
 
-			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
-				(t) => t.value === this.addForm.type,
-			)
-			const inverseType = typeObj ? typeObj.inverse : this.addForm.type
-			const category = typeObj ? typeObj.category : ''
-			const toEntityOption = this.entityOptions.find(
-				(e) => e.id === this.addForm.toContact,
-			)
-			const toEntityType = toEntityOption
-				? toEntityOption.entityType
-				: 'contact'
-
 			try {
-				if (this.editingRelationship) {
-					// Update existing relationship
-					await this.objectStore.saveObject('relationship', {
-						id: this.editingRelationship.id,
-						type: this.addForm.type,
-						inverseType,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
-					// Update inverse if it exists
-					if (this.editingRelationship._inverseId) {
-						await this.objectStore.saveObject('relationship', {
-							id: this.editingRelationship._inverseId,
-							type: inverseType,
-							inverseType: this.addForm.type,
-							category,
-							notes: this.addForm.notes,
-							startDate: this.addForm.startDate || null,
-							endDate: this.addForm.endDate || null,
-							strength: this.addForm.strength,
-						})
-					}
-				} else {
-					// Create primary relationship
-					await this.objectStore.saveObject('relationship', {
-						fromContact: this.entityId,
-						toContact: this.addForm.toContact,
-						fromType: this.entityType,
-						toType: toEntityType,
-						type: this.addForm.type,
-						inverseType,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
-
-					// Create inverse relationship
-					await this.objectStore.saveObject('relationship', {
-						fromContact: this.addForm.toContact,
-						toContact: this.entityId,
-						fromType: toEntityType,
-						toType: this.entityType,
-						type: inverseType,
-						inverseType: this.addForm.type,
-						category,
-						notes: this.addForm.notes,
-						startDate: this.addForm.startDate || null,
-						endDate: this.addForm.endDate || null,
-						strength: this.addForm.strength,
-					})
+				for (const payload of this.relationshipPayloads()) {
+					await this.objectStore.saveObject('relationship', payload)
 				}
 
 				showSuccess(t('pipelinq', 'Relationship saved'))
@@ -642,8 +598,57 @@ export default {
 		},
 
 		/**
+		 * A new relationship that this entity already has, to the same entity and of the same type.
+		 *
+		 * @return {boolean} Whether the form duplicates an existing relationship.
+		 */
+		isDuplicateRelationship() {
+			if (this.editingRelationship) {
+				return false
+			}
+			return this.relationships.some(
+				(r) =>
+					r.toContact === this.addForm.toContact
+					&& r.type === this.addForm.type,
+			)
+		},
+
+		/**
+		 * The relationship objects the form writes, in order: the edited
+		 * relationship and its inverse, or a new relationship and its inverse.
+		 *
+		 * @return {Array<object>} The objects to save.
+		 */
+		relationshipPayloads() {
+			const draft = {
+				form: this.addForm,
+				kind: relationshipKind(DEFAULT_RELATIONSHIP_TYPES, this.addForm.type),
+			}
+			if (this.editingRelationship) {
+				return editedRelationshipPair(this.editingRelationship, draft)
+			}
+			const link = {
+				from: { id: this.entityId, type: this.entityType },
+				to: { id: this.addForm.toContact, type: this.selectedEntityType() },
+			}
+			return newRelationshipPair(link, draft)
+		},
+
+		/**
+		 * @return {string} The type of the entity chosen in the form; a contact when it is not among the options.
+		 */
+		selectedEntityType() {
+			const toEntityOption = this.entityOptions.find(
+				(e) => e.id === this.addForm.toContact,
+			)
+			return toEntityOption
+				? toEntityOption.entityType
+				: 'contact'
+		},
+
+		/**
 		 * @param {object} rel The relationship row to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
 		 */
 		editRelationship(rel) {
 			this.editingRelationship = { ...rel }
@@ -669,7 +674,7 @@ export default {
 
 		/**
 		 * @param {object} rel The relationship row to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
 		 */
 		removeRelationship(rel) {
 			this.deletingRelationship = rel
@@ -677,7 +682,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
 		 */
 		async confirmRemove() {
 			if (!this.deletingRelationship) {
@@ -716,7 +721,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
 		 */
 		closeDialog() {
 			this.showAddDialog = false
@@ -735,6 +740,42 @@ export default {
 </script>
 
 <style scoped>
+.contact-relationships__compact {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	font-size: 14px;
+}
+
+.contact-relationships__compact-row {
+	display: grid;
+	grid-template-columns: 110px minmax(0, 1fr);
+	gap: 12px;
+}
+
+/* Nextcloud's global dt rule (130px, right-aligned, padded) would overlap the value. */
+.contact-relationships__compact-row dt {
+	width: auto;
+	padding: 0;
+	white-space: normal;
+	text-align: start;
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-relationships__compact-row dd {
+	margin: 0;
+	padding: 0;
+}
+
+.contact-relationships__add--pill {
+	border-radius: var(--border-radius-pill, 17px) !important;
+	background: var(--color-primary-element-light) !important;
+	color: var(--color-primary-element-light-text) !important;
+	font-weight: 600;
+}
+
 .contact-relationships__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 12px 0;
@@ -770,13 +811,13 @@ export default {
 }
 
 .relationship-status--active {
-	background: #dcfce7;
-	color: #166534;
+	background: var(--color-success-light, #dcfce7);
+	color: var(--color-success-text, #166534);
 }
 
 .relationship-status--ended {
-	background: #fee2e2;
-	color: #991b1b;
+	background: var(--color-error-light, #fee2e2);
+	color: var(--color-error-text, #991b1b);
 }
 
 .relationship-actions {
@@ -784,41 +825,8 @@ export default {
 	gap: 4px;
 }
 
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 8px 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
 .viewTableRow {
 	cursor: pointer;
-	transition: background-color 0.2s ease;
-}
-
-.viewTableRow:hover {
-	background: var(--color-background-hover);
 }
 
 /* Dialog styles */
@@ -894,10 +902,6 @@ export default {
 	gap: 8px;
 	margin-top: 16px;
 }
-
-@media (prefers-reduced-motion: reduce) {
-	.viewTableRow {
-		transition: none;
-	}
-}
 </style>
+
+<style scoped src="./viewTable.css"></style>

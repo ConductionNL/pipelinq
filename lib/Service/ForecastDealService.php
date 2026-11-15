@@ -17,14 +17,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-001
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 
@@ -48,7 +49,7 @@ use OCP\IAppConfig;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastDealService {
+class ForecastDealService implements ForecastDealServiceInterface {
 	/**
 	 * Schema slug whose `x-pipelinq-forecast-lifecycle` declares the partition.
 	 *
@@ -72,34 +73,12 @@ class ForecastDealService {
 	public const CLOSED_CATEGORIES = ['closed_won', 'closed_lost'];
 
 	/**
-	 * Fallback default forecast category assigned to a new deal. The canonical
-	 * source of truth is `x-pipelinq-forecast-lifecycle.default`.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_CATEGORY = 'pipeline';
-
-	/**
 	 * Fallback open forecast categories a rep may freely choose. The canonical
 	 * source of truth is `x-pipelinq-forecast-lifecycle.open`.
 	 *
 	 * @var array<int, string>
 	 */
 	public const OPEN_CATEGORIES = ['commit', 'best_case', 'pipeline', 'omitted'];
-
-	/**
-	 * App-config key for the commit justification threshold (in reporting currency).
-	 *
-	 * @var string
-	 */
-	public const COMMIT_THRESHOLD_KEY = 'forecast_commit_threshold';
-
-	/**
-	 * Default commit justification threshold when none is configured.
-	 *
-	 * @var int
-	 */
-	public const COMMIT_THRESHOLD_DEFAULT = 50000;
 
 	/**
 	 * Minimum number of characters required in a commit justification.
@@ -187,7 +166,7 @@ class ForecastDealService {
 	 *
 	 * @return bool True when the category is closed_won or closed_lost.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002
 	 */
 	public function isClosedCategory(?string $category): bool {
 		return $category !== null && in_array($category, $this->closedCategories(), true);
@@ -203,7 +182,7 @@ class ForecastDealService {
 	 *
 	 * @return array<string, mixed>|null The mutated data to persist, or null when unchanged.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-001-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-001-01
 	 */
 	public function applyDefaultCategory(array $data): ?array {
 		$current = $data['forecast_category'] ?? null;
@@ -229,7 +208,7 @@ class ForecastDealService {
 	 *
 	 * @return string|null The error key (translatable) or null when the change is valid.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-01, REQ-FRC-003-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 */
 	public function validateTransition(array $oldData, array $newData): ?string {
 		$oldCategory = $oldData['forecast_category'] ?? null;
@@ -263,7 +242,7 @@ class ForecastDealService {
 	 *
 	 * @return bool True when a justification is required.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-04
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-04
 	 */
 	public function requiresJustification(array $data): bool {
 		$value = (float)($data['value'] ?? 0);
@@ -275,11 +254,11 @@ class ForecastDealService {
 	 *
 	 * @return int The threshold in the reporting currency.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 */
 	public function getCommitThreshold(): int {
 		$configured = $this->appConfig->getValueInt(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::COMMIT_THRESHOLD_KEY,
 			self::COMMIT_THRESHOLD_DEFAULT
 		);
@@ -302,7 +281,7 @@ class ForecastDealService {
 	 *
 	 * @return array<string, mixed>|null The mutated data to persist, or null when no reset applies.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-03
 	 */
 	public function applyReopenReset(array $oldData, array $newData): ?array {
 		$newCategory = $newData['forecast_category'] ?? null;

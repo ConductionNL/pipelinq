@@ -22,15 +22,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -43,15 +46,43 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coordinates the export
  *  destination / data / run collaborators a job service legitimately needs.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class ExportJobService extends AbstractExportService {
+class ExportJobService extends AbstractExportService implements ExportJobServiceInterface {
 	/**
 	 * The exportJob schema config key.
 	 *
 	 * @var string
 	 */
 	private const SCHEMA_KEY = 'exportJob_schema';
+
+	/**
+	 * The app config key of the failed runs in a row that switch a job off.
+	 *
+	 * @var string
+	 */
+	public const FAILURE_THRESHOLD_KEY = 'export_failure_threshold';
+
+	/**
+	 * The default number of failed runs in a row that switch a job off.
+	 *
+	 * @var int
+	 */
+	public const DEFAULT_FAILURE_THRESHOLD = 3;
+
+	/**
+	 * The lowest threshold an administrator may set.
+	 *
+	 * @var int
+	 */
+	public const MIN_FAILURE_THRESHOLD = 1;
+
+	/**
+	 * The highest threshold an administrator may set.
+	 *
+	 * @var int
+	 */
+	public const MAX_FAILURE_THRESHOLD = 10;
 
 	/**
 	 * Constructor.
@@ -63,6 +94,8 @@ class ExportJobService extends AbstractExportService {
 	 * @param ExportDataService $data The data extraction service.
 	 * @param CronExpressionHelper $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ExportRunSummary $summary A job's last and next run.
+	 * @param ExportJobSwitchOffNotifier|null $switchOffNotifier Tells the administrators a job was switched off.
 	 */
 	public function __construct(
 		ContainerInterface $container,
@@ -72,6 +105,8 @@ class ExportJobService extends AbstractExportService {
 		private ExportDataService $data,
 		private CronExpressionHelper $cron,
 		private LoggerInterface $logger,
+		private ExportRunSummary $summary,
+		private ?ExportJobSwitchOffNotifier $switchOffNotifier=null,
 	) {
 		parent::__construct(
 			container: $container,
@@ -85,7 +120,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @return array<int, array<string, mixed>> The jobs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	public function listJobs(): array {
 		return $this->findAllObjects(schemaKey: self::SCHEMA_KEY);
@@ -120,7 +155,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException On validation failure.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
 	 */
 	public function createJob(array $data, string $userId): array {
 		$this->validateJob(data: $data);
@@ -130,6 +165,7 @@ class ExportJobService extends AbstractExportService {
 		$data['createdBy'] = $userId;
 		$data['createdAt'] = $this->now();
 		$data['scheduleCron'] = $this->cron->normalize(expression: (string)($data['scheduleCron'] ?? ''));
+		$data['nextRunAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $data, id: null);
 	}//end createJob()
@@ -153,6 +189,7 @@ class ExportJobService extends AbstractExportService {
 
 		$merged['enabled'] = false;
 		$merged['scheduleCron'] = $this->cron->normalize(expression: (string)($merged['scheduleCron'] ?? ''));
+		$merged['nextRunAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $merged, id: $id);
 	}//end updateJob()
@@ -184,8 +221,8 @@ class ExportJobService extends AbstractExportService {
 	 * @throws OCSBadRequestException When the destination is invalid.
 	 * @throws OCSNotFoundException When the job is absent.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
 	 */
 	public function enableJob(string $id): array {
 		$job = $this->getJob(id: $id);
@@ -196,6 +233,11 @@ class ExportJobService extends AbstractExportService {
 		}
 
 		$job['enabled'] = true;
+		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
+		// Switching on starts the count again and clears an automatic switch-off.
+		$job['consecutiveFailures'] = 0;
+		$job['pausedReason'] = null;
+		$job['pausedAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $id);
 	}//end enableJob()
@@ -213,9 +255,118 @@ class ExportJobService extends AbstractExportService {
 	public function disableJob(string $id): array {
 		$job = $this->getJob(id: $id);
 		$job['enabled'] = false;
+		$job['nextRunAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $id);
 	}//end disableJob()
+
+	/**
+	 * Keep a finished run on its job: the last run's summary and the next run.
+	 *
+	 * @param string $jobId The job UUID.
+	 * @param array<string, mixed> $run The finished run.
+	 *
+	 * @return array<string, mixed> The updated job.
+	 *
+	 * @throws OCSNotFoundException When the job is absent.
+	 * A succeeded run sets the job's failed runs in a row back to 0, a failed
+	 * run adds one and any other outcome leaves the count. An enabled job that
+	 * reaches the threshold is switched off in the same save, with the reason
+	 * and the time, and the administrators are told once.
+	 *
+	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-export-job-switches-off-after-repeated-failed-runs-req-efs-001
+	 */
+	public function recordRun(string $jobId, array $run): array {
+		$job = array_merge($this->getJob(id: $jobId), $this->summary->lastRunSummary(run: $run));
+		$failures = $this->failuresAfter(job: $job, status: (string)($run['status'] ?? ''));
+		$job['consecutiveFailures'] = $failures;
+
+		$switchOff = (($job['enabled'] ?? false) === true
+			&& ($run['status'] ?? '') === 'failed'
+			&& $failures >= $this->failureThreshold());
+		if ($switchOff === true) {
+			$job['enabled'] = false;
+			$job['nextRunAt'] = null;
+			$job['pausedReason'] = sprintf('Switched off after %d failed runs in a row', $failures);
+			$job['pausedAt'] = $this->now();
+		} else {
+			$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
+		}
+
+		$saved = $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $jobId);
+		if ($switchOff === true) {
+			$this->switchOffNotifier?->notifySwitchedOff(
+				job: array_merge($job, $saved),
+				failures: $failures,
+				lastError: (string)($run['errorMessage'] ?? '')
+			);
+		}
+
+		return $saved;
+	}//end recordRun()
+
+	/**
+	 * The failed runs in a row once a run with this status has finished.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 * @param string $status The finished run's status.
+	 *
+	 * @return int The new count.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-export-job-switches-off-after-repeated-failed-runs-req-efs-001
+	 */
+	private function failuresAfter(array $job, string $status): int {
+		$count = max(0, (int)($job['consecutiveFailures'] ?? 0));
+
+		return match ($status) {
+			'succeeded' => 0,
+			'failed' => $count + 1,
+			default => $count,
+		};
+	}//end failuresAfter()
+
+	/**
+	 * The failed runs in a row that switch a job off: the app config value,
+	 * kept within 1 to 10, else 3.
+	 *
+	 * @return int The threshold.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	public function failureThreshold(): int {
+		$value = trim(
+			$this->appConfig->getValueString(
+				AppIdentity::APP_ID,
+				self::FAILURE_THRESHOLD_KEY,
+				(string)self::DEFAULT_FAILURE_THRESHOLD
+			)
+		);
+		if (self::isValidThreshold(value: $value) === false) {
+			return self::DEFAULT_FAILURE_THRESHOLD;
+		}
+
+		return (int)$value;
+	}//end failureThreshold()
+
+	/**
+	 * Whether a value is a whole number from 1 to 10.
+	 *
+	 * @param string $value The value as entered or stored.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	public static function isValidThreshold(string $value): bool {
+		if (preg_match('/^[0-9]+$/', $value) !== 1) {
+			return false;
+		}
+
+		$number = (int)$value;
+
+		return $number >= self::MIN_FAILURE_THRESHOLD && $number <= self::MAX_FAILURE_THRESHOLD;
+	}//end isValidThreshold()
 
 	/**
 	 * Run a non-destructive test of a job: extract <=100 rows per schema and
@@ -228,7 +379,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @return array<string, mixed> Result: success, sample_rows, errors, samples[].
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
 	 */
 	public function testRun(array $job): array {
 		$errors = [];
@@ -278,7 +429,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @return string The preview text.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-03
 	 */
 	public function describeSchedule(string $expression, string $locale = 'en'): string {
 		return $this->cron->describe(expression: $expression, locale: $locale);
@@ -293,17 +444,34 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException On any validation failure.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) A flat list of independent
-	 *  required-field / enum / cron / watermark guards, each a single condition.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      See note — sequential guards only.
-	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	private function validateJob(array $data): void {
 		if (trim((string)($data['name'] ?? '')) === '') {
 			throw new OCSBadRequestException('Job name is required.');
 		}
 
+		$this->requireSourceSchemas(data: $data);
+		$this->requireFormatAndMode(data: $data);
+		if ($this->cron->isValid(expression: (string)($data['scheduleCron'] ?? '')) === false) {
+			throw new OCSBadRequestException('Invalid cron expression.');
+		}
+
+		if (trim((string)($data['destinationId'] ?? '')) === '') {
+			throw new OCSBadRequestException('A destination is required.');
+		}
+	}//end validateJob()
+
+	/**
+	 * Require at least one source schema, each of which exists.
+	 *
+	 * @param array<string, mixed> $data The config.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSBadRequestException When there is none, or one does not exist.
+	 */
+	private function requireSourceSchemas(array $data): void {
 		$schemas = $data['sourceSchemas'] ?? [];
 		if (is_array($schemas) === false || $schemas === []) {
 			throw new OCSBadRequestException('At least one source schema is required.');
@@ -314,7 +482,18 @@ class ExportJobService extends AbstractExportService {
 				throw new OCSBadRequestException("Schema '{$schemaSlug}' does not exist.");
 			}
 		}
+	}//end requireSourceSchemas()
 
+	/**
+	 * Require a supported format and mode, and a watermark column for incremental mode.
+	 *
+	 * @param array<string, mixed> $data The config.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSBadRequestException On an unsupported format or mode, or a missing watermark column.
+	 */
+	private function requireFormatAndMode(array $data): void {
 		$format = (string)($data['format'] ?? '');
 		if (in_array($format, ['csv', 'parquet', 'jsonl'], true) === false) {
 			throw new OCSBadRequestException("Unsupported format '{$format}'.");
@@ -328,15 +507,7 @@ class ExportJobService extends AbstractExportService {
 		if ($mode === 'incremental' && trim((string)($data['incrementalWatermarkColumn'] ?? '')) === '') {
 			throw new OCSBadRequestException('Watermark column is required for incremental mode.');
 		}
-
-		if ($this->cron->isValid(expression: (string)($data['scheduleCron'] ?? '')) === false) {
-			throw new OCSBadRequestException('Invalid cron expression.');
-		}
-
-		if (trim((string)($data['destinationId'] ?? '')) === '') {
-			throw new OCSBadRequestException('A destination is required.');
-		}
-	}//end validateJob()
+	}//end requireFormatAndMode()
 
 	/**
 	 * Strip never-trusted fields from a job payload.

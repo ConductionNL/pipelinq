@@ -439,4 +439,88 @@ class EligibilityServiceTest extends TestCase {
 		$this->assertSame(expected: [], actual: $service->getEligibleResourcesForSlot(serviceId: '', date: '2026-06-01', durationMinutes: 30));
 
 	}//end testEmptyAndUnknownServiceIdReturnsEmptyList()
+
+	/**
+	 * A resource of the right type and skill matches; one on another type, and
+	 * one without the required skill, do not (REQ-SRG-002).
+	 *
+	 * @return void
+	 */
+	public function testMatchingResourcesExcludesWrongTypeAndMissingSkill(): void {
+		$serviceRoomSkill = [
+			'@self' => ['id' => 'svc-passport'],
+			'name' => 'Passport',
+			'requiredSkills' => ['civil-affairs'],
+			'requiredResourceTypes' => ['staff'],
+			'multiStep' => [],
+		];
+		$deskStaff = ['@self' => ['id' => 'r-staff'], 'name' => 'Desk clerk', 'type' => 'staff', 'skills' => ['civil-affairs']];
+		$roomWithSkill = ['@self' => ['id' => 'r-room'], 'name' => 'Room 1', 'type' => 'room', 'skills' => ['civil-affairs']];
+		$staffNoSkill = ['@self' => ['id' => 'r-nostaff'], 'name' => 'Trainee', 'type' => 'staff', 'skills' => []];
+
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => ['svc-passport' => $serviceRoomSkill]]);
+		$this->wireFindAll(mock: $mock, bySchema: ['appointmentResource' => [$deskStaff, $roomWithSkill, $staffNoSkill]]);
+		$service = $this->buildService(objectService: $mock);
+
+		$names = array_map(static fn (array $r): string => (string)$r['name'], $service->getMatchingResources(serviceId: 'svc-passport'));
+
+		$this->assertSame(expected: ['Desk clerk'], actual: $names);
+		$this->assertSame(expected: 1, actual: $service->countMatchingResources(serviceId: 'svc-passport'));
+	}//end testMatchingResourcesExcludesWrongTypeAndMissingSkill()
+
+	/**
+	 * An inactive resource and a non-bookable resource are not counted, even
+	 * when they carry the required skill and type (REQ-SRG-002).
+	 *
+	 * @return void
+	 */
+	public function testMatchingResourcesExcludesInactiveAndNonBookable(): void {
+		$service = [
+			'@self' => ['id' => 'svc'],
+			'name' => 'Service',
+			'requiredSkills' => [],
+			'requiredResourceTypes' => [],
+			'multiStep' => [],
+		];
+		$active = ['@self' => ['id' => 'r-ok'], 'name' => 'Active', 'type' => 'staff', 'skills' => [], 'status' => 'active', 'bookable' => true];
+		$inactive = ['@self' => ['id' => 'r-off'], 'name' => 'Inactive', 'type' => 'staff', 'skills' => [], 'status' => 'inactive', 'bookable' => true];
+		$archived = ['@self' => ['id' => 'r-arch'], 'name' => 'Archived', 'type' => 'staff', 'skills' => [], 'status' => 'archived'];
+		$notBookable = ['@self' => ['id' => 'r-nb'], 'name' => 'Hidden', 'type' => 'staff', 'skills' => [], 'status' => 'active', 'bookable' => false];
+		$defaults = ['@self' => ['id' => 'r-def'], 'name' => 'Defaults', 'type' => 'staff', 'skills' => []];
+
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => ['svc' => $service]]);
+		$this->wireFindAll(mock: $mock, bySchema: ['appointmentResource' => [$active, $inactive, $archived, $notBookable, $defaults]]);
+		$svc = $this->buildService(objectService: $mock);
+
+		$names = array_map(static fn (array $r): string => (string)$r['name'], $svc->getMatchingResources(serviceId: 'svc'));
+
+		// A missing status defaults to active and a missing bookable to bookable.
+		$this->assertSame(expected: ['Active', 'Defaults'], actual: $names);
+	}//end testMatchingResourcesExcludesInactiveAndNonBookable()
+
+	/**
+	 * The per-service count covers every service when asked for none, and only
+	 * the named services when asked for some (REQ-SRG-002, the list page).
+	 *
+	 * @return void
+	 */
+	public function testMatchingResourceCountsPerService(): void {
+		$svcA = ['@self' => ['id' => 'svc-a'], 'name' => 'A', 'requiredSkills' => ['x'], 'requiredResourceTypes' => [], 'multiStep' => []];
+		$svcB = ['@self' => ['id' => 'svc-b'], 'name' => 'B', 'requiredSkills' => ['y'], 'requiredResourceTypes' => [], 'multiStep' => []];
+		$hasX = ['@self' => ['id' => 'r1'], 'name' => 'HasX', 'type' => 'staff', 'skills' => ['x', 'y']];
+		$hasYOnly = ['@self' => ['id' => 'r2'], 'name' => 'HasY', 'type' => 'staff', 'skills' => ['y']];
+
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => ['svc-a' => $svcA, 'svc-b' => $svcB]]);
+		$this->wireFindAll(mock: $mock, bySchema: [
+			'appointmentService' => [$svcA, $svcB],
+			'appointmentResource' => [$hasX, $hasYOnly],
+		]);
+		$service = $this->buildService(objectService: $mock);
+
+		$this->assertSame(expected: ['svc-a' => 1, 'svc-b' => 2], actual: $service->matchingResourceCounts());
+		$this->assertSame(expected: ['svc-a' => 1], actual: $service->matchingResourceCounts(serviceIds: ['svc-a', 'svc-a']));
+	}//end testMatchingResourceCountsPerService()
 }//end class

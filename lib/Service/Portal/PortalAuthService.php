@@ -22,13 +22,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuthServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\IHasher;
@@ -45,7 +46,7 @@ use OCP\Security\IHasher;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAuthService {
+class PortalAuthService implements PortalAuthServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -137,158 +138,208 @@ class PortalAuthService {
 		string $userAgentHash,
 	): array {
 		$this->repository->requireWritable();
+		$run = new PortalLoginRun(tenantId: $tenantId, client: new PortalClient(ipHash: $ipHash, userAgentHash: $userAgentHash));
+		$this->findAccount(run: $run, email: $email);
+		$this->refuseClosedAccount(run: $run);
+		$this->refuseLockedOut(run: $run);
+		$this->verifyPassword(run: $run, password: $password);
+
+		// Password OK from here: reset the failure counter on the in-memory
+		// account so the success-path save below persists it once.
+		$this->resetFailures(account: $run->account);
+
+		if ($this->mfaRequired(account: $run->account, tenantId: $tenantId) === true) {
+			return $this->completeMfaStage(run: $run, totpCode: $totpCode);
+		}
+
+		return $this->startSession(run: $run);
+	}//end login()
+
+	/**
+	 * Find the account by its normalised email in the tenant and put it on the run.
+	 *
+	 * @param PortalLoginRun $run   The login in progress.
+	 * @param string         $email The login email.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException The uniform invalid-credentials error for an unknown account.
+	 */
+	private function findAccount(PortalLoginRun $run, string $email): void {
 		$email = strtolower(trim($email));
-		$account = $this->repository->findOneBy(self::SCHEMA, ['email' => $email, 'tenantId' => $tenantId]);
+		$account = $this->repository->findOneBy(self::SCHEMA, ['email' => $email, 'tenantId' => $run->tenantId]);
 
 		// Uniform failure for unknown account (no user enumeration), still audited.
 		if ($account === null) {
-			$this->audit->log(
-				null,
-				$tenantId,
-				'login-failure',
-				'denied',
-				[
-					'reason' => 'unknown-account',
-					'ipHash' => $ipHash,
-					'userAgentHash' => $userAgentHash,
-				]
-			);
+			$this->auditUnknownAccount(run: $run);
 			throw $this->invalidCredentials();
 		}
 
-		$accountId = (string)$this->repository->idOf(object: $account);
+		$run->account = $account;
+		$run->accountId = (string)$this->repository->idOf(object: $account);
+	}//end findAccount()
 
-		if (($account['status'] ?? 'active') === 'closed') {
-			$this->audit->log(
-				accountId: $accountId,
-				tenantId: $tenantId,
-				eventType: 'login-failure',
-				outcome: 'denied',
-				details: ['reason' => 'account-closed']
-			);
+	/**
+	 * Write the denied login-failure audit event of an unknown account.
+	 *
+	 * @param PortalLoginRun $run The login in progress.
+	 *
+	 * @return void
+	 */
+	private function auditUnknownAccount(PortalLoginRun $run): void {
+		$this->audit->log(
+			null,
+			$run->tenantId,
+			'login-failure',
+			'denied',
+			[
+				'reason' => 'unknown-account',
+				'ipHash' => $run->client->ipHash,
+				'userAgentHash' => $run->client->userAgentHash,
+			]
+		);
+	}//end auditUnknownAccount()
+
+	/**
+	 * Refuse a closed account (audited).
+	 *
+	 * @param PortalLoginRun $run The login in progress.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException 401 accountClosed.
+	 */
+	private function refuseClosedAccount(PortalLoginRun $run): void {
+		if (($run->account['status'] ?? 'active') === 'closed') {
+			$this->auditDenied(run: $run, reason: 'account-closed');
 			throw new PortalException(
 				status: Http::STATUS_UNAUTHORIZED,
 				errorCode: 'accountClosed',
 				message: 'Dit account is gesloten.'
 			);
 		}
+	}//end refuseClosedAccount()
 
-		if ($this->isLockedOut(account: $account) === true) {
-			$this->audit->log(
-				accountId: $accountId,
-				tenantId: $tenantId,
-				eventType: 'login-failure',
-				outcome: 'denied',
-				details: ['reason' => 'locked-out']
-			);
+	/**
+	 * Refuse an account inside its lockout window (audited).
+	 *
+	 * @param PortalLoginRun $run The login in progress.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException 429 rateLimited.
+	 */
+	private function refuseLockedOut(PortalLoginRun $run): void {
+		if ($this->isLockedOut(account: $run->account) === true) {
+			$this->auditDenied(run: $run, reason: 'locked-out');
 			throw new PortalException(
 				Http::STATUS_TOO_MANY_REQUESTS,
 				'rateLimited',
 				'Te veel mislukte pogingen. Wacht 5 minuten alstublieft.'
 			);
 		}
+	}//end refuseLockedOut()
 
-		if ($this->hasher->verify($password, (string)($account['passwordHash'] ?? '')) === false) {
-			$this->registerFailure(account: $account, accountId: $accountId, tenantId: $tenantId, ipHash: $ipHash, userAgentHash: $userAgentHash);
+	/**
+	 * Verify the password; a wrong one counts as a failure and is refused uniformly.
+	 *
+	 * @param PortalLoginRun $run      The login in progress.
+	 * @param string         $password The plaintext password.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException The uniform invalid-credentials error.
+	 */
+	private function verifyPassword(PortalLoginRun $run, string $password): void {
+		if ($this->hasher->verify($password, (string)($run->account['passwordHash'] ?? '')) === false) {
+			$this->registerFailure(run: $run);
 			throw $this->invalidCredentials();
 		}
+	}//end verifyPassword()
 
-		// Password OK from here: reset the failure counter on the in-memory
-		// account so the success-path save below persists it once.
-		$this->resetFailures(account: $account);
-
-		$mfaRequired = $this->mfaRequired(account: $account, tenantId: $tenantId);
-		if ($mfaRequired === true) {
-			return $this->completeMfaStage(
-				account: $account,
-				accountId: $accountId,
-				tenantId: $tenantId,
-				totpCode: $totpCode,
-				ipHash: $ipHash,
-				userAgentHash: $userAgentHash
-			);
-		}
-
-		$created = $this->sessions->createSession(
-			$accountId,
-			$tenantId,
-			$ipHash,
-			$userAgentHash,
-			$this->tenant->sessionTtlHours(tenantId: $tenantId)
+	/**
+	 * Write a denied login-failure audit event with the given reason.
+	 *
+	 * @param PortalLoginRun $run    The login in progress.
+	 * @param string         $reason The reason (account-closed, locked-out, invalid-mfa).
+	 *
+	 * @return void
+	 */
+	private function auditDenied(PortalLoginRun $run, string $reason): void {
+		$this->audit->log(
+			accountId: $run->accountId,
+			tenantId: $run->tenantId,
+			eventType: 'login-failure',
+			outcome: 'denied',
+			details: ['reason' => $reason]
 		);
-		$this->recordLogin(account: $account, accountId: $accountId, tenantId: $tenantId, ipHash: $ipHash, userAgentHash: $userAgentHash);
-
-		return [
-			'status' => 'authenticated',
-			'mfaRequired' => false,
-			'accountId' => $accountId,
-			'token' => $created['token'],
-			'sessionId' => (string)$this->repository->idOf(object: $created['session']),
-		];
-	}//end login()
+	}//end auditDenied()
 
 	/**
 	 * Resolve the MFA stage: either accept an up-front TOTP code and complete
 	 * login, or signal that a code is still required.
 	 *
-	 * @param array<string, mixed> $account The account record.
-	 * @param string $accountId The account id.
-	 * @param string $tenantId The tenant id.
-	 * @param string|null $totpCode The presented code, if any.
-	 * @param string $ipHash Hash of the client IP.
-	 * @param string $userAgentHash Hash of the client user agent.
+	 * @param PortalLoginRun $run      The login in progress.
+	 * @param string|null    $totpCode The presented code, if any.
 	 *
 	 * @return array<string, mixed> The login result.
 	 *
 	 * @throws PortalException On an invalid code.
 	 */
-	private function completeMfaStage(
-		array $account,
-		string $accountId,
-		string $tenantId,
-		?string $totpCode,
-		string $ipHash,
-		string $userAgentHash,
-	): array {
-		$enrolled = ($account['mfaEnabled'] ?? false) === true && ($account['mfaSecret'] ?? '') !== '';
-
+	private function completeMfaStage(PortalLoginRun $run, ?string $totpCode): array {
 		// MFA required by policy but not yet enrolled: tell the client to enroll.
-		if ($enrolled === false) {
-			return ['status' => 'mfa-enrollment-required', 'mfaRequired' => true, 'accountId' => $accountId];
+		if ($this->mfaEnrolled(account: $run->account) === false) {
+			return ['status' => 'mfa-enrollment-required', 'mfaRequired' => true, 'accountId' => $run->accountId];
 		}
 
 		if ($totpCode === null || $totpCode === '') {
-			return ['status' => 'mfa-required', 'mfaRequired' => true, 'accountId' => $accountId];
+			return ['status' => 'mfa-required', 'mfaRequired' => true, 'accountId' => $run->accountId];
 		}
 
-		if ($this->mfa->verifyCode(encryptedSecret: ($account['mfaSecret'] ?? null), code: $totpCode) === false) {
-			$this->audit->log(
-				accountId: $accountId,
-				tenantId: $tenantId,
-				eventType: 'login-failure',
-				outcome: 'denied',
-				details: ['reason' => 'invalid-mfa']
-			);
+		if ($this->mfa->verifyCode(encryptedSecret: ($run->account['mfaSecret'] ?? null), code: $totpCode) === false) {
+			$this->auditDenied(run: $run, reason: 'invalid-mfa');
 			throw new PortalException(Http::STATUS_UNAUTHORIZED, 'invalidMfaCode', 'Ongeldige verificatiecode.');
 		}
 
+		return $this->startSession(run: $run);
+	}//end completeMfaStage()
+
+	/**
+	 * Whether the account has MFA switched on with a stored secret.
+	 *
+	 * @param array<string, mixed> $account The account record.
+	 *
+	 * @return bool True when enrolled.
+	 */
+	private function mfaEnrolled(array $account): bool {
+		return ($account['mfaEnabled'] ?? false) === true && ($account['mfaSecret'] ?? '') !== '';
+	}//end mfaEnrolled()
+
+	/**
+	 * Mint the full session, record the login and return the authenticated result.
+	 *
+	 * @param PortalLoginRun $run The login in progress.
+	 *
+	 * @return array{status: string, mfaRequired: bool, accountId: string, token: string, sessionId: string}
+	 */
+	private function startSession(PortalLoginRun $run): array {
 		$created = $this->sessions->createSession(
-			$accountId,
-			$tenantId,
-			$ipHash,
-			$userAgentHash,
-			$this->tenant->sessionTtlHours(tenantId: $tenantId)
+			$run->accountId,
+			$run->tenantId,
+			$run->client->ipHash,
+			$run->client->userAgentHash,
+			$this->tenant->sessionTtlHours(tenantId: $run->tenantId)
 		);
-		$this->recordLogin(account: $account, accountId: $accountId, tenantId: $tenantId, ipHash: $ipHash, userAgentHash: $userAgentHash);
+		$this->recordLogin(run: $run);
 
 		return [
 			'status' => 'authenticated',
 			'mfaRequired' => false,
-			'accountId' => $accountId,
+			'accountId' => $run->accountId,
 			'token' => $created['token'],
 			'sessionId' => (string)$this->repository->idOf(object: $created['session']),
 		];
-	}//end completeMfaStage()
+	}//end startSession()
 
 	/**
 	 * Whether MFA must be satisfied for this account in this tenant.
@@ -326,21 +377,36 @@ class PortalAuthService {
 	/**
 	 * Increment the failure counter and arm a lockout once the threshold is hit.
 	 *
-	 * @param array<string, mixed> $account The account record.
-	 * @param string $accountId The account id.
-	 * @param string $tenantId The tenant id.
-	 * @param string $ipHash Hash of the client IP.
-	 * @param string $userAgentHash Hash of the client user agent.
+	 * @param PortalLoginRun $run The login in progress.
 	 *
 	 * @return void
 	 */
-	private function registerFailure(
-		array $account,
-		string $accountId,
-		string $tenantId,
-		string $ipHash,
-		string $userAgentHash,
-	): void {
+	private function registerFailure(PortalLoginRun $run): void {
+		$account = $this->withFailureCounted(account: $run->account);
+		$attempts = $account['failedLoginAttempts'];
+		$this->repository->save(self::SCHEMA, $account, $run->accountId);
+		$this->audit->log(
+			$run->accountId,
+			$run->tenantId,
+			'login-failure',
+			'denied',
+			[
+				'reason' => 'invalid-password',
+				'failedAttemptCount' => $attempts,
+				'ipHash' => $run->client->ipHash,
+				'userAgentHash' => $run->client->userAgentHash,
+			]
+		);
+	}//end registerFailure()
+
+	/**
+	 * The account with one more failed attempt, and a lockout armed once the threshold is hit.
+	 *
+	 * @param array<string, mixed> $account The account record.
+	 *
+	 * @return array<string, mixed> The updated account record.
+	 */
+	private function withFailureCounted(array $account): array {
 		$attempts = ((int)($account['failedLoginAttempts'] ?? 0) + 1);
 		$account['failedLoginAttempts'] = $attempts;
 		if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
@@ -349,20 +415,8 @@ class PortalAuthService {
 			$account['lockedUntil'] = $lock->format(DATE_ATOM);
 		}
 
-		$this->repository->save(self::SCHEMA, $account, $accountId);
-		$this->audit->log(
-			$accountId,
-			$tenantId,
-			'login-failure',
-			'denied',
-			[
-				'reason' => 'invalid-password',
-				'failedAttemptCount' => $attempts,
-				'ipHash' => $ipHash,
-				'userAgentHash' => $userAgentHash,
-			]
-		);
-	}//end registerFailure()
+		return $account;
+	}//end withFailureCounted()
 
 	/**
 	 * Reset the failure counter and clear any lockout on the in-memory account.
@@ -383,31 +437,22 @@ class PortalAuthService {
 	/**
 	 * Stamp lastLoginAt and write the login-success audit event.
 	 *
-	 * @param array<string, mixed> $account The account record.
-	 * @param string $accountId The account id.
-	 * @param string $tenantId The tenant id.
-	 * @param string $ipHash Hash of the client IP.
-	 * @param string $userAgentHash Hash of the client user agent.
+	 * @param PortalLoginRun $run The login in progress.
 	 *
 	 * @return void
 	 */
-	private function recordLogin(
-		array $account,
-		string $accountId,
-		string $tenantId,
-		string $ipHash,
-		string $userAgentHash,
-	): void {
+	private function recordLogin(PortalLoginRun $run): void {
+		$account = $run->account;
 		$account['lastLoginAt'] = $this->time->getDateTime()->format(DATE_ATOM);
-		$this->repository->save(self::SCHEMA, $account, $accountId);
+		$this->repository->save(self::SCHEMA, $account, $run->accountId);
 		$this->audit->log(
-			$accountId,
-			$tenantId,
+			$run->accountId,
+			$run->tenantId,
 			'login-success',
 			'success',
 			[
-				'ipHash' => $ipHash,
-				'userAgentHash' => $userAgentHash,
+				'ipHash' => $run->client->ipHash,
+				'userAgentHash' => $run->client->userAgentHash,
 			]
 		);
 	}//end recordLogin()

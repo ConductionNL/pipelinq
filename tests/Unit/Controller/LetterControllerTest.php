@@ -30,6 +30,7 @@ use OCA\Pipelinq\Controller\LetterController;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
 use OCA\Pipelinq\Service\Letter\LetterLog;
+use OCA\Pipelinq\Service\Letter\LoggedLetter;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\IAppConfig;
@@ -59,6 +60,8 @@ class LetterControllerTest extends TestCase
     private const CONTACT = '1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e';
 
     private const TICKET = '7a2b3c4d-5e6f-4a1b-9c2d-3e4f5a6b7c8d';
+
+    private const APPOINTMENT = '9c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f';
 
     /**
      * The adapter double.
@@ -103,6 +106,7 @@ class LetterControllerTest extends TestCase
             self::CLIENT  => ['name' => 'Bakkerij de Jong', 'type' => 'organization'],
             self::CONTACT => ['name' => 'Anna de Jong', 'client' => self::CLIENT],
             self::TICKET  => ['title' => 'Oven repair', 'client' => self::CLIENT, 'ticketType' => 'request'],
+            self::APPOINTMENT => ['customerId' => self::CLIENT, 'startAt' => '2026-10-14T10:30:00+02:00', 'status' => 'confirmed'],
         ];
 
     }//end setUp()
@@ -139,6 +143,7 @@ class LetterControllerTest extends TestCase
                 'client_schema' => '11',
                 'contact_schema' => '12',
                 'ticket_schema' => '13',
+                'booking_schema' => '14',
                 default => $default,
             }
         );
@@ -397,6 +402,175 @@ class LetterControllerTest extends TestCase
 
 
     /**
+     * A download-only letter is rendered without a copy in Files and logs nothing.
+     *
+     * @return void
+     */
+    public function testADownloadOnlyLetterIsNotFiledOrLogged(): void
+    {
+        $this->filinqPresent();
+        $this->letters->expects($this->once())->method('render')
+            ->with('tpl-1', $this->anything(), $this->anything(), 'return')
+            ->willReturn(['content' => '%PDF-1.7 letter', 'fileId' => null, 'path' => null, 'warnings' => []]);
+        $this->tickets->expects($this->never())->method('save');
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1', 'downloadOnly' => 'true'])->create(id: self::CLIENT);
+
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+        $this->assertSame(expected: '%PDF-1.7 letter', actual: base64_decode(string: $response->getData()['content']));
+        $this->assertNull(actual: $response->getData()['contactMomentId']);
+
+    }//end testADownloadOnlyLetterIsNotFiledOrLogged()
+
+
+    /**
+     * The preview reads the same records as a letter and returns filinq's fields; nothing is made.
+     *
+     * @return void
+     */
+    public function testThePreviewReturnsTheFilledFields(): void
+    {
+        $this->filinqPresent();
+        $preview = [
+            'html'     => '<p>Geachte heer De Jong,</p>',
+            'fields'   => [
+                ['label' => 'Aanhef', 'value' => 'Geachte heer De Jong,', 'source' => 'op basis van het opgegeven geslacht', 'filled' => true],
+            ],
+            'complete' => true,
+            'warnings' => [],
+        ];
+        $this->letters->expects($this->once())->method('preview')
+            ->with('tpl-1', [
+                ['register' => '7', 'schema' => 'client', 'id' => self::CLIENT],
+                ['register' => '7', 'schema' => 'ticket', 'id' => self::TICKET],
+            ])
+            ->willReturn($preview);
+        $this->letters->expects($this->never())->method('render');
+        $this->tickets->expects($this->never())->method('save');
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1', 'ticketId' => self::TICKET])->preview(id: self::CLIENT);
+
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+        $this->assertSame(expected: $preview, actual: $response->getData());
+
+    }//end testThePreviewReturnsTheFilledFields()
+
+
+    /**
+     * The client's appointment reaches filinq as `appointmentBooking`, so a
+     * template can print the Afspraak field.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     */
+    public function testTheAppointmentReachesFilinq(): void
+    {
+        $this->filinqPresent();
+        $this->letters->expects($this->once())->method('preview')
+            ->with('tpl-1', [
+                ['register' => '7', 'schema' => 'client', 'id' => self::CLIENT],
+                ['register' => '7', 'schema' => 'ticket', 'id' => self::TICKET],
+                ['register' => '7', 'schema' => 'appointmentBooking', 'id' => self::APPOINTMENT],
+            ])
+            ->willReturn(['html' => '', 'fields' => [], 'complete' => true, 'warnings' => []]);
+
+        $params   = ['templateId' => 'tpl-1', 'ticketId' => self::TICKET, 'appointmentId' => self::APPOINTMENT];
+        $response = $this->controller(params: $params)->preview(id: self::CLIENT);
+
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+
+    }//end testTheAppointmentReachesFilinq()
+
+
+    /**
+     * An appointment of another client is refused, unless it is on the letter's ticket.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     */
+    public function testAnAppointmentOfAnotherClientIs404(): void
+    {
+        $this->filinqPresent();
+        $this->readable[self::APPOINTMENT]['customerId'] = 'someone-else';
+        $this->letters->expects($this->never())->method('render');
+        $this->letters->expects($this->never())->method('preview');
+
+        $params = ['templateId' => 'tpl-1', 'appointmentId' => self::APPOINTMENT];
+        $this->assertSame(expected: 404, actual: $this->controller(params: $params)->create(id: self::CLIENT)->getStatus());
+        $this->assertSame(expected: 404, actual: $this->controller(params: $params)->preview(id: self::CLIENT)->getStatus());
+        $message = $this->controller(params: $params)->preview(id: self::CLIENT)->getData()['message'];
+        $this->assertSame(expected: 'Appointment not found', actual: $message);
+
+        // On another ticket than the letter's it stays refused.
+        $this->readable[self::APPOINTMENT]['ticket'] = 'another-ticket';
+        $params['ticketId'] = self::TICKET;
+        $this->assertSame(expected: 404, actual: $this->controller(params: $params)->preview(id: self::CLIENT)->getStatus());
+
+    }//end testAnAppointmentOfAnotherClientIs404()
+
+
+    /**
+     * An appointment booked for a contact person counts when it is on the letter's ticket.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     */
+    public function testAnAppointmentOnTheLettersTicketIsAccepted(): void
+    {
+        $this->filinqPresent();
+        $this->readable[self::APPOINTMENT]['customerId'] = self::CONTACT;
+        $this->readable[self::APPOINTMENT]['ticket']     = self::TICKET;
+        $this->letters->expects($this->once())->method('preview')
+            ->willReturn(['html' => '', 'fields' => [], 'complete' => true, 'warnings' => []]);
+
+        $params = ['templateId' => 'tpl-1', 'ticketId' => self::TICKET, 'appointmentId' => self::APPOINTMENT];
+        $this->assertSame(expected: 200, actual: $this->controller(params: $params)->preview(id: self::CLIENT)->getStatus());
+
+    }//end testAnAppointmentOnTheLettersTicketIsAccepted()
+
+
+    /**
+     * An appointment the caller cannot read is 404 and never reaches filinq.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
+     */
+    public function testAnUnreadableAppointmentIs404(): void
+    {
+        $this->filinqPresent();
+        unset($this->readable[self::APPOINTMENT]);
+        $this->letters->expects($this->never())->method('render');
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1', 'appointmentId' => self::APPOINTMENT])->create(id: self::CLIENT);
+
+        $this->assertSame(expected: 404, actual: $response->getStatus());
+
+    }//end testAnUnreadableAppointmentIs404()
+
+
+    /**
+     * A client the caller may not read gets no preview.
+     *
+     * @return void
+     */
+    public function testThePreviewOfAnUnreadableClientIs404(): void
+    {
+        $this->filinqPresent();
+        $this->letters->expects($this->never())->method('preview');
+
+        $this->assertSame(
+            expected: 404,
+            actual: $this->controller(params: ['templateId' => 'tpl-1'])->preview(id: 'client-nobody-reads')->getStatus()
+        );
+
+    }//end testThePreviewOfAnUnreadableClientIs404()
+
+
+    /**
      * A failed render answers 502 and logs nothing.
      *
      * @return void
@@ -444,11 +618,13 @@ class LetterControllerTest extends TestCase
     public function testContactMomentPayloadMatchesTheRealTicketSchema(): void
     {
         $payload = LetterLog::contactMomentPayload(
-            clientId: self::CLIENT,
-            contactId: self::CONTACT,
-            ticketId: self::TICKET,
-            templateName: 'Appointment letter',
-            path: '/DocuDesk/Appointment letter.pdf',
+            letter: new LoggedLetter(
+                clientId: self::CLIENT,
+                contactId: self::CONTACT,
+                ticketId: self::TICKET,
+                templateName: 'Appointment letter',
+                path: '/DocuDesk/Appointment letter.pdf',
+            ),
             occurredAt: new DateTimeImmutable('2026-09-30T10:15:00+02:00')
         );
         $payload['ticketType'] = TicketService::TYPE_CONTACTMOMENT;
@@ -511,5 +687,65 @@ class LetterControllerTest extends TestCase
 
     }//end mergedSchema()
 
+
+    /**
+     * Both actions refuse in the same order: no user 401, no template 400,
+     * no filinq 503 (with the action's own wording), an unreadable client 404,
+     * an unknown template 404; nothing is rendered or previewed.
+     *
+     * @return void
+     */
+    public function testBothActionsRefuseInOrder(): void
+    {
+        $this->letters->expects($this->never())->method('render');
+        $this->letters->expects($this->never())->method('preview');
+
+        foreach (['create', 'preview'] as $action) {
+            $response = $this->controller(params: ['templateId' => 'tpl-1'], uid: null)->$action(self::CLIENT);
+            $this->assertSame([401, ['message' => 'Authentication required']], [$response->getStatus(), $response->getData()]);
+
+            $response = $this->controller(params: ['templateId' => '  '])->$action(self::CLIENT);
+            $this->assertSame([400, ['message' => 'Missing required parameter: templateId']], [$response->getStatus(), $response->getData()]);
+        }
+
+        $letters = $this->createMock(FilinqLetterAdapter::class);
+        $letters->method('unavailableReason')->willReturn('not installed');
+        $letters->expects($this->never())->method('findTemplate');
+        $this->letters = $letters;
+        $made = $this->controller(params: ['templateId' => 'tpl-1'])->create(self::CLIENT);
+        $this->assertSame([503, ['message' => 'filinq is not available, so no letter can be made.', 'reason' => 'not installed']], [$made->getStatus(), $made->getData()]);
+        $previewed = $this->controller(params: ['templateId' => 'tpl-1'])->preview(self::CLIENT);
+        $this->assertSame([503, ['message' => 'filinq is not available, so no letter can be previewed.', 'reason' => 'not installed']], [$previewed->getStatus(), $previewed->getData()]);
+
+        $this->letters = $this->createMock(FilinqLetterAdapter::class);
+        $this->letters->expects($this->never())->method('render');
+        $this->letters->expects($this->never())->method('preview');
+        $this->filinqPresent();
+        foreach (['create', 'preview'] as $action) {
+            $response = $this->controller(params: ['templateId' => 'tpl-x'])->$action(self::CLIENT);
+            $this->assertSame([404, ['message' => 'Template not found']], [$response->getStatus(), $response->getData()]);
+
+            $response = $this->controller(params: ['templateId' => 'tpl-x'])->$action('unknown-client');
+            $this->assertSame(404, $response->getStatus());
+            $this->assertNotSame(['message' => 'Template not found'], $response->getData());
+        }
+
+    }//end testBothActionsRefuseInOrder()
+
+
+    /**
+     * A failed preview answers 502 with filinq's reason.
+     *
+     * @return void
+     */
+    public function testAFailedPreviewIs502(): void
+    {
+        $this->filinqPresent();
+        $this->letters->method('preview')->willThrowException(new RuntimeException('engine down'));
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1'])->preview(self::CLIENT);
+        $this->assertSame([502, ['message' => 'filinq could not preview the letter.', 'reason' => 'engine down']], [$response->getStatus(), $response->getData()]);
+
+    }//end testAFailedPreviewIs502()
 
 }//end class

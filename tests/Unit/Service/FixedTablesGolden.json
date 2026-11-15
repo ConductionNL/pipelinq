@@ -1,0 +1,209 @@
+{
+    "sales pipeline": {
+        "title": "Sales Pipeline",
+        "description": "Default sales pipeline for tracking leads from first contact through to won or lost.",
+        "propertyMappings": [
+            {
+                "schemaSlug": "lead",
+                "columnProperty": "stage",
+                "totalsProperty": "value"
+            },
+            {
+                "schemaSlug": "request",
+                "columnProperty": "stage"
+            }
+        ],
+        "totalsLabel": "EUR",
+        "isDefault": true,
+        "stages": [
+            {
+                "name": "New",
+                "order": 0,
+                "probability": 10,
+                "color": "#3b82f6",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Contacted",
+                "order": 1,
+                "probability": 20,
+                "color": "#8b5cf6",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Qualified",
+                "order": 2,
+                "probability": 40,
+                "color": "#f59e0b",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Proposal",
+                "order": 3,
+                "probability": 60,
+                "color": "#f97316",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Negotiation",
+                "order": 4,
+                "probability": 80,
+                "color": "#ef4444",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Won",
+                "order": 5,
+                "probability": 100,
+                "color": "#22c55e",
+                "isClosed": true,
+                "isWon": true
+            },
+            {
+                "name": "Lost",
+                "order": 6,
+                "probability": 0,
+                "color": "#6b7280",
+                "isClosed": true,
+                "isWon": false
+            }
+        ]
+    },
+    "sales pipeline with view": {
+        "title": "Sales Pipeline",
+        "description": "Default sales pipeline for tracking leads from first contact through to won or lost.",
+        "propertyMappings": [
+            {
+                "schemaSlug": "lead",
+                "columnProperty": "stage",
+                "totalsProperty": "value"
+            },
+            {
+                "schemaSlug": "request",
+                "columnProperty": "stage"
+            }
+        ],
+        "totalsLabel": "EUR",
+        "isDefault": true,
+        "stages": [
+            {
+                "name": "New",
+                "order": 0,
+                "probability": 10,
+                "color": "#3b82f6",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Contacted",
+                "order": 1,
+                "probability": 20,
+                "color": "#8b5cf6",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Qualified",
+                "order": 2,
+                "probability": 40,
+                "color": "#f59e0b",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Proposal",
+                "order": 3,
+                "probability": 60,
+                "color": "#f97316",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Negotiation",
+                "order": 4,
+                "probability": 80,
+                "color": "#ef4444",
+                "isClosed": false,
+                "isWon": false
+            },
+            {
+                "name": "Won",
+                "order": 5,
+                "probability": 100,
+                "color": "#22c55e",
+                "isClosed": true,
+                "isWon": true
+            },
+            {
+                "name": "Lost",
+                "order": 6,
+                "probability": 0,
+                "color": "#6b7280",
+                "isClosed": true,
+                "isWon": false
+            }
+        ],
+        "viewId": "view-1"
+    },
+    "signal catalogue": {
+        "shillinqRecognisedRevenue": {
+            "type": "number",
+            "title": "Recognised revenue",
+            "source": "shillinq",
+            "description": "Paid invoices for this customer over the signal window."
+        },
+        "shillinqValueTier": {
+            "type": "string",
+            "title": "Value tier",
+            "source": "shillinq",
+            "description": "top, mid, low or none, from recognised revenue against the tier thresholds."
+        },
+        "shillinqMonthsSinceLastInvoice": {
+            "type": "integer",
+            "title": "Months since the last invoice",
+            "source": "shillinq",
+            "description": "Whole months since the most recent invoice that left the draft stage."
+        },
+        "shillinqPurchasedProducts": {
+            "type": "array",
+            "title": "Purchased products",
+            "source": "shillinq",
+            "description": "Catalogue products named on this customer's invoice lines."
+        },
+        "shillinqPurchasedServices": {
+            "type": "array",
+            "title": "Purchased services",
+            "source": "shillinq",
+            "description": "Catalogue services named on this customer's invoice lines."
+        },
+        "shillinqDunningState": {
+            "type": "string",
+            "title": "Dunning state",
+            "source": "shillinq",
+            "description": "current, overdue, disputed, written-off or unknown."
+        },
+        "pipelinqContractRenewalDays": {
+            "type": "integer",
+            "title": "Days to contract renewal",
+            "source": "pipelinq",
+            "description": "Days until the nearest contract of this customer ends."
+        },
+        "pipelinqStalledLeadDays": {
+            "type": "integer",
+            "title": "Days a lead has been stalled",
+            "source": "pipelinq",
+            "description": "Days the longest-waiting open lead has sat in its current stage."
+        },
+        "pipelinqLastContactAt": {
+            "type": "string",
+            "title": "Last contact",
+            "source": "pipelinq",
+            "description": "When the latest contact moment with this customer took place."
+        }
+    }
+}

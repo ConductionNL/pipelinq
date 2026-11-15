@@ -1,0 +1,18 @@
+{
+	"$comment": "pipelinq's task escalation in the Zuiddrecht set: the team leads' group, with Marleen Postma (Teamleider), receives every expired task, so PqTaken's footer \"its handler and team lead are told\" holds. pipelinq reads task_expiry.escalation_group once feat/pq-task-expiry is installed; before that the key is unused.",
+	"groups": [
+		{
+			"group": "zuiddrecht-teamleiders",
+			"displayName": "Teamleiders",
+			"members": [
+				"marleen"
+			]
+		}
+	],
+	"appConfig": [
+		{
+			"key": "task_expiry.escalation_group",
+			"value": "zuiddrecht-teamleiders"
+		}
+	]
+}
