@@ -245,7 +245,7 @@ class InitSlaStatus implements IRepairStep {
 		$startedAt = $this->parseStarted(data: $data) ?? $surface->run->now;
 		$data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
 
-		$this->saveInitialised(data: $data, surface: $surface, uuid: $uuid);
+		$this->saveInitialised(object: ['data' => $data, 'uuid' => $uuid], surface: $surface);
 
 		return true;
 	}//end initialiseObject()
@@ -316,22 +316,21 @@ class InitSlaStatus implements IRepairStep {
 	/**
 	 * Persist an object with its initialised slaStatus as the system.
 	 *
-	 * @param array<string, mixed> $data    The object data.
-	 * @param SlaSweepSurface      $surface The surface it was read from.
-	 * @param string               $uuid    The object UUID.
+	 * @param array{data: array<string, mixed>, uuid: string} $object  The object data and its UUID.
+	 * @param SlaSweepSurface                                  $surface The surface it was read from.
 	 *
 	 * @return void
 	 */
-	private function saveInitialised(array $data, SlaSweepSurface $surface, string $uuid): void {
+	private function saveInitialised(array $object, SlaSweepSurface $surface): void {
 		$objectService = $surface->run->objectService;
 		$this->execAsSystem(
 			objectService: $objectService,
 			operation: static fn () => $objectService->saveObject(
-				object: $data,
+				object: $object['data'],
 				extend: [],
 				register: $surface->run->register,
 				schema: $surface->schemaId,
-				uuid: $uuid,
+				uuid: $object['uuid'],
 			)
 		);
 	}//end saveInitialised()
