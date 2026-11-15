@@ -115,7 +115,11 @@ class SubmissionTouchRecorder {
 	 */
 	public function record(array $form, array $payload, ?string $idempotencyKey = null): ?array {
 		try {
-			return $this->recordOrThrow(form: $form, payload: $payload, idempotencyKey: $idempotencyKey);
+			$formId = trim((string)($form['id'] ?? ''));
+			return $this->recordOrThrow(
+				payload: $payload,
+				submit: ['formId' => $formId, 'nonce' => self::nonceFor(formId: $formId, idempotencyKey: $idempotencyKey)]
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: website form submit stored, its campaign touch was not recorded.',
@@ -157,20 +161,19 @@ class SubmissionTouchRecorder {
 	/**
 	 * Record, letting a failure reach record()'s catch.
 	 *
-	 * @param array<string, mixed> $form           The published form.
-	 * @param array<string, mixed> $payload        The raw submitted fields.
-	 * @param string|null          $idempotencyKey The submit's Idempotency-Key.
+	 * @param array<string, mixed>                $payload The raw submitted fields.
+	 * @param array{formId: string, nonce: string} $submit  The published form's trimmed id and the submit's
+	 *                                                      nonce ('' without an Idempotency-Key).
 	 *
 	 * @return array<string, mixed>|null The saved touchpoint, or null.
 	 */
-	private function recordOrThrow(array $form, array $payload, ?string $idempotencyKey): ?array {
-		$formId = trim((string)($form['id'] ?? ''));
-		$nonce = self::nonceFor(formId: $formId, idempotencyKey: $idempotencyKey);
+	private function recordOrThrow(array $payload, array $submit): ?array {
+		$nonce = $submit['nonce'];
 		if ($nonce !== '' && $this->touchpoints->existsForNonce(nonce: $nonce) === true) {
 			return null;
 		}
 
-		$row = $this->submitRow(payload: $payload, formId: $formId);
+		$row = $this->submitRow(payload: $payload, formId: $submit['formId']);
 		if ($nonce !== '') {
 			$row['nonce'] = $nonce;
 		}
