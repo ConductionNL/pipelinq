@@ -21,19 +21,21 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Reads objects from the main pipelinq register.
@@ -46,7 +48,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class MainRegisterReader {
+class MainRegisterReader implements MainRegisterReaderInterface {
+	use CastingPayloadToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -73,7 +77,7 @@ class MainRegisterReader {
 	 *   audit are all unspecified
 	 */
 	public function hasSchema(string $schemaKey): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		return $register !== '' && $schema !== '';
 	}//end hasSchema()
@@ -157,6 +161,37 @@ class MainRegisterReader {
 	}//end find()
 
 	/**
+	 * Find a single main-register object by id as the signed-in user, under
+	 * their OpenRegister RBAC and organisation, or null when they may not read it.
+	 *
+	 * @param string $schemaKey The schema slug.
+	 * @param string $id The object id.
+	 *
+	 * @return array<string, mixed>|null The object, or null.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+	 */
+	public function findAsCaller(string $schemaKey, string $id): ?array {
+		if ($id === '' || $this->hasSchema(schemaKey: $schemaKey) === false) {
+			return null;
+		}
+
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+
+		try {
+			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		if ($object === null) {
+			return null;
+		}
+
+		return $this->toArray(object: $object);
+	}//end findAsCaller()
+
+	/**
 	 * Persist an object to a main-register schema. The portal only writes here
 	 * for a customer-submitted request; the register and schema are injected so
 	 * a caller can never redirect the write to another schema.
@@ -212,7 +247,7 @@ class MainRegisterReader {
 	 * @throws RuntimeException When unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
@@ -231,40 +266,11 @@ class MainRegisterReader {
 	 */
 	private function schemaIdFor(string $schemaKey): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaKey] ?? $schemaKey . '_schema'),
 			''
 		);
 	}//end schemaIdFor()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 
 	/**
 	 * Get the OpenRegister ObjectService.

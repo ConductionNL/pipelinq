@@ -12,7 +12,7 @@
  * window; this listener answers a line item's announcement with the same
  * page refresh the Refresh action sends.
  *
- * @spec openspec/changes/round3-review-points/specs/lead-product-link/spec.md
+ * @spec openspec/specs/lead-product-link/spec.md
  */
 
 import { emit } from '@nextcloud/event-bus'
@@ -42,7 +42,7 @@ export const WIDGET_REFRESH_ON_CREATE = ['contact']
  * @param {Window} target The window to listen on.
  * @param {(channel: string, payload: object) => void} [send] The event-bus emit (injectable for tests).
  * @return {() => void} Removes the listener.
- * @spec openspec/changes/round3-review-points/specs/lead-product-link/spec.md
+ * @spec openspec/specs/lead-product-link/spec.md
  * @spec openspec/specs/client-management/spec.md#requirement-cards-on-the-client-page-follow-a-contact-added-on-that-page
  */
 export function installPageRefreshOnCreate(target, send = emit) {

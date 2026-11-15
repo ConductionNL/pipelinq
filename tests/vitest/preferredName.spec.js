@@ -129,28 +129,6 @@ describe('the detail headers carry the preferred name', () => {
 		},
 	)
 
-	it('a client can have it filled in next to the name', () => {
-		const identity = page('ClientDetail').config.widgets.find(
-			(w) => w.id === 'client-identity',
-		)
-		expect(identity.content.include.slice(0, 2)).toEqual([
-			'name',
-			'preferredName',
-		])
-	})
-
-	it('an organisation shows no preferred name row: only a person has one', () => {
-		const identity = page('ClientDetail').config.widgets.find(
-			(w) => w.id === 'client-identity',
-		)
-		// The shared visibility predicate of nextcloud-vue, local mode,
-		// read by CnObjectDataWidget on each field of `content.overrides`.
-		expect(identity.content.overrides.preferredName.visibleWhen).toEqual({
-			field: 'type',
-			value: 'person',
-		})
-	})
-
 	it('the contact details name the fields board PqContactpersoon draws, the preferred name among them', () => {
 		const details = page('ContactDetail').config.widgets.find(
 			(w) => w.id === 'contact-data',

@@ -33,9 +33,12 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\EventDispatcher\Event;
@@ -89,8 +92,8 @@ class BookkeepingFakeObjectService extends ObjectService {
 		int|string $id,
 		?array $_extend = [],
 		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_render = true,
@@ -145,10 +148,10 @@ class BookkeepingFakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array $object,
+		array|ObjectEntity $object,
 		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		Register|string|int|null $register = null,
+		Schema|string|int|null $schema = null,
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -157,6 +160,9 @@ class BookkeepingFakeObjectService extends ObjectService {
 		?array $uploadedFiles = null,
 		?IUser $currentUser = null,
 		bool $failIfExists = false,
+		bool $_unowned = false,
+		bool $_dedupOverride = false,
+		?string $_owner = null,
 	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$key = (string)$uuid;
@@ -264,11 +270,17 @@ class PosBookkeepingServiceTest extends TestCase {
 	private array $emailsSent = [];
 
 	/**
+	 * Whether the detector reports Shillinq as installed.
+	 *
+	 * @var bool
+	 */
+	private bool $shillinqInstalled = true;
+
+	/**
 	 * @var array<string, string>
 	 */
 	private array $appConfigStore = [
 		'register' => 'reg',
-		'shillinq_journal_webhook_url' => 'https://shillinq.example.org/webhook',
 		'pos_eod.alert_email' => 'accounting@example.org',
 		'pos_eod.max_retry_attempts' => '5',
 	];
@@ -344,8 +356,22 @@ class PosBookkeepingServiceTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			webhookService: $this->webhooks,
 			objectService: $this->objects,
+			integrations: $this->detector(),
 		);
 	}//end setUp()
+
+	/**
+	 * A detector that reports Shillinq as installed while $shillinqInstalled is true.
+	 *
+	 * @return IntegrationDetector The detector.
+	 */
+	private function detector(): IntegrationDetector {
+		$detector = $this->createMock(originalClassName: IntegrationDetector::class);
+		$detector->method('shillinq')->willReturnCallback(
+			fn (): array => ['installed' => $this->shillinqInstalled, 'url' => '']
+		);
+		return $detector;
+	}//end detector()
 
 	/**
 	 * Make a UID a Nextcloud admin (so the manager predicate passes).
@@ -536,7 +562,7 @@ class PosBookkeepingServiceTest extends TestCase {
 	 */
 	public function testUnconfiguredIntegrationLeavesPending(): void {
 		$this->asAdmin();
-		$this->appConfigStore['shillinq_journal_webhook_url'] = '';
+		$this->shillinqInstalled = false;
 		$this->seedZReport();
 
 		$result = $this->service->raiseJournalEntry('zr-1', 'boss');
@@ -617,7 +643,7 @@ class PosBookkeepingServiceTest extends TestCase {
 	 */
 	public function testUnconfiguredIntegrationStoresTheReason(): void {
 		$this->asAdmin();
-		$this->appConfigStore['shillinq_journal_webhook_url'] = '';
+		$this->shillinqInstalled = false;
 		$this->seedZReport();
 
 		$result = $this->service->raiseJournalEntry(zReportId: 'zr-1', userId: 'boss');
@@ -626,17 +652,14 @@ class PosBookkeepingServiceTest extends TestCase {
 	}//end testUnconfiguredIntegrationStoresTheReason()
 
 	/**
-	 * shouldDispatch only enables on a valid HTTPS webhook URL.
+	 * shouldDispatch follows the installed Shillinq app, with no address to type.
 	 *
 	 * @return void
 	 */
-	public function testShouldDispatchRequiresHttpsUrl(): void {
-		$this->assertTrue($this->service->shouldDispatch());
+	public function testShouldDispatchFollowsTheDetectedShillinq(): void {
+		$this->assertTrue(condition: $this->service->shouldDispatch());
 
-		$this->appConfigStore['shillinq_journal_webhook_url'] = 'http://insecure.example.org';
-		$this->assertFalse($this->service->shouldDispatch());
-
-		$this->appConfigStore['shillinq_journal_webhook_url'] = '';
-		$this->assertFalse($this->service->shouldDispatch());
-	}//end testShouldDispatchRequiresHttpsUrl()
+		$this->shillinqInstalled = false;
+		$this->assertFalse(condition: $this->service->shouldDispatch());
+	}//end testShouldDispatchFollowsTheDetectedShillinq()
 }//end class

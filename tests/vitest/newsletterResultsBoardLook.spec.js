@@ -150,3 +150,9 @@ describe('readTrafficRows', () => {
 		expect(result).toMatchObject({ asked: 3, answered: 0, connected: null, rows: [] })
 	})
 })
+
+describe('section titles in the board look', () => {
+	it('sets the A/B card and attribution titles on a 1.2 line, as PqNieuwsbriefABTest and PqNieuwsbriefToeschrijving draw them', () => {
+		expect(rule('.cn-look-board .performance-dashboard__section-title')).toMatch(/line-height:\s*1\.2/)
+	})
+})

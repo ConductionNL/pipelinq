@@ -63,6 +63,18 @@ function stub(name, tag = 'div') {
 }
 
 vi.mock('@conduction/nextcloud-vue', () => ({
+	// Renders the head labels and each row's cells: the column slot when there
+	// is one, else the value.
+	CnDataTable: {
+		name: 'CnDataTable',
+		props: ['columns', 'rows', 'rowKey'],
+		render() {
+			return h('table', [h('thead', [h('tr', this.columns.map((column) => h('th', column.label)))]), h('tbody', this.rows.map((row) => h('tr', { key: row[this.rowKey] }, this.columns.map((column) => {
+				const slot = this.$slots[`column-${column.key}`]
+				return h('td', slot ? slot({ row }) : String(row[column.key] ?? ''))
+			}))))])
+		},
+	},
 	CnStatusBadge: {
 		name: 'CnStatusBadge',
 		props: ['label', 'variant'],

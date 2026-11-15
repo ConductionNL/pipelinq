@@ -76,6 +76,7 @@ vi.mock('@nextcloud/vue', () => ({
 	NcTextField: stub('NcTextField'),
 }))
 vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDurationField: stub('CnDurationField'),
 	CnResourceSelect: stub('CnResourceSelect'),
 }))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({

@@ -32,7 +32,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
 
 declare(strict_types=1);
@@ -42,9 +42,10 @@ namespace OCA\Pipelinq\Integration;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
-use OCA\Pipelinq\Service\ContactMomentFilingService;
-use OCA\Pipelinq\Service\PartyIndicatorService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -52,9 +53,9 @@ use Throwable;
 /**
  * List and append the contact moments filed on a host object.
  *
- * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
-class ContactMomentLeafProvider {
+class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	/**
 	 * The leaf id a host declares in its schema's `linkedTypes`.
 	 *
@@ -70,13 +71,6 @@ class ContactMomentLeafProvider {
 	public const PANEL_ID = 'pipelinq-contact-moments-panel';
 
 	/**
-	 * Default page size for a host's contact moments.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_LIMIT = 50;
-
-	/**
 	 * Hard ceiling on a page, per ADR-058: a leaf never scans a whole schema.
 	 *
 	 * @var int
@@ -86,16 +80,16 @@ class ContactMomentLeafProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
-	 * @param ContactMomentFilingService $filingService The case set a contact moment is filed on.
-	 * @param PartyIndicatorService $indicatorService The party's standing indicators.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
+	 * @param ContactMomentFilingServiceInterface $filingService The case set a contact moment is filed on.
+	 * @param PartyIndicatorServiceInterface $indicatorService The party's standing indicators.
 	 * @param IUserSession $userSession The acting user, stamped as the agent.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private readonly TicketService $ticketService,
-		private readonly ContactMomentFilingService $filingService,
-		private readonly PartyIndicatorService $indicatorService,
+		private readonly TicketServiceInterface $ticketService,
+		private readonly ContactMomentFilingServiceInterface $filingService,
+		private readonly PartyIndicatorServiceInterface $indicatorService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -111,27 +105,59 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoments` or `error`.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
 		$hostId = trim($hostId);
-		if ($hostId === '') {
-			return ['status' => 400, 'error' => 'A host object id is required.'];
+		$refusal = $this->hostRefusal(hostId: $hostId);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($this->canReadHost(hostId: $hostId) === false) {
-			return ['status' => 403, 'error' => 'You may not read this object.'];
+		$moments = $this->newestMoments(hostId: $hostId, limit: max(1, min($limit, self::MAX_LIMIT)));
+
+		return [
+			'status' => 200,
+			'contactMoments' => $moments,
+			'indicators' => $this->indicatorsOf(partyId: $partyId),
+		];
+	}//end list()
+
+	/**
+	 * The party's standing indicators; none when no party is named.
+	 *
+	 * The party's indicators travel with the panel, resolved live, so a KCC
+	 * agent taking a call reads "agressie-registratie" BEFORE they speak.
+	 * Nothing is copied onto a contact moment: this is a read.
+	 *
+	 * @param string $partyId The party, or an empty string.
+	 *
+	 * @return array<mixed> The indicators.
+	 */
+	private function indicatorsOf(string $partyId): array {
+		if ($partyId === '') {
+			return [];
 		}
 
-		$limit = max(1, min($limit, self::MAX_LIMIT));
+		return $this->indicatorService->resolve(partyId: trim($partyId));
+	}//end indicatorsOf()
 
+	/**
+	 * The contact moments filed on a host, newest first, at most the limit.
+	 *
+	 * @param string $hostId The trimmed host object uuid.
+	 * @param int    $limit  The capped page size.
+	 *
+	 * @return array<int, array<string, mixed>> The presented moments.
+	 */
+	private function newestMoments(string $hostId, int $limit): array {
 		// MEMBERSHIP, not equality: one contact moment filed on three cases is
 		// one record, and each of the three has to see it. Filtering on the
 		// single `caseReference` would show it only on the primary, and an
 		// absent row on the other two looks exactly like a case with no
 		// contact moments. Still bounded by `limit` per ADR-058.
 		$rows = $this->ticketService->findByType(
-			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT,
 			extraFilters: ['caseReferences' => $hostId],
 			limit: $limit,
 		);
@@ -146,20 +172,8 @@ class ContactMomentLeafProvider {
 			static fn (array $a, array $b): int => strcmp((string)$b['occurredAt'], (string)$a['occurredAt'])
 		);
 
-		// The party's indicators travel with the panel, resolved live, so a KCC
-		// agent taking a call reads "agressie-registratie" BEFORE they speak.
-		// Nothing is copied onto a contact moment: this is a read.
-		$indicators = [];
-		if ($partyId !== '') {
-			$indicators = $this->indicatorService->resolve(partyId: trim($partyId));
-		}
-
-		return [
-			'status' => 200,
-			'contactMoments' => $moments,
-			'indicators' => $indicators,
-		];
-	}//end list()
+		return $moments;
+	}//end newestMoments()
 
 	/**
 	 * Append one contact moment to a host object.
@@ -169,20 +183,17 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function create(string $hostId, array $payload): array {
 		$hostId = trim($hostId);
-		if ($hostId === '') {
-			return ['status' => 400, 'error' => 'A host object id is required.'];
-		}
-
 		// The read guard is the write guard: a caller who may not see the host
 		// may not file anything against it either. Checked BEFORE any field
 		// validation, so a refused caller learns nothing about the payload the
 		// surface would have accepted.
-		if ($this->canReadHost(hostId: $hostId) === false) {
-			return ['status' => 403, 'error' => 'You may not read this object.'];
+		$refusal = $this->hostRefusal(hostId: $hostId);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
@@ -202,9 +213,40 @@ class ContactMomentLeafProvider {
 			return ['status' => 400, 'error' => 'A contact moment requires a channel.'];
 		}
 
+		return $this->appended(hostId: $hostId, ticket: $ticket);
+	}//end create()
+
+	/**
+	 * The refusal for a blank host id (400) or a host the caller may not read (403), or null.
+	 *
+	 * @param string $hostId The trimmed host object id.
+	 *
+	 * @return array<string, mixed>|null The refusal, or null when the host may be used.
+	 */
+	private function hostRefusal(string $hostId): ?array {
+		if ($hostId === '') {
+			return ['status' => 400, 'error' => 'A host object id is required.'];
+		}
+
+		if ($this->canReadHost(hostId: $hostId) === false) {
+			return ['status' => 403, 'error' => 'You may not read this object.'];
+		}
+
+		return null;
+	}//end hostRefusal()
+
+	/**
+	 * Save the contact moment, answering 201 with the stored row or the failure.
+	 *
+	 * @param string               $hostId The host object id.
+	 * @param array<string, mixed> $ticket The ticket to save.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function appended(string $hostId, array $ticket): array {
 		try {
 			$saved = $this->ticketService->save(
-				ticketType: TicketService::TYPE_CONTACTMOMENT,
+				ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT,
 				payload: $ticket,
 			);
 		} catch (InvalidArgumentException $e) {
@@ -220,7 +262,7 @@ class ContactMomentLeafProvider {
 		}//end try
 
 		return ['status' => 201, 'contactMoment' => $this->present(row: $saved, hostId: $hostId)];
-	}//end create()
+	}//end appended()
 
 	/**
 	 * The refusal an outbound append meets, or null when it may go ahead.
@@ -235,7 +277,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed>|null The 409 answer, or null.
 	 *
-	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
+	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
 	 */
 	private function outboundRefusal(string $partyId, array $payload): ?array {
 		if ($partyId === '' || trim((string)($payload['direction'] ?? '')) !== 'outbound') {
@@ -265,7 +307,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @return array<string, mixed> The ticket, ready for TicketService::save().
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	private function ticketFrom(string $hostId, array $payload, string $partyId): array {
 		$ticket = [
@@ -277,14 +319,7 @@ class ContactMomentLeafProvider {
 			'primaryCaseReference' => $hostId,
 			'assignee' => $this->actingUserId(),
 			'occurredAt' => $this->occurredAt(payload: $payload),
-		];
-
-		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
-			$value = trim((string)($payload[$from] ?? ''));
-			if ($value !== '') {
-				$ticket[$to] = $value;
-			}
-		}
+		] + self::describedFields(payload: $payload);
 
 		if ($partyId !== '') {
 			// Only when named: an empty string on a uuid property fails the
@@ -294,6 +329,25 @@ class ContactMomentLeafProvider {
 
 		return $ticket;
 	}//end ticketFrom()
+
+	/**
+	 * The outcome and description an append payload names; a later non-empty source wins the description.
+	 *
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return array<string, string> The trimmed, non-empty fields.
+	 */
+	private static function describedFields(array $payload): array {
+		$fields = [];
+		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
+			$value = trim((string)($payload[$from] ?? ''));
+			if ($value !== '') {
+				$fields[$to] = $value;
+			}
+		}
+
+		return $fields;
+	}//end describedFields()
 
 	/**
 	 * Whether the acting user may read the host object.

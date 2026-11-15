@@ -43,7 +43,7 @@ kiss no, hubspot-crm unknown.
 - Pipelinq sends every administrator one Nextcloud notification,
   `export_job_switched_off`, naming the job, the number of failures and the
   last error.
-- The BI export page shows the job as off, with Next run "Not scheduled" and
+- The BI export page shows the job as off, with Next run "Niet ingepland" and
   its last run as Failed, and the "Last run failed" view lists it.
 - Switching the job back on clears `pausedReason` and starts the count again.
 - An administrator sets the threshold in the admin settings.

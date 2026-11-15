@@ -521,7 +521,7 @@ The system MUST provide a structured wrap-up form at the end of each contact tha
 
 - GIVEN an agent clicks "Afronden" to complete a phone contact
 - WHEN the wrap-up form is displayed
-- THEN the system MUST require: resultaat (afgehandeld/doorverwezen/terugbelverzoek/escalatie), onderwerp category (from taxonomy), and a brief summary
+- THEN the system MUST require: uitkomst (Opgelost, Terugbellen, Geëscaleerd, Verkeerd nummer, Geen gehoor, Opgehangen), onderwerp category (from taxonomy), and a brief summary
 - AND optional fields MUST include: follow-up date, linked zaak, internal notes, and client satisfaction score (1-5 if surveyed)
 - AND the form MUST NOT allow submission without the required fields
 
@@ -529,12 +529,12 @@ The system MUST provide a structured wrap-up form at the end of each contact tha
 
 - GIVEN an agent has handled a simple status inquiry lasting under 2 minutes
 - WHEN the agent clicks "Snel afronden"
-- THEN the system MUST offer a simplified one-click wrap-up with preset: resultaat "Afgehandeld", category "Status informatieverzoek"
+- THEN the system MUST offer a simplified one-click wrap-up with preset: uitkomst "Opgelost", category "Status informatieverzoek"
 - AND the agent MUST be able to override these defaults if needed
 
 #### Scenario: Wrap-up triggers follow-up task creation
 
-- GIVEN an agent selects resultaat "Terugbelverzoek" in the wrap-up form
+- GIVEN an agent selects uitkomst "Terugbellen" in the wrap-up form
 - WHEN the agent fills in follow-up date "morgen 10:00" and target "Afdeling Burgerzaken"
 - THEN the system MUST automatically create a terugbelverzoek task linked to the contactmoment and client
 - AND the task MUST appear in the target department's task queue with the specified deadline
@@ -693,15 +693,21 @@ The system MUST allow agents to set their availability status, which affects que
 
 ---
 
-### Requirement: The ticket list shows the newest ticket first
+### Requirement: The ticket list shows the newest ticket first, and "Niet toegewezen" the longest-waiting first
 
-The ticket list in the simple structure SHALL sort on `occurredAt` descending by default, so a ticket that just came in is on the first page. Its count line SHALL name that order.
+The ticket list in the simple structure SHALL sort on `occurredAt` descending by default, so a ticket that just came in is on the first page. The "Niet toegewezen" view SHALL sort on waiting time instead, longest first. The count line SHALL name the order. A click on a column head SHALL sort differently.
 
 #### Scenario: A resident's question reaches the KCC agent
 - **GIVEN** 83 tickets, most of them weeks old
 - **WHEN** a resident asks a question through the portal and a KCC agent opens Vragen en meldingen
 - **THEN** the resident's ticket SHALL be the first row
 - **AND** the count line SHALL read "... · nieuwste eerst"
+
+#### Scenario: A KCC agent opens the unassigned tickets
+- **GIVEN** 46 tickets, 8 of them unassigned
+- **WHEN** a KCC agent opens the "Niet toegewezen" view
+- **THEN** the ticket that waits longest SHALL be the first row
+- **AND** the count line SHALL read "8 van 46 · langst wachtend eerst"
 
 @e2e exclude A list declaration; the vitest pins the declaration and the library's index page applies sortKey and sortOrder.
 
@@ -768,6 +774,32 @@ the earlier contact moments "Eerder contact". Without a call the cards SHALL kee
 
 - **WHEN** the agent takes a call
 - **THEN** the middle column opens with "Dit contactmoment" above "Openstaande zaken"
+
+### Requirement: The in-call columns are drawn at the board's widths
+
+In a call the contact centre page SHALL draw its three columns as board PqWerkplekKlant does: 332px, 415px and 332px wide on the 1120px content width. Outside a call the page SHALL keep its twelve equal shares.
+
+#### Scenario: A call is on
+- **GIVEN** the simple profile's contact centre page while `callActive` holds
+- **THEN** "Wie is het" is 332px wide, "Dit contactmoment" and "Openstaande zaken" 415px, the knowledge base, tasks and earlier contact 332px
+
+#### Scenario: No call
+- **GIVEN** the same page without a call
+- **THEN** its cards keep the twelve shares
+
+### Requirement: The in-call lists are rows
+
+While a call is on, the client's open matters, the tasks and callback requests and the earlier contact SHALL each be
+drawn as rows with a title, a meta line and, for matters and tasks, a pill, without a table head. A handled matter
+SHALL read "Klaar", an open one with an SLA deadline "Uiterlijk {date}". The earlier contact SHALL link to all the
+client's contact moments. While a call is on the header SHALL NOT offer "Contact vastleggen", since the page carries
+its own contact form.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client with an open request due 11 October
+- **THEN** "Openstaande zaken" shows the request as a row with "Uiterlijk 11 okt"
+- **AND** the header shows "Beëindigen en afronden" but not "Contact vastleggen"
 
 ## Notes
 

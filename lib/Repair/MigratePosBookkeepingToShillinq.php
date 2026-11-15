@@ -43,8 +43,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosBookkeepingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -59,6 +61,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
  */
 class MigratePosBookkeepingToShillinq implements IRepairStep {
+	use CastingPayloadToArray;
+	use ContainerObjectServiceLookup;
 	use \OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 
 	/**
@@ -81,14 +85,14 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 * @param IAppManager $appManager The app manager.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container The DI container (OR ObjectService).
-	 * @param PosBookkeepingService $service The bookkeeping service (registry raise).
+	 * @param PosBookkeepingServiceInterface $service The bookkeeping service (registry raise).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
 		private readonly ContainerInterface $container,
-		private readonly PosBookkeepingService $service,
+		private readonly PosBookkeepingServiceInterface $service,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -122,7 +126,7 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->warning('Pipelinq register not configured — skipping POS bookkeeping migration.');
 			return;
@@ -163,9 +167,22 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 
 		$zReportsById = $this->indexZReports(objectService: $objectService, register: $register);
 
-		$raised = 0;
-		$projected = 0;
-		$pending = 0;
+		$counts = $this->migrateAll(objectService: $objectService, register: $register, outbounds: $outbounds, zReportsById: $zReportsById);
+		$this->reportMigration(output: $output, counts: $counts);
+	}//end runInner()
+
+	/**
+	 * Migrate every outbound record, counting the outcomes.
+	 *
+	 * @param object                           $objectService OpenRegister's ObjectService.
+	 * @param string                           $register      The register slug.
+	 * @param array<int, array<string, mixed>> $outbounds     The outbound journal records.
+	 * @param array<string, mixed>             $zReportsById  The Z-reports, keyed by id.
+	 *
+	 * @return array{raised: int, projected: int, pending: int}
+	 */
+	private function migrateAll(object $objectService, string $register, array $outbounds, array $zReportsById): array {
+		$counts = ['raised' => 0, 'projected' => 0, 'pending' => 0];
 		foreach ($outbounds as $outbound) {
 			$result = $this->migrateOne(
 				objectService: $objectService,
@@ -173,30 +190,38 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 				outbound: $outbound,
 				zReportsById: $zReportsById
 			);
-			if ($result === 'raised') {
-				$raised++;
-			} elseif ($result === 'projected') {
-				$projected++;
-			} elseif ($result === 'pending') {
-				$pending++;
+			if (array_key_exists($result, $counts) === true) {
+				$counts[$result]++;
 			}
 		}
 
+		return $counts;
+	}//end migrateAll()
+
+	/**
+	 * Report the migration's outcome to the output and the log.
+	 *
+	 * @param IOutput                                         $output Progress reporting.
+	 * @param array{raised: int, projected: int, pending: int} $counts The outcome counts.
+	 *
+	 * @return void
+	 */
+	private function reportMigration(IOutput $output, array $counts): void {
 		$output->info(
 			sprintf(
 				'POS bookkeeping migration: %d re-raised, %d posted-projected, %d left pending for retry. '
 				. 'No glAccountMapping / posJournalEntryOutbound data was deleted. '
 				. 'One-off: export the glAccountMapping VAT->GL profiles into shillinq\'s GL configuration manually.',
-				$raised,
-				$projected,
-				$pending
+				$counts['raised'],
+				$counts['projected'],
+				$counts['pending']
 			)
 		);
 		$this->logger->info(
 			'POS bookkeeping migration completed',
-			['raised' => $raised, 'projected' => $projected, 'pending' => $pending]
+			['raised' => $counts['raised'], 'projected' => $counts['projected'], 'pending' => $counts['pending']]
 		);
-	}//end runInner()
+	}//end reportMigration()
 
 	/**
 	 * Migrate a single outbound record onto the Z-report projection / registry.
@@ -348,43 +373,6 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 * @return object|null The object service, or null.
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'POS bookkeeping migration: OpenRegister ObjectService not resolvable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'POS bookkeeping migration: OpenRegister ObjectService not resolvable', errorKey: 'exception');
 	}//end resolveObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

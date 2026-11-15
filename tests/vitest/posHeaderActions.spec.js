@@ -101,7 +101,8 @@ describe('the replaced code', () => {
 		expect(registry).toMatch(/PrintReceiptModal: \{\n\t\tkind: 'modal'/)
 		expect(registry).toMatch(/EmailReceiptModal: \{\n\t\tkind: 'modal'/)
 		for (const modal of ['PrintReceiptModal', 'EmailReceiptModal']) {
-			expect(readFileSync(resolve(root, `src/modals/${modal}.vue`), 'utf8')).toContain('loadActiveReceiptTemplates()')
+			expect(readFileSync(resolve(root, `src/modals/${modal}.vue`), 'utf8')).toContain('mixins: [receiptModalMixin]')
 		}
+		expect(readFileSync(resolve(root, 'src/mixins/receiptModalMixin.js'), 'utf8')).toContain('loadActiveReceiptTemplates()')
 	})
 })

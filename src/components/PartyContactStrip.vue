@@ -41,7 +41,7 @@ import LogVisitAction from './LogVisitAction.vue'
 import PartyIndicatorPanel from './PartyIndicatorPanel.vue'
 
 /**
- * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-warnings-and-the-ways-to-reach-the-client-are-one-card
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
  */
 export default {
 	name: 'PartyContactStrip',
@@ -80,10 +80,19 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 	margin: 0;
-	padding: 16px 20px;
+	padding: 12px 16px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--cn-board-card-radius, 12px);
 	background: var(--color-main-background);
+}
+
+/* The warnings line sits on the card's own inset: no state padding, the
+   link without Nextcloud's button margin, both on a 1.2 line. */
+.party-contact-strip :deep(.party-indicators__none),
+.party-contact-strip :deep(.party-indicators__add-link) {
+	margin: 0;
+	padding: 0;
+	line-height: 1.2;
 }
 
 .party-contact-strip__actions {

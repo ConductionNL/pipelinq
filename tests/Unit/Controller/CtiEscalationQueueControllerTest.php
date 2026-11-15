@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\CtiEscalationQueueController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\IRequest;
@@ -54,8 +55,7 @@ class CtiEscalationQueueControllerTest extends TestCase {
 		return new CtiEscalationQueueController(
 			request: $this->createMock(IRequest::class),
 			ctiService: $cti,
-			userSession: $session,
-			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged]),
+			privilege: new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
 		);
 	}//end controller()
 

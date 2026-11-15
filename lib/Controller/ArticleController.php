@@ -28,16 +28,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ArticleService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,24 +48,24 @@ use OCP\IUserSession;
 /**
  * REST controller for articles.
  *
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 class ArticleController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ArticleService $articles Article service.
+	 * @param ArticleServiceInterface $articles Article service.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ArticleService $articles,
+		private readonly ArticleServiceInterface $articles,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -76,16 +76,13 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse `{data[], pagination}`.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->articles->listArticles(page: $page, limit: $limit));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse($this->articles->listArticles(page: $page, limit: $limit))
+		);
 	}//end index()
 
 	/**
@@ -95,21 +92,18 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse The article, or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
+			$article = $this->articles->getArticleById(articleId: $id);
+			if ($article === null) {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$article = $this->articles->getArticleById(articleId: $id);
-		if ($article === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(['article' => $article]);
+			return new JSONResponse(['article' => $article]);
+		});
 	}//end show()
 
 	/**
@@ -117,21 +111,18 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 201 with the article, or 400 naming the bad field.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (string $uid): JSONResponse {
+			$result = $this->articles->createArticle(payload: $this->collectBody(), authorUid: $uid);
+			if (isset($result['error']) === true) {
+				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+			}
 
-		$result = $this->articles->createArticle(payload: $this->collectBody(), authorUid: $uid);
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse(['article' => ($result['article'] ?? null)], Http::STATUS_CREATED);
+			return new JSONResponse(['article' => ($result['article'] ?? null)], Http::STATUS_CREATED);
+		});
 	}//end create()
 
 	/**
@@ -141,16 +132,13 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->render(result: $this->articles->updateArticle(articleId: $id, patch: $this->collectBody()));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->render(result: $this->articles->updateArticle(articleId: $id, patch: $this->collectBody()))
+		);
 	}//end update()
 
 	/**
@@ -160,16 +148,13 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	#[NoAdminRequired]
 	public function publish(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->render(result: $this->articles->publishArticle(articleId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->render(result: $this->articles->publishArticle(articleId: $id))
+		);
 	}//end publish()
 
 	/**
@@ -179,16 +164,13 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	#[NoAdminRequired]
 	public function archive(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return $this->render(result: $this->articles->archiveArticle(articleId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => $this->render(result: $this->articles->archiveArticle(articleId: $id))
+		);
 	}//end archive()
 
 	/**
@@ -202,20 +184,17 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the article, 400 or 404.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 	 */
 	#[NoAdminRequired]
 	public function transition(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
+			$transition = (string)$this->request->getParam('transition', '');
 
-		$transition = (string)$this->request->getParam('transition', '');
-
-		return $this->render(
-			result: $this->articles->applyTransition(articleId: $id, transition: $transition),
-		);
+			return $this->render(
+				result: $this->articles->applyTransition(articleId: $id, transition: $transition),
+			);
+		});
 	}//end transition()
 
 	/**
@@ -225,16 +204,13 @@ class ArticleController extends Controller {
 	 *
 	 * @return JSONResponse `{data[], counts}`.
 	 *
-	 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 	 */
 	#[NoAdminRequired]
 	public function usages(string $id): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse($this->articles->listUsages(articleId: $id));
+		return $this->crmUserGuard()->respond(
+			action: fn (): JSONResponse => new JSONResponse($this->articles->listUsages(articleId: $id))
+		);
 	}//end usages()
 
 	/**
@@ -257,37 +233,13 @@ class ArticleController extends Controller {
 	}//end render()
 
 	/**
-	 * Resolve the caller, refusing anyone who is not a CRM user.
+	 * The CRM-user gate over this request's session.
 	 *
-	 * Authentication is not authorization: an unpublished article is the
-	 * tenant's unreleased copy, so reading one is gated on the same policy a
-	 * segment and a mailing list are.
-	 *
-	 * @return string|null The uid, or null when the caller may not proceed.
+	 * @return CrmUserGuard The gate.
 	 */
-	private function requireCrmUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		$uid = $user->getUID();
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return null;
-		}
-
-		return $uid;
-	}//end requireCrmUser()
-
-	/**
-	 * The single refusal, so an unauthenticated and an unprivileged caller
-	 * cannot tell each other apart.
-	 *
-	 * @return JSONResponse A 403.
-	 */
-	private function refuse(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end refuse()
+	private function crmUserGuard(): CrmUserGuard {
+		return new CrmUserGuard(userSession: $this->userSession, policy: $this->policy);
+	}//end crmUserGuard()
 
 	/**
 	 * Collect a sanitised article body.

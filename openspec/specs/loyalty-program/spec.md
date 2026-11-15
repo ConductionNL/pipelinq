@@ -343,7 +343,7 @@ query performance caching (which is refreshed daily).
 
 - GIVEN a programme with 30+ days of transaction history
 - WHEN an administrator opens the reporting dashboard for that programme
-- THEN the dashboard MUST display:
+- THEN the dashboard MUST display stat tiles for:
   - **Active Accounts**: count of accounts with status "actief"
   - **Points Issued (Period)**: sum of credit ledger entries for the selected period
   - **Points Redeemed (Period)**: sum of debit ledger entries for the selected period
@@ -369,7 +369,7 @@ query performance caching (which is refreshed daily).
   - 100 redemptions in the period
   - Associated sales value EUR 5000
 - WHEN cost % is calculated
-- THEN cost % MUST be (100 * 5 / 5000) * 100 = 100%
+- THEN cost % MUST be (100 * 5 / 5000) * 100 = 10%
 - AND a tooltip MUST explain the calculation
 - AND the metric MUST be configurable per redemption option (cost basis)
 
@@ -378,11 +378,11 @@ query performance caching (which is refreshed daily).
 - GIVEN a programme with tiers "Zilver" (0 points), "Goud" (500 points), "Platina" (2000 points)
 - AND 1000 "Zilver", 200 "Goud", 50 "Platina" active accounts
 - WHEN the tier distribution widget renders
-- THEN a stacked bar or donut chart MUST show:
+- THEN one bar per tier MUST show:
   - 1000 in "Zilver" (64%)
   - 200 in "Goud" (13%)
   - 50 in "Platina" (3%)
-- AND clicking a segment MUST show the top accounts in that tier
+- AND a table under the bars MUST list the number of accounts per tier
 
 ### Requirement: IFRS 15 / RJ 270 Compliance (REQ-LOY-009)
 
@@ -455,3 +455,56 @@ linkable to klantbeeld-360 and subject to GDPR data subject access and deletion 
   - Retain ledger for audit trail (immutable)
   - NOT delete any records (soft-delete / anonymization only)
 
+### Requirement: A retried movement is written once (REQ-LOY-011)
+
+Every ledger movement MAY carry an operation id. The caller picks it, and it MUST be the same on every retry of that movement. `creditPoints`, `debitPoints`, `refundPoints`, `adjustPoints` and `expirePoints` MUST accept it. The ledger entry MUST store it as `operationId`.
+
+Before it writes, the service MUST look for an entry of the same account with the same operation id. When one exists, the service MUST return that entry and write nothing. The balance, the lifetime total and the tier MUST stay as they are. A debit repeat MUST NOT check the balance again, so a retry after the points were spent still answers with the first entry.
+
+When the stored entry has another type or another amount, the call MUST fail and write nothing. A call without an operation id MUST append a new entry, as before.
+
+Two calls with the same operation id that run at the same moment can both write. This is a known limit, shared with two concurrent debits on one account, and it is out of scope.
+
+**Feature tier**: MVP
+**Files**: `pipelinq/lib/Service/PointsLedgerService.php`
+
+#### Scenario: A retried POS credit is credited once (REQ-LOY-011-01)
+
+- GIVEN a customer "Anna" with currentBalance 100 points
+- AND a credit of 45 points with operation id "pos:TX-1001" was written
+- WHEN the POS sends the same credit again with operation id "pos:TX-1001"
+- THEN the service MUST return the first ledger entry
+- AND no second entry MUST be written
+- AND currentBalance MUST stay 145
+- @e2e exclude backend service, covered by PHPUnit
+
+#### Scenario: A retried debit after the points were spent returns the first entry (REQ-LOY-011-02)
+
+- GIVEN a debit of 250 points with operation id "redemption:R-77" was written
+- AND Anna spent her remaining points after that
+- WHEN the redemption sends the same debit again with operation id "redemption:R-77"
+- THEN the service MUST return the first ledger entry
+- AND it MUST NOT answer "Insufficient balance"
+- @e2e exclude backend service, covered by PHPUnit
+
+#### Scenario: A reused operation id with another amount is refused (REQ-LOY-011-03)
+
+- GIVEN a credit of 45 points with operation id "pos:TX-1001" was written
+- WHEN a credit of 60 points arrives with operation id "pos:TX-1001"
+- THEN the call MUST fail
+- AND no entry MUST be written
+- @e2e exclude backend service, covered by PHPUnit
+
+#### Scenario: The same operation id on another account is a new movement (REQ-LOY-011-04)
+
+- GIVEN a credit with operation id "pos:TX-1001" was written for Anna
+- WHEN a credit with operation id "pos:TX-1001" arrives for Bram
+- THEN a new entry MUST be written for Bram
+- @e2e exclude backend service, covered by PHPUnit
+
+#### Scenario: A movement without an operation id is always written (REQ-LOY-011-05)
+
+- GIVEN a credit of 45 points without an operation id was written
+- WHEN the same credit arrives again without an operation id
+- THEN a second entry MUST be written
+- @e2e exclude backend service, covered by PHPUnit

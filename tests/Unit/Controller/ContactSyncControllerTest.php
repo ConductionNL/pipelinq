@@ -21,7 +21,10 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\Pipelinq\Controller\ContactSyncController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
@@ -89,8 +92,7 @@ class ContactSyncControllerTest extends TestCase {
 		$this->controller = new ContactSyncController($this->request,
 			$this->syncService,
 			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$logger,
 		);
@@ -227,8 +229,7 @@ class ContactSyncControllerTest extends TestCase {
 		return new ContactSyncController($this->createMock(IRequest::class),
 			$this->syncService,
 			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
-			$session,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -462,8 +463,7 @@ class ContactSyncControllerTest extends TestCase {
 		$controller = new ContactSyncController($this->request,
 			$this->syncService,
 			$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => false]),
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -667,10 +667,10 @@ class ContactSyncControllerTest extends TestCase {
 			 * @return ObjectEntityInterface The saved object, wrapped as an entity.
 			 */
 			public function saveObject(
-				array $object,
+				array|ObjectEntity $object,
 				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
+				Register|string|int|null $register = null,
+				Schema|string|int|null $schema = null,
 				?string $uuid = null,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
@@ -679,6 +679,9 @@ class ContactSyncControllerTest extends TestCase {
 				?array $uploadedFiles = null,
 				?IUser $currentUser = null,
 				bool $failIfExists = false,
+				bool $_unowned = false,
+				bool $_dedupOverride = false,
+				?string $_owner = null,
 			): ObjectEntityInterface {
 				$this->captured[] = ['object' => $object, 'uuid' => $uuid, 'schema' => (string)$schema];
 
@@ -744,4 +747,60 @@ class ContactSyncControllerTest extends TestCase {
 			revisions: new VcardRevision(),
 		);
 	}//end realSyncService()
+
+	/**
+	 * Golden: every action's unexpected failure logs its own line with the exception, and answers the generic 500.
+	 *
+	 * @return void
+	 */
+	public function testEveryUnexpectedFailureLogsItsActionAndAnswers500(): void {
+		$failure = new \RuntimeException('directory offline');
+		$cases = [
+			'status' => [['uid' => 'u-1'], 'cardStatus'],
+			'search' => [['q' => 'acme'], 'searchContacts'],
+			'import' => [['uid' => 'u-1'], 'importContact'],
+			'create' => [['objectType' => 'client', 'object' => ['name' => 'Acme']], 'createWithContact'],
+			'writeBack' => [['objectType' => 'client', 'objectId' => 'obj-1'], 'syncToContacts'],
+		];
+		foreach ($cases as $action => [$params, $serviceMethod]) {
+			$request = $this->createMock(IRequest::class);
+			$request->method('getParam')->willReturnCallback(
+				static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default)
+			);
+			$service = $this->createMock(ContactSyncService::class);
+			$service->method($serviceMethod)->willThrowException(
+				$action === 'create' ? new \LogicException('directory offline') : $failure
+			);
+			$logged = [];
+			$logger = $this->createMock(LoggerInterface::class);
+			$logger->method('error')->willReturnCallback(
+				static function (string $message, array $context = []) use (&$logged): void {
+					$logged[] = [$message, get_class($context['exception']), $context['exception']->getMessage()];
+				}
+			);
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn('test-user');
+			$session = $this->createMock(IUserSession::class);
+			$session->method('getUser')->willReturn($user);
+			$l10n = $this->createMock(IL10N::class);
+			$l10n->method('t')->willReturnArgument(0);
+			$controller = new ContactSyncController($request,
+				$service,
+				$this->createConfiguredMock(ContactSyncSettingsService::class, ['writesBack' => true]),
+				new CrmPrivilegeCheck($session, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
+				$l10n,
+				$logger,
+			);
+
+			$response = $controller->$action();
+
+			$this->assertSame([500, ['error' => 'An unexpected error occurred']], [$response->getStatus(), $response->getData()], $action);
+			$expectedClass = \RuntimeException::class;
+			if ($action === 'create') {
+				$expectedClass = \LogicException::class;
+			}
+
+			$this->assertSame([['ContactSyncController::'.$action.' failed', $expectedClass, 'directory offline']], $logged, $action);
+		}
+	}//end testEveryUnexpectedFailureLogsItsActionAndAnswers500()
 }//end class

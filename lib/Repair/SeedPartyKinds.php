@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 
 declare(strict_types=1);
@@ -33,8 +33,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Repair step: seed the party kinds the fleet already uses.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 class SeedPartyKinds implements IRepairStep {
 	/**
@@ -104,13 +104,13 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param PartyKindRegistryService $registry Reads the kinds already declared.
+	 * @param PartyKindRegistryServiceInterface $registry Reads the kinds already declared.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ObjectServiceInterface $objectService,
-		private PartyKindRegistryService $registry,
+		private PartyKindRegistryServiceInterface $registry,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -120,7 +120,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return string Name.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function getName(): string {
 		return 'Seed the party kinds the fleet already uses';
@@ -135,7 +135,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return array<int, array<string, mixed>> The kinds to write.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function missingKinds(array $existingCodes): array {
 		return array_values(
@@ -153,11 +153,11 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyKind_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyKind_schema', '');
 		if ($register === '' || $schema === '') {
 			$output->info('Party kind registry not configured — skipping the seed.');
 			return;

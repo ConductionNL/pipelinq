@@ -304,31 +304,20 @@ The system MUST keep the OpenRegister schema instances (contact, account, produc
 
 `@e2e exclude` backend sync path — asserted by OpenRegisterSyncService/listener unit tests; steward UI lives in OR.
 
-### Requirement: REQ-MDM-012 — Conflict-Resolution Wizard for Data Stewards
+### Requirement: REQ-MDM-012: Conflicts are resolved in OpenRegister
 
-The system MUST provide a wizard for data stewards to resolve attribute conflicts, with the option to establish persistent trust-tier rules.
+pipelinq SHALL NOT draw a conflict-resolution wizard. A data steward SHALL resolve attribute conflicts and set trust-tier rules in OpenRegister's steward surface, which the single navigation entry of REQ-MDM-013 opens.
 
 **Feature tier**: MVP
-**Handoff**: Deferred — UI wizard tracked for a future change once the trust-configuration schema lands.
+**Handoff**: Consumes OpenRegister `mdm-conflict-resolution-ui`.
 
-`@e2e exclude` the wizard both scenarios drive does not exist in this app and by REQ-MDM-013 must not: `MdmConflictResolutionModal` and `MdmMergeWizardModal` return no match under `src/`, `src/registry.js` registers neither, and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []` — there is no route, nav entry or control a browser could open. The steward conflict-resolution surface is hosted by OpenRegister (`mdm-conflict-resolution-ui`) against the `x-openregister-survivorship` annotation, and the persistent rule the second scenario creates is a row in OR's `trust-configuration` register, seeded by `lib/Repair/SeedTrustConfigurationRows.php` (asserted by tests/Unit/Repair/SeedTrustConfigurationRowsTest.php: testSeedsThreeRows, testSecondRunIsIdempotent, testNoOpWhenOpenRegisterMissing).
+`@e2e exclude` a code-absence assertion: `MdmConflictResolutionModal` and `MdmMergeWizardModal` return no match under `src/`. The wizard is owned and tested by OpenRegister.
 
-#### Scenario: Resolve VAT number conflict
+#### Scenario: A steward opens a VAT number conflict
 
 - GIVEN a Master Entity with conflicting VAT numbers: pipelinq-crm="NL123456789B01", shillinq-debiteuren="NL123456789B02"
-- WHEN a steward opens the conflict-resolution wizard
-- THEN the UI displays the attribute name, both values with their source and last-updated timestamp, and a rationale field
-- AND the steward can select which value to keep
-- AND optionally check "Always use this rule" to create a persistent trust-config entry
-
-#### Scenario: Persistent rule creation
-
-- GIVEN the steward selected "Always use this rule"
-- AND entered rationale "Shillinq bron geverifieerd via VAT-validatie EU-service"
-- WHEN the wizard saves
-- THEN the attribute value for this entity is resolved to the shillinq value
-- AND a trust-configuration entry is created with entityType=account, attribute=vatNumber, sourceSystem=shillinq-debiteuren, trustTier=gold
-- AND all other Master Entities are queued for recomputation with the new rule
+- WHEN a steward follows the data-quality entry in pipelinq
+- THEN OpenRegister's surface SHALL open, and pipelinq SHALL show no wizard of its own
 
 ### Requirement: REQ-MDM-013 — MDM Steward UI Deep-Linked to OpenRegister
 
@@ -344,6 +333,15 @@ app-local MDM dashboard, list, merge wizard or conflict-resolution modal may rem
 
 **Feature tier**: MVP
 **Handoff**: Consumes OpenRegister `mdm-quality-api`, `mdm-survivorship`, `mdm-merge`, `duplicate-detection`, `mdm-conflict-resolution-ui` (steward views hosted by OR). Backend deletion is retired to the sibling backend link.
+
+#### Scenario: A merged-away client says where it went
+
+`@e2e exclude` needs a merge run in OpenRegister, which the CI seed does not set up; `pipelinq/PqKlant` draws the line.
+
+- GIVEN a client merged into another record in OpenRegister
+- WHEN a user opens the merged-away client in pipelinq
+- THEN one line SHALL read "Samengevoegd met Sanne J. de Vries (K-2019-01184) op 2 oktober 2026"
+- AND the record SHALL be read-only, with "Open het samengevoegde record"
 
 #### Scenario: App-local MDM views are removed
 

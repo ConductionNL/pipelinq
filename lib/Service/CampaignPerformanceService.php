@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 
 declare(strict_types=1);
@@ -36,45 +36,35 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\CampaignPerformanceServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * CampaignPerformanceService: one blast, mailbox and site numbers together.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The join needs the blast
- *  (BlastService), the deals (AttributionService), the campaign slug
- *  (CampaignLinkDecorator), the portal setting, the clock and the lazy,
- *  duck-typed object service; one cohesive read model.
- *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
-class CampaignPerformanceService {
-
+class CampaignPerformanceService implements CampaignPerformanceServiceInterface {
 	/**
-	 * Portaliq's register and rollup schema slugs (contract section 3).
+	 * Portaliq's register slug (contract section 3).
 	 *
 	 * @var string
 	 */
-	public const PORTALIQ_REGISTER = 'portaliq';
+	public const PORTALIQ_REGISTER = CampaignSiteTraffic::PORTALIQ_REGISTER;
 
 	/**
 	 * The rollup schema slug.
 	 *
 	 * @var string
 	 */
-	public const DAILY_SCHEMA = 'portalTrafficDaily';
+	public const DAILY_SCHEMA = CampaignSiteTraffic::DAILY_SCHEMA;
 
 	/**
 	 * A class that exists exactly when Portaliq is installed.
 	 *
 	 * @var string
 	 */
-	public const PORTALIQ_PROBE_CLASS = 'OCA\\Portaliq\\AppInfo\\Application';
+	public const PORTALIQ_PROBE_CLASS = CampaignSiteTraffic::PORTALIQ_PROBE_CLASS;
 
 	/**
 	 * Longest window served, in days.
@@ -91,146 +81,166 @@ class CampaignPerformanceService {
 	private const DEFAULT_WINDOW_DAYS = 30;
 
 	/**
-	 * Rollup rows read per page, and the hard cap.
-	 *
-	 * @var int
-	 */
-	private const PAGE = 200;
-
-	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container for the lazy, duck-typed object service.
-	 * @param IAppConfig $appConfig Pipelinq app config.
-	 * @param ITimeFactory $time Time factory for the window's end.
-	 * @param BlastService $blastService Loads the blast.
-	 * @param AttributionService $attributionService Blast to deal roll-up.
-	 * @param CampaignLinkDecorator $decorator Owns the campaign slug.
-	 * @param LoggerInterface $logger Logger.
+	 * @param ITimeFactory        $time               Time factory for the window's end.
+	 * @param BlastService        $blastService       Loads the blast.
+	 * @param AttributionService  $attributionService Blast to deal roll-up.
+	 * @param CampaignSiteTraffic $traffic            Portal, campaign slug and site sessions.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function __construct(
-		private ContainerInterface $container,
-		private IAppConfig $appConfig,
 		private ITimeFactory $time,
 		private BlastService $blastService,
 		private AttributionService $attributionService,
-		private CampaignLinkDecorator $decorator,
-		private LoggerInterface $logger,
+		private CampaignSiteTraffic $traffic,
 	) {
 	}//end __construct()
 
 	/**
 	 * The performance of one blast over a window.
 	 *
-	 * @param string $blastId Blast UUID or slug.
-	 * @param string|null $from Window start `YYYY-MM-DD`; defaults to the blast's send date.
-	 * @param string|null $to Window end `YYYY-MM-DD`, inclusive; defaults to today.
+	 * @param string      $blastId Blast UUID or slug.
+	 * @param string|null $from    Window start `YYYY-MM-DD`; defaults to the blast's send date.
+	 * @param string|null $to      Window end `YYYY-MM-DD`, inclusive; defaults to today.
 	 *
 	 * @return array<string, mixed>|null The performance record, or null when the blast does not exist.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
-	public function forBlast(string $blastId, ?string $from = null, ?string $to = null): ?array {
+	public function forBlast(string $blastId, ?string $from=null, ?string $to=null): ?array {
 		$blast = $this->blastService->getBlastById(blastId: $blastId);
 		if ($blast === null) {
 			return null;
 		}
 
-		$window = $this->window(blast: $blast, from: $from, to: $to);
-		$campaign = $this->decorator->campaignFor(blast: $blast);
-		$totals = (array)($blast['totals'] ?? []);
-		$deals = $this->attributionService->getBlastAttributionSummary(blastId: $blastId);
+		$record           = $this->mailboxRecord(blastId: $blastId, blast: $blast);
+		$record['window'] = $this->window(blast: $blast, requested: ['from' => $from, 'to' => $to]);
+		return $this->withSite(record: $record, blast: $blast);
+	}//end forBlast()
 
-		$record = [
-			'blastId' => $blastId,
-			'campaign' => $campaign,
-			'portal' => '',
+	/**
+	 * The record with the mailbox and deal numbers, the site half not yet read.
+	 *
+	 * @param string               $blastId The requested blast id.
+	 * @param array<string, mixed> $blast   The blast row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function mailboxRecord(string $blastId, array $blast): array {
+		return [
+			'blastId'   => $blastId,
+			'campaign'  => $this->traffic->campaignFor(blast: $blast),
+			'portal'    => '',
 			'connected' => false,
-			'reason' => '',
-			'window' => $window,
-			'email' => [
-				'sent' => (int)($totals['sent'] ?? 0),
-				'delivered' => (int)($totals['delivered'] ?? 0),
-				'opened' => (int)($totals['opened'] ?? 0),
-				'clicked' => (int)($totals['clicked'] ?? 0),
-			],
-			'deals' => [
-				'dealCount' => (int)($deals['dealCount'] ?? 0),
-				'attributedValue' => (float)($deals['attributedValue'] ?? 0.0),
-				'currency' => (string)($deals['currency'] ?? 'EUR'),
-			],
-			'site' => null,
+			'reason'    => '',
+			'window'    => [],
+			'email'     => $this->emailCounts(totals: (array) ($blast['totals'] ?? [])),
+			'deals'     => $this->dealCounts(blastId: $blastId),
+			'site'      => null,
 		];
+	}//end mailboxRecord()
 
-		$portal = trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
+	/**
+	 * The blast's mailbox counters.
+	 *
+	 * @param array<string, mixed> $totals The blast's totals.
+	 *
+	 * @return array<string, int>
+	 */
+	private function emailCounts(array $totals): array {
+		return [
+			'sent'      => (int) ($totals['sent'] ?? 0),
+			'delivered' => (int) ($totals['delivered'] ?? 0),
+			'opened'    => (int) ($totals['opened'] ?? 0),
+			'clicked'   => (int) ($totals['clicked'] ?? 0),
+		];
+	}//end emailCounts()
+
+	/**
+	 * The deals attributed to the blast.
+	 *
+	 * @param string $blastId The requested blast id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function dealCounts(string $blastId): array {
+		$deals = $this->attributionService->getBlastAttributionSummary(blastId: $blastId);
+		return [
+			'dealCount'       => (int) ($deals['dealCount'] ?? 0),
+			'attributedValue' => (float) ($deals['attributedValue'] ?? 0.0),
+			'currency'        => (string) ($deals['currency'] ?? 'EUR'),
+		];
+	}//end dealCounts()
+
+	/**
+	 * The record with its site half: the numbers, or the reason there are none.
+	 *
+	 * @param array<string, mixed> $record The record so far.
+	 * @param array<string, mixed> $blast  The blast row.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withSite(array $record, array $blast): array {
+		$portal = $this->traffic->portal();
 		if ($portal === '') {
 			$record['reason'] = 'no_portal';
 			return $record;
 		}
 
 		$record['portal'] = $portal;
-		if ($this->isPortaliqInstalled() === false) {
+		if ($this->traffic->isPortaliqInstalled() === false) {
 			$record['reason'] = 'portaliq_missing';
 			return $record;
 		}
 
-		$rows = $this->loadRollups(portal: $portal, from: $window['from'], to: $window['to']);
+		$record['site']      = $this->traffic->site(window: $record['window'], blast: $blast);
 		$record['connected'] = true;
-		$record['site'] = $this->sumCampaignRows(rows: $rows, campaign: $campaign, blastName: (string)($blast['name'] ?? ''));
-
 		return $record;
-	}//end forBlast()
-
-	/**
-	 * Whether Portaliq is installed. Protected so a test can answer for it.
-	 *
-	 * @return bool
-	 */
-	protected function isPortaliqInstalled(): bool {
-		return class_exists(self::PORTALIQ_PROBE_CLASS);
-	}//end isPortaliqInstalled()
+	}//end withSite()
 
 	/**
 	 * Resolve the window: explicit and valid dates win, else the blast's
 	 * send date to today, else the last thirty days; never longer than a year.
 	 *
-	 * @param array<string, mixed> $blast The blast row.
-	 * @param string|null $from Requested start.
-	 * @param string|null $to Requested end.
+	 * @param array<string, mixed>                          $blast     The blast row.
+	 * @param array{from: string|null, to: string|null}     $requested The requested start and end.
 	 *
 	 * @return array{from: string, to: string} Both `YYYY-MM-DD`.
 	 */
-	private function window(array $blast, ?string $from, ?string $to): array {
+	private function window(array $blast, array $requested): array {
 		$today = (new DateTimeImmutable('@' . $this->time->getTime()))->setTimezone(new DateTimeZone('UTC'));
-		$end = ($this->parseDay(value: $to) ?? $today);
-
-		$start = $this->parseDay(value: $from);
-		if ($start === null) {
-			foreach (['sentAt', 'scheduledFor', 'createdAt'] as $key) {
-				$start = $this->parseDay(value: (string)($blast[$key] ?? ''));
-				if ($start !== null) {
-					break;
-				}
-			}
-		}
-
-		if ($start === null) {
-			$start = $end->modify('-' . self::DEFAULT_WINDOW_DAYS . ' days');
-		}
-
+		$end   = ($this->parseDay(value: $requested['to']) ?? $today);
+		$start = ($this->parseDay(value: $requested['from']) ?? $this->blastDay(blast: $blast) ?? $end->modify('-' . self::DEFAULT_WINDOW_DAYS . ' days'));
 		if ($start > $end) {
 			$start = $end;
 		}
 
-		$span = (int)$start->diff($end)->format('%a');
-		if ($span > self::MAX_WINDOW_DAYS) {
+		if ((int) $start->diff($end)->format('%a') > self::MAX_WINDOW_DAYS) {
 			$start = $end->modify('-' . self::MAX_WINDOW_DAYS . ' days');
 		}
 
 		return ['from' => $start->format('Y-m-d'), 'to' => $end->format('Y-m-d')];
 	}//end window()
+
+	/**
+	 * The first usable date the blast carries: sent, scheduled, then created.
+	 *
+	 * @param array<string, mixed> $blast The blast row.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function blastDay(array $blast): ?DateTimeImmutable {
+		foreach (['sentAt', 'scheduledFor', 'createdAt'] as $key) {
+			$day = $this->parseDay(value: (string) ($blast[$key] ?? ''));
+			if ($day !== null) {
+				return $day;
+			}
+		}
+
+		return null;
+	}//end blastDay()
 
 	/**
 	 * Parse the date part of an ISO string, or null when unusable.
@@ -240,195 +250,14 @@ class CampaignPerformanceService {
 	 * @return DateTimeImmutable|null The UTC midnight, or null.
 	 */
 	private function parseDay(?string $value): ?DateTimeImmutable {
-		if ($value === null || preg_match('/^(\d{4})-(\d{2})-(\d{2})/', trim($value), $matches) !== 1) {
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', trim((string) $value), $matches) !== 1) {
 			return null;
 		}
 
-		if (checkdate((int)$matches[2], (int)$matches[3], (int)$matches[1]) === false) {
+		if (checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1]) === false) {
 			return null;
 		}
 
 		return new DateTimeImmutable(($matches[1] . '-' . $matches[2] . '-' . $matches[3] . 'T00:00:00'), new DateTimeZone('UTC'));
 	}//end parseDay()
-
-	/**
-	 * Read the portal's rollups in the window through OpenRegister.
-	 *
-	 * @param string $portal The portal slug.
-	 * @param string $from Window start, inclusive.
-	 * @param string $to Window end, inclusive.
-	 *
-	 * @return array<int, array<string, mixed>> The rollup rows.
-	 */
-	private function loadRollups(string $portal, string $from, string $to): array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		$dayAfter = (new DateTimeImmutable($to, new DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d');
-		$filters = [
-			'register' => self::PORTALIQ_REGISTER,
-			'schema' => self::DAILY_SCHEMA,
-			'portal' => $portal,
-			'date' => ['gte' => $from, 'lt' => $dayAfter],
-		];
-
-		return $this->pages(objectService: $objectService, filters: $filters, pageSize: self::PAGE, maxRows: self::MAX_WINDOW_DAYS);
-	}//end loadRollups()
-
-	/**
-	 * Read matching rows page by page until a short page or the cap.
-	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param array<string, mixed> $filters The filters, register and schema included.
-	 * @param int $pageSize Rows per page.
-	 * @param int $maxRows Never read more than this many rows.
-	 *
-	 * @return array<int, array<string, mixed>> Plain rows.
-	 */
-	private function pages(object $objectService, array $filters, int $pageSize, int $maxRows): array {
-		$rows = [];
-		$offset = 0;
-		while ($offset < $maxRows) {
-			try {
-				$page = $objectService->findAll(
-					config: ['filters' => $filters, 'limit' => $pageSize, 'offset' => $offset],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'CampaignPerformanceService: reading portalTrafficDaily failed',
-					['portal' => (string)($filters['portal'] ?? ''), 'exception' => $e->getMessage()]
-				);
-				break;
-			}
-
-			if (is_iterable($page) === false) {
-				break;
-			}
-
-			$count = 0;
-			foreach ($page as $row) {
-				$rows[] = $this->toArray(value: $row);
-				$count++;
-			}
-
-			if ($count < $pageSize) {
-				break;
-			}
-
-			$offset += $pageSize;
-		}
-
-		return $rows;
-	}//end pages()
-
-	/**
-	 * Sum the matching `campaigns[]` rows across the rollups.
-	 *
-	 * `pageViews` and `formSubmits` stay null unless a row carries them:
-	 * the contract's campaign rows hold sessions only today, and a zero
-	 * would read as "nobody came" rather than "not counted".
-	 *
-	 * @param array<int, array<string, mixed>> $rows The rollups.
-	 * @param string $campaign The blast's UTM slug.
-	 * @param string $blastName The blast name email events carry.
-	 *
-	 * @return array<string, mixed> sessions, pageViews, formSubmits, days, sources.
-	 */
-	private function sumCampaignRows(array $rows, string $campaign, string $blastName): array {
-		$wanted = array_filter(array_unique([strtolower($campaign), strtolower(trim($blastName))]), static fn (string $v): bool => $v !== '');
-		$sessions = 0;
-		$pageViews = null;
-		$formSubmits = null;
-		$days = [];
-		$sources = [];
-		foreach ($rows as $row) {
-			$campaigns = ($row['campaigns'] ?? []);
-			if (is_array($campaigns) === false) {
-				continue;
-			}
-
-			foreach ($campaigns as $entry) {
-				if (is_array($entry) === false || in_array(strtolower((string)($entry['campaign'] ?? '')), $wanted, true) === false) {
-					continue;
-				}
-
-				$sessions += (int)($entry['sessions'] ?? 0);
-				$days[(string)($row['date'] ?? '')] = true;
-				$key = ((string)($entry['source'] ?? '') . '/' . (string)($entry['medium'] ?? ''));
-				$sources[$key] = ($sources[$key] ?? 0) + (int)($entry['sessions'] ?? 0);
-				if (isset($entry['pageViews']) === true) {
-					$pageViews = (($pageViews ?? 0) + (int)$entry['pageViews']);
-				}
-
-				if (isset($entry['formSubmits']) === true) {
-					$formSubmits = (($formSubmits ?? 0) + (int)$entry['formSubmits']);
-				}
-			}
-		}
-
-		arsort($sources);
-		$sourceRows = [];
-		foreach ($sources as $key => $count) {
-			[$source, $medium] = explode('/', (string)$key, 2);
-			$sourceRows[] = ['source' => $source, 'medium' => $medium, 'sessions' => $count];
-		}
-
-		return [
-			'sessions' => $sessions,
-			'pageViews' => $pageViews,
-			'formSubmits' => $formSubmits,
-			'days' => count($days),
-			'sources' => $sourceRows,
-		];
-	}//end sumCampaignRows()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'CampaignPerformanceService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Normalise an OpenRegister entity or array to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

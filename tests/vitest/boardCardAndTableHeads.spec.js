@@ -62,9 +62,9 @@ describe('board card titles', () => {
 })
 
 describe('board card table heads', () => {
+	// The search queries, connection audit and competitor tables are framed
+	// CnDataTables now (searchInsightFramedTables.spec.js).
 	const heads = [
-		['views/marketing/SearchQueries.vue', '\tth {'],
-		['views/marketing/CompetitorWatches.vue', '\t\tth {'],
 		['views/marketing/KeywordIntelligence.vue', '\tth {'],
 		['components/pos/ZReportBookkeepingWidget.vue', '.z-bookkeeping__table th {'],
 	]

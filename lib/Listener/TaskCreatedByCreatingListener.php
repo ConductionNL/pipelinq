@@ -21,7 +21,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -40,7 +40,7 @@ use OCP\IUserSession;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+ * @spec openspec/specs/user-fields/spec.md
  */
 class TaskCreatedByCreatingListener implements IEventListener {
 
@@ -66,14 +66,14 @@ class TaskCreatedByCreatingListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
+	 * @spec openspec/specs/user-fields/spec.md
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false) {
 			return;
 		}
 
-		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		$entity = $event->getObject();
 		if ($taskSchema === '' || (string)$entity->getSchema() !== $taskSchema) {
 			return;

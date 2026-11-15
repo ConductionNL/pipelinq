@@ -1657,7 +1657,7 @@ Schema properties MUST use the `visible` flag to control which properties appear
 
 ### Requirement: Property Title Annotations for Display Labels
 
-Schema properties MAY include a `title` field that overrides the property key as the display label in the UI.
+Schema properties MAY include a `title` field. When a property has one, the UI SHALL show that title as the display label instead of the property key.
 
 **Feature tier**: MVP
 

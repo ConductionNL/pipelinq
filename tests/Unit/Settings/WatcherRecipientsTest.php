@@ -108,15 +108,15 @@ class WatcherRecipientsTest extends TestCase {
 	 * @return object|null The validator, or null when no checkout is found.
 	 */
 	private function openRegisterValidator(): ?object {
-		$class = 'OCA\\OpenRegister\\Service\\Notification\\NotificationAnnotationValidator';
+		$class = 'OCA\\OpenRegister\\Notifications\\Service\\Notification\\NotificationAnnotationValidator';
 		$root = (string)getenv('OPENREGISTER_PATH');
 		if ($root === '') {
 			$root = dirname(__DIR__, 4).'/openregister';
 		}
 
-		$prefix = 'OCA\\OpenRegister\\Service\\Notification\\';
-		$dir = $root.'/lib/Service/Notification/';
-		if (is_file($dir.'NotificationAnnotationValidator.php') === false) {
+		$prefix = 'OCA\\OpenRegister\\';
+		$dir = $root.'/lib/';
+		if (is_file($dir.'Notifications/Service/Notification/NotificationAnnotationValidator.php') === false) {
 			return null;
 		}
 

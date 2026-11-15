@@ -30,9 +30,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Controller\LoyaltyReportingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
@@ -84,11 +85,10 @@ class LoyaltyReportingControllerTest extends TestCase {
 
 		return new LoyaltyReportingController($this->createMock(IRequest::class),
 			$reportingService,
-			$userSession,
-			$this->createConfiguredMock(
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(
 				ObjectOwnerAccessPolicy::class,
 				['isPrivileged' => $privileged, 'mayAccess' => $privileged]
-			)
+			))
 		);
 	}//end buildController()
 

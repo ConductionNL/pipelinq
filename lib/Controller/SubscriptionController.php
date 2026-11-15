@@ -31,11 +31,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Marketing\PreferenceCentreService;
-use OCA\Pipelinq\Service\Marketing\SubscriptionQueryService;
-use OCA\Pipelinq\Service\SubscriptionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,21 +53,21 @@ class SubscriptionController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SubscriptionService $subscriptions Membership state changes.
-	 * @param SubscriptionQueryService $queries Membership reads.
-	 * @param PreferenceCentreService $preferences The preference centre.
+	 * @param SubscriptionServiceInterface $subscriptions Membership state changes.
+	 * @param SubscriptionQueryServiceInterface $queries Membership reads.
+	 * @param PreferenceCentreServiceInterface $preferences The preference centre.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SubscriptionService $subscriptions,
-		private readonly SubscriptionQueryService $queries,
-		private readonly PreferenceCentreService $preferences,
+		private readonly SubscriptionServiceInterface $subscriptions,
+		private readonly SubscriptionQueryServiceInterface $queries,
+		private readonly PreferenceCentreServiceInterface $preferences,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -81,14 +81,11 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function forContact(string $contactId): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		return new JSONResponse([
-			'subscriptions' => $this->queries->listSubscriptionsForContact(contactId: $contactId),
-		]);
+		return $this->crmUserGuard()->respond(action: function () use ($contactId): JSONResponse {
+			return new JSONResponse([
+				'subscriptions' => $this->queries->listSubscriptionsForContact(contactId: $contactId),
+			]);
+		});
 	}//end forContact()
 
 	/**
@@ -105,32 +102,29 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function softOptIn(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		$offered = $this->request->getParam('objectionOffered');
-		$result = $this->subscriptions->importSoftOptIn(
-			listId: (string)$this->request->getParam('listId', ''),
-			contactId: (string)$this->request->getParam('contactId', ''),
-			email: (string)$this->request->getParam('email', ''),
-			evidence: [
-				'objectionOffered' => ($offered === true || $offered === 'true' || $offered === '1'),
-				'objectionOfferedAt' => (string)$this->request->getParam('objectionOfferedAt', ''),
-				'objectionText' => (string)$this->request->getParam('objectionText', ''),
-				'reference' => (string)$this->request->getParam('reference', ''),
-			],
-		);
-
-		if ($result['status'] !== 'imported') {
-			return new JSONResponse(
-				['error' => ($result['error'] ?? 'The subscription could not be imported')],
-				Http::STATUS_BAD_REQUEST
+		return $this->crmUserGuard()->respond(action: function (): JSONResponse {
+			$offered = $this->request->getParam('objectionOffered');
+			$result = $this->subscriptions->importSoftOptIn(
+				listId: (string)$this->request->getParam('listId', ''),
+				contactId: (string)$this->request->getParam('contactId', ''),
+				email: (string)$this->request->getParam('email', ''),
+				evidence: [
+					'objectionOffered' => ($offered === true || $offered === 'true' || $offered === '1'),
+					'objectionOfferedAt' => (string)$this->request->getParam('objectionOfferedAt', ''),
+					'objectionText' => (string)$this->request->getParam('objectionText', ''),
+					'reference' => (string)$this->request->getParam('reference', ''),
+				],
 			);
-		}
 
-		return new JSONResponse(['status' => 'imported'], Http::STATUS_CREATED);
+			if ($result['status'] !== 'imported') {
+				return new JSONResponse(
+					['error' => ($result['error'] ?? 'The subscription could not be imported')],
+					Http::STATUS_BAD_REQUEST
+				);
+			}
+
+			return new JSONResponse(['status' => 'imported'], Http::STATUS_CREATED);
+		});
 	}//end softOptIn()
 
 	/**
@@ -147,33 +141,30 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function unsubscribe(): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function (): JSONResponse {
+			$contactId = (string)$this->request->getParam('contactId', '');
+			$listId = (string)$this->request->getParam('listId', '');
+			$reason = (string)$this->request->getParam('reason', '');
+			if ($contactId === '') {
+				return new JSONResponse(['error' => 'Name the contact to unsubscribe'], Http::STATUS_BAD_REQUEST);
+			}
 
-		$contactId = (string)$this->request->getParam('contactId', '');
-		$listId = (string)$this->request->getParam('listId', '');
-		$reason = (string)$this->request->getParam('reason', '');
-		if ($contactId === '') {
-			return new JSONResponse(['error' => 'Name the contact to unsubscribe'], Http::STATUS_BAD_REQUEST);
-		}
+			if ($listId === '') {
+				$count = $this->subscriptions->globalUnsubscribe(contactId: $contactId, reason: $reason);
+				return new JSONResponse(['count' => $count]);
+			}
 
-		if ($listId === '') {
-			$count = $this->subscriptions->globalUnsubscribe(contactId: $contactId, reason: $reason);
-			return new JSONResponse(['count' => $count]);
-		}
+			$closed = $this->subscriptions->unsubscribeFromList(
+				listId: $listId,
+				contactId: $contactId,
+				reason: $reason,
+			);
+			if ($closed === false) {
+				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+			}
 
-		$closed = $this->subscriptions->unsubscribeFromList(
-			listId: $listId,
-			contactId: $contactId,
-			reason: $reason,
-		);
-		if ($closed === false) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(['count' => 1]);
+			return new JSONResponse(['count' => 1]);
+		});
 	}//end unsubscribe()
 
 	/**
@@ -191,44 +182,21 @@ class SubscriptionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preferenceLink(string $contactId): JSONResponse {
-		$uid = $this->requireCrmUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
+		return $this->crmUserGuard()->respond(action: function () use ($contactId): JSONResponse {
+			if ($contactId === '') {
+				return new JSONResponse(['error' => 'Name the contact'], Http::STATUS_BAD_REQUEST);
+			}
 
-		if ($contactId === '') {
-			return new JSONResponse(['error' => 'Name the contact'], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse(['url' => $this->preferences->preferencesUrlFor(contactId: $contactId)]);
+			return new JSONResponse(['url' => $this->preferences->preferencesUrlFor(contactId: $contactId)]);
+		});
 	}//end preferenceLink()
 
 	/**
-	 * Resolve the caller, refusing anyone who is not a CRM user.
+	 * The CRM-user gate over this request's session.
 	 *
-	 * @return string|null The uid, or null when the caller may not proceed.
+	 * @return CrmUserGuard The gate.
 	 */
-	private function requireCrmUser(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		$uid = $user->getUID();
-		if ($this->policy->isPrivileged(uid: $uid) === false) {
-			return null;
-		}
-
-		return $uid;
-	}//end requireCrmUser()
-
-	/**
-	 * The single refusal, so an unauthenticated and an unprivileged caller
-	 * cannot tell each other apart.
-	 *
-	 * @return JSONResponse A 403.
-	 */
-	private function refuse(): JSONResponse {
-		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-	}//end refuse()
+	private function crmUserGuard(): CrmUserGuard {
+		return new CrmUserGuard(userSession: $this->userSession, policy: $this->policy);
+	}//end crmUserGuard()
 }//end class

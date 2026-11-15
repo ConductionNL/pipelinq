@@ -77,6 +77,17 @@ class WorkBucketsTest extends TestCase {
 	}//end testLeadsAndTasksAreDueByTheirOwnDate()
 
 	/**
+	 * An item without a term, of any kind, waits on the user (specs/my-work "An item without a term").
+	 *
+	 * @return void
+	 */
+	public function testAnItemWithoutATermWaitsOnMe(): void {
+		foreach (['request' => ['status' => 'in_progress'], 'lead' => ['status' => 'open'], 'task' => ['deadline' => '']] as $kind => $record) {
+			self::assertSame(expected: 'waiting-on-me', actual: $this->row(kind: $kind, record: $record)['bucket'], message: $kind);
+		}
+	}//end testAnItemWithoutATermWaitsOnMe()
+
+	/**
 	 * The phone groups: late, today, this week, later, and none without a date.
 	 *
 	 * @return void

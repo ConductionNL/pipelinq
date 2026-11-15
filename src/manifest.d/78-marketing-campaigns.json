@@ -28,6 +28,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaign",
+				"pagination": { "limit": 5 },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"addLabel": "New campaign",
 				"showEditAction": true,

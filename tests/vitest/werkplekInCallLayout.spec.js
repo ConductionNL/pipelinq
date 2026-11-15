@@ -32,8 +32,8 @@ describe('werkplek in-call layout (PqWerkplekKlant)', () => {
 			.sort((a, b) => a.gridY - b.gridY)
 			.map((item) => item.widgetId)
 		expect(column(0)).toEqual(['simple-call-who'])
-		expect(column(4)).toEqual(['interaction', 'client-cases'])
-		expect(column(8)).toEqual(['knowledge', 'simple-call-tasks', 'client-contacts'])
+		expect(column(4)).toEqual(['interaction', 'simple-call-matters'])
+		expect(column(8)).toEqual(['knowledge', 'simple-call-tasks', 'simple-call-earlier'])
 		for (const item of cards) {
 			expect(item.gridWidth, item.widgetId).toBe(4)
 		}

@@ -20,27 +20,25 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
-use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SearchQueryReportServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * SearchConsoleController: `GET /api/marketing/search-queries`.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
  */
 class SearchConsoleController extends Controller {
 
@@ -49,20 +47,18 @@ class SearchConsoleController extends Controller {
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param SearchQueryReportService $report The aggregation.
-	 * @param SearchConsoleImportService $importer Connection status.
-	 * @param IUserSession $userSession Session.
-	 * @param ObjectOwnerAccessPolicy $policy CRM privilege check.
+	 * @param SearchQueryReportServiceInterface $report The aggregation.
+	 * @param SearchConsoleImportServiceInterface $importer Connection status.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SearchQueryReportService $report,
-		private readonly SearchConsoleImportService $importer,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly SearchQueryReportServiceInterface $report,
+		private readonly SearchConsoleImportServiceInterface $importer,
+		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -81,17 +77,13 @@ class SearchConsoleController extends Controller {
 	 *
 	 * @return JSONResponse `{from, to, rows[], totalQueries, configured, properties[], serviceAccountEmail, lastImportAt}`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	#[NoAdminRequired]
 	public function index(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$result = $this->report->topQueries(from: $from, to: $to, limit: $limit, property: $property);

@@ -11,7 +11,7 @@
   - Competitors: the competitor watches (CompetitorWatches, embedded);
   - Connection audit: the stored follow audit, with Check again.
 
-  @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+  @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
   @spec openspec/specs/marketing/spec.md
 -->
 <template>
@@ -72,14 +72,15 @@
 						· {{ t('pipelinq', 'Last import: {when}', { when: lastImportAt }) }}
 					</span>
 				</p>
-				<!-- CnDataTable only reports header clicks; the sorting itself is
-					done here, over the rows the one request brought in. -->
+				<!-- The table sorts and filters the rows the one request brought
+					in; the sort it reports orders the download. -->
 				<CnDataTable
 					data-testid="search-queries-table"
+					framed
+					filterable
+					localHeaders
 					:columns="columns"
-					:rows="sortedRows"
-					:sortKey="sortKey"
-					:sortOrder="sortOrder"
+					:rows="rows"
 					rowKey="query"
 					@sort="onSort">
 					<template #column-ctr="{ row }">
@@ -142,38 +143,28 @@
 			<p v-if="auditRows.length === 0" class="search-queries__meta">
 				{{ t('pipelinq', 'No connections checked yet.') }}
 			</p>
-			<div v-else class="search-queries__table-card">
-				<table class="search-queries__table">
-					<thead>
-						<tr>
-							<th scope="col">
-								{{ t('pipelinq', 'Username') }}
-							</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Network') }}
-							</th>
-							<th scope="col">
-								{{ t('pipelinq', 'We follow them') }}
-							</th>
-							<th scope="col">
-								{{ t('pipelinq', 'They follow us') }}
-							</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Reason') }}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in auditRows" :key="row.id || `${row.network}:${row.counterpartHandle}`">
-							<td>{{ row.counterpartHandle || '—' }}</td>
-							<td>{{ networkLabel(row.network) }}</td>
-							<td>{{ auditVerdict(row.weFollowThem) }}</td>
-							<td>{{ auditVerdict(row.theyFollowUs) }}</td>
-							<td>{{ row.reason || '' }}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+			<CnDataTable
+				v-else
+				data-testid="search-insight-audit-table"
+				framed
+				filterable
+				localHeaders
+				:columns="auditColumns"
+				:rows="auditRows"
+				rowKey="rowKey">
+				<template #column-counterpartHandle="{ row }">
+					{{ row.counterpartHandle || '—' }}
+				</template>
+				<template #column-network="{ row }">
+					{{ networkLabel(row.network) }}
+				</template>
+				<template #column-weFollowThem="{ row }">
+					{{ auditVerdict(row.weFollowThem) }}
+				</template>
+				<template #column-theyFollowUs="{ row }">
+					{{ auditVerdict(row.theyFollowUs) }}
+				</template>
+			</CnDataTable>
 		</section>
 	</div>
 </template>
@@ -196,6 +187,7 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import CompetitorWatches from './CompetitorWatches.vue'
 import KeywordIntelligence from './KeywordIntelligence.vue'
 import { auditVerdict, CONNECTION_AUDIT_PATH } from '../../services/connectionAudit.js'
+import { downloadCsv } from '../../services/csvExport.js'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -244,12 +236,20 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The search query columns: every one sorts and filters from its head.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
 		columns() {
 			const number = (key, label) => ({
 				key,
 				label,
+				type: 'number',
 				sortable: true,
 				class: 'search-queries__num',
+				cellClass: 'search-queries__num',
 			})
 			return [
 				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
@@ -258,6 +258,23 @@ export default {
 				number('ctr', this.t('pipelinq', 'CTR')),
 				number('position', this.t('pipelinq', 'Position')),
 				number('pages', this.t('pipelinq', 'Pages')),
+			]
+		},
+
+		/**
+		 * The connection audit columns: every one sorts and filters the rows
+		 * the section holds, as board PqZoekinzicht draws the heads.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		auditColumns() {
+			return [
+				{ key: 'counterpartHandle', label: this.t('pipelinq', 'Username'), sortable: true },
+				{ key: 'network', label: this.t('pipelinq', 'Network'), sortable: true },
+				{ key: 'weFollowThem', label: this.t('pipelinq', 'We follow them'), sortable: true },
+				{ key: 'theyFollowUs', label: this.t('pipelinq', 'They follow us'), sortable: true },
+				{ key: 'reason', label: this.t('pipelinq', 'Reason'), sortable: true },
 			]
 		},
 
@@ -355,13 +372,17 @@ export default {
 		 *
 		 * @param {boolean} refresh Re-run the audit before reading.
 		 * @return {Promise<boolean>} Whether the audit answered.
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		async fetchAudit(refresh = false) {
 			try {
 				const { data } = await axios.get(generateUrl(CONNECTION_AUDIT_PATH), {
 					params: refresh ? { refresh: 'true' } : {},
 				})
-				this.auditRows = (data?.rows || []).slice(0, AUDIT_ROWS)
+				this.auditRows = (data?.rows || []).slice(0, AUDIT_ROWS).map((row) => ({
+					...row,
+					rowKey: row.id || `${row.network}:${row.counterpartHandle}`,
+				}))
 				return true
 			} catch {
 				this.auditRows = []
@@ -398,17 +419,7 @@ export default {
 		 */
 		download() {
 			const keys = ['query', 'clicks', 'impressions', 'ctr', 'position', 'pages']
-			const cell = (value) => {
-				const text = value === null || value === undefined ? '' : String(value)
-				return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-			}
-			const lines = [keys.join(';'), ...this.sortedRows.map((row) => keys.map((key) => cell(row[key])).join(';'))]
-			const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-			const link = document.createElement('a')
-			link.href = URL.createObjectURL(blob)
-			link.download = 'search-queries.csv'
-			link.click()
-			URL.revokeObjectURL(link.href)
+			downloadCsv('search-queries.csv', this.sortedRows, keys)
 		},
 
 		isoDay(date) {
@@ -424,8 +435,6 @@ export default {
 
 <style scoped lang="scss">
 .search-queries {
-	/* The board draws every table head on white. */
-	--cn-board-table-head-bg: var(--color-main-background);
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 1240px;
@@ -514,41 +523,5 @@ export default {
 
 :deep(.search-queries__num) {
 	text-align: end;
-}
-
-.search-queries__table-card {
-	border: 1px solid var(--color-border);
-	border-radius: 10px;
-	overflow-x: auto;
-}
-
-.search-queries__table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 14px;
-
-	th,
-	td {
-		padding: 10px 12px;
-		text-align: start;
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	th {
-		border-bottom: 0;
-		background: var(--cn-board-table-head-bg, color-mix(in srgb, var(--color-background-hover) 40%, var(--color-main-background)));
-		color: var(--color-text-maxcontrast);
-		font-weight: 600;
-		line-height: 1.2;
-	}
-
-	th:first-child,
-	td:first-child {
-		padding-inline-start: 18px;
-	}
-
-	tbody tr:last-child td {
-		border-bottom: 0;
-	}
 }
 </style>

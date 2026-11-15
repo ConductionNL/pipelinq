@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\JourneyController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCP\AppFramework\Http;
@@ -80,8 +81,7 @@ class JourneyControllerTest extends TestCase {
 			'pipelinq',
 			$this->request,
 			$this->journeys,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true])),
 		);
 
 		$this->authenticate('marketeer');
@@ -280,8 +280,7 @@ class JourneyControllerTest extends TestCase {
 			'pipelinq',
 			$this->request,
 			$this->journeys,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true])),
 		);
 	}//end authenticate()
 }//end class

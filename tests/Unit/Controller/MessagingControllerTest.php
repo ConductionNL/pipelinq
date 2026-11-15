@@ -25,11 +25,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
+use OCA\Pipelinq\Tests\Unit\Support\NextcloudDispatch;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -50,6 +53,13 @@ class MessagingControllerTest extends TestCase {
 	private MessagingController $controller;
 
 	/**
+	 * The request parameters the next send() reads.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $params = [];
+
+	/**
 	 * Build the controller with mocked collaborators.
 	 *
 	 * @return void
@@ -60,15 +70,31 @@ class MessagingControllerTest extends TestCase {
 		$this->consentService = $this->createMock(ConsentService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
-		$this->controller = new MessagingController($this->createMock(IRequest::class),
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => (isset($this->params[$key]) === true ? $this->params[$key] : $default)
+		);
+
+		$this->controller = new MessagingController($request,
 			$this->messagingService,
 			$this->providerRepo,
 			$this->consentService,
-			$this->userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end setUp()
+
+	/**
+	 * Call send() as Nextcloud dispatches it.
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return Response
+	 */
+	private function send(array $params): Response {
+		$this->params = $params;
+		return NextcloudDispatch::call(controller: $this->controller, method: 'send', params: $params);
+	}//end send()
 
 	/**
 	 * Stub the session to return a user with the given uid.
@@ -90,7 +116,7 @@ class MessagingControllerTest extends TestCase {
 	 */
 	public function testSendUnauthorized(): void {
 		$this->userSession->method('getUser')->willReturn(null);
-		$response = $this->controller->send(contactId: 'c1', channel: 'sms', body: 'hi');
+		$response = $this->send(params: ['contactId' => 'c1', 'channel' => 'sms', 'body' => 'hi']);
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 	}//end testSendUnauthorized()
 
@@ -101,7 +127,7 @@ class MessagingControllerTest extends TestCase {
 	 */
 	public function testSendInvalidChannel(): void {
 		$this->signIn('agent-1');
-		$response = $this->controller->send(contactId: 'c1', channel: 'carrier-pigeon', body: 'hi');
+		$response = $this->send(params: ['contactId' => 'c1', 'channel' => 'carrier-pigeon', 'body' => 'hi']);
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}//end testSendInvalidChannel()
 
@@ -115,7 +141,7 @@ class MessagingControllerTest extends TestCase {
 		$this->messagingService->method('loadContact')->willReturn(null);
 		$this->messagingService->expects($this->never())->method('send');
 
-		$response = $this->controller->send(contactId: 'c-nope', channel: 'sms', body: 'hi');
+		$response = $this->send(params: ['contactId' => 'c-nope', 'channel' => 'sms', 'body' => 'hi']);
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 	}//end testSendUnauthorizedContactRejectedBeforeDispatch()
 
@@ -129,7 +155,7 @@ class MessagingControllerTest extends TestCase {
 		$this->messagingService->method('loadContact')->willReturn(['uuid' => 'c1']);
 		$this->messagingService->method('send')->willReturn(['status' => 'sent', 'messageId' => 'm1']);
 
-		$response = $this->controller->send(contactId: 'c1', channel: 'sms', body: 'hi');
+		$response = $this->send(params: ['contactId' => 'c1', 'channel' => 'sms', 'body' => 'hi']);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame('sent', $response->getData()['status']);
 		$this->assertSame('m1', $response->getData()['messageId']);
@@ -145,7 +171,7 @@ class MessagingControllerTest extends TestCase {
 		$this->messagingService->method('loadContact')->willReturn(['uuid' => 'c1']);
 		$this->messagingService->method('send')->willReturn(['status' => 'consent-missing']);
 
-		$response = $this->controller->send(contactId: 'c1', channel: 'whatsapp', templateId: 'tpl-1');
+		$response = $this->send(params: ['contactId' => 'c1', 'channel' => 'whatsapp', 'templateId' => 'tpl-1']);
 		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 		$this->assertSame('consent-missing', $response->getData()['status']);
 	}//end testSendConsentMissingMaps422()
@@ -160,7 +186,7 @@ class MessagingControllerTest extends TestCase {
 		$this->messagingService->method('loadContact')->willReturn(['uuid' => 'c1']);
 		$this->messagingService->method('send')->willReturn(['status' => 'failed']);
 
-		$response = $this->controller->send(contactId: 'c1', channel: 'sms', body: 'hi');
+		$response = $this->send(params: ['contactId' => 'c1', 'channel' => 'sms', 'body' => 'hi']);
 		$this->assertSame(Http::STATUS_BAD_GATEWAY, $response->getStatus());
 		$this->assertArrayNotHasKey('error', $response->getData());
 	}//end testSendFailureMaps502()
@@ -426,8 +452,7 @@ class MessagingControllerTest extends TestCase {
 			$service,
 			$providerRepo,
 			$consent,
-			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 		);
 
 		$response = $controller->preflight(contactId: 'c1');

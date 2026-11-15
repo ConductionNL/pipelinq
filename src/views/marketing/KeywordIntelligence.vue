@@ -11,7 +11,7 @@
   page paints is the failure pipelinq#1781 removed from the blast performance
   page, and the derivations run over the same rows anyway.
 
-  @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+  @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 -->
 <template>
 	<div class="keyword-intel" :class="{ 'keyword-intel--embedded': embedded }">
@@ -104,61 +104,34 @@
 						)
 					}}
 				</p>
-				<div v-else class="keyword-intel__scroll">
-					<table class="keyword-intel__table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Position') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Impressions') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'CTR') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Behind by') }}
-								</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in strikingDistance" :key="row.query">
-								<td>{{ row.query }}</td>
-								<td class="keyword-intel__num">
-									{{ row.position }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ row.impressions }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ percent(row.ctr) }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ shortfall(row) }}
-								</td>
-								<td>
-									<NcButton
-										v-if="
-											!isConfirmed(row.query, confirmedTerms)
-										"
-										variant="tertiary"
-										:title="addTargetHint"
-										@click="
-											openConfirm(row, 'striking-distance')
-										">
-										{{ t('pipelinq', 'Add as target') }}
-									</NcButton>
-									<span v-else class="keyword-intel__taken">
-										{{ t('pipelinq', 'Already a target') }}
-									</span>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					v-else
+					data-testid="keyword-intel-striking-table"
+					framed
+					filterable
+					localHeaders
+					:columns="strikingColumns"
+					:rows="strikingDistance"
+					rowKey="query">
+					<template #column-ctr="{ row }">
+						{{ percent(row.ctr) }}
+					</template>
+					<template #column-shortfall="{ row }">
+						{{ shortfall(row) }}
+					</template>
+					<template #column-target="{ row }">
+						<NcButton
+							v-if="!isConfirmed(row.query, confirmedTerms)"
+							variant="tertiary"
+							:title="addTargetHint"
+							@click="openConfirm(row, 'striking-distance')">
+							{{ t('pipelinq', 'Add as target') }}
+						</NcButton>
+						<span v-else class="keyword-intel__taken">
+							{{ t('pipelinq', 'Already a target') }}
+						</span>
+					</template>
+				</CnDataTable>
 			</section>
 
 			<section
@@ -301,44 +274,25 @@
 						)
 					}}
 				</p>
-				<div v-else class="keyword-intel__scroll">
-					<table class="keyword-intel__table">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Impressions') }}
-								</th>
-								<th scope="col" class="keyword-intel__num">
-									{{ t('pipelinq', 'Position') }}
-								</th>
-								<th scope="col" />
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in gaps" :key="row.query">
-								<td>{{ row.query }}</td>
-								<td class="keyword-intel__num">
-									{{ row.impressions }}
-								</td>
-								<td class="keyword-intel__num">
-									{{ row.position }}
-								</td>
-								<td>
-									<NcButton
-										v-if="
-											!isConfirmed(row.query, confirmedTerms)
-										"
-										variant="tertiary"
-										:title="addTargetHint"
-										@click="openConfirm(row, 'content-gap')">
-										{{ t('pipelinq', 'Add as target') }}
-									</NcButton>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+				<CnDataTable
+					v-else
+					data-testid="keyword-intel-gaps-table"
+					framed
+					filterable
+					localHeaders
+					:columns="gapColumns"
+					:rows="gaps"
+					rowKey="query">
+					<template #column-target="{ row }">
+						<NcButton
+							v-if="!isConfirmed(row.query, confirmedTerms)"
+							variant="tertiary"
+							:title="addTargetHint"
+							@click="openConfirm(row, 'content-gap')">
+							{{ t('pipelinq', 'Add as target') }}
+						</NcButton>
+					</template>
+				</CnDataTable>
 			</section>
 		</template>
 
@@ -356,6 +310,7 @@
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -380,9 +335,26 @@ import {
 
 const DAY = 24 * 60 * 60 * 1000
 
+/**
+ * The sections the keyword proposals answer fills, in order, each with what
+ * it shows when the answer has none.
+ */
+const PROPOSAL_SECTIONS = [
+	['buckets', () => []],
+	['strikingDistance', () => []],
+	['cannibalisation', () => []],
+	['gaps', () => []],
+	['crawl', () => ({ crawled: false, reason: '' })],
+	['confirmedTerms', () => []],
+	['minImpressions', () => 0],
+	['from', () => ''],
+	['to', () => ''],
+]
+
 export default {
 	name: 'KeywordIntelligence',
 	components: {
+		CnDataTable,
 		KeyVariant,
 		KeywordTargetConfirmModal,
 		NcButton,
@@ -430,17 +402,51 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The tooltip on every "Add as target" button.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		addTargetHint() {
 			return this.t('pipelinq', 'Save this search as a keyword to work on')
 		},
 
 		/**
+		 * The "one push from page one" columns: every data column sorts and
+		 * filters the rows the section holds, as board PqZoekinzicht draws the
+		 * heads; the confirm column carries no head controls.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		strikingColumns() {
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				this.numberColumn('position', this.t('pipelinq', 'Position')),
+				this.numberColumn('impressions', this.t('pipelinq', 'Impressions')),
+				this.numberColumn('ctr', this.t('pipelinq', 'CTR')),
+				this.numberColumn('shortfall', this.t('pipelinq', 'Behind by')),
+				{ key: 'target', label: '', sortable: false, filterable: false },
+			]
+		},
+
+		/**
+		 * The "nothing of ours answers this" columns, as `strikingColumns`.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		gapColumns() {
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				this.numberColumn('impressions', this.t('pipelinq', 'Impressions')),
+				this.numberColumn('position', this.t('pipelinq', 'Position')),
+				{ key: 'target', label: '', sortable: false, filterable: false },
+			]
+		},
+
+		/**
 		 * The selectable windows.
 		 *
 		 * @return {Array<object>} days and label per option.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		windowOptions() {
 			return [
@@ -453,7 +459,7 @@ export default {
 		 * Whether there is anything at all to show.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		isEmpty() {
 			return !this.buckets.some((bucket) => bucket.queries > 0)
@@ -464,7 +470,7 @@ export default {
 		 * to derive from, and the settings are where that is fixed.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		emptyDescription() {
 			return this.t(
@@ -498,15 +504,27 @@ export default {
 		crawlNotice,
 
 		/**
+		 * A right-aligned number column that sorts and filters as a number.
+		 *
+		 * @param {string} key The row field.
+		 * @param {string} label The head label.
+		 * @return {object} The column.
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 */
+		numberColumn(key, label) {
+			return { key, label, type: 'number', sortable: true, class: 'keyword-intel__num', cellClass: 'keyword-intel__num' }
+		},
+
+		/**
 		 * GET /api/marketing/keyword-proposals for the chosen window. One
 		 * request serves every section on this page.
 		 *
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		async fetchProposals() {
 			this.loading = true
 			this.error = ''
-			const days = this.days || this.window?.days || 28
+			const days = this.windowDays()
 			const today = new Date()
 			const start = new Date(today.getTime() - days * DAY)
 			try {
@@ -516,15 +534,9 @@ export default {
 				const { data } = await axios.get(url, {
 					params: { from: this.isoDay(start), to: this.isoDay(today) },
 				})
-				this.buckets = data?.buckets || []
-				this.strikingDistance = data?.strikingDistance || []
-				this.cannibalisation = data?.cannibalisation || []
-				this.gaps = data?.gaps || []
-				this.crawl = data?.crawl || { crawled: false, reason: '' }
-				this.confirmedTerms = data?.confirmedTerms || []
-				this.minImpressions = data?.minImpressions || 0
-				this.from = data?.from || ''
-				this.to = data?.to || ''
+				for (const [key, empty] of PROPOSAL_SECTIONS) {
+					this[key] = data?.[key] || empty()
+				}
 			} catch (e) {
 				this.buckets = []
 				this.error =
@@ -536,11 +548,18 @@ export default {
 		},
 
 		/**
+		 * @return {number} The days the page looks back: the chosen window, else 28.
+		 */
+		windowDays() {
+			return this.days || this.window?.days || 28
+		},
+
+		/**
 		 * Open the confirmation dialog for one proposal.
 		 *
 		 * @param {object} proposal The proposal row.
 		 * @param {string} kind Which derivation proposed it.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		openConfirm(proposal, kind) {
 			this.confirming = { proposal, kind }
@@ -551,7 +570,7 @@ export default {
 		 * proposals do not change because a target was created.
 		 *
 		 * @param {string} term The confirmed term.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		onConfirmed(term) {
 			this.confirmedTerms = [
@@ -564,7 +583,7 @@ export default {
 		/**
 		 * @param {Date} date A date.
 		 * @return {string} YYYY-MM-DD in UTC.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
 		 */
 		isoDay(date) {
 			return date.toISOString().slice(0, 10)
@@ -577,7 +596,7 @@ export default {
 		 * @param {object} choice What the marketer chose.
 		 * @param {string} kind The proposal kind.
 		 * @return {object} The request body.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 		 */
 		payloadFor(proposal, choice, kind) {
 			return confirmPayload(proposal, choice, kind)
@@ -663,7 +682,8 @@ export default {
 	}
 }
 
-.keyword-intel__num {
+.keyword-intel__num,
+:deep(.keyword-intel__num) {
 	text-align: end;
 }
 

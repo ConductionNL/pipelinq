@@ -51,4 +51,34 @@ describe('PipelineBoard list headers', () => {
 		const columns = board.computed.listColumns.call({ t: (app, text) => text })
 		expect(columns.map((c) => c.key)).toEqual(['title', 'schemaSlug', 'stage', 'assignee', 'value', 'dueDate', 'priority', 'score', 'age'])
 	})
+
+	describe('sortedListItems', () => {
+		const sorted = (sortBy, sortDir, items) => {
+			const ctx = { sortBy, sortDir, filteredItems: items, getItemColumnValue: (item) => item.stage }
+			ctx.listSortKey = board.methods.listSortKey?.bind(ctx)
+			return board.computed.sortedListItems.call(ctx).map((item) => item.id)
+		}
+		const items = [
+			{ id: 'a', title: 'beta', value: '20', priority: 'low', stage: 'Won' },
+			{ id: 'b', title: 'Alpha', value: '300', priority: 'urgent', stage: 'new' },
+			{ id: 'c', title: 'gamma', value: 'x', priority: undefined, stage: null },
+		]
+
+		it('sorts text case-insensitively both ways', () => {
+			expect(sorted('title', 'asc', items)).toEqual(['b', 'a', 'c'])
+			expect(sorted('title', 'desc', items)).toEqual(['c', 'a', 'b'])
+			expect(sorted('stage', 'asc', items)).toEqual(['c', 'b', 'a'])
+		})
+
+		it('sorts value as a number and priority by rank, an unknown priority as normal', () => {
+			expect(sorted('value', 'asc', items)).toEqual(['c', 'a', 'b'])
+			expect(sorted('priority', 'asc', items)).toEqual(['b', 'c', 'a'])
+		})
+
+		it('keeps the order for a column that does not sort, and does not touch the source list', () => {
+			expect(sorted('unknown', 'asc', items)).toEqual(['a', 'b', 'c'])
+			sorted('title', 'asc', items)
+			expect(items.map((item) => item.id)).toEqual(['a', 'b', 'c'])
+		})
+	})
 })

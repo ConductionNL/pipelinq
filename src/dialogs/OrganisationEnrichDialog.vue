@@ -41,12 +41,12 @@
 				<table class="enrich__table" data-testid="enrich-proposals">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Use') }}</th>
-							<th>{{ t('pipelinq', 'Organisation') }}</th>
-							<th>{{ t('pipelinq', 'Field') }}</th>
-							<th>{{ t('pipelinq', 'Now') }}</th>
-							<th>{{ t('pipelinq', 'Found') }}</th>
-							<th>{{ t('pipelinq', 'Source') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Use') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Organisation') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Field') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Now') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Found') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Source') }}</th>
 						</tr>
 					</thead>
 					<tbody>

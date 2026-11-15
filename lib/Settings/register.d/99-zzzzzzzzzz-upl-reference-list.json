@@ -1,0 +1,76 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "product-service-catalogue-public task 4.1. The national list of government products (UPL) as a lookup: one uplProduct per UPL URI, written by `occ pipelinq:upl:import` (UplListImporter) and never by hand, so the schema grants no write verb and follows the register's staff read. The product form offers the list on uplReference through x-options-from; the stored value stays the URI, so a product saved before the import is still valid. hideWhenEmpty keeps the field a free URI input until the list is imported. Product moves to 1.2.1 so OpenRegister writes the picker onto an existing schema."
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "uplProduct"
+        ]
+      }
+    },
+    "schemas": {
+      "uplProduct": {
+        "slug": "uplProduct",
+        "title": "UPL product",
+        "icon": "FormatListBulleted",
+        "version": "1.0.0",
+        "summary": "An entry in the national list of government products",
+        "description": "One product from the national list of government products (UPL), imported from the national source.",
+        "required": [
+          "name",
+          "uri"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The product's uniform name in the national list.",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "uri": {
+            "type": "string",
+            "title": "URI",
+            "description": "The product's URI in the national list.",
+            "maxLength": 500
+          },
+          "audience": {
+            "type": "array",
+            "title": "Audience",
+            "description": "Who the national list marks this product for.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "resident",
+                "business"
+              ],
+              "x-enum-labels": {
+                "resident": "Residents",
+                "business": "Businesses"
+              }
+            }
+          }
+        }
+      },
+      "product": {
+        "slug": "product",
+        "version": "1.2.1",
+        "properties": {
+          "uplReference": {
+            "x-options-from": {
+              "register": "pipelinq",
+              "schema": "uplProduct",
+              "valueField": "uri",
+              "labelField": "name",
+              "hideWhenEmpty": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

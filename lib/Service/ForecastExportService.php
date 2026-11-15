@@ -24,10 +24,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
+use OCA\Pipelinq\Service\Support\FindAllAsArrays;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Snapshot export builder.
@@ -40,7 +44,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastExportService {
+class ForecastExportService implements ForecastExportServiceInterface {
+	use PayloadToArray;
+	use InjectedObjectService;
+	use FindAllAsArrays;
+
 	/**
 	 * The CSV header row.
 	 *
@@ -80,35 +88,51 @@ class ForecastExportService {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-01, REQ-FRC-010-05
 	 */
 	public function exportSnapshots(string $periodId, string $level, ?string $ownerId, int $limit, int $offset): array {
-		$filters = ['period_id' => $periodId, 'level' => $level];
+		$filters = ['period_id' => $periodId, 'level' => $level] + self::ownerFilter(ownerId: $ownerId);
+
+		return $this->snapshotPage(filters: $filters, window: ['limit' => $limit, 'offset' => $offset]);
+	}//end exportSnapshots()
+
+	/**
+	 * The owner filter, or none when no owner is given.
+	 *
+	 * @param string|null $ownerId Optional owner filter.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function ownerFilter(?string $ownerId): array {
 		if ($ownerId !== null && $ownerId !== '') {
-			$filters['owner_id'] = $ownerId;
+			return ['owner_id' => $ownerId];
 		}
 
+		return [];
+	}//end ownerFilter()
+
+	/**
+	 * One page of presented snapshots matching the filters, with the full count.
+	 *
+	 * @param array<string, string> $filters The period_id, level and optional owner_id filters.
+	 * @param array{limit: int, offset: int} $window The page size and offset.
+	 *
+	 * @return array{snapshots: array<int, array<string, mixed>>, total: int, limit: int, offset: int}
+	 */
+	private function snapshotPage(array $filters, array $window): array {
 		// Push the ascending sort and the page window down into OpenRegister,
 		// and count the full matching set separately, instead of fetching every
 		// snapshot and sorting/slicing in PHP.
 		$total = $this->countObjects(schemaKey: 'forecastSnapshot_schema', filters: $filters);
 		$page = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			filters: $filters,
-			sort: ['as_of_date' => 'ASC'],
-			limit: $limit,
-			offset: $offset
+			query: ['filters' => $filters, 'sort' => ['as_of_date' => 'ASC']] + $window
 		);
 
 		$snapshots = [];
 		foreach ($page as $row) {
-			$snapshots[] = $this->presentSnapshot(row: $row, periodId: $periodId);
+			$snapshots[] = $this->presentSnapshot(row: $row, periodId: $filters['period_id']);
 		}
 
-		return [
-			'snapshots' => $snapshots,
-			'total' => $total,
-			'limit' => $limit,
-			'offset' => $offset,
-		];
-	}//end exportSnapshots()
+		return ['snapshots' => $snapshots, 'total' => $total] + $window;
+	}//end snapshotPage()
 
 	/**
 	 * Render snapshots as injection-safe CSV.
@@ -172,7 +196,7 @@ class ForecastExportService {
 			'currency' => (string)($row['currency'] ?? 'EUR'),
 			'partial' => (bool)($row['partial'] ?? false),
 			'exchange_rates' => $this->exchangeRates(row: $row),
-			'calculation_audit' => $this->buildAudit(row: $row, periodId: $periodId, level: $level),
+			'calculation_audit' => $this->buildAudit(periodId: $periodId, level: $level),
 		];
 	}//end presentSnapshot()
 
@@ -200,20 +224,19 @@ class ForecastExportService {
 	 * Only meaningful above rep level; a rep snapshot returns an empty audit
 	 * (its contribution is the deal-level commit, traced via deal_snapshot_ids).
 	 *
-	 * @param array<string, mixed> $row The raw snapshot.
 	 * @param string $periodId The period id.
 	 * @param string $level The snapshot level.
 	 *
 	 * @return array<int, array<string, mixed>> The audit rows.
 	 */
-	private function buildAudit(array $row, string $periodId, string $level): array {
+	private function buildAudit(string $periodId, string $level): array {
 		$childLevel = $this->childLevel(level: $level);
 		if ($childLevel === null) {
 			return [];
 		}
 
 		$audit = [];
-		$children = $this->childOwners(row: $row, level: $level, periodId: $periodId, childLevel: $childLevel);
+		$children = $this->childOwners(periodId: $periodId, childLevel: $childLevel);
 		foreach ($children as $childId) {
 			$rollUp = $this->forecastService->computeRollUp(ownerId: $childId, periodId: $periodId, level: $childLevel);
 			$overrideAmount = null;
@@ -254,20 +277,15 @@ class ForecastExportService {
 	 * The child owners are read from sibling snapshots at the child level for
 	 * the same period (the snapshot job already materialized them).
 	 *
-	 * @param array<string, mixed> $row The parent snapshot.
-	 * @param string $level The parent level.
 	 * @param string $periodId The period id.
 	 * @param string $childLevel The child level.
 	 *
 	 * @return array<int, string> The child owner ids.
 	 */
-	private function childOwners(array $row, string $level, string $periodId, string $childLevel): array {
+	private function childOwners(string $periodId, string $childLevel): array {
 		$childRows = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			filters: [
-				'period_id' => $periodId,
-				'level' => $childLevel,
-			]
+			query: ['filters' => ['period_id' => $periodId, 'level' => $childLevel]]
 		);
 
 		$owners = [];
@@ -278,7 +296,6 @@ class ForecastExportService {
 			}
 		}
 
-		unset($row, $level);
 		return array_keys($owners);
 	}//end childOwners()
 
@@ -286,48 +303,26 @@ class ForecastExportService {
 	 * Query objects of a configured schema with equality filters.
 	 *
 	 * @param string $schemaKey The app-config schema key.
-	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param array<string, string> $sort Optional sort map (field => ASC|DESC) pushed to OR.
-	 * @param int|null $limit Optional page size pushed to OR.
-	 * @param int|null $offset Optional offset pushed to OR.
+	 * @param array<string, mixed> $query Additional equality `filters`, and an optional `sort` map
+	 *                                    (field => ASC|DESC), `limit` and `offset`, all pushed to OR.
 	 *
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
-	private function findObjects(string $schemaKey, array $filters, array $sort = [], ?int $limit = null, ?int $offset = null): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($register === '' || $schema === '') {
+	private function findObjects(string $schemaKey, array $query): array {
+		$allFilters = $this->scopedFilters(schemaKey: $schemaKey, filters: $query['filters']);
+		if ($allFilters === null) {
 			return [];
 		}
-
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
 		$config = ['filters' => $allFilters];
-		if ($sort !== []) {
-			$config['sort'] = $sort;
+		if (($query['sort'] ?? []) !== []) {
+			$config['sort'] = $query['sort'];
 		}
 
-		if ($limit !== null) {
-			$config['limit'] = $limit;
-		}
+		$window = ['limit' => ($query['limit'] ?? null), 'offset' => ($query['offset'] ?? null)];
+		$config += array_filter($window, static fn (?int $value): bool => $value !== null);
 
-		if ($offset !== null) {
-			$config['offset'] = $offset;
-		}
-
-		try {
-			$results = $this->getObjectService()->findAll(config: $config);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: forecast export query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
-		}
-
-		return $objects;
+		return $this->findAllAsArrays(config: $config, failure: 'Pipelinq: forecast export query failed');
 	}//end findObjects()
 
 	/**
@@ -338,16 +333,13 @@ class ForecastExportService {
 	 *
 	 * @return int The matching row count, or 0 when OR is unavailable.
 	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-8
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-1/tasks.md#task-8
 	 */
 	private function countObjects(string $schemaKey, array $filters): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($register === '' || $schema === '') {
+		$allFilters = $this->scopedFilters(schemaKey: $schemaKey, filters: $filters);
+		if ($allFilters === null) {
 			return 0;
 		}
-
-		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
 		try {
 			return $this->getObjectService()->count(config: ['filters' => $allFilters]);
@@ -358,42 +350,21 @@ class ForecastExportService {
 	}//end countObjects()
 
 	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
+	 * The configured register and schema followed by the equality filters, or
+	 * null when the register or the schema is not configured.
 	 *
-	 * @param mixed $object The entity or array.
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $filters Additional equality filters.
 	 *
-	 * @return array<string, mixed> The object data.
+	 * @return array<string, mixed>|null
 	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
+	private function scopedFilters(string $schemaKey, array $filters): ?array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '') {
+			return null;
 		}
 
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
+		return array_merge(['register' => $register, 'schema' => $schema], $filters);
+	}//end scopedFilters()
 }//end class

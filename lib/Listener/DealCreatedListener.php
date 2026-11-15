@@ -25,10 +25,12 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\ForecastDealService;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LeadRotationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -69,6 +71,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 class DealCreatedListener implements IEventListener, DeferredObjectWork {
+	use ConfiguredSchemaObjectRead;
+	use ConfiguredSchemaObjectWrite;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -78,22 +82,45 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 	public const HANDLER_KEY = 'deal-created';
 
 	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'lead_schema';
+
+	/**
+	 * Log line when the deferred re-read fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to re-read deal for deferred forecast_category default';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to default forecast_category on new deal';
+
+	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ForecastDealService $dealService The forecast deal lifecycle service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
+	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param LeadRotationServiceInterface|null $rotation Assigns a new lead in turn when switched on.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
-		private ForecastDealService $dealService,
+		private SchemaMapServiceInterface $schemaMapService,
+		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
 		private LoggerInterface $logger,
+		private ?LeadRotationServiceInterface $rotation=null,
 	) {
 	}//end __construct()
 
@@ -165,12 +192,35 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 		}
 
 		$mutated = $this->dealService->applyDefaultCategory($data);
+		$rotated = $this->rotate(data: ($mutated ?? $data));
+		if ($rotated !== null) {
+			$mutated = $rotated;
+		}
+
 		if ($mutated === null) {
 			return;
 		}
 
 		$this->persist(uuid: $uuid, data: $mutated);
 	}//end runDeferredWork()
+
+	/**
+	 * Assign a new lead without an assignee in turn, when an administrator
+	 * switched automatic lead assignment on.
+	 *
+	 * @param array<string, mixed> $data The deal's current data.
+	 *
+	 * @return array<string, mixed>|null The assigned deal, or null when nothing changes.
+	 *
+	 * @spec openspec/changes/pipeline-lead-rotation/specs/lead-rotation/spec.md#requirement-new-unassigned-leads-are-assigned-in-turn-req-lrt-001
+	 */
+	private function rotate(array $data): ?array {
+		if ($this->rotation === null || $this->rotation->isEnabled() === false) {
+			return null;
+		}
+
+		return $this->rotation->assign(lead: $data);
+	}//end rotate()
 
 	/**
 	 * Whether the entity belongs to the lead (deal) schema.
@@ -183,67 +233,4 @@ class DealCreatedListener implements IEventListener, DeferredObjectWork {
 		$entityType = $this->schemaMapService->resolveEntityType(schemaId: $entity->getSchema());
 		return $entityType === 'lead';
 	}//end isLead()
-
-	/**
-	 * Read the deal's current data.
-	 *
-	 * @param string $uuid The deal UUID.
-	 *
-	 * @return array<string, mixed>|null The deal data, or null when it is gone.
-	 */
-	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return null;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to re-read deal for deferred forecast_category default',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetch()
-
-	/**
-	 * Persist the mutated deal data back to OpenRegister.
-	 *
-	 * @param string $uuid The deal UUID.
-	 * @param array<string, mixed> $data The mutated deal data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to default forecast_category on new deal',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

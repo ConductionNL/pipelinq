@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SemanticHandoffController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\TicketService;
@@ -189,7 +190,10 @@ class SemanticHandoffControllerTest extends TestCase {
 			container: $this->container,
 			appConfig: $this->appConfig,
 			ticketService: $this->ticketService,
-			userSession: $this->userSession,
+			privilege: new CrmPrivilegeCheck($this->userSession, new ObjectOwnerAccessPolicy(
+				groupManager: $groupManager,
+				appConfig: $this->createMock(originalClassName: IAppConfig::class)
+			)),
 			accessPolicy: new ObjectOwnerAccessPolicy(
 				groupManager: $groupManager,
 				appConfig: $this->createMock(originalClassName: IAppConfig::class)

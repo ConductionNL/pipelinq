@@ -104,6 +104,12 @@
 						"formatter": "enumLabel"
 					},
 					{
+						"key": "requiredSkills",
+						"label": "Matching resources",
+						"sortable": false,
+						"formatter": "serviceMatchLine"
+					},
+					{
 						"key": "status",
 						"label": "Status",
 						"formatter": "enumLabel",
@@ -274,6 +280,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "appointmentBooking",
+				"pagination": { "limit": 8 },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_boardNote": "PqAfspraken: the count line, the period chips with their counts, a selectable table that reads when, with whom, about what, where and with which handler, and a footer that says how appointments come in. The chips read the booking's own fields: the period from startAt, Mine from the handler (assignee), Unconfirmed from the awaiting-deposit status. 'This week' is the coming seven days, the window the filter tokens can name.",
 				"showAdd": false,
@@ -334,8 +341,9 @@
 				"statusPill": { "field": "status", "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" }, "labels": { "pending-deposit": "Awaiting deposit", "confirmed": "Confirmed", "completed": "Finished", "no-show": "No-show", "cancelled-by-customer": "Cancelled by the customer", "cancelled-by-business": "Cancelled by us", "rescheduled": "Rescheduled" } },
 				"headerMeta": "{startAt|weekday} · {startAt|time} to {endAt|time}",
 				"tabsLabel": "Appointment",
+				"gridFloat": false,
 				"layout": [
-					{ "id": "1", "widgetId": "booking-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 18, "showTitle": false }
+					{ "id": "1", "widgetId": "booking-panels", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 18, "showTitle": false, "sizeToContent": true }
 				],
 				"sideColumn": ["booking-context", "booking-when", "booking-request"],
 				"widgets": [

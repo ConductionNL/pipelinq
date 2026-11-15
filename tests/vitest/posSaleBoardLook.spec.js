@@ -62,10 +62,14 @@ vi.mock('@nextcloud/router', () => ({ generateUrl: (url) => url }))
 vi.mock('@nextcloud/l10n', () => ({ getLocale: () => 'nl', getLanguage: () => 'nl', translate: (app, text) => text }))
 
 const posts = []
+const server = { sale: { transaction: {}, lines: [] } }
 vi.mock('@nextcloud/axios', () => ({
 	default: {
 		post: vi.fn(async (url, body) => {
 			posts.push([url, body])
+			if (url.endsWith('/recalculate')) {
+				return { data: server.sale }
+			}
 			if (url.endsWith('/barcode-lookup')) {
 				return { data: { product: { '@self': { id: 'p-map' }, name: 'City map', unitPrice: 4.95, taxRate: 9 } } }
 			}
@@ -149,16 +153,21 @@ describe('the new sale (PqKassa)', () => {
 		expect(wrapper.vm.linesHint).toContain('The barcode found City map in Products.')
 	})
 
-	it('totals excl. VAT, VAT and incl. VAT, and previews the receipt', async () => {
+	it('shows the totals and line total the server worked out, and previews the receipt', async () => {
+		server.sale = { transaction: { subtotal: 10, totalTax: 2.1, total: 12.1, taxBreakdown: [{ rate: 21, base: 10, tax: 2.1 }] }, lines: [{ id: 'line', taxAmount: 2.1, lineTotal: 12.1 }] }
 		const wrapper = await mountNew()
 		wrapper.vm.addProductLine({ id: 'p1', name: 'Waste pass, extra', unitPrice: 10, taxRate: 21 })
-		await flushPromises()
+		await wrapper.vm.syncCart()
+		expect(posts.map(([url]) => url)).toContain('/apps/pipelinq/api/pos-transactions/tx-1/recalculate')
+		expect(store.saveObject).toHaveBeenCalledWith('posTransactionLine', expect.not.objectContaining({ lineTotal: expect.anything() }))
+		expect(wrapper.vm.lines[0].lineTotal).toBe(12.1)
 		expect(wrapper.vm.totals.total).toBe(12.1)
 		expect(wrapper.vm.vatRows).toEqual([{ key: 'vat', label: 'VAT 21%', tax: 2.1 }])
 		expect(wrapper.vm.receiptText).toMatch(/Waste pass, extra €\s?12,10/)
 	})
 
 	it('checks out through the payment dialog and books points, gift card and the rest', async () => {
+		server.sale = { transaction: { subtotal: 96.41, totalTax: 0, total: 96.41, taxBreakdown: [{ rate: 0, base: 96.41, tax: 0 }] }, lines: [{ id: 'line', taxAmount: 0, lineTotal: 96.41 }] }
 		const wrapper = await mountNew()
 		wrapper.vm.addProductLine({ id: 'p1', name: 'Parking permit', unitPrice: 96.41, taxRate: 0 })
 		wrapper.vm.transaction.tenderType = 'card'

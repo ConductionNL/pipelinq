@@ -24,10 +24,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
+use OCA\Pipelinq\Service\Support\FindAllAsArrays;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Sales quota lookup and attainment math.
@@ -38,34 +42,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec exclude infrastructure utility with no feature requirement of its own; it is
  *   exercised through the features that call it
  */
-class QuotaService {
-	/**
-	 * App-config key for the at-risk quota-attainment threshold (percent).
-	 *
-	 * @var string
-	 */
-	public const AT_RISK_PERCENT_KEY = 'forecast_at_risk_percent';
-
-	/**
-	 * App-config key for the at-risk days-remaining threshold.
-	 *
-	 * @var string
-	 */
-	public const AT_RISK_DAYS_KEY = 'forecast_at_risk_days';
-
-	/**
-	 * Default at-risk attainment threshold (90%).
-	 *
-	 * @var int
-	 */
-	public const AT_RISK_PERCENT_DEFAULT = 90;
-
-	/**
-	 * Default at-risk days-remaining threshold (30 days).
-	 *
-	 * @var int
-	 */
-	public const AT_RISK_DAYS_DEFAULT = 30;
+class QuotaService implements QuotaServiceInterface {
+	use PayloadToArray;
+	use InjectedObjectService;
+	use FindAllAsArrays;
 
 	/**
 	 * Best-case weighting used in the projected-attainment formula.
@@ -225,7 +205,7 @@ class QuotaService {
 	 *   exercised through the features that call it
 	 */
 	public function getAtRiskPercent(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
 		if ($value > 0) {
 			return $value;
 		}
@@ -241,7 +221,7 @@ class QuotaService {
 	 *   exercised through the features that call it
 	 */
 	public function getAtRiskDays(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);
 		if ($value > 0) {
 			return $value;
 		}
@@ -258,66 +238,14 @@ class QuotaService {
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
 	 */
 	private function findObjects(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
 		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
-		try {
-			$results = $this->getObjectService()->findAll(config: ['filters' => $allFilters]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: quota query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
-		}
-
-		return $objects;
+		return $this->findAllAsArrays(config: ['filters' => $allFilters], failure: 'Pipelinq: quota query failed');
 	}//end findObjects()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The object data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

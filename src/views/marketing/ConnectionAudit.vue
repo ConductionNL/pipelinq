@@ -14,7 +14,7 @@
   rendering is the fan-out pipelinq#1781 removed from the blast performance
   page, and it would be slower by a factor of the client list.
 
-  @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+  @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 -->
 <template>
 	<div class="connection-audit">
@@ -118,7 +118,7 @@ export default {
 		 * GET /api/marketing/connection-audit. One read serves the page.
 		 *
 		 * @param {boolean} refresh Whether to re-run the audit first.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+		 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 		 */
 		async fetchRows(refresh = false) {
 			this.error = ''
@@ -143,7 +143,7 @@ export default {
 		/**
 		 * Re-run the audit against the networks that will answer.
 		 *
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+		 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 		 */
 		async refresh() {
 			this.refreshing = true
@@ -153,7 +153,7 @@ export default {
 		/**
 		 * @param {object} row An audit row.
 		 * @return {string} A stable key for the row.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+		 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 		 */
 		keyOf(row) {
 			return `${row?.network || ''}:${row?.counterpartHandle || ''}`
@@ -165,7 +165,7 @@ export default {
 		 *
 		 * @param {string} verdict The stored verdict.
 		 * @return {string}
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+		 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 		 */
 		verdictLabel(verdict) {
 			const labels = {
@@ -179,7 +179,7 @@ export default {
 		/**
 		 * @param {string} verdict The stored verdict.
 		 * @return {string} The class for the cell.
-		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+		 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 		 */
 		verdictClass(verdict) {
 			if (verdict === 'unknown' || !verdict) {

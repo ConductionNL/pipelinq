@@ -25,7 +25,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\FirstTicketServiceInterface;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -34,7 +36,9 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/dashboard/spec.md
  */
-class FirstTicketService {
+class FirstTicketService implements FirstTicketServiceInterface {
+	use SerialisedToArray;
+
 	/**
 	 * The ticket types a handler is assigned.
 	 *
@@ -85,7 +89,7 @@ class FirstTicketService {
 		$tickets = [];
 		foreach (self::TICKET_TYPES as $ticketType) {
 			foreach ($this->ticketService->findByType(ticketType: $ticketType, extraFilters: ['assignee' => $userId], limit: self::FETCH_LIMIT) as $result) {
-				$ticket = $this->toArray(object: $result);
+				$ticket = $this->toArray(value: $result);
 				if (in_array((string) ($ticket['status'] ?? ''), WorklistService::TERMINAL_TICKET_STATUSES, true) === false) {
 					$tickets[] = $ticket;
 				}
@@ -117,6 +121,18 @@ class FirstTicketService {
 			return $overdue;
 		}
 
+		return $this->byPriorityThenAge(a: $a, b: $b);
+	}//end compare()
+
+	/**
+	 * Order of two tickets equally overdue: the highest priority, then the oldest.
+	 *
+	 * @param array<string, mixed> $a A ticket.
+	 * @param array<string, mixed> $b Another ticket.
+	 *
+	 * @return int The comparison.
+	 */
+	private function byPriorityThenAge(array $a, array $b): int {
 		$rankA = (WorklistService::PRIORITY_ORDER[(string) ($a['priority'] ?? '')] ?? WorklistService::PRIORITY_ORDER['normal']);
 		$rankB = (WorklistService::PRIORITY_ORDER[(string) ($b['priority'] ?? '')] ?? WorklistService::PRIORITY_ORDER['normal']);
 		if ($rankA !== $rankB) {
@@ -124,7 +140,7 @@ class FirstTicketService {
 		}
 
 		return ($this->createdAt(ticket: $a) <=> $this->createdAt(ticket: $b));
-	}//end compare()
+	}//end byPriorityThenAge()
 
 	/**
 	 * How long a ticket is past its deadline, in seconds; 0 when it is not.
@@ -202,8 +218,8 @@ class FirstTicketService {
 			return '';
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		try {
 			$client = $this->objectService->find(id: $clientId, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
@@ -215,7 +231,7 @@ class FirstTicketService {
 			return '';
 		}
 
-		return (string) ($this->toArray(object: $client)['name'] ?? '');
+		return (string) ($this->toArray(value: $client)['name'] ?? '');
 	}//end clientName()
 
 	/**
@@ -237,26 +253,4 @@ class FirstTicketService {
 
 		return $stamp;
 	}//end timestamp()
-
-	/**
-	 * An OpenRegister entity or array as an array.
-	 *
-	 * @param mixed $object The entity.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$data = $object->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\OrganisationEnrichmentController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\OrganisationEnrichmentService;
 use OCP\AppFramework\Http;
@@ -54,8 +55,7 @@ class OrganisationEnrichmentControllerTest extends TestCase {
 		return new OrganisationEnrichmentController(
 			$request,
 			$service,
-			$this->createConfiguredMock(IUserSession::class, ['getUser' => $user]),
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged]),
+			new CrmPrivilegeCheck($this->createConfiguredMock(IUserSession::class, ['getUser' => $user]), $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
 			$l10n,
 		);
 	}//end controller()

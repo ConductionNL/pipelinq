@@ -90,39 +90,96 @@ final class MailAccountTransport implements TransportInterface {
 	public function send(RenderedMail $mail): SendResult {
 		$accountId = $this->parseAccountId();
 		if ($accountId === null || $this->mailAccountUserId === '') {
-			$this->logger->warning(
-				'MailAccountTransport.send: malformed mailAccountRef/mailAccountUserId',
-				['deliveryId' => $mail->deliveryId, 'mailAccountRef' => $this->mailAccountRef]
-			);
-			return new SendResult(accepted: false, error: 'malformed-mail-account-reference');
+			return $this->malformed(mail: $mail);
 		}
 
+		$services = $this->mailServices();
+		if ($services === null) {
+			return $this->unavailable(mail: $mail);
+		}
+
+		$account = $this->ownersAccount(accountService: $services['accounts'], accountId: $accountId);
+		if ($account instanceof Throwable) {
+			return $this->lookupFailed(mail: $mail, failure: $account);
+		}
+
+		return $this->sendViaOutbox(outboxService: $services['outbox'], account: $account, mail: $mail);
+	}//end send()
+
+	/**
+	 * The refusal of a malformed account reference or a missing owner, logged.
+	 *
+	 * @param RenderedMail $mail The rendered mail.
+	 *
+	 * @return SendResult
+	 */
+	private function malformed(RenderedMail $mail): SendResult {
+		$this->logger->warning(
+			'MailAccountTransport.send: malformed mailAccountRef/mailAccountUserId',
+			['deliveryId' => $mail->deliveryId, 'mailAccountRef' => $this->mailAccountRef]
+		);
+		return new SendResult(accepted: false, error: 'malformed-mail-account-reference');
+	}//end malformed()
+
+	/**
+	 * The refusal when the Mail app is not available, logged.
+	 *
+	 * @param RenderedMail $mail The rendered mail.
+	 *
+	 * @return SendResult
+	 */
+	private function unavailable(RenderedMail $mail): SendResult {
+		$this->logger->info('MailAccountTransport.send: Mail app unavailable', ['deliveryId' => $mail->deliveryId]);
+		return new SendResult(accepted: false, error: 'mail-app-not-available');
+	}//end unavailable()
+
+	/**
+	 * The Mail app's account and outbox services; null when either is absent.
+	 *
+	 * @return array{accounts: object, outbox: object}|null
+	 */
+	private function mailServices(): ?array {
 		$accountService = $this->resolve(key: 'accounts');
 		$outboxService = $this->resolve(key: 'outbox');
 		if ($accountService === null || $outboxService === null) {
-			$this->logger->info(
-				'MailAccountTransport.send: Mail app unavailable',
-				['deliveryId' => $mail->deliveryId]
-			);
-			return new SendResult(accepted: false, error: 'mail-app-not-available');
+			return null;
 		}
 
+		return ['accounts' => $accountService, 'outbox' => $outboxService];
+	}//end mailServices()
+
+	/**
+	 * The owner's account, looked up for the configured owner only; the
+	 * lookup's failure when it throws.
+	 *
+	 * @param object $accountService Resolved `AccountService`.
+	 * @param int    $accountId      The account id.
+	 *
+	 * @return object The account, or the Throwable the lookup threw.
+	 */
+	private function ownersAccount(object $accountService, int $accountId): object {
 		try {
-			$account = $accountService->find($this->mailAccountUserId, $accountId);
+			return $accountService->find($this->mailAccountUserId, $accountId);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'MailAccountTransport.send: account lookup failed',
-				['deliveryId' => $mail->deliveryId, 'exception' => $e->getMessage()]
-			);
-			return new SendResult(accepted: false, error: 'mail-account-not-found');
+			return $e;
 		}
+	}//end ownersAccount()
 
-		return $this->sendViaOutbox(
-			outboxService: $outboxService,
-			account: $account,
-			mail: $mail,
+	/**
+	 * The refusal of a failed account lookup, logged.
+	 *
+	 * @param RenderedMail $mail    The rendered mail.
+	 * @param Throwable    $failure What the lookup threw.
+	 *
+	 * @return SendResult
+	 */
+	private function lookupFailed(RenderedMail $mail, Throwable $failure): SendResult {
+		$this->logger->warning(
+			'MailAccountTransport.send: account lookup failed',
+			['deliveryId' => $mail->deliveryId, 'exception' => $failure->getMessage()]
 		);
-	}//end send()
+		return new SendResult(accepted: false, error: 'mail-account-not-found');
+	}//end lookupFailed()
 
 	/**
 	 * Build a `LocalMessage`, save it to the outbox, and send it.
@@ -134,36 +191,38 @@ final class MailAccountTransport implements TransportInterface {
 	 * @return SendResult The outcome.
 	 */
 	private function sendViaOutbox(object $outboxService, object $account, RenderedMail $mail): SendResult {
-		$localMessageClass = self::MAIL_CLASSES['localMessage'];
-		if (class_exists($localMessageClass) === false) {
+		if (class_exists(self::MAIL_CLASSES['localMessage']) === false) {
 			return new SendResult(accepted: false, error: 'mail-app-not-available');
 		}
 
 		try {
-			$localMessage = new $localMessageClass();
-			$localMessage->setSubject($mail->subject);
-			$localMessage->setBodyPlain($mail->text);
-			$localMessage->setHtml(true);
-			$localMessage->setBodyHtml($mail->html);
-
-			$saved = $outboxService->saveMessage(
-				$account,
-				$localMessage,
-				[['email' => $mail->toEmail]],
-				[],
-				[],
-			);
+			$saved = $outboxService->saveMessage($account, $this->localMessageFor(mail: $mail), [['email' => $mail->toEmail]], [], []);
 			$outboxService->sendMessage($saved, $account);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'MailAccountTransport.send: outbox send failed',
-				['deliveryId' => $mail->deliveryId, 'exception' => $e->getMessage()]
-			);
+			$this->logger->warning('MailAccountTransport.send: outbox send failed', ['deliveryId' => $mail->deliveryId, 'exception' => $e->getMessage()]);
 			return new SendResult(accepted: false, error: 'mail-account-send-failed');
 		}
 
 		return new SendResult(accepted: true);
 	}//end sendViaOutbox()
+
+	/**
+	 * The Mail app's `LocalMessage` for the mail: subject, plain and HTML body.
+	 *
+	 * @param RenderedMail $mail The rendered mail.
+	 *
+	 * @return object The local message.
+	 */
+	private function localMessageFor(RenderedMail $mail): object {
+		$localMessageClass = self::MAIL_CLASSES['localMessage'];
+		$localMessage = new $localMessageClass();
+		$localMessage->setSubject($mail->subject);
+		$localMessage->setBodyPlain($mail->text);
+		$localMessage->setHtml(true);
+		$localMessage->setBodyHtml($mail->html);
+
+		return $localMessage;
+	}//end localMessageFor()
 
 	/**
 	 * Parse `mailAccountRef` into the `int` the Mail app's API expects.
@@ -194,8 +253,24 @@ final class MailAccountTransport implements TransportInterface {
 			return null;
 		}
 
+		$service = $this->fromContainer(class: $class);
+		if (is_object($service) === false) {
+			return null;
+		}
+
+		return $service;
+	}//end resolve()
+
+	/**
+	 * The container's entry for a class; null (logged at debug) when it cannot build it.
+	 *
+	 * @param string $class The class name.
+	 *
+	 * @return mixed The entry.
+	 */
+	private function fromContainer(string $class): mixed {
 		try {
-			$service = $this->container->get($class);
+			return $this->container->get($class);
 		} catch (Throwable $e) {
 			$this->logger->debug(
 				'MailAccountTransport.resolve: container resolution failed',
@@ -203,11 +278,5 @@ final class MailAccountTransport implements TransportInterface {
 			);
 			return null;
 		}
-
-		if (is_object($service) === false) {
-			return null;
-		}
-
-		return $service;
-	}//end resolve()
+	}//end fromContainer()
 }//end class

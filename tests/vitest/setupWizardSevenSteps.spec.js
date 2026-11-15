@@ -33,6 +33,6 @@ describe('the setup wizard', () => {
 
 	it('asks the till and the integrations for settings the app reads', () => {
 		expect(Object.keys(step('pos').schema.properties)).toEqual(['receipt_printer_host', 'receipt_printer_port', 'receipt_email_sender'])
-		expect(Object.keys(step('integrations').schema.properties)).toEqual(['shillinq_journal_webhook_url', 'billing_handoff_manager_group'])
+		expect(Object.keys(step('integrations').schema.properties)).toEqual(['billing_handoff_manager_group'])
 	})
 })

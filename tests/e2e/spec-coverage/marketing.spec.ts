@@ -716,8 +716,8 @@ test.describe('Blasts ledger and wizard', () => {
 /* ══════════════════════════════════════════════════════════════════════════
  * Segments and Templates — marketing-segments-ui-repair (pipelinq#773).
  *
- * `SegmentFormDialog.vue` hosts the rule-tree editor (`SegmentBuilder.vue` /
- * `SegmentRuleNode.vue`) as a modal in the Segments index page's form-dialog
+ * `SegmentFormDialog.vue` hosts the rule-tree editor (`SegmentBuilder.vue`
+ * over nc-vue's `CnConditionGroupEditor`) as a modal in the Segments index page's form-dialog
  * slot, opened by the page's Add button and its row Edit action.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Segments', () => {
@@ -756,12 +756,12 @@ test.describe('Segments', () => {
 		await expect(dialog).toContainText(
 			'Complete or remove the unfinished conditions.',
 		)
-		await expect(builder.locator('.segment-rule__error')).toHaveCount(0)
+		await expect(builder.locator('.cn-condition-row__error')).toHaveCount(0)
 		await expect(saveButton).toBeDisabled()
 
 		// NcSelect (vue-select) appends its dropdown to <body>, so the option
 		// is matched page-wide.
-		await builder.locator('.segment-rule__field .vs__dropdown-toggle').click()
+		await builder.locator('.cn-condition-row__field .vs__dropdown-toggle').click()
 		await page
 			.locator('li[role="option"], .vs__dropdown-option')
 			.filter({ hasText: 'Marketing consent' })
@@ -776,6 +776,56 @@ test.describe('Segments', () => {
 			{ timeout: 10000 },
 		)
 		await expect(saveButton).toBeEnabled({ timeout: 10000 })
+
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#build-a-group
+	// @e2e openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#mix-and-and-or
+	// @e2e openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#remove-a-condition-or-a-group
+	test('the Segment builder groups its rules as PqSegmentBouwer draws them', async ({
+		page,
+	}) => {
+		await openApp(page)
+		await navClick(page, 'Segments', /\/segments$/)
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
+
+		const dialog = page.getByRole('dialog', { name: 'New segment' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
+		const builder = dialog.locator('.segment-builder')
+		await expect(builder).toBeVisible({ timeout: 20000 })
+
+		await builder.getByRole('button', { name: 'Add condition' }).click()
+		await builder.getByRole('button', { name: 'Add group' }).click()
+
+		// One indented group, holding one empty condition, with the combinator
+		// choice and a written Remove group, and no Add group of its own.
+		const inner = builder.locator('.cn-condition-group--nested')
+		await expect(inner).toHaveCount(1)
+		await expect(inner.locator('.cn-condition-row')).toHaveCount(1)
+		await expect(inner.getByText('How the conditions combine')).toBeVisible()
+		await expect(inner.getByRole('button', { name: 'Remove group' })).toBeVisible()
+		await expect(inner.getByRole('button', { name: 'Add group' })).toHaveCount(0)
+		await expect(builder.locator('.segment-builder__estimate')).toContainText(
+			'Complete every condition to see the estimate.',
+		)
+
+		// Match any condition: the caption before the group reads "one of these"
+		// and the group's second row reads "or".
+		await inner.getByText('Match any condition').click()
+		await expect(builder.locator('.cn-condition-group__caption')).toHaveText('one of these')
+		await inner.getByRole('button', { name: 'Add condition' }).click()
+		await expect(inner.locator('.cn-condition-group__connector').nth(1)).toHaveText('or')
+
+		// Remove a condition, then the group.
+		await inner.getByRole('button', { name: 'Remove condition' }).nth(1).click()
+		await expect(inner.locator('.cn-condition-row')).toHaveCount(1)
+		await inner.getByRole('button', { name: 'Remove group' }).click()
+		await expect(builder.locator('.cn-condition-group--nested')).toHaveCount(0)
+		await expect(builder.locator('.cn-condition-row')).toHaveCount(1)
 
 		await assertNoHardError(page)
 	})
