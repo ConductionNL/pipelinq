@@ -259,12 +259,8 @@ class MessagingController extends Controller {
 	): JSONResponse {
 		return $this->consentResponse(
 			change: new ConsentChange(
-				contactId: $contactId,
-				channel: $channel,
-				action: $action,
-				source: $source,
-				evidence: $evidence,
-				legalBasis: $legalBasis
+				contactId: $contactId, channel: $channel, action: $action,
+				source: $source, evidence: $evidence, legalBasis: $legalBasis
 			)
 		);
 	}//end consent()

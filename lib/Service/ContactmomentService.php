@@ -148,18 +148,28 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		string $clientId = '',
 		string $agent = '',
 	): ?string {
+		return $this->recordOutbound(
+			message: ['channel' => $channel, 'title' => $subject, 'description' => $summary, 'channelMetadata' => $channelMetadata],
+			links: ['client' => $clientId, 'assignee' => $agent]
+		);
+	}//end recordOutboundMessage()
+
+	/**
+	 * Save the contact moment of an outbound send, unless the ticket schema is unconfigured.
+	 *
+	 * @param array{channel: string, title: string, description: string, channelMetadata: array<string, mixed>} $message The message.
+	 * @param array{client: string, assignee: string}                                                          $links   Client and agent.
+	 *
+	 * @return string|null The contactmoment ticket UUID, or null when skipped/failed.
+	 */
+	private function recordOutbound(array $message, array $links): ?string {
 		$config = $this->configOrNull(logMessage: 'ContactmomentService.recordOutboundMessage: audit skipped (ticket schema unconfigured)');
 		if ($config === null) {
 			return null;
 		}
 
-		$payload = $this->outboundPayload(
-			message: ['channel' => $channel, 'title' => $subject, 'description' => $summary, 'channelMetadata' => $channelMetadata],
-			links: ['client' => $clientId, 'assignee' => $agent]
-		);
-
-		return $this->saveTicket(payload: $payload, config: $config);
-	}//end recordOutboundMessage()
+		return $this->saveTicket(payload: $this->outboundPayload(message: $message, links: $links), config: $config);
+	}//end recordOutbound()
 
 	/**
 	 * The contact moment ticket fields of an outbound send.
@@ -215,15 +225,25 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		string $body,
 		string $messageId,
 	): ?string {
+		return $this->recordInbound(sender: ['platform' => $platform, 'phone' => $phone], message: ['body' => $body, 'messageId' => $messageId]);
+	}//end recordInboundFromUnknownNumber()
+
+	/**
+	 * Save the contact moment of an inbound message from an unknown number, unless the ticket schema is unconfigured.
+	 *
+	 * @param array{platform: string, phone: string}  $sender  The platform (`sms` or `whatsapp`) and the sender in E.164.
+	 * @param array{body: string, messageId: string} $message The message text and persisted message UUID.
+	 *
+	 * @return string|null The contact moment ticket UUID, or null when skipped/failed.
+	 */
+	private function recordInbound(array $sender, array $message): ?string {
 		$config = $this->configOrNull(logMessage: 'ContactmomentService.recordInboundFromUnknownNumber: skipped (ticket schema unconfigured)');
 		if ($config === null) {
 			return null;
 		}
 
-		$payload = $this->inboundPayload(sender: ['platform' => $platform, 'phone' => $phone], message: ['body' => $body, 'messageId' => $messageId]);
-
-		return $this->saveTicket(payload: $payload, config: $config);
-	}//end recordInboundFromUnknownNumber()
+		return $this->saveTicket(payload: $this->inboundPayload(sender: $sender, message: $message), config: $config);
+	}//end recordInbound()
 
 	/**
 	 * The contact moment ticket fields of an inbound message from an unknown number.
