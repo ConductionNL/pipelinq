@@ -508,14 +508,7 @@ class SegmentService implements SegmentServiceInterface {
 			return $fields;
 		}
 
-		return $this->persistSegmentUpdate(
-			segmentId: $segmentId,
-			existing: $existing,
-			name: $fields['name'],
-			description: $fields['description'],
-			rules: $fields['rules'],
-			entityType: $fields['entityType'],
-		);
+		return $this->persistSegmentUpdate(segmentId: $segmentId, existing: $existing, fields: $fields);
 	}//end applySegmentUpdate()
 
 	/**
@@ -588,25 +581,17 @@ class SegmentService implements SegmentServiceInterface {
 	 * Extracted from {@see updateSegment()} so it stays within the
 	 * complexity budget.
 	 *
-	 * @param string $segmentId Existing Segment UUID or slug.
-	 * @param array<string, mixed> $existing The Segment row before the edit.
-	 * @param string $name Validated name.
-	 * @param string $description Description (may be unchanged).
-	 * @param array<string, mixed> $rules Validated rule tree.
-	 * @param string $entityType "contact" or "customer".
+	 * @param string               $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $existing  The Segment row before the edit.
+	 * @param array<string, mixed> $fields    Validated name, description, rules and entityType ("contact" or "customer").
 	 *
 	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
 	 *
 	 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 	 */
-	private function persistSegmentUpdate(
-		string $segmentId,
-		array $existing,
-		string $name,
-		string $description,
-		array $rules,
-		string $entityType,
-	): array {
+	private function persistSegmentUpdate(string $segmentId, array $existing, array $fields): array {
+		$rules = $fields['rules'];
+		$entityType = $fields['entityType'];
 		// Computed from the (validated) NEW $rules/$entityType being saved,
 		// not via recomputeSize(segmentId) after the fact — that would
 		// re-read whatever is currently stored, which at this point is
@@ -617,8 +602,8 @@ class SegmentService implements SegmentServiceInterface {
 		$estimated = $this->countMatchingEntities(rules: $rules, entityType: $entityType);
 
 		$object = $existing;
-		$object['name'] = $name;
-		$object['description'] = $description;
+		$object['name'] = $fields['name'];
+		$object['description'] = $fields['description'];
 		$object['rules'] = $rules;
 		$object['entityType'] = $entityType;
 		$object['estimatedSize'] = $estimated;
