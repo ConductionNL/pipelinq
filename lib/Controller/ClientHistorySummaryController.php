@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ClientHistorySummaryService;
+use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
 use OCA\Pipelinq\Service\RegisterSchema;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,16 +56,16 @@ class ClientHistorySummaryController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                    $request        The request.
-	 * @param ClientHistorySummaryService $summaryService Writes the summary.
-	 * @param ObjectServiceInterface      $objectService  OpenRegister, for the read guard.
-	 * @param IUserSession                $userSession    The current user.
-	 * @param IAppConfig                  $appConfig      Register and client schema.
-	 * @param LoggerInterface             $logger         PSR logger.
+	 * @param IRequest                             $request        The request.
+	 * @param ClientHistorySummaryServiceInterface $summaryService Writes the summary.
+	 * @param ObjectServiceInterface               $objectService  OpenRegister, for the read guard.
+	 * @param IUserSession                         $userSession    The current user.
+	 * @param IAppConfig                           $appConfig      Register and client schema.
+	 * @param LoggerInterface                      $logger         PSR logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ClientHistorySummaryService $summaryService,
+		private readonly ClientHistorySummaryServiceInterface $summaryService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IUserSession $userSession,
 		private readonly IAppConfig $appConfig,

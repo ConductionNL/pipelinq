@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\BookingFiguresServiceInterface;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -49,7 +50,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-resource-page-shows-how-much-of-its-bookable-time-is-booked-req-srg-004
  */
-class BookingFiguresService {
+class BookingFiguresService implements BookingFiguresServiceInterface {
 	use NullablePayloadToArray;
 
 	/**

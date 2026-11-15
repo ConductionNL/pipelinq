@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\ClientRiskServiceInterface;
 use OCA\Pipelinq\Util\LockedRecord;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -47,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.2
  */
-class ClientRiskService {
+class ClientRiskService implements ClientRiskServiceInterface {
 	use PayloadToArray;
 
 	/**

@@ -40,8 +40,8 @@ namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalContributionInterface;
 use OCA\Pipelinq\Kernel\Contracts\QuestionAnsweredNoticeInterface;
-use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
 use Psr\Log\LoggerInterface;
@@ -151,7 +151,7 @@ class QuestionAnsweredNotice implements QuestionAnsweredNoticeInterface {
 					."\n\n".$l10n->t('Read the answer here: %1$s', [$link]),
 				'read' => false,
 				'receivedAt' => gmdate('c'),
-				'ruleKey' => PortalContributionProvider::RULE_QUESTION_ANSWERED,
+				'ruleKey' => PortalContributionInterface::RULE_QUESTION_ANSWERED,
 				'recordLink' => ['app' => AppIdentity::APP_ID, 'collection' => self::COLLECTION, 'id' => $ticketId],
 			];
 

@@ -31,7 +31,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ClientRiskService;
+use OCA\Pipelinq\Kernel\Contracts\ClientRiskServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -55,13 +55,13 @@ class ClientRiskChangeListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig        $appConfig App config: the contract and survey answer schemas.
-	 * @param ClientRiskService $risk      Scores and stores a client's risk.
-	 * @param LoggerInterface   $logger    PSR logger.
+	 * @param IAppConfig                 $appConfig App config: the contract and survey answer schemas.
+	 * @param ClientRiskServiceInterface $risk      Scores and stores a client's risk.
+	 * @param LoggerInterface            $logger    PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly ClientRiskService $risk,
+		private readonly ClientRiskServiceInterface $risk,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

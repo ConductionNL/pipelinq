@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "BookingFiguresService::serviceFigures": [
+                "BookingFiguresServiceInterface::serviceFigures": [
                     "sample-id"
                 ]
             }
@@ -71,7 +71,7 @@
                 ]
             },
             {
-                "BookingFiguresService::resourceFigures": [
+                "BookingFiguresServiceInterface::resourceFigures": [
                     "sample-id"
                 ]
             }
