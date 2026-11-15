@@ -47,13 +47,27 @@ trait AdminNotice {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function notifyAdmins(string $subject, array $parameters, NoticedObject $about): void {
+		$this->noticeAdmins(notice: ['subject' => $subject, 'parameters' => $parameters, 'about' => $about]);
+	}//end notifyAdmins()
+
+	/**
+	 * Send a notice to every member of the admin group, when it exists.
+	 *
+	 * @param array{subject: string, parameters: array<string, mixed>, about: NoticedObject} $notice The subject, its parameters and
+	 *   the object the notice is about.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function noticeAdmins(array $notice): void {
 		$adminGroup = $this->groupManager->get('admin');
 		if ($adminGroup === null) {
 			return;
 		}
 
-		$this->noticeEach(users: $adminGroup->getUsers(), notice: ['subject' => $subject, 'parameters' => $parameters, 'about' => $about]);
-	}//end notifyAdmins()
+		$this->noticeEach(users: $adminGroup->getUsers(), notice: $notice);
+	}//end noticeAdmins()
 
 	/**
 	 * Send one notification to each user.
