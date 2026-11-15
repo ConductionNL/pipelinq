@@ -1,6 +1,0 @@
-schema: spec-driven
-name: email-calendar-sync
-status: proposed
-created: 2026-03-20
-specs:
-  - specs/email-calendar-sync/spec.md

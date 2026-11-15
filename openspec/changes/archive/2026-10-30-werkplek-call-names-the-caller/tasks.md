@@ -1,3 +1,0 @@
-- [x] Header writes selectedClientName
-- [x] titleWhen + Wie is het card in the simple overlay, en/nl
-- [x] vitest werkplekInCall, simpleContactDashboard

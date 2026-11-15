@@ -1,7 +1,0 @@
-{
-  "schema_version": 2,
-  "spec_slug": "marketing-segmentation-and-blast-03-compliance-service",
-  "app": "pipelinq",
-  "kind": "code",
-  "depends_on": ["marketing-segmentation-and-blast-02-segment-service"]
-}

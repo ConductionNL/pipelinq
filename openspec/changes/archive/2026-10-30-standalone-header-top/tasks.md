@@ -1,2 +1,0 @@
-- [x] WeeklyReview, SearchQueries, ForecastDashboard: top padding 28px
-- [x] vitest standaloneHeaderTop
