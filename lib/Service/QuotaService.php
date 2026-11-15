@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
+use OCA\Pipelinq\Util\FindAllAsArrays;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -44,6 +45,7 @@ use Psr\Log\LoggerInterface;
 class QuotaService implements QuotaServiceInterface {
 	use PayloadToArray;
 	use InjectedObjectService;
+	use FindAllAsArrays;
 
 	/**
 	 * Best-case weighting used in the projected-attainment formula.
@@ -244,18 +246,6 @@ class QuotaService implements QuotaServiceInterface {
 
 		$allFilters = array_merge(['register' => $register, 'schema' => $schema], $filters);
 
-		try {
-			$results = $this->getObjectService()->findAll(config: ['filters' => $allFilters]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: quota query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(value: $result);
-		}
-
-		return $objects;
+		return $this->findAllAsArrays(config: ['filters' => $allFilters], failure: 'Pipelinq: quota query failed');
 	}//end findObjects()
 }//end class
