@@ -3,7 +3,7 @@
 /**
  * Pipelinq GiftCardIssue.
  *
- * What a new gift card is issued with: programme, opening balance, validity, channel and recipient.
+ * What a new gift card is issued with: programme, opening balance, validity and recipient.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -38,7 +38,6 @@ final class GiftCardIssue {
 	 * @param ?string $programmeId    Optional programme UUID.
 	 * @param float   $initialBalance Initial card balance.
 	 * @param int     $expiryDays     Days until expiry.
-	 * @param string  $channel        Issuance channel.
 	 * @param ?string $issuedIn       Recipient label.
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-006-01
@@ -47,7 +46,6 @@ final class GiftCardIssue {
 		public readonly ?string $programmeId,
 		public readonly float $initialBalance,
 		public readonly int $expiryDays,
-		public readonly string $channel,
 		public readonly ?string $issuedIn,
 	) {
 	}//end __construct()

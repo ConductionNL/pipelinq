@@ -36,12 +36,15 @@ class GiftCardIssueTest extends TestCase {
 	 * @return void
 	 */
 	public function testKeepsTheValuesItIsGiven(): void {
-		$value = new GiftCardIssue(programmeId: 'prog-1', initialBalance: 25.0, expiryDays: 365, channel: 'purchased', issuedIn: 'Shop');
+		$programmeId = 'prog-1';
+		$initialBalance = 25.0;
+		$expiryDays = 365;
+		$issuedIn = 'Shop';
+		$value = new GiftCardIssue(programmeId: $programmeId, initialBalance: $initialBalance, expiryDays: $expiryDays, issuedIn: $issuedIn);
 
-		self::assertSame('prog-1', $value->programmeId);
-		self::assertSame(25.0, $value->initialBalance);
-		self::assertSame(365, $value->expiryDays);
-		self::assertSame('purchased', $value->channel);
-		self::assertSame('Shop', $value->issuedIn);
+		self::assertSame($programmeId, $value->programmeId);
+		self::assertSame($initialBalance, $value->initialBalance);
+		self::assertSame($expiryDays, $value->expiryDays);
+		self::assertSame($issuedIn, $value->issuedIn);
 	}//end testKeepsTheValuesItIsGiven()
 }//end class

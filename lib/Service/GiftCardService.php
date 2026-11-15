@@ -92,11 +92,9 @@ class GiftCardService implements GiftCardServiceInterface {
 		string $channel = 'purchased',
 		?string $issuedIn = null,
 	): array {
-		$issue = new GiftCardIssue(
-			programmeId: $programmeId, initialBalance: $initialBalance, expiryDays: $expiryDays, channel: $channel, issuedIn: $issuedIn
-		);
+		$issue = new GiftCardIssue(programmeId: $programmeId, initialBalance: $initialBalance, expiryDays: $expiryDays, issuedIn: $issuedIn);
 		[$card, $pin] = $this->newCard(issue: $issue);
-		$saved = $this->persistCard(payload: $card, uuid: null);
+		$saved = $this->persistCard(payload: $card + ['channel' => $channel], uuid: null);
 		$this->logIssue(saved: $saved, initialBalance: $initialBalance);
 
 		return ['card' => $saved, 'pin' => $pin];
@@ -117,7 +115,8 @@ class GiftCardService implements GiftCardServiceInterface {
 	}//end logIssue()
 
 	/**
-	 * Build the payload of a new card with a unique serial and a hashed PIN.
+	 * Build the payload of a new card with a unique serial and a hashed PIN;
+	 * the issuance channel is the one field it leaves to the caller.
 	 *
 	 * @param GiftCardIssue $issue The issuance request.
 	 *
@@ -149,7 +148,6 @@ class GiftCardService implements GiftCardServiceInterface {
 			'issuedOn' => $now,
 			'issuedIn' => $issue->issuedIn,
 			'expiresOn' => $exp,
-			'channel' => $issue->channel,
 		];
 
 		return [$card, $pin];
