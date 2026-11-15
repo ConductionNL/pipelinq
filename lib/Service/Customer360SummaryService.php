@@ -32,7 +32,7 @@ use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
-use OCA\Pipelinq\Util\SerialisedPayload;
+use OCA\Pipelinq\Service\Support\CastingSerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -56,7 +56,7 @@ use Throwable;
  * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
 class Customer360SummaryService implements Customer360SummaryServiceInterface {
-	use SerialisedPayload;
+	use CastingSerialisedToArray;
 
 	/**
 	 * Ticket statuses considered "open" (mirrors KccWerkplekService::OPEN_REQUEST_STATUSES
@@ -281,22 +281,6 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 	}//end getSchema()
 
 	/**
-	 * Normalise an OpenRegister entity (object or array) to a plain array.
-	 *
-	 * @param mixed $object The object or array returned by ObjectService.
-	 *
-	 * @return array<string, mixed> Plain associative array.
-	 */
-	private function toArray(mixed $object): array {
-		$serialised = $this->serialisedPayload(value: $object);
-		if ($serialised === null && is_object($object) === true) {
-			return (array)$object;
-		}
-
-		return ($serialised ?? []);
-	}//end toArray()
-
-	/**
 	 * Find leads matching the given equality filters, scoped to the pipelinq
 	 * register + lead schema. Swallows OR outages so a partial summary still renders.
 	 *
@@ -323,11 +307,6 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 			return [];
 		}
 
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
+		return $this->resultsToArrays(results: $results);
 	}//end findLeadsSafe()
 }//end class
