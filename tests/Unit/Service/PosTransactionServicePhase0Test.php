@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -47,6 +48,8 @@ use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Fake OR ObjectService recording every findAll / saveObject call so the test
@@ -91,7 +94,9 @@ class Phase0FakeObjectService {
 	 *
 	 * @return array<string, mixed>|null The configured object.
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): ?array {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
 		return $this->object;
 	}//end find()
 
@@ -120,11 +125,14 @@ class Phase0FakeObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->saveCalls[] = [
 			'object' => $object,
 			'register' => $register,
@@ -162,7 +170,7 @@ class Phase0FakeSchema {
 /**
  * Fake OR SchemaMapper resolving a slug to a Phase0FakeSchema with a numeric id.
  */
-class Phase0FakeSchemaMapper {
+class Phase0FakeSchemaMapper extends SchemaMapper {
 	/**
 	 * Constructor.
 	 *
@@ -176,28 +184,29 @@ class Phase0FakeSchemaMapper {
 	/**
 	 * Resolve a slug (or id/uuid) to a fake schema.
 	 *
-	 * @param string $idOrSlug The slug to resolve.
-	 * @param array<int, string> $extend Unused (OR signature).
-	 * @param int|null $register Unused (OR signature).
-	 * @param bool $rbac Unused (OR signature).
-	 * @param bool $tenant Unused (OR signature).
+	 * Mirrors OpenRegister's SchemaMapper::find() shape, so a call in the old
+	 * five-argument form fails here the way it fails against OpenRegister.
+	 *
+	 * @param string|int $id The id, uuid or slug.
+	 * @param array<int, string>|null $_extend Unused.
+	 * @param bool $_rbac Unused.
+	 * @param bool $_multitenancy Unused.
 	 *
 	 * @return Phase0FakeSchema The resolved fake schema.
 	 *
 	 * @throws \RuntimeException When the slug is unknown.
 	 */
 	public function find(
-		string $idOrSlug,
-		array $extend = [],
-		?int $register = null,
-		bool $rbac = true,
-		bool $tenant = true,
+		string|int $id,
+		?array $_extend = [],
+		bool $_rbac = true,
+		bool $_multitenancy = true,
 	): Phase0FakeSchema {
-		if (isset($this->idsBySlug[$idOrSlug]) === false) {
-			throw new \RuntimeException('unknown schema slug ' . $idOrSlug);
+		if (isset($this->idsBySlug[(string)$id]) === false) {
+			throw new \RuntimeException('unknown schema slug ' . $id);
 		}
 
-		return new Phase0FakeSchema($this->idsBySlug[$idOrSlug]);
+		return new Phase0FakeSchema($this->idsBySlug[(string)$id]);
 	}//end find()
 }//end class
 

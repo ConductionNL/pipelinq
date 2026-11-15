@@ -1,0 +1,1146 @@
+{
+    "index no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "index empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "index agent": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getScheduledTasks": {
+                    "status": "",
+                    "assigneeUserId": "agent",
+                    "assigneeGroupId": "",
+                    "from": "",
+                    "to": "",
+                    "_page": 1,
+                    "_limit": 20
+                }
+            }
+        ]
+    },
+    "index agent asks other": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getScheduledTasks": {
+                    "status": "open",
+                    "assigneeUserId": "agent",
+                    "assigneeGroupId": "kcc",
+                    "from": "a",
+                    "to": "b",
+                    "_page": 2,
+                    "_limit": 5
+                }
+            }
+        ]
+    },
+    "index admin asks other": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "getScheduledTasks": {
+                    "status": "",
+                    "assigneeUserId": "bob",
+                    "assigneeGroupId": "",
+                    "from": "",
+                    "to": "",
+                    "_page": 0,
+                    "_limit": 1
+                }
+            }
+        ]
+    },
+    "index admin all": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "getScheduledTasks": {
+                    "status": "",
+                    "assigneeUserId": "",
+                    "assigneeGroupId": "",
+                    "from": "",
+                    "to": "",
+                    "_page": 1,
+                    "_limit": 20
+                }
+            }
+        ]
+    },
+    "index fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "message": "Operation failed"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getScheduledTasks": {
+                    "status": "",
+                    "assigneeUserId": "agent",
+                    "assigneeGroupId": "",
+                    "from": "",
+                    "to": "",
+                    "_page": 1,
+                    "_limit": 20
+                }
+            },
+            {
+                "log": [
+                    "error",
+                    "SchedulesController::index failed",
+                    {
+                        "exception": "DomainException: store down: secret detail"
+                    }
+                ]
+            }
+        ]
+    },
+    "create no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "create empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "create no type": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "Invalid input"
+        },
+        "trace": []
+    },
+    "create bad type": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "Invalid input"
+        },
+        "trace": []
+    },
+    "create no subject": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "Invalid input"
+        },
+        "trace": []
+    },
+    "create no deadline": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "Invalid input"
+        },
+        "trace": []
+    },
+    "create minimal": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "priority": "normal",
+            "assigneeUserId": "agent"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
+                }
+            }
+        ]
+    },
+    "create full agent": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "description": "d",
+            "priority": "high",
+            "assigneeUserId": "agent",
+            "clientId": "c-1",
+            "requestId": "r-1",
+            "callbackPhoneNumber": "+316",
+            "preferredTimeSlot": "am"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "description": "d",
+                    "priority": "high",
+                    "assigneeUserId": "agent",
+                    "clientId": "c-1",
+                    "requestId": "r-1",
+                    "callbackPhoneNumber": "+316",
+                    "preferredTimeSlot": "am"
+                }
+            }
+        ]
+    },
+    "create full self": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "description": "d",
+            "priority": "high",
+            "assigneeUserId": "agent",
+            "clientId": "c-1",
+            "requestId": "r-1",
+            "callbackPhoneNumber": "+316",
+            "preferredTimeSlot": "am"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "description": "d",
+                    "priority": "high",
+                    "assigneeUserId": "agent",
+                    "clientId": "c-1",
+                    "requestId": "r-1",
+                    "callbackPhoneNumber": "+316",
+                    "preferredTimeSlot": "am"
+                }
+            }
+        ]
+    },
+    "create full admin": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "description": "d",
+            "priority": "high",
+            "assigneeUserId": "bob",
+            "assigneeGroupId": "kcc",
+            "clientId": "c-1",
+            "requestId": "r-1",
+            "callbackPhoneNumber": "+316",
+            "preferredTimeSlot": "am"
+        },
+        "trace": [
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "description": "d",
+                    "priority": "high",
+                    "assigneeUserId": "bob",
+                    "assigneeGroupId": "kcc",
+                    "clientId": "c-1",
+                    "requestId": "r-1",
+                    "callbackPhoneNumber": "+316",
+                    "preferredTimeSlot": "am"
+                }
+            }
+        ]
+    },
+    "create agent group only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "priority": "normal",
+            "assigneeUserId": "agent"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
+                }
+            }
+        ]
+    },
+    "create admin group only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "id": "t-new",
+            "type": "callbackRequest",
+            "subject": "Bel terug",
+            "deadline": "2026-11-04T10:00:00+00:00",
+            "priority": "normal",
+            "assigneeGroupId": "kcc"
+        },
+        "trace": [
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal",
+                    "assigneeGroupId": "kcc"
+                }
+            }
+        ]
+    },
+    "create invalid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "Invalid input"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
+                }
+            }
+        ]
+    },
+    "create fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "message": "Operation failed"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "createScheduledTask": {
+                    "type": "callbackRequest",
+                    "subject": "Bel terug",
+                    "deadline": "2026-11-04T10:00:00+00:00",
+                    "priority": "normal",
+                    "assigneeUserId": "agent"
+                }
+            },
+            {
+                "log": [
+                    "error",
+                    "SchedulesController::create failed",
+                    {
+                        "exception": "DomainException: store down: secret detail"
+                    }
+                ]
+            }
+        ]
+    },
+    "pending no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "pending empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "pending agent": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                }
+            ],
+            "total": 1
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 60
+            }
+        ]
+    },
+    "pending admin": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                },
+                {
+                    "id": "t-bob",
+                    "assigneeUserId": "bob",
+                    "status": "open"
+                },
+                {
+                    "id": "t-none",
+                    "status": "open"
+                }
+            ],
+            "total": 3
+        },
+        "trace": [
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "getPendingTasks": 30
+            }
+        ]
+    },
+    "pending window high": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                }
+            ],
+            "total": 1
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 1440
+            }
+        ]
+    },
+    "pending window low": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                }
+            ],
+            "total": 1
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 1
+            }
+        ]
+    },
+    "pending window 1440": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                }
+            ],
+            "total": 1
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 1440
+            }
+        ]
+    },
+    "pending window 1": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                }
+            ],
+            "total": 1
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 1
+            }
+        ]
+    },
+    "pending window text": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "items": [
+                {
+                    "id": "t-agent",
+                    "assigneeUserId": "agent",
+                    "status": "open"
+                }
+            ],
+            "total": 1
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 1
+            }
+        ]
+    },
+    "pending fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "message": "Operation failed"
+        },
+        "trace": [
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "getPendingTasks": 60
+            },
+            {
+                "log": [
+                    "error",
+                    "SchedulesController::pending failed",
+                    {
+                        "exception": "DomainException: store down: secret detail"
+                    }
+                ]
+            }
+        ]
+    },
+    "show no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "show empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "message": "Authentication required"
+        },
+        "trace": []
+    },
+    "show own": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "id": "t-agent",
+            "assigneeUserId": "agent",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "isAdmin": "agent"
+            }
+        ]
+    },
+    "show other": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Not found"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "getScheduledTask": "t-bob"
+            },
+            {
+                "isAdmin": "agent"
+            }
+        ]
+    },
+    "show other admin": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "id": "t-bob",
+            "assigneeUserId": "bob",
+            "status": "open"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "getScheduledTask": "t-bob"
+            },
+            {
+                "isAdmin": "admin"
+            }
+        ]
+    },
+    "show unassigned": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Not found"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "getScheduledTask": "t-none"
+            },
+            {
+                "isAdmin": "agent"
+            }
+        ]
+    },
+    "show missing": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Not found"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "getScheduledTask": "t-missing"
+            }
+        ]
+    },
+    "show fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "message": "Operation failed"
+        },
+        "trace": [
+            {
+                "applyAcceptLanguage": "nl-NL,nl;q=0.9"
+            },
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "log": [
+                    "error",
+                    "SchedulesController::show failed",
+                    {
+                        "exception": "DomainException: store down: secret detail"
+                    }
+                ]
+            }
+        ]
+    },
+    "show array id": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "update missing": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Not found"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-missing"
+            }
+        ]
+    },
+    "update no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    ""
+                ]
+            }
+        ]
+    },
+    "update empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    ""
+                ]
+            }
+        ]
+    },
+    "update not allowed": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-bob"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-bob",
+                    "agent"
+                ]
+            }
+        ]
+    },
+    "update own strips": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "id": "t-agent",
+            "subject": "x",
+            "priority": "low"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    "agent"
+                ]
+            },
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "updateScheduledTask": [
+                    "t-agent",
+                    {
+                        "subject": "x",
+                        "priority": "low"
+                    }
+                ]
+            }
+        ]
+    },
+    "update admin keeps": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "id": "t-bob",
+            "subject": "x",
+            "assigneeUserId": "eve",
+            "status": "done",
+            "attempts": []
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-bob"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-bob",
+                    "admin"
+                ]
+            },
+            {
+                "isAdmin": "admin"
+            },
+            {
+                "updateScheduledTask": [
+                    "t-bob",
+                    {
+                        "subject": "x",
+                        "assigneeUserId": "eve",
+                        "status": "done",
+                        "attempts": []
+                    }
+                ]
+            }
+        ]
+    },
+    "update invalid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "message": "Invalid input"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    "agent"
+                ]
+            },
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "updateScheduledTask": [
+                    "t-agent",
+                    {
+                        "subject": "x"
+                    }
+                ]
+            }
+        ]
+    },
+    "update fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "message": "Operation failed"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    "agent"
+                ]
+            },
+            {
+                "isAdmin": "agent"
+            },
+            {
+                "updateScheduledTask": [
+                    "t-agent",
+                    {
+                        "subject": "x"
+                    }
+                ]
+            },
+            {
+                "log": [
+                    "error",
+                    "SchedulesController::update failed",
+                    {
+                        "exception": "DomainException: store down: secret detail"
+                    }
+                ]
+            }
+        ]
+    },
+    "destroy missing": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "message": "Not found"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-missing"
+            }
+        ]
+    },
+    "destroy no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    ""
+                ]
+            }
+        ]
+    },
+    "destroy empty uid": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    ""
+                ]
+            }
+        ]
+    },
+    "destroy not allowed": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "message": "Not authorized"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-bob"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-bob",
+                    "agent"
+                ]
+            }
+        ]
+    },
+    "destroy own": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 204,
+        "data": [],
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    "agent"
+                ]
+            },
+            {
+                "deleteScheduledTask": "t-agent"
+            }
+        ]
+    },
+    "destroy admin": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 204,
+        "data": [],
+        "trace": [
+            {
+                "getScheduledTask": "t-bob"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-bob",
+                    "admin"
+                ]
+            },
+            {
+                "deleteScheduledTask": "t-bob"
+            }
+        ]
+    },
+    "destroy fails": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 500,
+        "data": {
+            "message": "Operation failed"
+        },
+        "trace": [
+            {
+                "getScheduledTask": "t-agent"
+            },
+            {
+                "authorizeTaskMutation": [
+                    "t-agent",
+                    "agent"
+                ]
+            },
+            {
+                "deleteScheduledTask": "t-agent"
+            },
+            {
+                "log": [
+                    "error",
+                    "SchedulesController::destroy failed",
+                    {
+                        "exception": "DomainException: store down: secret detail"
+                    }
+                ]
+            }
+        ]
+    }
+}

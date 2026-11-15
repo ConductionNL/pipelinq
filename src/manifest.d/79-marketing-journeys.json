@@ -18,88 +18,161 @@
 	"pages": [
 		{
 			"id": "Journeys",
-			"_note": "Journey list as a declarative type:index page (marketing-integrated-campaigns), read-only. Create and edit go to JourneyFormView instead of the declarative dialog, and showAdd / showFormDialog / showEditAction are therefore off: every write compiles the journey into an OpenRegister flow, which only POST and PATCH /api/journeys do. A journey written through the object API would be stored and never compiled, and a journey that is never compiled looks exactly like one whose trigger has not fired yet. The flow status column is what makes that difference visible in the list.",
+			"_note": "Journey list as a declarative type:index page (marketing-integrated-campaigns). Add and the row Edit action open JourneyFormDialog in the form-dialog slot instead of the declarative dialog: every write compiles the journey into an OpenRegister flow, which only POST and PATCH /api/journeys do. A journey written through the object API would be stored and never compiled, and a journey that is never compiled looks exactly like one whose trigger has not fired yet. The flow status column is what makes that difference visible in the list.",
 			"route": "/journeys",
 			"type": "index",
 			"title": "Journeys",
+			"slots": {
+				"form-dialog": "JourneyFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "journey",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"includeColumns": ["name", "status", "flowStatus", "waitFor"],
-				"actions": [
+				"addLabel": "New journey",
+				"showEditAction": true,
+				"showCopyAction": false,
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"countText": "{shown} of {total} journeys",
+				"searchPlaceholder": "Filter by name",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "status"
+				},
+				"footerNote": "A journey is a trigger, a wait, a condition and an action. Pipelinq turns it into a flow.",
+				"headerButtons": [
 					{
-						"id": "view",
-						"label": "Open",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "JourneyDetail"
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
 					},
 					{
-						"id": "edit",
-						"label": "Edit",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "JourneyEdit"
+						"action": "add",
+						"variant": "primary",
+						"label": "New journey"
 					}
 				],
-				"showAdd": false,
-				"showFormDialog": false,
-				"showEditAction": false,
-				"showCopyAction": false,
-				"headerActions": [
+				"quickFilters": [
 					{
-						"id": "create",
-						"label": "New journey",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "JourneyNew"
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Active",
+						"filter": {
+							"status": "active"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Paused",
+						"filter": {
+							"status": "paused"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
 					}
-				]
-			}
-		},
-		{
-			"id": "JourneyNew",
-			"_note": "Journey create as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns), matching the CampaignNew convention. Custom rather than declarative: the write path compiles the journey into a flow and surfaces the flow engine's own refusal verbatim, which no declarative form primitive expresses. Missing primitive: a form whose save action returns a compilation result the page has to show.",
-			"route": "/journeys/new",
-			"type": "custom",
-			"title": "New journey",
-			"component": "JourneyFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "journey"
-			}
-		},
-		{
-			"id": "JourneyEdit",
-			"_note": "Journey edit as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns). Same reason as JourneyNew: a journey saved through the declarative dialog is stored and never compiled.",
-			"route": "/journeys/:id/edit",
-			"type": "custom",
-			"title": "Edit journey",
-			"component": "JourneyFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "journey"
+				],
+				"columns": [
+					"name",
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"active": "success",
+								"paused": "warning",
+								"draft": "default"
+							}
+						}
+					},
+					{
+						"key": "flowStatus",
+						"label": "Flow status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"compiled": "success",
+								"not_compiled": "default",
+								"engine_missing": "error",
+								"refused": "error"
+							}
+						}
+					},
+					"waitFor"
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
 			"id": "JourneyDetail",
-			"_note": "Journey record as a declarative type:detail page (ADR-062 grid). The journey's own fields auto-render in the details widget. The run log is a bodyWidgets section rather than a declarative object-list widget because the refusal reason has to be read as words: 'suppressed_dunning' is the answer to the only question a marketer asks here, and a raw enum value does not answer it. Its props carry @objectId, the only token that resolves on a detail page.",
+			"_note": "Journey record as a declarative type:detail page (ADR-062 grid). The journey's own fields auto-render in the details widget. Edit opens JourneyFormDialog in the form-dialog slot, the same dialog as the Journeys index, so an edit here is compiled too. The run log is a bodyWidgets section rather than a declarative object-list widget because the refusal reason has to be read as words: 'suppressed_dunning' is the answer to the only question a marketer asks here, and a raw enum value does not answer it. Its props carry @objectId, the only token that resolves on a detail page.",
 			"route": "/journeys/:id",
 			"type": "detail",
 			"title": "Journey",
+			"slots": {
+				"form-dialog": "JourneyFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "journey",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"widgets": [
 					{
+						"id": "journey-panels",
+						"type": "tabs",
+						"title": "Journey",
+						"content": {
+							"ariaLabel": "Journey",
+							"tabs": [
+								{
+									"widgetIds": [
+										"journey-details",
+										"journey-runs"
+									],
+									"label": "Overview"
+								},
+								{
+									"widgetId": "journey-history",
+									"label": "History",
+									"countFrom": {
+										"auditTrail": true,
+										"excludeActions": [
+											"read"
+										]
+									}
+								}
+							]
+						}
+					},
+					{
 						"id": "journey-data",
 						"type": "data",
 						"title": "Journey details",
-						"icon": "InformationOutline",
 						"content": {
-							"columns": 2,
+							"title": "Journey details",
+							"columns": 3,
 							"include": [
 								"description",
 								"status",
@@ -107,47 +180,299 @@
 								"waitFor",
 								"flowStatus",
 								"flowError"
+							],
+							"overrides": {
+								"description": {
+									"order": 0,
+									"editable": false
+								},
+								"status": {
+									"order": 1,
+									"editable": false,
+									"enumLabels": {
+										"draft": "Draft",
+										"active": "Active",
+										"paused": "Paused"
+									}
+								},
+								"audienceSegment": {
+									"order": 2,
+									"editable": false
+								},
+								"waitFor": {
+									"order": 3,
+									"editable": false
+								},
+								"flowStatus": {
+									"order": 4,
+									"editable": false
+								},
+								"flowError": {
+									"order": 5,
+									"editable": false
+								}
+							}
+						}
+					},
+					{
+						"id": "journey-details",
+						"type": "sections",
+						"title": "Journey details",
+						"content": {
+							"dividers": false,
+							"gap": 14,
+							"sections": [
+								{
+									"widgetId": "journey-data"
+								},
+								{
+									"widgetId": "journey-steps"
+								}
 							]
+						}
+					},
+					{
+						"id": "journey-steps",
+						"type": "facts",
+						"title": "Steps",
+						"content": {
+							"layout": "tiles",
+							"columns": 3,
+							"fields": [
+								{
+									"label": "Trigger",
+									"firstOf": [
+										"trigger.label",
+										{
+											"path": "trigger.kind",
+											"map": {
+												"leadStageChanged": "A lead moved stage",
+												"contractRenewalWindow": "A contract is up for renewal",
+												"listConfirmed": "Someone confirmed a subscription",
+												"shillinqSignal": "A bookkeeping signal changed",
+												"addressChanged": "A resident or business got a new address",
+												"ticketClosed": "A ticket was closed"
+											}
+										}
+									]
+								},
+								{
+									"path": "waitFor",
+									"label": "Wait",
+									"format": "duration"
+								},
+								{
+									"path": "condition.field",
+									"label": "Condition",
+									"map": {
+										"marketingConsentEmail": "Has consent for e-mail marketing"
+									}
+								},
+								{
+									"label": "Action",
+									"wide": true,
+									"firstOf": [
+										"action.label",
+										{
+											"path": "action.kind",
+											"map": {
+												"sendMailing": "Send a mailing",
+												"createTask": "Create a task"
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"id": "journey-history",
+						"type": "audit-trail",
+						"title": "History",
+						"content": {
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "active",
+									"label": "Activated by {actor}"
+								},
+								{
+									"field": "flowStatus",
+									"to": "compiled",
+									"label": "Flow compiled"
+								}
+							]
+						}
+					},
+					{
+						"id": "journey-flow",
+						"type": "facts",
+						"title": "Flow",
+						"content": {
+							"fields": [
+								{
+									"as": "text",
+									"template": "Converted into a flow on {compiledAt:date}. The flow runs in the automation engine.",
+									"when": {
+										"all": [
+											{ "field": "flowStatus", "op": "eq", "value": "compiled" },
+											{ "field": "compiledAt", "op": "notEmpty" }
+										]
+									}
+								},
+								{
+									"as": "text",
+									"path": "flowStatus",
+									"when": {
+										"any": [
+											{ "field": "flowStatus", "op": "neq", "value": "compiled" },
+											{ "field": "compiledAt", "op": "empty" }
+										]
+									},
+									"map": {
+										"compiled": "Converted into a flow. The flow runs in the automation engine.",
+										"not_compiled": "Not converted into a flow yet.",
+										"engine_missing": "There is no automation engine to run the flow.",
+										"refused": "The automation engine refused the flow."
+									}
+								}
+							],
+							"link": {
+								"label": "Open flow",
+								"route": {
+									"name": "FlowDetail",
+									"params": {
+										"id": "@object.flowUuid"
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "journey-side-history",
+						"type": "audit-trail",
+						"title": "History",
+						"content": {
+							"maxDisplay": 3,
+							"layout": "dated",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created"
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"to": "active",
+									"label": "Activated by {actor}"
+								},
+								{
+									"field": "flowStatus",
+									"to": "compiled",
+									"label": "Flow compiled"
+								}
+							]
+						}
+					},
+					{
+						"id": "journey-runs",
+						"type": "JourneyRunsWidget",
+						"title": "What this journey did",
+						"subtitle": "Every contact reached and every contact refused",
+						"content": {
+							"title": "What this journey did"
 						}
 					}
 				],
 				"layout": [
 					{
 						"id": "1",
-						"widgetId": "journey-data",
+						"widgetId": "journey-panels",
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 12,
-						"gridHeight": 5
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "journey-runs",
-						"component": "JourneyRunsSection",
-						"title": "What this journey did",
-						"placement": "end",
-						"props": {
-							"journeyId": "@objectId"
-						}
+						"gridHeight": 8,
+						"showTitle": false,
+						"sizeToContent": true
 					}
 				],
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{
-							"id": "audit",
-							"label": "History",
-							"icon": "History",
-							"widgets": [
-								{
-									"type": "audit"
-								}
-							]
-						}
-					]
-				}
+					"enabled": false
+				},
+				"follow": false,
+				"showTypeEyebrow": false,
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"draft": "Draft",
+						"active": "Active",
+						"paused": "Paused"
+					},
+					"colorMap": {
+						"active": "success",
+						"paused": "warning",
+						"draft": "default"
+					}
+				},
+				"breadcrumb": {
+					"label": "Journeys",
+					"route": "Journeys",
+					"separator": "/"
+				},
+				"actionsMenu": {
+					"label": "More"
+				},
+				"sideColumn": [
+					"journey-flow",
+					"journey-side-history"
+				],
+				"headerActions": [
+					{
+						"id": "pause",
+						"label": "Pause",
+						"icon": "Pause",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/journeys/@objectId/status",
+						"method": "POST",
+						"payload": {
+							"status": "paused"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"value": "active"
+						},
+						"successMessage": "The journey is paused. Its flow no longer runs.",
+						"errorMessage": "Could not pause this journey."
+					},
+					{
+						"id": "resume",
+						"label": "Resume",
+						"icon": "Play",
+						"type": "api-call",
+						"url": "/apps/pipelinq/api/journeys/@objectId/status",
+						"method": "POST",
+						"payload": {
+							"status": "active"
+						},
+						"visibleWhen": {
+							"field": "status",
+							"value": "paused"
+						},
+						"successMessage": "The journey runs again.",
+						"errorMessage": "Could not resume this journey."
+					}
+				],
+				"quickActions": [
+					"pause",
+					"resume"
+				]
 			}
 		},
 		{

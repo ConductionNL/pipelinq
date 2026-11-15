@@ -8,21 +8,23 @@
  App.vue renders no CnIndexSidebar itself — CnAppRoot auto-hoists CnIndexPage's
  sidebar, so rendering one here too caused a double sidebar on index pages.
 
- @spec openspec/changes/pipelinq-manifest-v1/tasks.md
+ @spec openspec/changes/archive/2026-05-11-pipelinq-manifest-v1/tasks.md
 -->
 <template>
 	<CnAppRoot
 		:aiCompanion="true"
 		:manifest="manifest"
-		:registry="registry"
+		:registry="appRegistry"
 		:cellWidgets="cellWidgets"
-		:customComponents="connectionHandlers"
+		:formatters="cellFormatters"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
 		:translate="translateForApp"
+		:notificationLabels="notificationLabels"
 		:permissions="permissions"
 		:persistManifestDelta="persistManifestDelta"
-		:requiresApps="[]">
+		:requiresApps="[]"
+		:userSettingsSections="userSettingsSections">
 		<template #sidebar="{ pageSidebarComponent }">
 			<!--
 				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
@@ -50,7 +52,18 @@
 			     fallback, which is what hid the flow sidebar. -->
 			<component :is="pageSidebarComponent" v-if="pageSidebarComponent" />
 		</template>
+		<!-- The app's own sections of the user settings dialog (boards
+		     PqPersoonlijk, PqSynchronisatie), between Notifications and
+		     Credentials. -->
+		<template #user-settings-sections>
+			<ContactsSyncSettingsSection />
+			<EmailCalendarSettingsSection />
+		</template>
 	</CnAppRoot>
+	<!-- The incoming-call card of board PqInkomendGesprek. It floats over
+	     whichever page the agent is on, and renders nothing at all on an
+	     install without a telephony platform. -->
+	<IncomingCallCard />
 </template>
 
 <script>
@@ -60,12 +73,27 @@ import {
 	CnObjectSidebar,
 } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
+import IncomingCallCard from './components/IncomingCallCard.vue'
+import ContactsSyncSettingsSection from './components/settings/ContactsSyncSettingsSection.vue'
+import EmailCalendarSettingsSection from './components/settings/EmailCalendarSettingsSection.vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
+import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
+import { createMatchLineFormatter } from './services/bookingFigures.js'
+import { createAppFormatters } from './services/cellFormatters.js'
+import {
+	auditVerdict,
+	createConnectionAuditHandlers,
+} from './services/connectionAudit.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
+import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
+import { createTicketHandlers } from './services/ticketAssign.js'
+import { createWalkInHandlers } from './services/walkInQueue.js'
+import { useObjectStore } from './store/modules/object.js'
 
 export default {
 	name: 'App',
@@ -73,10 +101,13 @@ export default {
 	components: {
 		CnAppRoot,
 		CnObjectSidebar,
+		ContactsSyncSettingsSection,
+		EmailCalendarSettingsSection,
+		IncomingCallCard,
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-app-shell/tasks.md#task-3
 	 */
 	provide() {
 		return {
@@ -87,6 +118,10 @@ export default {
 			// Legacy channel — kept so bespoke index views (CnIndexPage
 			// wrappers) continue to inject it.
 			sidebarState: this.sidebarState,
+			// The manifest's look for what renders beside CnAppRoot (the
+			// incoming-call card and its dialogs); CnAppRoot provides its own
+			// to everything inside it.
+			cnLook: computed(() => (this.manifest?.look === 'board' ? 'board' : 'nextcloud')),
 		}
 	},
 
@@ -157,10 +192,50 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
+		 * Order of the user settings dialog: Notifications, the app's own
+		 * sections, Credentials, the tour, then the library's other sections.
+		 *
+		 * @return {Array<string>}
+		 * @spec openspec/specs/email-calendar-sync/spec.md
+		 */
+		userSettingsSections() {
+			return ['notifications', 'app', 'credentials', 'walkthrough', 'views', 'integrations']
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-app-shell/tasks.md#task-2
 		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
+		},
+
+		/**
+		 * Cell-formatter registry for CnAppRoot, keyed by the `formatter` id a
+		 * manifest column (or a data widget override) references.
+		 * `objectCurrency` shows an amount in the row's own currency, or the
+		 * reporting currency; the `booking*Name` formatters show names, not ids.
+		 *
+		 * @return {Record<string, (value: unknown) => string>}
+		 * @spec openspec/specs/commercial-dashboard/spec.md
+		 */
+		cellFormatters() {
+			// `auditVerdict` prints the connection audit's follow answers.
+			const formatters = { ...createAppFormatters(useObjectStore()), auditVerdict }
+			// The services list's match line (services-and-resources-at-a-glance).
+			formatters.serviceMatchLine = createMatchLineFormatter()
+			return formatters
+		},
+
+		/**
+		 * Labels for pipelinq's notification rules, keyed `<schema>.<rule>`.
+		 * The notification pane in the user settings shows them instead of
+		 * the rule keys (`newLead`, `clientUpdated`).
+		 *
+		 * @return {Record<string, string>}
+		 * @spec openspec/specs/notifications/spec.md
+		 */
+		notificationLabels() {
+			return buildNotificationLabels(ncT)
 		},
 
 		/**
@@ -170,30 +245,64 @@ export default {
 		 * @return {Record<string, object>}
 		 * @spec openspec/specs/customer-360/spec.md
 		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		cellWidgets() {
 			return {
 				'lead-close-date': LeadCloseDateCell,
 				'lead-probability': LeadProbabilityCell,
+				'lead-score': LeadScoreCell,
 			}
 		},
 
 		/**
-		 * The Integrations page's Add integration handler, which leaves this app
-		 * for integriq's Connections overview. CnIndexPage resolves a header
-		 * action's handler name only against `customComponents`, so this map
-		 * holds that one function. CnAppRoot logs a one-time deprecation warning
-		 * for the prop beside a v2 manifest; the registry prop has no slot for a
-		 * function handler in the installed nextcloud-vue.
+		 * The v2 registry plus the Integrations page's Add integration handler,
+		 * which leaves this app for integriq's Connections overview, registered
+		 * as a `kind: 'handler'` entry.
 		 *
-		 * @return {Record<string, function(): void>}
+		 * @return {Record<string, object>}
 		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
-		connectionHandlers() {
-			return createConnectionHandlers({
-				generateUrl,
-				assign: (url) => window.location.assign(url),
-			})
+		appRegistry() {
+			const handlers = {
+				...createConnectionHandlers({
+					generateUrl,
+					assign: (url) => window.location.assign(url),
+				}),
+
+				// Check again on the connection audit (board PqVerbindingscontrole).
+				...createConnectionAuditHandlers({
+					generateUrl,
+					http: axios,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+
+				// "Assign to me" on the Queue rows (detail-pages-read-at-a-glance).
+				...createTicketHandlers({
+					generateUrl,
+					http: axios,
+					router: this.$router,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+
+				// The walk-in queue's call, help and left actions (PqInloop).
+				...createWalkInHandlers({
+					generateUrl,
+					http: axios,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+			}
+			const entries = {}
+			for (const [name, handler] of Object.entries(handlers)) {
+				entries[name] = { kind: 'handler', handler }
+			}
+			return { ...this.registry, ...entries }
 		},
 
 		/**
@@ -240,7 +349,7 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
-		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-app-shell/tasks.md#task-4
 		 */
 		translateForApp(key) {
 			return ncT('pipelinq', key)

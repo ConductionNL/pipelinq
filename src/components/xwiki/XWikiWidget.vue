@@ -7,8 +7,8 @@
   - graceful-degradation message when the xWiki proxy reports unavailable.
   -->
 <template>
-	<div class="xwiki-widget">
-		<header class="xwiki-widget__header">
+	<div class="xwiki-widget" :class="{ 'xwiki-widget--bare': bare }">
+		<header v-if="!bare" class="xwiki-widget__header">
 			<h3 class="xwiki-widget__title">
 				{{ title }}
 			</h3>
@@ -22,13 +22,27 @@
 					@input="onSearchInput" />
 			</div>
 		</header>
+		<form
+			v-else-if="showSearch"
+			role="search"
+			class="xwiki-widget__search-bar"
+			@submit.prevent="refresh">
+			<Magnify :size="18" class="xwiki-widget__search-icon" aria-hidden="true" />
+			<input
+				v-model="localQuery"
+				type="search"
+				class="xwiki-widget__search-bar-input"
+				:aria-label="t('pipelinq', 'Search the knowledge base')"
+				:placeholder="t('pipelinq', 'Search the knowledge base')"
+				@input="onSearchInput" />
+		</form>
 		<div
 			v-if="store.available === false && store.status !== null"
 			class="xwiki-widget__unavailable">
 			{{ t('pipelinq', 'xWiki integration unavailable') }}
 		</div>
 		<NcLoadingIcon v-else-if="store.loading" />
-		<XWikiArticleList v-else :articles="visibleArticles" @select="onSelect" />
+		<XWikiArticleList v-else :articles="visibleArticles" linkExternal />
 		<a
 			v-if="hasMore"
 			class="xwiki-widget__more"
@@ -41,12 +55,13 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 import XWikiArticleList from './XWikiArticleList.vue'
 import { useXwikiStore } from '../../store/modules/xwiki.js'
 
 export default {
 	name: 'XWikiWidget',
-	components: { NcLoadingIcon, XWikiArticleList },
+	components: { Magnify, NcLoadingIcon, XWikiArticleList },
 	props: {
 		space: {
 			type: String,
@@ -77,9 +92,18 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
+		/**
+		 * Draw no card and no title of its own, for a host that already draws
+		 * the card (a dashboard widget); the search becomes a full-width field.
+		 */
+		bare: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
-	emits: ['select', 'viewMore'],
+	emits: ['viewMore'],
 	setup() {
 		return { store: useXwikiStore() }
 	},
@@ -116,10 +140,6 @@ export default {
 			})
 		},
 
-		onSelect(article) {
-			this.$emit('select', article)
-		},
-
 		onSearchInput() {
 			if (this.debounceHandle) clearTimeout(this.debounceHandle)
 			this.debounceHandle = setTimeout(() => {
@@ -138,6 +158,39 @@ export default {
 	border: 1px solid var(--color-border, #e0e0e0);
 	border-radius: var(--border-radius-large, 8px);
 	padding: 12px;
+}
+
+.xwiki-widget--bare {
+	gap: 8px;
+	padding: 0 var(--cn-board-dashboard-card-inset, 22px) 20px;
+	border: 0;
+	background: none;
+}
+
+.xwiki-widget__search-bar {
+	position: relative;
+}
+
+.xwiki-widget__search-icon {
+	position: absolute;
+	top: 11px;
+	inset-inline-start: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.xwiki-widget__search-bar-input {
+	box-sizing: border-box;
+	width: 100%;
+	height: 40px;
+	/* Nextcloud's input rule sets its own height with a stronger selector;
+	   a min-height still lifts the field to 40px. */
+	min-height: 40px;
+	margin: 0;
+	padding-block: 0;
+	padding-inline: 38px 12px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-large, 8px);
+	font-size: 14px;
 }
 
 .xwiki-widget__header {

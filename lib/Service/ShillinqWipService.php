@@ -26,25 +26,20 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use DateTimeImmutable;
-use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCP\EventDispatcher\Event;
-use OCP\IAppConfig;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Builds and dispatches Shillinq WIP CloudEvents.
  *
- * The shillinq_wip_webhook_url app-config value is the integration toggle:
- * an empty or non-HTTPS value disables dispatch ({@see self::shouldDispatch()}).
- * When configured, approved time entries are emitted as CloudEvents 1.0
- * envelopes through OpenRegister's WebhookService.
+ * The detected Shillinq app is the integration toggle: without it dispatch is
+ * off ({@see self::shouldDispatch()}). With it, approved time entries are
+ * emitted as CloudEvents 1.0 envelopes through OpenRegister's WebhookService.
  *
  * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
  */
-class ShillinqWipService {
+class ShillinqWipService implements ShillinqWipServiceInterface {
 	/**
 	 * CloudEvents type for an approved time entry routed to WIP.
 	 *
@@ -62,12 +57,12 @@ class ShillinqWipService {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig $appConfig The app configuration.
+	 * @param IntegrationDetector $integrations Detects the Shillinq app on this server.
 	 * @param ContainerInterface $container The DI container (OpenRegister WebhookService lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private IAppConfig $appConfig,
+		private IntegrationDetector $integrations,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
@@ -76,25 +71,17 @@ class ShillinqWipService {
 	/**
 	 * Whether WIP dispatch is enabled.
 	 *
-	 * Returns true only when shillinq_wip_webhook_url is a non-empty,
-	 * well-formed HTTPS URL. An unconfigured or malformed value disables the
-	 * integration so listeners no-op silently (REQ-WIP-001 missing-URL scenario).
+	 * True when the Shillinq app is installed on this server. Nobody types a
+	 * webhook URL: the event travels internally through OpenRegister's
+	 * WebhookService, so detecting Shillinq is all the configuration there is.
+	 * Without Shillinq the listeners no-op silently.
 	 *
-	 * @return bool True when a valid HTTPS webhook URL is configured.
+	 * @return bool True when Shillinq is installed.
 	 *
-	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
 	 */
 	public function shouldDispatch(): bool {
-		$url = $this->webhookUrl();
-		if ($url === '') {
-			return false;
-		}
-
-		if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-			return false;
-		}
-
-		return str_starts_with($url, 'https://') || str_starts_with($url, 'http://');
+		return $this->integrations->shillinq()['installed'] === true;
 	}//end shouldDispatch()
 
 	/**
@@ -116,25 +103,23 @@ class ShillinqWipService {
 			return false;
 		}
 
-		$payload = $this->buildPayload(timeEntry: $timeEntry, approvedBy: $approvedBy, approvedAt: $approvedAt);
-
-		return $this->dispatch(eventName: self::EVENT_TIME_APPROVED, payload: $payload);
+		$payload = $this->buildPayload(timeEntry: $timeEntry, approval: new ShillinqApproval(approvedBy: $approvedBy, approvedAt: $approvedAt));
+		return $this->cloudEvents()->dispatch(cloudEvent: $payload, handOff: 'WIP');
 	}//end dispatchWipEvent()
 
 	/**
 	 * Build the CloudEvents 1.0 envelope for a WIP event.
 	 *
 	 * @param array<string, mixed> $timeEntry The time entry data.
-	 * @param string $approvedBy The approver's user id.
-	 * @param string $approvedAt The ISO 8601 UTC approval timestamp.
+	 * @param ShillinqApproval     $approval  Who approved it, and when.
 	 *
 	 * @return array<string, mixed> The CloudEvent payload.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
 	 */
-	private function buildPayload(array $timeEntry, string $approvedBy, string $approvedAt): array {
+	private function buildPayload(array $timeEntry, ShillinqApproval $approval): array {
 		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');
-		$time = $approvedAt;
+		$time = $approval->approvedAt;
 		if ($time === '') {
 			$time = $this->now();
 		}
@@ -146,58 +131,30 @@ class ShillinqWipService {
 			'id' => $uuid,
 			'time' => $time,
 			'datacontenttype' => 'application/json',
-			'data' => [
-				'timeEntryId' => $uuid,
-				'hours' => (float)($timeEntry['hours'] ?? 0),
-				'billingCategoryId' => (string)($timeEntry['billingCategory'] ?? ''),
-				'clientId' => (string)($timeEntry['client'] ?? ''),
-				'leadId' => (string)($timeEntry['lead'] ?? ''),
-				'projectId' => (string)($timeEntry['project'] ?? ''),
-				'approvedBy' => $approvedBy,
-				'approvedAt' => $approvedAt,
-			],
+			'data' => $this->timeEntryData(timeEntry: $timeEntry, approval: $approval),
 		];
 	}//end buildPayload()
 
 	/**
-	 * Dispatch a CloudEvent through OpenRegister's WebhookService.
+	 * The `data` of a time-approved CloudEvent.
 	 *
-	 * Fire-and-forget: any failure to resolve or invoke the WebhookService is
-	 * logged and reported as a false return so the caller can mark the entry
-	 * sync as failed, but never throws.
+	 * @param array<string, mixed> $timeEntry The time entry data.
+	 * @param ShillinqApproval     $approval  Who approved it, and when.
 	 *
-	 * @param string $eventName The webhook event name.
-	 * @param array<string, mixed> $payload The CloudEvent payload.
-	 *
-	 * @return bool True on successful dispatch, false on failure.
+	 * @return array<string, mixed> The event data.
 	 */
-	private function dispatch(string $eventName, array $payload): bool {
-		try {
-			$webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
-			$event = new Event();
-			$webhookService->dispatchEvent(
-				_event: $event,
-				eventName: $eventName,
-				payload: $payload
-			);
-			return true;
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: Shillinq WIP CloudEvent not dispatched (no consumer or OpenRegister unavailable)',
-				['exception' => $e->getMessage(), 'eventName' => $eventName]
-			);
-			return false;
-		}//end try
-	}//end dispatch()
-
-	/**
-	 * Read the configured Shillinq WIP webhook URL.
-	 *
-	 * @return string The configured URL, or an empty string when unset.
-	 */
-	private function webhookUrl(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'shillinq_wip_webhook_url', ''));
-	}//end webhookUrl()
+	private function timeEntryData(array $timeEntry, ShillinqApproval $approval): array {
+		return [
+			'timeEntryId' => (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? ''),
+			'hours' => (float)($timeEntry['hours'] ?? 0),
+			'billingCategoryId' => (string)($timeEntry['billingCategory'] ?? ''),
+			'clientId' => (string)($timeEntry['client'] ?? ''),
+			'leadId' => (string)($timeEntry['lead'] ?? ''),
+			'projectId' => (string)($timeEntry['project'] ?? ''),
+			'approvedBy' => $approval->approvedBy,
+			'approvedAt' => $approval->approvedAt,
+		];
+	}//end timeEntryData()
 
 	/**
 	 * Current UTC timestamp in ISO 8601 format.
@@ -209,6 +166,15 @@ class ShillinqWipService {
 	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function now(): string {
-		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+		return $this->cloudEvents()->now();
 	}//end now()
+
+	/**
+	 * The shared Shillinq CloudEvent delivery on this service's container and logger.
+	 *
+	 * @return ShillinqCloudEvents The delivery.
+	 */
+	private function cloudEvents(): ShillinqCloudEvents {
+		return new ShillinqCloudEvents(container: $this->container, logger: $this->logger);
+	}//end cloudEvents()
 }//end class

@@ -85,6 +85,27 @@ class JourneyServiceTest extends TestCase {
 	}//end testACleanCompileRecordsTheFlowAndPublishesIt()
 
 	/**
+	 * Pausing stores the status and compiles a switched-off flow; resuming
+	 * switches it on again. An unknown journey is null.
+	 *
+	 * @return void
+	 */
+	public function testPausingSwitchesTheFlowOffAndResumingOn(): void {
+		$flowService = new FakeFlowService();
+		$service = $this->service(flowService: $flowService, versionService: new FakeFlowVersionService());
+
+		$paused = $service->setStatus(journeyId: 'journey-1', status: 'paused', runAs: 'admin');
+		$this->assertSame('paused', $paused['status']);
+		$this->assertSame('paused', $this->store->rows['journey']['journey-1']['status']);
+		$this->assertFalse($flowService->lastDocument['enabled']);
+
+		$service->setStatus(journeyId: 'journey-1', status: 'active', runAs: 'admin');
+		$this->assertTrue($flowService->lastDocument['enabled']);
+
+		$this->assertNull($service->setStatus(journeyId: 'nope', status: 'paused'));
+	}//end testPausingSwitchesTheFlowOffAndResumingOn()
+
+	/**
 	 * With no flow service the journey is stored and inert, and says so.
 	 * It must NOT fall back to a pipelinq-side loop: that would be the
 	 * second engine ADR-094 exists to prevent.
@@ -129,6 +150,57 @@ class JourneyServiceTest extends TestCase {
 
 		$this->assertSame(['', 'flow-1'], $flowService->uuidsSeen);
 	}//end testASecondCompileUpdatesTheSameFlow()
+
+	/**
+	 * The first clean compile records when the journey became a flow; a
+	 * later compile of the same flow keeps that date. A refusal records none.
+	 *
+	 * @return void
+	 */
+	public function testTheFirstCompileRecordsWhenTheJourneyBecameAFlow(): void {
+		$flowService = new FakeFlowService();
+		$this->service(flowService: $flowService, versionService: null)->compile(journeyId: 'journey-1');
+		$this->assertSame('2026-09-05T12:00:00+00:00', $this->store->rows['journey']['journey-1']['compiledAt']);
+
+		$this->store->rows['journey']['journey-1']['compiledAt'] = '2026-10-02T09:00:00+00:00';
+		$this->service(flowService: $flowService, versionService: null)->compile(journeyId: 'journey-1');
+		$this->assertSame('2026-10-02T09:00:00+00:00', $this->store->rows['journey']['journey-1']['compiledAt']);
+
+		$refusing = new FakeFlowService();
+		$refusing->refuseWith = 'no';
+		$this->store->rows['journey']['journey-1']['compiledAt'] = '';
+		$journey = $this->service(flowService: $refusing, versionService: null)->compile(journeyId: 'journey-1');
+		$this->assertSame('', $journey['compiledAt']);
+	}//end testTheFirstCompileRecordsWhenTheJourneyBecameAFlow()
+
+	/**
+	 * Activating a journey records when; pausing and activating again
+	 * records the new moment, and pausing keeps the last one.
+	 *
+	 * @return void
+	 */
+	public function testActivatingRecordsWhenTheJourneyWentLive(): void {
+		$service = $this->service(flowService: new FakeFlowService(), versionService: null);
+		$this->store->rows['journey']['journey-1']['status'] = 'draft';
+
+		$service->setStatus(journeyId: 'journey-1', status: 'active');
+		$this->assertSame('2026-09-05T12:00:00+00:00', $this->store->rows['journey']['journey-1']['activatedAt']);
+
+		$this->store->rows['journey']['journey-1']['activatedAt'] = '2026-10-02T09:00:00+00:00';
+		$service->setStatus(journeyId: 'journey-1', status: 'active');
+		$this->assertSame('2026-10-02T09:00:00+00:00', $this->store->rows['journey']['journey-1']['activatedAt']);
+
+		$service->setStatus(journeyId: 'journey-1', status: 'paused');
+		$this->assertSame('2026-10-02T09:00:00+00:00', $this->store->rows['journey']['journey-1']['activatedAt']);
+
+		$service->setStatus(journeyId: 'journey-1', status: 'active');
+		$this->assertSame('2026-09-05T12:00:00+00:00', $this->store->rows['journey']['journey-1']['activatedAt']);
+
+		$created = $service->save(payload: ['name' => 'Welcome', 'status' => 'active'], createdByUid: 'admin');
+		$this->assertSame('2026-09-05T12:00:00+00:00', $created['activatedAt']);
+		$draft = $service->save(payload: ['name' => 'Later', 'status' => 'draft'], createdByUid: 'admin');
+		$this->assertArrayNotHasKey('activatedAt', $draft);
+	}//end testActivatingRecordsWhenTheJourneyWentLive()
 
 	/**
 	 * A recorded run keeps the contact and the reason, which is the only
@@ -231,14 +303,23 @@ class FakeFlowService {
 		$this->lastDocument = $data;
 		$this->uuidsSeen[] = (string)$uuid;
 
+		// Like OpenRegister's Flow entity, the getter is magic: there is no
+		// getUuid() method to find, only __call.
 		return new class {
 			/**
-			 * The flow's uuid.
+			 * Resolve a Nextcloud-entity-style magic getter.
 			 *
-			 * @return string The uuid.
+			 * @param string $name The method called.
+			 * @param array<int, mixed> $args Its arguments.
+			 *
+			 * @return string|null The uuid for getUuid(), null otherwise.
 			 */
-			public function getUuid(): string {
-				return 'flow-1';
+			public function __call(string $name, array $args): ?string {
+				if ($name === 'getUuid') {
+					return 'flow-1';
+				}
+
+				return null;
 			}
 		};
 	}//end save()

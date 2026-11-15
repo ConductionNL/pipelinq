@@ -1,0 +1,140 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
+
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Service\Portal\MainRegisterReader;
+use OCP\IAppConfig;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+
+/**
+ * The portal's write into the main register.
+ *
+ * @spec exclude the portal backend has no owning requirement (see MainRegisterReader::save)
+ */
+class MainRegisterReaderTest extends TestCase {
+	/**
+	 * A portal write arrives without a Nextcloud user: a resident is proven by
+	 * the signed portal assertion and the caller's own checks, never by a
+	 * Nextcloud session. Saving under OpenRegister's per-user RBAC therefore
+	 * ran as "Anonymous" and was refused for every ticket ("User 'Anonymous'
+	 * does not have permission to 'create' objects in schema 'Ticket'", found
+	 * by the Woo journey e2e, J4). The register and schema stay pinned by the
+	 * reader, so the save runs without per-user RBAC and tenant scoping.
+	 *
+	 * @return void
+	 */
+	public function testAPortalWriteIsNotRefusedForHavingNoNextcloudUser(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => '7',
+				'ticket_schema' => '42',
+				default => $default,
+			}
+		);
+
+		$saved = $this->createMock(\OCA\OpenRegister\Contract\ObjectEntityInterface::class);
+		$saved->method('jsonSerialize')->willReturn(['id' => 't-1', 'title' => 'Vraag']);
+
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->expects($this->once())
+			->method('saveObject')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->equalTo(['title' => 'Vraag']),
+					'extend' => $this->anything(),
+					'register' => $this->equalTo('7'),
+					'schema' => $this->equalTo('42'),
+					'uuid' => $this->isNull(),
+					'_rbac' => $this->isFalse(),
+					'_multitenancy' => $this->isFalse(),
+				]))
+			->willReturn($saved);
+
+		$reader = new MainRegisterReader($appConfig, $this->createMock(LoggerInterface::class), $objectService);
+		$reader->save(schemaKey: 'ticket', data: ['title' => 'Vraag']);
+	}//end testAPortalWriteIsNotRefusedForHavingNoNextcloudUser()
+
+	/**
+	 * The same holds for reads: a resident's reply looks up their own ticket,
+	 * and under per-user RBAC "Anonymous" found nothing, so every reply
+	 * answered 404 (Woo journey e2e, J4). The callers scope the result to the
+	 * resident themselves.
+	 *
+	 * @return void
+	 */
+	public function testAPortalReadIsNotEmptiedForHavingNoNextcloudUser(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => '7',
+				'ticket_schema' => '42',
+				default => $default,
+			}
+		);
+
+		$found = $this->createMock(\OCA\OpenRegister\Contract\ObjectEntityInterface::class);
+		$found->method('jsonSerialize')->willReturn(['id' => 't-1']);
+
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->expects($this->once())
+			->method('find')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => $this->equalTo('t-1'),
+					'_extend' => $this->anything(),
+					'files' => $this->anything(),
+					'register' => $this->equalTo('7'),
+					'schema' => $this->equalTo('42'),
+					'_rbac' => $this->isFalse(),
+					'_multitenancy' => $this->isFalse(),
+				]))
+			->willReturn($found);
+		$objectService->expects($this->once())
+			->method('findAll')
+			->with($this->anything(), $this->isFalse(), $this->isFalse())
+			->willReturn([]);
+
+		$reader = new MainRegisterReader($appConfig, $this->createMock(LoggerInterface::class), $objectService);
+		$this->assertNotNull($reader->find(schemaKey: 'ticket', id: 't-1'));
+		$reader->findAll(schemaKey: 'ticket', filters: ['portalSubject' => 's-1']);
+	}//end testAPortalReadIsNotEmptiedForHavingNoNextcloudUser()
+
+	/**
+	 * An employee's read keeps OpenRegister's RBAC and organisation filter
+	 * on, so a ticket of another organisation answers null.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeesReadKeepsTheirRbacAndOrganisation(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => '7',
+				'ticket_schema' => '42',
+				default => $default,
+			}
+		);
+
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objectService->expects($this->once())
+			->method('find')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => $this->equalTo(value: 't-other-organisation'),
+					'_extend' => $this->anything(),
+					'files' => $this->anything(),
+					'register' => $this->equalTo(value: '7'),
+					'schema' => $this->equalTo(value: '42'),
+					'_rbac' => $this->isTrue(),
+					'_multitenancy' => $this->isTrue(),
+				]))
+			->willReturn(null);
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$reader = new MainRegisterReader(appConfig: $appConfig, logger: $logger, objectService: $objectService);
+		$this->assertNull(actual: $reader->findAsCaller(schemaKey: 'ticket', id: 't-other-organisation'));
+	}//end testAnEmployeesReadKeepsTheirRbacAndOrganisation()
+}//end class

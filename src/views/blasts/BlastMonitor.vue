@@ -2,37 +2,83 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
 	<div class="blast-monitor">
+		<router-link class="blast-monitor__back" :to="{ name: 'Blasts' }">
+			<ArrowLeft :size="16" />
+			{{ t('pipelinq', 'Back to blasts') }}
+		</router-link>
+
 		<header class="blast-monitor__header">
-			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
-				{{ t('pipelinq', 'Back to blasts') }}
+			<div class="blast-monitor__heading">
+				<h1>{{ blast?.name || t('pipelinq', 'Blast') }}</h1>
+				<div class="blast-monitor__meta">
+					<CnStatusBadge
+						v-if="blast?.status"
+						:status="blast.status"
+						:variant="statusVariant(blast.status)"
+						:label="statusLabel(blast.status)"
+						size="small" />
+					<router-link :to="{ name: 'Blasts' }" class="blast-monitor__crumb">
+						{{ t('pipelinq', 'Newsletters') }}
+					</router-link>
+					<span aria-hidden="true">/</span>
+					<span>{{ t('pipelinq', 'Live sending') }}</span>
+					<span v-if="audienceTotal" class="blast-monitor__meta-line">
+						· {{ t('pipelinq', '{count} recipients', { count: audienceTotal.toLocaleString() }) }}
+					</span>
+				</div>
+			</div>
+<div class="cn-header-actions">
+			<NcButton
+				v-if="canCancel"
+				class="blast-monitor__cancel"
+				variant="secondary"
+				:disabled="cancelling"
+				@click="cancel">
+				<template #icon>
+					<Cancel :size="18" />
+				</template>
+				{{
+					cancelling
+						? t('pipelinq', 'Cancelling…')
+						: t('pipelinq', 'Cancel send')
+				}}
 			</NcButton>
-			<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
-			<CnStatusBadge
-				v-if="blast?.status"
-				:status="blast.status"
-				:label="statusLabel(blast.status)" />
+			<CnBuildiqEditButton />
+			</div>
 		</header>
+		<p v-if="cancelError" class="blast-monitor__error" role="alert">
+			{{ cancelError }}
+		</p>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
 		<section v-else class="blast-monitor__body">
-			<div class="blast-monitor__progress">
+			<div class="blast-monitor__card blast-monitor__progress">
+				<div class="blast-monitor__progress-head">
+					<p class="blast-monitor__progress-meta">
+						<strong>{{ progressPercent }}%</strong>
+						{{ t('pipelinq', 'done') }}
+					</p>
+					<p v-if="etaLabel" class="blast-monitor__eta">
+						{{ etaLabel }}
+					</p>
+				</div>
 				<div
 					class="blast-monitor__bar"
+					:style="{ '--blast-progress': progressPercent }"
 					role="progressbar"
 					:aria-valuenow="progressPercent"
 					aria-valuemin="0"
 					aria-valuemax="100">
-					<div
-						class="blast-monitor__bar-fill"
-						:style="{ width: progressPercent + '%' }" />
+					<div class="blast-monitor__bar-fill" />
 				</div>
-				<p class="blast-monitor__progress-meta">
-					<strong>{{ progressPercent }}%</strong>
-					{{ t('pipelinq', 'complete') }}
-					<span v-if="etaLabel" class="blast-monitor__eta">
-						· {{ etaLabel }}
-					</span>
+				<p class="blast-monitor__progress-note">
+					{{
+						t('pipelinq', '{done} of {total} handed to the provider', {
+							done: processed.toLocaleString(),
+							total: audienceTotal.toLocaleString(),
+						})
+					}}
 				</p>
 			</div>
 
@@ -40,31 +86,39 @@
 				<div
 					v-for="key in totalsKeys"
 					:key="key"
-					class="blast-monitor__total">
+					class="blast-monitor__card blast-monitor__total">
 					<span class="blast-monitor__total-label">
 						{{ totalLabel(key) }}
 					</span>
-					<strong class="blast-monitor__total-value">
+					<strong
+						class="blast-monitor__total-value"
+						:class="`blast-monitor__total-value--${totalTone(key)}`">
 						{{ totals[key] || 0 }}
 					</strong>
+					<span class="blast-monitor__total-caption">
+						{{ totalCaption(key) }}
+					</span>
 				</div>
 			</div>
 
-			<section class="blast-monitor__timeline">
-				<h3>{{ t('pipelinq', 'Recent events') }}</h3>
+			<section class="blast-monitor__card blast-monitor__timeline">
+				<header class="blast-monitor__timeline-head">
+					<h3>{{ t('pipelinq', 'Recent events') }}</h3>
+					<span>{{ t('pipelinq', 'Newest first · addresses are masked') }}</span>
+				</header>
 				<ul v-if="timeline.length > 0">
 					<li
 						v-for="event in timeline"
 						:key="event.id || event.timestamp + event.status">
 						<time>{{ formatTime(event.timestamp) }}</time>
+						<span class="blast-monitor__event-target">
+							{{ maskAddress(event.email || event.phone || event.contactId) }}
+						</span>
 						<CnStatusBadge
 							:status="event.status"
-							:label="statusLabel(event.status)" />
-						<span class="blast-monitor__event-target">
-							{{
-								event.email || event.phone || event.contactId || '—'
-							}}
-						</span>
+							:variant="statusVariant(event.status)"
+							:label="statusLabel(event.status)"
+							size="small" />
 					</li>
 				</ul>
 				<p v-else class="blast-monitor__empty">
@@ -72,27 +126,34 @@
 				</p>
 			</section>
 
-			<footer v-if="canCancel" class="blast-monitor__footer">
-				<NcButton variant="error" :disabled="cancelling" @click="cancel">
-					{{
-						cancelling
-							? t('pipelinq', 'Cancelling…')
-							: t('pipelinq', 'Cancel send')
-					}}
-				</NcButton>
-			</footer>
-			<p v-if="cancelError" class="blast-monitor__error" role="alert">
-				{{ cancelError }}
-			</p>
+			<!-- @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004 -->
+			<section v-if="hasSentContent" class="blast-monitor__card blast-monitor__sent">
+				<header class="blast-monitor__timeline-head">
+					<h3>{{ t('pipelinq', 'Sent content') }}</h3>
+					<span>{{ t('pipelinq', 'As sent; later changes to the template do not alter it') }}</span>
+				</header>
+				<dl>
+					<dt>{{ t('pipelinq', 'Subject') }}</dt>
+					<dd>{{ blast.sentSubject }}</dd>
+					<template v-if="blast.sentText">
+						<dt>{{ t('pipelinq', 'Text') }}</dt>
+						<dd class="blast-monitor__sent-text">
+							{{ blast.sentText }}
+						</dd>
+					</template>
+				</dl>
+			</section>
 		</section>
 	</div>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnBuildiqEditButton, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
 
 const POLL_INTERVAL_MS = 2000
 const TIMELINE_MAX = 50
@@ -106,11 +167,16 @@ const TOTALS_KEYS = [
 	'unsubscribed',
 	'complained',
 ]
+// The tiles in the order the send monitor board draws them.
+const TILE_ORDER = ['queued', 'sent', 'delivered', 'opened', 'clicked', 'bounced', 'unsubscribed', 'complained']
 const TERMINAL_STATUSES = ['sent', 'failed', 'cancelled']
 
 export default {
 	name: 'BlastMonitor',
 	components: {
+		CnBuildiqEditButton,
+		ArrowLeft,
+		Cancel,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -137,6 +203,15 @@ export default {
 
 	computed: {
 		/**
+		 * Whether the blast holds the content it was sent with (REQ-MMT-004).
+		 *
+		 * @return {boolean}
+		 */
+		hasSentContent() {
+			return typeof this.blast?.sentSubject === 'string'
+		},
+
+		/**
 		 * Convenience accessor for the blast's totals counter map.
 		 *
 		 * @return {object}
@@ -151,7 +226,7 @@ export default {
 		 * @return {Array<string>}
 		 */
 		totalsKeys() {
-			return TOTALS_KEYS
+			return TILE_ORDER
 		},
 
 		/**
@@ -209,9 +284,23 @@ export default {
 			if (!isFinite(remaining) || remaining < 1) {
 				return ''
 			}
-			return this.t('pipelinq', 'ETA: ~{seconds}s remaining', {
+			return this.t('pipelinq', 'About {seconds} s to go', {
 				seconds: Math.round(remaining),
 			})
+		},
+
+		/**
+		 * Whether messages are going out right now; drives the moving stripes.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-progress-bar-and-totals-update-by-polling
+		 */
+		isSending() {
+			return (
+				this.blast?.status === 'sending'
+				|| this.blast?.status === 'cancelling'
+			)
 		},
 
 		/**
@@ -306,9 +395,12 @@ export default {
 
 		/**
 		 * Build the reverse-chronological event timeline (capped at 50 entries).
+		 * Events of the same moment keep the order the deliveries come in.
 		 *
 		 * @param {Array} deliveries Raw delivery objects.
 		 * @return {Array} Trimmed timeline entries.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-events-of-the-same-moment-keep-their-order-in-the-send-monitor
 		 */
 		buildTimeline(deliveries) {
 			if (!Array.isArray(deliveries)) {
@@ -331,7 +423,12 @@ export default {
 						|| d.createdAt,
 				}))
 				.filter((d) => d.timestamp)
-				.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+				.sort((a, b) => {
+					if (a.timestamp === b.timestamp) {
+						return 0
+					}
+					return a.timestamp < b.timestamp ? 1 : -1
+				})
 				.slice(0, TIMELINE_MAX)
 		},
 
@@ -370,7 +467,7 @@ export default {
 			const map = {
 				draft: this.t('pipelinq', 'Draft'),
 				scheduled: this.t('pipelinq', 'Scheduled'),
-				sending: this.t('pipelinq', 'Sending'),
+				sending: this.t('pipelinq', 'Being sent'),
 				cancelling: this.t('pipelinq', 'Cancelling'),
 				sent: this.t('pipelinq', 'Sent'),
 				paused: this.t('pipelinq', 'Paused'),
@@ -380,7 +477,7 @@ export default {
 				delivered: this.t('pipelinq', 'Delivered'),
 				opened: this.t('pipelinq', 'Opened'),
 				clicked: this.t('pipelinq', 'Clicked'),
-				bounced: this.t('pipelinq', 'Bounced'),
+				bounced: this.t('pipelinq', 'Could not be delivered'),
 				unsubscribed: this.t('pipelinq', 'Unsubscribed'),
 				complained: this.t('pipelinq', 'Complained'),
 			}
@@ -394,7 +491,90 @@ export default {
 		 * @return {string}
 		 */
 		totalLabel(key) {
+			if (key === 'queued') {
+				return this.t('pipelinq', 'In the queue')
+			}
 			return this.statusLabel(key)
+		},
+
+		/**
+		 * An address as the event list shows it: the first character, then
+		 * stars, then the domain ("a***@ziggo.nl"), so the list can be on a
+		 * shared screen.
+		 *
+		 * @param {string} value An e-mail address, phone number or contact id.
+		 * @return {string} The masked text.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		maskAddress(value) {
+			const text = String(value || '')
+			if (text === '') {
+				return '—'
+			}
+			const at = text.indexOf('@')
+			if (at > 0) {
+				return `${text.charAt(0)}***${text.slice(at)}`
+			}
+			return text.length > 4 ? `${'*'.repeat(text.length - 4)}${text.slice(-4)}` : text
+		},
+
+		/**
+		 * The tone of a state: the colour of its pill and its tile figure.
+		 *
+		 * @param {string} status A blast or delivery state.
+		 * @return {string} A CnStatusBadge variant.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		statusVariant(status) {
+			const tones = {
+				sending: 'purple',
+				cancelling: 'warning',
+				scheduled: 'info',
+				sent: 'default',
+				delivered: 'success',
+				opened: 'info',
+				clicked: 'teal',
+				bounced: 'error',
+				failed: 'error',
+				unsubscribed: 'warning',
+				complained: 'error',
+				paused: 'warning',
+			}
+			return tones[status] || 'default'
+		},
+
+		/**
+		 * The tone of a tile's figure: delivered reads good, bounced reads bad.
+		 *
+		 * @param {string} key A totals key.
+		 * @return {string} success, error or plain.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		totalTone(key) {
+			return { delivered: 'success', bounced: 'error' }[key] || 'plain'
+		},
+
+		/**
+		 * The line under a tile's figure, saying what the number means.
+		 *
+		 * @param {string} key A totals key.
+		 * @return {string} The caption.
+		 * @spec openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
+		 */
+		totalCaption(key) {
+			const totals = this.totals
+			const share = (part, whole) => (whole ? Math.round(((part || 0) / whole) * 100) : 0)
+			const captions = {
+				queued: () => this.t('pipelinq', 'waiting on the rate limit'),
+				sent: () => this.t('pipelinq', 'handed to the provider'),
+				delivered: () => this.t('pipelinq', '{percent}% of sent', { percent: share(totals.delivered, totals.sent) }),
+				opened: () => this.t('pipelinq', '{percent}% of delivered', { percent: share(totals.opened, totals.delivered) }),
+				clicked: () => this.t('pipelinq', '{percent}% of delivered', { percent: share(totals.clicked, totals.delivered) }),
+				bounced: () => this.t('pipelinq', 'address refused'),
+				unsubscribed: () => this.t('pipelinq', 'via the link in the footer'),
+				complained: () => this.t('pipelinq', 'marked as spam'),
+			}
+			return captions[key] ? captions[key]() : ''
 		},
 
 		/**
@@ -414,7 +594,7 @@ export default {
 				if (isNaN(date.getTime())) {
 					return ts
 				}
-				return date.toLocaleString()
+				return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 			} catch {
 				return ts
 			}
@@ -423,118 +603,255 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.cn-header-actions {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
 .blast-monitor {
-	padding: 20px;
-	max-width: 980px;
+	box-sizing: border-box;
+	width: 100%;
+	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
+}
+
+.blast-monitor__back {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: normal;
+	text-decoration: none;
+	color: var(--color-primary-element);
 }
 
 .blast-monitor__header {
 	display: flex;
-	align-items: center;
-	gap: 12px;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 4px 0 8px;
 }
 
-.blast-monitor__header h2 {
+.blast-monitor__heading {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.blast-monitor__header h1 {
 	margin: 0;
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+/* The page's class outranks the board look's neutral secondary (0,3,0). */
+.blast-monitor .blast-monitor__cancel.button-vue {
+	min-height: 40px;
+	border: 1px solid var(--nldesign-component-status-badge-error-color, var(--nl-color-red-text, var(--color-error-text)));
+	background-color: var(--color-main-background);
+	color: var(--nldesign-component-status-badge-error-color, var(--nl-color-red-text, var(--color-error-text)));
+}
+
+.blast-monitor .blast-monitor__cancel.button-vue :deep(.button-vue__text) {
+	color: inherit;
+}
+
+.blast-monitor__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	line-height: normal;
+	color: var(--color-text-maxcontrast);
+}
+
+.blast-monitor__crumb {
+	text-decoration: underline;
+	color: var(--color-primary-element);
+}
+
+.blast-monitor__body {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.blast-monitor__card {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	padding: 20px 22px;
 }
 
 .blast-monitor__progress {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 12px;
+}
+
+.blast-monitor__progress-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.blast-monitor__progress-meta {
+	margin: 0;
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+
+	strong {
+		font-size: 28px;
+		line-height: 1.2;
+	}
 }
 
 .blast-monitor__bar {
+	position: relative;
 	width: 100%;
-	height: 14px;
-	background: var(--color-background-darker);
-	border-radius: var(--border-radius);
+	height: 12px;
+	background: var(--color-background-dark);
+	border-radius: 999px;
 	overflow: hidden;
 }
 
 .blast-monitor__bar-fill {
 	height: 100%;
+	width: calc(var(--blast-progress) * 1%);
 	background: var(--color-primary-element);
-	transition: width 200ms linear;
-}
-
-.blast-monitor__progress-meta {
-	margin: 0;
-	color: var(--color-text-lighter);
+	border-radius: 999px;
+	transition: width 600ms ease;
 }
 
 .blast-monitor__eta {
-	margin-inline-start: 6px;
+	margin: 0;
+	color: var(--color-primary-element);
+	font-weight: 600;
+}
+
+.blast-monitor__progress-note {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .blast-monitor__totals {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-	gap: 8px;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 16px;
 }
 
 .blast-monitor__total {
 	display: flex;
 	flex-direction: column;
-	padding: 12px;
-	background: var(--color-background-hover);
-	border-radius: var(--border-radius);
+	gap: 4px;
 }
 
-.blast-monitor__total-label {
-	color: var(--color-text-lighter);
-	font-size: 0.85em;
+.blast-monitor__card.blast-monitor__total {
+	padding: 16px 18px;
+}
+
+.blast-monitor__total-label,
+.blast-monitor__total-caption {
+	color: var(--color-text-maxcontrast);
+}
+
+.blast-monitor__total-caption {
+	font-size: 13px;
 }
 
 .blast-monitor__total-value {
-	font-size: 1.4em;
+	font-size: 26px;
 	color: var(--color-main-text);
 }
 
-.blast-monitor__timeline {
+.blast-monitor__total-value--success {
+	color: var(--color-success-text, var(--color-success));
+}
+
+.blast-monitor__total-value--error {
+	color: var(--color-error-text, var(--color-error));
+}
+
+.blast-monitor__timeline-head {
 	display: flex;
-	flex-direction: column;
-	gap: 6px;
+	align-items: baseline;
+	justify-content: space-between;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+
+	h3 {
+		margin: 0 0 8px;
+		color: var(--color-main-text);
+		font-size: 17px;
+		font-weight: 700;
+		line-height: normal;
+	}
 }
 
 .blast-monitor__timeline ul {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	max-height: 360px;
-	overflow-y: auto;
 }
 
 .blast-monitor__timeline li {
-	display: flex;
+	font-size: 14px;
+	display: grid;
+	grid-template-columns: 100px 1fr auto;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 0;
+	padding: 10px 0;
 	border-bottom: 1px solid var(--color-border);
 }
 
-.blast-monitor__event-target {
-	color: var(--color-text-lighter);
+.blast-monitor__timeline time {
+	color: var(--color-text-maxcontrast);
 }
 
-.blast-monitor__empty {
-	color: var(--color-text-lighter);
+.blast-monitor__event-target {
+	font-weight: 600;
+}
+
+.blast-monitor__sent dt {
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
+	margin-top: 8px;
+}
+
+.blast-monitor__sent dd {
 	margin: 0;
 }
 
-.blast-monitor__footer {
-	display: flex;
-	justify-content: flex-end;
+.blast-monitor__sent-text {
+	white-space: pre-wrap;
+}
+
+.blast-monitor__empty {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
 }
 
 .blast-monitor__error {
 	color: var(--color-error);
 	font-weight: 600;
 	margin: 0;
+}
+
+@media (max-width: 1024px) {
+	.blast-monitor__totals {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

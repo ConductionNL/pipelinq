@@ -13,9 +13,31 @@
 // contactsUid + the denormalised name/email/phone mirror.
 
 import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 
 const base = (path) => generateUrl('/apps/pipelinq' + path)
+
+/**
+ * Ask the server to write a saved object back to its Nextcloud Contact.
+ *
+ * @param {{objectType: string, objectId: string}} target What to write back.
+ * @return {Promise<{uid: string|null, skipped: boolean}>} The contacts UID (null
+ *   on a failure) and whether the user turned write-back off.
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
+ */
+async function requestWriteBack(target) {
+	try {
+		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
+			objectType: target.objectType,
+			objectId: target.objectId,
+		})
+		return { uid: data?.contactsUid || null, skipped: data?.skipped === true }
+	} catch {
+		return { uid: null, skipped: false }
+	}
+}
 
 /**
  * Contact-FIRST create of a client or contact.
@@ -36,23 +58,40 @@ export async function createWithContact(objectType, form) {
 
 /**
  * Write-back sync of an existing client/contact to its linked Nextcloud
- * Contact vCard (contacts-sync spec, write-back requirement). Best-effort:
- * a failure here must never block the caller's own save flow, since the
- * Pipelinq object is already persisted by the time this runs.
+ * Contact vCard (contacts-sync spec, write-back requirement). A failure never
+ * blocks the caller's own save flow, since the Pipelinq object is already
+ * persisted by the time this runs. It is no longer silent either: the user is
+ * told that Nextcloud Contacts still has the old details (round4, item 1).
  *
  * @param {string} objectType The object type ('client' or 'contact').
  * @param {string} objectId The saved object's id.
+ * @param {(message: string) => void} [notify] Shows the failure (injectable for tests).
  * @return {Promise<string|null>} The contacts UID on success, or null.
- * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
  */
-export async function writeBack(objectType, objectId) {
-	try {
-		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
-			objectType,
-			objectId,
-		})
-		return data?.contactsUid || null
-	} catch {
-		return null
+export async function writeBack(objectType, objectId, notify = showError) {
+	const { uid, skipped } = await requestWriteBack({ objectType, objectId })
+	// The user turned write-back off: nothing was meant to reach Contacts.
+	if (uid === null && !skipped) {
+		notify(
+			t(
+				'pipelinq',
+				'Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details.',
+			),
+		)
 	}
+	return uid
+}
+
+/**
+ * A record's address book card: whether it exists, its address book and its
+ * last change.
+ *
+ * @param {string} uid The record's `contactsUid`.
+ * @return {Promise<{linked: boolean, addressBook: string, updatedAt: string|null}>} The status.
+ * @spec openspec/specs/contact-person-page-as-board/spec.md#requirement-the-contact-page-shows-its-address-book-card
+ */
+export async function cardStatus(uid) {
+	const { data } = await axios.get(base('/api/contacts-sync/status'), { params: { uid } })
+	return data
 }

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
+use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCP\IAppConfig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -78,7 +79,8 @@ class PortalSchemaKeyResolutionTest extends TestCase {
 		$repository = new PortalObjectRepository(
 			InstalledAppConfig::wire($this->createMock(IAppConfig::class)),
 			$this->createMock(LoggerInterface::class),
-			$this->createMock(ObjectServiceInterface::class)
+			$this->createMock(ObjectServiceInterface::class),
+			$this->createMock(PortalServiceAccount::class)
 		);
 
 		$this->assertSame(InstalledAppConfig::schemaId(slug: $slug), $repository->schemaId(schemaSlug: $slug));
@@ -105,7 +107,8 @@ class PortalSchemaKeyResolutionTest extends TestCase {
 		$repository = new PortalObjectRepository(
 			InstalledAppConfig::wire($this->createMock(IAppConfig::class)),
 			$this->createMock(LoggerInterface::class),
-			$objects
+			$objects,
+			$this->createMock(PortalServiceAccount::class)
 		);
 
 		$found = $repository->findAll(schemaSlug: 'crmPortalAccount', filters: ['email' => 'resident@example.org']);

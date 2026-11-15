@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Community meetup illustration">
+	<defs>
+		<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ff9a5a"/>
+			<stop offset="1" stop-color="#e2574c"/>
+		</linearGradient>
+	</defs>
+	<rect width="1200" height="630" fill="url(#bg)"/>
+	<g fill="#ffffff" opacity="0.08">
+		<circle cx="200" cy="120" r="200"/>
+		<circle cx="1080" cy="540" r="240"/>
+	</g>
+	<g transform="translate(250 150)">
+		<rect x="0" y="0" width="700" height="250" rx="24" fill="#fff4ea"/>
+		<rect x="40" y="40" width="300" height="24" rx="12" fill="#e2574c"/>
+		<g fill="#f3c6a8">
+			<rect x="40" y="90" width="420" height="18" rx="9"/>
+			<rect x="40" y="126" width="360" height="18" rx="9"/>
+			<rect x="40" y="162" width="390" height="18" rx="9"/>
+		</g>
+		<g transform="translate(520 60)">
+			<rect width="140" height="130" rx="18" fill="#ffffff" stroke="#e2574c" stroke-width="4"/>
+			<rect width="140" height="36" rx="18" fill="#e2574c"/>
+			<rect y="18" width="140" height="18" fill="#e2574c"/>
+			<text x="70" y="104" font-family="Helvetica, Arial, sans-serif" font-size="56" font-weight="700" fill="#e2574c" text-anchor="middle">NOV</text>
+		</g>
+	</g>
+	<g transform="translate(0 470)">
+		<g transform="translate(300 0)">
+			<circle cx="0" cy="0" r="38" fill="#ffd9c0"/>
+			<rect x="-62" y="50" width="124" height="220" rx="62" fill="#2f4858"/>
+		</g>
+		<g transform="translate(470 0)">
+			<circle cx="0" cy="0" r="38" fill="#8d5a3b"/>
+			<rect x="-62" y="50" width="124" height="220" rx="62" fill="#f6ae2d"/>
+		</g>
+		<g transform="translate(640 0)">
+			<circle cx="0" cy="0" r="38" fill="#ffd9c0"/>
+			<rect x="-62" y="50" width="124" height="220" rx="62" fill="#33658a"/>
+		</g>
+		<g transform="translate(810 0)">
+			<circle cx="0" cy="0" r="38" fill="#c68642"/>
+			<rect x="-62" y="50" width="124" height="220" rx="62" fill="#fff4ea"/>
+		</g>
+	</g>
+	<g transform="translate(950 90)">
+		<path d="M0 0h150a20 20 0 0 1 20 20v70a20 20 0 0 1-20 20h-100l-30 30v-30h-20a20 20 0 0 1-20-20v-70a20 20 0 0 1 20-20z" fill="#ffffff"/>
+		<g fill="#e2574c">
+			<circle cx="45" cy="55" r="10"/>
+			<circle cx="85" cy="55" r="10"/>
+			<circle cx="125" cy="55" r="10"/>
+		</g>
+	</g>
+</svg>

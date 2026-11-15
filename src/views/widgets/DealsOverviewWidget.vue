@@ -10,13 +10,7 @@
 		:emptyText="t('pipelinq', 'No leads found')"
 		@rowClick="onShow">
 		<template #footer>
-			<a
-				class="cn-data-table__view-all"
-				role="button"
-				tabindex="0"
-				@click.prevent="onViewAll"
-				@keydown.enter.prevent="onViewAll"
-				@keydown.space.prevent="onViewAll">
+			<a class="cn-data-table__view-all" :href="leadsUrl">
 				{{ t('pipelinq', 'View all') }} →
 			</a>
 		</template>
@@ -27,9 +21,10 @@
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { formatCurrency } from '../../services/localeUtils.js'
-import { initializeStores } from '../../store/store.js'
+import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { toText } from '../../utils/widgetText.js'
-import { LIST_COLUMNS, navigateTo } from './listTable.js'
+import { navigateTo } from './listTable.js'
+import listWidgetMixin from './listWidgetMixin.js'
 
 export default {
 	name: 'DealsOverviewWidget',
@@ -37,34 +32,19 @@ export default {
 		CnDataTable,
 	},
 
-	props: {
-		/**
-		 * Widget heading, supplied by the manifest.
-		 *
-		 * Declared but not rendered here: the widget chrome draws the heading.
-		 * Declaring it is what stops Vue's attribute fallthrough painting
-		 * `title="…"` onto the component's root element, which would hover a
-		 * browser tooltip over the whole widget.
-		 */
-		// eslint-disable-next-line vue/no-unused-properties
-		title: {
-			type: String,
-			required: true,
-		},
-	},
+	mixins: [listWidgetMixin],
 
 	data() {
 		return {
-			loading: false,
 			leads: [],
 			clients: [],
-			columns: LIST_COLUMNS,
+			leadsUrl: generateUrl('/apps/pipelinq/leads'),
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
 		 */
 		clientMap() {
 			const map = {}
@@ -75,7 +55,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
 		 */
 		items() {
 			return this.leads.map((lead) => {
@@ -98,93 +78,43 @@ export default {
 		},
 	},
 
-	async mounted() {
-		await this.fetchData()
-	},
-
 	methods: {
 		/**
-		 * Navigate to the clicked lead in the same tab.
+		 * Navigate to the clicked lead.
 		 *
 		 * @param {object} item The clicked row (a shaped lead item).
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
+		 * @param {MouseEvent} [event] The row click.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
 		 */
-		onShow(item) {
-			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
+		onShow(item, event) {
+			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id), event)
 		},
 
 		/**
-		 * Navigate to the full leads list.
-		 *
-		 * @return {void}
-		 */
-		onViewAll() {
-			navigateTo(generateUrl('/apps/pipelinq/leads'))
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
 		 */
 		async fetchData() {
-			this.loading = true
-			try {
-				const { objectStore } = await initializeStores()
-				const config = objectStore.objectTypeRegistry
-
+			await this.loadWidget('DealsOverviewWidget', async (config) => {
 				if (config.lead) {
-					this.leads = await this.fetchRaw(config, 'lead', {
-						_limit: 20,
-						_order: 'created_at:desc',
+					this.leads = await fetchRegisteredObjects(config, {
+						type: 'lead',
+						params: {
+							_limit: 20,
+							_order: 'created_at:desc',
+						},
 					})
 				}
 				if (config.client) {
-					this.clients = await this.fetchRaw(config, 'client', {
-						_limit: 500,
+					this.clients = await fetchRegisteredObjects(config, {
+						type: 'client',
+						params: {
+							_limit: 500,
+						},
 					})
 				}
-			} catch (err) {
-				console.error('DealsOverviewWidget fetch error:', err)
-			} finally {
-				this.loading = false
-			}
-		},
-
-		/**
-		 * @param {object} config The object-type registry (register/schema per type).
-		 * @param {string} type The object type to fetch.
-		 * @param {object} params Query parameters.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-30
-		 */
-		async fetchRaw(config, type, params = {}) {
-			const typeConfig = config[type]
-			if (!typeConfig) return []
-
-			const queryParams = new URLSearchParams()
-			for (const [key, value] of Object.entries(params)) {
-				if (value === undefined || value === null || value === '') continue
-				queryParams.set(key, value)
-			}
-
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
-
-			const response = await fetch(url, {
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-					'OCS-APIREQUEST': 'true',
-				},
 			})
-
-			if (!response.ok) throw new Error('Failed to fetch ' + type)
-			const data = await response.json()
-			return data.results || data || []
 		},
+
 	},
 }
 </script>

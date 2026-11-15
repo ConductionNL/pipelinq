@@ -136,6 +136,37 @@ else
 	echo "::warning::No occ in $(pwd) — skipping the pretty-URL setting."
 fi
 
+# ── 0b. The suite runs against the FULL structure ───────────────────────────
+# Pipelinq ships two structures from one manifest (simple-structure-profile).
+# `simple` is the default: nine menu entries for a contact centre. The specs
+# here were written against the full menu and reach pages through it (the
+# Sales group, Marketing, Point of Sale), so the CI instance is put on `full`,
+# the same switch an administrator has. `simple-structure-menu.spec.ts` covers
+# the simple menu without touching this setting: it rewrites the initial state
+# on its own page, because six workers share this one instance.
+#
+# Only here, never in global-setup: this script runs on a throwaway CI
+# instance, and global-setup also runs against a shared instance people use.
+#
+# A failure is fatal. Without the setting the suite runs against the simple
+# menu, and every spec that walks the full navigation fails naming a missing
+# entry rather than this step.
+if [ -f "./occ" ]; then
+	if ! php occ config:app:set pipelinq menu_structure --value=full; then
+		echo "::error::could not set pipelinq menu_structure=full. The suite would run against the simple menu."
+		exit 1
+	fi
+	STRUCTURE="$(php occ config:app:get pipelinq menu_structure || echo '<unset>')"
+	echo "[ci-seed] read-back: menu_structure=${STRUCTURE}"
+	if [ "$STRUCTURE" != "full" ]; then
+		echo "::error::menu_structure reads '${STRUCTURE}' after it was set to full."
+		exit 1
+	fi
+else
+	echo "::error::No occ in $(pwd): cannot put the instance on the full menu structure."
+	exit 1
+fi
+
 # Small helper: POST JSON as the admin, echo the status, dump the body.
 # Basic auth without a session cookie skips Nextcloud's CSRF check, which is
 # why these admin-only endpoints are reachable from curl at all.
@@ -191,7 +222,7 @@ fi
 #
 # CnAppRoot opens the non-gating wizard when ANY optional step that is not
 # `info` or `summary` is reported outstanding — not just demo-data. Steps 1-3
-# clear `provision`, `currency` and `demo-data`, and leave `organisation`
+# clear `currency` and `demo-data`, and leave `organisation`
 # behind: SetupController marks it done only once `receipt_company_name` is
 # set, and nothing here ever set it.
 #
@@ -200,54 +231,8 @@ fi
 # describes. It went unnoticed because most specs never click behind the
 # overlay; one that opens a row and then reads its sidebar does.
 #
-# `integrations` is done when EITHER integration URL is set, or when neither
-# shillinq nor integriq is installed. The second arm is the CI stack, where
-# nothing needs doing.
-#
-# It is not the only stack this script runs on. On a fleet instance every app
-# is installed — which is also what a customer runs — and there the step is
-# genuinely outstanding, the wizard arms, and the suite fails on a modal mask
-# for a reason that has nothing to do with any assertion.
-#
-# So point the shillinq integration at this instance when shillinq is actually
-# here. That is TRUE rather than a mute: the app is installed and reachable at
-# this base URL. `xwiki_direct_url` is still deliberately NOT forced — it would
-# point at a host that does not exist and break the specs asserting on its
-# degraded state.
-# `format=json` is not optional here. Without it OCS answers XML, the app name
-# comes back as `<element>shillinq</element>`, and a grep for the JSON spelling
-# silently matches nothing — the check then reports "not installed" on an
-# instance where it plainly is, which is the failure this block exists to stop.
-if curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/ocs/v2.php/cloud/apps?filter=enabled&format=json" 2>/dev/null \
-	| grep -q '"shillinq"'; then
-	echo "[ci-seed] shillinq is installed — recording its URL so the integrations step is met"
-	post_json "${APP_BASE}/api/setup/config" "{\"shillinq_app_url\":\"${BASE}/apps/shillinq\"}"
-	if [ "$POST_CODE" != "200" ]; then
-		echo "::error::Could not record the shillinq integration URL (HTTP ${POST_CODE}). On an instance where shillinq IS installed the integrations step stays unmet and CnAppRoot covers the shell with the setup wizard."
-		exit 1
-	fi
-fi
-
-# With integriq installed and no URL recorded, the integrations step is
-# answered the way an operator who uses neither integration answers it: by
-# saving the step blank. The step is outstanding only when both URLs are
-# already blank, so posting a blank XWiki URL overwrites nothing, and it is
-# still not forced to a host that does not exist.
-STATUS_BODY_PRE="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${APP_BASE}/api/setup/status" -o "$STATUS_BODY_PRE"
-if python3 -c 'import json, sys; sys.exit(0 if json.load(open(sys.argv[1])).get("steps", {}).get("integrations", {}).get("done") is True else 1)' "$STATUS_BODY_PRE"; then
-	echo "[ci-seed] integrations step already met"
-else
-	echo "[ci-seed] integrations step outstanding, answering it blank"
-	post_json "${APP_BASE}/api/setup/config" '{"xwiki_direct_url":""}'
-	if [ "$POST_CODE" != "200" ]; then
-		echo "::error::Could not answer the integrations setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."
-		exit 1
-	fi
-fi
-
+# There is no `integrations` step any more: Shillinq and XWiki are detected,
+# never typed (pipelinq-setup-wizard-review), so nothing here sets a URL.
 post_json "${APP_BASE}/api/setup/config" '{"receipt_company_name":"CI Test Organisation"}'
 if [ "$POST_CODE" != "200" ]; then
 	echo "::error::Could not complete the organisation setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."

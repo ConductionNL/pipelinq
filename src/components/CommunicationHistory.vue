@@ -10,7 +10,7 @@
   - renders them as a CnDataTable. Rows link to the contactmoment detail
   - route.
   -
-  - @spec openspec/changes/entity-notes/tasks.md#task-5
+  - @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-5
   - @spec openspec/specs/entity-notes/spec.md
   -->
 
@@ -75,7 +75,12 @@
 </template>
 
 <script>
-import { CnDataTable, CnDetailCard, CnPagination } from '@conduction/nextcloud-vue'
+import {
+	CnDataTable,
+	CnDetailCard,
+	CnPagination,
+	openRowTarget,
+} from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -191,26 +196,51 @@ export default {
 
 			this.loading = true
 			try {
-				const response = await axios.get(this.buildUrl(), {
-					params: {
-						type: 'contactmomenten',
-						_page: this.page,
-						_limit: this.limit,
-					},
-				})
-				const data = response.data || {}
-				this.items = Array.isArray(data.results) ? data.results : []
-				this.total = Number(data.total) || 0
-				this.pages = Number(data.pages) || 1
-				this.page = Number(data.page) || this.page
+				const response = await this.requestHistoryPage()
+				this.showHistoryPage(response.data || {})
 			} catch {
-				showError(this.t('pipelinq', 'Could not load communication history'))
-				this.items = []
-				this.total = 0
-				this.pages = 1
+				this.showHistoryFailure()
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Ask for the current page of contact moments.
+		 *
+		 * @return {Promise<object>} The response.
+		 */
+		requestHistoryPage() {
+			return axios.get(this.buildUrl(), {
+				params: {
+					type: 'contactmomenten',
+					_page: this.page,
+					_limit: this.limit,
+				},
+			})
+		},
+
+		/**
+		 * Say the history could not be loaded, and show an empty first page.
+		 */
+		showHistoryFailure() {
+			showError(this.t('pipelinq', 'Could not load communication history'))
+			this.items = []
+			this.total = 0
+			this.pages = 1
+		},
+
+		/**
+		 * Show one page of the answer: its rows, the total, the page count and
+		 * the page the server served.
+		 *
+		 * @param {object} data The answer.
+		 */
+		showHistoryPage(data) {
+			this.items = Array.isArray(data.results) ? data.results : []
+			this.total = Number(data.total) || 0
+			this.pages = Number(data.pages) || 1
+			this.page = Number(data.page) || this.page
 		},
 
 		onRefresh() {
@@ -231,18 +261,20 @@ export default {
 		 * Open a communication-history row on the unified ticket detail page.
 		 *
 		 * @param {object} row The contactmoment row (a `ticket` object).
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
-		goToContactmoment(row) {
+		goToContactmoment(row, event) {
 			if (!row || !row.id) {
 				return
 			}
 			// A contactmoment is a `ticket` with ticketType=contactmoment
 			// (unify-ticket-supertype) — open the unified detail page.
-			this.$router.push({
-				name: 'TicketDetail',
-				params: { id: row.id },
-			})
+			openRowTarget(
+				event,
+				{ name: 'TicketDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		formatChannel(value) {

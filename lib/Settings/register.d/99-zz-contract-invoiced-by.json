@@ -1,0 +1,62 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "When a contract went to invoicing and who sent it (PqContract: 'Op 2 januari 2026 naar facturering gestuurd door Pieter Jansen'). Named 99-zz so it merges after 96-contract-renewal, which declares the schema. invoiceHistory keeps every send, for this year's invoicing on the contract page."
+	},
+	"components": {
+		"schemas": {
+			"salesContract": {
+				"slug": "salesContract",
+				"version": "1.2.0",
+				"properties": {
+					"invoicedAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Sent to invoicing",
+						"description": "When the contract was last sent to invoicing."
+					},
+					"invoicedBy": {
+						"type": "string",
+						"format": "user",
+						"title": "Sent to invoicing by",
+						"description": "The user who last sent the contract to invoicing."
+					},
+					"invoiceHistory": {
+						"type": "array",
+						"title": "Invoice history",
+						"description": "Every send to invoicing: the reference the invoicing app returned, when, by whom and the amount. The contract page reads this year's invoicing from it.",
+						"items": {
+							"type": "object",
+							"properties": {
+								"reference": {
+									"type": "string",
+									"title": "Invoice reference",
+									"description": "The reference the invoicing app returned for this send."
+								},
+								"sentAt": {
+									"type": "string",
+									"format": "date-time",
+									"title": "Sent at",
+									"description": "When the contract was sent."
+								},
+								"sentBy": {
+									"type": "string",
+									"format": "user",
+									"title": "Sent by",
+									"description": "The user who sent it."
+								},
+								"amount": {
+									"type": "number",
+									"minimum": 0,
+									"title": "Amount",
+									"description": "The amount sent, the value per period."
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

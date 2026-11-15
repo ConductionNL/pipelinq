@@ -20,13 +20,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PasswordResetServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\IL10N;
 use OCP\Security\IHasher;
@@ -42,7 +43,7 @@ use OCP\Security\IHasher;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PasswordResetService {
+class PasswordResetService implements PasswordResetServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -101,6 +102,10 @@ class PasswordResetService {
 	 *   audit are all unspecified
 	 */
 	public function requestReset(string $email, string $tenantId): void {
+		// First, before any lookup: without a service account nothing can be
+		// saved, and the answer must not depend on whether the address exists.
+		$this->repository->requireWritable();
+
 		$email = strtolower(trim($email));
 		$account = $this->repository->findOneBy(self::SCHEMA, ['email' => $email, 'tenantId' => $tenantId]);
 		if ($account === null || ($account['status'] ?? 'active') === 'closed') {
@@ -110,8 +115,11 @@ class PasswordResetService {
 		$token = $this->tokens->issue(self::TTL_MINUTES);
 		$account['passwordResetTokenHash'] = $token['hash'];
 		$account['passwordResetExpiresAt'] = $token['expiresAt'];
+		// Save first: a link whose token is not stored can never be used.
 		$this->repository->save(self::SCHEMA, $account, $this->repository->idOf(object: $account));
 
+		// Category `account` (IntegriqConsentClient::CATEGORY_ACCOUNT) is exempt
+		// from opt-outs, so the reset mail is never put to integriq.
 		$this->mail->sendTokenLink(
 			$email,
 			'/index.php/apps/pipelinq/portal/password-reset',
@@ -137,14 +145,63 @@ class PasswordResetService {
 	 *   audit are all unspecified
 	 */
 	public function resetPassword(string $token, string $newPassword, string $tenantId): void {
-		if (strlen($newPassword) < self::MIN_PASSWORD_LENGTH) {
+		$this->reset(reset: ['token' => $token, 'tenantId' => $tenantId], newPassword: $newPassword);
+	}//end resetPassword()
+
+	/**
+	 * Store a policy-compliant new password on the account a valid token names, then end its sessions.
+	 *
+	 * @param array{token: string, tenantId: string} $reset       The plaintext reset token and the tenant id.
+	 * @param string                                 $newPassword The new plaintext password.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException On an invalid/expired token or a weak password.
+	 */
+	private function reset(array $reset, string $newPassword): void {
+		$tenantId = $reset['tenantId'];
+		$this->repository->requireWritable();
+		$this->requireStrong(password: $newPassword);
+		$account = $this->accountForResetToken(token: $reset['token'], tenantId: $tenantId);
+
+		$accountId = (string)$this->repository->idOf(object: $account);
+		$this->repository->save(self::SCHEMA, $this->withPassword(account: $account, password: $newPassword), $accountId);
+
+		// A password reset invalidates every existing session.
+		$this->sessions->revokeAllForAccount(accountId: $accountId, reason: 'password-reset');
+		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'password-reset', outcome: 'success');
+	}//end reset()
+
+	/**
+	 * Refuse a password shorter than the minimum.
+	 *
+	 * @param string $password The new password.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException When it is too short.
+	 */
+	private function requireStrong(string $password): void {
+		if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
 			throw new PortalException(
 				Http::STATUS_UNPROCESSABLE_ENTITY,
 				'weakPassword',
 				'Wachtwoord moet minimaal 10 tekens bevatten.'
 			);
 		}
+	}//end requireStrong()
 
+	/**
+	 * The tenant's account the reset token belongs to, when it is valid and unexpired.
+	 *
+	 * @param string $token    The plaintext reset token.
+	 * @param string $tenantId The tenant.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws PortalException When no account holds a valid token.
+	 */
+	private function accountForResetToken(string $token, string $tenantId): array {
 		$account = $this->findByResetToken(token: $token, tenantId: $tenantId);
 		if ($account === null) {
 			throw new PortalException(
@@ -154,18 +211,27 @@ class PasswordResetService {
 			);
 		}
 
-		$accountId = (string)$this->repository->idOf(object: $account);
-		$account['passwordHash'] = $this->hasher->hash($newPassword);
+		return $account;
+	}//end accountForResetToken()
+
+	/**
+	 * The account with its new password, its reset token cleared and its
+	 * lock lifted.
+	 *
+	 * @param array<string, mixed> $account  The account.
+	 * @param string               $password The new password.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withPassword(array $account, string $password): array {
+		$account['passwordHash'] = $this->hasher->hash($password);
 		$account['passwordResetTokenHash'] = null;
 		$account['passwordResetExpiresAt'] = null;
 		$account['failedLoginAttempts'] = 0;
 		$account['lockedUntil'] = null;
-		$this->repository->save(self::SCHEMA, $account, $accountId);
 
-		// A password reset invalidates every existing session.
-		$this->sessions->revokeAllForAccount(accountId: $accountId, reason: 'password-reset');
-		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'password-reset', outcome: 'success');
-	}//end resetPassword()
+		return $account;
+	}//end withPassword()
 
 	/**
 	 * Find the account whose stored reset-token hash matches and is unexpired.
@@ -184,12 +250,7 @@ class PasswordResetService {
 			return null;
 		}
 
-		if ($this->tokens->verify(
-			$token,
-			($candidate['passwordResetTokenHash'] ?? null),
-			($candidate['passwordResetExpiresAt'] ?? null)
-		) === false
-		) {
+		if ($this->tokens->verify($token, ($candidate['passwordResetTokenHash'] ?? null), ($candidate['passwordResetExpiresAt'] ?? null)) === false) {
 			return null;
 		}
 

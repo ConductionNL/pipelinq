@@ -1,9 +1,38 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1 -->
+<!-- @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1 -->
 <template>
 	<div class="werkplek-agent-status">
+		<!-- In a call the control reads "In gesprek" and opens a menu that still sets the availability (PqWerkplekKlant). -->
+		<NcActions
+			v-if="inCall"
+			class="werkplek-agent-status__call"
+			variant="secondary"
+			:forceMenu="true"
+			:menuName="t('pipelinq', 'In call')"
+			data-testid="werkplek-call-state">
+			<template #icon>
+				<span class="werkplek-agent-status__dot werkplek-agent-status__dot--call" aria-hidden="true" />
+			</template>
+			<NcActionButton
+				type="radio"
+				:modelValue="isAvailable"
+				:disabled="saving"
+				data-testid="werkplek-call-available"
+				@click="save(true)">
+				{{ t('pipelinq', 'Available') }}
+			</NcActionButton>
+			<NcActionButton
+				type="radio"
+				:modelValue="!isAvailable"
+				:disabled="saving"
+				data-testid="werkplek-call-unavailable"
+				@click="save(false)">
+				{{ t('pipelinq', 'Unavailable') }}
+			</NcActionButton>
+		</NcActions>
 		<button
+			v-else
 			type="button"
 			class="werkplek-agent-status__toggle"
 			:class="{
@@ -12,10 +41,12 @@
 			}"
 			:disabled="saving"
 			:aria-pressed="isAvailable"
-			:aria-label="ariaLabel"
+			:aria-label="description"
+			:title="description"
 			@click="toggle">
 			<span class="werkplek-agent-status__dot" />
 			<span class="werkplek-agent-status__label">{{ label }}</span>
+			<ChevronDown :size="16" aria-hidden="true" />
 		</button>
 	</div>
 </template>
@@ -24,6 +55,8 @@
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 
 /**
  * Agent availability toggle button for the KCC Werkplek.
@@ -34,11 +67,13 @@ import { generateUrl } from '@nextcloud/router'
  * surface a user-facing error dialog so the agent knows the change did
  * not stick (REQ-KWP-040).
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1
  * @spec openspec/specs/kcc-werkplek/spec.md
  */
 export default {
 	name: 'WerkplekAgentStatus',
+
+	components: { ChevronDown, NcActionButton, NcActions },
 
 	props: {
 		/**
@@ -48,9 +83,19 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
+		/**
+		 * Whether a call is on: the control reads "In call" and its menu sets the availability.
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+		 */
+		inCall: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
-	emits: ['update:isAvailable'],
+	emits: ['update:isAvailable', 'saved'],
 
 	data() {
 		return {
@@ -71,19 +116,22 @@ export default {
 		},
 
 		/**
-		 * Aria label describing the toggle action (a11y).
+		 * What the status means and what a click does, used as tooltip and
+		 * aria label. Routing skips agents marked unavailable.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
-		ariaLabel() {
+		description() {
 			return this.isAvailable
 				? this.t(
 						'pipelinq',
-						'Currently available — click to mark unavailable',
+						'Available: routing suggests you for new contacts. Click to become unavailable.',
 					)
 				: this.t(
 						'pipelinq',
-						'Currently unavailable — click to mark available',
+						'Unavailable: routing skips you for new contacts. Click to become available.',
 					)
 		},
 	},
@@ -95,11 +143,22 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1
 		 */
-		async toggle() {
-			if (this.saving) return
-			const next = !this.isAvailable
+		toggle() {
+			return this.save(!this.isAvailable)
+		},
+
+		/**
+		 * Set the availability to `next` (the in-call menu's choice); nothing
+		 * happens while a save runs or when it already holds.
+		 *
+		 * @param {boolean} next The availability to save.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-in-call-header-marks-the-call
+		 */
+		async save(next) {
+			if (this.saving || next === this.isAvailable) return
 			this.saving = true
 			// Optimistic update — emit immediately so the parent reflects the toggle.
 			this.$emit('update:isAvailable', next)
@@ -108,6 +167,7 @@ export default {
 					'/apps/pipelinq/api/kcc-werkplek/availability',
 				)
 				await axios.put(url, { isAvailable: next })
+				this.$emit('saved', next)
 			} catch (e) {
 				// Revert + surface the error.
 				this.$emit('update:isAvailable', !next)
@@ -136,16 +196,26 @@ export default {
 	align-items: center;
 }
 
+/* The board's availability control (PqDashboard): a neutral button with a
+   coloured dot, the state and a chevron; clicking switches the state. */
 .werkplek-agent-status__toggle {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 14px;
-	border-radius: var(--border-radius-pill, 999px);
-	border: 1px solid var(--color-border);
-	background: var(--color-background-dark);
+	min-height: 40px;
+	padding: 0 12px 0 14px;
+	border-radius: var(--border-radius-element, 8px);
+	border: 1px solid var(--color-border-dark);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
 	cursor: pointer;
 	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.werkplek-agent-status__toggle:hover:not(:disabled) {
+	background: var(--color-background-hover);
 }
 
 .werkplek-agent-status__toggle:disabled {
@@ -161,15 +231,21 @@ export default {
 }
 
 .werkplek-agent-status__toggle--available .werkplek-agent-status__dot {
-	background: var(--color-success);
+	background: var(--color-success-text);
 }
 
-.werkplek-agent-status__toggle--available {
-	border-color: var(--color-success);
-	color: var(--color-success);
+/* In a call the same outlined control reads "In gesprek" with an amber dot. */
+.werkplek-agent-status__call :deep(.action-item__menutoggle) {
+	min-height: 40px;
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-weight: 600;
 }
 
-.werkplek-agent-status__toggle--unavailable .werkplek-agent-status__dot {
-	background: var(--color-text-maxcontrast);
+.werkplek-agent-status__dot--call {
+	display: inline-block;
+	background: var(--color-warning);
 }
 </style>

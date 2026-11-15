@@ -14,7 +14,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/product-service-catalog/spec.md#products-index
+// @e2e openspec/specs/product-service-catalog/spec.md
 test('Products: navigates from sidebar and shows index surface', async ({
 	page,
 }) => {
@@ -33,7 +33,7 @@ test('Products: navigates from sidebar and shows index surface', async ({
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/product-service-catalog/spec.md#products-list-table
+// @e2e openspec/specs/product-service-catalog/spec.md
 test('Products: list table and primary actions render', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Products', /\/products/)
@@ -47,7 +47,7 @@ test('Products: list table and primary actions render', async ({ page }) => {
 	).toBeVisible()
 })
 
-// @e2e openspec/specs/product-service-catalog/spec.md#products-create-modal
+// @e2e openspec/specs/product-service-catalog/spec.md
 test('Products: Add Product opens a create modal with a form', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Products', /\/products/)

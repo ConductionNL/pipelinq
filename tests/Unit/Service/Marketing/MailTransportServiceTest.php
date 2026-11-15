@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -31,6 +32,8 @@ use OCP\Mail\IMessage;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for MailTransportService — transport resolution, rate-limit
@@ -64,7 +67,9 @@ class MailTransportServiceTest extends TestCase {
 			/** @var array<int, array<string, mixed>> */
 			public array $saved = [];
 
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}//end find()
 
@@ -94,7 +99,10 @@ class MailTransportServiceTest extends TestCase {
 				return $out;
 			}//end findAll()
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}
@@ -132,6 +140,8 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($this->makeArticleStore()),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $this->appConfig, new \Psr\Log\NullLogger()),
 		);
 	}//end setUp()
 
@@ -427,6 +437,8 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($this->makeArticleStore()),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $this->appConfig, new \Psr\Log\NullLogger()),
 		);
 
 		$delivery = ['uuid' => 'd-prov', 'email' => 'user@example.com'];
@@ -518,6 +530,8 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($articleStore),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $this->appConfig, new \Psr\Log\NullLogger()),
 		);
 
 		$delivery = ['uuid' => 'd-articles', 'email' => 'c1@example.test'];
@@ -576,6 +590,150 @@ class MailTransportServiceTest extends TestCase {
 		$this->assertTrue($result);
 		$this->assertSame('<p>hi, no marker here</p>', $html);
 	}//end testSendOneDeliveryLeavesATemplateWithNoMarkerUnchanged()
+
+	/**
+	 * The template's physical address (`footerOverride`) reaches the sent
+	 * mail: at its token in the HTML body, escaped with its line breaks kept,
+	 * and appended to a plain-text body that has no token.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-unsubscribe-footer-enforced-on-email-templates
+	 */
+	public function testSendOneDeliveryRendersThePhysicalAddress(): void {
+		$transport = ['uuid' => 't-address', 'kind' => 'instance', 'dailyLimit' => 0, 'sentToday' => 0];
+		$this->objectService->store['t-address'] = $transport;
+
+		$message = $this->createMock(IMessage::class);
+		$message->method('setFrom')->willReturn($message);
+		$message->method('setTo')->willReturn($message);
+		$message->method('setReplyTo')->willReturn($message);
+		$message->method('setSubject')->willReturn($message);
+		$html = null;
+		$text = null;
+		$message->method('setHtmlBody')->willReturnCallback(
+			function (string $value) use ($message, &$html) {
+				$html = $value;
+				return $message;
+			}
+		);
+		$message->method('setPlainBody')->willReturnCallback(
+			function (string $value) use ($message, &$text) {
+				$text = $value;
+				return $message;
+			}
+		);
+		$this->mailer->method('createMessage')->willReturn($message);
+		$this->mailer->method('send')->willReturn([]);
+
+		$delivery = ['uuid' => 'd-address', 'email' => 'user@example.com'];
+		$template = [
+			'subject' => 'Hi',
+			'bodyHtml' => '<p>Hi</p><p>{{physical_address}}</p>',
+			'bodyText' => 'Hi',
+			'footerOverride' => "Conduction B.V. & Co\nTurfmarkt 147",
+		];
+
+		$result = $this->service->sendOneDelivery($delivery, $template, $transport);
+
+		$this->assertTrue($result);
+		$this->assertSame('<p>Hi</p><p>Conduction B.V. &amp; Co<br>' . "\n" . 'Turfmarkt 147</p>', $html);
+		$this->assertSame("Hi\n\nConduction B.V. & Co\nTurfmarkt 147", $text);
+	}//end testSendOneDeliveryRendersThePhysicalAddress()
+
+	/**
+	 * `{{preferredName}}` reaches the sent mail from the recipient's own
+	 * record: the preferred name when there is one, the full name when there
+	 * is none, escaped in the HTML body and plain in the subject and text.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+	 */
+	public function testSendOneDeliveryGreetsTheRecipientByTheirPreferredName(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default): string => match ($key) {
+				'register' => 'pipelinq',
+				'contact_schema' => 'contact',
+				'client_schema' => 'client',
+				default => $default,
+			}
+		);
+		$service = new MailTransportService(
+			$this->container,
+			$appConfig,
+			$this->mailer,
+			new ArticleService($this->makeArticleStore()),
+			FakeSlugResolver::connectorRegister(),
+			$this->logger,
+			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $appConfig, new \Psr\Log\NullLogger()),
+		);
+
+		$transport = ['uuid' => 't-name', 'kind' => 'instance', 'dailyLimit' => 0, 'sentToday' => 0];
+		$this->objectService->store['t-name'] = $transport;
+		$this->objectService->store['c-jan'] = ['name' => 'Johannes Jansen', 'preferredName' => 'Jan'];
+		$this->objectService->store['c-full'] = ['name' => 'Kees <Kok> & Zn'];
+
+		$sent = [];
+		$message = $this->createMock(IMessage::class);
+		$message->method('setFrom')->willReturn($message);
+		$message->method('setTo')->willReturn($message);
+		$message->method('setReplyTo')->willReturn($message);
+		$current = [];
+		$message->method('setSubject')->willReturnCallback(
+			function (string $value) use ($message, &$current) {
+				$current['subject'] = $value;
+				return $message;
+			}
+		);
+		$message->method('setHtmlBody')->willReturnCallback(
+			function (string $value) use ($message, &$current) {
+				$current['html'] = $value;
+				return $message;
+			}
+		);
+		$message->method('setPlainBody')->willReturnCallback(
+			function (string $value) use ($message, &$current) {
+				$current['text'] = $value;
+				return $message;
+			}
+		);
+		$this->mailer->method('createMessage')->willReturn($message);
+		$this->mailer->method('send')->willReturnCallback(
+			function () use (&$sent, &$current) {
+				$sent[] = $current;
+				$current = [];
+				return [];
+			}
+		);
+
+		$template = [
+			'subject' => 'Nieuws voor {{preferredName}}',
+			'bodyHtml' => '<p>Beste {{preferredName}},</p>',
+			'bodyText' => 'Beste {{preferredName}},',
+		];
+
+		$this->assertTrue($service->sendOneDelivery(['uuid' => 'd-1', 'email' => 'jan@example.com', 'contactId' => 'c-jan'], $template, $transport));
+		$this->assertTrue($service->sendOneDelivery(['uuid' => 'd-2', 'email' => 'kees@example.com', 'contactId' => 'c-full'], $template, $transport));
+		$this->assertTrue($service->sendOneDelivery(['uuid' => 'd-3', 'email' => 'new@example.com', 'contactId' => 'new@example.com'], $template, $transport));
+
+		$this->assertSame(
+			['subject' => 'Nieuws voor Jan', 'html' => '<p>Beste Jan,</p>', 'text' => 'Beste Jan,'],
+			$sent[0]
+		);
+		$this->assertSame(
+			[
+				'subject' => 'Nieuws voor Kees <Kok> & Zn',
+				'html' => '<p>Beste Kees &lt;Kok&gt; &amp; Zn,</p>',
+				'text' => 'Beste Kees <Kok> & Zn,',
+			],
+			$sent[1]
+		);
+		// A signup known only by its address is no record here: no name.
+		$this->assertSame('<p>Beste ,</p>', $sent[2]['html']);
+	}//end testSendOneDeliveryGreetsTheRecipientByTheirPreferredName()
 
 	/**
 	 * Build an in-memory {@see ListObjectStore} double for {@see ArticleService}.

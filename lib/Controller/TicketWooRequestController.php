@@ -1,0 +1,159 @@
+<?php
+
+/**
+ * Pipelinq Ticket Woo Request Controller
+ *
+ * "Omzetten naar Woo-verzoek" on TicketDetail (hydra woo-citizen-journey J4.6,
+ * C5 caller). The availability route tells the page whether to show the
+ * action at all; the convert route calls dossiq's intake through
+ * WooRequestConversionService and records the case on the ticket.
+ *
+ * @category Controller
+ * @package  OCA\Pipelinq\Controller
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @version GIT: <git-id>
+ *
+ * @link https://conduction.nl
+ *
+ * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Controller;
+
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\WooRequestConversionServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IRequest;
+use RuntimeException;
+
+/**
+ * Offers and performs the conversion of a question into a Woo request.
+ *
+ * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+ */
+class TicketWooRequestController extends Controller {
+	/**
+	 * The pipelinq schema key of the ticket supertype.
+	 *
+	 * @var string
+	 */
+	private const TICKET = 'ticket';
+
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest                    $request      The request.
+	 * @param WooRequestConversionServiceInterface $conversion   Calls dossiq's intake.
+	 * @param MainRegisterReaderInterface          $tickets      Reads the ticket under the user's RBAC.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly WooRequestConversionServiceInterface $conversion,
+		private readonly MainRegisterReaderInterface $tickets,
+		private readonly CrmPrivilegeCheck $privilege,
+	) {
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
+	}//end __construct()
+
+	/**
+	 * Whether the ticket page may offer the conversion.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+	 */
+	#[NoAdminRequired]
+	public function availability(string $id = ''): JSONResponse {
+		$ticket = $this->callerTicket(id: $id);
+		if ($ticket instanceof JSONResponse) {
+			return $ticket;
+		}
+
+		try {
+			return new JSONResponse($this->conversion->availability(ticket: $ticket));
+		} catch (RuntimeException $e) {
+			return new JSONResponse(['status' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+	}//end availability()
+
+	/**
+	 * Convert the ticket into a Woo request.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return JSONResponse 200 converted; 409 not available or not convertible; 502 intake failed.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+	 */
+	#[NoAdminRequired]
+	public function convert(string $id = ''): JSONResponse {
+		// The same privileged-group check the case handoff uses; the ticket
+		// itself is read under the employee's OpenRegister RBAC, so a ticket
+		// they may not read answers 404.
+		$ticket = $this->callerTicket(id: $id);
+		if ($ticket instanceof JSONResponse) {
+			return $ticket;
+		}
+
+		try {
+			$result = $this->conversion->convert(ticketId: $id, ticket: $ticket);
+		} catch (RuntimeException $e) {
+			// OpenRegister is not configured or not reachable; nothing was written.
+			return new JSONResponse(['status' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		$status = match ($result['status']) {
+			'not-available', 'not-convertible' => Http::STATUS_CONFLICT,
+			'intake-failed' => Http::STATUS_BAD_GATEWAY,
+			default => Http::STATUS_OK,
+		};
+
+		return new JSONResponse($result, $status);
+	}//end convert()
+
+	/**
+	 * The ticket as the caller may read it, or the 401/403, 404 or 503 that refuses it.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function callerTicket(string $id): array|JSONResponse {
+		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			$ticket = $this->tickets->findAsCaller(schemaKey: self::TICKET, id: $id);
+		} catch (RuntimeException $e) {
+			// OpenRegister is not configured or not reachable.
+			return new JSONResponse(['status' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		if ($ticket === null) {
+			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		}
+
+		return $ticket;
+	}//end callerTicket()
+}//end class

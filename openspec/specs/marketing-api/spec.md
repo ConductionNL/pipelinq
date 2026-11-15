@@ -54,6 +54,19 @@ SHALL be derived from `IUserSession`, never trusted from the frontend.
 - **WHEN** the controller processes it
 - **THEN** it SHALL call `ComplianceService.validateTemplate()` and reject templates missing the unsubscribe token or physical address
 
+#### Scenario: Template update keeps the fields the request leaves out
+
+- **GIVEN** an existing CampaignTemplate
+- **WHEN** PATCH `/api/templates/{id}` carries only some of its fields
+- **THEN** only those fields SHALL change, the others SHALL keep their stored values, and the result SHALL be re-validated before it is saved
+
+#### Scenario: A stored template can be validated without saving
+
+- **GIVEN** an existing CampaignTemplate
+- **WHEN** POST `/api/templates/{id}/validate`, optionally with a `channel`
+- **THEN** the response SHALL be HTTP 200 with `{valid, error}` from `ComplianceService.validateTemplate()` on the requested channel, or the template's own when none is given, and nothing SHALL be saved
+- **AND** an unknown id SHALL answer HTTP 404
+
 ### Requirement: Segment Update and Unsaved-Tree Preview
 
 `SegmentController` SHALL expose `PATCH /api/segments/{id}` to update an

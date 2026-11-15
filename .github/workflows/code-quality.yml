@@ -146,17 +146,9 @@ concurrency:
   # superseding really is correct.
   cancel-in-progress: ${{ github.event_name != 'push' }}
 
-# Permission CEILING for the called quality pipeline. GitHub statically
-# validates the called workflow's declared job permissions against this
-# grant — even for jobs that are disabled — so it must cover the maximum
-# any nested job declares: journeydoc-capture (contents+actions write),
-# update-baseline / features-extract (contents write), and the Quality
-# Report PR comment (issues / pull-requests write).
+# Read-only by default; the write grants sit on the job that needs them.
 permissions:
-  contents: write
-  actions: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   quality:
@@ -166,32 +158,22 @@ jobs:
     if: >-
       (github.event_name != 'push' || github.event.created != true)
       && (github.event_name != 'pull_request' || github.head_ref != 'development')
+    # Permission CEILING for the called quality pipeline. GitHub statically
+    # validates the called workflow's declared job permissions against this
+    # grant, even for jobs that are disabled, so it must cover the maximum
+    # any nested job declares: journeydoc-capture (contents+actions write),
+    # update-baseline / features-extract (contents write), and the Quality
+    # Report PR comment (issues / pull-requests write).
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+      pull-requests: write
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
-      # Pinned, because the shared workflow's DEFAULT is '["stable31", "stable32"]'
-      # and stable31 CANNOT WORK here. `additional-apps` below installs
-      # openregister, which declares min-version="32" (its
-      # lib/ContextChat/ContentProvider.php implements
-      # OCP\ContextChat\IContentProvider, absent from core before NC32). On NC31
-      # the install step logs
-      #   App "Open Register" cannot be installed because it is not compatible
-      #   with this version of the server.
-      # and then continues, because the enable failure is only a ::warning::. The
-      # run therefore proceeded without its data layer and every
-      # /apps/openregister/... call returned Nextcloud's HTML 404 page.
-      #
-      # Order matters as much as membership: newman, playwright and
-      # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
-      # their single server, so with the inherited default those three jobs ran
-      # entirely on the version openregister cannot load.
-      #
-      # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
-      # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
-      # a leg. Adopting NC 34 by REPLACING the list left 32 and 33 advertised to
-      # the App Store with no job touching them — the declared floor became the
-      # untested end, which is the same drift as never testing 34, reversed.
-      nextcloud-test-refs: '["stable34", "stable32", "stable33"]'
+      # No `nextcloud-test-refs` override: the shared quality.yml derives the
+      # Nextcloud test matrix from appinfo/info.xml's declared range.
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and
@@ -225,6 +207,15 @@ jobs:
       # diff and toolchain. The package prints both (`COVERAGE: N of M`) in the
       # job log. See https://github.com/ConductionNL/.github/tree/main/hydra-gates
       enable-hydra-gates: true
+      # Gate 122 (SIG unit ratchet) blocks: a unit this change adds or makes
+      # worse must stay at NLOC 60, McCabe 10 and at most 4 parameters, and a
+      # new duplicated fragment of 6+ lines fails. Units the change does not
+      # touch, or touches without making worse, are inherited and do not count.
+      hydra-gates-sig-blocking: true
+      # Maintainability floor: no rating in .maintainability-floor.json may drop
+      # more than 0.01 against the merge base (pull request) or below the
+      # committed floor (push). The floor is raised after improving merges.
+      enable-maintainability-floor: true
       # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
       # to @main, and this workflow is itself consumed at @main, so the two
       # sides move together and a gate fix reaches this repo without a commit
@@ -390,9 +381,9 @@ jobs:
       # with no code change. Raise this as scenarios get annotated; it must only
       # ever go up.
       playwright-coverage-threshold: 20
-      # Pin openregister to development: main lacks the react/async composer dep
-      # that lib/Service/ObjectService.php (Async\await call) requires, so app:enable
-      # fails with "Call to undefined function React\Async\await()" during seed.
+      # openregister on main: this app calls main's option-object API (find,
+      # saveObject, ...), which the frozen development line does not have. main
+      # now requires react/async, the dependency that once kept this pin on development.
       # ⚠️ The org here is `ConductionNL`, not `Conduction` — the latter does not
       # exist. With the wrong org the checkout prompts for credentials and exits
       # 128, which took out all four PHPUnit legs AND the Playwright job: they
@@ -420,7 +411,7 @@ jobs:
       # objects endpoint answers 404, and all six tests in
       # `tests/e2e/integrations-page.spec.ts` fail. `app` is `integriq`, the id
       # in its appinfo/info.xml on `development`.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
       # The old seed was `php occ app:disable pipelinq && php occ app:enable
       # pipelinq`. It reported success on every run and provisioned nothing
       # reliable: the repair step it triggers runs with NO user session (OR RBAC
@@ -498,7 +489,9 @@ jobs:
       # renders the English source inside an otherwise translated form, silently.
       # The fleet had 30,459 such strings, so this records the current count and
       # fails only when it GROWS — burning it down stays an ordinary PR.
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js", "check:e2e-nav"]'
+      # `check:lib-link` fails when package.json or the lockfile still links
+      # @conduction/nextcloud-vue to a local checkout (`npm i ../nextcloud-vue/`).
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js", "check:e2e-nav", "check:lib-link"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both

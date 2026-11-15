@@ -12,9 +12,10 @@ check. From pipelinq matrix row `mkt-block-editor`.
 
 The email template form SHALL offer a Blocks mode with heading, text, image,
 button, divider, spacer, articles and footer blocks. A marketer SHALL add a
-block by dragging it from the palette or with a button, and SHALL reorder
-blocks by dragging or with Move up and Move down buttons. New email templates
-SHALL open in Blocks mode.
+block with a palette button, SHALL reorder blocks by dragging or with Move up
+and Move down buttons, and SHALL open a block's properties by pressing its
+name. The footer SHALL be edited under the list, always last. New email
+templates SHALL open in Blocks mode.
 
 #### Scenario: A marketer builds a newsletter without HTML
 
@@ -53,11 +54,15 @@ removable, so a template saved in Blocks mode passes the compliance check.
 
 #### Scenario: A script in a heading is not sent as code
 
+@e2e exclude server-side rendering rule, covered by MailBlockRendererTest::testAScriptInAHeadingIsText and TemplateControllerTest
+
 - GIVEN a heading block with the text `<script>alert(1)</script>`
 - WHEN the template is saved
 - THEN the stored `bodyHtml` shows that text as text and contains no script element
 
 #### Scenario: A blocks template passes compliance
+
+@e2e exclude save-path contract, covered by TemplateControllerTest::testABlocksTemplateIsRenderedOnSaveAndPassesCompliance against the real ComplianceService
 
 - GIVEN a new template in Blocks mode with only a heading and the footer
 - WHEN the marketer saves it

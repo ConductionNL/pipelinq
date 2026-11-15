@@ -25,7 +25,7 @@ Move the POS transaction and refund lifecycles onto OpenRegister's declarative `
 
 ## Requirements
 
-### REQ-PLG-001: Declarative POS lifecycle
+### Requirement: REQ-PLG-001: Declarative POS lifecycle
 
 The `posTransaction` and `posRefund` schemas MUST declare their state machine
 via `x-openregister-lifecycle` instead of a bespoke PHP state machine.
@@ -46,7 +46,7 @@ via `x-openregister-lifecycle` instead of a bespoke PHP state machine.
   and transitions `complete` (pending→completed) and `reject` (pending→rejected),
   each naming a `requires` guard tag
 
-### REQ-PLG-002: Transitions route through OpenRegister TransitionEngine
+### Requirement: REQ-PLG-002: Transitions route through OpenRegister TransitionEngine
 
 Every POS state transition MUST be applied via
 `OCA\OpenRegister\Service\Lifecycle\TransitionEngine::transition()`, not by a
@@ -60,7 +60,7 @@ bespoke `setStatus`-style mutation.
 - AND the resulting object MUST have `status = confirmed`
 - AND an `ObjectTransitionedEvent` MUST be dispatched by the engine
 
-### REQ-PLG-003: IDOR closed by per-object lifecycle guard
+### Requirement: REQ-PLG-003: IDOR closed by per-object lifecycle guard
 
 A POS state transition MUST be denied for a caller who is neither the
 transaction's cashier, nor a member of the POS group, nor a Nextcloud admin.
@@ -80,7 +80,7 @@ transaction's cashier, nor a member of the POS group, nor a Nextcloud admin.
 - WHEN C invokes settle on a confirmed T
 - THEN the guard MUST allow the transition
 
-### REQ-PLG-004: Manager-gated refund + posRefund completion
+### Requirement: REQ-PLG-004: Manager-gated refund + posRefund completion
 
 `refund` on a posTransaction and `complete`/`reject` on a posRefund MUST be
 denied for any caller who is not a POS manager (member of the configured
@@ -99,7 +99,7 @@ manager group) or a Nextcloud admin.
 - WHEN a manager completes the refund
 - THEN `PosRefundManagerGuard` MUST deny the completion
 
-### REQ-PLG-005: Server-authoritative money preserved
+### Requirement: REQ-PLG-005: Server-authoritative money preserved
 
 Monetary totals MUST remain server-computed from the persisted line items; the
 confirm guard MUST recompute totals before the transition is applied.
@@ -111,7 +111,7 @@ confirm guard MUST recompute totals before the transition is applied.
 - THEN `computeTotals` MUST be re-run server-side and persisted, ignoring any
   client-supplied subtotal/tax/total
 
-### REQ-PLG-006: Non-transition POS endpoints are object-scoped
+### Requirement: REQ-PLG-006: Non-transition POS endpoints are object-scoped
 
 Non-transition POS endpoints MUST enforce authorization beyond bare session auth: `PosReceiptController::preview/email/print`, the product price/barcode lookup, and `PosTransactionController::taxReport`.
 
@@ -127,3 +127,18 @@ Non-transition POS endpoints MUST enforce authorization beyond bare session auth
 - GIVEN a non-manager, non-admin user
 - WHEN they request the cross-object BTW tax report
 - THEN the request MUST be rejected with HTTP 403
+
+### Requirement: The POS header shows one primary action per state
+
+The POS transaction page SHALL show one primary button that follows the transaction's status: Confirm for a draft or
+parked transaction that has lines, Resume for a parked one, Check out for a confirmed one. Print receipt, Email receipt
+and Register refund SHALL be quick actions while they apply. Edit line items, Park and Reverse SHALL be in the Actions
+menu; Reverse SHALL be for admins and ask for a reason. The POS refund page SHALL offer Confirm as the pending refund's
+primary button and Reject with a reason, both for admins.
+
+#### Scenario: A confirmed transaction
+
+- GIVEN a confirmed transaction
+- WHEN the cashier opens it
+- THEN the primary button reads Check out
+- AND Print receipt, Email receipt and Register refund are beside it

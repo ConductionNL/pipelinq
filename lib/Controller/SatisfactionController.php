@@ -24,16 +24,16 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+ * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SatisfactionAggregationService;
-use OCA\Pipelinq\Service\SurveyDispatchService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SatisfactionAggregationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -42,22 +42,22 @@ use OCP\IRequest;
 /**
  * Routes for the satisfaction panel and the response rate.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 class SatisfactionController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SatisfactionAggregationService $aggregation The per-client panel.
-	 * @param SurveyDispatchService $dispatchService Reads invitations.
+	 * @param SatisfactionAggregationServiceInterface $aggregation The per-client panel.
+	 * @param SurveyDispatchServiceInterface $dispatchService Reads invitations.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SatisfactionAggregationService $aggregation,
-		private readonly SurveyDispatchService $dispatchService,
+		private readonly SatisfactionAggregationServiceInterface $aggregation,
+		private readonly SurveyDispatchServiceInterface $dispatchService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -67,7 +67,7 @@ class SatisfactionController extends Controller {
 	 *
 	 * @return JSONResponse The panel, empty state included.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+	 * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	#[NoAdminRequired]
 	public function clientPanel(string $clientId): JSONResponse {
@@ -78,23 +78,36 @@ class SatisfactionController extends Controller {
 	 * A survey's response rate, with its suppressed and failed counts.
 	 *
 	 * @param string $surveyId The survey's uuid, or '' for every survey.
+	 * @param string $channel  One channel, or '' for every channel.
+	 * @param int    $days     The period in days, 0 for all time.
 	 *
-	 * @return JSONResponse The figures.
+	 * @return JSONResponse The figures, with a per-channel breakdown.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	#[NoAdminRequired]
-	public function responseRate(string $surveyId = ''): JSONResponse {
-		$filters = [];
-		if (trim($surveyId) !== '') {
-			$filters = ['surveyRef' => trim($surveyId)];
-		}
-
-		return new JSONResponse(
-			$this->dispatchService->responseRate(
-				invitations: $this->dispatchService->read(filters: $filters)
-			),
-			200
+	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {
+		$filters = self::filtersOf(surveyId: $surveyId, channel: $channel);
+		$invitations = $this->dispatchService->withinDays(
+			invitations: $this->dispatchService->read(filters: $filters),
+			days: $days
 		);
+
+		return new JSONResponse($this->dispatchService->responseRate(invitations: $invitations), 200);
 	}//end responseRate()
+
+	/**
+	 * The invitation filters for a survey and a channel, leaving out the blank ones.
+	 *
+	 * @param string $surveyId The survey's uuid, or ''.
+	 * @param string $channel  One channel, or ''.
+	 *
+	 * @return array<string, string> The filters.
+	 */
+	private static function filtersOf(string $surveyId, string $channel): array {
+		return array_filter(
+			array_map('trim', ['surveyRef' => $surveyId, 'channel' => $channel]),
+			static fn (string $value): bool => $value !== ''
+		);
+	}//end filtersOf()
 }//end class

@@ -1,0 +1,168 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Infima tokens only, so the brand theme and dark mode carry through.
+ */
+
+.comparison {
+	margin-block: 1rem 2rem;
+}
+
+.lead {
+	font-size: 1.1rem;
+	max-width: 70ch;
+}
+
+/* Wide tables scroll inside their own box, so the page body never does. */
+.scroller {
+	overflow-x: auto;
+	margin-bottom: 1rem;
+}
+
+.table {
+	display: table;
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.table th,
+.table td {
+	text-align: start;
+	vertical-align: top;
+}
+
+.table thead th {
+	white-space: nowrap;
+}
+
+.caption {
+	text-align: start;
+	padding-block: 0.5rem;
+	color: var(--ifm-color-emphasis-700);
+}
+
+.cap {
+	font-weight: normal;
+	min-width: 22ch;
+}
+
+.num {
+	white-space: nowrap;
+	color: var(--ifm-color-emphasis-700);
+}
+
+.self {
+	background-color: var(--ifm-color-emphasis-100);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.legendItem {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	color: var(--ifm-color-emphasis-800);
+}
+
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-block: 1rem 0.5rem;
+}
+
+.filter {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-weight: var(--ifm-font-weight-semibold);
+}
+
+.filter input,
+.filter select {
+	min-width: 16rem;
+	min-height: 2.5rem;
+	padding: 0.25rem 0.5rem;
+	font: inherit;
+	font-weight: normal;
+	color: var(--ifm-font-color-base);
+	background-color: var(--ifm-background-color);
+	border: 1px solid var(--ifm-color-emphasis-500);
+	border-radius: var(--ifm-global-radius);
+}
+
+.status {
+	min-height: 1.5rem;
+	color: var(--ifm-color-emphasis-800);
+}
+
+.area {
+	border: 1px solid var(--ifm-color-emphasis-300);
+	border-radius: var(--ifm-global-radius);
+	margin-bottom: 0.5rem;
+	padding: 0.25rem 0.75rem;
+}
+
+.areaSummary {
+	cursor: pointer;
+	padding-block: 0.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 0.75rem;
+	align-items: baseline;
+}
+
+.areaName {
+	font-weight: var(--ifm-font-weight-bold);
+}
+
+.areaCount {
+	color: var(--ifm-color-emphasis-700);
+}
+
+.pendingHeading {
+	margin-top: 1rem;
+	font-size: 1rem;
+}
+
+.pending .cap {
+	color: var(--ifm-color-emphasis-700);
+}
+
+.chip {
+	display: inline-block;
+	padding: 0 0.5rem;
+	border-radius: 1rem;
+	white-space: nowrap;
+	border: 1px solid var(--ifm-color-emphasis-500);
+}
+
+.chip_yes {
+	background-color: var(--ifm-color-success-contrast-background);
+	border-color: var(--ifm-color-success-dark);
+	color: var(--ifm-color-success-contrast-foreground);
+}
+
+.chip_partial {
+	background-color: var(--ifm-color-warning-contrast-background);
+	border-color: var(--ifm-color-warning-dark);
+	color: var(--ifm-color-warning-contrast-foreground);
+}
+
+.chip_no {
+	background-color: var(--ifm-color-emphasis-200);
+	color: var(--ifm-color-emphasis-800);
+}
+
+/* Unrated, and deliberately so. Dashed, because an empty cell and a cell we
+   looked at and could not answer are different claims. */
+.chip_unknown {
+	background-color: transparent;
+	border-style: dashed;
+	color: var(--ifm-color-emphasis-700);
+}

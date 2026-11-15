@@ -150,7 +150,7 @@ class SettingsControllerWriteTest extends TestCase {
 	/**
 	 * POST /api/settings is a legacy alias and must write identically.
 	 *
-	 * `src/views/settings/ExportConfigurationSettings.vue::save()` still posts
+	 * `src/store/modules/settings.js::saveSettings()` still posts
 	 * here, so the alias staying a real write — not an empty success — is
 	 * load-bearing.
 	 *

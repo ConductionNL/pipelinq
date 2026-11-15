@@ -14,9 +14,11 @@
 
 import { describe, expect, it } from 'vitest'
 import {
+	bucketRange,
 	confirmPayload,
 	crawlNotice,
 	isConfirmed,
+	pagePath,
 	pageShare,
 	percent,
 	PROPOSAL_KINDS,
@@ -55,6 +57,36 @@ describe('pageShare', () => {
 	it('answers a dash rather than dividing by zero', () => {
 		expect(pageShare({ impressions: 5 }, 0)).toBe('-')
 		expect(pageShare({ impressions: 5 }, null)).toBe('-')
+	})
+})
+
+describe('bucketRange', () => {
+	it('writes a closed range with a range dash', () => {
+		expect(bucketRange('1-3')).toBe('1–3')
+		expect(bucketRange('11-20')).toBe('11–20')
+	})
+
+	it('leaves the open-ended bucket as it is', () => {
+		expect(bucketRange('21+')).toBe('21+')
+	})
+})
+
+describe('pagePath', () => {
+	it('keeps the path and query string, which is what tells two pages apart', () => {
+		expect(pagePath('https://www.demo.example/blog/klantreis')).toBe(
+			'/blog/klantreis',
+		)
+		expect(pagePath('https://www.demo.example/zoek?q=crm')).toBe('/zoek?q=crm')
+	})
+
+	it('shows a site root as a slash', () => {
+		expect(pagePath('https://www.demo.example')).toBe('/')
+	})
+
+	it('returns anything that is not an absolute URL unchanged', () => {
+		expect(pagePath('/already/a/path')).toBe('/already/a/path')
+		expect(pagePath('')).toBe('')
+		expect(pagePath(null)).toBe('')
 	})
 })
 

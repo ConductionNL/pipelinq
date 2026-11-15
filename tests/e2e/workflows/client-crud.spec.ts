@@ -186,23 +186,11 @@ test.describe('Clients — full CRUD with persistence', () => {
 		await expect(row).toContainText(PHONE)
 
 		// --- UPDATE ------------------------------------------------------------
-		// REWRITTEN 2026-08-06. This leg used to rename the client
-		// (`apiUpdateName(... NAME_EDITED)`) and asserted only `toBeTruthy()` on a
-		// helper that collapses any non-2xx into `null`, so when it started
-		// failing the message was the uninformative "Received: false".
-		//
-		// The rename could not have succeeded on a correct instance:
-		// register.d/15-unify-client-contact.json declares `client.name` as
-		// `readOnly: true`, "Denormalised read-only mirror of the NC contact name
-		// (vCard FN). The Nextcloud Contact is authoritative … Edit identity in
-		// the addressbook." Renaming a client through the object API is not the
-		// supported edit path — it is the one edit the contact-first unification
-		// exists to forbid. (It never surfaced before because the test failed
-		// earlier, at the index search box; fixing that exposed this.)
-		//
-		// So the round-trip now edits a field the client genuinely owns, and
-		// separately ASSERTS the read-only mirror rejects a write — which is the
-		// more valuable of the two claims and had no coverage at all.
+		// The leg first edits fields only the client owns (lifecycle stage,
+		// account status) and checks the identity stays put, then renames the
+		// client. Until 8 October 2026 the schema declared name, email and phone
+		// readOnly and this leg asserted the rename was refused; Ruben's decision
+		// in #2214 made them editable on the client page (round3-review-points).
 		const editId = createdId
 
 		const updated = await fx.update('client', editId, {
@@ -225,30 +213,37 @@ test.describe('Clients — full CRUD with persistence', () => {
 		).toBe(NAME)
 		expect(persisted.email, 'email unchanged').toBe(EMAIL)
 
-		// The identity mirror is authoritative in the addressbook: a direct write
-		// must NOT silently take effect here.
-		await fx.apiUpdateName('client', editId, NAME_EDITED).catch(() => false)
+		// Ruben decided (#2214) that name, email and phone are edited on the
+		// client page and written back to the Nextcloud Contact. The schema no
+		// longer marks them readOnly (round3-review-points, review point 1:
+		// OpenRegister refused the Edit dialog with "Cannot modify readOnly
+		// property: phone"), so a rename through the object API takes effect.
+		await fx.apiUpdateName('client', editId, NAME_EDITED)
 		const afterRename = await fx.get('client', editId)
 		expect(
 			afterRename.name,
-			'client.name is a read-only mirror — the object API must not rename it',
-		).toBe(NAME)
+			'client.name is editable: the object API renames it',
+		).toBe(NAME_EDITED)
 
 		await openClientsList(page)
-		await searchInList(page, NAME)
+		await searchInList(page, NAME_EDITED)
 		await expect(
-			page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }),
+			page
+				.locator('[data-testid="cn-object-row"]')
+				.filter({ hasText: NAME_EDITED }),
 		).toBeVisible({ timeout: 10000 })
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('client', editId)
 		await openClientsList(page)
-		await searchInList(page, NAME)
+		await searchInList(page, NAME_EDITED)
 		await expect(
-			page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }),
+			page
+				.locator('[data-testid="cn-object-row"]')
+				.filter({ hasText: NAME_EDITED }),
 		).toHaveCount(0)
 		const remaining = await fx
-			.list('client', { _limit: 5, name: NAME })
+			.list('client', { _limit: 5, name: NAME_EDITED })
 			.catch(() => [])
 		expect(remaining.length, 'deleted client no longer returned by OR API').toBe(
 			0,

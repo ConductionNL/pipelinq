@@ -13,6 +13,7 @@ The prospect discovery capability enables sales teams to find new potential clie
 **Feature tier**: V1
 
 ---
+
 ## Requirements
 
 ### Requirement: Ideal Customer Profile Configuration
@@ -551,8 +552,9 @@ The created client MUST carry `type: organization` and the prospect's KVK
 number, and MUST be created through the contact-first path so the required
 `contactsUid` is provisioned — a direct object save is rejected without it.
 
-A lead is NOT created here. A lead now requires a client, so the client has to
-exist first; creating the lead is a separate step from the client itself.
+A lead is NOT created here. Adding a prospect makes a client; creating a lead
+for it is a separate step. A lead does not need a client (decision 207), but a
+lead for this prospect links the client made here.
 
 #### Scenario: Single prospect conversion
 - GIVEN a prospect with fit score 85 in the discovery widget
@@ -729,6 +731,56 @@ Operations for prospect discovery cards MUST tolerate missing, empty, or malform
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
+
+### Requirement: Prospects page
+
+The system SHALL offer a Prospects page at `/prospects` that lists the discovered prospects in a table with the columns Score, Company, Industry, Employees, Location and Actions. Score, Company and Employees SHALL be sortable, the list SHALL default to the highest fit score first, and the table SHALL be paged. Each row SHALL offer "Add as client". The page SHALL offer Refresh, which fetches the prospects again past the cache. The page SHALL be reachable from a menu entry in the Sales group and from a card in the Sales category of the Modules page.
+
+#### Scenario: A user opens the Prospects page
+
+- GIVEN an ideal customer profile is configured
+- WHEN the user opens Prospects from the Sales group in the menu
+- THEN the page SHALL be `/prospects`
+- AND it SHALL list the discovered prospects with their fit score, highest score first
+- AND every row SHALL offer "Add as client"
+
+#### Scenario: Sorting orders the whole list
+
+- GIVEN more prospects than fit on one page
+- WHEN the user sorts by Company
+- THEN the prospects SHALL be ordered by trade name across all pages, not only the page shown
+
+#### Scenario: No profile configured
+
+- GIVEN no ideal customer profile is configured
+- WHEN the user opens the Prospects page
+- THEN the page SHALL say that no Ideal Customer Profile is configured instead of showing an empty table
+
+### Requirement: The prospects list offers lenses, a Filter menu and a search
+
+The prospects page MUST offer the lenses All, Good fit (a score above 70) and New this week (registered in the KVK register in the last seven days) with their counts, a Filter menu on the place, and a search on company, SBI code and place, all narrowing the list.
+
+#### Scenario: good fit
+
+- GIVEN three companies scoring 40, 75 and 90
+- WHEN the user chooses Good fit
+- THEN the list shows the two companies scoring 75 and 90
+
+#### Scenario: search a place
+
+- GIVEN companies in Utrecht and Veenendaal
+- WHEN the user searches "veenendaal"
+- THEN the list shows the company in Veenendaal
+
+### Requirement: The profile card lists its facts with Edit profile
+
+The ideal customer profile card MUST list each set criterion, keywords included, as a label over its value, and offer Edit profile.
+
+#### Scenario: keywords
+
+- GIVEN a profile with the keywords horeca and retail
+- WHEN the prospects page opens
+- THEN the card lists "Keywords: horeca, retail" after the other criteria
 
 ## Current Implementation Status
 

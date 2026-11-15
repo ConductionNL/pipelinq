@@ -27,12 +27,16 @@ use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
 use OCA\Pipelinq\Service\Export\ExportUploadService;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
+use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
+use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Migrated and unmigrated instances, told apart.
@@ -421,6 +425,7 @@ class ConnectorRegisterResolutionTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->readCount++;
 				// Positional: named arguments reach a mock callback in
 				// declaration order, and `register` is the FOURTH parameter of
@@ -527,15 +532,19 @@ class ConnectorRegisterResolutionTest extends TestCase {
 
 		return $transport->send(
 			new RenderedMail(
-				fromEmail: 'noreply@example.test',
-				fromName: 'Pipelinq',
-				replyTo: 'reply@example.test',
-				toEmail: 'user@example.test',
-				subject: 'Hi',
-				html: '<p>hi</p>',
-				text: 'hi',
+				addressing: new MailAddressing(
+					fromEmail: 'noreply@example.test',
+					fromName: 'Pipelinq',
+					replyTo: 'reply@example.test',
+					toEmail: 'user@example.test',
+				),
+				content: new MailContent(
+					subject: 'Hi',
+					html: '<p>hi</p>',
+					text: 'hi',
+				),
 				headers: [],
-				deliveryId: 'd-1'
+				deliveryId: 'd-1',
 			)
 		);
 	}//end sendOneMail()
@@ -567,7 +576,9 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			mailer: $this->createMock(\OCP\Mail\IMailer::class),
 			articleService: $this->createMock(\OCA\Pipelinq\Service\ArticleService::class),
 			connectorRegister: FakeSlugResolver::connectorRegister($presentSlugs),
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			addressRenderer: new \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer(),
+			recipientNames: $this->createMock(\OCA\Pipelinq\Service\Marketing\RecipientNameReader::class)
 		);
 
 		return $service->resolveRateLimit(
@@ -608,7 +619,9 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The source payload.
 			 */
-			public function find(string $id, ?string $register=null, ?string $schema=null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->recordRead(register: $register);
 				return $this->source;
 			}//end find()

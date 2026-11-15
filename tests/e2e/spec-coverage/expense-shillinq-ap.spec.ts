@@ -7,7 +7,7 @@
  *
  * UI-observable scenarios for the Shillinq AP integration:
  *  - Admin settings page renders the Shillinq integration section and the
- *    `shillinq_ap_webhook_url` text field (REQ-AP-004 / Scenario 12).
+ *    detected Shillinq state; no webhook URL field (REQ-AP-004 / Scenario 12).
  *  - The expense list page reaches its empty/loaded state through the
  *    `/apps/pipelinq/expenses` route (REQ-AP-005 — column header is
  *    only visible once an expense exists; here we assert the surface

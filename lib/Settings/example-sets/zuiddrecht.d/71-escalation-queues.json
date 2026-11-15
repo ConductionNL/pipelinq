@@ -1,0 +1,33 @@
+{
+	"$comment": "pipelinq's escalation queues in the Zuiddrecht set (cti-escalation-queues): board PqGesprekAfronden closes a call as Escalated and hands it to \"Vergunningen, tweede lijn\". A queue is app config `cti_escalation_queues` ({ id, label, groupId }); the follow-up task is assigned to the queue's group. The groups are the second-line teams, staffed from the cast: Esra Demir and Sanne Bakker (Vergunningverleners) for Vergunningen, Petra van Dijk (Financien) for Belastingen, Fatma Kaya (Regisseur jeugdteam) for Sociaal domein.",
+	"groups": [
+		{
+			"group": "zuiddrecht-tweede-lijn-vergunningen",
+			"displayName": "Vergunningen, tweede lijn",
+			"members": [
+				"esra",
+				"sannebakker"
+			]
+		},
+		{
+			"group": "zuiddrecht-tweede-lijn-belastingen",
+			"displayName": "Belastingen, tweede lijn",
+			"members": [
+				"petra"
+			]
+		},
+		{
+			"group": "zuiddrecht-tweede-lijn-sociaal-domein",
+			"displayName": "Sociaal domein, tweede lijn",
+			"members": [
+				"fatma"
+			]
+		}
+	],
+	"appConfig": [
+		{
+			"key": "cti_escalation_queues",
+			"value": "[{\"id\":\"vergunningen-tweede-lijn\",\"label\":\"Vergunningen, tweede lijn\",\"groupId\":\"zuiddrecht-tweede-lijn-vergunningen\"},{\"id\":\"belastingen-tweede-lijn\",\"label\":\"Belastingen, tweede lijn\",\"groupId\":\"zuiddrecht-tweede-lijn-belastingen\"},{\"id\":\"sociaal-domein-tweede-lijn\",\"label\":\"Sociaal domein, tweede lijn\",\"groupId\":\"zuiddrecht-tweede-lijn-sociaal-domein\"}]"
+		}
+	]
+}

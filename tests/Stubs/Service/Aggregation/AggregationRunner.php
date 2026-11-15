@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Service\Aggregation;
 
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+
 if (class_exists(AggregationRunner::class) === false) {
 	/**
 	 * Stub AggregationRunner — used only in standalone unit tests.
@@ -41,7 +43,7 @@ if (class_exists(AggregationRunner::class) === false) {
 		 *
 		 * @return array<string, mixed> The result envelope.
 		 */
-		public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
+		public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query, bool $bypassRbac=false): array {
 			return ['value' => null, 'backend' => 'stub', 'cached' => false];
 		}//end runAdhocByRef()
 	}//end class

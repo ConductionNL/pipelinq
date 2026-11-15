@@ -16,14 +16,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * Default region is read from `pipelinq::default_country_code` (IAppConfig);
  * value is an ISO-3166-1 alpha-2 code (`NL`, `BE`, `DE`, …).
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.2
  */
 class PhoneNormaliser {
 	/**
@@ -93,7 +93,7 @@ class PhoneNormaliser {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgId is a reserved parameter
 	 *  of the public contract (see method summary) for future per-org normalisation
 	 *  overrides; CtiService already passes it.
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.2
 	 */
 	public function normaliseForOrg(string $rawNumber, ?string $orgId = null): array {
 		$raw = trim($rawNumber);
@@ -102,39 +102,82 @@ class PhoneNormaliser {
 		}
 
 		$country = $this->resolveDefaultCountry();
-
-		// Strip everything except digits and a single leading '+'.
-		$hasPlus = ($raw[0] === '+');
 		$digits = preg_replace('/[^0-9]/', '', $raw);
 		if ($digits === null || $digits === '') {
 			$this->logFailure(rawNumber: $rawNumber, reason: 'no digits in input');
 			return ['e164' => null, 'raw' => $rawNumber];
 		}
 
-		// Case 1: already prefixed with '+CC'.
-		if ($hasPlus === true) {
-			$e164 = '+' . $digits;
-			return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
-		}
-
-		// Case 2: international dialling via 00 prefix (e.g. 0031...).
-		if (str_starts_with($digits, '00') === true) {
-			$e164 = '+' . substr($digits, 2);
-			return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
-		}
-
-		// Case 3: national leading '0' -- replace with country prefix.
-		if (str_starts_with($digits, '0') === true) {
-			$countryCode = (self::COUNTRY_PREFIX[$country] ?? '31');
-			$e164 = '+' . $countryCode . substr($digits, 1);
-			return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
-		}
-
-		// Case 4: bare subscriber digits and we know the country -- still try.
-		$countryCode = (self::COUNTRY_PREFIX[$country] ?? '31');
-		$e164 = '+' . $countryCode . $digits;
-		return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
+		$candidate = $this->candidate(dialled: $this->dialled(raw: $raw, digits: $digits), countryCode: (self::COUNTRY_PREFIX[$country] ?? '31'));
+		return ['e164' => $this->validate(candidate: $candidate, rawNumber: $rawNumber), 'raw' => $rawNumber];
 	}//end normaliseForOrg()
+
+	/**
+	 * The digits as dialled: a leading '+' is the same as dialling 00.
+	 *
+	 * @param string $raw    The trimmed input.
+	 * @param string $digits Its digits.
+	 *
+	 * @return string
+	 */
+	private function dialled(string $raw, string $digits): string {
+		if ($raw[0] === '+') {
+			return '00' . $digits;
+		}
+
+		return $digits;
+	}//end dialled()
+
+	/**
+	 * The E.164 candidate of dialled digits: international (00) as it is,
+	 * national (leading 0) with the country code instead of the 0, bare
+	 * subscriber digits with the country code in front.
+	 *
+	 * @param string $dialled     The dialled digits.
+	 * @param string $countryCode The default country's code.
+	 *
+	 * @return string
+	 */
+	private function candidate(string $dialled, string $countryCode): string {
+		if (str_starts_with($dialled, '00') === true) {
+			return '+' . substr($dialled, 2);
+		}
+
+		if (str_starts_with($dialled, '0') === true) {
+			return '+' . $countryCode . substr($dialled, 1);
+		}
+
+		return '+' . $countryCode . $dialled;
+	}//end candidate()
+
+	/**
+	 * Normalise the sender of an inbound SMS or WhatsApp callback to E.164.
+	 *
+	 * Providers name the sender internationally, and Meta and MessageBird
+	 * leave out the '+' (31611119999). Read as a national number that would
+	 * get the country prefix twice, so bare digits that do not start with 0
+	 * are taken as international. A sender that is not a phone number is
+	 * returned trimmed, so the caller still has an address to record.
+	 *
+	 * @param string $rawNumber Sender as the provider sent it.
+	 *
+	 * @return string E.164 number, or the trimmed input when it is none.
+	 *
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
+	 */
+	public function normaliseInbound(string $rawNumber): string {
+		$raw = trim($rawNumber);
+		if ($raw === '') {
+			return '';
+		}
+
+		$candidate = $raw;
+		if (preg_match('/^[1-9][0-9 ]*$/', $raw) === 1) {
+			$candidate = '+' . $raw;
+		}
+
+		return ($this->normaliseForOrg(rawNumber: $candidate)['e164'] ?? $raw);
+	}//end normaliseInbound()
 
 	/**
 	 * Resolve the default ISO-3166 country code for normalisation.
@@ -143,7 +186,7 @@ class PhoneNormaliser {
 	 */
 	private function resolveDefaultCountry(): string {
 		$configured = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'default_country_code',
 			'NL'
 		);

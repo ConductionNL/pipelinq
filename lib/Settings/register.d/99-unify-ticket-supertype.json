@@ -5,13 +5,14 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.1.0",
+        "version": "1.7.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
         "x-schema-org-by-type": {
           "request": "schema:Demand",
           "complaint": "schema:Message",
+          "melding": "schema:Message",
           "contactmoment": "schema:CommunicateAction"
         },
         "linkedTypes": [
@@ -24,6 +25,60 @@
           "forms"
         ],
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
+          "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "Whether the ticket is in a final lifecycle state (completed, converted, resolved, rejected or closed). Not materialised, so it is always fresh on read; the Lock action on TicketDetail shows only when it is true (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "completed"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "converted"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "resolved"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "rejected"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "closed"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
           "x-openregister-archival": {
             "_note": "unify-ticket-supertype: the retired `contactmoment` schema carried a VNG/AVG retention policy (default P2Y, plus outcome rules). `request` and `complaint` carried NONE. A merged schema can hold only ONE archival block, and the condition DSL supports a single comparison (no AND), so the two postures are reconciled with ordered, first-match-wins rules: the two ticketType rules below exempt request/complaint tickets (P100Y == effectively never disposed, matching their previous no-retention behaviour), and everything after them applies only to contactmoment tickets, whose original default (P2Y) is preserved below. CONSEQUENCE: OpenRegister's SCHEMA_ARCHIVAL_IMMUTABLE guard is schema-level, so tickets can no longer be hard-deleted by hand — they expire via ArchivalRetentionTask. That is the intended posture for an auditable client-interaction record, but it IS a change for request/complaint tickets.",
             "retention": {
@@ -38,6 +93,11 @@
                   "condition": "ticketType == 'complaint'",
                   "retention": "P100Y",
                   "reason": "Complaint-type tickets carried no retention policy before the ticket merge; exempted here so the merge does not start auto-disposing them. Klacht retention is a separate DPO decision."
+                },
+                {
+                  "condition": "ticketType == 'melding'",
+                  "retention": "P100Y",
+                  "reason": "Meldingen follow requests and complaints: no retention term until the DPO sets one, so the contactmoment default below never disposes them."
                 },
                 {
                   "condition": "outcome == 'handled'",
@@ -95,9 +155,19 @@
                 "description": "Resolve a request-type ticket successfully. Authorization: the assignee (per-object owner RBAC)."
               },
               "convert": {
-                "from": ["in_progress"],
+                "from": ["new", "in_progress", "awaiting_customer"],
                 "to": "converted",
                 "description": "Convert a request-type ticket into a case (Procest). Authorization: the assignee (per-object owner RBAC)."
+              },
+              "await": {
+                "from": ["new", "in_progress"],
+                "to": "awaiting_customer",
+                "description": "Answer the customer and wait for their reply. Authorization: the assignee (per-object owner RBAC)."
+              },
+              "resume": {
+                "from": ["awaiting_customer"],
+                "to": "in_progress",
+                "description": "The customer replied; the ticket is back with the handler."
               },
               "resolve": {
                 "from": ["in_progress"],
@@ -142,6 +212,9 @@
               },
               "requester": {
                 "semanticRef": "client"
+              },
+              "caseType": {
+                "from": "requestedCaseType"
               }
             }
           }
@@ -177,8 +250,14 @@
           "ticketType": {
             "type": "string",
             "title": "Ticket Type",
-            "description": "Discriminator: request (demand/case), complaint (klacht) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
-            "enum": ["request", "complaint", "interaction"],
+            "description": "Discriminator: request (demand/case), complaint (klacht), melding (a report about the public space, such as loose paving or a broken street light) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
+            "enum": ["request", "complaint", "melding", "interaction"],
+            "x-enum-labels": {
+              "request": "Request",
+              "complaint": "Complaint",
+              "melding": "Public-space report",
+              "interaction": "Contact moment"
+            },
             "facetable": true
           },
           "title": {
@@ -187,6 +266,13 @@
             "description": "Ticket headline. For a contactmoment this is the interaction subject.",
             "maxLength": 255,
             "minLength": 1
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference",
+            "description": "The ticket's reference number, PQ-<year>-<number>, given to every new request and complaint when it is stored (TicketReferenceCreatingListener). Read only for users; a ticket created with a reference keeps it.",
+            "maxLength": 32,
+            "facetable": false
           },
           "description": {
             "type": "string",
@@ -209,6 +295,7 @@
           },
           "assignee": {
             "type": "string",
+            "format": "user",
             "title": "Assignee",
             "description": "Nextcloud UID (or agent) handling the ticket.",
             "facetable": true
@@ -218,6 +305,16 @@
             "title": "Status",
             "description": "Unified lifecycle status across all ticket types.",
             "enum": ["new", "in_progress", "awaiting_customer", "resolved", "completed", "rejected", "converted", "closed"],
+            "x-enum-labels": {
+              "new": "New",
+              "in_progress": "In progress",
+              "awaiting_customer": "Waiting for customer",
+              "resolved": "Resolved",
+              "completed": "Completed",
+              "rejected": "Rejected",
+              "converted": "Converted",
+              "closed": "Closed"
+            },
             "default": "new",
             "facetable": true
           },
@@ -226,6 +323,12 @@
             "title": "Priority",
             "description": "Ticket priority (request/complaint).",
             "enum": ["low", "normal", "high", "urgent"],
+            "x-enum-labels": {
+              "low": "Low",
+              "normal": "Normal",
+              "high": "High",
+              "urgent": "Urgent"
+            },
             "default": "normal",
             "facetable": true
           },
@@ -292,6 +395,11 @@
             "description": "Ordinal of the current pipeline stage (request only).",
             "visible": false
           },
+          "requestedCaseType": {
+            "type": "string",
+            "title": "Requested case type",
+            "description": "The case type chosen when the request was converted to a case (request only). The convert-to-case handoff carries it to the case as ns#Case caseType."
+          },
           "caseReference": {
             "type": "string",
             "title": "Case Reference",
@@ -312,7 +420,7 @@
           "slaDeadline": {
             "type": "string",
             "title": "SLA Deadline",
-            "description": "Service-level resolution deadline (complaint only).",
+            "description": "The term the ticket must be handled within: the service-level deadline of a complaint, the term of a request.",
             "format": "date-time"
           },
           "resolvedAt": {
@@ -331,6 +439,14 @@
             "title": "Outcome",
             "description": "Disposition of a contactmoment interaction.",
             "enum": ["handled", "transferred", "callbackRequest", "followUpAction", "resolved", "referred"],
+            "x-enum-labels": {
+              "handled": "Handled",
+              "transferred": "Transferred",
+              "callbackRequest": "Callback request",
+              "followUpAction": "Follow-up action",
+              "resolved": "Resolved",
+              "referred": "Referred"
+            },
             "facetable": true
           },
           "duration": {
@@ -361,11 +477,24 @@
             "items": {
               "type": "object",
               "properties": {
-                "message": { "type": "string" },
-                "createdAt": { "type": "string", "format": "date-time" }
+                "message": { "type": "string", "title": "Reply", "description": "The text the customer wrote." },
+                "createdAt": { "type": "string", "format": "date-time", "title": "Sent at", "description": "When the customer sent the reply." }
               }
             },
             "x-notes": "Written by PortalRequestService::addReply() only."
+          },
+          "portalAnswers": {
+            "type": "array",
+            "title": "Answers to the customer",
+            "description": "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "title": "Answer", "description": "The text the customer read." },
+                "createdAt": { "type": "string", "format": "date-time", "title": "Sent at", "description": "When the handler saved the answer." }
+              }
+            },
+            "x-notes": "question-detail-on-the-portal: customerMessage holds only the latest answer and no date, so the resident could not see when they were answered or what was answered before. Appended by the ticket's answer section (CustomerReplySection) whenever the answer text changes; customerMessage keeps the latest answer, which portaliq's change rule pipelinq.question.answered listens to."
           },
           "reporterAccountId": {
             "type": "string",
@@ -378,6 +507,41 @@
             "title": "Portal attachments",
             "description": "Files the customer attached when submitting this request in the portal.",
             "items": { "type": "string" }
+          },
+          "portalSubject": {
+            "type": "string",
+            "title": "Portal resident",
+            "description": "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask(), and by portaliq on a resident's own request or complaint (createOwnRequest, createOwnComplaint), which the ownRequests and ownComplaints collections read back. A DigiD resident has no clientId claim, so this is the scope that needs none.",
+            "facetable": false
+          },
+          "subjectReference": {
+            "type": "object",
+            "title": "Asked about",
+            "description": "The dossier the resident asked about, as it was when they asked.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): a snapshot of the resident's opencatalogi collection, taken once by DossierQuestionService::ask(). The KCC employee sees what the resident saw and gets no live access to the dossier afterwards, because a dossier reveals what someone is researching.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "Kind",
+                "description": "What the question is about.",
+                "enum": ["opencatalogi.collection"]
+              },
+              "id": { "type": "string", "title": "Dossier", "description": "The id of the resident's dossier." },
+              "title": { "type": "string", "title": "Dossier title", "description": "The dossier's title when the question was asked." },
+              "items": {
+                "type": "array",
+                "title": "Documents",
+                "description": "The documents in the dossier when the question was asked.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string", "title": "Document", "description": "The document's title." },
+                    "url": { "type": "string", "title": "Public link", "description": "Where the public document can be read." }
+                  }
+                }
+              }
+            }
           }
         }
       }

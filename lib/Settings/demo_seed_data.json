@@ -1,10 +1,10 @@
 {
-    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
+    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject / appointmentService.name / appointmentResource.name / appointmentBooking.subject / journey.name / socialAccount.displayName / socialPost.title; search rows carry the demo property and source instead, and a keyword target a '[Demo]' note) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N, '@week:D' -> Y-m-d of day D (0 = Monday) this week, '@week:DTHH:MM' -> ISO-8601 that day at that time. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
     "_coverageNote": "The contacts / pipelines / products / complaints / tasks sections were added 2026-08-06. Measured on run 31082256226: the CONTACTS, TASKS and PIPELINES index pages had a genuinely empty collection on a fresh install — the base register ships example objects for products (14), clients, leads, tickets and the POS entities, but none at all for contact, task or pipeline — so CnIndexPage rendered `cn-index-page__empty` and no data table, silently, with no console error and no failed request. Every 'the list table renders' assertion in tests/e2e/spec-coverage failed for a reason that pointed at the page rather than at the fixture. Products was NOT empty; the extra rows here exist so the seeded set is coherent (a client has contact persons) rather than to repair that page.",
 
     "clients": [
-        { "key": "bakkerij", "data": { "name": "[Demo] Bakkerij De Gouden Korst", "type": "organization", "email": "info@goudenkorst.example", "phone": "+31201234567", "address": "Nieuwstraat 12, 1012 AB Amsterdam", "website": "https://goudenkorst.example", "industry": "Retail", "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
-        { "key": "gemeente", "data": { "name": "[Demo] Gemeente Zonnedael", "type": "organization", "email": "kcc@zonnedael.example", "phone": "+31702345678", "address": "Raadhuisplein 1, 2513 AA Den Haag", "industry": "Government", "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
+        { "key": "bakkerij", "data": { "name": "[Demo] Bakkerij De Gouden Korst", "type": "organization", "email": "info@goudenkorst.example", "phone": "+31201234567", "address": "Nieuwstraat 12, 1012 AB Amsterdam", "website": "https://goudenkorst.example", "industry": ["Retail"], "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
+        { "key": "gemeente", "data": { "name": "[Demo] Gemeente Zonnedael", "type": "organization", "email": "kcc@zonnedael.example", "phone": "+31702345678", "address": "Raadhuisplein 1, 2513 AA Den Haag", "industry": ["Government"], "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
         { "key": "jansen", "data": { "name": "[Demo] Anna Jansen", "type": "person", "email": "anna.jansen@example.com", "phone": "+31612345678", "address": "Dorpsstraat 8, 3511 BB Utrecht", "notes": "Demo person seeded by pipelinq:demo:seed.", "emails": [ { "kind": "work", "value": "anna.jansen@example.com", "primary": true, "verified": false } ], "phones": [ { "kind": "mobile", "value": "+31612345678", "primary": true, "verified": false } ], "socialProfiles": [ { "network": "linkedin", "handle": "anna-jansen", "url": "https://www.linkedin.com/in/anna-jansen-demo", "verified": false, "followedByUs": true, "followsUs": false } ], "preferredChannel": "linkedin", "timezone": "Europe/Amsterdam", "language": "nl" } },
         { "key": "devries", "data": { "name": "[Demo] Pieter de Vries", "type": "person", "email": "p.devries@example.com", "phone": "+31687654321", "address": "Kerkweg 21, 6511 CC Nijmegen", "notes": "Demo person seeded by pipelinq:demo:seed.", "emails": [ { "kind": "work", "value": "p.devries@example.com", "primary": true, "verified": false } ], "phones": [ { "kind": "mobile", "value": "+31687654321", "primary": true, "verified": false } ], "socialProfiles": [ { "network": "mastodon", "handle": "@pdevries@mastodon.social", "url": "https://mastodon.social/@pdevries", "verified": false, "followedByUs": false, "followsUs": true } ], "preferredChannel": "email", "timezone": "Europe/Amsterdam", "language": "nl" } },
         { "key": "elharrak", "data": { "name": "[Demo] Samira El Harrak", "type": "person", "email": "s.elharrak@example.com", "phone": "+31699887766", "address": "Havenkade 3, 3011 DD Rotterdam", "notes": "Demo person seeded by pipelinq:demo:seed." } }
@@ -69,5 +69,1015 @@
         { "key": "task-terugbel", "data": { "subject": "[Demo] Terugbellen over parkeervergunning", "type": "callbackRequest", "status": "open", "priority": "high", "deadline": "@datetime:1", "description": "Demo task: call the applicant back about the parking permit.", "callbackPhoneNumber": "+31612345678" } },
         { "key": "task-opvolg", "data": { "subject": "[Demo] Offerte webshop opvolgen", "type": "followUpTask", "status": "in_progress", "priority": "normal", "deadline": "@datetime:3", "description": "Demo task: follow up on the webshop quotation." } },
         { "key": "task-info", "data": { "subject": "[Demo] Informatievraag afvalkalender", "type": "informationRequest", "status": "completed", "priority": "low", "deadline": "@datetime:-2", "description": "Demo task: answer the waste-calendar question." } }
-    ]
+    ],
+
+    "_appointmentsNote": "The appointment sections back the Services and resources page (openspec/changes/services-and-resources-at-a-glance task 4.1): seven services (five bookable online, one draft that no resource matches), the desks and desk staff they match, and bookings in the current week. They live here, not in the example register, because '@week:D' resolves to day D (0 = Monday) of the week the seed runs as a date, and '@week:DTHH:MM' to that day at that time; each booking links its customer (customerKey), its service (serviceKey) and the resource of each assignment (resourceKey) to the objects saved earlier in the run.",
+    "appointmentServices": [
+        {
+            "key": "svc-paspoort",
+            "data": {
+                "name": "[Demo] Paspoort of ID-kaart aanvragen",
+                "description": "Aanvraag van een paspoort of identiteitskaart aan de balie, met pasfoto en vingerafdrukken.",
+                "durationMinutes": 20,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 5,
+                "requiredSkills": [
+                    "burgerzaken"
+                ],
+                "requiredResourceTypes": [
+                    "room"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            }
+        },
+        {
+            "key": "svc-rijbewijs",
+            "data": {
+                "name": "[Demo] Rijbewijs aanvragen of verlengen",
+                "description": "Aanvraag of verlenging van een rijbewijs aan de balie.",
+                "durationMinutes": 15,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 5,
+                "requiredSkills": [
+                    "burgerzaken"
+                ],
+                "requiredResourceTypes": [
+                    "room"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            }
+        },
+        {
+            "key": "svc-verhuizing",
+            "data": {
+                "name": "[Demo] Verhuizing doorgeven",
+                "description": "Hulp bij het doorgeven van een verhuizing naar of binnen de gemeente.",
+                "durationMinutes": 15,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 0,
+                "requiredSkills": [
+                    "burgerzaken"
+                ],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            }
+        },
+        {
+            "key": "svc-uittreksel",
+            "data": {
+                "name": "[Demo] Uittreksel BRP ophalen",
+                "description": "Een uittreksel uit de Basisregistratie Personen, direct mee naar huis.",
+                "durationMinutes": 10,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 0,
+                "requiredSkills": [
+                    "burgerzaken"
+                ],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active",
+                "price": 14.4,
+                "currency": "EUR"
+            }
+        },
+        {
+            "key": "svc-wmo",
+            "data": {
+                "name": "[Demo] Keukentafelgesprek Wmo",
+                "description": "Gesprek met een Wmo-consulent over ondersteuning thuis.",
+                "durationMinutes": 60,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 15,
+                "requiredSkills": [
+                    "wmo"
+                ],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": true,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            }
+        },
+        {
+            "key": "svc-huwelijk",
+            "data": {
+                "name": "[Demo] Huwelijk of partnerschap plannen",
+                "description": "Gesprek met de trouwambtenaar om de ceremonie te plannen. Nog in voorbereiding.",
+                "durationMinutes": 45,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 15,
+                "requiredSkills": [
+                    "trouwambtenaar"
+                ],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": false,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "draft"
+            }
+        },
+        {
+            "key": "svc-gevonden",
+            "data": {
+                "name": "[Demo] Gevonden voorwerp ophalen",
+                "description": "Een gevonden voorwerp ophalen bij de balie; alleen op afspraak via de telefoon.",
+                "durationMinutes": 10,
+                "bufferBeforeMinutes": 0,
+                "bufferAfterMinutes": 0,
+                "requiredSkills": [],
+                "requiredResourceTypes": [
+                    "staff"
+                ],
+                "multiStep": [],
+                "bookableOnline": false,
+                "requiresDeposit": false,
+                "cancellationPolicy": "free",
+                "cancellationHoursBefore": 24,
+                "status": "active"
+            }
+        }
+    ],
+    "appointmentResources": [
+        {
+            "key": "res-balie-1",
+            "data": {
+                "name": "[Demo] Balie 1, stadskantoor",
+                "type": "room",
+                "skills": [
+                    "burgerzaken"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        },
+        {
+            "key": "res-balie-2",
+            "data": {
+                "name": "[Demo] Balie 2, stadskantoor",
+                "type": "room",
+                "skills": [
+                    "burgerzaken"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        },
+        {
+            "key": "res-balie-3",
+            "data": {
+                "name": "[Demo] Balie 3, stadskantoor",
+                "type": "room",
+                "skills": [
+                    "burgerzaken"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        },
+        {
+            "key": "res-balie-4",
+            "data": {
+                "name": "[Demo] Balie 4, stadskantoor",
+                "type": "room",
+                "skills": [
+                    "burgerzaken"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "08:30",
+                        "closeTime": "17:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        },
+        {
+            "key": "res-fatma",
+            "data": {
+                "name": "[Demo] Fatma Yildiz",
+                "type": "staff",
+                "skills": [
+                    "burgerzaken"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "08:30",
+                        "closeTime": "16:45"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "08:30",
+                        "closeTime": "16:45"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "08:30",
+                        "closeTime": "16:45"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "08:30",
+                        "closeTime": "16:45"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        },
+        {
+            "key": "res-pieter",
+            "data": {
+                "name": "[Demo] Pieter de Wit",
+                "type": "staff",
+                "skills": [
+                    "wmo"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "09:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "09:00",
+                        "closeTime": "17:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "09:00",
+                        "closeTime": "17:00"
+                    }
+                ],
+                "vacations": [],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        },
+        {
+            "key": "res-anouk",
+            "data": {
+                "name": "[Demo] Anouk Smit",
+                "type": "staff",
+                "skills": [
+                    "burgerzaken"
+                ],
+                "workingHours": [
+                    {
+                        "day": "monday",
+                        "openTime": "09:00",
+                        "closeTime": "13:00"
+                    },
+                    {
+                        "day": "tuesday",
+                        "openTime": "09:00",
+                        "closeTime": "13:00"
+                    },
+                    {
+                        "day": "wednesday",
+                        "openTime": "09:00",
+                        "closeTime": "13:00"
+                    },
+                    {
+                        "day": "thursday",
+                        "openTime": "09:00",
+                        "closeTime": "13:00"
+                    },
+                    {
+                        "day": "friday",
+                        "openTime": "09:00",
+                        "closeTime": "13:00"
+                    }
+                ],
+                "vacations": [
+                    {
+                        "startDate": "@week:0",
+                        "endDate": "@week:6",
+                        "label": "Vakantie"
+                    }
+                ],
+                "bookable": true,
+                "maxConcurrent": 1,
+                "status": "active"
+            }
+        }
+    ],
+    "appointmentBookings": [
+        {
+            "key": "bk-01",
+            "customerKey": "jansen",
+            "serviceKey": "svc-verhuizing",
+            "data": {
+                "subject": "[Demo] Verhuizing doorgeven, Anna Jansen (ma 09:00)",
+                "startAt": "@week:0T09:00",
+                "endAt": "@week:0T09:15",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:0T09:00",
+                        "endAt": "@week:0T09:15"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-02",
+            "customerKey": "devries",
+            "serviceKey": "svc-uittreksel",
+            "data": {
+                "subject": "[Demo] Uittreksel BRP ophalen, Pieter de Vries (ma 10:30)",
+                "startAt": "@week:0T10:30",
+                "endAt": "@week:0T10:40",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:0T10:30",
+                        "endAt": "@week:0T10:40"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-03",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-verhuizing",
+            "data": {
+                "subject": "[Demo] Verhuizing doorgeven, Samira El Harrak (ma 14:00)",
+                "startAt": "@week:0T14:00",
+                "endAt": "@week:0T14:15",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:0T14:00",
+                        "endAt": "@week:0T14:15"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-04",
+            "customerKey": "jansen",
+            "serviceKey": "svc-uittreksel",
+            "data": {
+                "subject": "[Demo] Uittreksel BRP ophalen, Anna Jansen (di 09:15)",
+                "startAt": "@week:1T09:15",
+                "endAt": "@week:1T09:25",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:1T09:15",
+                        "endAt": "@week:1T09:25"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-05",
+            "customerKey": "devries",
+            "serviceKey": "svc-verhuizing",
+            "data": {
+                "subject": "[Demo] Verhuizing doorgeven, Pieter de Vries (di 11:00)",
+                "startAt": "@week:1T11:00",
+                "endAt": "@week:1T11:15",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:1T11:00",
+                        "endAt": "@week:1T11:15"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-06",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-uittreksel",
+            "data": {
+                "subject": "[Demo] Uittreksel BRP ophalen, Samira El Harrak (di 15:30)",
+                "startAt": "@week:1T15:30",
+                "endAt": "@week:1T15:40",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:1T15:30",
+                        "endAt": "@week:1T15:40"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-07",
+            "customerKey": "jansen",
+            "serviceKey": "svc-verhuizing",
+            "data": {
+                "subject": "[Demo] Verhuizing doorgeven, Anna Jansen (wo 08:45)",
+                "startAt": "@week:2T08:45",
+                "endAt": "@week:2T09:00",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:2T08:45",
+                        "endAt": "@week:2T09:00"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-08",
+            "customerKey": "devries",
+            "serviceKey": "svc-uittreksel",
+            "data": {
+                "subject": "[Demo] Uittreksel BRP ophalen, Pieter de Vries (wo 10:00)",
+                "startAt": "@week:2T10:00",
+                "endAt": "@week:2T10:10",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:2T10:00",
+                        "endAt": "@week:2T10:10"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-09",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-verhuizing",
+            "data": {
+                "subject": "[Demo] Verhuizing doorgeven, Samira El Harrak (wo 13:30)",
+                "startAt": "@week:2T13:30",
+                "endAt": "@week:2T13:45",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:2T13:30",
+                        "endAt": "@week:2T13:45"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-10",
+            "customerKey": "jansen",
+            "serviceKey": "svc-uittreksel",
+            "data": {
+                "subject": "[Demo] Uittreksel BRP ophalen, Anna Jansen (do 09:00)",
+                "startAt": "@week:3T09:00",
+                "endAt": "@week:3T09:10",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:3T09:00",
+                        "endAt": "@week:3T09:10"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-11",
+            "customerKey": "devries",
+            "serviceKey": "svc-verhuizing",
+            "data": {
+                "subject": "[Demo] Verhuizing doorgeven, Pieter de Vries (do 11:15)",
+                "startAt": "@week:3T11:15",
+                "endAt": "@week:3T11:30",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:3T11:15",
+                        "endAt": "@week:3T11:30"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-12",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-uittreksel",
+            "data": {
+                "subject": "[Demo] Uittreksel BRP ophalen, Samira El Harrak (do 14:45)",
+                "startAt": "@week:3T14:45",
+                "endAt": "@week:3T14:55",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-fatma",
+                        "startAt": "@week:3T14:45",
+                        "endAt": "@week:3T14:55"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-13",
+            "customerKey": "devries",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Pieter de Vries (ma 09:00)",
+                "startAt": "@week:0T09:00",
+                "endAt": "@week:0T09:20",
+                "status": "no-show",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-1",
+                        "startAt": "@week:0T09:00",
+                        "endAt": "@week:0T09:20"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-14",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Samira El Harrak (ma 09:30)",
+                "startAt": "@week:0T09:30",
+                "endAt": "@week:0T09:50",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-2",
+                        "startAt": "@week:0T09:30",
+                        "endAt": "@week:0T09:50"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-15",
+            "customerKey": "jansen",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Anna Jansen (di 10:00)",
+                "startAt": "@week:1T10:00",
+                "endAt": "@week:1T10:20",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-1",
+                        "startAt": "@week:1T10:00",
+                        "endAt": "@week:1T10:20"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-16",
+            "customerKey": "devries",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Pieter de Vries (di 10:00)",
+                "startAt": "@week:1T10:00",
+                "endAt": "@week:1T10:20",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-3",
+                        "startAt": "@week:1T10:00",
+                        "endAt": "@week:1T10:20"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-17",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Samira El Harrak (wo 11:00)",
+                "startAt": "@week:2T11:00",
+                "endAt": "@week:2T11:20",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-2",
+                        "startAt": "@week:2T11:00",
+                        "endAt": "@week:2T11:20"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-18",
+            "customerKey": "jansen",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Anna Jansen (do 09:00)",
+                "startAt": "@week:3T09:00",
+                "endAt": "@week:3T09:20",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-4",
+                        "startAt": "@week:3T09:00",
+                        "endAt": "@week:3T09:20"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-19",
+            "customerKey": "devries",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Pieter de Vries (do 13:00)",
+                "startAt": "@week:3T13:00",
+                "endAt": "@week:3T13:20",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-1",
+                        "startAt": "@week:3T13:00",
+                        "endAt": "@week:3T13:20"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-20",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-paspoort",
+            "data": {
+                "subject": "[Demo] Paspoort of ID-kaart aanvragen, Samira El Harrak (vr 10:30)",
+                "startAt": "@week:4T10:30",
+                "endAt": "@week:4T10:50",
+                "status": "confirmed",
+                "source": "portal",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-2",
+                        "startAt": "@week:4T10:30",
+                        "endAt": "@week:4T10:50"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-21",
+            "customerKey": "jansen",
+            "serviceKey": "svc-rijbewijs",
+            "data": {
+                "subject": "[Demo] Rijbewijs aanvragen of verlengen, Anna Jansen (di 14:00)",
+                "startAt": "@week:1T14:00",
+                "endAt": "@week:1T14:15",
+                "status": "confirmed",
+                "source": "phone",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-4",
+                        "startAt": "@week:1T14:00",
+                        "endAt": "@week:1T14:15"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-22",
+            "customerKey": "devries",
+            "serviceKey": "svc-rijbewijs",
+            "data": {
+                "subject": "[Demo] Rijbewijs aanvragen of verlengen, Pieter de Vries (vr 09:00)",
+                "startAt": "@week:4T09:00",
+                "endAt": "@week:4T09:15",
+                "status": "confirmed",
+                "source": "phone",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-balie-3",
+                        "startAt": "@week:4T09:00",
+                        "endAt": "@week:4T09:15"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-23",
+            "customerKey": "elharrak",
+            "serviceKey": "svc-wmo",
+            "data": {
+                "subject": "[Demo] Keukentafelgesprek Wmo, Samira El Harrak (ma 10:00)",
+                "startAt": "@week:0T10:00",
+                "endAt": "@week:0T11:00",
+                "status": "confirmed",
+                "source": "phone",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-pieter",
+                        "startAt": "@week:0T10:00",
+                        "endAt": "@week:0T11:00"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "bk-24",
+            "customerKey": "jansen",
+            "serviceKey": "svc-wmo",
+            "data": {
+                "subject": "[Demo] Keukentafelgesprek Wmo, Anna Jansen (wo 14:00)",
+                "startAt": "@week:2T14:00",
+                "endAt": "@week:2T15:00",
+                "status": "confirmed",
+                "source": "phone",
+                "resourceAssignments": [
+                    {
+                        "stepIndex": 0,
+                        "resourceKey": "res-pieter",
+                        "startAt": "@week:2T14:00",
+                        "endAt": "@week:2T15:00"
+                    }
+                ]
+            }
+        }
+    ],
+    "_journeysNote": "Journeys are saved through JourneyService so each compiles into a flow, and are held to draft or paused so that flow is never enabled. Each journey's `runs` fill the run log on its detail page; a run names a demo contact (contactKey) and client (clientKey), and its `reason` is one of the codes the run log puts into words.",
+    "journeys": [
+        {
+            "key": "journey-herinnering-verlenging",
+            "data": { "name": "[Demo] Terugbellen bij contractverlenging", "description": "Demo journey: puts a call on the account manager's list three weeks before a contract is up for renewal, unless it was cancelled in the meantime.", "status": "paused", "audienceSegment": "segment-renewing-within-ninety-days", "trigger": { "kind": "contractRenewalWindow" }, "waitFor": "21 days", "condition": { "field": "status", "operator": "notEquals", "value": "cancelled" }, "action": { "kind": "createTask", "taskSubject": "Bellen over de contractverlenging", "taskType": "callbackRequest", "intent": "service" } },
+            "runs": [
+                { "contactKey": "contact-bakker", "clientKey": "bakkerij", "data": { "state": "task-created", "actionKind": "createTask", "occurredAt": "@datetime:-12" } },
+                { "contactKey": "contact-inkoop", "clientKey": "gemeente", "data": { "state": "task-created", "actionKind": "createTask", "occurredAt": "@datetime:-5" } }
+            ]
+        },
+        {
+            "key": "journey-welkom-nieuwsbrief",
+            "data": { "name": "[Demo] Welkom voor nieuwe abonnees", "description": "Demo journey: sends a welcome mail the day after someone confirms their newsletter subscription.", "status": "paused", "trigger": { "kind": "listConfirmed" }, "waitFor": "1 day", "action": { "kind": "sendMailing", "intent": "service" } },
+            "runs": [
+                { "contactKey": "contact-mulder", "clientKey": "bakkerij", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-20" } },
+                { "contactKey": "contact-kcc", "clientKey": "gemeente", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-14" } },
+                { "contactKey": "contact-inkoop", "clientKey": "gemeente", "data": { "state": "refused", "reason": "no_consent", "actionKind": "sendMailing", "occurredAt": "@datetime:-9" } },
+                { "contactKey": "contact-bakker", "clientKey": "bakkerij", "data": { "state": "failed", "reason": "transport_rejected", "actionKind": "sendMailing", "occurredAt": "@datetime:-3" } }
+            ]
+        },
+        {
+            "key": "journey-vastgelopen-leads",
+            "data": { "name": "[Demo] Vastgelopen leads opvolgen", "description": "Demo journey: when a lead moves into Offerte and is still open a month later, a follow-up task goes to the sales team.", "status": "draft", "audienceSegment": "segment-stalled-leads-thirty-days", "trigger": { "kind": "leadStageChanged" }, "waitFor": "30 days", "condition": { "field": "status", "operator": "equals", "value": "open" }, "action": { "kind": "createTask", "taskSubject": "Vastgelopen lead opvolgen", "taskType": "followUpTask" } }
+        },
+        {
+            "key": "journey-klanten-terugwinnen",
+            "data": { "name": "[Demo] Oud-klanten terugwinnen", "description": "Demo journey: each morning, mails customers who have not bought anything in a year with an offer to come back.", "status": "paused", "audienceSegment": "segment-lapsed-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 7 * * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } },
+            "runs": [
+                { "contactKey": "contact-mulder", "clientKey": "bakkerij", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-30" } },
+                { "contactKey": "contact-kcc", "clientKey": "gemeente", "data": { "state": "refused", "reason": "suppressed_dunning", "actionKind": "sendMailing", "occurredAt": "@datetime:-30" } }
+            ]
+        },
+        {
+            "key": "journey-topklanten-bedanken",
+            "data": { "name": "[Demo] Topklanten bedanken", "description": "Demo journey: on the first of each month, thanks the top tier customers with a personal mail.", "status": "draft", "audienceSegment": "segment-top-tier-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 9 1 * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } }
+        }
+    ],
+
+    "_socialNote": "Fills the Social performance ranking. The accounts are inactive and hold no credential, so the daily follower refresh leaves their followerCount alone and the composer never offers them; the publications carry no externalId, so the daily metrics pull keeps their numbers and calls no network. Views stay 0: Mastodon and LinkedIn do not report them, and the metrics service never borrows a number. One publication has no metrics yet, which the ranking sorts last.",
+    "social": {
+        "accounts": [
+            { "key": "social-mastodon", "data": { "network": "mastodon", "kind": "organisation", "handle": "@demo@mastodon.example", "displayName": "[Demo] Conduction op Mastodon", "instanceBaseUrl": "https://mastodon.example", "publishMode": "api", "status": "pending", "active": false, "followerCount": 900, "followerCountAt": "@datetime:-1" } },
+            { "key": "social-linkedin", "data": { "network": "linkedin", "kind": "person", "handle": "demo-woordvoerder", "displayName": "[Demo] Woordvoerder op LinkedIn", "publishMode": "api", "status": "pending", "active": false, "followerCount": 4000, "followerCountAt": "@datetime:-1" } },
+            { "key": "social-bluesky", "data": { "network": "bluesky", "kind": "organisation", "handle": "demo.bsky.example", "displayName": "[Demo] Conduction op Bluesky", "publishMode": "api", "status": "pending", "active": false, "followerCount": 1500, "followerCountAt": "@datetime:-1" } }
+        ],
+        "posts": [
+            { "key": "social-post-release", "accountKeys": ["social-mastodon", "social-linkedin", "social-bluesky"], "data": { "title": "[Demo] Nieuwe versie van het klantportaal", "body": "Demo post: de nieuwe versie van het klantportaal staat live. Inwoners volgen hun aanvraag nu stap voor stap.", "status": "published", "publishedAt": "@datetime:-21" } },
+            { "key": "social-post-webinar", "accountKeys": ["social-mastodon", "social-linkedin"], "data": { "title": "[Demo] Webinar zaakgericht werken", "body": "Demo post: doe mee met ons webinar over zaakgericht werken, volgende week donderdag om 15:00.", "status": "published", "publishedAt": "@datetime:-10" } },
+            { "key": "social-post-vacature", "accountKeys": ["social-linkedin", "social-bluesky", "social-mastodon"], "data": { "title": "[Demo] Vacature developer", "body": "Demo post: we zoeken een developer die open source en de overheid net zo leuk vindt als wij.", "status": "published", "publishedAt": "@datetime:-3" } }
+        ],
+        "publications": [
+            { "postKey": "social-post-release", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 48, "comments": 6, "shares": 21, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-release", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 112, "comments": 14, "shares": 9, "clicks": 63 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-release", "accountKey": "social-bluesky", "data": { "status": "published", "url": "https://bsky.example/profile/demo.bsky.example/post/1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 37, "comments": 4, "shares": 11, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-webinar", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1002", "publishedAt": "@datetime:-10", "metrics": { "views": 0, "likes": 19, "comments": 2, "shares": 8, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-webinar", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1002", "publishedAt": "@datetime:-10", "metrics": { "views": 0, "likes": 86, "comments": 21, "shares": 5, "clicks": 140 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1003", "publishedAt": "@datetime:-3", "metrics": { "views": 0, "likes": 204, "comments": 33, "shares": 41, "clicks": 97 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-bluesky", "data": { "status": "published", "url": "https://bsky.example/profile/demo.bsky.example/post/1003", "publishedAt": "@datetime:-3", "metrics": { "views": 0, "likes": 58, "comments": 7, "shares": 26, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1003", "publishedAt": "@datetime:-3" } }
+        ]
+    },
+
+    "_searchNote": "Fills the Keyword intelligence page. The rows stand in for a Search Console import: each query/page is split over two days inside the page's default 28-day window, and they are shaped to land in every derivation — all four position buckets, three striking-distance queries (positions 8-20 with a click rate under the expected curve), one cannibalisation (two pages sharing a query, the combined rate well below the better page's) and one query under the 100-impression floor. The query text has to read as real search, so the rows are marked by `property` and `source` rather than a [Demo] prefix, and removal deletes exactly the rows carrying both. The content gap check needs a crawl source, so it keeps saying none is configured.",
+    "search": {
+        "property": "https://www.demo.example/",
+        "source": "demo",
+        "rows": [
+            { "query": "crm software gemeente", "page": "https://www.demo.example/oplossingen/crm", "position": 2.1, "clicks": 90, "impressions": 600, "date": "@days:-4" },
+            { "query": "crm software gemeente", "page": "https://www.demo.example/oplossingen/crm", "position": 2.1, "clicks": 90, "impressions": 600, "date": "@days:-12" },
+            { "query": "klantcontactcentrum systeem", "page": "https://www.demo.example/oplossingen/kcc", "position": 6.5, "clicks": 20, "impressions": 320, "date": "@days:-4" },
+            { "query": "klantcontactcentrum systeem", "page": "https://www.demo.example/oplossingen/kcc", "position": 6.5, "clicks": 20, "impressions": 320, "date": "@days:-12" },
+            { "query": "zaakgericht werken uitleg", "page": "https://www.demo.example/kennisbank/zaakgericht-werken", "position": 11.8, "clicks": 3, "impressions": 410, "date": "@days:-4" },
+            { "query": "zaakgericht werken uitleg", "page": "https://www.demo.example/kennisbank/zaakgericht-werken", "position": 11.8, "clicks": 3, "impressions": 410, "date": "@days:-12" },
+            { "query": "common ground crm", "page": "https://www.demo.example/oplossingen/crm", "position": 9.4, "clicks": 2, "impressions": 205, "date": "@days:-4" },
+            { "query": "common ground crm", "page": "https://www.demo.example/oplossingen/crm", "position": 9.4, "clicks": 1, "impressions": 205, "date": "@days:-12" },
+            { "query": "open source klantvolgsysteem", "page": "https://www.demo.example/blog/open-source-klantvolgsysteem", "position": 14.2, "clicks": 1, "impressions": 130, "date": "@days:-4" },
+            { "query": "open source klantvolgsysteem", "page": "https://www.demo.example/blog/open-source-klantvolgsysteem", "position": 14.2, "clicks": 0, "impressions": 130, "date": "@days:-12" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/oplossingen/crm", "position": 7.0, "clicks": 15, "impressions": 150, "date": "@days:-4" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/oplossingen/crm", "position": 7.0, "clicks": 15, "impressions": 150, "date": "@days:-12" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/blog/openregister-koppelen", "position": 12.0, "clicks": 1, "impressions": 125, "date": "@days:-4" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/blog/openregister-koppelen", "position": 12.0, "clicks": 1, "impressions": 125, "date": "@days:-12" },
+            { "query": "wat is een klantreis", "page": "https://www.demo.example/blog/klantreis", "position": 27.0, "clicks": 0, "impressions": 75, "date": "@days:-4" },
+            { "query": "wat is een klantreis", "page": "https://www.demo.example/blog/klantreis", "position": 27.0, "clicks": 0, "impressions": 75, "date": "@days:-12" },
+            { "query": "pipelinq demo", "page": "https://www.demo.example/demo", "position": 1.2, "clicks": 20, "impressions": 45, "date": "@days:-4" },
+            { "query": "pipelinq demo", "page": "https://www.demo.example/demo", "position": 1.2, "clicks": 20, "impressions": 45, "date": "@days:-12" }
+        ],
+        "targets": [
+            { "data": { "term": "common ground crm", "status": "use-more", "intent": "commercial", "proposalKind": "striking-distance", "targetPageRef": "https://www.demo.example/oplossingen/crm", "notes": "[Demo] Confirmed from the striking-distance list, so the page shows a proposal already taken up." } }
+        ]
+    }
 }

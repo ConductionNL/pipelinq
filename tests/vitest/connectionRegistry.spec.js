@@ -23,6 +23,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { describe, expect, it } from 'vitest'
 import fragment from '../../src/manifest.d/97-connection-registry.json'
+import { createAppFormatters } from '../../src/services/cellFormatters.js'
 import {
 	createConnectionHandlers,
 	INTEGRIQ_CONNECTIONS_PATH,
@@ -35,7 +36,7 @@ const appVue = fs.readFileSync(path.resolve(__dirname, '../../src/App.vue'), 'ut
 const mainJs = fs.readFileSync(path.resolve(__dirname, '../../src/main.js'), 'utf8')
 
 // The registry the way CnAppRoot builds it: built-ins first, the app's own
-// formatters over them. App.vue passes none, so the built-ins answer alone.
+// formatters over them. The app's own never reuse a built-in's name.
 const formatters = { ...BUILT_IN_FORMATTERS }
 
 describe('the Integrations page declaration', () => {
@@ -112,16 +113,21 @@ describe('the Add integration handler', () => {
 
 describe('the connection formatters', () => {
 	it('labels a switched-off connection through the nextcloud-vue built-in', () => {
-		// CnAppRoot lets an app formatter win over a built-in, so a local copy
-		// passed to the shell would shadow the library's labels. App.vue does
-		// not declare the prop, so a `formatters` passed from main.js would
-		// fall through onto CnAppRoot all the same.
-		expect(appVue, 'App.vue passes its own formatters').not.toContain(
-			':formatters=',
+		// CnAppRoot lets an app formatter win over a built-in, so an app
+		// formatter under a built-in's name would shadow the library's labels.
+		// App.vue passes createAppFormatters(); none of its keys is a built-in.
+		const appFormatters = createAppFormatters({ fetchObject: async () => null })
+		const shadowed = Object.keys(appFormatters).filter(
+			(key) => key in BUILT_IN_FORMATTERS,
 		)
+		expect(shadowed, 'app formatters shadowing a built-in').toEqual([])
+		expect(appVue).toContain(':formatters="cellFormatters"')
+		expect(appVue).toContain('createAppFormatters(useObjectStore())')
 		expect(mainJs, 'main.js passes its own formatters').not.toContain(
 			'formatters:',
 		)
+		const merged = { ...BUILT_IN_FORMATTERS, ...appFormatters }
+		expect(merged.connectionStatus('disabled')).toBe('Switched off')
 		expect(formatters.connectionStatus('disabled')).toBe('Switched off')
 	})
 })

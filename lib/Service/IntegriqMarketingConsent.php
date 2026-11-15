@@ -1,0 +1,472 @@
+<?php
+
+/**
+ * Pipelinq IntegriqMarketingConsent.
+ *
+ * The marketing side of the cutover: blasts, journeys and list mail ask
+ * integriq, and list consent, the preference centre and withdrawals write to
+ * integriq. ComplianceService keeps its signatures and its dunning
+ * suppression and bounce handling, and hands this class the consent question.
+ *
+ * @category Service
+ * @package  OCA\Pipelinq\Service
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ *
+ * @version GIT: <git-id>
+ *
+ * @link https://pipelinq.nl
+ *
+ * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Service;
+
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
+use OCA\Pipelinq\Service\Consent\ListConsentGrant;
+
+/**
+ * Marketing consent questions and writes, through integriq.
+ *
+ * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+ */
+class IntegriqMarketingConsent {
+
+	/**
+	 * Withdrawal reasons that are deliverability, not a wish. They stay in pipelinq.
+	 *
+	 * @var array<int,string>
+	 */
+	public const BOUNCE_REASONS = ['bounce-hard', 'bounce-soft-x5'];
+
+	/**
+	 * The legacy-ref suffix per state.
+	 *
+	 * @var array<string,string>
+	 */
+	private const STATE_SUFFIX = ['opted-in' => 'in', 'opted-out' => 'out'];
+
+	/**
+	 * Constructor.
+	 *
+	 * @param IntegriqConsentClient $integriq  Asks and records.
+	 * @param ContactAddressLookup  $addresses The contact's email or phone.
+	 */
+	public function __construct(
+		private readonly IntegriqConsentClient $integriq,
+		private readonly ContactAddressLookup $addresses,
+	) {
+	}//end __construct()
+
+	/**
+	 * Whether the cutover happened.
+	 *
+	 * @return bool True when integriq answers pipelinq's consent questions.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
+	 */
+	public function isActive(): bool {
+		return $this->integriq->isCutover();
+	}//end isActive()
+
+	/**
+	 * The category and consent flag for a send intent.
+	 *
+	 * @param string $intent `promotional` or `service`.
+	 *
+	 * @return array{0:string,1:bool} Category and requiresConsent.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function categoryFor(string $intent): array {
+		if ($intent === ComplianceService::INTENT_SERVICE) {
+			return [IntegriqConsentClient::CATEGORY_SERVICE, false];
+		}
+
+		return [IntegriqConsentClient::CATEGORY_MARKETING, true];
+	}//end categoryFor()
+
+	/**
+	 * Ask integriq about one contact.
+	 *
+	 * @param string      $contactId       Contact UUID, or the address of a public signup.
+	 * @param string      $channel         `email` or `sms`.
+	 * @param string      $category        The category.
+	 * @param bool        $requiresConsent Whether a consent must match.
+	 * @param string|null $listId          The list, for a list send.
+	 *
+	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function decide(string $contactId, string $channel, string $category, bool $requiresConsent, ?string $listId = null): array {
+		return $this->integriq->decideOne(
+			ask: new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent),
+			recipient: $this->recipientFor(contact: [$contactId, $channel], listId: $listId),
+		);
+	}//end decide()
+
+	/**
+	 * The recipient integriq is asked about for one contact.
+	 *
+	 * @param array{0: string, 1: string} $contact The contact UUID (or signup address) and the channel.
+	 * @param string|null                 $listId  The list, for a list send.
+	 *
+	 * @return array{address: string, contactRef: string, listRef: string}
+	 */
+	private function recipientFor(array $contact, ?string $listId): array {
+		[$contactId, $channel] = $contact;
+		return [
+			'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+			'contactRef' => $this->contactRefOf(contactId: $contactId),
+			'listRef' => (string)$listId,
+		];
+	}//end recipientFor()
+
+	/**
+	 * Ask integriq about a whole segment, one event per 500 members.
+	 *
+	 * @param array<int,array<string,mixed>> $members  Segment members, each with `contactId` and maybe `email`.
+	 * @param string                         $channel  `email` or `sms`.
+	 * @param string                         $category The category.
+	 * @param bool                           $requiresConsent Whether a consent must match.
+	 *
+	 * @return array<string,array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null}> By contact id.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function decideMembers(array $members, string $channel, string $category, bool $requiresConsent): array {
+		[$recipients, $byAddress] = $this->recipientsOf(members: $members, channel: $channel);
+
+		$ask = new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent);
+		$decisions = $this->integriq->decide(question: $ask->question(), recipients: $recipients);
+
+		return $this->decisionsByContact(decisions: $decisions, byAddress: $byAddress);
+	}//end decideMembers()
+
+	/**
+	 * The recipients to ask about, and the contact ids behind each address.
+	 *
+	 * @param array<int,array<string,mixed>> $members Segment members, each with `contactId` and maybe `email`.
+	 * @param string                         $channel `email` or `sms`.
+	 *
+	 * @return array{0: array<int, array{address: string, contactRef: mixed}>, 1: array<string, array<int, string>>}
+	 */
+	private function recipientsOf(array $members, string $channel): array {
+		$recipients = [];
+		$byAddress = [];
+		foreach ($members as $member) {
+			$contactId = (string)($member['contactId'] ?? '');
+			if ($contactId === '') {
+				continue;
+			}
+
+			$address = $this->memberAddress(member: $member, channel: $channel);
+			if ($address === '') {
+				continue;
+			}
+
+			$recipients[] = ['address' => $address, 'contactRef' => $this->contactRefOf(contactId: $contactId)];
+			$byAddress[$address][] = $contactId;
+		}//end foreach
+
+		return [$recipients, $byAddress];
+	}//end recipientsOf()
+
+	/**
+	 * The member's address on the channel: its own email first, then the address book.
+	 *
+	 * @param array<string,mixed> $member  The segment member, with its `contactId`.
+	 * @param string              $channel `email` or `sms`.
+	 *
+	 * @return string
+	 */
+	private function memberAddress(array $member, string $channel): string {
+		$address = '';
+		if ($channel === 'email') {
+			$address = trim((string)($member['email'] ?? ''));
+		}
+
+		if ($address === '') {
+			$address = $this->addresses->addressFor(contactId: (string)($member['contactId'] ?? ''), channel: $channel);
+		}
+
+		return $address;
+	}//end memberAddress()
+
+	/**
+	 * Integriq's decisions, spread over every contact id behind each address.
+	 *
+	 * @param iterable<string, mixed>           $decisions The decisions, by address.
+	 * @param array<string, array<int, string>> $byAddress The contact ids behind each address.
+	 *
+	 * @return array<string, mixed> By contact id.
+	 */
+	private function decisionsByContact(iterable $decisions, array $byAddress): array {
+		$out = [];
+		foreach ($decisions as $address => $decision) {
+			foreach (($byAddress[$address] ?? []) as $contactId) {
+				$out[$contactId] = $decision;
+			}
+		}
+
+		return $out;
+	}//end decisionsByContact()
+
+	/**
+	 * Hand integriq a list consent.
+	 *
+	 * @param string              $contactId   Contact UUID, or a signup address.
+	 * @param string              $listId      The list.
+	 * @param string              $channel     The channel.
+	 * @param string              $lawfulBasis The AVG article 6 basis.
+	 * @param string              $source      How the consent was given.
+	 * @param array<string,mixed> $evidence    What was shown and when.
+	 *
+	 * @return bool True when integriq took it; false keeps it in pipelinq.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 */
+	public function recordListConsent(
+		string $contactId,
+		string $listId,
+		string $channel,
+		string $lawfulBasis,
+		string $source,
+		array $evidence,
+	): bool {
+		return $this->recordGrant(grant: new ListConsentGrant(
+			contactId: $contactId, listId: $listId, channel: $channel,
+			lawfulBasis: $lawfulBasis, source: $source, evidence: $evidence
+		));
+	}//end recordListConsent()
+
+	/**
+	 * Hand integriq one list consent.
+	 *
+	 * @param ListConsentGrant $grant The list consent.
+	 *
+	 * @return bool True when integriq took it; false keeps it in pipelinq.
+	 */
+	private function recordGrant(ListConsentGrant $grant): bool {
+		return $this->integriq->record(
+			request: [
+				'address' => $this->addresses->addressFor(contactId: $grant->contactId, channel: $grant->channel),
+				'state' => 'opted-in',
+				'scope' => 'list',
+				'channel' => $grant->channel,
+				'ref' => $grant->listId,
+				'contactRef' => $this->contactRefOf(contactId: $grant->contactId),
+				'lawfulBasis' => $grant->lawfulBasis,
+				'evidence' => $grant->evidence,
+				'source' => $grant->source,
+				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
+			]
+		)['recorded'];
+	}//end recordGrant()
+
+	/**
+	 * Hand integriq a withdrawal. A bounce is not a wish and is never handed over.
+	 *
+	 * @param string      $contactId Contact UUID, or a signup address.
+	 * @param string      $channel   The channel.
+	 * @param string      $reason    The withdrawal reason.
+	 * @param string|null $listId    The list, or null for the channel.
+	 *
+	 * @return bool True when integriq took it; false keeps it in pipelinq.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 */
+	public function recordWithdrawal(string $contactId, string $channel, string $reason, ?string $listId = null): bool {
+		if (in_array($reason, self::BOUNCE_REASONS, true) === true) {
+			return false;
+		}
+
+		return $this->recordOptOut(contact: [$contactId, $channel], withdrawal: ['reason' => $reason, 'listId' => $listId]);
+	}//end recordWithdrawal()
+
+	/**
+	 * Hand integriq a withdrawal that is a wish.
+	 *
+	 * @param array{0: string, 1: string}                $contact    The contact UUID (or signup address) and the channel.
+	 * @param array{reason: string, listId: string|null} $withdrawal The withdrawal reason and the list, or null for the channel.
+	 *
+	 * @return bool True when integriq took it; false keeps it in pipelinq.
+	 */
+	private function recordOptOut(array $contact, array $withdrawal): bool {
+		[$contactId, $channel] = $contact;
+		return $this->integriq->record(
+			request: [
+				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+				'state' => 'opted-out',
+				'scope' => $this->withdrawalScope(listId: $withdrawal['listId']),
+				'channel' => $channel,
+				'ref' => (string)$withdrawal['listId'],
+				'contactRef' => $this->contactRefOf(contactId: $contactId),
+				'source' => $withdrawal['reason'],
+				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
+			]
+		)['recorded'];
+	}//end recordOptOut()
+
+	/**
+	 * The scope of a withdrawal: the list when one is named, else the channel.
+	 *
+	 * @param string|null $listId The list, or null for the channel.
+	 *
+	 * @return string `list` or `channel`.
+	 */
+	private function withdrawalScope(?string $listId): string {
+		if ($listId !== null && $listId !== '') {
+			return 'list';
+		}
+
+		return 'channel';
+	}//end withdrawalScope()
+
+	/**
+	 * The change request for one consentRecord, or null when it is not migrated.
+	 *
+	 * Mapping of hydra design section 7: a live record is an opt-in on its
+	 * channel or list, a withdrawal is an opt-out on the same scope, a bounce
+	 * is not migrated.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 * @param string              $id  Its UUID.
+	 *
+	 * @return array<string,mixed>|null The request, or null for a bounce.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
+	 */
+	public function changeRequestFor(array $row, string $id): ?array {
+		if ($this->isBounce(row: $row) === true) {
+			return null;
+		}
+
+		$state = $this->recordState(row: $row);
+		$request = $this->consentRequest(row: $row, state: $state);
+		// The UUID plus the state, so a later withdrawal of the same record
+		// is a new wish. Fits integriq's 64-character legacy_uuid column.
+		$request['legacyRef'] = $id.':'.self::STATE_SUFFIX[$state];
+		if ($state === 'opted-in') {
+			$request['lawfulBasis'] = (string)($row['lawfulBasis'] ?? '');
+			return $request;
+		}
+
+		$request['source'] = (string)($row['withdrawnReason'] ?? '');
+		return $request;
+	}//end changeRequestFor()
+
+	/**
+	 * Whether a consentRecord was withdrawn by a bounce, which is not migrated.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return bool True for a bounce.
+	 */
+	private function isBounce(array $row): bool {
+		$withdrawnAt = trim((string)($row['withdrawnAt'] ?? ''));
+		$reason = (string)($row['withdrawnReason'] ?? '');
+		return $withdrawnAt !== '' && in_array($reason, self::BOUNCE_REASONS, true) === true;
+	}//end isBounce()
+
+	/**
+	 * `opted-out` for a withdrawn record, `opted-in` for a live one.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return string The state.
+	 */
+	private function recordState(array $row): string {
+		if (trim((string)($row['withdrawnAt'] ?? '')) !== '') {
+			return 'opted-out';
+		}
+
+		return 'opted-in';
+	}//end recordState()
+
+	/**
+	 * The change request's address, scope, evidence and source for a record in a state.
+	 *
+	 * @param array<string,mixed> $row   The consentRecord.
+	 * @param string              $state Its state.
+	 *
+	 * @return array<string,mixed> The request.
+	 */
+	private function consentRequest(array $row, string $state): array {
+		$contactId = (string)($row['contactId'] ?? '');
+		$channel = strtolower((string)($row['channel'] ?? ''));
+		$listId = trim((string)($row['listId'] ?? ''));
+		$scope = 'channel';
+		if ($listId !== '') {
+			$scope = 'list';
+		}
+
+		return [
+			'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+			'state' => $state,
+			'scope' => $scope,
+			'channel' => $channel,
+			'ref' => $listId,
+			'contactRef' => $this->contactRefOf(contactId: $contactId),
+			'evidence' => $this->evidenceOf(row: $row),
+			'source' => (string)($row['consentSource'] ?? ''),
+			'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
+		];
+	}//end consentRequest()
+
+	/**
+	 * A record's evidence as a map; a plain value becomes its `text`.
+	 *
+	 * @param array<string,mixed> $row The consentRecord.
+	 *
+	 * @return array<string,mixed> The evidence.
+	 */
+	private function evidenceOf(array $row): array {
+		$evidence = ($row['evidence'] ?? []);
+		if (is_array($evidence) === false) {
+			return ['text' => (string)$evidence];
+		}
+
+		return $evidence;
+	}//end evidenceOf()
+
+	/**
+	 * Hand integriq one prepared change request.
+	 *
+	 * @param array<string,mixed> $request The request.
+	 *
+	 * @return array{recorded:bool,recordId:int|null,code:string,reason:string} The outcome.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
+	 */
+	public function record(array $request): array {
+		return $this->integriq->record(request: $request);
+	}//end record()
+
+	/**
+	 * The contact ref integriq keeps: a UUID, never an address.
+	 *
+	 * @param string $contactId The pipelinq contact id.
+	 *
+	 * @return string The ref, or empty for a signup recorded under an address.
+	 */
+	private function contactRefOf(string $contactId): string {
+		if (str_contains($contactId, '@') === true) {
+			return '';
+		}
+
+		return $contactId;
+	}//end contactRefOf()
+}//end class

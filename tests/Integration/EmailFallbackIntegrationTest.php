@@ -21,8 +21,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-FALLBACK-004
  */
 
 declare(strict_types=1);
@@ -72,7 +72,9 @@ class EmailFallbackIntegrationTest extends TestCase {
 
 		$sender = new EmailFallbackSender($mailer,
 			$appConfig,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->createMock(IAppConfig::class)),
+			new \OCA\Pipelinq\Service\UnsubscribeMail($this->createMock(\Psr\Container\ContainerInterface::class), $this->createMock(\OCP\IL10N::class), $this->createMock(LoggerInterface::class))
 		);
 
 		$sent = $sender->send(
@@ -112,7 +114,9 @@ class EmailFallbackIntegrationTest extends TestCase {
 
 		$sender = new EmailFallbackSender($mailer,
 			$appConfig,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->createMock(IAppConfig::class)),
+			new \OCA\Pipelinq\Service\UnsubscribeMail($this->createMock(\Psr\Container\ContainerInterface::class), $this->createMock(\OCP\IL10N::class), $this->createMock(LoggerInterface::class))
 		);
 
 		$sender->send(
@@ -133,7 +137,9 @@ class EmailFallbackIntegrationTest extends TestCase {
 		$mailer->method('validateMailAddress')->willReturn(false);
 		$sender = new EmailFallbackSender($mailer,
 			$this->createMock(IAppConfig::class),
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->createMock(IAppConfig::class)),
+			new \OCA\Pipelinq\Service\UnsubscribeMail($this->createMock(\Psr\Container\ContainerInterface::class), $this->createMock(\OCP\IL10N::class), $this->createMock(LoggerInterface::class))
 		);
 		$this->expectException(\RuntimeException::class);
 		$sender->send(['subject' => 'x', 'body' => '<p>x</p>'], 'not-an-email');

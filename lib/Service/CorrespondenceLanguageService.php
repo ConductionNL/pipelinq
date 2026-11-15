@@ -34,7 +34,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+ * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
  */
 
 declare(strict_types=1);
@@ -42,7 +42,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\L10N\IFactory;
@@ -52,9 +56,11 @@ use Throwable;
 /**
  * Resolve the language to write to a party in, with its reason.
  *
- * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
+ * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
  */
-class CorrespondenceLanguageService {
+class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInterface {
+	use PartyObjectRead;
+
 	/**
 	 * The rule that produced an answer: the party asked for it.
 	 *
@@ -108,26 +114,10 @@ class CorrespondenceLanguageService {
 	 * @return array<int, string> The available tags, sorted, always including
 	 *   the floor.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function available(): array {
-		try {
-			$languages = $this->l10nFactory->findAvailableLanguages(Application::APP_ID);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'CorrespondenceLanguageService: could not read the available languages',
-				['exception' => $e->getMessage()]
-			);
-			$languages = [];
-		}
-
-		$tags = [];
-		foreach ($languages as $language) {
-			$tag = trim((string)$language);
-			if ($tag !== '' && in_array($tag, $tags, true) === false) {
-				$tags[] = $tag;
-			}
-		}
+		$tags = $this->languageTags(languages: $this->availableLanguages());
 
 		// The floor is always offered: an instance that renders nothing else
 		// still renders its source strings, and a picker with no options at
@@ -142,13 +132,55 @@ class CorrespondenceLanguageService {
 	}//end available()
 
 	/**
+	 * The languages Nextcloud lists for the app, or none when they cannot be read.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function availableLanguages(): array {
+		try {
+			return $this->l10nFactory->findAvailableLanguages(AppIdentity::APP_ID);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'CorrespondenceLanguageService: could not read the available languages',
+				['exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end availableLanguages()
+
+	/**
+	 * The distinct well-formed language tags among the listed languages.
+	 *
+	 * @param array<int, mixed> $languages The listed languages.
+	 *
+	 * @return array<int, string>
+	 */
+	private function languageTags(array $languages): array {
+		$tags = [];
+		foreach ($languages as $language) {
+			$tag = trim((string)$language);
+			// Nextcloud lists every l10n/*.json, and pipelinq keeps a
+			// `.schema-l10n-baseline.json` there that is not a language.
+			if (preg_match('/^[a-z]{2,3}(?:[_-][A-Za-z0-9]{2,8})*$/', $tag) !== 1) {
+				continue;
+			}
+
+			if (in_array($tag, $tags, true) === false) {
+				$tags[] = $tag;
+			}
+		}
+
+		return $tags;
+	}//end languageTags()
+
+	/**
 	 * Whether a tag may be written, and what to say when it may not.
 	 *
 	 * @param string $tag The BCP 47 tag.
 	 *
 	 * @return array{valid: bool, reason: string} The verdict.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function validate(string $tag): array {
 		$tag = trim($tag);
@@ -190,7 +222,7 @@ class CorrespondenceLanguageService {
 	 * @return array{language: string, rule: string, partyPreference: string}
 	 *   The answer.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
+	 * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
 	 */
 	public function resolveFor(array $party): array {
 		$preference = trim((string)($party['correspondenceLanguage'] ?? ''));
@@ -226,7 +258,7 @@ class CorrespondenceLanguageService {
 	 *
 	 * @return array<string, mixed> `status` plus the answer, or `error`.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
+	 * @spec openspec/specs/parties/spec.md#requirement-the-resolver-is-published-and-no-caller-reads-the-property-directly-req-pcl-005
 	 */
 	public function resolve(string $partyId): array {
 		$party = $this->readParty(partyId: $partyId);
@@ -245,7 +277,7 @@ class CorrespondenceLanguageService {
 	 *
 	 * @return array<string, mixed> `status` plus the answer, or `error`.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
+	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function setPreference(string $partyId, string $tag): array {
 		$party = $this->readParty(partyId: $partyId);
@@ -263,9 +295,13 @@ class CorrespondenceLanguageService {
 		try {
 			$this->objectService->saveObject(
 				object: $party,
-				register: $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-				uuid: (string)($party['id'] ?? $party['uuid'] ?? $partyId),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+							schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '')
+						),
+					uuid: (string)($party['id'] ?? $party['uuid'] ?? $partyId)
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -293,7 +329,7 @@ class CorrespondenceLanguageService {
 	 * @return array{needsChoice: bool, language: string, options: array<int, string>}
 	 *   What the merge should do.
 	 *
-	 * @spec openspec/changes/correspondence-language-per-party/specs/parties/spec.md#requirement-a-merge-does-not-pick-a-language-silently-req-pcl-006
+	 * @spec openspec/specs/parties/spec.md#requirement-a-merge-does-not-pick-a-language-silently-req-pcl-006
 	 */
 	public function mergeAnswer(array $winner, array $loser): array {
 		$a = trim((string)($winner['correspondenceLanguage'] ?? ''));
@@ -324,27 +360,6 @@ class CorrespondenceLanguageService {
 			return null;
 		}
 
-		try {
-			$entity = $this->objectService->find(id: $partyId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'CorrespondenceLanguageService: the party could not be read',
-				['party' => $partyId, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $partyId, failure: 'CorrespondenceLanguageService: the party could not be read', idKey: 'party');
 	}//end readParty()
 }//end class

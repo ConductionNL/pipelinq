@@ -45,7 +45,15 @@ const manifest = JSON.parse(readFileSync(resolve(root, 'src/manifest.json'), 'ut
 const registry = readFileSync(resolve(root, 'src/registry.js'), 'utf8')
 
 describe('party warnings are mounted', () => {
-	it.each(['ClientDetail', 'ContactDetail'])(
+	it('ClientDetail renders them in the contact strip, first in the band across the page', () => {
+		const page = manifest.pages.find((p) => p.id === 'ClientDetail')
+		const widget = page.config.widgets.find((w) => w.type === 'PartyContactStripWidget')
+		expect(page.config.band[0].widgetId).toBe(widget.id)
+		expect(registry).toContain("'PartyContactStripWidget',\n\t\t\tPartyContactStrip,")
+		expect(readFileSync(resolve(root, 'src/components/PartyContactStrip.vue'), 'utf8')).toContain('<PartyIndicatorPanel')
+	})
+
+	it.each(['ContactDetail'])(
 		'%s renders the panel before the body',
 		(pageId) => {
 			const page = manifest.pages.find((p) => p.id === pageId)
@@ -55,9 +63,20 @@ describe('party warnings are mounted', () => {
 			)
 			expect(widget, `${pageId} mounts PartyIndicatorPanel`).toBeTruthy()
 			expect(widget.placement).toBe('before-body')
-			expect(widget.props).toEqual({ partyId: '@objectId' })
+			// Board PqContactpersoon: one framed line with the shield, "No
+			// warnings on this contact person." and the Add a warning link.
+			expect(widget.props).toEqual({ partyId: '@objectId', compact: true, framed: true, partyKind: 'contact' })
 		},
 	)
+
+	it('names a contact person in the none line and frames the strip on its own', () => {
+		const panel = readFileSync(resolve(root, 'src/components/PartyIndicatorPanel.vue'), 'utf8')
+		expect(panel).toContain("t('pipelinq', 'No warnings on this contact person.')")
+		expect(panel).toMatch(/'party-indicators--framed': compact && framed/)
+		const nl = JSON.parse(readFileSync(resolve(root, 'l10n/nl.json'), 'utf8')).translations
+		expect(nl['No warnings on this contact person.']).toBe('Geen waarschuwingen bij deze contactpersoon.')
+		expect(nl.Call).toBe('Bellen')
+	})
 
 	it('registers the panel as a section component', () => {
 		expect(registry).toMatch(

@@ -7,20 +7,25 @@
   - identity fields (status / source / startAt / endAt / depositAmount / …)
   - auto-render in the detail-page body via CnObjectDataWidget; this section adds
   - the parts the auto-body + relatedCollections cannot express:
-  -   1. the six TIME-WINDOW-gated admin actions (Confirm deposit / Mark completed
-  -      / Mark no-show / Reschedule / Send reminder / Cancel) which POST to bespoke
-  -      /api/bookings/{id}/{action} endpoints with side-effects (emails, no-show
-  -      fees) — Reschedule CREATES A NEW booking UUID and navigates to it. These
-  -      are NOT plain OR /transition status flips, so CnLifecycleActions cannot
-  -      drive them even though booking has an x-openregister-lifecycle;
-  -   2. the inline notes / internalNotes editor (objectStore save);
-  -   3. resourceAssignments + statusHistory — ARRAY fields ON the booking (not FK
-  -      children), with cross-schema id->name resolution for resources;
-  -   4. the computed Timeline (a merge of timestamp fields);
-  -   5. human-readable Service / Customer names resolved across other schemas.
+  -   1. human-readable Service / Customer names resolved across other schemas
+  -      (part "context");
+  -   2. resourceAssignments, an ARRAY field ON the booking, with cross-schema
+  -      id->name resolution for resources (part "assignments");
+  -   3. the computed Timeline, a merge of the timestamp fields and the
+  -      statusHistory entries (part "timeline").
+  -
+  - The `part` prop renders one of them, so each can be its own grid widget or
+  - tab. Notes are the notes leaf on the page, and the record history is
+  - OpenRegister's activity in the actions menu, so this section no longer
+  - carries a notes editor or an audit table. The booking page shows its
+  - timeline through the library's `timeline` widget (review-part-two); the
+  - timeline part here only renders in the combined `all` section.
+  -
+  - The admin actions live in the page header (BookingHeaderActions).
   -
   - Self-fetches the booking by id (passed as `bookingId` via @objectId, with a
-  - cnSectionContext inject fallback) so it stays in sync after an action.
+  - cnSectionContext inject fallback) and re-reads it on `cn:page:refresh`, which
+  - a header action sends after it succeeds.
   -
   - @spec openspec/specs/appointment-booking/spec.md
   -->
@@ -28,53 +33,65 @@
 	<div class="booking-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
-			<section class="booking-section__actions">
-				<NcButton
-					v-if="canConfirmDeposit"
-					variant="primary"
-					:disabled="busy"
-					@click="confirmDeposit">
-					{{ t('pipelinq', 'Confirm deposit') }}
-				</NcButton>
-				<NcButton
-					v-if="canMarkCompleted"
-					variant="primary"
-					:disabled="busy"
-					@click="markCompleted">
-					{{ t('pipelinq', 'Mark completed') }}
-				</NcButton>
-				<NcButton
-					v-if="canMarkNoShow"
-					variant="error"
-					:disabled="busy"
-					@click="markNoShow">
-					{{ t('pipelinq', 'Mark no-show') }}
-				</NcButton>
-				<NcButton
-					v-if="canReschedule"
-					variant="secondary"
-					:disabled="busy"
-					@click="showReschedule = true">
-					{{ t('pipelinq', 'Reschedule') }}
-				</NcButton>
+			<section v-if="part === 'customer'" class="booking-section__block booking-person">
+				<h2 class="booking-section__title cn-side-heading">
+					{{ customerKindLabel }}
+				</h2>
+				<div class="booking-person__head">
+					<span class="booking-person__initials" aria-hidden="true">{{ customerInitials }}</span>
+					<div>
+						<strong>{{ customerLabel }}</strong>
+						<span v-if="customer && customer.address" class="booking-person__sub">{{ customerKindLabel }} · {{ customer.address }}</span>
+					</div>
+				</div>
+				<dl class="booking-facts">
+					<template v-if="customer && customer.phone">
+						<dt>{{ t('pipelinq', 'Phone') }}</dt>
+						<dd>{{ customer.phone }}</dd>
+					</template>
+					<template v-if="customer && customer.email">
+						<dt>{{ t('pipelinq', 'Email') }}</dt>
+						<dd>{{ customer.email }}</dd>
+					</template>
+				</dl>
+				<router-link v-if="customerRoute" :to="customerRoute" class="booking-section__link">
+					{{ t('pipelinq', 'Contact details and earlier tickets') }}
+				</router-link>
+			</section>
+
+			<section v-if="part === 'when'" class="booking-section__block booking-when">
+				<h2 class="booking-section__title cn-side-heading">
+					{{ t('pipelinq', 'When and where') }}
+				</h2>
+				<p class="booking-when__slot">
+					<span>{{ whenDay }}</span>
+					<span>{{ whenTime }}</span>
+				</p>
+				<p v-if="booking.location" class="booking-when__place">
+					<MapMarkerOutline :size="18" />
+					{{ booking.location }}
+				</p>
+				<dl class="booking-facts">
+					<template v-if="booking.assignee">
+						<dt>{{ t('pipelinq', 'Handler') }}</dt>
+						<dd>{{ handlerName }}</dd>
+					</template>
+					<dt>{{ t('pipelinq', 'Reminder') }}</dt>
+					<dd>{{ booking.reminderSentAt ? formatDateTime(booking.reminderSentAt) : t('pipelinq', 'Not sent yet') }}</dd>
+				</dl>
 				<NcButton
 					v-if="canSendReminder"
+					class="cn-button--tonal"
 					variant="secondary"
-					:disabled="busy"
+					:disabled="sending"
+					data-testid="booking-action-send-reminder"
 					@click="sendReminder">
 					{{ t('pipelinq', 'Send reminder') }}
 				</NcButton>
-				<NcButton
-					v-if="canCancel"
-					variant="error"
-					:disabled="busy"
-					@click="showCancel = true">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
 			</section>
 
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Context') }}</h4>
+			<section v-if="shows('context')" class="booking-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Context') }}</h4>
 				<div class="info-grid">
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Service') }}</label>
@@ -91,48 +108,22 @@
 					<div v-if="booking.previousBookingId" class="info-field">
 						<label>{{ t('pipelinq', 'Rescheduled from') }}</label>
 						<span>
-							<a href="#" @click.prevent="openPrevious">
+							<router-link
+								:to="{
+									name: 'BookingDetail',
+									params: { id: booking.previousBookingId },
+								}">
 								{{ booking.previousBookingId }}
-							</a>
+							</router-link>
 						</span>
 					</div>
 				</div>
 			</section>
 
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Notes') }}</h4>
-				<div class="form-group">
-					<label for="booking-notes">{{
-						t('pipelinq', 'Customer-facing notes')
-					}}</label>
-					<textarea
-						id="booking-notes"
-						v-model="editableNotes"
-						rows="3"
-						maxlength="4000" />
-				</div>
-				<div class="form-group">
-					<label for="booking-internal-notes">{{
-						t('pipelinq', 'Internal staff notes')
-					}}</label>
-					<textarea
-						id="booking-internal-notes"
-						v-model="editableInternalNotes"
-						rows="3"
-						maxlength="4000" />
-				</div>
-				<div class="notes-actions">
-					<NcButton
-						variant="primary"
-						:disabled="busy || !notesDirty"
-						@click="saveNotes">
-						{{ t('pipelinq', 'Save notes') }}
-					</NcButton>
-				</div>
-			</section>
-
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Resource assignments') }}</h4>
+			<section v-if="shows('assignments')" class="booking-section__block">
+				<h4 v-if="part === 'all'">
+					{{ t('pipelinq', 'Resource assignments') }}
+				</h4>
 				<div v-if="!assignments.length" class="section-empty">
 					<p>{{ t('pipelinq', 'No resource assignments recorded.') }}</p>
 				</div>
@@ -158,144 +149,218 @@
 				</div>
 			</section>
 
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Audit trail') }}</h4>
-				<div v-if="!history.length" class="section-empty">
-					<p>{{ t('pipelinq', 'No status changes recorded.') }}</p>
-				</div>
-				<div v-else class="viewTableContainer">
-					<table class="viewTable">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Changed at') }}
-								</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Changed by') }}
-								</th>
-								<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="(entry, idx) in history" :key="idx">
-								<td>{{ statusLabel(entry.status) }}</td>
-								<td>{{ formatDateTime(entry.changedAt) }}</td>
-								<td>{{ entry.changedBy || '-' }}</td>
-								<td>{{ entry.reason || '-' }}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</section>
-
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Timeline') }}</h4>
-				<ol class="timeline">
+			<section v-if="shows('timeline')" class="booking-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Timeline') }}</h4>
+				<p v-if="!timeline.length" class="section-empty">
+					{{ t('pipelinq', 'No events yet.') }}
+				</p>
+				<ol v-else class="booking-timeline">
 					<li
-						v-for="(event, idx) in timeline"
+						v-for="(event, idx) in timelineWithNow"
 						:key="idx"
-						:class="`timeline-${event.kind}`">
-						<span class="timeline-when">{{
-							formatDateTime(event.at)
-						}}</span>
-						<span class="timeline-text">{{ event.text }}</span>
+						class="booking-timeline__event"
+						:class="[
+							`booking-timeline__event--${event.kind}`,
+							{ 'booking-timeline__event--upcoming': event.upcoming },
+						]">
+						<span class="booking-timeline__marker" aria-hidden="true">
+							<component
+								:is="event.icon"
+								v-if="event.icon"
+								:size="16" />
+						</span>
+						<div class="booking-timeline__body">
+							<span class="booking-timeline__text">{{
+								event.text
+							}}</span>
+							<time
+								v-if="event.at"
+								class="booking-timeline__when"
+								:datetime="event.at">
+								{{ formatDateTime(event.at) }}
+							</time>
+						</div>
 					</li>
 				</ol>
 			</section>
-
-			<RescheduleBookingDialog
-				v-if="showReschedule"
-				:currentStartAt="booking.startAt || ''"
-				@confirm="onReschedule"
-				@cancel="showReschedule = false" />
-
-			<CancelBookingDialog
-				v-if="showCancel"
-				@confirm="onCancel"
-				@cancel="showCancel = false" />
 		</template>
 	</div>
 </template>
 
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
-import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
+import CashCheck from 'vue-material-design-icons/CashCheck.vue'
+import CashRemove from 'vue-material-design-icons/CashRemove.vue'
+import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
+import ClockStart from 'vue-material-design-icons/ClockStart.vue'
+import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
+import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
+import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
+import { currencyOr } from '../../services/reportingCurrency.js'
+import { createUserDisplayNameFormatter } from '../../services/userDisplayName.js'
+import { slotLabel, timeRange } from '../../utils/bookingTime.js'
+import { BOOKING_STATUS_LABELS, bookingCurrency, bookingDateTime } from './bookingFormat.js'
+import bookingSectionMixin from './bookingSectionMixin.js'
 
-const STATUS_LABELS = {
-	'pending-deposit': 'Awaiting deposit',
-	confirmed: 'Confirmed',
-	completed: 'Completed',
-	'no-show': 'No-show',
-	'cancelled-by-customer': 'Cancelled (customer)',
-	'cancelled-by-business': 'Cancelled (business)',
-	rescheduled: 'Rescheduled',
+const userName = createUserDisplayNameFormatter()
+
+const TIMELINE_ICONS = {
+	start: ClockStart,
+	end: ClockEnd,
+	email: EmailCheckOutline,
+	deposit: CashCheck,
+	fee: CashRemove,
+	cancel: CalendarRemove,
+	status: ProgressCheck,
 }
 
-const HOUR_MS = 60 * 60 * 1000
+/**
+ * The booking's timestamp fields the timeline lists, each with its kind and its words.
+ */
+const TIMESTAMP_EVENTS = [
+	['startAt', 'start', () => t('pipelinq', 'Booking starts')],
+	['endAt', 'end', () => t('pipelinq', 'Booking ends')],
+	['confirmationSentAt', 'email', () => t('pipelinq', 'Confirmation email sent')],
+	['reminderSentAt', 'email', () => t('pipelinq', 'Reminder email sent')],
+	['depositPaidAt', 'deposit', () => t('pipelinq', 'Deposit cleared')],
+	['noShowFeeChargedAt', 'fee', () => t('pipelinq', 'No-show fee charged')],
+	['cancelledAt', 'cancel', () => t('pipelinq', 'Cancelled')],
+]
+
+/** The parts this section can render on its own. */
+const PARTS = ['all', 'context', 'assignments', 'timeline', 'customer', 'when']
+
+const STATUS_LABELS = BOOKING_STATUS_LABELS
 
 export default {
 	name: 'BookingDetailSection',
 	components: {
+		MapMarkerOutline,
 		NcButton,
 		NcLoadingIcon,
-		RescheduleBookingDialog,
-		CancelBookingDialog,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [bookingSectionMixin],
 
 	props: {
-		/** The booking id (token-resolved from `@objectId` by CnBodySections). */
-		bookingId: {
+		/**
+		 * Which part to render: `context`, `assignments`, `timeline`, or
+		 * `all` (each under its own heading).
+		 */
+		part: {
 			type: String,
-			default: '',
+			default: 'all',
+			validator: (v) => PARTS.includes(v),
 		},
 	},
 
 	data() {
 		return {
-			booking: {},
-			loading: false,
-			busy: false,
-			showReschedule: false,
-			showCancel: false,
-			editableNotes: '',
-			editableInternalNotes: '',
-			savedNotes: '',
-			savedInternalNotes: '',
-			resourceLookup: {},
 			service: null,
 			customer: null,
+			customerIsContact: false,
 			loadedCustomerId: null,
+			sending: false,
 			contextLoading: false,
 		}
 	},
 
 	computed: {
-		objectStore() {
-			return useObjectStore()
-		},
-
-		/** The resolved booking id — prop wins, else the injected section context. */
-		resolvedId() {
-			if (this.bookingId) {
-				return this.bookingId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
-		},
-
 		serviceName() {
 			return this.service?.name || this.booking.serviceId || '-'
+		},
+
+		/**
+		 * The customer's initials for the avatar of the customer card.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		customerInitials() {
+			const words = String(this.customerLabel || '').split(/\s+/).filter(Boolean)
+			if (words.length === 0) {
+				return ''
+			}
+			const first = words[0].charAt(0)
+			const last = words.length > 1 ? words[words.length - 1].charAt(0) : ''
+			return (first + last).toUpperCase()
+		},
+
+		/**
+		 * The page of the customer: the client, or the contact person.
+		 *
+		 * @return {object|null} The route, or null when the customer is unknown.
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		customerRoute() {
+			if (!this.customer || !this.booking.customerId) {
+				return null
+			}
+			return {
+				name: this.customerIsContact ? 'ContactDetail' : 'ClientDetail',
+				params: { id: this.booking.customerId },
+			}
+		},
+
+		/**
+		 * The day of the appointment ("Donderdag 22 oktober").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		whenDay() {
+			const label = slotLabel(this.booking.startAt, this.booking.endAt)
+			return label.split(', ')[0] || ''
+		},
+
+		/**
+		 * The time of the appointment ("14:00 tot 15:00").
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		whenTime() {
+			return timeRange(this.booking.startAt, this.booking.endAt)
+		},
+
+		/**
+		 * The handler's display name.
+		 *
+		 * @return {string}
+		 */
+		handlerName() {
+			return userName(this.booking.assignee)
+		},
+
+		/**
+		 * Whether a reminder can go out: a confirmed booking more than an
+		 * hour away, the rule the reminder endpoint applies.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		canSendReminder() {
+			const start = Date.parse(this.booking.startAt || '')
+			return this.booking.status === 'confirmed'
+				&& Number.isFinite(start)
+				&& start - Date.now() > 60 * 60 * 1000
+		},
+
+		/**
+		 * What the customer is, as the side card names it: a resident or an
+		 * organisation (PqAfspraak "Inwoner").
+		 *
+		 * @return {string} The label.
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		customerKindLabel() {
+			return this.customer?.type === 'organization'
+				? t('pipelinq', 'Organisation')
+				: t('pipelinq', 'Resident')
 		},
 
 		customerLabel() {
@@ -310,78 +375,85 @@ export default {
 				: []
 		},
 
-		history() {
+		/**
+		 * The booking's status changes that carry a time and a status.
+		 *
+		 * @return {Array<{status: string, changedAt: string}>}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		statusHistory() {
 			const raw = Array.isArray(this.booking.statusHistory)
 				? this.booking.statusHistory
 				: []
-			return [...raw].sort((a, b) => {
-				const ta = a?.changedAt ? Date.parse(a.changedAt) : 0
-				const tb = b?.changedAt ? Date.parse(b.changedAt) : 0
-				return ta - tb
-			})
+			return raw.filter((entry) => entry && entry.changedAt && entry.status)
 		},
 
+		/**
+		 * The booking's events in time order, merged from its timestamp fields
+		 * and its status changes.
+		 *
+		 * @return {Array<{at: string, kind: string, text: string}>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		timeline() {
-			const events = []
-			if (this.booking.startAt) {
+			const events = TIMESTAMP_EVENTS
+				.filter(([field]) => this.booking[field])
+				.map(([field, kind, text]) => ({ at: this.booking[field], kind, text: text() }))
+			// Status changes, which the dropped audit table used to list.
+			for (const entry of this.statusHistory) {
 				events.push({
-					at: this.booking.startAt,
-					kind: 'start',
-					text: t('pipelinq', 'Booking starts'),
-				})
-			}
-			if (this.booking.endAt) {
-				events.push({
-					at: this.booking.endAt,
-					kind: 'end',
-					text: t('pipelinq', 'Booking ends'),
-				})
-			}
-			if (this.booking.confirmationSentAt) {
-				events.push({
-					at: this.booking.confirmationSentAt,
-					kind: 'email',
-					text: t('pipelinq', 'Confirmation email sent'),
-				})
-			}
-			if (this.booking.reminderSentAt) {
-				events.push({
-					at: this.booking.reminderSentAt,
-					kind: 'email',
-					text: t('pipelinq', 'Reminder email sent'),
-				})
-			}
-			if (this.booking.depositPaidAt) {
-				events.push({
-					at: this.booking.depositPaidAt,
-					kind: 'payment',
-					text: t('pipelinq', 'Deposit cleared'),
-				})
-			}
-			if (this.booking.noShowFeeChargedAt) {
-				events.push({
-					at: this.booking.noShowFeeChargedAt,
-					kind: 'payment',
-					text: t('pipelinq', 'No-show fee charged'),
-				})
-			}
-			if (this.booking.cancelledAt) {
-				events.push({
-					at: this.booking.cancelledAt,
-					kind: 'cancel',
-					text: t('pipelinq', 'Cancelled'),
+					at: entry.changedAt,
+					kind: 'status',
+					text: t('pipelinq', 'Status: {status}', {
+						status: this.statusLabel(entry.status),
+					}),
 				})
 			}
 			return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
 		},
 
+		/**
+		 * The timeline as rendered: each event with its icon and whether it is
+		 * still ahead, plus a "Now" marker between the past and the upcoming
+		 * events when the booking has both.
+		 *
+		 * @return {Array<{at?: string, kind: string, text: string, icon: object|null, upcoming: boolean}>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
+		timelineWithNow() {
+			const now = Date.now()
+			const events = this.timeline.map((e) => ({
+				...e,
+				icon: TIMELINE_ICONS[e.kind] || null,
+				upcoming: Date.parse(e.at) > now,
+			}))
+			const firstUpcoming = events.findIndex((e) => e.upcoming)
+			if (firstUpcoming > 0) {
+				events.splice(firstUpcoming, 0, {
+					kind: 'now',
+					text: t('pipelinq', 'Now'),
+					icon: null,
+					upcoming: false,
+				})
+			}
+			return events
+		},
+
+		/**
+		 * The deposit, in the service's currency or the reporting currency.
+		 *
+		 * @spec openspec/specs/commercial-dashboard/spec.md
+		 */
 		depositLabel() {
 			const amount = Number(this.booking.depositAmount || 0)
 			if (!amount) return t('pipelinq', 'None')
 			const paid = !!this.booking.depositPaidAt
 			const formatted = this.formatCurrency(
 				amount,
-				this.service?.currency || 'EUR',
+				currencyOr(this.service?.currency),
 			)
 			return paid
 				? t('pipelinq', '{amount} (paid {when})', {
@@ -390,96 +462,75 @@ export default {
 					})
 				: t('pipelinq', '{amount} (pending)', { amount: formatted })
 		},
-
-		notesDirty() {
-			return (
-				this.editableNotes !== this.savedNotes
-				|| this.editableInternalNotes !== this.savedInternalNotes
-			)
-		},
-
-		isFuture() {
-			if (!this.booking.endAt) return false
-			return new Date(this.booking.endAt).getTime() > Date.now()
-		},
-
-		isPast() {
-			if (!this.booking.endAt) return false
-			return new Date(this.booking.endAt).getTime() <= Date.now()
-		},
-
-		hourAway() {
-			if (!this.booking.startAt) return false
-			return new Date(this.booking.startAt).getTime() - Date.now() > HOUR_MS
-		},
-
-		canConfirmDeposit() {
-			return this.booking.status === 'pending-deposit'
-		},
-
-		canMarkCompleted() {
-			return this.booking.status === 'confirmed' && this.isPast
-		},
-
-		canMarkNoShow() {
-			return this.booking.status === 'confirmed' && this.isPast
-		},
-
-		canReschedule() {
-			return (
-				['confirmed', 'pending-deposit'].includes(this.booking.status)
-				&& this.isFuture
-			)
-		},
-
-		canCancel() {
-			return (
-				['confirmed', 'pending-deposit'].includes(this.booking.status)
-				&& this.isFuture
-			)
-		},
-
-		canSendReminder() {
-			return (
-				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
-			)
-		},
-	},
-
-	watch: {
-		resolvedId: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
 	},
 
 	methods: {
+		/**
+		 * Whether a block belongs to the requested part.
+		 *
+		 * @param {string} block The block: context, assignments or timeline.
+		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		shows(block) {
+			return this.part === 'all' || this.part === block
+		},
+
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},
 
 		formatDateTime(iso) {
-			if (!iso) return '-'
-			try {
-				return new Date(iso).toLocaleString('nl-NL')
-			} catch {
-				return iso
-			}
+			return bookingDateTime(iso)
 		},
 
+		/**
+		 * An amount in the given currency, or the reporting currency.
+		 *
+		 * @param {number|string} value The amount.
+		 * @param {string} [currency] The currency code.
+		 * @return {string} The formatted amount.
+		 * @spec openspec/specs/commercial-dashboard/spec.md
+		 */
 		formatCurrency(value, currency) {
-			const code = currency || 'EUR'
-			const n = Number(value) || 0
+			return bookingCurrency(value, currency)
+		},
+
+		/**
+		 * Send the reminder through the booking endpoint, then refresh the page.
+		 *
+		 * @spec openspec/changes/screens-appointments-board/specs/appointment-booking/spec.md
+		 */
+		async sendReminder() {
+			if (!this.resolvedId) {
+				return
+			}
+			this.sending = true
 			try {
-				return new Intl.NumberFormat('nl-NL', {
-					style: 'currency',
-					currency: code,
-					maximumFractionDigits: 2,
-				}).format(n)
+				const response = await fetch(
+					generateUrl(`/apps/pipelinq/api/bookings/${this.resolvedId}/send-reminder`),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: '{}',
+					},
+				)
+				const data = await response.json().catch(() => ({}))
+				if (!response.ok) {
+					showError(data.error || t('pipelinq', 'Action failed.'))
+					return
+				}
+				showSuccess(t('pipelinq', 'Reminder dispatched.'))
+				emit('cn:page:refresh', {})
 			} catch {
-				return `${code} ${n}`
+				showError(t('pipelinq', 'Action failed.'))
+			} finally {
+				this.sending = false
 			}
 		},
 
@@ -489,33 +540,14 @@ export default {
 		},
 
 		/**
-		 * Load the booking and seed the notes editor, then resolve the linked
-		 * Service / Customer / Resource names.
+		 * Once the booking is in, resolve the linked Service / Customer /
+		 * Resource names.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
-		async load() {
-			if (!this.resolvedId) {
-				return
-			}
-			this.loading = true
-			try {
-				this.booking =
-					(await this.objectStore.fetchObject(
-						'appointmentBooking',
-						this.resolvedId,
-					)) || {}
-				this.editableNotes = this.booking.notes || ''
-				this.savedNotes = this.booking.notes || ''
-				this.editableInternalNotes = this.booking.internalNotes || ''
-				this.savedInternalNotes = this.booking.internalNotes || ''
-				await this.loadContext()
-			} catch (err) {
-				showError(
-					err?.response?.data?.error
-						|| t('pipelinq', 'Could not load booking.'),
-				)
-			} finally {
-				this.loading = false
-			}
+		loadLinked() {
+			return this.loadContext()
 		},
 
 		/**
@@ -531,196 +563,161 @@ export default {
 			if (this.contextLoading) return
 			this.contextLoading = true
 			try {
-				const booking = this.booking
-				if (booking.serviceId && !this.service) {
-					this.service = await this.objectStore.fetchObject(
-						'appointmentService',
-						booking.serviceId,
-					)
-				}
-				// Resolve the customer once per id. fetchObject returns null
-				// (it does not throw) on a 404, so fall back to `client` on a
-				// null contact rather than in a catch — and record the id so a
-				// genuinely missing customer is not refetched on every run.
-				if (
-					booking.customerId
-					&& this.loadedCustomerId !== booking.customerId
-				) {
-					this.loadedCustomerId = booking.customerId
-					const contact = await this.objectStore.fetchObject(
-						'contact',
-						booking.customerId,
-					)
-					this.customer =
-						contact
-						|| (await this.objectStore.fetchObject(
-							'client',
-							booking.customerId,
-						))
-				}
-				// De-duplicate resource ids: a booking has one assignment row
-				// per step/time-slot, so the same resource recurs across rows.
-				const resourceIds = [
-					...new Set(
-						(this.assignments || [])
-							.map((a) => a?.resourceId)
-							.filter(Boolean),
-					),
-				].filter((id) => !this.resourceLookup[id])
-				for (const id of resourceIds) {
-					const resource = await this.objectStore.fetchObject(
-						'appointmentResource',
-						id,
-					)
-					if (resource?.name) {
-						this.resourceLookup = {
-							...this.resourceLookup,
-							[id]: resource.name,
-						}
-					}
-				}
+				await this.loadService()
+				await this.loadCustomer()
+				await this.loadResourceNames()
 			} finally {
 				this.contextLoading = false
 			}
 		},
 
-		async saveNotes() {
-			this.busy = true
-			try {
-				const payload = {
-					id: this.resolvedId,
-					notes: this.editableNotes,
-					internalNotes: this.editableInternalNotes,
-				}
-				const saved = await this.objectStore.saveObject(
-					'appointmentBooking',
-					payload,
+		/**
+		 * The booking's service, once.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadService() {
+			if (this.booking.serviceId && !this.service) {
+				this.service = await this.objectStore.fetchObject(
+					'appointmentService',
+					this.booking.serviceId,
 				)
-				if (saved) {
-					this.savedNotes = this.editableNotes
-					this.savedInternalNotes = this.editableInternalNotes
-					showSuccess(t('pipelinq', 'Notes saved.'))
-				} else {
-					showError(t('pipelinq', 'Failed to save notes.'))
-				}
-			} finally {
-				this.busy = false
 			}
 		},
 
 		/**
-		 * POST to a booking-admin endpoint and reload the booking on success.
+		 * The booking's customer, once per id: a contact, else a client.
 		 *
-		 * @param {string} action The path segment (e.g. 'complete').
-		 * @param {object} body   Optional JSON body.
-		 * @param {string} okMsg  Success toast message.
-		 * @return {Promise<boolean>} Whether the call succeeded.
+		 * @return {Promise<void>}
 		 */
-		async lifecycle(action, body, okMsg) {
-			this.busy = true
-			try {
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/bookings/${this.resolvedId}/${action}`,
-					),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(body || {}),
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (!response.ok) {
-					showError(data.error || t('pipelinq', 'Action failed.'))
-					return false
-				}
-				showSuccess(okMsg)
-				if (data.bookingId && data.bookingId !== this.resolvedId) {
-					// Reschedule returns a new UUID — navigate to the new booking.
-					this.$router.push({
-						name: 'BookingDetail',
-						params: { id: data.bookingId },
-					})
-					return true
-				}
-				await this.load()
-				return true
-			} catch {
-				showError(t('pipelinq', 'Action failed.'))
-				return false
-			} finally {
-				this.busy = false
+		async loadCustomer() {
+			const customerId = this.booking.customerId
+			// Resolve the customer once per id. fetchObject returns null
+			// (it does not throw) on a 404, so fall back to `client` on a
+			// null contact rather than in a catch — and record the id so a
+			// genuinely missing customer is not refetched on every run.
+			if (!customerId || this.loadedCustomerId === customerId) {
+				return
 			}
+			this.loadedCustomerId = customerId
+			const contact = await this.objectStore.fetchObject(
+				'contact',
+				customerId,
+			)
+			this.customerIsContact = Boolean(contact)
+			this.customer =
+				contact
+				|| (await this.objectStore.fetchObject(
+					'client',
+					customerId,
+				))
 		},
 
-		async confirmDeposit() {
-			await this.lifecycle(
-				'confirm-deposit',
-				{},
-				t('pipelinq', 'Deposit confirmed.'),
-			)
-		},
-
-		async markCompleted() {
-			await this.lifecycle(
-				'complete',
-				{},
-				t('pipelinq', 'Booking marked completed.'),
-			)
-		},
-
-		async markNoShow() {
-			await this.lifecycle(
-				'no-show',
-				{},
-				t('pipelinq', 'Booking marked as no-show.'),
-			)
-		},
-
-		async sendReminder() {
-			await this.lifecycle(
-				'send-reminder',
-				{},
-				t('pipelinq', 'Reminder dispatched.'),
-			)
-		},
-
-		async onReschedule(newStartAt) {
-			this.showReschedule = false
-			await this.lifecycle(
-				'reschedule',
-				{ newStartAt },
-				t('pipelinq', 'Booking rescheduled.'),
-			)
-		},
-
-		async onCancel(reason) {
-			this.showCancel = false
-			await this.lifecycle(
-				'cancel',
-				{ reason: reason || '' },
-				t('pipelinq', 'Booking cancelled.'),
-			)
+		/**
+		 * The names of the assigned resources not yet known, one request each.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadResourceNames() {
+			// De-duplicate resource ids: a booking has one assignment row
+			// per step/time-slot, so the same resource recurs across rows.
+			const resourceIds = [
+				...new Set(
+					(this.assignments || [])
+						.map((a) => a?.resourceId)
+						.filter(Boolean),
+				),
+			].filter((id) => !this.resourceLookup[id])
+			for (const id of resourceIds) {
+				const resource = await this.objectStore.fetchObject(
+					'appointmentResource',
+					id,
+				)
+				if (resource?.name) {
+					this.resourceLookup = {
+						...this.resourceLookup,
+						[id]: resource.name,
+					}
+				}
+			}
 		},
 	},
 }
 </script>
 
 <style scoped>
+.booking-person__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.booking-person__initials {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--color-background-dark);
+	font-weight: 700;
+	flex: none;
+}
+
+.booking-person__sub {
+	display: block;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
+}
+
+.booking-facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 16px;
+	margin: 0 0 12px;
+}
+
+.booking-facts dt {
+	color: var(--color-text-maxcontrast);
+}
+
+.booking-facts dd {
+	margin: 0;
+}
+
+.booking-when__slot {
+	display: flex;
+	flex-direction: column;
+	margin: 0 0 12px;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.booking-when__place {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 12px;
+}
+
+.booking-section__link {
+	font-weight: 600;
+	text-decoration: underline;
+}
+
 .booking-section {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
 }
 
-.booking-section__actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
+.booking-section__title {
+	margin: 0 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
 }
 
 .booking-section__block h4 {
@@ -746,78 +743,129 @@ export default {
 	font-size: 13px;
 }
 
-.form-group {
-	margin-bottom: 12px;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 4px;
-}
-
-.form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
-}
-
-.notes-actions {
-	display: flex;
-	justify-content: flex-end;
-}
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-}
-
 .section-empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 	padding: 20px;
 }
 
-.timeline {
+/* Vertical timeline: a marker per event on a continuous rail. Colour tells the
+   kind of event, a dashed marker tells an event that is still ahead. */
+.booking-timeline {
+	--booking-timeline-marker: 28px;
+	--booking-timeline-gap: calc(var(--default-grid-baseline) * 4);
 	margin: 0;
-	padding-inline-start: 20px;
+	padding: 0;
+	list-style: none;
 }
 
-.timeline li {
-	margin-bottom: 8px;
+.booking-timeline__event {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: calc(var(--default-grid-baseline) * 3);
+	padding-bottom: var(--booking-timeline-gap);
 }
 
-.timeline-when {
-	display: inline-block;
-	min-width: 180px;
-	color: var(--color-text-maxcontrast);
-	font-size: 12px;
+.booking-timeline__event:last-child {
+	padding-bottom: 0;
 }
 
-.timeline-text {
+/* The rail segment from this marker down to the next one. */
+.booking-timeline__event:not(:last-child)::before {
+	content: '';
+	position: absolute;
+	inset-block: var(--booking-timeline-marker) 0;
+	inset-inline-start: calc(var(--booking-timeline-marker) / 2 - 1px);
+	width: 2px;
+	background-color: var(--color-border);
+}
+
+.booking-timeline__marker {
+	flex: 0 0 var(--booking-timeline-marker);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--booking-timeline-marker);
+	height: var(--booking-timeline-marker);
+	border: 2px solid transparent;
+	border-radius: 50%;
+	background-color: var(--color-background-dark);
+	color: var(--color-main-text);
+}
+
+.booking-timeline__event--start .booking-timeline__marker,
+.booking-timeline__event--end .booking-timeline__marker {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
+.booking-timeline__event--deposit .booking-timeline__marker {
+	background-color: color-mix(
+		in srgb,
+		var(--color-success) 18%,
+		var(--color-main-background)
+	);
+	color: var(--color-success-text);
+}
+
+.booking-timeline__event--fee .booking-timeline__marker,
+.booking-timeline__event--cancel .booking-timeline__marker {
+	background-color: color-mix(
+		in srgb,
+		var(--color-error) 15%,
+		var(--color-main-background)
+	);
+	color: var(--color-error-text);
+}
+
+.booking-timeline__event--upcoming .booking-timeline__marker {
+	border-style: dashed;
+	border-color: currentColor;
+	background-color: var(--color-main-background);
+}
+
+.booking-timeline__body {
+	display: flex;
+	flex-direction: column;
+	min-height: var(--booking-timeline-marker);
+	justify-content: center;
+}
+
+.booking-timeline__text {
 	font-weight: 500;
 }
+
+.booking-timeline__event--upcoming .booking-timeline__text {
+	color: var(--color-text-maxcontrast);
+}
+
+.booking-timeline__when {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
+	font-variant-numeric: tabular-nums;
+}
+
+/* "Now": a small dot on the rail and a quiet label. */
+.booking-timeline__event--now .booking-timeline__marker {
+	background-color: transparent;
+}
+
+.booking-timeline__event--now .booking-timeline__marker::after {
+	content: '';
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background-color: var(--color-primary-element);
+	box-shadow: 0 0 0 4px var(--color-main-background);
+}
+
+.booking-timeline__event--now .booking-timeline__text {
+	color: var(--color-primary-element-text-dark, var(--color-primary-element));
+	font-size: var(--font-size-small, 13px);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
 </style>
+
+<style scoped src="./bookingTable.css"></style>

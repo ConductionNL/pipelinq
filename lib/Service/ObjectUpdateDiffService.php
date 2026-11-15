@@ -32,98 +32,76 @@ namespace OCA\Pipelinq\Service;
  */
 class ObjectUpdateDiffService {
 	/**
+	 * Lower-cased stage names that close a deal, and how.
+	 *
+	 * @var array<string, string>
+	 */
+	private const STAGE_OUTCOMES = [
+		'won' => 'won',
+		'gewonnen' => 'won',
+		'closed won' => 'won',
+		'lost' => 'lost',
+		'verloren' => 'lost',
+		'closed lost' => 'lost',
+	];
+
+	/**
 	 * Check if the assignee has changed and dispatch if so.
 	 *
-	 * @param array $oldData The old object data.
-	 * @param string $entityType The entity type.
-	 * @param string $title The entity title.
-	 * @param string $objectId The object ID.
-	 * @param string $assignee The current assignee.
+	 * @param array<string, mixed> $change The update: new and old object data (`new`, `old`), and the
+	 *                                     entity type, title, object id and current assignee.
 	 * @param ObjectEventDispatcher $dispatcher The event dispatcher.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
 	 */
-	public function dispatchAssigneeChangeIfNeeded(
-		array $oldData,
-		string $entityType,
-		string $title,
-		string $objectId,
-		string $assignee,
-		ObjectEventDispatcher $dispatcher,
-	): void {
-		$oldAssignee = $oldData['assignee'] ?? '';
-		if ($assignee === '' || $assignee === $oldAssignee) {
+	public function dispatchAssigneeChangeIfNeeded(array $change, ObjectEventDispatcher $dispatcher): void {
+		$assignee = $change['assignee'];
+		if ($assignee === '' || $assignee === ($change['old']['assignee'] ?? '')) {
 			return;
 		}
 
 		$dispatcher->dispatchAssigneeChange(
-			entityType: $entityType,
-			title: $title,
-			objectId: $objectId,
+			entityType: $change['entityType'],
+			title: $change['title'],
+			objectId: $change['objectId'],
 			assignee: $assignee
 		);
 	}//end dispatchAssigneeChangeIfNeeded()
 
 	/**
-	 * Check if the stage has changed and dispatch if so.
+	 * Check if the stage has changed and dispatch if so: a won or lost stage
+	 * (by name, in English or Dutch) as a deal won or lost, any other as a
+	 * stage change.
 	 *
-	 * @param array $newData The new object data.
-	 * @param array $oldData The old object data.
-	 * @param string $title The entity title.
-	 * @param string $objectId The object ID.
-	 * @param string $assignee The current assignee.
+	 * @param array<string, mixed> $change The update: new and old object data (`new`, `old`), and the
+	 *                                     entity type, title, object id and current assignee.
 	 * @param ObjectEventDispatcher $dispatcher The event dispatcher.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
 	 */
-	public function dispatchStageChangeIfNeeded(
-		array $newData,
-		array $oldData,
-		string $title,
-		string $objectId,
-		string $assignee,
-		ObjectEventDispatcher $dispatcher,
-	): void {
-		$newStage = $newData['stage'] ?? '';
-		$oldStage = $oldData['stage'] ?? '';
-		if ($newStage === '' || $newStage === $oldStage) {
+	public function dispatchStageChangeIfNeeded(array $change, ObjectEventDispatcher $dispatcher): void {
+		$newStage = $change['new']['stage'] ?? '';
+		if ($newStage === '' || $newStage === ($change['old']['stage'] ?? '')) {
 			return;
 		}
 
-		// Detect deal won or lost based on stage name.
-		$wonNames = ['won', 'gewonnen', 'closed won'];
-		$lostNames = ['lost', 'verloren', 'closed lost'];
-		$stageLower = strtolower($newStage);
-
-		if (in_array($stageLower, $wonNames, true) === true) {
-			$dispatcher->dispatchDealWon(
-				title: $title,
-				value: (string)($newData['value'] ?? '0'),
-				objectId: $objectId,
-				assignee: $assignee
-			);
+		$outcome = (self::STAGE_OUTCOMES[strtolower($newStage)] ?? null);
+		if ($outcome === 'won') {
+			$value = (string)($change['new']['value'] ?? '0');
+			$dispatcher->dispatchDealWon(title: $change['title'], value: $value, objectId: $change['objectId'], assignee: $change['assignee']);
 			return;
 		}
 
-		if (in_array($stageLower, $lostNames, true) === true) {
-			$dispatcher->dispatchDealLost(
-				title: $title,
-				objectId: $objectId,
-				assignee: $assignee
-			);
+		if ($outcome === 'lost') {
+			$dispatcher->dispatchDealLost(title: $change['title'], objectId: $change['objectId'], assignee: $change['assignee']);
 			return;
 		}
 
-		$dispatcher->dispatchStageChange(
-			title: $title,
-			objectId: $objectId,
-			newStage: $newStage,
-			assignee: $assignee
-		);
+		$dispatcher->dispatchStageChange(title: $change['title'], objectId: $change['objectId'], newStage: $newStage, assignee: $change['assignee']);
 	}//end dispatchStageChangeIfNeeded()
 
 	/**
@@ -152,36 +130,20 @@ class ObjectUpdateDiffService {
 	/**
 	 * Check if the status has changed and dispatch if so.
 	 *
-	 * @param array $newData The new object data.
-	 * @param array $oldData The old object data.
-	 * @param string $title The entity title.
-	 * @param string $objectId The object ID.
-	 * @param string $assignee The current assignee.
+	 * @param array<string, mixed> $change The update: new and old object data (`new`, `old`), and the
+	 *                                     entity type, title, object id and current assignee.
 	 * @param ObjectEventDispatcher $dispatcher The event dispatcher.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
 	 */
-	public function dispatchStatusChangeIfNeeded(
-		array $newData,
-		array $oldData,
-		string $title,
-		string $objectId,
-		string $assignee,
-		ObjectEventDispatcher $dispatcher,
-	): void {
-		$newStatus = $newData['status'] ?? '';
-		$oldStatus = $oldData['status'] ?? '';
-		if ($newStatus === '' || $newStatus === $oldStatus) {
+	public function dispatchStatusChangeIfNeeded(array $change, ObjectEventDispatcher $dispatcher): void {
+		$newStatus = $change['new']['status'] ?? '';
+		if ($newStatus === '' || $newStatus === ($change['old']['status'] ?? '')) {
 			return;
 		}
 
-		$dispatcher->dispatchStatusChange(
-			title: $title,
-			objectId: $objectId,
-			newStatus: $newStatus,
-			assignee: $assignee
-		);
+		$dispatcher->dispatchStatusChange(title: $change['title'], objectId: $change['objectId'], newStatus: $newStatus, assignee: $change['assignee']);
 	}//end dispatchStatusChangeIfNeeded()
 }//end class

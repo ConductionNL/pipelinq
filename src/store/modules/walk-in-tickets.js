@@ -3,7 +3,7 @@
 /**
  * Walk-in ticket store module — re-exports the central object store.
  *
- * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+ * @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
  */
 import { useObjectStore } from './object.js'
 

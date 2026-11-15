@@ -11,6 +11,21 @@
  * deleteObject) in one place and makes per-customer / per-tenant scoping
  * auditable (ADR-005, ADR-022).
  *
+ * Every portal endpoint is a PublicPage, so OpenRegister sees the caller as
+ * Anonymous: it reads no portal account and refuses every save. The password
+ * reset answered 200 and never mailed, and nobody could log in.
+ *
+ * Writes therefore run as the portal service account an admin picks
+ * ({@see PortalServiceAccount}), with OpenRegister's RBAC and organisation
+ * checks ON. The portal schemas grant that account's group create and update
+ * on the portal's own schemas and nothing else. A missing, disabled or
+ * ungrouped account refuses with 503 before anything is written.
+ *
+ * Reads of the portal's own register (accounts, sessions, delegations, audit
+ * events, tenant config) skip RBAC and organisation scoping: the portal's
+ * schemas grant read to nobody, and the portal itself scopes every read by
+ * tenant and account. Reads only: no write ever skips a check.
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service\Portal
  *
@@ -22,19 +37,25 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Thin, register-scoped wrapper over the OpenRegister ObjectService for the
@@ -48,7 +69,12 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalObjectRepository {
+class PortalObjectRepository implements PortalObjectRepositoryInterface {
+	use CastingPayloadToArray;
+	use NullableRowIdOf {
+		idOf as public;
+	}
+
 	/**
 	 * App-config key holding the separate portal register id.
 	 *
@@ -62,11 +88,13 @@ class PortalObjectRepository {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param PortalServiceAccount $serviceAccount The account every write runs as.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly PortalServiceAccount $serviceAccount,
 	) {
 	}//end __construct()
 
@@ -83,9 +111,9 @@ class PortalObjectRepository {
 	 *   audit are all unspecified
 	 */
 	public function registerId(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::PORTAL_REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_REGISTER_KEY, '');
 		if ($register === '') {
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		}
 
 		if ($register === '') {
@@ -112,7 +140,7 @@ class PortalObjectRepository {
 	 */
 	public function schemaId(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
 			''
 		);
@@ -147,8 +175,12 @@ class PortalObjectRepository {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug)
+				options: new ObjectFindOptions(
+					register: $this->registerId(),
+					schema: $this->schemaId(schemaSlug: $schemaSlug)
+				),
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -185,7 +217,9 @@ class PortalObjectRepository {
 
 		try {
 			$results = $this->objectService()->findAll(
-				config: ['filters' => array_merge($base, $filters)]
+				config: ['filters' => array_merge($base, $filters)],
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -239,14 +273,42 @@ class PortalObjectRepository {
 		// Never trust a client-derived self envelope.
 		unset($data['@self']);
 
-		try {
-			$saved = $this->objectService()->saveObject(
+		$register = $this->registerId();
+		$schema = $this->schemaId(schemaSlug: $schemaSlug);
+
+		$saved = $this->savedAsServiceAccount(
+			save: fn (): mixed => $this->objectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
-				uuid: $id
-			);
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
+			),
+			schemaSlug: $schemaSlug
+		);
+
+		return $this->toArray(object: $saved);
+	}//end save()
+
+	/**
+	 * Run a save as the portal service account; a failed save is logged and becomes a RuntimeException.
+	 *
+	 * Outside the try: a missing service account is a 503 PortalException,
+	 * not a failed save, and nothing has been written.
+	 *
+	 * @param callable(): mixed $save       The save.
+	 * @param string            $schemaSlug The schema slug, for the log.
+	 *
+	 * @return mixed The saved object.
+	 *
+	 * @throws PortalException When the service account is missing.
+	 * @throws RuntimeException When the save fails.
+	 */
+	private function savedAsServiceAccount(callable $save, string $schemaSlug): mixed {
+		try {
+			return $this->serviceAccount->runAs($save);
+		} catch (PortalException $e) {
+			throw $e;
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Pipelinq portal: saveObject failed',
@@ -254,72 +316,24 @@ class PortalObjectRepository {
 			);
 			throw new RuntimeException('Failed to persist portal object.');
 		}
-
-		return $this->toArray(object: $saved);
-	}//end save()
+	}//end savedAsServiceAccount()
 
 	/**
-	 * Extract the stable id/uuid from a normalised portal object array.
+	 * Refuse with 503 unless the portal can write. Called first by every flow
+	 * that writes, so a refusal does not depend on what the request looked up
+	 * (a known and an unknown address get the same answer).
 	 *
-	 * @param array<string, mixed> $object The object array.
+	 * @return void
 	 *
-	 * @return string|null The id, or null when absent.
+	 * @throws PortalException 503 portalUnavailable.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
 	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
 	 *   audit are all unspecified
 	 */
-	public function idOf(array $object): ?string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return null;
-	}//end idOf()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
+	public function requireWritable(): void {
+		$this->serviceAccount->require();
+	}//end requireWritable()
 
 	/**
 	 * Get the OpenRegister ObjectService.

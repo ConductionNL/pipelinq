@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Email templates need a physical address in the template's footer** (`footerOverride`, labelled "Physical Address"). An address token or an address typed into the body no longer satisfies the CAN-SPAM rule, because the token is what the footer address is rendered into. After upgrading, an email template whose footer is empty is refused by the blast wizard and by every save until the address is filled in; open it, enter the address in the Physical Address field and save. The seeded demo templates and articles carry a new seed version, so the upgrade rewrites them with their footer address and shipped hero images.
 - **MCP provider surgery** (`plq-mcp-provider-surgery`): completes Migration Plan
   steps 3–6 of `mcp-provider-declarative-migration` now that OpenRegister's ADR-063
   chain (#355 dialect, #360 schema-derived tool provider, #363 `#[McpTool]` attribute

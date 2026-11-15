@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+ * @spec openspec/changes/archive/2026-06-23-pipelinq-avg-adopt-or-gdpr/design.md
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires only the OR container
  *  and a logger.
  *
- * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+ * @spec openspec/changes/archive/2026-06-23-pipelinq-avg-adopt-or-gdpr/design.md
  * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014-openregister-compliance-subsystem-consumption-boundary
  */
 class DataDeletionService {
@@ -106,6 +106,7 @@ class DataDeletionService {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
 	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014-openregister-compliance-subsystem-consumption-boundary
+	 * @spec openspec/specs/avg-verzoeken-workflow/spec.md#REQ-AVG-018
 	 */
 	public function pseudonymizeCustomerBookings(string $customerId, bool $dryRun = false): array {
 		$summary = ['bookings' => 0, 'held' => 0];
@@ -114,7 +115,7 @@ class DataDeletionService {
 			return $summary;
 		}
 
-		$result = $this->eraseViaOr(subjectId: $customerId, type: null, dryRun: $dryRun);
+		$result = $this->eraseViaOr(subjectId: $customerId, dryRun: $dryRun);
 
 		$summary['bookings'] = count((array)($result['erased'] ?? []));
 		$summary['held'] = count((array)($result['held'] ?? []));
@@ -143,17 +144,16 @@ class DataDeletionService {
 	 * 7-year booking retention. When OR is absent, or the call throws, this
 	 * degrades to a safe empty summary rather than throwing.
 	 *
-	 * @param string $subjectId The subject identifier value.
-	 * @param string|null $type Optional GdprEntity type filter.
+	 * @param string $subjectId The subject identifier value, over every GdprEntity type.
 	 * @param bool $dryRun When true, report matches/holds without mutating.
 	 *
 	 * @return array<string, mixed> OR's erase summary (erased/held/failed buckets).
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
 	 *
-	 * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+	 * @spec openspec/changes/archive/2026-06-23-pipelinq-avg-adopt-or-gdpr/design.md
 	 */
-	private function eraseViaOr(string $subjectId, ?string $type = null, bool $dryRun = false): array {
+	private function eraseViaOr(string $subjectId, bool $dryRun = false): array {
 		$service = $this->requestService();
 		if ($service === null) {
 			return ['subject' => $subjectId, 'matchedCount' => 0, 'erased' => [], 'held' => [], 'failed' => [], 'complete' => false];
@@ -162,7 +162,7 @@ class DataDeletionService {
 		try {
 			return $service->erase(
 				subjectId: $subjectId,
-				type: $type,
+				type: null,
 				eraseMode: self::ERASE_MODE_PSEUDONYMISE,
 				dryRun: $dryRun
 			);

@@ -1,0 +1,33 @@
+{
+    "boardSaleInclusive": {
+        "priceMode": "incl",
+        "lines": [
+            {"description": "Parkeervergunning bewoners, jaar", "quantity": 1, "unitPrice": 75, "discount": 0, "taxRate": 0},
+            {"description": "Afvalpas, extra", "quantity": 1, "unitPrice": 12.5, "discount": 0, "taxRate": 21},
+            {"description": "Stadsplattegrond Zuiddrecht", "quantity": 2, "unitPrice": 4.95, "discount": 10, "taxRate": 9}
+        ]
+    },
+    "mixedRatesExclusive": {
+        "priceMode": "excl",
+        "lines": [
+            {"description": "Koffie", "quantity": 3, "unitPrice": 4.25, "discount": 0, "taxRate": 9},
+            {"description": "Headset", "quantity": 1, "unitPrice": 54.98, "discount": 10, "taxRate": 21},
+            {"description": "Leges", "quantity": 1, "unitPrice": 10, "discount": 0, "taxRate": 0}
+        ]
+    },
+    "giftCardSale": {
+        "priceMode": "excl",
+        "lines": [
+            {"description": "Cadeaukaart", "quantity": 1, "unitPrice": 25, "discount": 0, "taxRate": 0},
+            {"description": "Boek", "quantity": 1, "unitPrice": 19.99, "discount": 0, "taxRate": 21}
+        ]
+    },
+    "roundingInclusive": {
+        "priceMode": "incl",
+        "lines": [
+            {"description": "Sticker", "quantity": 7, "unitPrice": 0.33, "discount": 3, "taxRate": 21},
+            {"description": "Ansichtkaart", "quantity": 3, "unitPrice": 1.01, "discount": 0, "taxRate": 9},
+            {"description": "Pen", "quantity": 1.5, "unitPrice": 2.49, "discount": 12.5, "taxRate": 21}
+        ]
+    }
+}

@@ -20,17 +20,14 @@
 
 namespace OCA\Pipelinq\Dashboard;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCP\Dashboard\IWidget;
 use OCP\IL10N;
-use OCP\Util;
 
 /**
  * Find Client widget for the Nextcloud Dashboard.
  *
  * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
  */
-class FindClientWidget implements IWidget {
+class FindClientWidget extends AbstractPipelinqWidget {
 	/**
 	 * Constructor.
 	 *
@@ -72,38 +69,11 @@ class FindClientWidget implements IWidget {
 	}//end getOrder()
 
 	/**
-	 * Get the CSS class for the widget icon.
+	 * The widget's own webpack entry.
 	 *
-	 * @return string The icon CSS class
-	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
+	 * @return string The entry name
 	 */
-	public function getIconClass(): string {
-		return 'icon-pipelinq-widget';
-	}//end getIconClass()
-
-	/**
-	 * Get the URL for the widget header link.
-	 *
-	 * @return string|null The URL or null if none
-	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
-	 */
-	public function getUrl(): ?string {
-		return null;
-	}//end getUrl()
-
-	/**
-	 * Load the widget scripts and styles.
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
-	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
-	 */
-	public function load(): void {
-		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-findClientWidget');
-		Util::addStyle(Application::APP_ID, 'dashboardWidgets');
-	}//end load()
+	protected function scriptEntry(): string {
+		return 'findClientWidget';
+	}//end scriptEntry()
 }//end class

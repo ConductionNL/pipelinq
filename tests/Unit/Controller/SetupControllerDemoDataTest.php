@@ -3,6 +3,7 @@
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SetupController;
+use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -21,24 +22,19 @@ use Psr\Log\NullLogger;
  * the seed script's own assertion caught.
  *
  * @covers \OCA\Pipelinq\Controller\SetupController
- *
- * 🔴 `@uses` IS NOT DECORATION. `beStrictAboutCoverageMetadata` makes a test
- * RISKY when it executes a class this block does not name, and status() resolves
- * the integration app id through FleetAppId. Locally that is invisible: the
- * check only runs with a coverage driver, so all six PHPUnit cells went red on
- * a suite that is green here.
- *
- * @uses \OCA\Pipelinq\Support\FleetAppId
  */
 class SetupControllerDemoDataTest extends TestCase {
 	private array $written = [];
 	private array $config = [];
 	private DemoSeedService $demoSeed;
+	private DemoRegisterImporter $importer;
 
 	protected function setUp(): void {
 		$this->written = [];
 		$this->config = [];
 		$this->demoSeed = $this->createMock(DemoSeedService::class);
+		$this->importer = $this->createMock(DemoRegisterImporter::class);
+		$this->importer->method('import')->willReturn(['imported' => 0, 'skipped' => 0]);
 	}
 
 	private function controller(array $params = []): SetupController {
@@ -72,11 +68,12 @@ class SetupControllerDemoDataTest extends TestCase {
 			$this->createMock(SettingsService::class),
 			$this->demoSeed,
 			$this->createMock(IAppManager::class),
-			new NullLogger()
+			new NullLogger(),
+			$this->importer
 		);
 	}
 
-	public function testStatusReportsBothExampleDataSteps(): void {
+	public function testStatusReportsTheExampleDataStep(): void {
 		$this->demoSeed->method('listChoices')->willReturn([]);
 
 		$steps = $this->controller()->status()->getData()['steps'];
@@ -84,9 +81,70 @@ class SetupControllerDemoDataTest extends TestCase {
 		// Absence is the defect this guards: a step the wizard is never told
 		// about cannot be offered and cannot be completed.
 		$this->assertArrayHasKey('demo-data', $steps);
-		$this->assertArrayHasKey('load-demo-data', $steps);
 		$this->assertFalse($steps['demo-data']['done']);
-		$this->assertFalse($steps['load-demo-data']['done']);
+		// The separate load step is gone: each card loads its own dataset.
+		$this->assertArrayNotHasKey('load-demo-data', $steps);
+	}
+
+	public function testPickingADatasetWithoutLoadingItStillAnswersTheStep(): void {
+		// A nextcloud-vue without `loadAction` can only record the pick. If
+		// that did not count, the wizard would reopen over every page forever.
+		$this->demoSeed->method('listChoices')->willReturn([]);
+		$this->config['demo_dataset'] = 'demo';
+
+		$this->assertTrue($this->controller()->status()->getData()['steps']['demo-data']['done']);
+	}
+
+	public function testTheCardLoadButtonSeedsTheDatasetItNames(): void {
+		// The card posts `{ dataset }`; nothing was stored a step earlier.
+		$this->demoSeed->method('listChoices')->willReturn([
+			['id' => 'none', 'label' => 'None', 'description' => '', 'objectCount' => 0, 'icon' => ''],
+			['id' => 'demo', 'label' => 'Example data', 'description' => '', 'objectCount' => 0, 'icon' => ''],
+		]);
+		$this->demoSeed->expects($this->once())->method('seed')
+			->willReturn(['success' => true, 'created' => ['deal' => 3], 'skipped' => []]);
+
+		$data = $this->controller(['dataset' => 'demo'])->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertSame('demo', $this->written['demo_dataset'] ?? null);
+		$this->assertSame('seeded', $this->written['demo_data_decided'] ?? null);
+	}
+
+	public function testTheNoneCardRecordsTheAnswerAndSeedsNothing(): void {
+		$this->demoSeed->method('listChoices')->willReturn([
+			['id' => 'none', 'label' => 'None', 'description' => '', 'objectCount' => 0, 'icon' => ''],
+		]);
+		$this->demoSeed->expects($this->never())->method('seed');
+
+		$data = $this->controller(['dataset' => 'none'])->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertSame('none', $this->written['demo_dataset'] ?? null);
+	}
+
+	public function testACardNamingAnUnknownDatasetIsRefused(): void {
+		$this->demoSeed->method('listChoices')->willReturn([
+			['id' => 'none', 'label' => 'None', 'description' => '', 'objectCount' => 0, 'icon' => ''],
+		]);
+		$this->demoSeed->expects($this->never())->method('seed');
+
+		$data = $this->controller(['dataset' => 'atlantis'])->runAction('load-demo-data')->getData();
+
+		$this->assertFalse($data['success']);
+		$this->assertSame([], $this->written);
+	}
+
+	public function testAFailedCardLoadLeavesTheStepOpen(): void {
+		$this->demoSeed->method('listChoices')->willReturn([
+			['id' => 'demo', 'label' => 'Example data', 'description' => '', 'objectCount' => 0, 'icon' => ''],
+		]);
+		$this->demoSeed->method('seed')->willReturn(['success' => false, 'message' => 'OpenRegister is not installed.']);
+
+		$response = $this->controller(['dataset' => 'demo'])->runAction('load-demo-data');
+
+		$this->assertFalse($response->getData()['success']);
+		$this->assertSame([], $this->written);
 	}
 
 	public function testStatusCarriesTheOptionListTheChoiceStepReads(): void {
@@ -103,14 +161,13 @@ class SetupControllerDemoDataTest extends TestCase {
 		$this->assertSame(['none', 'demo'], array_column($data['datasets'], 'id'));
 	}
 
-	public function testChoosingNoneClosesBothStepsWithoutRunningAnything(): void {
+	public function testChoosingNoneClosesTheStepWithoutRunningAnything(): void {
 		$this->demoSeed->method('listChoices')->willReturn([]);
 		$this->config['demo_dataset'] = 'none';
 
 		$steps = $this->controller()->status()->getData()['steps'];
 
 		$this->assertTrue($steps['demo-data']['done']);
-		$this->assertTrue($steps['load-demo-data']['done']);
 	}
 
 	public function testAnUnknownDatasetIsRefusedRatherThanStored(): void {
@@ -145,6 +202,31 @@ class SetupControllerDemoDataTest extends TestCase {
 		$this->assertTrue($data['success']);
 		$this->assertSame('demo', $this->written['demo_dataset'] ?? null);
 		$this->assertSame('seeded', $this->written['demo_data_decided'] ?? null);
+	}
+
+	public function testLoadingNoneImportsNoExampleRecords(): void {
+		// 🔴 THE REPORTED BUG. An administrator picked None and still got example
+		// records. The register no longer carries them; this guards the other
+		// half, that None never reaches the descriptor import either.
+		$this->config['demo_dataset'] = 'none';
+		$this->demoSeed->expects($this->never())->method('seed');
+		$this->importer->expects($this->never())->method('import');
+
+		$data = $this->controller()->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+	}
+
+	public function testLoadingExampleDataImportsTheExampleRecordsToo(): void {
+		$this->config['demo_dataset'] = 'demo';
+		$this->demoSeed->method('seed')->willReturn(['success' => true, 'created' => ['deal' => 3], 'skipped' => []]);
+		$this->importer = $this->createMock(DemoRegisterImporter::class);
+		$this->importer->expects($this->once())->method('import')->willReturn(['imported' => 250, 'skipped' => 6]);
+
+		$data = $this->controller()->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertStringContainsString('Seeded 253 demo object(s) (6 already present)', $data['message']);
 	}
 
 	public function testLoadingWithoutAChoiceRefusesRatherThanGuessing(): void {

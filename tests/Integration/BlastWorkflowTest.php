@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -36,6 +37,8 @@ use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * End-to-end test of the marketing chain.
@@ -98,7 +101,9 @@ class BlastWorkflowTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$rows = ($this->tables[$schema] ?? []);
 				foreach ($rows as $row) {
 					if (($row['uuid'] ?? null) === $id) {
@@ -149,7 +154,10 @@ class BlastWorkflowTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The persisted row.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = 'gen-' . $schema . '-' . count(($this->tables[$schema] ?? []));
 				}
@@ -288,6 +296,7 @@ class BlastWorkflowTest extends TestCase {
 			$segmentService,
 			$this->logger,
 			$signals,
+			new \OCA\Pipelinq\Service\IntegriqMarketingConsent(\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($this->container, $this->appConfig, new \Psr\Log\NullLogger())),
 		);
 		$mailTransportService = new MailTransportService(
 			$this->container,
@@ -296,6 +305,8 @@ class BlastWorkflowTest extends TestCase {
 			$this->createMock(ArticleService::class),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
+			new \OCA\Pipelinq\Service\Marketing\RecipientNameReader($this->container, $this->appConfig, new \Psr\Log\NullLogger()),
 		);
 		$blastService = new BlastService($this->container,
 			$this->appConfig,
@@ -377,6 +388,7 @@ class BlastWorkflowTest extends TestCase {
 				'subject' => 'Hi {{firstName}}',
 				'bodyHtml' => '<p>{{unsubscribe_link}} {{physical_address}}</p>',
 				'bodyText' => 'Unsubscribe: {{unsubscribe_link}}',
+				'footerOverride' => "Pipelinq B.V.\nTurfmarkt 147\nDen Haag",
 				'senderName' => 'Pipelinq',
 				'senderEmail' => 'pipelinq@example.test',
 			],
@@ -476,14 +488,14 @@ class BlastWorkflowTest extends TestCase {
 
 		$this->complianceService->recordConsentWithdrawal('c1', 'email', 'user-unsubscribed', 'blast-1');
 
-		$queuedRow = $this->objectService->find('d1', null, 'blastDelivery');
-		$sentRow = $this->objectService->find('d2', null, 'blastDelivery');
+		$queuedRow = $this->objectService->find('d1', new ObjectFindOptions(schema: 'blastDelivery'));
+		$sentRow = $this->objectService->find('d2', new ObjectFindOptions(schema: 'blastDelivery'));
 
 		$this->assertSame('unsubscribed-before-send', $queuedRow['status']);
 		$this->assertSame('sent', $sentRow['status'], 'sent rows must not transition');
 
 		// ConsentRecord update was issued with a withdrawnAt timestamp.
-		$consent = $this->objectService->find('cr-c1', null, 'consentRecord');
+		$consent = $this->objectService->find('cr-c1', new ObjectFindOptions(schema: 'consentRecord'));
 		$this->assertNotEmpty((string)($consent['withdrawnAt'] ?? ''));
 		$this->assertSame('user-unsubscribed', $consent['withdrawnReason']);
 	}//end testWithdrawalTransitionsQueuedDeliveriesEndToEnd()

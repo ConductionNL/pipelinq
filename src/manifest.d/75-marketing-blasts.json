@@ -39,196 +39,507 @@
 	"pages": [
 		{
 			"id": "Segments",
-			"_note": "Segment list as a declarative type:index page (marketing-segments-ui-repair, pipelinq#773). Row view and Add both navigate to SegmentFormView, which mounts SegmentBuilder — a recursive rule-tree editor, not a declarative form.",
+			"_note": "Segment list as a declarative type:index page (marketing-segments-ui-repair, pipelinq#773). Add and the row Edit action open SegmentFormDialog in the form-dialog slot, which mounts SegmentBuilder, a recursive rule-tree editor rather than a declarative form. Rows have no detail page, so selection is off and a row click does nothing.",
 			"route": "/segments",
 			"type": "index",
 			"title": "Segments",
+			"slots": {
+				"form-dialog": "SegmentFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "segment",
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showAdd": false,
-				"showFormDialog": false,
+				"selectable": true,
+				"addLabel": "New segment",
 				"showViewAction": false,
-				"showEditAction": false,
+				"showEditAction": true,
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": [
+				"countText": "{shown} of {total} segments",
+				"searchPlaceholder": "Filter by name",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "entityType"
+				},
+				"footerNote": "A segment is a living rule, not a fixed list: it is worked out again every time it is used.",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New segment"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Contacts",
+						"filter": {
+							"entityType": "contact"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Customers",
+						"filter": {
+							"entityType": "customer"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
 					"name",
-					"entityType",
-					"estimatedSize",
-					"updatedAt"
-				],
-				"headerActions": [
 					{
-						"id": "create",
-						"label": "New segment",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "SegmentNew"
+						"key": "entityType",
+						"label": "Audience",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"contact": "info",
+								"customer": "teal"
+							}
+						}
+					},
+					{
+						"key": "estimatedSize",
+						"label": "Estimated members"
+					},
+					{
+						"key": "updatedAt",
+						"label": "Updated",
+						"formatter": "date"
 					}
 				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Edit rules",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "SegmentEdit"
-					}
-				]
-			}
-		},
-		{
-			"id": "SegmentNew",
-			"route": "/segments/new",
-			"type": "custom",
-			"title": "New segment",
-			"component": "SegmentFormView",
-			"_note": "Mounts SegmentBuilder (marketing-segments-ui-repair): recursive AND/OR rule-tree editing with a debounced POST /api/segments/preview call driving both live validation and the member-size estimate. A declarative form cannot host a recursive sub-tree editor or a debounced cross-field backend call.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "segment"
-			}
-		},
-		{
-			"id": "SegmentEdit",
-			"route": "/segments/:id",
-			"type": "custom",
-			"title": "Edit segment",
-			"component": "SegmentFormView",
-			"_note": "Same SegmentFormView as SegmentNew; edit mode is driven by the route :id param (PosTransactionForm convention). Loads the existing Segment, then re-validates the rule tree the same way on every change.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "segment"
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
 			"id": "Templates",
-			"_note": "CampaignTemplate list as a declarative type:index page (marketing-segments-ui-repair). Row view and Add both navigate to TemplateFormView, whose channel-conditional fields and post-submit compliance-error-to-field mapping a declarative form cannot express.",
+			"_note": "CampaignTemplate list as a declarative type:index page (marketing-segments-ui-repair). Add and the row Edit action open TemplateFormDialog in the form-dialog slot: its channel-conditional fields and compliance-error-to-field mapping a declarative form cannot express. Rows have no detail page, so a row click does nothing. The row Copy action duplicates a template (the copy dialog names it \"{name} (Copy)\"), and Delete is refused server-side by TemplateInUseGuard while a scheduled mailing uses the template (@spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001).",
 			"route": "/templates",
 			"type": "index",
 			"title": "Templates",
+			"slots": {
+				"form-dialog": "TemplateFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaignTemplate",
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showAdd": false,
-				"showFormDialog": false,
+				"selectable": true,
+				"addLabel": "New template",
 				"showViewAction": false,
-				"showEditAction": false,
-				"showCopyAction": false,
-				"showDeleteAction": false,
+				"showEditAction": true,
+				"showCopyAction": true,
+				"showDeleteAction": true,
 				"showMassImport": false,
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": ["name", "channel", "subject", "senderEmail"],
-				"headerActions": [
+				"countText": "{shown} of {total} templates",
+				"searchPlaceholder": "Filter by name or subject",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
+				],
+				"board": {
+					"statusField": "channel"
+				},
+				"footerNote": "A template holds the subject, the content, the sender and the address in the footer. Newsletters and journeys start from it.",
+				"headerButtons": [
 					{
-						"id": "create",
-						"label": "New template",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "TemplateNew"
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New template"
 					}
 				],
-				"actions": [
+				"quickFilters": [
 					{
-						"id": "view",
-						"label": "Edit",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "TemplateEdit"
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Email",
+						"filter": {
+							"channel": "email"
+						},
+						"showCount": true
+					},
+					{
+						"label": "SMS",
+						"filter": {
+							"channel": "sms"
+						},
+						"showCount": true
 					}
-				]
-			}
-		},
-		{
-			"id": "TemplateNew",
-			"route": "/templates/new",
-			"type": "custom",
-			"title": "New template",
-			"component": "TemplateFormView",
-			"_note": "Calls the existing POST /api/templates endpoint, which runs ComplianceService.validateTemplate() before persisting — a missing {{unsubscribe_link}} token or physical address block returns a generic error TemplateFormView maps back onto the body field.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "campaignTemplate"
-			}
-		},
-		{
-			"id": "TemplateEdit",
-			"route": "/templates/:id",
-			"type": "custom",
-			"title": "Edit template",
-			"component": "TemplateFormView",
-			"_note": "Same TemplateFormView as TemplateNew; edit mode is driven by the route :id param and PATCHes the existing /api/templates/{id} endpoint, which re-runs compliance validation before persisting.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "campaignTemplate"
+				],
+				"columns": [
+					"name",
+					{
+						"key": "channel",
+						"label": "Channel",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"email": "info",
+								"sms": "teal"
+							}
+						},
+						"enum": [
+							"email",
+							"sms"
+						],
+						"enumLabels": {
+							"email": "Email",
+							"sms": "SMS"
+						}
+					},
+					"subject",
+					{
+						"key": "senderEmail",
+						"label": "Sender e-mail address"
+					}
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{
 			"id": "Blasts",
-			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). Row view navigates to the live monitor (BlastMonitor); Add navigates to the multi-step wizard (BlastNew). Both stay custom.",
+			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). A row click and the built-in View open the live monitor (BlastMonitor, via rowRoute); Add opens BlastWizardDialog in the form-dialog slot: a multi-step wizard with a compliance gate (conditional advancing, an optional A/B split, template validation and a consent preflight that holds the create back pending the marketer's decision), which no declarative form expresses. Rows can be selected, as board PqNieuwsbrieven draws, and a selection downloaded.",
 			"route": "/blasts",
 			"type": "index",
-			"title": "Blasts",
+			"title": "Newsletters",
+			"slots": {
+				"form-dialog": "BlastWizardDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast",
+				"columnOverrides": {
+					"createdBy": {
+						"formatter": "userDisplayName"
+					}
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showAdd": false,
-				"showFormDialog": false,
-				"showViewAction": false,
+				"selectable": true,
+				"rowRoute": "BlastMonitor",
+				"addLabel": "New newsletter",
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
-				"showMassExport": false,
+				"showMassExport": true,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": [
-					"name",
-					"channel",
-					"status",
-					"scheduledFor",
-					"sentAt"
+				"countText": "{shown} of {total} newsletters · open and click rate from our own measurements · newest first",
+				"sortKey": "scheduledFor",
+				"sortOrder": "desc",
+				"searchPlaceholder": "Search this list",
+				"filterMenu": true,
+				"viewModes": [
+					"table",
+					"cards",
+					"board",
+					"map"
 				],
-				"headerActions": [
+				"board": {
+					"statusField": "status"
+				},
+				"rowTitle": "plain",
+				"footerNote": "A newsletter only goes to people with consent for e-mail. Every template has an unsubscribe link and the sender's address.",
+				"headerButtons": [
 					{
-						"id": "create",
-						"label": "New blast",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "BlastNew"
+						"action": "export",
+						"label": "Download",
+						"icon": "Download"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New newsletter"
 					}
 				],
-				"actions": [
+				"statRow": [
 					{
-						"id": "view",
-						"label": "Open",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "BlastMonitor"
+						"id": "blasts-sent-month",
+						"type": "stat",
+						"title": "Sent this month",
+						"content": {
+							"label": "Sent this month",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "count",
+								"filter": {
+									"status": "sent",
+									"sentAt": {
+										"gte": "@monthStart"
+									}
+								}
+							},
+							"caption": "{count} messages",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "totals.sent",
+								"filter": {
+									"status": "sent",
+									"sentAt": {
+										"gte": "@monthStart"
+									}
+								}
+							}
+						}
+					},
+					{
+						"id": "blasts-open-rate",
+						"type": "stat",
+						"title": "Average opened",
+						"content": {
+							"label": "Average opened",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"kind": "ratio",
+								"numerator": {
+									"metric": "sum",
+									"field": "totals.opened"
+								},
+								"denominator": {
+									"metric": "sum",
+									"field": "totals.delivered"
+								}
+							},
+							"caption": "of the delivered messages",
+							"format": {
+								"style": "percent",
+								"decimals": 0
+							}
+						}
+					},
+					{
+						"id": "blasts-unsubscribed",
+						"type": "stat",
+						"title": "Unsubscribed",
+						"content": {
+							"label": "Unsubscribed",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "totals.unsubscribed"
+							},
+							"caption": "via the link in the footer"
+						}
+					},
+					{
+						"id": "blasts-blocked-consent",
+						"type": "stat",
+						"title": "Blocked by consent",
+						"content": {
+							"label": "Blocked by consent",
+							"caption": "no lawful basis, not sent",
+							"variant": "error",
+							"source": {
+								"register": "pipelinq",
+								"schema": "blast",
+								"metric": "sum",
+								"field": "skippedNoConsent"
+							}
+						}
 					}
-				]
-			}
-		},
-		{
-			"id": "BlastNew",
-			"route": "/blasts/new",
-			"type": "custom",
-			"title": "New blast",
-			"component": "BlastFormView",
-			"_note": "A multi-step wizard with a compliance gate, which no declarative type expresses. Advancing is conditional (canAdvance), the audience can be split into an A/B pair (abEnabled), and before a blast may be sent the page runs preflightCompliance + validateTemplate and blocks on awaitConsentDecision — the lawful-basis and unsubscribe-footer checks from the marketing-compliance spec. A declarative form submits; it cannot hold a send back pending a compliance verdict.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "blast"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Lined up",
+						"filter": {
+							"status": "scheduled"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Sent",
+						"filter": {
+							"status": "sent"
+						},
+						"showCount": true
+					}
+				],
+				"columns": [
+					{
+						"key": "name",
+						"label": "Newsletter",
+						"secondary": [
+							"Segment: {segment.name|lowerfirst} · {segment.estimatedSize|number} contacts",
+							"Mailing list: {list.name} · {list.subscribers|number} subscribers"
+						],
+						"secondaryRefs": {
+							"segment": {
+								"field": "segmentId",
+								"register": "pipelinq",
+								"schema": "segment"
+							},
+							"list": {
+								"field": "listId",
+								"register": "pipelinq",
+								"schema": "mailingList",
+								"counts": {
+									"subscribers": {
+										"register": "pipelinq",
+										"schema": "subscription",
+										"where": {
+											"listId": "@self.id",
+											"state": "confirmed"
+										}
+									}
+								}
+							}
+						}
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"sent": "success",
+								"scheduled": "info",
+								"sending": "purple",
+								"draft": "default",
+								"paused": "warning",
+								"failed": "error",
+								"cancelled": "default"
+							}
+						},
+						"enum": [
+							"draft",
+							"scheduled",
+							"sending",
+							"sent",
+							"paused",
+							"failed",
+							"cancelled"
+						],
+						"enumLabels": {
+							"draft": "Draft",
+							"scheduled": "Lined up",
+							"sending": "Sending",
+							"sent": "Sent",
+							"paused": "Paused",
+							"failed": "Failed",
+							"cancelled": "Cancelled"
+						}
+					},
+					{
+						"key": "sentAt",
+						"label": "Sent or scheduled",
+						"formatter": "datetime"
+					},
+					{
+						"key": "totals.opened",
+						"label": "Opened",
+						"sortable": false,
+						"formatter": "share",
+						"formatterOptions": {
+							"over": "totals.delivered"
+						},
+						"cellClass": "cn-cell--strong"
+					},
+					{
+						"key": "totals.clicked",
+						"label": "Clicked",
+						"sortable": false,
+						"formatter": "share",
+						"formatterOptions": {
+							"over": "totals.delivered"
+						},
+						"cellClass": "cn-cell--strong"
+					},
+					{
+						"key": "totals.unsubscribed",
+						"label": "Unsubscribed",
+						"sortable": false
+					},
+					{
+						"key": "skippedNoConsent",
+						"label": "Note",
+						"sortable": false,
+						"filterable": false,
+						"formatter": "blastNote"
+					}
+				],
+				"map": {
+					"center": [
+						52.09,
+						5.12
+					]
+				}
 			}
 		},
 		{

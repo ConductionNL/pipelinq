@@ -134,8 +134,6 @@ Operations for contact synchronisation screens MUST tolerate missing, empty, or 
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
-## Requirements
-
 ### Requirement: vCard Field Mapping Completeness [V1]
 
 The write-back sync MUST map all available Pipelinq fields to their RFC 6350 vCard equivalents so that Nextcloud Contacts shows rich, complete contact cards.
@@ -262,7 +260,7 @@ The system MUST use a predictable address book for sync operations and support c
 
 ### Requirement: Group and Category Mapping [V1]
 
-The system SHOULD support mapping between Pipelinq client types/tags and vCard CATEGORIES to enable filtering in Nextcloud Contacts.
+The system SHALL support mapping between Pipelinq client types/tags and vCard CATEGORIES to enable filtering in Nextcloud Contacts.
 
 #### Scenario: Client type maps to vCard CATEGORIES
 - GIVEN a Pipelinq client with type "organization"
@@ -278,7 +276,7 @@ The system SHOULD support mapping between Pipelinq client types/tags and vCard C
 
 ### Requirement: Photo and Avatar Sync [V1]
 
-The system SHOULD support syncing profile photos between Pipelinq and Nextcloud Contacts.
+The system SHALL support syncing profile photos between Pipelinq and Nextcloud Contacts.
 
 #### Scenario: Nextcloud contact photo is available after import
 - GIVEN a Nextcloud contact has a PHOTO property in its vCard
@@ -385,6 +383,135 @@ The system MUST handle large Nextcloud address books efficiently during search a
 - AND the UI MUST update the "Already linked" status after each successful import
 
 ---
+
+### Requirement: Write-back maps channel arrays to typed vCard properties
+
+When a client or contact carries a non-empty `emails[]` or `phones[]` array, the write-back sync SHALL build the vCard's `EMAIL`/`TEL` properties from that array as multiple typed values (one vCard property per entry, with a `TYPE` parameter derived from the entry's `kind`) rather than from the legacy single `email`/`phone` field. When `socialProfiles[]` is non-empty, the write-back sync SHALL also write an `X-SOCIALPROFILE` property per entry, with `TYPE` set to the entry's `network` and the value set to its `url` (falling back to `handle` when no URL is set). An object whose `emails[]`/`phones[]` array is absent or empty SHALL fall back to the legacy scalar `email`/`phone` field, unchanged from prior behaviour.
+
+#### Scenario: Multiple typed emails write multiple vCard EMAIL properties
+
+- **GIVEN** a client with `emails: [{kind: "work", value: "a@x.test", primary: true}, {kind: "private", value: "b@x.test", primary: false}]`
+- **WHEN** the object is synced to Nextcloud Contacts
+- **THEN** the vCard SHALL contain two `EMAIL` properties, `a@x.test` with `TYPE=WORK` and `b@x.test` with `TYPE=HOME`
+
+#### Scenario: Social profiles write X-SOCIALPROFILE properties
+
+- **GIVEN** a contact with `socialProfiles: [{network: "linkedin", url: "https://linkedin.com/in/jane", handle: "jane"}]`
+- **WHEN** the object is synced to Nextcloud Contacts
+- **THEN** the vCard SHALL contain an `X-SOCIALPROFILE` property with value `https://linkedin.com/in/jane` and `TYPE=linkedin`
+
+#### Scenario: Empty channel arrays fall back to the legacy scalar field
+
+- **GIVEN** a client with `emails: []` and a non-empty legacy `email` field
+- **WHEN** the object is synced to Nextcloud Contacts
+- **THEN** the vCard's `EMAIL` property SHALL be built from the legacy `email` field, matching pre-existing behaviour
+
+@e2e exclude vCard property construction is a PHP service method with no direct UI surface — the resulting vCard is written to Nextcloud Contacts via IManager, not rendered in Pipelinq; covered by PHPUnit (ContactVcardPropertyBuilderTest)
+
+### Requirement: Import maps typed vCard properties to channel arrays
+
+When a Nextcloud contact's `EMAIL`/`TEL` properties carry `TYPE` information (the IManager search `types` option), importing that contact into a Pipelinq client or contact SHALL build `emails[]`/`phones[]` with one entry per vCard property, `kind` derived from the vCard `TYPE` (falling back to `other` when no mapping applies), and the first entry marked `primary`. The legacy scalar `email`/`phone` field SHALL be set from the primary entry's value, matching the array. An `X-SOCIALPROFILE` property SHALL be imported into `socialProfiles[]`, with `network` matched case-insensitively against the network enum (falling back to `other`) and the value stored as `url` when it looks like a URL, else as `handle`.
+
+#### Scenario: Multiple typed EMAIL/TEL import as typed arrays
+
+- **GIVEN** a Nextcloud contact with `EMAIL: [{type: "WORK", value: "a@x.test"}, {type: "HOME", value: "b@x.test"}]`
+- **WHEN** the contact is imported into Pipelinq
+- **THEN** the created object's `emails[]` SHALL be `[{kind: "work", value: "a@x.test", primary: true, verified: false}, {kind: "private", value: "b@x.test", primary: false, verified: false}]`
+- **AND** the legacy `email` field SHALL be `"a@x.test"`
+
+#### Scenario: An untyped or unmapped TYPE imports as kind "other"
+
+- **GIVEN** a Nextcloud contact with a `TEL` property carrying no `TYPE` parameter
+- **WHEN** the contact is imported into Pipelinq
+- **THEN** the imported `phones[]` entry's `kind` SHALL be `"other"`
+
+@e2e exclude vCard property parsing is a PHP service method (ContactDataBuilder) consumed by the import API, not directly rendered; covered by PHPUnit
+
+### Requirement: Existing records backfill channel arrays on upgrade
+
+On upgrade, every existing `client` and `contact` object whose `emails[]`/`phones[]` array is missing or empty SHALL have that array seeded from its legacy scalar `email`/`phone` field, as a single entry with `kind: "work"`, `primary: true` and `verified: false`. A record whose array is already non-empty SHALL NOT be modified. The backfill SHALL be idempotent: running it again SHALL make no further change.
+
+#### Scenario: A legacy record gets its arrays seeded
+
+- **GIVEN** a client with `email: "info@acme.example"` and no `emails` property
+- **WHEN** the backfill repair step runs
+- **THEN** the client's `emails[]` SHALL become `[{kind: "work", value: "info@acme.example", primary: true, verified: false}]`
+
+#### Scenario: A record with existing arrays is left untouched
+
+- **GIVEN** a client whose `emails[]` already has one or more entries
+- **WHEN** the backfill repair step runs
+- **THEN** the client's `emails[]` SHALL remain exactly as it was, and no save SHALL occur for that field
+
+@e2e exclude an upgrade repair step (IRepairStep) runs during app install/update, outside any user-driven flow a browser session can trigger; covered by PHPUnit (BackfillContactChannelArraysTest)
+
+### Requirement: Write-back updates the existing card
+
+The write-back of a client or contact that is linked to a Nextcloud contact
+MUST update that contact's existing card, in the addressbook that holds it,
+and MUST NOT create a second card with the same UID. Only when no addressbook
+of the user holds the linked UID MAY a new card be created under that UID, in
+a writable addressbook that is not the system addressbook.
+
+#### Scenario: Editing the phone of a client whose contact exists
+
+- GIVEN a client linked to a Nextcloud contact whose card has phone 010-1111111
+- WHEN the user changes the client's phone to 010-2222222 and saves
+- THEN the write-back answers success
+- AND the contact's card has phone 010-2222222
+- AND the addressbook still holds one card with that UID
+
+#### Scenario: The card lives in another addressbook
+
+- GIVEN the linked card is in the user's second addressbook
+- WHEN the write-back runs
+- THEN that card is updated
+- AND no card is created in the first addressbook
+
+#### Scenario: The card was deleted
+
+- GIVEN no addressbook holds the linked UID
+- WHEN the write-back runs
+- THEN a card with that UID is created in a writable addressbook that is not the system addressbook
+
+### Requirement: A failed write-back is shown to the user
+
+When the write-back to Nextcloud Contacts fails, the user MUST be told that the
+change is saved in Pipelinq but not in Nextcloud Contacts. The saved client
+MUST stay saved.
+
+#### Scenario: The server refuses the write-back
+
+- GIVEN the user saved a change to a client's name, email or phone
+- WHEN `POST /api/contacts-sync/write-back` fails
+- THEN an error toast reads "Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details."
+- AND in Dutch "Uw wijzigingen zijn hier opgeslagen, maar niet in Nextcloud Contactpersonen. Het contact daar heeft nog de oude gegevens."
+
+### Requirement: A user controls and sees their contacts sync
+
+The user settings dialog MUST show a Contacts section with:
+
+- the number of linked clients and contact persons;
+- the addressbook new cards go to;
+- a write-back switch, on by default;
+- the last full run, with the records whose card could not be written.
+
+With the switch off, a save MUST NOT write the linked card. A full run MUST write every linked record back, and MUST require the same CRM capability as a single write-back.
+
+#### Scenario: write-back off
+
+- GIVEN Pieter turned write-back off
+- WHEN he saves Sanne de Vries's phone number
+- THEN her Nextcloud contact keeps the old number
+- AND no error is shown
+
+#### Scenario: a full run with a failure
+
+- WHEN Pieter clicks "Nu synchroniseren"
+- THEN every linked record is written back
+- AND the section names the record whose card could not be written
+
+## Implementation Notes
 
 ### Current Implementation Status
 

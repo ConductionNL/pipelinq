@@ -20,14 +20,23 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
+use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -36,11 +45,17 @@ use Throwable;
 /**
  * AttributionService — click→deal joining and revenue roll-up.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attribution joins many payload shapes; complexity is inherent to the roll-up.
  */
-class AttributionService {
+class AttributionService implements AttributionServiceInterface {
+	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
+
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -69,7 +84,7 @@ class AttributionService {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -95,7 +110,7 @@ class AttributionService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
 	 */
 	public function recordClick(string $blastDeliveryId, array $clickEvent): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -111,21 +126,9 @@ class AttributionService {
 			$payload['firstClickAt'] = $timestamp;
 		}
 
-		$clickedUrls = ($payload['clickedUrls'] ?? []);
-		if (is_array($clickedUrls) === false) {
-			$clickedUrls = [];
-		}
+		$payload['clickedUrls'] = $this->clickedUrlsWith(payload: $payload, url: $url);
 
-		if ($url !== '' && in_array($url, $clickedUrls, true) === false) {
-			$clickedUrls[] = $url;
-		}
-
-		$payload['clickedUrls'] = $clickedUrls;
-
-		$current = (string)($payload['status'] ?? '');
-		if (in_array($current, ['delivered', 'opened', 'sent'], true) === true) {
-			$payload['status'] = 'clicked';
-		}
+		$payload = $this->withClickedStatus(payload: $payload);
 
 		$this->saveObject(
 			payload: $payload,
@@ -135,12 +138,50 @@ class AttributionService {
 	}//end recordClick()
 
 	/**
+	 * The delivery's clicked URLs with this click's URL added once.
+	 *
+	 * @param array<string, mixed> $payload The BlastDelivery payload.
+	 * @param string               $url     The clicked URL ('' adds nothing).
+	 *
+	 * @return array<int, string>
+	 */
+	private function clickedUrlsWith(array $payload, string $url): array {
+		$clickedUrls = ($payload['clickedUrls'] ?? []);
+		if (is_array($clickedUrls) === false) {
+			$clickedUrls = [];
+		}
+
+		if ($url !== '' && in_array($url, $clickedUrls, true) === false) {
+			$clickedUrls[] = $url;
+		}
+
+		return $clickedUrls;
+	}//end clickedUrlsWith()
+
+	/**
+	 * Advance a delivered, opened or sent delivery to clicked.
+	 *
+	 * @param array<string, mixed> $payload The BlastDelivery payload.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withClickedStatus(array $payload): array {
+		$current = (string)($payload['status'] ?? '');
+		if (in_array($current, ['delivered', 'opened', 'sent'], true) === true) {
+			$payload['status'] = 'clicked';
+		}
+
+		return $payload;
+	}//end withClickedStatus()
+
+	/**
 	 * Create an AttributionLink joining a Blast click to a closed Deal.
 	 *
 	 * Loads the BlastDelivery and the Deal (Lead), then writes a fresh
 	 * AttributionLink with `blastId` / `contactId` / `dealId` /
-	 * `firstClickAt` / `closedWonAt` / `attributedValue` (EUR, taken from
-	 * the Lead's `value` field). Idempotent: when an AttributionLink for
+	 * `firstClickAt` / `closedWonAt` / `attributedValue` (taken from the
+	 * Lead's `value` field, in the Lead's own currency or else the reporting
+	 * currency). Idempotent: when an AttributionLink for
 	 * the same (blastId, contactId, dealId) triple already exists we
 	 * skip without raising.
 	 *
@@ -149,7 +190,8 @@ class AttributionService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public function linkBlastToDeal(string $blastDeliveryId, string $dealId): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -182,7 +224,7 @@ class AttributionService {
 			'firstClickAt' => (string)($delivery['firstClickAt'] ?? ''),
 			'closedWonAt' => $closedWonAt,
 			'attributedValue' => $value,
-			'currency' => 'EUR',
+			'currency' => $this->currencyOf(deal: $deal),
 			'createdAt' => $this->nowIso(),
 		];
 
@@ -200,7 +242,7 @@ class AttributionService {
 	 *
 	 * @return float Sum in EUR.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
 	 */
 	public function getBlastAttributedValue(string $blastId): float {
 		$rows = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
@@ -225,7 +267,8 @@ class AttributionService {
 	 *
 	 * @return array{blastId: string, dealCount: int, attributedValue: float, currency: string}
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+	 * @spec openspec/specs/commercial-dashboard/spec.md
 	 */
 	public function getBlastAttributionSummary(string $blastId): array {
 		$rows = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
@@ -247,7 +290,7 @@ class AttributionService {
 			'blastId' => $blastId,
 			'dealCount' => count($deals),
 			'attributedValue' => $total,
-			'currency' => 'EUR',
+			'currency' => $this->reportingCurrency(),
 		];
 	}//end getBlastAttributionSummary()
 
@@ -330,11 +373,45 @@ class AttributionService {
 	}//end extractClosedWonAt()
 
 	/**
-	 * Extract the EUR value to attribute from a Lead payload.
+	 * The reporting currency chosen in setup (`currency` app config).
+	 *
+	 * @return string An upper-case three-letter code, EUR when unset.
+	 *
+	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 */
+	private function reportingCurrency(): string {
+		$code = strtoupper(trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR')));
+		if (preg_match('/^[A-Z]{3}$/', $code) === 1) {
+			return $code;
+		}
+
+		return 'EUR';
+	}//end reportingCurrency()
+
+	/**
+	 * The currency of a Lead's value: its own when valid, else the reporting currency.
 	 *
 	 * @param array<string, mixed>|null $deal Lead payload.
 	 *
-	 * @return float Value in EUR (0 when unknown).
+	 * @return string An upper-case three-letter code.
+	 *
+	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 */
+	private function currencyOf(?array $deal): string {
+		$code = strtoupper(trim((string)($deal['currency'] ?? '')));
+		if (preg_match('/^[A-Z]{3}$/', $code) === 1) {
+			return $code;
+		}
+
+		return $this->reportingCurrency();
+	}//end currencyOf()
+
+	/**
+	 * Extract the value to attribute from a Lead payload.
+	 *
+	 * @param array<string, mixed>|null $deal Lead payload.
+	 *
+	 * @return float The Lead's value (0 when unknown).
 	 */
 	private function extractDealValue(?array $deal): float {
 		if ($deal === null) {
@@ -390,16 +467,33 @@ class AttributionService {
 			return null;
 		}
 
+		$entity = $this->findOne(id: $id, register: $register, schemaSlug: $schemaSlug);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end loadOne()
+
+	/**
+	 * Find one entity; a missing ObjectService or a failed lookup (logged) yields null.
+	 *
+	 * @param string $id         Object UUID or slug.
+	 * @param string $register   Register slug.
+	 * @param string $schemaSlug Schema slug.
+	 *
+	 * @return mixed The entity, or null.
+	 */
+	private function findOne(string $id, string $register, string $schemaSlug): mixed {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return null;
 		}
 
 		try {
-			$entity = $objectService->find(
+			return $objectService->find(
 				id: $id,
-				register: $register,
-				schema: $schemaSlug,
+				options: new ObjectFindOptions(register: $register, schema: $schemaSlug)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(
@@ -408,13 +502,7 @@ class AttributionService {
 			);
 			return null;
 		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
-	}//end loadOne()
+	}//end findOne()
 
 	/**
 	 * Load AttributionLink rows with the given filter map.
@@ -430,30 +518,7 @@ class AttributionService {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $register,
-							'schema' => $schema,
-						]
-					),
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'AttributionService.loadAttributionLinks: findAll failed',
-				['filters' => $filters, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
+		$rows = $this->findLinkRows(filters: $filters, register: $register, schema: $schema);
 
 		$out = [];
 		foreach (($rows ?? []) as $row) {
@@ -462,6 +527,34 @@ class AttributionService {
 
 		return $out;
 	}//end loadAttributionLinks()
+
+	/**
+	 * Find AttributionLink rows; a missing ObjectService or a failed read (logged) yields none.
+	 *
+	 * @param array<string, mixed> $filters  Filter map.
+	 * @param string               $register Register slug.
+	 * @param string               $schema   AttributionLink schema slug.
+	 *
+	 * @return mixed The rows.
+	 */
+	private function findLinkRows(array $filters, string $register, string $schema): mixed {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		try {
+			return $objectService->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schema])]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'AttributionService.loadAttributionLinks: findAll failed',
+				['filters' => $filters, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end findLinkRows()
 
 	/**
 	 * Persist a payload via OpenRegister's ObjectService.
@@ -492,9 +585,10 @@ class AttributionService {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schemaSlug,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schemaSlug),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -508,40 +602,12 @@ class AttributionService {
 	}//end saveObject()
 
 	/**
-	 * Extract the object id from a payload (`uuid` / `id` / `slug`).
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential id-candidate probes across two payload shapes; extraction adds no clarity.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
 	 * Resolve the AttributionLink schema slug from app config.
 	 *
 	 * @return string Slug.
 	 */
 	private function getAttributionLinkSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'attributionLink_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'attributionLink_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -550,92 +616,18 @@ class AttributionService {
 	}//end getAttributionLinkSchemaSlug()
 
 	/**
-	 * Resolve the BlastDelivery schema slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
-
-	/**
 	 * Resolve the Lead (Deal) schema slug from app config.
 	 *
 	 * @return string Slug.
 	 */
 	private function getLeadSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
 
 		return self::DEFAULT_LEAD_SCHEMA_SLUG;
 	}//end getLeadSchemaSlug()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'AttributionService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Normalise an OpenRegister entity or array to a plain array.
-	 *
-	 * @param mixed $value Entity object or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Current time as an ISO-8601 string.

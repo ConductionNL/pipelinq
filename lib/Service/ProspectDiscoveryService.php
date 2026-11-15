@@ -21,16 +21,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCP\App\IAppManager;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Kernel\Contracts\ProspectDiscoveryServiceInterface;
 
 /**
  * Orchestrator for prospect discovery.
  *
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
-class ProspectDiscoveryService {
+class ProspectDiscoveryService implements ProspectDiscoveryServiceInterface {
 	/**
 	 * Default cache TTL in seconds (1 hour) when unconfigured.
 	 *
@@ -41,215 +39,148 @@ class ProspectDiscoveryService {
 	private const DEFAULT_CACHE_TTL = 3600;
 
 	/**
-	 * Cache key prefix.
+	 * Cache key prefix. v2: entries hold the whole scored list, not the top 10.
 	 *
 	 * @var string
 	 */
-	private const CACHE_PREFIX = 'pipelinq_prospects_';
+	private const CACHE_PREFIX = 'pipelinq_prospects_v2_';
 
 	/**
 	 * Constructor.
 	 *
 	 * @param IcpConfigService $icpConfig The ICP config service.
-	 * @param KvkApiClient $kvkClient The KVK API client.
-	 * @param OpenCorporatesApiClient $ocClient The OpenCorporates client.
-	 * @param ProspectScoringService $scoring The scoring service.
-	 * @param SettingsService $settings The settings service.
-	 * @param LoggerInterface $logger The logger.
-	 * @param ContainerInterface $container The DI container.
-	 * @param IAppManager $appManager The app manager.
+	 * @param ProspectSources  $sources   The KVK and OpenCorporates searches.
+	 * @param ProspectRanking  $ranking   Client exclusion, scoring and the inactive filter.
+	 * @param SettingsService  $settings  The settings service (cache lifetime).
 	 */
 	public function __construct(
 		private IcpConfigService $icpConfig,
-		private KvkApiClient $kvkClient,
-		private OpenCorporatesApiClient $ocClient,
-		private ProspectScoringService $scoring,
+		private ProspectSources $sources,
+		private ProspectRanking $ranking,
 		private SettingsService $settings,
-		private LoggerInterface $logger,
-		private ContainerInterface $container,
-		private IAppManager $appManager,
 	) {
 	}//end __construct()
 
 	/**
-	 * Discover prospects based on configured ICP.
+	 * Discover prospects based on configured ICP, with the profile they were
+	 * matched on under `icp`. The profile carries the criteria only, never the
+	 * KVK API key, and comes along when no profile is set yet as well, so the
+	 * prospects page can show what it searches for.
 	 *
 	 * @param bool $refresh Whether to bypass cache.
+	 * @param int  $limit   How many of the best-scored prospects to return; 0 returns all of them.
 	 *
 	 * @return array The discovery results.
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)  — $refresh is a simple cache bypass toggle
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) — orchestration method with multiple sources
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
-	 * @spec                                         openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
+	 * @spec                                        openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
-	public function discover(bool $refresh = false): array {
-		if ($this->icpConfig->isConfigured() === false) {
-			return [
-				'error' => 'no_icp_configured',
-				'message' => 'Configure your Ideal Customer Profile in admin settings first',
-			];
-		}
-
-		$icpHash = $this->icpConfig->getIcpHash();
-		$cacheKey = self::CACHE_PREFIX . $icpHash;
-
-		// Check cache.
-		if ($refresh === false && function_exists(function: 'apcu_exists') === true) {
-			$cached = $this->getFromCache(key: $cacheKey);
-			if ($cached !== null) {
-				return $cached;
-			}
-		}
-
-		$criteria = $this->icpConfig->getCriteria();
-		$apiKey = $this->icpConfig->getKvkApiKey();
-
-		$prospects = [];
-
-		// Fetch from KVK.
-		try {
-			$kvkResults = $this->kvkClient->search(apiKey: $apiKey, criteria: $criteria);
-			foreach ($kvkResults as $result) {
-				$prospects[$result['kvkNumber']] = $result;
-			}
-		} catch (\Exception $e) {
-			$this->logger->error(
-				message: 'KVK API search failed',
-				context: ['error' => $e->getMessage()]
-			);
-		}//end try
-
-		// Fetch from OpenCorporates (if enabled).
-		try {
-			$ocEnabled = $this->icpConfig->getSettings()['openCorporatesEnabled'] ?? false;
-			if ($ocEnabled === true) {
-				$ocResults = $this->ocClient->search(criteria: $criteria);
-				foreach ($ocResults as $result) {
-					if (isset($prospects[$result['kvkNumber']]) === false) {
-						$prospects[$result['kvkNumber']] = $result;
-					}
-				}
-			}
-		} catch (\Exception $e) {
-			$this->logger->warning(
-				message: 'OpenCorporates search failed',
-				context: ['error' => $e->getMessage()]
-			);
-		}//end try
-
-		// Exclude existing clients.
-		$prospects = $this->excludeExistingClients(prospects: array_values(array: $prospects));
-
-		// Score and sort.
-		$prospects = $this->scoring->scoreAll(prospects: $prospects, criteria: $criteria);
-
-		// Filter inactive if configured.
-		if (($criteria['excludeInactive'] ?? true) === true) {
-			$prospects = array_values(
-				array: array_filter(
-					array: $prospects,
-					callback: fn (array $prospect): bool => ($prospect['isActive'] ?? true) === true
-				)
-			);
-		}
-
-		$result = [
-			'prospects' => array_slice(array: $prospects, offset: 0, length: 10),
-			'total' => count($prospects),
-			'displayed' => min(count($prospects), 10),
-			'cachedAt' => date(format: 'c'),
-			'icpHash' => $icpHash,
-		];
-
-		// Store in cache.
-		$this->setInCache(key: $cacheKey, data: $result);
+	public function discover(bool $refresh=false, int $limit=10): array {
+		$result        = $this->collect(refresh: $refresh, limit: $limit);
+		$result['icp'] = $this->icpConfig->getCriteria();
 
 		return $result;
 	}//end discover()
 
 	/**
-	 * Exclude existing clients from prospect results by matching company names.
+	 * Collect, score and cache the prospects for the configured ICP.
 	 *
-	 * @param array $prospects The prospects to filter.
+	 * @param bool $refresh Whether to bypass cache.
+	 * @param int  $limit   How many of the best-scored prospects to return; 0 returns all of them.
 	 *
-	 * @return array The filtered prospects.
+	 * @return array The discovery results.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
+	 * @spec                                        openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
-	private function excludeExistingClients(array $prospects): array {
-		$clientNames = $this->getExistingClientNames();
-
-		if (count($clientNames) === 0) {
-			return $prospects;
+	private function collect(bool $refresh, int $limit): array {
+		if ($this->icpConfig->isConfigured() === false) {
+			return [
+				'error'   => 'no_icp_configured',
+				'message' => 'Configure your Ideal Customer Profile in admin settings first',
+			];
 		}
 
-		return array_values(
-			array: array_filter(
-				array: $prospects,
-				callback: function (array $prospect) use ($clientNames): bool {
-					$tradeName = strtolower(string: trim(string: $prospect['tradeName'] ?? ''));
-					if ($tradeName === '') {
-						return true;
-					}
+		$icpHash = $this->icpConfig->getIcpHash();
+		$cached  = $this->cached(refresh: $refresh, icpHash: $icpHash);
+		if ($cached !== null) {
+			return $this->limitResult(result: $this->withoutNewClients(result: $cached), limit: $limit);
+		}
 
-					// Use strict normalised equality only; bidirectional str_contains
-					// produces false positives on common substrings like "BV" or "Group".
-					return in_array($tradeName, $clientNames, true) === false;
-				}
-			)
-		);
-	}//end excludeExistingClients()
+		return $this->limitResult(result: $this->search(icpHash: $icpHash), limit: $limit);
+	}//end collect()
 
 	/**
-	 * Get names of existing clients (lowercased) from OpenRegister.
+	 * The cached result for the profile, unless the caller asks to refresh.
 	 *
-	 * @return array The client names.
+	 * @param bool   $refresh Whether to bypass the cache.
+	 * @param string $icpHash The profile's hash.
+	 *
+	 * @return array|null
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — $refresh is a simple cache bypass toggle
 	 */
-	private function getExistingClientNames(): array {
-		try {
-			$register = $this->settings->getConfigValue(key: 'register');
-			$schema = $this->settings->getConfigValue(key: 'client_schema');
+	private function cached(bool $refresh, string $icpHash): ?array {
+		if ($refresh === true) {
+			return null;
+		}
 
-			if ($register === '' || $schema === '') {
-				return [];
-			}
+		return $this->getFromCache(key: self::CACHE_PREFIX . $icpHash);
+	}//end cached()
 
-			if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-				return [];
-			}
+	/**
+	 * Search, rank and cache the whole scored list for the profile.
+	 *
+	 * @param string $icpHash The profile's hash.
+	 *
+	 * @return array The discovery result.
+	 */
+	private function search(string $icpHash): array {
+		$criteria  = $this->icpConfig->getCriteria();
+		$prospects = $this->ranking->rank(prospects: $this->sources->fetch(criteria: $criteria), criteria: $criteria);
 
-			/*
-			 * @var \OCA\OpenRegister\Service\ObjectService $objectService
-			 */
+		$result = [
+			'prospects' => $prospects,
+			'total'     => count($prospects),
+			'cachedAt'  => date(format: 'c'),
+			'icpHash'   => $icpHash,
+		];
+		$this->setInCache(key: self::CACHE_PREFIX . $icpHash, data: $result);
+		return $result;
+	}//end search()
 
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	/**
+	 * A cached result without the prospects that have since become clients.
+	 *
+	 * @param array $result The cached result.
+	 *
+	 * @return array
+	 */
+	private function withoutNewClients(array $result): array {
+		$result['prospects'] = $this->ranking->withoutClients(prospects: $result['prospects'] ?? []);
+		$result['total']     = count($result['prospects']);
+		return $result;
+	}//end withoutNewClients()
 
-			$clients = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1000,
-				]
-			);
+	/**
+	 * Cut a discovery result down to its best-scored prospects.
+	 *
+	 * @param array $result The full discovery result, prospects sorted by score.
+	 * @param int   $limit  How many prospects to keep; 0 keeps all of them.
+	 *
+	 * @return array The result with `prospects` and `displayed` set for the limit.
+	 */
+	private function limitResult(array $result, int $limit): array {
+		$prospects = $result['prospects'] ?? [];
+		if ($limit > 0) {
+			$prospects = array_slice(array: $prospects, offset: 0, length: $limit);
+		}
 
-			$names = [];
-			foreach ($clients as $client) {
-				$name = $client['name'] ?? $client['tradeName'] ?? '';
-				if ($name !== '') {
-					$names[] = strtolower(trim($name));
-				}
-			}
+		$result['prospects'] = $prospects;
+		$result['displayed'] = count($prospects);
 
-			return $names;
-		} catch (\Exception $e) {
-			$this->logger->warning(
-				message: 'Failed to fetch existing clients for exclusion',
-				context: ['error' => $e->getMessage()]
-			);
-			return [];
-		}//end try
-	}//end getExistingClientNames()
+		return $result;
+	}//end limitResult()
 
 	/**
 	 * Get cached results.
@@ -257,8 +188,9 @@ class ProspectDiscoveryService {
 	 * @param string $key The cache key.
 	 *
 	 * @return array|null The cached data or null.
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
-	private function getFromCache(string $key): ?array {
+	protected function getFromCache(string $key): ?array {
 		if (function_exists(function: 'apcu_fetch') === false) {
 			return null;
 		}
@@ -280,8 +212,9 @@ class ProspectDiscoveryService {
 	 * @param array $data The data to cache.
 	 *
 	 * @return void
+	 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
-	private function setInCache(string $key, array $data): void {
+	protected function setInCache(string $key, array $data): void {
 		if (function_exists(function: 'apcu_store') === true) {
 			$ttl = $this->settings->getIntValue(
 				'prospect_discovery.cache_ttl_seconds',

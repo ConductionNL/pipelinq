@@ -34,6 +34,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Passing the built-in slug as getValueString()'s default only covers an
@@ -97,13 +98,11 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	private function registerRecordingObjectService(array &$seen): ObjectServiceInterface {
 		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			static function (
-				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
-			) use (&$seen): ?ObjectEntityInterface {
+			static function (int|string $id, ?ObjectFindOptions $options = null) use (&$seen): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$seen[] = $register;
 				return null;
 			}

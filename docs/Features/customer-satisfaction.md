@@ -17,9 +17,16 @@ What is implemented:
 - detractor follow-up: a task for the client's owner, or for the configured
   default assignee when the client has none, with the notification produced by
   the OpenRegister notification engine rather than by app code
+- a public survey page in the customer portal (`/portal/survey/{token}`), which
+  the invitation links to: the respondent needs no account, answers the
+  questions, and can tick "Don't send me satisfaction surveys again"
 - response-rate analytics, with suppressed and failed invitations reported
-  beside the percentage rather than folded into it
-- a per-client satisfaction panel on customer 360, with its own empty state
+  beside the percentage rather than folded into it: the "Survey response rate"
+  widget on the Operational overview shows the rate for the last 30, 90 or 365
+  days or all time, with one line per channel
+- a satisfaction panel on the client page: NPS, average rating, number of
+  responses, the trend against the 90 days before and the three latest
+  comments, with its own empty state
 
 What is not built yet: the admin surface for the dispatch rules is the settings
 API rather than a screen, and sms and whatsapp delivery wait on the outbound
@@ -44,7 +51,8 @@ Klanttevredenheidsonderzoek (KTO) survey management and Net Promoter Score (NPS)
 - Link surveys to specific interaction channels, request types, or time periods
 
 ### Public Response Collection
-- Public survey response endpoint (unauthenticated): citizens respond without login
+- Public survey page in the customer portal (unauthenticated): citizens respond without login
+- `GET` and `POST /apps/pipelinq/survey/i/{token}`: the JSON the page reads and answers through
 - Unique survey links per contactmoment or request
 - Rate limiting and duplicate submission prevention
 
@@ -52,7 +60,8 @@ Klanttevredenheidsonderzoek (KTO) survey management and Net Promoter Score (NPS)
 - NPS calculation: promoters (9–10) minus detractors (0–6), displayed as −100 to +100
 - Average satisfaction score per survey, per channel, per period
 - Trend visualization: satisfaction over time
-- Response rate tracking
+- Response rate tracking: `GET /apps/pipelinq/api/satisfaction/response-rate?days=&channel=&surveyId=`
+  answers delivered, responded, rate, suppressed and failed, and the same per channel under `byChannel`
 
 ### Entity Linking
 - Link survey responses to specific contactmomenten, requests, or clients

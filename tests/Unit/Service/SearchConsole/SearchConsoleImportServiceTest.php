@@ -43,6 +43,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for SearchConsoleImportService.
@@ -164,7 +165,10 @@ class SearchConsoleImportServiceTest extends TestCase {
 			}//end findAll()
 
 			/** @return array<string, mixed> */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null) {
 					$this->created++;
 					$uuid = ('obj-' . $this->created);
@@ -328,6 +332,59 @@ class SearchConsoleImportServiceTest extends TestCase {
 		$this->assertSame(1, $result['rows']);
 		$this->assertSame(['https://example.org/' => 'Search Console: User does not have sufficient permission for site'], $result['errors']);
 	}//end testAnApiErrorOnOnePropertyIsReportedAndTheOthersContinue()
+
+	/**
+	 * An answer that is not JSON fails the property with its own message, and
+	 * a run where no property succeeded leaves the last-import stamp alone.
+	 *
+	 * @return void
+	 */
+	public function testAnAnswerThatIsNotJsonFailsThePropertyAndStampsNothing(): void {
+		$importer = $this->build(['<html>', '!down']);
+		$result = $importer->importRecent();
+
+		$this->assertSame(
+			['properties' => 0, 'rows' => 0, 'errors' => [
+				'https://example.org/' => 'Search Console: the API answered with something that is not JSON',
+				'sc-domain:example.net' => 'down',
+			]],
+			$result
+		);
+		$this->assertSame('', $importer->lastImportAt());
+	}//end testAnAnswerThatIsNotJsonFailsThePropertyAndStampsNothing()
+
+	/**
+	 * The request carries the bearer, the window and the paging, and a
+	 * successful run stamps the import moment.
+	 *
+	 * @return void
+	 */
+	public function testTheRequestCarriesTheWindowAndASuccessStampsTheMoment(): void {
+		$importer = $this->build([$this->page([]), $this->page([])]);
+		$importer->importRecent(days: 2);
+
+		$this->assertCount(2, $this->posts);
+		$this->assertStringContainsString(rawurlencode('https://example.org/'), $this->posts[0]['url']);
+		$this->assertStringContainsString(rawurlencode('sc-domain:example.net'), $this->posts[1]['url']);
+		$today = gmdate('Y-m-d', self::NOW);
+		$from = gmdate('Y-m-d', (self::NOW - (2 * 86400)));
+		$this->assertSame(
+			[
+				'headers' => ['Authorization' => 'Bearer tok-1', 'Accept' => 'application/json'],
+				'json' => [
+					'startDate' => $from,
+					'endDate' => $today,
+					'dimensions' => ['date', 'query', 'page'],
+					'rowLimit' => 5000,
+					'startRow' => 0,
+					'dataState' => 'all',
+				],
+				'timeout' => 60,
+			],
+			$this->posts[0]['options']
+		);
+		$this->assertSame(gmdate('Y-m-d\TH:i:s\Z', self::NOW), $importer->lastImportAt());
+	}//end testTheRequestCarriesTheWindowAndASuccessStampsTheMoment()
 
 	/**
 	 * @return void

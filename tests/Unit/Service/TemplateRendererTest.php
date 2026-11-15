@@ -18,8 +18,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-template-013
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-deeplink-014
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-TEMPLATE-013
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-DEEPLINK-014
  */
 
 declare(strict_types=1);
@@ -169,4 +169,81 @@ class TemplateRendererTest extends TestCase {
 		$rendered = $renderer->render($tpl, ['caseId' => 'Z-1']);
 		$this->assertNull($rendered['deepLink']);
 	}//end testMissingDeepLinkBaseReturnsNull()
+
+	/**
+	 * `{{preferredName}}` is the preferred name, and the full name without one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+	 */
+	public function testPreferredNameFallsBackToTheFullName(): void {
+		$renderer = $this->buildRenderer();
+		$tpl = ['subject' => 'Uw aanvraag', 'body' => '<p>Beste {{preferredName}},</p>'];
+
+		$with = $renderer->render($tpl, ['preferredName' => 'Jan', 'name' => 'Johannes Jansen']);
+		$without = $renderer->render($tpl, ['name' => 'Johannes Jansen']);
+		$blank = $renderer->render($tpl, ['preferredName' => '  ', 'fullName' => 'Johanna de Wit', 'name' => 'ignored']);
+		$unknown = $renderer->render($tpl, []);
+
+		$this->assertSame('<p>Beste Jan,</p>', $with['body']);
+		$this->assertSame('<p>Beste Johannes Jansen,</p>', $without['body']);
+		$this->assertSame('<p>Beste Johanna de Wit,</p>', $blank['body']);
+		$this->assertSame('<p>Beste ,</p>', $unknown['body']);
+	}//end testPreferredNameFallsBackToTheFullName()
+
+	/**
+	 * A personalised greeting uses the preferred name (REQ-MMT-002 "Personalised greeting").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function testPersonalisedGreetingUsesThePreferredName(): void {
+		$rendered = $this->buildRenderer()->render(
+			['subject' => 'Hello {{preferredName}}', 'body' => '<p>Dear {{preferredName}},</p>'],
+			['preferredName' => 'Anna', 'fullName' => 'Anna de Vries']
+		);
+
+		$this->assertSame('Hello Anna', $rendered['subject']);
+		$this->assertSame('<p>Dear Anna,</p>', $rendered['body']);
+	}//end testPersonalisedGreetingUsesThePreferredName()
+
+	/**
+	 * A value with markup renders as text in `{{variable}}` and as markup in
+	 * `{{{variable}}}` (REQ-MMT-002 "A value with markup").
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function testMarkupInAValueIsEscapedUnlessTripleBraced(): void {
+		$renderer = $this->buildRenderer();
+		$variables = ['organisation' => '<b>Acme</b>'];
+
+		$escaped = $renderer->render(['subject' => 's', 'body' => '<p>{{organisation}}</p>'], $variables);
+		$raw = $renderer->render(['subject' => 's', 'body' => '<p>{{{organisation}}}</p>'], $variables);
+		$spaced = $renderer->render(['subject' => 's', 'body' => '<p>{{ organisation }}</p>'], $variables);
+
+		$this->assertSame('<p>&lt;b&gt;Acme&lt;/b&gt;</p>', $escaped['body']);
+		$this->assertSame('<p><b>Acme</b></p>', $raw['body']);
+		$this->assertSame($escaped['body'], $spaced['body']);
+	}//end testMarkupInAValueIsEscapedUnlessTripleBraced()
+
+	/**
+	 * A used variable without a value renders empty, in both brace forms.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function testAVariableWithoutAValueRendersEmpty(): void {
+		$rendered = $this->buildRenderer()->render(
+			['subject' => 'News for {{city}}', 'body' => '<p>[{{city}}][{{{city}}}]</p>'],
+			['name' => 'Anna']
+		);
+
+		$this->assertSame('News for ', $rendered['subject']);
+		$this->assertSame('<p>[][]</p>', $rendered['body']);
+	}//end testAVariableWithoutAValueRendersEmpty()
 }//end class

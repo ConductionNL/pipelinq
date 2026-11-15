@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ class FiscalPeriodService {
 	 *
 	 * @return string The period id, e.g. "Q2-2026".
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-02
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-004-02
 	 */
 	public function periodIdFor(DateTimeInterface $date): string {
 		$month = (int)$date->format('n');
@@ -97,7 +97,7 @@ class FiscalPeriodService {
 	 *
 	 * @return int Whole days remaining (0 once the period has ended).
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-008-04
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-008-04
 	 */
 	public function daysRemaining(string $periodId, ?DateTimeInterface $now = null): int {
 		$end = $this->periodEnd(periodId: $periodId);
@@ -122,7 +122,7 @@ class FiscalPeriodService {
 	 *
 	 * @return bool True when the period end is in the past.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-007-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-007-01
 	 */
 	public function isClosed(string $periodId, ?DateTimeInterface $now = null): bool {
 		$end = $this->periodEnd(periodId: $periodId);

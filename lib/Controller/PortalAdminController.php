@@ -22,18 +22,19 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-002
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Portal\PortalAuditService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
+use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -55,26 +56,35 @@ use Psr\Log\LoggerInterface;
  */
 class PortalAdminController extends Controller {
 	/**
+	 * How many audit events the all-tenant overview answers by default.
+	 *
+	 * @var int
+	 */
+	private const RECENT_EVENT_LIMIT = 20;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalTenantService $tenant The tenant service.
-	 * @param PortalAuditService $audit The audit service.
-	 * @param PortalObjectRepository $repository The portal object repository.
+	 * @param PortalTenantServiceInterface $tenant The tenant service.
+	 * @param PortalAuditServiceInterface $audit The audit service.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
+	 * @param PortalServiceAccount $serviceAccount The account portal writes run as.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PortalTenantService $tenant,
-		private PortalAuditService $audit,
-		private PortalObjectRepository $repository,
+		private PortalTenantServiceInterface $tenant,
+		private PortalAuditServiceInterface $audit,
+		private PortalObjectRepositoryInterface $repository,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
+		private PortalServiceAccount $serviceAccount,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -167,10 +177,31 @@ class PortalAdminController extends Controller {
 	public function auditEvents(): JSONResponse {
 		return $this->adminGuarded(
 			handler: function (): array {
+				if ((string)$this->request->getParam('all', '') === '1') {
+					$limit = (int)$this->request->getParam('limit', self::RECENT_EVENT_LIMIT);
+					return [$this->audit->getRecent(limit: $limit), Http::STATUS_OK];
+				}
+
 				return [['events' => $this->audit->getForTenant(tenantId: $this->tenantId())], Http::STATUS_OK];
 			}
 		);
 	}//end auditEvents()
+
+	/**
+	 * Every stored portal tenant, for the admin overview.
+	 *
+	 * @auth admin-only Lists every portal's admin config (domains, status); the body additionally enforces it through adminGuarded().
+	 *
+	 * @return JSONResponse `{tenants}`, or an error.
+		 * @spec openspec/changes/portal-tenants-on-one-admin-tab/specs/customer-portal/spec.md#requirement-the-admin-tab-lists-every-portal-tenant
+	 */
+	public function tenants(): JSONResponse {
+		return $this->adminGuarded(
+			handler: function (): array {
+				return [['tenants' => $this->tenant->listConfigs()], Http::STATUS_OK];
+			}
+		);
+	}//end tenants()
 
 	/**
 	 * The tenant id from the request (admin endpoints may target any tenant).
@@ -178,13 +209,69 @@ class PortalAdminController extends Controller {
 	 * @return string The tenant id.
 	 */
 	private function tenantId(): string {
-		$value = $this->request->getParam('tenantId', PortalTenantService::DEFAULT_TENANT);
+		$value = $this->request->getParam('tenantId', PortalTenantServiceInterface::DEFAULT_TENANT);
 		if (is_string($value) === true && trim($value) !== '') {
 			return trim($value);
 		}
 
-		return PortalTenantService::DEFAULT_TENANT;
+		return PortalTenantServiceInterface::DEFAULT_TENANT;
 	}//end tenantId()
+
+	/**
+	 * Which account portal writes run as, and whether it can be used.
+	 *
+	 * @auth admin-only Names the account every portal write runs as; the body additionally enforces it through adminGuarded().
+	 *
+	 * @return JSONResponse `{userId, usable, reason, group}`.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
+	 */
+	public function getServiceAccount(): JSONResponse {
+		return $this->adminGuarded(
+			handler: function (): array {
+				return [$this->serviceAccountBody(status: $this->serviceAccount->status()), Http::STATUS_OK];
+			}
+		);
+	}//end getServiceAccount()
+
+	/**
+	 * Pick the account portal writes run as. It must exist and be enabled; it
+	 * joins the portal service group.
+	 *
+	 * @auth admin-only Chooses the identity every portal write runs as; the body additionally enforces it through adminGuarded().
+	 *
+	 * @return JSONResponse The new status, or 400 when the account cannot be used.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
+	 */
+	public function saveServiceAccount(): JSONResponse {
+		return $this->adminGuarded(
+			handler: function (): array {
+				try {
+					$status = $this->serviceAccount->assign(userId: (string)$this->request->getParam('userId', ''));
+				} catch (\InvalidArgumentException $e) {
+					return [['errorCode' => 'badRequest', 'message' => $e->getMessage()], Http::STATUS_BAD_REQUEST];
+				}
+
+				return [$this->serviceAccountBody(status: $status), Http::STATUS_OK];
+			}
+		);
+	}//end saveServiceAccount()
+
+	/**
+	 * The service account status with the group it must be in.
+	 *
+	 * @param array{userId: string, usable: bool, reason: string|null} $status The status.
+	 *
+	 * @return array<string, mixed> The response body.
+	 */
+	private function serviceAccountBody(array $status): array {
+		return array_merge($status, ['group' => PortalServiceAccount::GROUP]);
+	}//end serviceAccountBody()
 
 	/**
 	 * Run a handler behind an explicit admin assertion, mapping errors safely.

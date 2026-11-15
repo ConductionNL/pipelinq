@@ -19,14 +19,20 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,9 +48,14 @@ use Throwable;
  * - findByVendor(kind, vendor) — find the first active row matching
  *   both `kind` and `vendor` (used by SmsAdapter.providerHint).
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class ChannelProviderRepository {
+class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
+	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SchemaRowQuery;
+
 	/**
 	 * Default channelProvider schema slug.
 	 */
@@ -62,7 +73,7 @@ class ChannelProviderRepository {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -78,7 +89,7 @@ class ChannelProviderRepository {
 	 *
 	 * @return array<int, array<string, mixed>> Provider rows.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function listActive(string $kind): array {
 		$objectService = $this->getObjectService();
@@ -86,27 +97,18 @@ class ChannelProviderRepository {
 			return [];
 		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'kind' => $kind,
-						'active' => true,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.listActive: findAll failed',
-				['kind' => $kind, 'exception' => $e->getMessage()]
-			);
+		$rows = $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['kind' => $kind, 'active' => true],
+			failure: 'ChannelProviderRepository.listActive: findAll failed',
+			context: ['kind' => $kind]
+		);
+		if ($rows === null) {
 			return [];
 		}
 
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(value: $row);
 			// Defence in depth — schema filter "active=true" should already
 			// remove inactive rows, but some OR backends don't honour
@@ -131,7 +133,7 @@ class ChannelProviderRepository {
 	}//end listActive()
 
 	/**
-	 * Load one provider row by id.
+	 * Load one provider row by id, under the caller's RBAC.
 	 *
 	 * @param string $id Provider UUID / slug.
 	 *
@@ -139,6 +141,35 @@ class ChannelProviderRepository {
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function findById(string $id): ?array {
+		return $this->lookup(id: $id, scope: []);
+	}//end findById()
+
+	/**
+	 * Load one provider row by id as the system, for a signed inbound webhook.
+	 *
+	 * A provider's inbound webhook is a PublicPage with no user, so under
+	 * OpenRegister's RBAC the row is never found. The webhook reads the row
+	 * whose secret then verifies the callback; the row stays in-process and
+	 * is never returned to the caller.
+	 *
+	 * @param string $id Provider UUID / slug.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
+	 */
+	public function findByIdForWebhook(string $id): ?array {
+		return $this->lookup(id: $id, scope: ['_rbac' => false, '_multitenancy' => false]);
+	}//end findByIdForWebhook()
+
+	/**
+	 * Load one provider row by id with the given OpenRegister access scope.
+	 *
+	 * @param string $id Provider UUID / slug.
+	 * @param array<string, bool> $scope Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 */
+	private function lookup(string $id, array $scope): ?array {
 		if ($id === '') {
 			return null;
 		}
@@ -148,17 +179,28 @@ class ChannelProviderRepository {
 			return null;
 		}
 
+		return $this->findProvider(objectService: $objectService, id: $id, scope: $scope);
+	}//end lookup()
+
+	/**
+	 * Find one provider row, logging a miss.
+	 *
+	 * @param object              $objectService OpenRegister's ObjectService.
+	 * @param string              $id            Provider UUID / slug.
+	 * @param array<string, bool> $scope         Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 */
+	private function findProvider(object $objectService, string $id, array $scope): array|null {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
+				options: new ObjectFindOptions(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
+				_rbac: $scope['_rbac'] ?? true,
+				_multitenancy: $scope['_multitenancy'] ?? true
 			);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'ChannelProviderRepository.findById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('ChannelProviderRepository.findById: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
 
@@ -167,7 +209,7 @@ class ChannelProviderRepository {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end findById()
+	}//end findProvider()
 
 	/**
 	 * First active row matching kind + vendor.
@@ -189,73 +231,13 @@ class ChannelProviderRepository {
 	}//end findByVendor()
 
 	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Normalise an OR entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
 	 * Schema slug (app-config overridable).
 	 *
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
 		$slug = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'channelProvider_schema',
 			''
 		);

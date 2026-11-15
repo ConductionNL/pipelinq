@@ -64,6 +64,17 @@ describe('fieldOptionsFor', () => {
 		)
 	})
 
+	it('offers the client place on the customer audience, so a rule can read "Plaats is gelijk aan Zuiddrecht"', () => {
+		const place = fieldOptionsFor('customer').find((o) => o.value === 'place')
+		expect(place).toEqual({ value: 'place', label: 'Place', type: 'string' })
+	})
+
+	it('offers the derived last contact on the customer audience as a date, so a rule can read "Laatste contact na"', () => {
+		const lastContact = fieldOptionsFor('customer').find((o) => o.value === 'pipelinqLastContactAt')
+		expect(lastContact).toEqual({ value: 'pipelinqLastContactAt', label: 'Last contact', type: 'string', format: 'date' })
+		expect(fieldOptionsFor('contact').some((o) => o.value === 'pipelinqLastContactAt')).toBe(false)
+	})
+
 	it('returns the contact list for an unrecognised entityType, matching SegmentForm.entityType.set()\'s "contact" fallback', () => {
 		expect(fieldOptionsFor('nonsense')).toBe(CONTACT_FIELD_OPTIONS)
 	})

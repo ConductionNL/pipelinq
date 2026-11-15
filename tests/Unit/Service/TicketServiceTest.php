@@ -288,6 +288,72 @@ class TicketServiceTest extends TestCase {
 	}//end testLogContactmomentWritesTicketAndReturnsUuid()
 
 	/**
+	 * logContactmoment() names each missing or invalid argument, in argument
+	 * order, trims what it is given and writes nothing on a refusal.
+	 *
+	 * @return void
+	 */
+	public function testLogContactmomentRefusalMessagesInArgumentOrder(): void {
+		$objectService = $this->mockObjectService();
+		$objectService->expects($this->never())->method('saveObject');
+		$service = $this->buildService();
+
+		$cases = [
+			[['  ', 'telefoon', 'T', 'inbound'], 'Required argument client is missing.'],
+			[[self::NIL_UUID, ' ', '', ''], 'Required argument channel is missing.'],
+			[[self::NIL_UUID, 'telefoon', "\t", ''], 'Required argument title is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', ''], 'Required argument direction is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', '  '], 'Required argument direction is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', 'sideways'], 'Argument direction must be one of ' . implode(', ', TicketService::DIRECTIONS) . '.'],
+			[[self::NIL_UUID, 'telefoon', 'T', 'Inbound'], 'Argument direction must be one of ' . implode(', ', TicketService::DIRECTIONS) . '.'],
+		];
+		foreach ($cases as [[$client, $channel, $title, $direction], $message]) {
+			$result = $service->logContactmoment(client: $client, channel: $channel, title: $title, direction: $direction);
+			$this->assertSame(['error' => ['code' => 'invalid_arguments', 'message' => $message]], $result, $message);
+		}
+	}//end testLogContactmomentRefusalMessagesInArgumentOrder()
+
+	/**
+	 * logContactmoment() trims client, channel, title and direction, leaves
+	 * empty optional fields out and stamps occurredAt.
+	 *
+	 * @return void
+	 */
+	public function testLogContactmomentTrimsAndOmitsEmptyOptionals(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$objectService = $this->mockObjectService();
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$captured): ObjectEntityInterface {
+				$captured = $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject($object);
+				return $entity;
+			}
+		);
+
+		$result = $this->buildService()->logContactmoment(
+			client: ' ' . self::NIL_UUID . ' ',
+			channel: ' email ',
+			title: ' Vraag ',
+			direction: ' outbound ',
+			outcome: '',
+			notes: ''
+		);
+
+		$this->assertSame(['ticketId' => self::NIL_UUID], $result);
+		$this->assertSame(self::NIL_UUID, $captured['client']);
+		$this->assertSame('email', $captured['channel']);
+		$this->assertSame('Vraag', $captured['title']);
+		$this->assertSame('outbound', $captured['direction']);
+		$this->assertArrayNotHasKey('outcome', $captured);
+		$this->assertArrayNotHasKey('description', $captured);
+		$this->assertNotFalse(\DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $captured['occurredAt']));
+	}//end testLogContactmomentTrimsAndOmitsEmptyOptionals()
+
+	/**
 	 * logContactmoment() denied by RBAC maps to a forbidden envelope, not a success.
 	 *
 	 * @return void
@@ -334,6 +400,20 @@ class TicketServiceTest extends TestCase {
 		$this->assertNull(actual: $service->detectTypeInText(text: 'How many leads are open?'));
 		$this->assertNull(actual: $service->detectTypeInText(text: ''));
 	}//end testDetectTypeInTextRecognisesSubtypeVocabulary()
+
+	/**
+	 * A melding is a ticket subtype like the others: it is in TYPES, so the
+	 * per-type summaries count it, and its words name it.
+	 *
+	 * @return void
+	 */
+	public function testMeldingIsATicketSubtype(): void {
+		$this->assertContains(needle: TicketService::TYPE_MELDING, haystack: TicketService::TYPES);
+		$this->assertSame(
+			expected: TicketService::TYPE_MELDING,
+			actual: $this->buildService()->detectTypeInText(text: 'Hoeveel meldingen staan er open?')
+		);
+	}//end testMeldingIsATicketSubtype()
 	/**
 	 * A contactmoment written without a direction is refused, naming the field.
 	 *
@@ -509,4 +589,56 @@ class TicketServiceTest extends TestCase {
 		$this->assertSame(expected: ['case-a', 'case-b'], actual: $captured['caseReferences']);
 		$this->assertSame(expected: 'case-b', actual: $captured['primaryCaseReference']);
 	}//end testAPrimaryInsideTheSetIsAccepted()
+
+	/**
+	 * An order asked for reaches the store, with the type filter still forced.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 */
+	public function testFindByTypeHandsAnOrderToTheStore(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$this->mockObjectService()->method('findAll')->willReturnCallback(
+			static function (array $query) use (&$captured): array {
+				$captured = $query;
+				return [];
+			}
+		);
+
+		$this->buildService()->findByType(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			extraFilters: ['assignee' => 'agent-1'],
+			limit: 5,
+			sort: ['started_at' => 'desc'],
+		);
+
+		$this->assertSame(expected: ['started_at' => 'desc'], actual: $captured['sort']);
+		$this->assertSame(expected: 5, actual: $captured['limit']);
+		$this->assertSame(expected: TicketService::TYPE_CONTACTMOMENT, actual: $captured['filters']['ticketType']);
+		$this->assertSame(expected: 'agent-1', actual: $captured['filters']['assignee']);
+	}//end testFindByTypeHandsAnOrderToTheStore()
+
+	/**
+	 * Without an order the query is the one every earlier caller sent: no sort key.
+	 *
+	 * @return void
+	 */
+	public function testFindByTypeWithoutAnOrderSendsNoSortKey(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$this->mockObjectService()->method('findAll')->willReturnCallback(
+			static function (array $query) use (&$captured): array {
+				$captured = $query;
+				return [];
+			}
+		);
+
+		$this->buildService()->findByType(ticketType: TicketService::TYPE_REQUEST);
+
+		$this->assertSame(expected: ['filters', 'limit'], actual: array_keys($captured));
+	}//end testFindByTypeWithoutAnOrderSendsNoSortKey()
 }//end class

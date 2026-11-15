@@ -32,6 +32,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Capturing ObjectService double for renewal-lead / task creation.
@@ -62,7 +63,11 @@ class FakeRenewalObjectService {
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function saveObject($object, $extend = [], $register = null, $schema = null, $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$data = (array)$object;
 		$this->seq++;
 		$data['id'] = ($uuid ?? 'new-' . $this->seq);

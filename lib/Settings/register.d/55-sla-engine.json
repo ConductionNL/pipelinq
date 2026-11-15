@@ -391,59 +391,6 @@
         "@self": {
           "register": "sla",
           "schema": "slaPolicy",
-          "slug": "goud-tier-request-sla"
-        },
-        "name": "Goud-tier klant-SLA",
-        "description": "Strakkere targets voor goud-tier klanten met 24x7-acknowledgement.",
-        "appliesTo": "request",
-        "customerTier": "gold",
-        "targets": [
-          {
-            "kind": "acknowledgement",
-            "duration": "PT1H",
-            "calendar": "24x7"
-          },
-          {
-            "kind": "firstResponse",
-            "duration": "PT4H",
-            "calendar": "24x7"
-          },
-          {
-            "kind": "resolution",
-            "duration": "P1W",
-            "calendar": "business-hours"
-          }
-        ],
-        "escalationChain": [
-          {
-            "triggerAt": 0.8,
-            "notify": "assignee",
-            "channel": "nextcloud-notification"
-          },
-          {
-            "triggerAt": 1.0,
-            "notify": "manager",
-            "channel": "email"
-          },
-          {
-            "triggerAt": 1.5,
-            "notify": "director",
-            "channel": "email"
-          }
-        ],
-        "pauseConditions": [
-          "awaiting_customer"
-        ],
-        "holidayCalendar": "nl-feestdagen-rijksoverheid",
-        "priority": 10,
-        "active": true,
-        "justification": "Goud-tier contractueel commitment (seed data).",
-        "status": "published"
-      },
-      {
-        "@self": {
-          "register": "sla",
-          "schema": "slaPolicy",
           "slug": "avg-datalek-klacht-sla"
         },
         "name": "AVG datalek-klacht SLA",

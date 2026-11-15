@@ -19,13 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ClientManagementIntegrationInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -36,20 +37,22 @@ use Throwable;
  * - onContactDeleted(contactId) — listener hook that cascades
  *   `messagingConsentRecord` deletion via ConsentService.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class ClientManagementIntegration {
+class ClientManagementIntegration implements ClientManagementIntegrationInterface {
 	/**
 	 * Constructor.
 	 *
 	 * @param ConsentService $consentService Consent audit log.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IntegriqConsentClient $integriq Tells integriq to drop the contact link and keep the opt-out.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ConsentService $consentService,
 		private LoggerInterface $logger,
+		private IntegriqConsentClient $integriq,
 	) {
 	}//end __construct()
 
@@ -60,11 +63,23 @@ class ClientManagementIntegration {
 	 *
 	 * @return int Number of consent rows deleted.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-contact-erasure-keeps-the-opt-out-in-integriq-req-cii-005
 	 */
 	public function onContactDeleted(string $contactId): int {
 		if ($contactId === '') {
 			return 0;
+		}
+
+		// Integriq keeps the opt-out under the address and drops the contact
+		// link and the evidence (Ruben, 2026-10-05, decision 5). pipelinq never
+		// asks integriq to delete an opt-out.
+		$erased = $this->integriq->eraseContact(contactRef: $contactId);
+		if ($erased['recorded'] === false) {
+			$this->logger->warning(
+				'ClientManagementIntegration.onContactDeleted: integriq did not clear the contact link',
+				['contactId' => $contactId, 'code' => $erased['code']]
+			);
 		}
 
 		try {

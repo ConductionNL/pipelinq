@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
 
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
+use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCP\IAppConfig;
 use Psr\Log\NullLogger;
 
@@ -63,7 +64,9 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	 */
 	public function __construct(IAppConfig $appConfig) {
 		// The OR stub is inert: storage is the in-memory map below.
-		parent::__construct($appConfig, new NullLogger(), new ObjectService());
+		// The service account is never consulted: save() is overridden below.
+		$serviceAccount = (new \ReflectionClass(PortalServiceAccount::class))->newInstanceWithoutConstructor();
+		parent::__construct($appConfig, new NullLogger(), new ObjectService(), $serviceAccount);
 	}//end __construct()
 
 	/**
@@ -143,6 +146,14 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 		$matches = $this->findAll($schemaSlug, $filters);
 		return ($matches[0] ?? null);
 	}//end findOneBy()
+
+	/**
+	 * The in-memory store can always write.
+	 *
+	 * @return void
+	 */
+	public function requireWritable(): void {
+	}//end requireWritable()
 
 	/**
 	 * {@inheritDoc}

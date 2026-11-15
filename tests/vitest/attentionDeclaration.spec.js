@@ -1,0 +1,202 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * `appinfo/attention.json`: what this app tells LaunchPad needs attention.
+ *
+ * LaunchPad's "First today" widget reads this file from every app a user has,
+ * counts each item in OpenRegister as that user and shows one ranked list with
+ * a link into the app. The contract is LaunchPad's
+ * (`openspec/specs/attention-feed/spec.md`, REQ-ATT-001 and REQ-ATT-003 in
+ * ConductionNL/launchpad); the rules below are a copy of its
+ * `AttentionDeclarationValidator`, because that class is not available here.
+ *
+ * The file fails quietly on LaunchPad's side: an invalid file is left out of
+ * the list, a filter that differs from the dashboard card shows a different
+ * number than the app does, and a string without a translation is shown in
+ * English. So every one of those is held here.
+ *
+ * @spec openspec/changes/simple-contact-dashboard/specs/kcc-werkplek/spec.md
+ */
+
+import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
+import fs from 'fs'
+import path from 'path'
+import { describe, expect, it } from 'vitest'
+import { applyMenuModules } from '../../src/utils/menuModules.js'
+import { buildProfiledManifest } from '../../src/utils/structureProfile.js'
+
+const ROOT = path.resolve(__dirname, '../..')
+const read = (...parts) => fs.readFileSync(path.join(ROOT, ...parts), 'utf8')
+const readJson = (...parts) => JSON.parse(read(...parts))
+
+const declaration = readJson('appinfo', 'attention.json')
+const item = declaration.items.find((entry) => entry.id === 'tickets-past-deadline')
+
+const fragments = fs
+	.readdirSync(path.join(ROOT, 'src', 'manifest.d'))
+	.filter((name) => name.endsWith('.json'))
+	.sort()
+	.map((name) => readJson('src', 'manifest.d', name))
+const builtSimple = buildProfiledManifest(
+	buildManifest,
+	readJson('src', 'manifest.json'),
+	fragments,
+	// As src/main.js builds it, with no module switched off.
+	applyMenuModules(readJson('src', 'menu-layout.simple.json'), []),
+)
+// The app's own "First today" card, as the contact centre dashboard ships it.
+const card = builtSimple.pages
+	.find((page) => page.id === 'KccWerkplek')
+	.config.widgets.find((widget) => widget.id === 'simple-first-today').content
+
+const SEVERITIES = ['error', 'warning', 'info']
+const OPERATORS = ['gt', 'gte', 'lt', 'lte', 'eq', 'neq']
+// The tokens LaunchPad resolves before it counts. Any other value that starts
+// with `@` fails the count (REQ-ATT-003).
+const TOKEN = /^@(me|now|today([+-]\d+d)?|monthStart|quarterStart|yearStart)$/
+
+function isScalar(value) {
+	return ['string', 'number', 'boolean'].includes(typeof value)
+}
+function isFlat(value) {
+	return (
+		isScalar(value)
+		|| (Array.isArray(value) && value.length > 0 && value.every(isScalar))
+	)
+}
+
+describe('appinfo/attention.json follows the attention feed contract', () => {
+	it('is version 1 with a list of at most ten items, each id once', () => {
+		expect(declaration.version).toBe(1)
+		expect(Array.isArray(declaration.items)).toBe(true)
+		expect(declaration.items.length).toBeGreaterThan(0)
+		expect(declaration.items.length).toBeLessThanOrEqual(10)
+		const ids = declaration.items.map((entry) => entry.id)
+		expect(new Set(ids).size).toBe(ids.length)
+	})
+
+	it('gives every item an id, three texts, a known severity, operator and a numeric value', () => {
+		for (const entry of declaration.items) {
+			expect(entry.id).toMatch(/^[a-z0-9][a-z0-9-]{0,63}$/)
+			for (const text of [entry.title, entry.reason, entry.action?.label]) {
+				expect(typeof text, entry.id).toBe('string')
+				expect(text.trim(), entry.id).not.toBe('')
+			}
+			expect(SEVERITIES, entry.id).toContain(entry.severity ?? 'info')
+			expect(OPERATORS, entry.id).toContain(entry.op ?? 'gt')
+			expect(typeof (entry.value ?? 0), entry.id).toBe('number')
+		}
+	})
+
+	it('names its register and schema by slug and writes the filter flat', () => {
+		const slug = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/
+		for (const entry of declaration.items) {
+			expect(entry.source.register, entry.id).toMatch(slug)
+			expect(entry.source.schema, entry.id).toMatch(slug)
+			const filter = entry.source.filter ?? {}
+			expect(Array.isArray(filter), entry.id).toBe(false)
+			for (const [key, value] of Object.entries(filter)) {
+				// An operator sits in the key ("deadline[lt]"). A nested
+				// object cannot be written into the link.
+				expect(isFlat(value), `${entry.id}: ${key}`).toBe(true)
+				for (const single of [value].flat()) {
+					if (typeof single === 'string' && single.startsWith('@')) {
+						expect(single, `${entry.id}: ${key}`).toMatch(TOKEN)
+					}
+				}
+			}
+		}
+	})
+
+	it('keeps every link inside the app', () => {
+		for (const entry of declaration.items) {
+			expect(entry.action.path, entry.id).toMatch(/^(\/[A-Za-z0-9._~-]+)+\/?$/)
+			expect(entry.action.path, entry.id).not.toContain('..')
+		}
+	})
+})
+
+describe('the declared item counts the tickets the dashboard card picks from', () => {
+	// The dashboard's "First, today" card names ONE ticket (the most overdue
+	// of the caller's open ones, GET /api/worklist/first). LaunchPad needs a
+	// count, so the declaration counts the caller's late tickets and opens the
+	// tickets list on that filter; the card is the same subject, read by name.
+	it('declares the late tickets as a count with a severity the card shares', () => {
+		expect(item).toBeTruthy()
+		expect(card.layout).toBe('attention')
+		expect(item.severity).toBe(card.variant)
+		expect(item.op ?? 'gt').toBe('gt')
+		expect(item.value ?? 0).toBe(0)
+		expect(item.source.filter.assignee).toBe('@me')
+		expect(card.visibleWhen.endpoint).toBe('/apps/pipelinq/api/worklist/first')
+	})
+
+	it('counts in a register and schema the app ships, on fields the schema carries', () => {
+		const dir = path.join(ROOT, 'lib', 'Settings', 'register.d')
+		const files = [
+			readJson('lib', 'Settings', 'pipelinq_register.json'),
+			...fs
+				.readdirSync(dir)
+				.filter((name) => name.endsWith('.json'))
+				.sort()
+				.map((name) => readJson('lib', 'Settings', 'register.d', name)),
+		]
+		const registers = Object.values(files[0].components.registers)
+		expect(registers.map((register) => register.slug)).toContain(
+			item.source.register,
+		)
+		// The schema is the main register plus what the fragments add to it.
+		const properties = {}
+		let found = false
+		for (const file of files) {
+			for (const schema of Object.values(file.components?.schemas ?? {})) {
+				if (schema?.slug === item.source.schema) {
+					found = true
+					Object.assign(properties, schema.properties ?? {})
+				}
+			}
+		}
+		expect(found, item.source.schema).toBe(true)
+		for (const key of Object.keys(item.source.filter)) {
+			const field = key.replace(/\[.*$/, '')
+			expect(properties[field], field).toBeTruthy()
+		}
+	})
+
+	it('opens the tickets list, with its filter as the query', () => {
+		const target = builtSimple.pages.find((page) => page.id === 'Tickets')
+		expect(target).toBeTruthy()
+		expect(item.action.path).toBe(target.route)
+	})
+})
+
+describe('every text of the declaration is translated', () => {
+	// LaunchPad translates with THIS app's catalogues, on the server.
+	const catalogues = {
+		en: readJson('l10n', 'en.json').translations,
+		nl: readJson('l10n', 'nl.json').translations,
+	}
+
+	it('has the title, the reason and the action label in English and in Dutch', () => {
+		for (const entry of declaration.items) {
+			for (const text of [entry.title, entry.reason, entry.action.label]) {
+				for (const [language, catalogue] of Object.entries(catalogues)) {
+					expect(typeof catalogue[text], `${language}: ${text}`).toBe(
+						'string',
+					)
+					expect(catalogue[text].trim(), `${language}: ${text}`).not.toBe(
+						'',
+					)
+				}
+				// English reads as written, Dutch is a translation.
+				expect(catalogues.en[text], text).toBe(text)
+				expect(catalogues.nl[text], text).not.toBe(text)
+			}
+			// The count survives the translation.
+			if (entry.reason.includes('{value}')) {
+				expect(catalogues.nl[entry.reason], entry.id).toContain('{value}')
+			}
+		}
+	})
+})

@@ -9,6 +9,7 @@
 			:description="
 				t('pipelinq', 'History of scheduled and manual export runs')
 			"
+			:pageTabs="pageTabs"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -19,8 +20,10 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No export runs yet')"
 			:showAdd="false"
+			rowClickToView
 			@refresh="onRefresh"
 			@sort="onSort"
+			@rowClick="openRun"
 			@view="openRun"
 			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">
@@ -37,12 +40,11 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
-import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
-import { useObjectStore } from '../../store/modules/object.js'
+import exportListMixin, { exportListView } from './exportListMixin.js'
 
 export default {
 	name: 'ExportRuns',
@@ -51,21 +53,12 @@ export default {
 		NcButton,
 	},
 
+	mixins: [exportListMixin],
+
 	setup() {
-		const sidebarState = inject('sidebarState', null)
-		const objectStore = useObjectStore()
-		return useListView('exportRun', {
-			sidebarState,
-			objectStore,
+		return exportListView('exportRun', {
 			defaultSort: { key: 'startedAt', order: 'desc' },
 		})
-	},
-
-	data() {
-		return {
-			busyId: null,
-			refreshing: false,
-		}
 	},
 
 	computed: {
@@ -88,21 +81,6 @@ export default {
 
 	methods: {
 		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
-		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
-		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
-		},
-
-		/**
 		 * Whether a run can be retried.
 		 *
 		 * @param {object} row The run row.
@@ -116,9 +94,15 @@ export default {
 		 * Navigate to a run's detail.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec exclude row navigation to the run's detail page; no requirement covers the export run list
 		 */
-		openRun(row) {
-			this.$router.push({ name: 'ExportRunDetail', params: { id: row.id } })
+		openRun(row, event) {
+			openRowTarget(
+				event,
+				{ name: 'ExportRunDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

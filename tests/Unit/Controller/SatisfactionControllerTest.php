@@ -150,4 +150,17 @@ class SatisfactionControllerTest extends TestCase {
 
 		$this->assertSame([['surveyRef' => 'survey-1']], $this->readWith);
 	}//end testANamedSurveyFiltersOnIt()
+	/**
+	 * A channel narrows the read; a period is applied to what was read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function testAChannelNarrowsTheRead(): void {
+		$controller = $this->controller();
+		$controller->responseRate(surveyId: 'survey-1', channel: ' sms ', days: 90);
+
+		$this->assertSame([['surveyRef' => 'survey-1', 'channel' => 'sms']], $this->readWith);
+	}//end testAChannelNarrowsTheRead()
 }//end class

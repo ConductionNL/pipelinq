@@ -18,11 +18,11 @@
   - the prepared text, a copy action and a link into the network's own
   - composer, and the person confirms when they have posted it.
   -
-  - @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+  - @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
   -->
 <template>
 	<div class="social-publications" data-testid="social-publications">
-		<NcLoadingIcon v-if="loading" :size="24" />
+		<NcLoadingIcon v-if="loading && !loaded" :size="24" />
 
 		<NcNoteCard v-else-if="error" type="error">{{ error }}</NcNoteCard>
 
@@ -31,12 +31,18 @@
 				{{ t('pipelinq', 'This post has not gone out yet.') }}
 			</p>
 
+			<!-- One grid for the whole list, each row a subgrid of it, so the
+				columns line up across rows whatever each row's content length. -->
 			<ul v-else class="social-publications__list">
 				<li
 					v-for="row in rows"
 					:key="rowId(row)"
 					class="social-publications__row"
 					data-testid="social-publication-row">
+					<span class="social-publications__icon" aria-hidden="true">
+						<component :is="networkIcon(row.network)" :size="20" />
+					</span>
+
 					<div class="social-publications__identity">
 						<strong>{{ networkLabel(row.network) }}</strong>
 						<a
@@ -49,7 +55,10 @@
 					</div>
 
 					<div class="social-publications__state">
-						<span :style="{ color: chip(row.status).color }">
+						<span class="social-publications__chip">
+							<span
+								class="social-publications__dot"
+								:style="{ background: chip(row.status).color }" />
 							{{ chip(row.status).label }}
 						</span>
 						<span
@@ -107,10 +116,14 @@
 					<NcButton variant="secondary" @click="copyPrepared">
 						{{ t('pipelinq', 'Copy text') }}
 					</NcButton>
+					<!-- The network's own composer, in a new tab.
+						@spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share -->
 					<NcButton
 						v-if="share.composerUrl"
 						variant="secondary"
-						@click="openComposer">
+						:href="share.composerUrl"
+						target="_blank"
+						rel="noopener noreferrer">
 						{{ t('pipelinq', 'Open the composer') }}
 					</NcButton>
 					<NcButton
@@ -133,11 +146,13 @@ import {
 	fetchShare,
 	retryPublication,
 } from '../../services/socialApi.js'
+import { networkIcon } from '../../services/socialNetworkIcons.js'
 import {
 	isRetryable,
 	networkLimits,
 	publicationStatusChip,
 } from '../../services/socialNetworks.js'
+import socialPostSectionMixin from './socialPostSectionMixin.js'
 
 export default {
 	name: 'SocialPublicationsSection',
@@ -148,21 +163,12 @@ export default {
 		NcNoteCard,
 	},
 
-	inject: {
-		cnSectionContext: { default: null },
-	},
-
-	props: {
-		/** The post id, on the post detail page (`@objectId`). */
-		postId: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [socialPostSectionMixin],
 
 	data() {
 		return {
 			loading: false,
+			loaded: false,
 			busy: '',
 			error: '',
 			rows: [],
@@ -170,30 +176,23 @@ export default {
 		}
 	},
 
-	mounted() {
-		this.load()
-	},
-
 	methods: {
 		/**
-		 * The id this section is bound to, either the prop or the section
-		 * context the page host provides.
+		 * The icon a publication's network is shown with.
 		 *
-		 * @return {string} The post id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @param {string} network The network.
+		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
-		effectiveId() {
-			if (this.postId) {
-				return this.postId
-			}
-			const context = this.cnSectionContext || {}
-			return context.objectId || context.id || ''
+		networkIcon(network) {
+			return networkIcon(network)
 		},
 
 		/**
 		 * @param {object} row A publication row.
 		 * @return {string} Its id.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		rowId(row) {
 			return row?.id || row?.uuid || ''
@@ -202,7 +201,7 @@ export default {
 		/**
 		 * @param {string} status The publication status.
 		 * @return {object} The chip.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		chip(status) {
 			return publicationStatusChip(status)
@@ -211,7 +210,7 @@ export default {
 		/**
 		 * @param {string} network The network.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
@@ -220,7 +219,7 @@ export default {
 		/**
 		 * @param {object} row A publication row.
 		 * @return {boolean} Whether a retry is worth offering.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		retryable(row) {
 			return isRetryable(row)
@@ -228,7 +227,7 @@ export default {
 
 		/**
 		 * @return {Promise<void>} Resolves once the rows are in.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		async load() {
 			const id = this.effectiveId()
@@ -244,13 +243,14 @@ export default {
 				this.error = t('pipelinq', 'The publications could not be loaded.')
 			} finally {
 				this.loading = false
+				this.loaded = true
 			}
 		},
 
 		/**
 		 * @param {object} row The publication to try again.
 		 * @return {Promise<void>} Resolves once retried.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		async retry(row) {
 			this.busy = this.rowId(row)
@@ -270,7 +270,7 @@ export default {
 		/**
 		 * @param {object} row The publication whose share is prepared.
 		 * @return {Promise<void>} Resolves once the bundle is in.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+		 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 		 */
 		async openShare(row) {
 			this.busy = this.rowId(row)
@@ -290,7 +290,7 @@ export default {
 		 * Put the prepared text on the clipboard.
 		 *
 		 * @return {Promise<void>} Resolves once copied.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+		 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 		 */
 		async copyPrepared() {
 			try {
@@ -304,20 +304,10 @@ export default {
 		},
 
 		/**
-		 * Open the network's own composer in a new tab.
-		 *
-		 * @return {void}
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
-		 */
-		openComposer() {
-			window.open(this.share?.composerUrl || '', '_blank', 'noopener')
-		},
-
-		/**
 		 * Record that the owner posted it.
 		 *
 		 * @return {Promise<void>} Resolves once recorded.
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+		 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 		 */
 		async confirm() {
 			this.error = ''
@@ -335,31 +325,69 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
+.social-publications {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.social-publications__empty {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+/* The edge columns are `auto`, not fixed: a subgrid row's padding is added to
+   its edge tracks, and a fixed track cannot grow to hold it. */
 .social-publications__list {
-	list-style: none;
+	display: grid;
+	grid-template-columns: auto minmax(140px, 1fr) minmax(0, 2fr) auto;
+	gap: 8px 16px;
+	margin: 0;
 	padding: 0;
+	list-style: none;
 }
 
 .social-publications__row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: subgrid;
+	align-items: center;
+	padding: 12px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+}
+
+.social-publications__icon {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 10px 0;
-	border-bottom: 1px solid var(--color-border);
-	flex-wrap: wrap;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
-.social-publications__identity {
-	display: flex;
-	flex-direction: column;
-}
-
+.social-publications__identity,
 .social-publications__state {
 	display: flex;
 	flex-direction: column;
-	max-width: 480px;
+	gap: 2px;
+	min-width: 0;
+}
+
+.social-publications__chip {
+	@include pill-chip;
+}
+
+.social-publications__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
 }
 
 .social-publications__reason {
@@ -369,16 +397,56 @@ export default {
 
 .social-publications__actions {
 	display: flex;
+	justify-content: flex-end;
+	flex-wrap: wrap;
 	gap: 8px;
 }
 
+.social-publications__share {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+}
+
+.social-publications__share h3 {
+	margin: 0;
+	font-size: 1em;
+}
+
+.social-publications__share .social-publications__actions {
+	justify-content: flex-start;
+}
+
 .social-publications__prepared {
+	box-sizing: border-box;
 	width: 100%;
 }
 
 .social-publications__label {
-	font-weight: bold;
 	display: block;
-	margin-top: 8px;
+	font-weight: bold;
+}
+
+/* Narrow screens: name beside the icon, status and actions underneath. */
+@media (max-width: 720px) {
+	.social-publications__list {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.social-publications__row {
+		row-gap: 10px;
+	}
+
+	.social-publications__state,
+	.social-publications__actions {
+		grid-column: 2;
+	}
+
+	.social-publications__actions {
+		justify-content: flex-start;
+	}
 }
 </style>

@@ -22,13 +22,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Competitor;
 
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
-use OCA\Pipelinq\Service\Competitor\FediverseWatchReader;
-use OCA\Pipelinq\Service\Competitor\FeedWatchReader;
-use OCA\Pipelinq\Service\Competitor\PageWatchReader;
 use OCA\Pipelinq\Service\Competitor\RelevanceScorer;
-use OCA\Pipelinq\Service\Competitor\SearchWatchReader;
-use OCA\Pipelinq\Service\Competitor\SitemapWatchReader;
 use OCA\Pipelinq\Service\Competitor\WatchEventStore;
+use OCA\Pipelinq\Service\Competitor\WatchReaders;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -86,11 +82,7 @@ class CompetitorWatchServiceTest extends TestCase {
 
 		$this->service = new CompetitorWatchService(
 			store: $this->store,
-			feeds: $this->createMock(FeedWatchReader::class),
-			sitemaps: $this->createMock(SitemapWatchReader::class),
-			pages: $this->createMock(PageWatchReader::class),
-			fediverse: $this->createMock(FediverseWatchReader::class),
-			searches: $this->createMock(SearchWatchReader::class),
+			readers: $this->createMock(WatchReaders::class),
 			scorer: $this->createMock(RelevanceScorer::class),
 			events: $this->createMock(WatchEventStore::class),
 			time: $time,

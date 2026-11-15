@@ -1,0 +1,1020 @@
+{
+    "zaaktype twice": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "status and rol": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/statustypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "ct-1"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/roltypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "ct-1"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/statustypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "ct-2"
+                    }
+                ]
+            }
+        ]
+    },
+    "besluittype empty": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\BesluittypeNotInCatalogusException",
+                "message": "ZGW: besluittype with omschrijving \"Geen\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/besluittypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Geen",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "zaaktype empty": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"Geen\" not found in catalogus"
+            },
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"Geen\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Geen",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Geen",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "warning": [
+                    "ZGW ZTC: lookup failed",
+                    {
+                        "endpoint": "ep-1",
+                        "resource": "zaaktypen",
+                        "om": "Geen",
+                        "err": "transport down"
+                    }
+                ]
+            }
+        ]
+    },
+    "body is the list": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/b/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/besluittypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "B",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "results not a list": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"X\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "X",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "first entry not array": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"X\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/roltypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "X",
+                        "status": "definitief",
+                        "caseType": "ct"
+                    }
+                ]
+            }
+        ]
+    },
+    "first entry without url": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"X\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "X",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "url not a string": {
+        "out": [
+            "42"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "N",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "no client": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"Een\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            }
+        ]
+    },
+    "no ztc url": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"Een\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-2",
+                    "componenten": []
+                }
+            }
+        ]
+    },
+    "no endpoint id": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "not found": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\ZaaktypeNotInCatalogusException",
+                "message": "ZGW: zaaktype with omschrijving \"Een\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/statustypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "ct"
+                    }
+                ]
+            }
+        ]
+    },
+    "transport fails": {
+        "out": [
+            {
+                "thrown": "OCA\\Pipelinq\\Service\\Zgw\\BesluittypeNotInCatalogusException",
+                "message": "ZGW: besluittype with omschrijving \"Een\" not found in catalogus"
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/besluittypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "warning": [
+                    "ZGW ZTC: lookup failed",
+                    {
+                        "endpoint": "ep-1",
+                        "resource": "besluittypen",
+                        "om": "Een",
+                        "err": "transport down"
+                    }
+                ]
+            }
+        ]
+    },
+    "invalidate one type": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1",
+            null,
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/statustypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "c"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/statustypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "c"
+                    }
+                ]
+            }
+        ]
+    },
+    "invalidate all": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            null,
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "invalidate empty type": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            null,
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "invalidate no id": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            null,
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "url after status lookup": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            {
+                "fromUrl": "Een"
+            },
+            {
+                "fromUrl": null
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/statustypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief",
+                        "caseType": "c"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/x/2",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    []
+                ]
+            },
+            {
+                "warning": [
+                    "ZGW ZTC: resolveOmschrijvingFromUrl failed",
+                    {
+                        "err": "transport down"
+                    }
+                ]
+            }
+        ]
+    },
+    "url not cached": {
+        "out": [
+            {
+                "fromUrl": "Direct"
+            },
+            {
+                "fromUrl": null
+            },
+            {
+                "fromUrl": null
+            },
+            {
+                "fromUrl": null
+            }
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/s/9",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    []
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/s/8",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    []
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/s/7",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    []
+                ]
+            },
+            {
+                "warning": [
+                    "ZGW ZTC: resolveOmschrijvingFromUrl failed",
+                    {
+                        "err": "transport down"
+                    }
+                ]
+            }
+        ]
+    },
+    "negative ttl": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    },
+    "ttl expires": {
+        "out": [
+            "https://ztc.example/catalogi/api/v1/x/1",
+            null,
+            "https://ztc.example/catalogi/api/v1/x/1"
+        ],
+        "calls": [
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            },
+            {
+                "findClientForEndpoint": {
+                    "id": "ep-1",
+                    "componenten": {
+                        "ztc": "https://ztc.example/catalogi/api/v1"
+                    }
+                }
+            },
+            {
+                "callComponent": [
+                    "https://ztc.example/catalogi/api/v1",
+                    "GET",
+                    "/zaaktypen",
+                    {
+                        "clientIdentifier": "c-1"
+                    },
+                    null,
+                    [],
+                    {
+                        "omschrijving": "Een",
+                        "status": "definitief"
+                    }
+                ]
+            }
+        ]
+    }
+}

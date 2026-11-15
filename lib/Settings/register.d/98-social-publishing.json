@@ -82,6 +82,7 @@
           },
           "ownerUserId": {
             "type": "string",
+            "format": "user",
             "description": "The Nextcloud user this account belongs to. For a personal account it is the authorization boundary: only this user or an administrator may publish as them, request a share from them or revoke the connection. Stamped by the connect path from the session and never taken from a request body.",
             "maxLength": 255,
             "title": "Owner"
@@ -306,6 +307,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "The Nextcloud user who created the post, stamped from the session.",
             "maxLength": 255,
             "title": "Created By"
@@ -472,131 +474,6 @@
           }
         }
       }
-    },
-    "objects": [
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "socialAccount",
-          "slug": "socialaccount-conduction-mastodon"
-        },
-        "network": "mastodon",
-        "kind": "organisation",
-        "handle": "@conduction@mastodon.nl",
-        "displayName": "Conduction",
-        "profileUrl": "https://mastodon.nl/@conduction",
-        "externalAccountId": "",
-        "instanceBaseUrl": "https://mastodon.nl",
-        "ownerUserId": "admin",
-        "clientId": "",
-        "credentialRef": "",
-        "scopes": ["read:accounts", "read:statuses", "write:statuses", "write:media"],
-        "status": "pending",
-        "statusReason": "Nog niet verbonden. Klik op Verbinden om het account te koppelen.",
-        "publishMode": "api",
-        "followerCount": 0,
-        "active": true
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "socialAccount",
-          "slug": "socialaccount-ruben-linkedin"
-        },
-        "network": "linkedin",
-        "kind": "person",
-        "handle": "Ruben van der Linde",
-        "displayName": "Ruben van der Linde",
-        "profileUrl": "https://www.linkedin.com/in/rubenvanderlinde/",
-        "externalAccountId": "",
-        "ownerUserId": "admin",
-        "clientId": "",
-        "credentialRef": "",
-        "scopes": ["openid", "profile", "w_member_social"],
-        "status": "pending",
-        "statusReason": "Nog niet verbonden. Alleen de eigenaar van dit account kan het koppelen.",
-        "publishMode": "api",
-        "followerCount": 0,
-        "active": true
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "socialAccount",
-          "slug": "socialaccount-ruben-instagram-prive"
-        },
-        "network": "instagram",
-        "kind": "person",
-        "handle": "@rubenvdlinde",
-        "displayName": "Ruben van der Linde",
-        "profileUrl": "https://www.instagram.com/rubenvdlinde/",
-        "ownerUserId": "admin",
-        "credentialRef": "",
-        "status": "not_configured",
-        "statusReason": "Een persoonlijk Instagram-account kan door geen enkele applicatie beschreven worden. Pipelinq bereidt de tekst voor en jij plaatst hem zelf.",
-        "publishMode": "share",
-        "followerCount": 0,
-        "active": true
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "socialPost",
-          "slug": "socialpost-openregister-3-0-aankondiging"
-        },
-        "title": "Aankondiging OpenRegister 3.0",
-        "articleId": "",
-        "campaignId": "",
-        "body": "OpenRegister 3.0 is uit. Schema's met een levenscyclus, berekende velden en zoekopdrachten die binnen een seconde klaar zijn. Lees wat er verandert en wat je moet doen.",
-        "link": "https://conduction.nl/nieuws/openregister-3-0-is-uit",
-        "accountIds": [],
-        "variants": {
-          "x": {
-            "body": "OpenRegister 3.0 is uit: schema's met een levenscyclus, berekende velden en zoeken binnen een seconde."
-          },
-          "linkedin": {
-            "body": "OpenRegister 3.0 is uit.\n\nDrie dingen die je meteen merkt: schema's met een levenscyclus, berekende velden die aan de serverkant bijgehouden worden, en zoekopdrachten die op een miljoen objecten binnen een seconde klaar zijn.\n\nIn het artikel staat wat je moet doen om bij te werken."
-          }
-        },
-        "status": "draft",
-        "approvals": [],
-        "agentAuthored": false,
-        "agentAuthoredBy": "",
-        "createdBy": "admin"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "socialPost",
-          "slug": "socialpost-meetup-common-ground"
-        },
-        "title": "Uitnodiging Common Ground meetup",
-        "body": "Kom in november langs op de Common Ground meetup. We laten zien hoe een gemeente haar zaaksysteem in zes weken koppelt, en er is genoeg tijd om vragen te stellen.",
-        "link": "https://conduction.nl/agenda/common-ground-meetup",
-        "accountIds": [],
-        "variants": {},
-        "status": "approval",
-        "approvals": [],
-        "agentAuthored": true,
-        "agentAuthoredBy": "marketing-agent",
-        "createdBy": "admin"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "messageSendBudget",
-          "slug": "messagesendbudget-default-x"
-        },
-        "tenantId": "default",
-        "providerId": "x",
-        "period": "monthly",
-        "maxMessages": 200,
-        "maxCostEur": 50,
-        "alertThresholdPct": 0.8,
-        "hardStop": true,
-        "currentPeriodMessages": 0,
-        "currentPeriodCostEur": 0
-      }
-    ]
+    }
   }
 }

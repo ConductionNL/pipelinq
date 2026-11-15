@@ -17,7 +17,7 @@
   - an account with no followers recorded shows no rate rather than a zero
   - that would read as "nobody engaged".
   -
-  - @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+  - @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
   -->
 <template>
 	<div class="social-performance" data-testid="social-performance">
@@ -25,50 +25,66 @@
 
 		<NcNoteCard v-if="error" type="error">{{ error }}</NcNoteCard>
 
-		<table class="social-performance__table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('pipelinq', 'Network') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Published') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Views') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Likes') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Comments') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Shares') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Followers') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Engagement rate') }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-if="loading">
-					<td colspan="8"><NcLoadingIcon :size="20" /></td>
-				</tr>
-				<tr v-else-if="rows.length === 0">
-					<td colspan="8">
-						{{ t('pipelinq', 'Nothing has been published yet.') }}
-					</td>
-				</tr>
-				<tr
-					v-for="row in rows"
-					v-else
-					:key="row.publicationId"
+		<!-- The date and the follower count sit on a second line to fit the
+			table, so their order is offered here; the headers sort the rest. -->
+		<div class="social-performance__sort">
+			<NcSelect
+				:modelValue="sortKey"
+				:options="sortOptions"
+				:inputLabel="t('pipelinq', 'Sort')"
+				:clearable="false"
+				label="label"
+				:reduce="(o) => o.value"
+				data-testid="social-performance-sort"
+				@update:modelValue="(key) => onSort({ key, order: sortOrder })" />
+			<NcSelect
+				:modelValue="sortOrder"
+				:options="orderOptions"
+				:inputLabel="t('pipelinq', 'Sort order')"
+				:clearable="false"
+				label="label"
+				:reduce="(o) => o.value"
+				data-testid="social-performance-order"
+				@update:modelValue="(order) => onSort({ key: sortKey, order })" />
+		</div>
+
+		<!-- CnDataTable renders its headers before the rows arrive, so the page
+			still paints before the one request that fills it. It only reports
+			header clicks; the sorting itself is done here. -->
+		<CnDataTable
+			:columns="columns"
+			:rows="sortedRows"
+			:loading="loading"
+			:sortKey="sortKey"
+			:sortOrder="sortOrder"
+			:emptyText="t('pipelinq', 'Nothing has been published yet.')"
+			rowKey="id"
+			@sort="onSort">
+			<template #column-network="{ row }">
+				<span
+					class="social-performance__network"
 					data-testid="social-performance-row">
-					<td>{{ networkLabel(row.network) }}</td>
-					<td>{{ row.publishedAt }}</td>
-					<td>{{ row.metrics?.views || 0 }}</td>
-					<td>{{ row.metrics?.likes || 0 }}</td>
-					<td>{{ row.metrics?.comments || 0 }}</td>
-					<td>{{ row.metrics?.shares || 0 }}</td>
-					<td>{{ row.followerCount || 0 }}</td>
-					<td>{{ rate(row) }}</td>
-				</tr>
-			</tbody>
-		</table>
+					<span class="social-performance__icon" aria-hidden="true">
+						<component :is="networkIcon(row.network)" :size="16" />
+					</span>
+					{{ networkLabel(row.network) }}
+				</span>
+			</template>
+			<template #column-publishedAt="{ row }">
+				{{ formatDate(row.publishedAt) }}
+			</template>
+			<template #column-engagementRate="{ row }">
+				{{ rate(row.source) }}
+			</template>
+		</CnDataTable>
 	</div>
 </template>
 
 <script>
-import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { fetchPerformance } from '../../services/socialApi.js'
+import { networkIcon } from '../../services/socialNetworkIcons.js'
 import {
 	formatEngagementRate,
 	networkLimits,
@@ -78,8 +94,9 @@ export default {
 	name: 'SocialPerformanceView',
 
 	components: {
-		NcLoadingIcon,
+		CnDataTable,
 		NcNoteCard,
+		NcSelect,
 	},
 
 	data() {
@@ -87,7 +104,136 @@ export default {
 			loading: false,
 			error: '',
 			rows: [],
+			// The server's own ranking order, until a header is clicked.
+			sortKey: 'engagementRate',
+			sortOrder: 'desc',
 		}
+	},
+
+	computed: {
+		/**
+		 * @return {Array<object>} The columns, every one sortable.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		columns() {
+			return [
+				{
+					key: 'network',
+					label: t('pipelinq', 'Network'),
+					sortable: true,
+					cellClass: 'cn-cell--wrap',
+					secondary: (row) => this.formatDate(row.publishedAt),
+				},
+				{ key: 'views', label: t('pipelinq', 'Views'), sortable: true },
+				{ key: 'likes', label: t('pipelinq', 'Likes'), sortable: true },
+				{
+					key: 'comments',
+					label: t('pipelinq', 'Comments'),
+					sortable: true,
+				},
+				{ key: 'shares', label: t('pipelinq', 'Shares'), sortable: true },
+				{
+					key: 'engagementRate',
+					label: t('pipelinq', 'Engagement rate'),
+					sortable: true,
+					secondary: (row) =>
+						t('pipelinq', 'Followers: {count}', {
+							count: row.followerCount,
+						}),
+				},
+			]
+		},
+
+		/**
+		 * Every order the page offers: the six table columns plus the
+		 * publication date and the follower count shown on their second lines.
+		 *
+		 * @return {Array<{value: string, label: string}>} The sort choices.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		sortOptions() {
+			const extra = {
+				network: [
+					{ value: 'publishedAt', label: t('pipelinq', 'Published') },
+				],
+
+				shares: [
+					{ value: 'followerCount', label: t('pipelinq', 'Followers') },
+				],
+			}
+			return this.columns.flatMap((column) => [
+				{ value: column.key, label: column.label },
+				...(extra[column.key] || []),
+			])
+		},
+
+		/**
+		 * @return {Array<{value: string, label: string}>} The two directions.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		orderOptions() {
+			return [
+				{ value: 'asc', label: t('pipelinq', 'Ascending') },
+				{ value: 'desc', label: t('pipelinq', 'Descending') },
+			]
+		},
+
+		/**
+		 * The ranking rows flattened to one value per column, so every column
+		 * sorts on the number it shows. `source` keeps the row as the server sent it.
+		 *
+		 * @return {Array<object>} The table rows.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		tableRows() {
+			return this.rows.map((row) => ({
+				id: row.publicationId,
+				network: row.network,
+				publishedAt: row.publishedAt || '',
+				views: row.metrics?.views || 0,
+				likes: row.metrics?.likes || 0,
+				comments: row.metrics?.comments || 0,
+				shares: row.metrics?.shares || 0,
+				followerCount: row.followerCount || 0,
+				engagementRate:
+					typeof row.engagementRate === 'number'
+						? row.engagementRate
+						: null,
+				source: row,
+			}))
+		},
+
+		/**
+		 * The rows in the chosen order. A row with no rate sorts last in both
+		 * directions, as the server's ranking does: it has nothing to say yet.
+		 *
+		 * @return {Array<object>} The sorted rows.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		sortedRows() {
+			if (!this.sortKey) {
+				return this.tableRows
+			}
+
+			const key = this.sortKey
+			const direction = this.sortOrder === 'desc' ? -1 : 1
+			const valueOf = (row) =>
+				key === 'network' ? this.networkLabel(row.network) : row[key]
+
+			return [...this.tableRows].sort((left, right) => {
+				const a = valueOf(left)
+				const b = valueOf(right)
+				if (a === null || b === null) {
+					return (a === null) - (b === null)
+				}
+
+				if (typeof a === 'number' && typeof b === 'number') {
+					return (a - b) * direction
+				}
+
+				return String(a).localeCompare(String(b)) * direction
+			})
+		},
 	},
 
 	mounted() {
@@ -96,9 +242,43 @@ export default {
 
 	methods: {
 		/**
+		 * @param {object} event The table's `{key, order}` sort event.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		onSort(event) {
+			this.sortKey = event?.key || null
+			this.sortOrder = event?.order || 'asc'
+		},
+
+		/**
+		 * The icon a ranked post's network is shown with.
+		 *
+		 * @param {string} network The network.
+		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		networkIcon(network) {
+			return networkIcon(network)
+		},
+
+		/**
+		 * Format a publication's timestamp for the reader.
+		 *
+		 * @param {string} value An ISO timestamp.
+		 * @return {string} It in the reader's locale, or as stored when unreadable.
+		 *
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		formatDate(value) {
+			const date = new Date(value)
+			return Number.isNaN(date.getTime()) ? value || '' : date.toLocaleString()
+		},
+
+		/**
 		 * @param {string} network The network.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
@@ -107,7 +287,7 @@ export default {
 		/**
 		 * @param {object} row A ranking row.
 		 * @return {string} The engagement rate, or a hyphen.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		rate(row) {
 			return formatEngagementRate(row)
@@ -117,7 +297,7 @@ export default {
 		 * One request, after the page has already rendered.
 		 *
 		 * @return {Promise<void>} Resolves once the rows are in.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		async load() {
 			this.loading = true
@@ -136,18 +316,40 @@ export default {
 
 <style scoped>
 .social-performance {
-	padding: 20px;
-}
-
-.social-performance__table {
+	box-sizing: border-box;
 	width: 100%;
-	border-collapse: collapse;
+	max-width: 1240px;
+	margin: 0 auto;
+	padding: 24px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
-.social-performance__table th,
-.social-performance__table td {
-	text-align: start;
-	padding: 8px;
-	border-bottom: 1px solid var(--color-border);
+.social-performance h2 {
+	margin: 0;
+}
+
+.social-performance__sort {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.social-performance__network {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.social-performance__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 </style>

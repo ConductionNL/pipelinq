@@ -3,11 +3,11 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
 -->
 <template>
-	<CnDetailPage
-		:title="t('pipelinq', 'Export run')"
-		:loading="loading"
-		@back="goBack">
+	<CnDetailPage :title="t('pipelinq', 'Export run')" :loading="loading">
 		<template #header>
+			<NcButton variant="tertiary" :to="{ name: 'ExportRuns' }">
+				{{ t('pipelinq', 'Back to list') }}
+			</NcButton>
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
 			<NcButton
 				v-if="canRetry"
@@ -236,13 +236,6 @@ export default {
 			} finally {
 				this.busy = false
 			}
-		},
-
-		/**
-		 * Navigate back to the run list.
-		 */
-		goBack() {
-			this.$router.push({ name: 'ExportRuns' })
 		},
 	},
 }

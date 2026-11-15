@@ -1,0 +1,145 @@
+<?php
+
+/**
+ * Pipelinq OrphanedLeadPlacer.
+ *
+ * Decides where a lead goes when its pipeline no longer exists (pipelinq
+ * review F1). Pure: it reads arrays and returns the fields to change. Kept
+ * beside LeadStagePlacer, whose default pipeline and first open stage it
+ * reuses, so neither class grows past its complexity budget.
+ *
+ * @category Service
+ * @package  OCA\Pipelinq\Service
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Service;
+
+
+/**
+ * Places a lead whose pipeline was deleted.
+ *
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ */
+final class OrphanedLeadPlacer {
+	/**
+	 * Constructor.
+	 *
+	 * @param LeadStagePlacer $placer Picks the default pipeline and its first open stage.
+	 */
+	public function __construct(
+		private readonly LeadStagePlacer $placer = new LeadStagePlacer(),
+	) {
+	}//end __construct()
+
+	/**
+	 * The fields that move a lead off a pipeline that no longer exists.
+	 *
+	 * A lead whose pipeline id points at nothing is on no board, yet counts
+	 * in the open pipeline and the forecast (pipelinq review F1). It goes to
+	 * the default lead pipeline: an open lead to its first open stage, a won
+	 * lead to its won stage and a lost lead to its closed, not won stage, so
+	 * a closed deal does not reopen. A stage the target lacks falls back to
+	 * the first open stage. A lead without a pipeline, or on a pipeline that
+	 * exists, is not this method's business and gets [].
+	 *
+	 * @param array<string, mixed>             $lead      The stored lead.
+	 * @param array<int, array<string, mixed>> $pipelines Stored pipelines.
+	 * @param string|null                      $now       ISO 8601 entry time; null means now.
+	 *
+	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing applies.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 */
+	public function forOrphanedLead(array $lead, array $pipelines, ?string $now = null): array {
+		if (self::isOrphaned(pipelineId: trim((string)($lead['pipeline'] ?? '')), pipelines: $pipelines) === false) {
+			return [];
+		}
+
+		$target = $this->placer->defaultPipeline(pipelines: $pipelines);
+		if ($target === null) {
+			return [];
+		}
+
+		return $this->movedTo(target: $target, move: ['status' => (string)($lead['status'] ?? ''), 'now' => $now]);
+	}//end forOrphanedLead()
+
+	/**
+	 * The fields that put a lead on the target pipeline, in the stage its status belongs in.
+	 *
+	 * @param array<string, mixed>                $target The default lead pipeline.
+	 * @param array{status: string, now: ?string} $move   The lead status and the ISO 8601 entry time (null means now).
+	 *
+	 * @return array<string, mixed> The fields to merge into the lead.
+	 */
+	private function movedTo(array $target, array $move): array {
+		$stage = $this->closedStageFor(pipeline: $target, status: $move['status']);
+		$stage ??= $this->placer->firstOpenStage(pipeline: $target);
+
+		$patch = ['pipeline' => (string)$target['id']];
+		if ($stage !== null) {
+			$patch['stage'] = $stage['name'];
+			$patch['stageOrder'] = $stage['order'];
+			$patch['stageEnteredAt'] = $this->placer->entryMoment(iso: $move['now']);
+		}
+
+		return $patch;
+	}//end movedTo()
+
+	/**
+	 * Whether a lead's pipeline id names a pipeline that is not stored; a lead without one is not orphaned.
+	 *
+	 * @param string                           $pipelineId The lead's trimmed pipeline id.
+	 * @param array<int, array<string, mixed>> $pipelines  Stored pipelines.
+	 *
+	 * @return bool
+	 */
+	private static function isOrphaned(string $pipelineId, array $pipelines): bool {
+		if ($pipelineId === '') {
+			return false;
+		}
+
+		foreach ($pipelines as $pipeline) {
+			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isOrphaned()
+
+	/**
+	 * The closed stage a won or lost lead belongs in, by stage order.
+	 *
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 * @param string               $status   The lead status.
+	 *
+	 * @return array{name: string, order: int}|null The stage, or null for an open lead or no such stage.
+	 */
+	private function closedStageFor(array $pipeline, string $status): ?array {
+		if ($status !== 'won' && $status !== 'lost') {
+			return null;
+		}
+
+		$wantWon = ($status === 'won');
+		$stages = array_filter(
+			(array)($pipeline['stages'] ?? []),
+			static fn ($stage): bool => is_array($stage) === true
+				&& trim((string)($stage['name'] ?? '')) !== ''
+				&& ($stage['isClosed'] ?? false) === true
+				&& (($stage['isWon'] ?? false) === true) === $wantWon
+		);
+		return $this->placer->lowestStage(stages: $stages);
+	}//end closedStageFor()
+}//end class

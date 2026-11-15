@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="City hall and skyline illustration">
+	<defs>
+		<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#9fd3f0"/>
+			<stop offset="1" stop-color="#e9f6fc"/>
+		</linearGradient>
+		<linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#3f7ea6"/>
+			<stop offset="1" stop-color="#2a5d7f"/>
+		</linearGradient>
+	</defs>
+	<rect width="1200" height="630" fill="url(#sky)"/>
+	<circle cx="980" cy="120" r="60" fill="#ffd66b"/>
+	<g fill="#b9d8e8">
+		<rect x="60" y="250" width="90" height="250"/>
+		<rect x="170" y="200" width="70" height="300"/>
+		<rect x="880" y="220" width="80" height="280"/>
+		<rect x="980" y="170" width="60" height="330"/>
+		<rect x="1060" y="260" width="90" height="240"/>
+	</g>
+	<g transform="translate(150 150)">
+		<rect x="60" y="120" width="360" height="230" fill="#d8a36a"/>
+		<rect x="0" y="180" width="480" height="170" fill="#c8894f"/>
+		<rect x="205" y="0" width="70" height="140" fill="#c8894f"/>
+		<path d="M195 0h90l-45-60z" fill="#7a4a24"/>
+		<circle cx="240" cy="60" r="20" fill="#f7efe3" stroke="#7a4a24" stroke-width="4"/>
+		<path d="M240 60v-12M240 60l9 6" stroke="#7a4a24" stroke-width="4" stroke-linecap="round"/>
+		<g fill="#f7efe3">
+			<rect x="30" y="210" width="40" height="60" rx="20"/>
+			<rect x="110" y="210" width="40" height="60" rx="20"/>
+			<rect x="330" y="210" width="40" height="60" rx="20"/>
+			<rect x="410" y="210" width="40" height="60" rx="20"/>
+			<rect x="90" y="140" width="40" height="50" rx="20"/>
+			<rect x="350" y="140" width="40" height="50" rx="20"/>
+		</g>
+		<path d="M200 350v-90a40 40 0 0 1 80 0v90z" fill="#7a4a24"/>
+	</g>
+	<rect y="500" width="1200" height="130" fill="url(#water)"/>
+	<g stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.35">
+		<path d="M120 550h120M420 580h160M760 545h140M980 590h110"/>
+	</g>
+	<g stroke="#f4f9fc" stroke-width="5" fill="none" stroke-linecap="round">
+		<path d="M930 470l-20-300" stroke-width="12"/>
+		<path d="M910 170l-200 300M910 170l-130 300M910 170l-60 300M910 170l80 300"/>
+		<path d="M680 470h460" stroke-width="10"/>
+	</g>
+</svg>

@@ -335,4 +335,57 @@ class SurveyDispatchServiceTest extends TestCase {
 		$this->assertSame(0.0, $figures['rate']);
 		$this->assertSame(2, $figures['suppressed']);
 	}//end testASurveyNobodyWasSentHasNoRate()
+	/**
+	 * The figures break down per channel, each with its own denominator.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function testTheResponseRateBreaksDownPerChannel(): void {
+		$figures = $this->service()->responseRate(
+			invitations: [
+				['status' => 'sent', 'channel' => 'email'],
+				['status' => 'responded', 'channel' => 'email'],
+				['status' => 'responded', 'channel' => 'sms'],
+				['status' => 'suppressed', 'channel' => 'sms'],
+				['status' => 'failed'],
+			]
+		);
+
+		$this->assertSame(['email', 'sms', 'unknown'], array_keys($figures['byChannel']));
+		$this->assertSame(2, $figures['byChannel']['email']['delivered']);
+		$this->assertSame(50.0, $figures['byChannel']['email']['rate']);
+		$this->assertSame(100.0, $figures['byChannel']['sms']['rate']);
+		$this->assertSame(1, $figures['byChannel']['sms']['suppressed']);
+		$this->assertSame(1, $figures['byChannel']['unknown']['failed']);
+		$this->assertArrayNotHasKey('byChannel', $figures['byChannel']['email']);
+	}//end testTheResponseRateBreaksDownPerChannel()
+
+	/**
+	 * A period keeps the invitations that fell due inside it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function testAPeriodKeepsTheInvitationsDueInsideIt(): void {
+		$now = new DateTimeImmutable('2026-10-09T12:00:00+00:00');
+		$kept = $this->service()->withinDays(
+			invitations: [
+				['status' => 'sent', 'scheduledFor' => '2026-10-01T09:00:00+00:00'],
+				['status' => 'sent', 'scheduledFor' => '2026-08-01T09:00:00+00:00'],
+				['status' => 'sent'],
+			],
+			days: 30,
+			now: $now,
+		);
+
+		$this->assertCount(1, $kept);
+		$this->assertSame('2026-10-01T09:00:00+00:00', $kept[0]['scheduledFor']);
+		$this->assertCount(
+			3,
+			$this->service()->withinDays(invitations: [['a' => 1], ['b' => 2], ['c' => 3]], days: 0, now: $now)
+		);
+	}//end testAPeriodKeepsTheInvitationsDueInsideIt()
 }//end class

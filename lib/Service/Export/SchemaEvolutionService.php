@@ -22,19 +22,21 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\Contracts\SchemaEvolutionServiceInterface;
+
 /**
  * Column-drift detection for the export schema snapshots.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
  */
-class SchemaEvolutionService {
+class SchemaEvolutionService implements SchemaEvolutionServiceInterface {
 	/**
 	 * Compare a current column definition map to the previous snapshot's.
 	 *
@@ -44,9 +46,9 @@ class SchemaEvolutionService {
 	 * @return array<int, string> Change descriptions, e.g.
 	 *                            ["added: phone", "removed: legacy", "changed: status (string -> enum)"].
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-01
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-02
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-03
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009-03
 	 */
 	public function compareColumns(array $current, array $previous): array {
 		$changes = [];
@@ -79,7 +81,7 @@ class SchemaEvolutionService {
 	 *
 	 * @return array<int, string> The change descriptions (empty when no prior snapshot).
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
 	public function compareToSnapshot(array $current, ?array $previous): array {
 		if ($previous === null) {
@@ -118,27 +120,47 @@ class SchemaEvolutionService {
 		$columns = [];
 		foreach ($rows as $row) {
 			foreach ($row as $column => $value) {
-				$type = $this->typeOf(value: $value);
 				$key = (string)$column;
-				if (isset($columns[$key]) === false) {
-					$columns[$key] = $type;
-					continue;
-				}
-
-				if ($columns[$key] !== $type && $type !== 'null') {
-					if ($columns[$key] === 'null') {
-						$columns[$key] = $type;
-					} elseif (str_contains($columns[$key], '|null') === false && $type === 'null') {
-						$columns[$key] = $columns[$key] . '|null';
-					} elseif ($columns[$key] !== $type) {
-						$columns[$key] = 'string';
-					}
-				}
+				$type = $this->typeOf(value: $value);
+				$columns[$key] = $this->mergedType(known: ($columns[$key] ?? null), seen: $type);
 			}
 		}
 
 		return $columns;
 	}//end deriveColumnDefinitions()
+
+	/**
+	 * A column's type after one more value: the first type stands, a null
+	 * changes nothing, a typed value after a null takes over, and two
+	 * different types become a string.
+	 *
+	 * @param string|null $known The column's type so far, null for a new column.
+	 * @param string      $seen  The new value's type.
+	 *
+	 * @return string
+	 */
+	private function mergedType(?string $known, string $seen): string {
+		if ($this->isUntyped(known: $known) === true) {
+			return $seen;
+		}
+
+		if ($known === $seen || $seen === 'null') {
+			return $known;
+		}
+
+		return 'string';
+	}//end mergedType()
+
+	/**
+	 * Whether a column has no type yet: it is new, or only nulls were seen.
+	 *
+	 * @param string|null $known The column's type so far.
+	 *
+	 * @return bool
+	 */
+	private function isUntyped(?string $known): bool {
+		return $known === null || $known === 'null';
+	}//end isUntyped()
 
 	/**
 	 * Coarse type name for a value.

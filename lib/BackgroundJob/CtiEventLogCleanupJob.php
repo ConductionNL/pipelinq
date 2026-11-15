@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-7.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\CtiService;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * Runs once per day; deletes ctiEventLog entries whose `received_at` is older
  * than 30 days. Number of deleted records is logged for audit.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.2
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-7.2
  */
 class CtiEventLogCleanupJob extends TimedJob {
 	/**
@@ -51,12 +51,12 @@ class CtiEventLogCleanupJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param CtiService $ctiService The CTI service.
+	 * @param CtiServiceInterface $ctiService The CTI service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private CtiService $ctiService,
+		private CtiServiceInterface $ctiService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

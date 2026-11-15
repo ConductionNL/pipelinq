@@ -26,7 +26,11 @@ const path = require('path')
 
 const REPO_ROOT = path.resolve(__dirname, '..')
 
-const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'manifest.json')
+// APP_MANIFEST points the check at another file: a BUILT manifest, which is
+// what the app actually renders (tests/vitest/structureProfile.spec.js builds
+// both structure profiles and validates each).
+const MANIFEST_PATH =
+	process.env.APP_MANIFEST || path.join(REPO_ROOT, 'src', 'manifest.json')
 
 // THE INSTALLED SCHEMA WINS OVER THE VENDORED COPY.
 //

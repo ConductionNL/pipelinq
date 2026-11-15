@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.2
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  * Allows only the transaction's own cashier, a POS-group member, or an admin.
  * Fails closed.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.2
  */
 class PosTransactionAccessGuard implements LifecycleGuardInterface {
 	/**
@@ -69,7 +69,7 @@ class PosTransactionAccessGuard implements LifecycleGuardInterface {
 	 *  LifecycleGuardInterface signature; this guard authorises every
 	 *  cashier-level action identically.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.2
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {

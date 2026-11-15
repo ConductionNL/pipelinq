@@ -49,6 +49,13 @@ class AppointmentBookingRegisterTest extends TestCase {
 	private array $config;
 
 	/**
+	 * Example records from the on-demand descriptor, where the booking seeds live.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $exampleObjects;
+
+	/**
 	 * Wire the real loader against the repository root and load the
 	 * merged register configuration once per test.
 	 *
@@ -62,6 +69,9 @@ class AppointmentBookingRegisterTest extends TestCase {
 
 		$loader = new ConfigFileLoaderService($appManager);
 		$this->config = $loader->loadConfigurationFile();
+
+		$example = json_decode((string)file_get_contents($appPath . '/lib/Settings/pipelinq_example_register.json'), true);
+		$this->exampleObjects = ($example['components']['objects'] ?? []);
 
 	}//end setUp()
 
@@ -161,7 +171,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 * Seed Service / Resource / Booking objects MUST be queryable via the
 	 * three-positional-arg shape ObjectService::findObjects() uses at
 	 * runtime (ADR-015) — here we exercise the contract against the
-	 * merged fragment payload that OpenRegister will import.
+	 * example descriptor an administrator imports on request.
 	 *
 	 * @param string $register The register slug to query.
 	 * @param string $schema The schema slug to query.
@@ -172,7 +182,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 * @return void
 	 */
 	public function testSeedObjectsAreFindable(string $register, string $schema, int $minHits): void {
-		$objects = ($this->config['components']['objects'] ?? []);
+		$objects = $this->exampleObjects;
 
 		$hits = $this->findObjects($objects, $register, $schema, []);
 		$this->assertGreaterThanOrEqual($minHits,
@@ -199,7 +209,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 * @return void
 	 */
 	public function testNamedServiceSeedsAreResolvable(): void {
-		$objects = ($this->config['components']['objects'] ?? []);
+		$objects = $this->exampleObjects;
 		$expected = [
 			'service-haircut-simple',
 			'service-color-and-cut',
@@ -224,7 +234,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 * @return void
 	 */
 	public function testMultiStepServiceSeedRoundTrip(): void {
-		$objects = ($this->config['components']['objects'] ?? []);
+		$objects = $this->exampleObjects;
 		$service = $this->findOneBySlug($objects, 'pipelinq', 'appointmentService', 'service-color-and-cut');
 
 		$this->assertNotNull($service, 'service-color-and-cut MUST be present.');

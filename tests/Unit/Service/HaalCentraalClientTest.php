@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
  */
 
@@ -40,7 +40,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
  */
 class HaalCentraalClientTest extends TestCase {
@@ -96,7 +96,7 @@ class HaalCentraalClientTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
 	 */
 	public function testLookupThrowsWhenUnconfigured(): void {
 		// OR leaf throws (absent) → falls back to legacy → OAuth unconfigured → throws.
@@ -185,6 +185,54 @@ class HaalCentraalClientTest extends TestCase {
 		self::assertSame('HaalCentraal-BRP-v2.0', $person['sourceSystem']);
 		self::assertSame('Hoofdstraat', $person['residence']['straat']);
 	}//end testLookupUsesOpenRegisterLeafWithMeta()
+
+	/**
+	 * A source in mock mode answers all its people to any BSN: the lookup
+	 * reads the person whose BSN it asked for (integriq's mock knows the
+	 * Zuiddrecht residents after its first test person).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
+	 */
+	public function testLookupReadsThePersonWhoseBsnItAskedFor(): void {
+		$other = $this->sampleRawPerson();
+		$asked = $this->sampleRawPerson();
+		$asked['burgerservicenummer'] = self::DEMO_BSN;
+		$asked['name']['surname'] = 'de Vries';
+		$response = $this->createMock(IResponse::class);
+		$response->method('getStatusCode')->willReturn(200);
+		$response->method('getBody')->willReturn(json_encode(['results' => [$other, $asked], 'total' => 2]));
+		$httpClient = $this->createMock(IClient::class);
+		$httpClient->method('get')->willReturn($response);
+
+		$person = $this->buildClient(values: [], httpClient: $httpClient, logger: $this->createMock(LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
+
+		self::assertSame('de Vries', $person['surname']);
+	}//end testLookupReadsThePersonWhoseBsnItAskedFor()
+
+	/**
+	 * HaalCentraal Personen v2 spells the name in Dutch (`naam`); the lookup
+	 * reads it as it reads the English shape.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
+	 */
+	public function testLookupReadsTheDutchNameShape(): void {
+		$raw = $this->sampleRawPerson();
+		unset($raw['name']);
+		$raw['naam'] = ['voornamen' => 'Sanne', 'voorletters' => 'S.', 'voorvoegsel' => 'de', 'geslachtsnaam' => 'Vries'];
+		$response = $this->createMock(IResponse::class);
+		$response->method('getStatusCode')->willReturn(200);
+		$response->method('getBody')->willReturn(json_encode(['results' => [$raw], 'total' => 1]));
+		$httpClient = $this->createMock(IClient::class);
+		$httpClient->method('get')->willReturn($response);
+
+		$person = $this->buildClient(values: [], httpClient: $httpClient, logger: $this->createMock(LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
+
+		self::assertSame(['Sanne', 'de', 'Vries'], [$person['givenNames'], $person['namePrefix'], $person['surname']]);
+	}//end testLookupReadsTheDutchNameShape()
 
 	/**
 	 * OR-first + null meta correlation: the leaf may relay a null correlationId

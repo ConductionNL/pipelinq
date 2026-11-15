@@ -9,144 +9,175 @@
   - native picker rather than typed as a bare path, the same
   - `getFilePickerBuilder` pattern the library's own `CnFilesWidgetForm` uses.
   -
-  - @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+  - @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
   -->
 <template>
-	<NcModal :name="modalTitle" size="large" @close="$emit('close')">
+	<CnDialog
+		width="wizard"
+		:name="modalTitle"
+		size="large"
+		:closeOnClickOutside="false"
+		@closing="$emit('close')">
 		<div class="article-edit">
-			<h2>{{ modalTitle }}</h2>
-
-			<NcNoteCard v-if="error" type="error">
+			<NcNoteCard v-if="error" type="error" class="article-edit__note">
 				{{ error }}
 			</NcNoteCard>
 
-			<label class="article-edit__label" for="article-edit-title">
-				{{ t('pipelinq', 'Title') }} *
-			</label>
-			<input
-				id="article-edit-title"
-				v-model="model.title"
-				type="text"
-				class="article-edit__input"
-				:placeholder="t('pipelinq', 'Headline of the article')" />
+			<section class="article-edit__section">
+				<NcTextField
+					id="article-edit-title"
+					v-model="model.title"
+					:label="t('pipelinq', 'Title')"
+					:placeholder="t('pipelinq', 'Headline of the article')"
+					required />
+				<NcTextArea
+					id="article-edit-summary"
+					v-model="model.summary"
+					:label="t('pipelinq', 'Summary')"
+					:placeholder="
+						t('pipelinq', 'One or two sentences, shown on the card')
+					"
+					rows="2"
+					resize="vertical" />
+				<div class="article-edit__body">
+					<span class="article-edit__label">{{
+						t('pipelinq', 'Body')
+					}}</span>
+					<CnMarkdownEditor
+						v-model="model.body"
+						:aria-label="t('pipelinq', 'Article body')"
+						:rows="14" />
+				</div>
+			</section>
 
-			<label class="article-edit__label" for="article-edit-slug">
-				{{ t('pipelinq', 'Slug') }}
-			</label>
-			<input
-				id="article-edit-slug"
-				v-model="model.slug"
-				type="text"
-				class="article-edit__input"
-				:placeholder="
-					t('pipelinq', 'Derived from the title when left empty')
-				" />
-
-			<label class="article-edit__label" for="article-edit-summary">
-				{{ t('pipelinq', 'Summary') }}
-			</label>
-			<textarea
-				id="article-edit-summary"
-				v-model="model.summary"
-				class="article-edit__textarea"
-				rows="2"
-				:placeholder="
-					t('pipelinq', 'One or two sentences, shown on the card')
-				" />
-
-			<span class="article-edit__label">{{ t('pipelinq', 'Body') }}</span>
-			<CnMarkdownEditor
-				v-model="model.body"
-				:aria-label="t('pipelinq', 'Article body')"
-				:rows="12" />
-
-			<label class="article-edit__label" for="article-edit-hero">
-				{{ t('pipelinq', 'Hero image') }}
-			</label>
-			<div class="article-edit__hero-row">
-				<input
-					id="article-edit-hero"
-					v-model="model.heroImage"
-					type="text"
-					class="article-edit__input"
-					:placeholder="t('pipelinq', 'Files path, or an absolute URL')" />
-				<NcButton variant="secondary" @click="openHeroPicker">
-					{{ t('pipelinq', 'Browse…') }}
-				</NcButton>
-			</div>
-
-			<NcSelect
-				v-model="languageOption"
-				:options="languageOptions"
-				:inputLabel="t('pipelinq', 'Language')"
-				label="label"
-				:reduce="(option) => option.value"
-				:clearable="false"
-				class="article-edit__language" />
-
-			<label class="article-edit__label" for="article-edit-tags">
-				{{ t('pipelinq', 'Tags') }}
-			</label>
-			<input
-				id="article-edit-tags"
-				v-model="tagsText"
-				type="text"
-				class="article-edit__input"
-				:placeholder="
-					t('pipelinq', 'Comma-separated, such as release, product')
-				" />
-
-			<label class="article-edit__label" for="article-edit-portal-ref">
-				{{ t('pipelinq', 'Portal page') }}
-			</label>
-			<input
-				id="article-edit-portal-ref"
-				v-model="model.portalPageRef"
-				type="text"
-				class="article-edit__input"
-				:placeholder="
-					t('pipelinq', 'Filled in once the public page exists')
-				" />
-
-			<footer class="article-edit__actions">
-				<NcButton
-					variant="tertiary"
-					:disabled="saving"
-					@click="$emit('close')">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton
-					variant="primary"
-					:disabled="!canSave"
-					data-testid="article-edit-save"
-					@click="save">
-					<template #icon>
-						<NcLoadingIcon v-if="saving" :size="16" />
-					</template>
-					{{
-						isEditing
-							? t('pipelinq', 'Save changes')
-							: t('pipelinq', 'Create article')
-					}}
-				</NcButton>
-			</footer>
+			<section class="article-edit__section">
+				<h3 class="article-edit__heading">
+					{{ t('pipelinq', 'Details') }}
+				</h3>
+				<div class="article-edit__hero">
+					<NcTextField
+						id="article-edit-hero"
+						v-model="model.heroImage"
+						:label="t('pipelinq', 'Hero image')"
+						:placeholder="
+							t('pipelinq', 'Files path, or an absolute URL')
+						" />
+					<NcButton variant="secondary" @click="openHeroPicker">
+						<template #icon>
+							<FolderImage :size="20" />
+						</template>
+						{{ t('pipelinq', 'Browse…') }}
+					</NcButton>
+				</div>
+				<div class="article-edit__grid">
+					<NcTextField
+						id="article-edit-slug"
+						v-model="model.slug"
+						:label="t('pipelinq', 'Slug')"
+						:placeholder="
+							t('pipelinq', 'Derived from the title when left empty')
+						" />
+					<!-- Lines the select up with the text field beside it. -->
+					<div class="article-edit__language">
+						<NcSelect
+							v-model="languageOption"
+							:options="languageOptions"
+							:inputLabel="t('pipelinq', 'Language')"
+							label="label"
+							:reduce="(option) => option.value"
+							:clearable="false"
+							:searchable="false" />
+					</div>
+					<!-- Tags from the shared label list (shared-label-list). -->
+					<LabelSelect v-model="tags" :inputLabel="t('pipelinq', 'Tags')" />
+					<NcTextField
+						id="article-edit-portal-ref"
+						v-model="model.portalPageRef"
+						:label="t('pipelinq', 'Portal page')"
+						:placeholder="
+							t('pipelinq', 'Filled in once the public page exists')
+						" />
+				</div>
+			</section>
 		</div>
-	</NcModal>
+
+		<template #actions>
+			<NcButton :disabled="saving" @click="$emit('close')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton
+				variant="primary"
+				:disabled="!canSave"
+				data-testid="article-edit-save"
+				@click="save">
+				<template v-if="saving" #icon>
+					<NcLoadingIcon :size="20" />
+				</template>
+				{{
+					isEditing
+						? t('pipelinq', 'Save changes')
+						: t('pipelinq', 'Create article')
+				}}
+			</NcButton>
+		</template>
+	</CnDialog>
 </template>
 
 <script>
-import { CnMarkdownEditor } from '@conduction/nextcloud-vue'
+import { CnDialog, CnMarkdownEditor } from '@conduction/nextcloud-vue'
 import { FilePickerClosed, getFilePickerBuilder } from '@nextcloud/dialogs'
 import {
 	NcButton,
 	NcLoadingIcon,
-	NcModal,
 	NcNoteCard,
 	NcSelect,
+	NcTextArea,
+	NcTextField,
 } from '@nextcloud/vue'
+import FolderImage from 'vue-material-design-icons/FolderImage.vue'
+import LabelSelect from '../components/LabelSelect.vue'
 import { createArticle, updateArticle } from '../services/articlesApi.js'
 
 import '@nextcloud/dialogs/style.css'
+
+/**
+ * The article's text fields in form order, each with its empty value.
+ */
+const ARTICLE_TEXT_DEFAULTS = {
+	title: '',
+	slug: '',
+	summary: '',
+	body: '',
+	heroImage: '',
+	language: 'nl',
+	portalPageRef: '',
+}
+
+/**
+ * The article's text fields, a missing one taking its empty value.
+ *
+ * @param {object} source The article, or an empty object for a new one.
+ * @return {object} The model.
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+ */
+function articleModel(source) {
+	const model = {}
+	for (const [field, empty] of Object.entries(ARTICLE_TEXT_DEFAULTS)) {
+		model[field] = source[field] || empty
+	}
+	return model
+}
+
+/**
+ * A stored list, or an empty one for anything else.
+ *
+ * @param {unknown} value The stored value.
+ * @return {Array} The list.
+ * @spec exclude a type guard, no behaviour of its own.
+ */
+function listOf(value) {
+	return Array.isArray(value) ? value : []
+}
 
 const LANGUAGE_OPTIONS = [
 	{ value: 'nl', label: 'Nederlands' },
@@ -158,11 +189,15 @@ export default {
 
 	components: {
 		CnMarkdownEditor,
+		FolderImage,
 		NcButton,
+		CnDialog,
+		LabelSelect,
 		NcLoadingIcon,
-		NcModal,
 		NcNoteCard,
 		NcSelect,
+		NcTextArea,
+		NcTextField,
 	},
 
 	props: {
@@ -180,20 +215,10 @@ export default {
 		return {
 			saving: false,
 			error: '',
-			model: {
-				title: source.title || '',
-				slug: source.slug || '',
-				summary: source.summary || '',
-				body: source.body || '',
-				heroImage: source.heroImage || '',
-				language: source.language || 'nl',
-				portalPageRef: source.portalPageRef || '',
-			},
+			model: articleModel(source),
 
-			tagsText: Array.isArray(source.tags) ? source.tags.join(', ') : '',
-			links: Array.isArray(source.links)
-				? source.links.map((link) => ({ ...link }))
-				: [],
+			tags: [...listOf(source.tags)],
+			links: listOf(source.links).map((link) => ({ ...link })),
 		}
 	},
 
@@ -206,7 +231,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The modal title.
 		 */
 		modalTitle() {
@@ -216,7 +241,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Array<{value: string, label: string}>} The two language options.
 		 */
 		languageOptions() {
@@ -230,7 +255,7 @@ export default {
 		 */
 		languageOption: {
 			/**
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+			 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 * @return {string} The current language code.
 			 */
 			get() {
@@ -239,7 +264,7 @@ export default {
 
 			/**
 			 * @param {string} value The language code just picked.
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+			 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 */
 			set(value) {
 				this.model.language = value || 'nl'
@@ -247,7 +272,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {boolean} Whether the form has enough to attempt a save.
 		 */
 		canSave() {
@@ -260,7 +285,7 @@ export default {
 		 * Open the Nextcloud Files picker restricted to images, and store the
 		 * picked node's path.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves once a pick has been applied, or declined.
 		 */
 		async openHeroPicker() {
@@ -300,20 +325,15 @@ export default {
 		},
 
 		/**
-		 * Build the payload from the model, splitting the tags text field
-		 * back into an array.
+		 * Build the payload from the model.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {object} The payload the API expects.
 		 */
 		buildPayload() {
-			const tags = this.tagsText
-				.split(',')
-				.map((tag) => tag.trim())
-				.filter((tag) => tag !== '')
 			return {
 				...this.model,
-				tags,
+				tags: this.tags,
 				links: this.links,
 			}
 		},
@@ -321,7 +341,7 @@ export default {
 		/**
 		 * Create or update the article.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the caller has been told.
 		 */
 		async save() {
@@ -334,7 +354,9 @@ export default {
 				const payload = this.buildPayload()
 				const saved = this.isEditing
 					? await updateArticle(
-							this.article.id || this.article.uuid,
+							this.article.id
+								|| this.article.uuid
+								|| this.article['@self']?.id,
 							payload,
 						)
 					: await createArticle(payload)
@@ -351,52 +373,72 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .article-edit {
-	padding: 1.5rem;
 	display: flex;
 	flex-direction: column;
-	gap: 0.4rem;
-	max-height: 80vh;
-	overflow-y: auto;
+	gap: 20px;
+	padding-bottom: 8px;
+}
+
+.article-edit__note {
+	margin: 0;
+}
+
+.article-edit__section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.article-edit__section + .article-edit__section {
+	padding-top: 16px;
+	border-top: 1px solid var(--color-border);
+}
+
+.article-edit__heading {
+	margin: 0;
+	font-size: 1.1em;
+}
+
+.article-edit__body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .article-edit__label {
-	font-weight: 600;
 	color: var(--color-text-maxcontrast);
-	margin-block-start: 0.5rem;
 }
 
-.article-edit__input,
-.article-edit__textarea {
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background: var(--color-background-darker);
-	color: var(--color-main-text);
-	font-family: inherit;
-	width: 100%;
-	box-sizing: border-box;
-}
-
-.article-edit__hero-row {
+.article-edit__hero {
 	display: flex;
-	gap: 0.5rem;
-	align-items: center;
+	align-items: flex-end;
+	gap: 8px;
 }
 
-.article-edit__hero-row .article-edit__input {
+.article-edit__hero > :first-child {
 	flex: 1;
 }
 
-.article-edit__language {
-	max-width: 320px;
+.article-edit__grid {
+	@include two-column-form-grid;
 }
 
-.article-edit__actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 0.5rem;
-	margin-block-start: 1rem;
+.article-edit__language {
+	margin-top: 6px;
+}
+
+.article-edit__language :deep(.v-select.select) {
+	width: 100%;
+	margin: 0;
+}
+
+@media (max-width: 720px) {
+	.article-edit__grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 </style>

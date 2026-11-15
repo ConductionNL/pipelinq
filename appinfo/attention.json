@@ -1,0 +1,26 @@
+{
+	"version": 1,
+	"items": [
+		{
+			"id": "tickets-past-deadline",
+			"title": "Tickets past their deadline",
+			"reason": "{value} of your tickets in progress are past their deadline or end today.",
+			"severity": "error",
+			"source": {
+				"register": "pipelinq",
+				"schema": "ticket",
+				"filter": {
+					"assignee": "@me",
+					"status": "in_progress",
+					"slaDeadline[lt]": "@today+1d"
+				}
+			},
+			"op": "gt",
+			"value": 0,
+			"action": {
+				"label": "Open these tickets",
+				"path": "/tickets"
+			}
+		}
+	]
+}

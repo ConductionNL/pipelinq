@@ -170,9 +170,20 @@ class CompetitorWatchFlowTest extends TestCase {
 	 */
 	public function testEverySeededObjectSatisfiesItsRequiredList(): void {
 		$schemas = $this->fragment['components']['schemas'];
-		foreach ($this->fragment['components']['objects'] as $object) {
+		// The seeds are example data and ship in the on-demand descriptor.
+		$example = (array)json_decode(
+			(string)file_get_contents(__DIR__ . '/../../../lib/Settings/pipelinq_example_register.json'),
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+		$objects = array_filter(
+			$example['components']['objects'],
+			static fn (array $object): bool => isset($schemas[(string)$object['@self']['schema']]) === true
+		);
+		$this->assertNotEmpty($objects, 'no example records for this fragment\'s schemas');
+		foreach ($objects as $object) {
 			$slug = (string)$object['@self']['schema'];
-			$this->assertArrayHasKey($slug, $schemas, 'seeded object names an unknown schema');
 			foreach (($schemas[$slug]['required'] ?? []) as $field) {
 				$this->assertArrayHasKey(
 					$field,

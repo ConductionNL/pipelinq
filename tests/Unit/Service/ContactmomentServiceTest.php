@@ -25,9 +25,11 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for ContactmomentService.
@@ -77,6 +79,13 @@ class ContactmomentServiceTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * Mock translator.
+	 *
+	 * @var IL10N
+	 */
+	private IL10N $l10n;
+
+	/**
 	 * Set up the test.
 	 *
 	 * @return void
@@ -86,11 +95,16 @@ class ContactmomentServiceTest extends TestCase {
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->l10n = $this->createMock(IL10N::class);
+		$this->l10n->method('t')->willReturnCallback(
+			static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters)
+		);
 
 		$this->service = new ContactmomentService($this->ticketService,
 			$this->groupManager,
 			$this->logger,
 			objectService: $this->objectService,
+			l10n: $this->l10n,
 		);
 	}//end setUp()
 
@@ -141,13 +155,11 @@ class ContactmomentServiceTest extends TestCase {
 		// an entity rather than the array it was handed.
 		$saves = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			static function (
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saves): ObjectEntityInterface {
+			static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema];
 
 				$entity = new ObjectEntity();
@@ -304,4 +316,114 @@ class ContactmomentServiceTest extends TestCase {
 		// Verify the non-admin check.
 		$this->assertFalse($this->groupManager->isAdmin('other-user'));
 	}//end testNonCreatorNonAdminIdentified()
+
+	/**
+	 * Capture saveObject() calls with the access flags they were made with.
+	 *
+	 * @return void
+	 */
+	private function captureSaves(): void {
+		$this->ticketService->method('isConfigured')->willReturn(true);
+		$this->ticketService->method('getRegisterId')->willReturn('reg-123');
+		$this->ticketService->method('getSchemaId')->willReturn('ticket-456');
+
+		$this->saves = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$this->saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+
+				$entity = new ObjectEntity();
+				$entity->setUuid('ticket-uuid-2');
+				$entity->setObject($object);
+				return $entity;
+			}
+		);
+	}//end captureSaves()
+
+	/**
+	 * Saves seen by captureSaves().
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $saves = [];
+
+	/**
+	 * A WhatsApp message from a number that matches no contact becomes a new,
+	 * unassigned contact moment for a person to pick up. It follows the
+	 * outbound convention (WhatsApp is channel chat, platform whatsapp). It is
+	 * written with OpenRegister's checks on: the webhook runs it as the
+	 * messaging service account.
+	 *
+	 * @return void
+	 */
+	public function testAMessageFromAnUnknownNumberIsLoggedForAPerson(): void {
+		$this->captureSaves();
+
+		$uuid = $this->service->recordInboundFromUnknownNumber(
+			platform: 'whatsapp',
+			phone: '+31699990000',
+			body: 'Hallo, ik heb een vraag',
+			messageId: 'msg-1',
+		);
+
+		$this->assertSame('ticket-uuid-2', $uuid);
+		$this->assertCount(1, $this->saves);
+		$save = $this->saves[0];
+		$this->assertTrue($save['_rbac'], 'the contact moment skipped RBAC');
+		$this->assertTrue($save['_multitenancy'], 'the contact moment skipped multitenancy');
+		$this->assertSame('reg-123', $save['register']);
+		$this->assertSame('ticket-456', $save['schema']);
+
+		$payload = $save['payload'];
+		$this->assertSame(TicketService::TYPE_CONTACTMOMENT, $payload['ticketType']);
+		$this->assertSame('chat', $payload['channel']);
+		$this->assertSame('inbound', $payload['direction']);
+		$this->assertSame('new', $payload['status']);
+		$this->assertSame('WhatsApp message from unknown number +31699990000', $payload['title']);
+		$this->assertSame('Hallo, ik heb een vraag', $payload['description']);
+		$this->assertSame('whatsapp', $payload['channelMetadata']['platform']);
+		$this->assertSame('inbound', $payload['channelMetadata']['direction']);
+		$this->assertSame('+31699990000', $payload['channelMetadata']['from']);
+		$this->assertSame('msg-1', $payload['channelMetadata']['messageId']);
+		$this->assertArrayNotHasKey('client', $payload);
+		$this->assertArrayNotHasKey('assignee', $payload);
+	}//end testAMessageFromAnUnknownNumberIsLoggedForAPerson()
+
+	/**
+	 * An SMS from an unknown number is logged on the sms channel.
+	 *
+	 * @return void
+	 */
+	public function testAnSmsFromAnUnknownNumberIsLoggedOnTheSmsChannel(): void {
+		$this->captureSaves();
+
+		$this->service->recordInboundFromUnknownNumber(
+			platform: 'sms',
+			phone: '+31699990000',
+			body: 'Wie is dit?',
+			messageId: '',
+		);
+
+		$payload = $this->saves[0]['payload'];
+		$this->assertSame('sms', $payload['channel']);
+		$this->assertSame('SMS from unknown number +31699990000', $payload['title']);
+	}//end testAnSmsFromAnUnknownNumberIsLoggedOnTheSmsChannel()
+
+	/**
+	 * The log is log-and-continue: an unconfigured ticket schema answers null.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownNumberIsNotLoggedWhenTicketsAreUnconfigured(): void {
+		$this->ticketService->method('isConfigured')->willReturn(false);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->assertNull(
+			$this->service->recordInboundFromUnknownNumber(platform: 'sms', phone: '+31699990000', body: 'Hoi', messageId: '')
+		);
+	}//end testAnUnknownNumberIsNotLoggedWhenTicketsAreUnconfigured()
 }//end class
