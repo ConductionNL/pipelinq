@@ -134,7 +134,7 @@ class CampaignAttributionService {
 	public function forCampaign(string $campaignId, string $from = '', string $to = ''): array {
 		$touchpoints = $this->touchpoints->forCampaign(campaignId: $campaignId);
 		$leads = $this->leadsFor(campaignId: $campaignId, touchpoints: $touchpoints);
-		$closes = $this->closeAll(leads: $leads, from: $from, to: $to);
+		$closes = $this->closeAll(leads: $leads, window: [$from, $to]);
 
 		return [
 			'touchpoints' => $touchpoints,
@@ -358,17 +358,16 @@ class CampaignAttributionService {
 	/**
 	 * Close every lead, claiming each invoice once.
 	 *
-	 * @param array<string, array<string, mixed>> $leads Lead id to lead row.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param array<string, array<string, mixed>> $leads  Lead id to lead row.
+	 * @param array{0: string, 1: string}         $window The window start and end.
 	 *
 	 * @return array<string, array<string, mixed>> Lead id to the closed record.
 	 */
-	private function closeAll(array $leads, string $from, string $to): array {
+	private function closeAll(array $leads, array $window): array {
 		$claimed = [];
 		$closes = [];
 		foreach ($leads as $leadId => $lead) {
-			$close = $this->closeFor(lead: $lead, from: $from, to: $to, claimed: $claimed);
+			$close = $this->closeFor(lead: $lead, from: $window[0], to: $window[1], claimed: $claimed);
 			foreach ($close['invoiceIds'] as $invoiceId) {
 				$claimed[$invoiceId] = $leadId;
 			}
