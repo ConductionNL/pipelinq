@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\SubscriptionService;
+use OCA\Pipelinq\Util\SubscriptionContactKey;
 
 /**
  * SubscriptionQueryService — counts, listings and the blast audience.
@@ -42,6 +43,8 @@ use OCA\Pipelinq\Service\SubscriptionService;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
  */
 class SubscriptionQueryService implements SubscriptionQueryServiceInterface {
+	use SubscriptionContactKey;
+
 	/**
 	 * The channel a mailing list sends on.
 	 *
@@ -328,26 +331,6 @@ class SubscriptionQueryService implements SubscriptionQueryServiceInterface {
 
 		return $subscription;
 	}//end withName()
-
-	/**
-	 * The key the consent ledger is written under for a membership.
-	 *
-	 * A public signup not yet matched to a contact still needs a ledger
-	 * entry, so the address stands in for the contact id. Mirrors
-	 * `SubscriptionService::contactKeyFor()`, which writes what this reads.
-	 *
-	 * @param array<string, mixed> $subscription The membership.
-	 *
-	 * @return string The consent key.
-	 */
-	private function contactKeyFor(array $subscription): string {
-		$contactId = (string)($subscription['contactId'] ?? '');
-		if ($contactId !== '') {
-			return $contactId;
-		}
-
-		return (string)($subscription['email'] ?? '');
-	}//end contactKeyFor()
 
 	/**
 	 * Resolve the Subscription schema slug.

@@ -32,6 +32,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -42,6 +43,8 @@ use Throwable;
  * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-kind-declared-single-shall-refuse-a-second-holder-on-one-record-req-pkr-005
  */
 class PartyLinkService implements PartyLinkServiceInterface {
+	use PartyObjectRead;
+
 	/**
 	 * Constructor.
 	 *
@@ -158,23 +161,7 @@ class PartyLinkService implements PartyLinkServiceInterface {
 	 * @return array<string, mixed>|null
 	 */
 	private function readLinkData(string $linkId): array|null {
-		try {
-			$entity = $this->objectService->find(id: $linkId);
-		} catch (Throwable $e) {
-			$this->logger->debug('PartyLinkService: the link could not be read', ['uuid' => $linkId, 'exception' => $e->getMessage()]);
-			$entity = null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $linkId, failure: 'PartyLinkService: the link could not be read', idKey: 'uuid');
 	}//end readLinkData()
 
 	/**

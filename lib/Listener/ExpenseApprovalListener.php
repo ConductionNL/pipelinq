@@ -32,6 +32,8 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ApSyncNotifierInterface;
 use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqApServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredSchemaObjectRead;
+use OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -88,6 +90,8 @@ use Throwable;
  */
 class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	use EntityAccessorTrait;
+	use ConfiguredSchemaObjectRead;
+	use ConfiguredSchemaObjectWrite;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -95,6 +99,27 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @var string
 	 */
 	public const HANDLER_KEY = 'expense-approval';
+
+	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'expense_schema';
+
+	/**
+	 * Log line when the deferred re-read fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to re-read expense for deferred AP dispatch';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist expense AP sync status';
 
 	/**
 	 * Constructor.
@@ -351,67 +376,4 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 		$expenseSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
 		return $expenseSchema !== '' && $schemaId === $expenseSchema;
 	}//end isExpense()
-
-	/**
-	 * Read the expense's current data.
-	 *
-	 * @param string $uuid The expense UUID.
-	 *
-	 * @return array<string, mixed>|null The expense data, or null when it is gone.
-	 */
-	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return null;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to re-read expense for deferred AP dispatch',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetch()
-
-	/**
-	 * Persist the mutated expense data back to OpenRegister.
-	 *
-	 * @param string $uuid The expense UUID.
-	 * @param array<string, mixed> $data The mutated expense data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist expense AP sync status',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

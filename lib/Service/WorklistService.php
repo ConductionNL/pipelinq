@@ -52,6 +52,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -74,6 +75,7 @@ use RuntimeException;
  */
 class WorklistService implements WorklistServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Priority sort ranks — lower sorts first (MyWorkWidget.vue:43).
@@ -985,15 +987,4 @@ class WorklistService implements WorklistServiceInterface {
 
 		return array_values(($results ?? []));
 	}//end runFindAll()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -34,6 +34,9 @@ use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\AppointmentServiceLookup;
+use OCA\Pipelinq\Util\Base64UrlDecode;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\App\IAppManager;
@@ -73,6 +76,9 @@ use RuntimeException;
 class PortalController extends Controller {
 	use EntityIdOf;
 	use NullablePayloadToArray;
+	use ConfiguredRegisterId;
+	use Base64UrlDecode;
+	use AppointmentServiceLookup;
 
 	/**
 	 * Signing-key app-config key (per-instance HMAC secret, ADR-005).
@@ -712,24 +718,7 @@ class PortalController extends Controller {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadService(string $serviceId): ?array {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: 'service_schema');
-		if ($register === '' || $schema === '' || $serviceId === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq portal: service load failed', ['service' => $serviceId]);
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findServiceObject(serviceId: $serviceId, failure: 'Pipelinq portal: service load failed');
 	}//end loadService()
 
 	/**
@@ -1135,54 +1124,6 @@ class PortalController extends Controller {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data (empty on failure).
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
-
-	/**
-	 * The pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured" and every caller refuses the
-	 * OpenRegister call on it. An empty register is NOT the same as none —
-	 * ObjectService skips setRegister() for an empty value, so the query
-	 * inherits whatever context an earlier call in the request left behind.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key The app-config key (e.g. `booking_schema`).
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
 
 	/**
 	 * Resolve the OpenRegister ObjectService via the DI container.

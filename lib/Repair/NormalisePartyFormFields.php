@@ -39,7 +39,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
+use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\SerialisedRows;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -55,6 +56,9 @@ use Throwable;
  * @spec openspec/specs/client-management/spec.md
  */
 class NormalisePartyFormFields implements IRepairStep {
+	use FirstAdminUser;
+	use SerialisedRows;
+
 	/**
 	 * Upper bound on rows fetched per schema.
 	 *
@@ -146,7 +150,7 @@ class NormalisePartyFormFields implements IRepairStep {
 			return;
 		}
 
-		$this->reportTotals(output: $output, totals: $this->repairAll(objectService: $resolved[0], register: $register));
+		$this->repairAll(objectService: $resolved[0], register: $register, output: $output);
 	}//end run()
 
 	/**
@@ -168,46 +172,49 @@ class NormalisePartyFormFields implements IRepairStep {
 	}//end resolveObjectService()
 
 	/**
-	 * Repair every party type that has a schema.
+	 * Repair every party type and report the totals.
 	 *
 	 * @param object $objectService OpenRegister's ObjectService.
 	 * @param string $register The register id.
+	 * @param IOutput $output Output.
 	 *
-	 * @return array{fixed: int, skipped: int, stuck: int} The totals.
+	 * @return void
 	 *
 	 * @spec openspec/specs/client-management/spec.md
 	 */
-	private function repairAll(object $objectService, string $register): array {
+	private function repairAll(object $objectService, string $register, IOutput $output): void {
 		$actingAdmin = $this->actingAdmin();
 		$totals = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 		foreach (self::OBJECT_TYPES as $objectType) {
-			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
-			if ($schema === '') {
-				continue;
-			}
-
-			$target = new SchemaWriteTarget(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
-			foreach ($this->repairType(target: $target) as $outcome) {
+			foreach ($this->repairType(objectService: $objectService, register: $register, objectType: $objectType, actingAdmin: $actingAdmin) as $outcome) {
 				$totals[$outcome]++;
 			}
 		}
 
-		return $totals;
+		$this->reportTotals(output: $output, totals: $totals);
 	}//end repairAll()
 
 	/**
-	 * Repair every stored party of one schema.
+	 * Repair every stored party of one type.
 	 *
-	 * @param SchemaWriteTarget $target The schema to repair and the admin to save as.
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $register The register id.
+	 * @param string $objectType The party type.
+	 * @param IUser|null $actingAdmin The admin to save as.
 	 *
-	 * @return array<int, string> One outcome per row: `fixed`, `skipped` or `stuck`.
+	 * @return array<int, string> One outcome per row: `fixed`, `skipped` or `stuck`; empty when the type has no schema.
 	 *
 	 * @spec openspec/specs/client-management/spec.md
 	 */
-	private function repairType(SchemaWriteTarget $target): array {
+	private function repairType(object $objectService, string $register, string $objectType, IUser|null $actingAdmin): array {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
+		if ($schema === '') {
+			return [];
+		}
+
 		$outcomes = [];
-		foreach ($this->readAll(target: $target) as $row) {
-			$outcomes[] = $this->repairRow(target: $target, row: $row);
+		foreach ($this->readAll(objectService: $objectService, register: $register, schema: $schema) as $row) {
+			$outcomes[] = $this->repairRow(objectService: $objectService, register: $register, schema: $schema, row: $row, actingAdmin: $actingAdmin);
 		}
 
 		return $outcomes;
@@ -237,12 +244,15 @@ class NormalisePartyFormFields implements IRepairStep {
 	/**
 	 * Save one party's patch.
 	 *
-	 * @param SchemaWriteTarget $target The schema and the admin to save as.
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
 	 * @param array<string,mixed> $row The stored party.
+	 * @param IUser|null $actingAdmin The admin to save as.
 	 *
 	 * @return string `fixed`, `skipped` or `stuck`.
 	 */
-	private function repairRow(SchemaWriteTarget $target, array $row): string {
+	private function repairRow(object $objectService, string $register, string $schema, array $row, ?IUser $actingAdmin): string {
 		$uuid = (string)($row['id'] ?? '');
 		$patch = self::patchFor(row: $row);
 		if ($uuid === '' || $patch === []) {
@@ -250,22 +260,22 @@ class NormalisePartyFormFields implements IRepairStep {
 		}
 
 		try {
-			$target->objectService->saveObject(
+			$objectService->saveObject(
 				object: array_merge($row, $patch),
 				extend: [],
-				register: $target->register,
-				schema: $target->schema,
+				register: $register,
+				schema: $schema,
 				uuid: $uuid,
 				_rbac: false,
 				_multitenancy: false,
-				currentUser: $target->actingAdmin,
+				currentUser: $actingAdmin,
 			);
 
 			return 'fixed';
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'NormalisePartyFormFields: failed to save record',
-				['uuid' => $uuid, 'schema' => $target->schema, 'error' => $e->getMessage()]
+				['uuid' => $uuid, 'schema' => $schema, 'error' => $e->getMessage()]
 			);
 
 			return 'stuck';
@@ -273,58 +283,27 @@ class NormalisePartyFormFields implements IRepairStep {
 	}//end repairRow()
 
 	/**
-	 * Resolve an admin to act as: a repair step has no session.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = ($this->groupManager->get('admin')?->getUsers() ?? []);
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
 	 * Read every row of one schema as arrays, RBAC off (no session on the CLI).
 	 *
-	 * @param SchemaWriteTarget $target The schema to read.
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
 	 *
 	 * @return array<int,array<string,mixed>> The rows.
 	 */
-	private function readAll(SchemaWriteTarget $target): array {
+	private function readAll(object $objectService, string $register, string $schema): array {
 		try {
-			$rows = $target->objectService->findAll(
-				config: ['filters' => ['register' => $target->register, 'schema' => $target->schema], 'limit' => self::BATCH_LIMIT],
+			$rows = $objectService->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::BATCH_LIMIT],
 				_rbac: false,
 				_multitenancy: false,
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning('NormalisePartyFormFields: findAll failed', ['schema' => $target->schema, 'error' => $e->getMessage()]);
+			$this->logger->warning('NormalisePartyFormFields: findAll failed', ['schema' => $schema, 'error' => $e->getMessage()]);
 
 			return [];
 		}
 
-		return $this->rowArrays(rows: $rows);
+		return $this->serialisedRows(rows: $rows);
 	}//end readAll()
-
-	/**
-	 * The rows as arrays, serialising objects and dropping anything else.
-	 *
-	 * @param mixed $rows The rows findAll returned.
-	 *
-	 * @return array<int,array<string,mixed>> The rows.
-	 */
-	private function rowArrays($rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$row = $row->jsonSerialize();
-			}
-
-			if (is_array($row) === true) {
-				$out[] = $row;
-			}
-		}
-
-		return $out;
-	}//end rowArrays()
 }//end class

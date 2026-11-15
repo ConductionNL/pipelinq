@@ -23,12 +23,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Util\FirstValue;
+
 /**
  * Service for building import data arrays from Nextcloud contact data.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactDataBuilder {
+	use FirstValue;
+
 	/**
 	 * vCard TYPE parameter (uppercased, single token) -> our `kind` enum
 	 * used on `emails[]`/`phones[]`. TYPE tokens with no mapping (or no
@@ -440,19 +444,4 @@ class ContactDataBuilder {
 
 		return 'person';
 	}//end determineClientType()
-
-	/**
-	 * Extract first value from a vCard property that may be an array or string.
-	 *
-	 * @param mixed $value The value to extract from.
-	 *
-	 * @return string The extracted string value.
-	 */
-	private function extractFirstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			return (string)($value[0] ?? '');
-		}
-
-		return (string)$value;
-	}//end extractFirstValue()
 }//end class

@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 
 /**
@@ -44,6 +45,7 @@ use OCP\IAppConfig;
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
  */
 class CampaignLinkDecorator {
+	use SavedPayloadId;
 
 	/**
 	 * App-config key for the per-tenant switch. `true` (the default) adds
@@ -112,24 +114,12 @@ class CampaignLinkDecorator {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	public function campaignFor(array $blast, array $template = [], array $campaign = []): string {
-		return self::firstSlug(
-			candidates: [
-				(string)($campaign['utmCampaign'] ?? ''),
-				(string)($blast['name'] ?? ''),
-				(string)($template['name'] ?? ''),
-				$this->blastId(blast: $blast),
-			]
-		);
-	}//end campaignFor()
-
-	/**
-	 * The slug of the first candidate that has one.
-	 *
-	 * @param array<int, string> $candidates The values to try, in order.
-	 *
-	 * @return string The slug, empty when no candidate yields one.
-	 */
-	private static function firstSlug(array $candidates): string {
+		$candidates = [
+			(string)($campaign['utmCampaign'] ?? ''),
+			(string)($blast['name'] ?? ''),
+			(string)($template['name'] ?? ''),
+			$this->extractId(payload: $blast),
+		];
 		foreach ($candidates as $candidate) {
 			$slug = self::slugify(value: $candidate);
 			if ($slug !== '') {
@@ -138,7 +128,7 @@ class CampaignLinkDecorator {
 		}
 
 		return '';
-	}//end firstSlug()
+	}//end campaignFor()
 
 	/**
 	 * The four parameters a blast link carries.
@@ -161,28 +151,29 @@ class CampaignLinkDecorator {
 	 */
 	public function utmFor(array $blast, array $template = [], array $campaign = []): array {
 		return [
-			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource'),
-			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium'),
+			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource', fallback: self::CHANNEL_DEFAULT),
+			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium', fallback: self::CHANNEL_DEFAULT),
 			'utm_campaign' => $this->campaignFor(blast: $blast, template: $template, campaign: $campaign),
-			'utm_content' => $this->blastId(blast: $blast),
+			'utm_content' => $this->extractId(payload: $blast),
 		];
 	}//end utmFor()
 
 	/**
-	 * One campaign-owned parameter, or the per-blast channel default.
+	 * One campaign-owned parameter, or the per-blast default.
 	 *
 	 * @param array<string, mixed> $campaign The campaign row, may be empty.
 	 * @param string $key The campaign property holding the value.
+	 * @param string $fallback What a blast without a campaign uses.
 	 *
 	 * @return string The value.
 	 */
-	private function fromCampaign(array $campaign, string $key): string {
+	private function fromCampaign(array $campaign, string $key, string $fallback): string {
 		$value = strtolower(trim((string)($campaign[$key] ?? '')));
 		if ($value !== '') {
 			return $value;
 		}
 
-		return self::CHANNEL_DEFAULT;
+		return $fallback;
 	}//end fromCampaign()
 
 	/**
@@ -206,19 +197,6 @@ class CampaignLinkDecorator {
 			$this->utmFor(blast: $blast, template: $template, campaign: $campaign),
 			static fn (string $value): bool => $value !== ''
 		);
-
-		return $this->rewriteAnchors(html: $html, utm: $utm);
-	}//end decorate()
-
-	/**
-	 * Add the parameters to every eligible anchor of a body.
-	 *
-	 * @param string $html The body.
-	 * @param array<string, string> $utm The non-empty parameters.
-	 *
-	 * @return string The body, unchanged when there is nothing to add or the rewrite failed.
-	 */
-	private function rewriteAnchors(string $html, array $utm): string {
 		if ($utm === []) {
 			return $html;
 		}
@@ -236,7 +214,7 @@ class CampaignLinkDecorator {
 		}
 
 		return $rewritten;
-	}//end rewriteAnchors()
+	}//end decorate()
 
 	/**
 	 * Decorate one URL, or answer null when it must be left alone.
@@ -385,31 +363,6 @@ class CampaignLinkDecorator {
 
 		return $additions;
 	}//end missingParameters()
-
-	/**
-	 * The blast's id from `uuid`, `id`, `slug` or the `@self` envelope.
-	 *
-	 * @param array<string, mixed> $blast The blast row.
-	 *
-	 * @return string The id or empty.
-	 */
-	private function blastId(array $blast): string {
-		$sources = [$blast];
-		if (is_array($blast['@self'] ?? null) === true) {
-			$sources[] = $blast['@self'];
-		}
-
-		foreach ($sources as $source) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($source[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end blastId()
 
 	/**
 	 * Split a string on the first occurrence of a separator.

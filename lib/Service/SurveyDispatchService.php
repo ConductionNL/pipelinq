@@ -47,6 +47,7 @@ use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableRows;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
@@ -60,6 +61,8 @@ use Throwable;
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
 class SurveyDispatchService implements SurveyDispatchServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The app-config key holding the dispatch rules, as a JSON array.
 	 *
@@ -548,47 +551,6 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 	}//end findInvitations()
-
-	/**
-	 * The rows as plain arrays, serialising objects and dropping anything else.
-	 *
-	 * @param array<mixed> $rows The rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function plainRows(array $rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			$data = $this->plainRow(row: $row);
-			if ($data !== null) {
-				$out[] = $data;
-			}
-		}
-
-		return $out;
-	}//end plainRows()
-
-	/**
-	 * One row as a plain array, or null when it is neither an array nor serialises to one.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function plainRow($row): array|null {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end plainRow()
 
 	/**
 	 * Persist one invitation.

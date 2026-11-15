@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Merge;
 
 use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
-use OCP\Constants;
+use OCA\Pipelinq\Util\WritableAddressBook;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IL10N;
@@ -46,6 +46,7 @@ use Throwable;
  * @spec openspec/changes/clients-reversible-merge/tasks.md#2.3
  */
 class MergedAwayCard implements MergedAwayCardInterface {
+	use WritableAddressBook;
 
 	/**
 	 * The start of the note line a merge adds, followed by the surviving record's uuid and `]`.
@@ -228,21 +229,6 @@ class MergedAwayCard implements MergedAwayCardInterface {
 
 		return null;
 	}//end findCard()
-
-	/**
-	 * Whether pipelinq may write to an address book.
-	 *
-	 * @param IAddressBook $addressBook The address book.
-	 *
-	 * @return bool
-	 */
-	private function isWritable(IAddressBook $addressBook): bool {
-		if ($addressBook->isSystemAddressBook() === true) {
-			return false;
-		}
-
-		return ($addressBook->getPermissions() & Constants::PERMISSION_UPDATE) !== 0;
-	}//end isWritable()
 
 	/**
 	 * The first value of a vCard property, which a search answers as a string or a list.

@@ -24,7 +24,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCP\Constants;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\WritableAddressBook;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IAppConfig;
@@ -37,6 +38,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactVcardWriterService {
+	use InjectedObjectService;
+	use WritableAddressBook;
+
 	/**
 	 * Constructor.
 	 *
@@ -299,21 +303,6 @@ class ContactVcardWriterService {
 	}//end newCardAddressBookName()
 
 	/**
-	 * Whether pipelinq may write cards in this addressbook.
-	 *
-	 * @param IAddressBook $addressBook The addressbook.
-	 *
-	 * @return bool True for a writable, non-system addressbook.
-	 */
-	private function isWritable(IAddressBook $addressBook): bool {
-		if ($addressBook->isSystemAddressBook() === true) {
-			return false;
-		}
-
-		return ($addressBook->getPermissions() & Constants::PERMISSION_UPDATE) !== 0;
-	}//end isWritable()
-
-	/**
 	 * Extract the contacts UID from an addressbook create/update result.
 	 *
 	 * @param mixed $result The result from createOrUpdate.
@@ -381,13 +370,4 @@ class ContactVcardWriterService {
 			);
 		}//end try
 	}//end storeContactsUidOnObject()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

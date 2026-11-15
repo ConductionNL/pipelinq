@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\PersonLookup\LookupLinks;
 use OCA\Pipelinq\Service\PersonLookup\LookupQuery;
 use OCA\Pipelinq\Service\PersonLookup\LookupRun;
 use OCA\Pipelinq\Service\PersonLookup\PersonFetch;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -72,6 +73,8 @@ use Throwable;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BrpController extends Controller {
+	use InjectedObjectService;
+
 	/**
 	 * Default role-based access list (group IDs).
 	 *
@@ -1221,15 +1224,4 @@ class BrpController extends Controller {
 
 		return [];
 	}//end personRow()
-
-	/**
-	 * Lazy OR ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

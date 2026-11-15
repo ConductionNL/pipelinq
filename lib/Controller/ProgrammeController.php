@@ -36,6 +36,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammeEstimationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
+use OCA\Pipelinq\Util\SerialisedEntity;
+use OCA\Pipelinq\Util\ServiceResultResponse;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -49,6 +51,9 @@ use Throwable;
  * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
  */
 class ProgrammeController extends Controller {
+	use ServiceResultResponse;
+	use SerialisedEntity;
+
 	/**
 	 * Constructor.
 	 *
@@ -242,30 +247,6 @@ class ProgrammeController extends Controller {
 			return null;
 		}
 
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->serialisedEntity(entity: $entity);
 	}//end readObject()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

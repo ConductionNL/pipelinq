@@ -31,13 +31,13 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
+use OCA\Pipelinq\Util\RequiredObjectService;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -74,6 +74,7 @@ use Throwable;
 class AppointmentCalendarLeafProvider {
 	use AnyPayloadToArray;
 	use RowIdOf;
+	use RequiredObjectService;
 
 
 	/**
@@ -870,27 +871,4 @@ class AppointmentCalendarLeafProvider {
 
 		return 0;
 	}//end schemaNumeric()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 */
-	private function getObjectService(): object {
-		// Availability established before the reach (ADR-083) — the lookup names
-		// OpenRegister only as a string, so without this the dependency is
-		// declared nowhere a reader or a gate can see it. Converting to a typed
-		// constructor property is the ADR's preferred shape: pipelinq#1160.
-		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
-			throw new RuntimeException('The OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
-	}//end getObjectService()
 }//end class

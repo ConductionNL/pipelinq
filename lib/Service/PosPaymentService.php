@@ -49,6 +49,7 @@ use OCA\Pipelinq\Service\Payment\PosTransactionStore;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -92,6 +93,7 @@ use Throwable;
  */
 class PosPaymentService implements PosPaymentServiceInterface {
 	use NullablePayloadToArray;
+	use RandomUuid;
 
 	/**
 	 * CloudEvent type emitted on settlement.
@@ -1790,18 +1792,6 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			);
 		}//end try
 	}//end dispatch()
-
-	/**
-	 * Generate a v4-ish UUID string.
-	 *
-	 * @return string
-	 */
-	private function uuid(): string {
-		$bytes = random_bytes(16);
-		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-	}//end uuid()
 
 	/**
 	 * Now in ISO-8601 UTC.

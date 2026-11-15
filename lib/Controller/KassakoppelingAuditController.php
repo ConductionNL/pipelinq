@@ -36,14 +36,13 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
+use OCA\Pipelinq\Util\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -71,6 +70,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -123,15 +124,11 @@ class KassakoppelingAuditController extends Controller {
 			'description' => $this->request->getParam('description', null),
 		];
 
-		$response = $this->run(
+		return $this->run(
 			action: fn (): array => ['entry' => $this->service->createEntry(data: $data)],
-			label: 'create'
+			label: 'create',
+			successStatus: Http::STATUS_CREATED
 		);
-		if ($response->getStatus() === Http::STATUS_OK) {
-			$response->setStatus(Http::STATUS_CREATED);
-		}
-
-		return $response;
 	}//end create()
 
 	/**
@@ -335,19 +332,19 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @param callable $action The action to run.
 	 * @param string $label A short label for log context.
+	 * @param int $successStatus The success HTTP status (default 200).
 	 *
-	 * @return JSONResponse The response, 200 on success.
+	 * @return JSONResponse The response.
 	 */
-	private function run(callable $action, string $label): JSONResponse {
+	private function run(callable $action, string $label, int $successStatus = Http::STATUS_OK): JSONResponse {
 		try {
-			return new JSONResponse($action(), Http::STATUS_OK);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
+			return new JSONResponse($action(), $successStatus);
 		} catch (\Throwable $e) {
+			$mapped = $this->ocsErrorResponse(failure: $e);
+			if ($mapped !== null) {
+				return $mapped;
+			}
+
 			$this->logger->error(
 				'KassakoppelingAuditController::' . $label . ' failed',
 				['exception' => $e->getMessage()]

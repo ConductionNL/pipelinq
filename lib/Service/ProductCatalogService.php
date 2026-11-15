@@ -31,6 +31,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -59,6 +60,7 @@ use Psr\Log\LoggerInterface;
  */
 class ProductCatalogService implements ProductCatalogServiceInterface {
 	use CastingPayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Canonical Dutch BTW class to tax-rate mapping.
@@ -756,17 +758,4 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 *
-	 * @spec openspec/specs/pos-product-catalogue/spec.md
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

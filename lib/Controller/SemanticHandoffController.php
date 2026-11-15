@@ -36,6 +36,7 @@ use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -79,6 +80,7 @@ use Throwable;
  */
 class SemanticHandoffController extends Controller {
 	use PayloadToArray;
+	use ConfiguredSchemaSlug;
 
 	/**
 	 * Canonical semantic kind URIs.
@@ -358,7 +360,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
+		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
@@ -395,7 +397,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
+		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
@@ -428,7 +430,7 @@ class SemanticHandoffController extends Controller {
 
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
+			schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'),
 			id: $id,
 			handoffId: self::HANDOFF_SEND_TO_INVOICING
 		);
@@ -498,7 +500,7 @@ class SemanticHandoffController extends Controller {
 			'amount' => (float)($contract['valuePerInterval'] ?? $contract['value'] ?? 0),
 		];
 		$contract['invoiceHistory'] = array_values($history);
-		$this->saveObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id, payload: $contract);
+		$this->saveObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id, payload: $contract);
 	}//end recordInvoice()
 
 	/**
@@ -719,33 +721,11 @@ class SemanticHandoffController extends Controller {
 	 * empty value, so the query silently inherits whatever register context an
 	 * earlier call in the same request left on the shared service instance.
 	 * Normalising '' back to the built-in slug, exactly as the sibling
-	 * schemaSlug() already does, keeps every call scoped.
+	 * resolveSchemaSlug() already does, keeps every call scoped.
 	 *
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'pipelinq';
+		return $this->resolveSchemaSlug(key: 'register', default: 'pipelinq');
 	}//end registerSlug()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end schemaSlug()
 }//end class

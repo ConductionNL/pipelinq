@@ -31,6 +31,7 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SlaAttainmentServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -51,6 +52,8 @@ use Throwable;
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaAttainmentService implements SlaAttainmentServiceInterface {
+	use ContainerObjectServiceLookup;
+
 	public const VALID_BUCKETS = ['day', 'week', 'month', 'quarter'];
 
 	public const VALID_GROUPS = ['policy', 'customer', 'tier', 'team', 'target'];
@@ -355,15 +358,7 @@ class SlaAttainmentService implements SlaAttainmentServiceInterface {
 	 * @return object|null
 	 */
 	private function breachObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaAttainmentService: ObjectService not available',
-				['error' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'SlaAttainmentService: ObjectService not available', errorKey: 'error');
 	}//end breachObjectService()
 
 	/**

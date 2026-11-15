@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Service\Marketing\ShillinqInvoiceProjection;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\PayloadToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -52,6 +53,7 @@ use Throwable;
  */
 class ShillinqInvoiceReader {
 	use PayloadToArray;
+	use ContainerObjectServiceLookup;
 
 
 	/**
@@ -279,15 +281,7 @@ class ShillinqInvoiceReader {
 	 * @return object|null The service.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ShillinqInvoiceReader: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ShillinqInvoiceReader: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
 
 	/**

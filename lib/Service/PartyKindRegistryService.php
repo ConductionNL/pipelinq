@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -52,6 +53,8 @@ use Throwable;
  * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
  */
 class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * Upper bound on the rows read per question.
 	 *
@@ -418,7 +421,7 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 			return [];
 		}
 
-		return self::plainRows(rows: $rows);
+		return $this->plainRows(rows: $rows);
 	}//end read()
 
 	/**
@@ -442,31 +445,4 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 
 		return ['register' => $register, 'schema' => $schema];
 	}//end scopeOf()
-
-	/**
-	 * The rows as plain arrays: arrays as they are, serialisable entities by
-	 * what they serialise to; anything else is dropped.
-	 *
-	 * @param iterable<mixed> $rows The rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private static function plainRows($rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
-			}
-		}
-
-		return $out;
-	}//end plainRows()
 }//end class

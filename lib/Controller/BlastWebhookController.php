@@ -132,21 +132,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function sendgrid(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Twilio-Email-Event-Webhook-Signature');
-
-		if ($this->verifySignature(provider: 'sendgrid', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'BlastWebhookController.sendgrid: invalid signature',
-				['ip' => $this->request->getRemoteAddress()]
-			);
-			// 422 (Unprocessable Entity) — match CtiController convention,
-			// signals invalid HMAC without surfacing a session-auth status
-			// to the upstream provider (and keeps the semantic-auth gate
-			// unambiguous: this is signature verification, not session auth).
-			return new JSONResponse(
-				['error' => 'Invalid webhook signature'],
-				Http::STATUS_UNPROCESSABLE_ENTITY
-			);
+		$refusal = $this->signatureRefusal(provider: 'sendgrid', rawBody: $rawBody, header: 'X-Twilio-Email-Event-Webhook-Signature');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$events = json_decode($rawBody, true);
@@ -175,21 +163,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function ses(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Amz-Sns-Message-Signature');
-
-		if ($this->verifySignature(provider: 'ses', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'BlastWebhookController.ses: invalid signature',
-				['ip' => $this->request->getRemoteAddress()]
-			);
-			// 422 (Unprocessable Entity) — match CtiController convention,
-			// signals invalid HMAC without surfacing a session-auth status
-			// to the upstream provider (and keeps the semantic-auth gate
-			// unambiguous: this is signature verification, not session auth).
-			return new JSONResponse(
-				['error' => 'Invalid webhook signature'],
-				Http::STATUS_UNPROCESSABLE_ENTITY
-			);
+		$refusal = $this->signatureRefusal(provider: 'ses', rawBody: $rawBody, header: 'X-Amz-Sns-Message-Signature');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$envelope = json_decode($rawBody, true);
@@ -220,21 +196,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function twilio(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Twilio-Signature');
-
-		if ($this->verifySignature(provider: 'twilio', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'BlastWebhookController.twilio: invalid signature',
-				['ip' => $this->request->getRemoteAddress()]
-			);
-			// 422 (Unprocessable Entity) — match CtiController convention,
-			// signals invalid HMAC without surfacing a session-auth status
-			// to the upstream provider (and keeps the semantic-auth gate
-			// unambiguous: this is signature verification, not session auth).
-			return new JSONResponse(
-				['error' => 'Invalid webhook signature'],
-				Http::STATUS_UNPROCESSABLE_ENTITY
-			);
+		$refusal = $this->signatureRefusal(provider: 'twilio', rawBody: $rawBody, header: 'X-Twilio-Signature');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$params = $this->request->getParams();
@@ -262,11 +226,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function brevo(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Sib-Signature');
-
-		if ($this->verifySignature(provider: 'brevo', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning('BlastWebhookController.brevo: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
-			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		$refusal = $this->signatureRefusal(provider: 'brevo', rawBody: $rawBody, header: 'X-Sib-Signature');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$decoded = json_decode($rawBody, true);
@@ -274,14 +236,11 @@ class BlastWebhookController extends Controller {
 			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$events = $this->asEventList(decoded: $decoded);
-		$accepted = 0;
-		foreach ($events as $event) {
-			$this->blastSendJob->enqueueWebhookEvent(provider: 'brevo', event: $this->normaliseBrevoEvent(event: $event));
-			$accepted++;
-		}
-
-		return new JSONResponse(['ok' => true, 'accepted' => $accepted]);
+		return $this->enqueueEventList(
+			provider: 'brevo',
+			decoded: $decoded,
+			normalise: fn (array $event): array => $this->normaliseBrevoEvent(event: $event)
+		);
 	}//end brevo()
 
 	/**
@@ -298,11 +257,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mailjet(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Mailjet-Signature');
-
-		if ($this->verifySignature(provider: 'mailjet', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning('BlastWebhookController.mailjet: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
-			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		$refusal = $this->signatureRefusal(provider: 'mailjet', rawBody: $rawBody, header: 'X-Mailjet-Signature');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$decoded = json_decode($rawBody, true);
@@ -310,14 +267,11 @@ class BlastWebhookController extends Controller {
 			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$events = $this->asEventList(decoded: $decoded);
-		$accepted = 0;
-		foreach ($events as $event) {
-			$this->blastSendJob->enqueueWebhookEvent(provider: 'mailjet', event: $this->normaliseMailjetEvent(event: $event));
-			$accepted++;
-		}
-
-		return new JSONResponse(['ok' => true, 'accepted' => $accepted]);
+		return $this->enqueueEventList(
+			provider: 'mailjet',
+			decoded: $decoded,
+			normalise: fn (array $event): array => $this->normaliseMailjetEvent(event: $event)
+		);
 	}//end mailjet()
 
 	/**
@@ -338,11 +292,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mailgun(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Mailgun-Signature-256');
-
-		if ($this->verifySignature(provider: 'mailgun', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning('BlastWebhookController.mailgun: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
-			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		$refusal = $this->signatureRefusal(provider: 'mailgun', rawBody: $rawBody, header: 'X-Mailgun-Signature-256');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$envelope = json_decode($rawBody, true);
@@ -377,11 +329,9 @@ class BlastWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function postmark(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = $this->extractSignatureHeader(fallback: 'X-Pipelinq-Signature');
-
-		if ($this->verifySignature(provider: 'postmark', rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning('BlastWebhookController.postmark: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
-			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		$refusal = $this->signatureRefusal(provider: 'postmark', rawBody: $rawBody, header: 'X-Pipelinq-Signature');
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$event = json_decode($rawBody, true);
@@ -393,6 +343,53 @@ class BlastWebhookController extends Controller {
 
 		return new JSONResponse(['ok' => true, 'accepted' => 1]);
 	}//end postmark()
+
+	/**
+	 * Enqueue every event of a decoded batch, normalised, and answer the count.
+	 *
+	 * @param string                                       $provider  The provider key.
+	 * @param array<mixed>                                 $decoded   The decoded body.
+	 * @param callable(array<string, mixed>): array<string, mixed> $normalise The provider's event normaliser.
+	 *
+	 * @return JSONResponse `{ok, accepted}`.
+	 */
+	private function enqueueEventList(string $provider, array $decoded, callable $normalise): JSONResponse {
+		$accepted = 0;
+		foreach ($this->asEventList(decoded: $decoded) as $event) {
+			$this->blastSendJob->enqueueWebhookEvent(provider: $provider, event: $normalise($event));
+			$accepted++;
+		}
+
+		return new JSONResponse(['ok' => true, 'accepted' => $accepted]);
+	}//end enqueueEventList()
+
+	/**
+	 * The refusal for a delivery whose signature does not verify, or null.
+	 *
+	 * 422 (Unprocessable Entity) — match CtiController convention, signals
+	 * invalid HMAC without surfacing a session-auth status to the upstream
+	 * provider (and keeps the semantic-auth gate unambiguous: this is
+	 * signature verification, not session auth).
+	 *
+	 * @param string $provider The provider key.
+	 * @param string $rawBody  The raw request body.
+	 * @param string $header   The signature header to fall back to.
+	 *
+	 * @return JSONResponse|null The 422 refusal, or null when the signature verifies.
+	 */
+	private function signatureRefusal(string $provider, string $rawBody, string $header): ?JSONResponse {
+		$signature = $this->extractSignatureHeader(fallback: $header);
+		if ($this->verifySignature(provider: $provider, rawBody: $rawBody, signature: $signature) === true) {
+			return null;
+		}
+
+		$this->logger->warning(
+			'BlastWebhookController.'.$provider.': invalid signature',
+			['ip' => $this->request->getRemoteAddress()]
+		);
+
+		return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+	}//end signatureRefusal()
 
 	/**
 	 * Normalise a decoded webhook body into a list of event arrays —

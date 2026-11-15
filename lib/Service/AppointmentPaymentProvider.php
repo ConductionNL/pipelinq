@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\CentsAsDecimal;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -62,6 +63,7 @@ use Throwable;
  */
 class AppointmentPaymentProvider {
 	use NullablePayloadToArray;
+	use CentsAsDecimal;
 
 	/**
 	 * Charge kind logged on the Booking record.
@@ -561,26 +563,6 @@ class AppointmentPaymentProvider {
 			$this->logger->warning('Pipelinq: booking stamp save failed', ['booking' => $bookingId, 'field' => $field]);
 		}
 	}//end saveStampedBooking()
-
-	/**
-	 * Render an integer-cent amount as a `nn.nn` decimal string.
-	 *
-	 * @param int $cents Amount in integer cents.
-	 *
-	 * @return string
-	 */
-	private function centsToDecimal(int $cents): string {
-		$sign = '';
-		$absolute = $cents;
-		if ($cents < 0) {
-			$sign = '-';
-			$absolute = -$cents;
-		}
-
-		$major = intdiv($absolute, 100);
-		$minor = ($absolute % 100);
-		return sprintf('%s%d.%02d', $sign, $major, $minor);
-	}//end centsToDecimal()
 
 	/**
 	 * Now in ISO-8601 UTC.

@@ -32,7 +32,11 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowArrays;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -63,6 +67,10 @@ use Throwable;
  */
 class ConsentService implements ConsentServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ContainerObjectService;
+	use SchemaRowArrays;
 
 	/**
 	 * Default messagingConsentRecord schema slug.
@@ -791,37 +799,12 @@ class ConsentService implements ConsentServiceInterface {
 	 */
 	private function loadRecords(array $filters): array {
 		$contactId = (string)($filters['contactId'] ?? '');
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $this->getRegisterSlug(),
-							'schema' => $this->getSchemaSlug(),
-						]
-					),
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.loadAllRecords: findAll failed',
-				['contactId' => $contactId, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
+		return $this->schemaRowArrays(
+			filters: $filters,
+			failure: 'ConsentService.loadAllRecords: findAll failed',
+			context: ['contactId' => $contactId]
+		);
 	}//end loadRecords()
 
 	/**
@@ -854,65 +837,6 @@ class ConsentService implements ConsentServiceInterface {
 
 		return $this->toArray(value: $saved);
 	}//end saveObject()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential key-lookup fallbacks; extraction adds no clarity.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug (app-config overridable).

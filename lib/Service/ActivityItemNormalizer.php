@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
+use OCA\Pipelinq\Util\NonEmptyString;
 use OCP\IDateTimeFormatter;
 use OCP\IUserManager;
 use Throwable;
@@ -40,6 +41,8 @@ use Throwable;
  * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
  */
 class ActivityItemNormalizer {
+	use NonEmptyString;
+
 	/**
 	 * Constructor.
 	 *
@@ -438,28 +441,4 @@ class ActivityItemNormalizer {
 			],
 		];
 	}//end normalizeLinkedEmail()
-
-	/**
-	 * Coerce a value to a string, or return null when empty/null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The string value or null.
-	 */
-	private function stringOrNull(mixed $value): ?string {
-		if ($value === null) {
-			return null;
-		}
-
-		$stringValue = '';
-		if (is_scalar($value) === true) {
-			$stringValue = (string)$value;
-		}
-
-		if ($stringValue === '') {
-			return null;
-		}
-
-		return $stringValue;
-	}//end stringOrNull()
 }//end class

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\LoyaltyEngineServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LoyaltyPurchase;
 use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
 use OCA\Pipelinq\Service\Loyalty\PointsGrant;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -53,6 +54,7 @@ use Throwable;
  */
 class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -543,15 +545,4 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 
 		return $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

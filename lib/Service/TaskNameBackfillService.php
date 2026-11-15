@@ -31,6 +31,7 @@ use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -53,6 +54,8 @@ use Throwable;
  * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
+	use FirstAdminUser;
+
 	/**
 	 * Upper bound on the tasks read in one run.
 	 *
@@ -306,20 +309,6 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 
 		return $payload;
 	}//end normaliseDateTimes()
-
-	/**
-	 * The first admin, for OpenRegister's object folder check.
-	 *
-	 * A repair step has no session, and the folder check denies a write with no
-	 * acting user for any task that owns a folder.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 
 	/**
 	 * Coerce an OpenRegister row into a plain array.

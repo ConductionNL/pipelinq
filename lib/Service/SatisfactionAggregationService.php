@@ -40,6 +40,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SatisfactionAggregationServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -50,6 +51,8 @@ use Throwable;
  * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
 class SatisfactionAggregationService implements SatisfactionAggregationServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The window each half of the trend covers, in days.
 	 *
@@ -406,26 +409,4 @@ class SatisfactionAggregationService implements SatisfactionAggregationServiceIn
 
 		return ['register' => $register, 'schema' => $schema, 'clientRef' => $clientId];
 	}//end clientFilters()
-
-	/**
-	 * Keep array rows and the array form of serialisable rows; drop the rest.
-	 *
-	 * @param array<int, mixed> $rows The findAll() rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function plainRows(array $rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (($row instanceof \JsonSerializable) === true) {
-				$row = $row->jsonSerialize();
-			}
-
-			if (is_array($row) === true) {
-				$out[] = $row;
-			}
-		}
-
-		return $out;
-	}//end plainRows()
 }//end class

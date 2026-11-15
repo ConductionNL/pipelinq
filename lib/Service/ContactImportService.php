@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -37,6 +38,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactImportService {
 	use ResultToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -251,13 +253,4 @@ class ContactImportService {
 
 		return $array;
 	}//end serialisedRow()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

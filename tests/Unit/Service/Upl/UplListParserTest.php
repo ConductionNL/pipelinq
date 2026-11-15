@@ -101,4 +101,36 @@ class UplListParserTest extends TestCase {
 
 		(new UplListParser())->parse(csv: "\n  \n");
 	}//end testAnEmptyListIsRefused()
+	/**
+	 * Other spellings of the name and URI headers, and old Mac line endings, read the same.
+	 *
+	 * @return void
+	 */
+	public function testOtherHeaderNamesAndLineEndingsAreRead(): void {
+		$parser = new UplListParser();
+
+		$this->assertSame(
+			[['name' => 'paspoort', 'uri' => 'https://standaarden.overheid.nl/owms/terms/paspoort', 'audience' => []]],
+			$parser->parse(csv: "prefLabel,identifier\rpaspoort,https://standaarden.overheid.nl/owms/terms/paspoort\r")
+		);
+		$this->assertSame(
+			[['name' => 'bijstand', 'uri' => 'http://standaarden.overheid.nl/owms/terms/bijstand', 'audience' => []]],
+			$parser->parse(csv: "Naam;URL\nbijstand;http://standaarden.overheid.nl/owms/terms/bijstand\n")
+		);
+	}//end testOtherHeaderNamesAndLineEndingsAreRead()
+
+	/**
+	 * A header without rows is an empty list; a file of blank lines is refused as empty.
+	 *
+	 * @return void
+	 */
+	public function testAHeaderWithoutRowsIsEmptyAndBlankLinesAreNoList(): void {
+		$parser = new UplListParser();
+
+		$this->assertSame([], $parser->parse(csv: "UniformeProductnaam,URI\n\n"));
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('The UPL list is empty.');
+		$parser->parse(csv: "\xEF\xBB\xBF\r\n   \n\t\n");
+	}//end testAHeaderWithoutRowsIsEmptyAndBlankLinesAreNoList()
 }//end class

@@ -44,6 +44,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Util\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,6 +58,8 @@ use OCP\IUserSession;
  * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 class SocialAccountController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
@@ -255,21 +258,6 @@ class SocialAccountController extends Controller {
 
 		return new JSONResponse(['account' => $this->accounts->syncStatus(accountId: $id)]);
 	}//end sync()
-
-	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
 
 	/**
 	 * Where the network's consent screen comes back to. A path on this

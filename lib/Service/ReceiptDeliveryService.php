@@ -36,6 +36,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -63,6 +64,7 @@ use RuntimeException;
  */
 class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	use CastingPayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
@@ -804,15 +806,4 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 
 		return [$register, $schema];
 	}//end resolveSchema()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

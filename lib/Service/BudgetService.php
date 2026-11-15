@@ -31,7 +31,11 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BudgetServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowArrays;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -56,6 +60,10 @@ use Throwable;
  */
 class BudgetService implements BudgetServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ContainerObjectService;
+	use SchemaRowArrays;
 
 	/**
 	 * Default messageSendBudget schema slug.
@@ -260,24 +268,12 @@ class BudgetService implements BudgetServiceInterface {
 	 * @return mixed The rows, or null.
 	 */
 	private function findBudgetRows(object $objectService, string $tenantId, string $providerId) {
-		try {
-			return $objectService->findAll(
-				config: [
-					'filters' => [
-						'tenantId' => $tenantId,
-						'providerId' => $providerId,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.loadBudget: findAll failed',
-				['tenantId' => $tenantId, 'providerId' => $providerId, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['tenantId' => $tenantId, 'providerId' => $providerId],
+			failure: 'BudgetService.loadBudget: findAll failed',
+			context: ['tenantId' => $tenantId, 'providerId' => $providerId]
+		);
 	}//end findBudgetRows()
 
 	/**
@@ -302,34 +298,7 @@ class BudgetService implements BudgetServiceInterface {
 	 * @return array<int, array<string, mixed>> All budgets.
 	 */
 	private function loadAllBudgets(): array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.loadAllBudgets: findAll failed',
-				['exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
+		return $this->schemaRowArrays(filters: [], failure: 'BudgetService.loadAllBudgets: findAll failed', context: []);
 	}//end loadAllBudgets()
 
 	/**
@@ -433,65 +402,6 @@ class BudgetService implements BudgetServiceInterface {
 			return gmdate('Y-m-d\TH:i:s\Z', (time() + (30 * 86400)));
 		}
 	}//end advancePeriod()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential id-candidate probes across two payload shapes; extraction adds no clarity.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug (app-config overridable).

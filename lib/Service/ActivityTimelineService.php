@@ -42,6 +42,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
+use OCA\Pipelinq\Util\NonEmptyString;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -59,6 +60,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ActivityTimelineService implements ActivityTimelineServiceInterface {
+	use NonEmptyString;
+
 	/**
 	 * Maximum allowed page size for list endpoints.
 	 */
@@ -920,30 +923,6 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 
 		return $output;
 	}//end secondsToIsoDuration()
-
-	/**
-	 * Coerce a value to a string, or return null when empty/null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The string value or null.
-	 */
-	private function stringOrNull(mixed $value): ?string {
-		if ($value === null) {
-			return null;
-		}
-
-		$stringValue = '';
-		if (is_scalar($value) === true) {
-			$stringValue = (string)$value;
-		}
-
-		if ($stringValue === '') {
-			return null;
-		}
-
-		return $stringValue;
-	}//end stringOrNull()
 
 	/**
 	 * Build an empty timeline result.

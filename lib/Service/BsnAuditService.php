@@ -31,6 +31,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -50,6 +51,7 @@ use Throwable;
  */
 class BsnAuditService implements BsnAuditServiceInterface {
 	use EntityAccessorTrait;
+	use InjectedObjectService;
 
 	/**
 	 * Default retention for audit records (5 years per RvIG guideline).
@@ -435,15 +437,4 @@ class BsnAuditService implements BsnAuditServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Get the OR ObjectService (lazy resolution — OR may not be available at boot).
-	 *
-	 * @return object The OR ObjectService.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

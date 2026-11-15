@@ -30,6 +30,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -44,6 +45,8 @@ use Throwable;
  *   and nothing inherited it
  */
 class TierDowngradeJob extends TimedJob {
+	use SerialisedPayload;
+
 	private const DEFAULT_INTERVAL = 86400;
 
 	/**
@@ -149,7 +152,7 @@ class TierDowngradeJob extends TimedJob {
 	private function getActiveProgrammes(): array {
 		$result = [];
 		foreach ((new ActiveLoyaltyProgrammes(appConfig: $this->appConfig, container: $this->container))->rows() as $row) {
-			$arr = $this->rowToArray(row: $row);
+			$arr = $this->serialisedPayload(value: $row);
 			if ($arr !== null) {
 				$result[] = $arr;
 			}
@@ -157,28 +160,6 @@ class TierDowngradeJob extends TimedJob {
 
 		return $result;
 	}//end getActiveProgrammes()
-
-	/**
-	 * Normalise an OpenRegister row (array or entity) to a plain array.
-	 *
-	 * @param mixed $row Row from ObjectService::findAll().
-	 *
-	 * @return array<string, mixed>|null Array representation, or null when unusable.
-	 */
-	private function rowToArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$serialised = $row->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return null;
-	}//end rowToArray()
 
 	/**
 	 * Extract UUID from an OR entity array.

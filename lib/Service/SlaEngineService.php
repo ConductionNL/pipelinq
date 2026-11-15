@@ -46,6 +46,7 @@ use OCA\Pipelinq\Service\Sla\SlaPause;
 use OCA\Pipelinq\Service\Sla\SlaPolicyQuery;
 use OCA\Pipelinq\Service\Sla\SlaRecipient;
 use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\Notification\IManager as INotificationManager;
@@ -71,6 +72,7 @@ use Throwable;
  */
 class SlaEngineService implements SlaEngineServiceInterface {
 	use EntityAccessorTrait;
+	use ContainerObjectServiceLookup;
 
 	public const STATUS_ON_TRACK = 'on-track';
 	public const STATUS_AT_RISK = 'at-risk';
@@ -754,15 +756,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 	 * @return object|null
 	 */
 	private function policyObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaEngineService: ObjectService not available',
-				['error' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'SlaEngineService: ObjectService not available', errorKey: 'error');
 	}//end policyObjectService()
 
 	/**
@@ -1307,15 +1301,7 @@ class SlaEngineService implements SlaEngineServiceInterface {
 	 * @return object|null
 	 */
 	private function breachObjectService(): object|null {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaEngineService: ObjectService unavailable for breach event write',
-				['error' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'SlaEngineService: ObjectService unavailable for breach event write', errorKey: 'error');
 	}//end breachObjectService()
 
 	/**

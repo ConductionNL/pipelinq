@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\SearchConsole;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -39,6 +40,7 @@ use Throwable;
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 class SearchQueryDailyStore {
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * The `searchQueryDaily` schema slug.
@@ -174,11 +176,6 @@ class SearchQueryDailyStore {
 	 * @return object|null ObjectService or null when OR is unavailable.
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('SearchQueryDailyStore: OpenRegister unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'SearchQueryDailyStore: OpenRegister unavailable', errorKey: 'exception');
 	}//end getObjectService()
 }//end class

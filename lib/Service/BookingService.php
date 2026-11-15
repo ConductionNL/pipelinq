@@ -34,11 +34,15 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\AppointmentServiceLookup;
+use OCA\Pipelinq\Util\ByteTruncate;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\WithoutSelf;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -72,6 +76,11 @@ use RuntimeException;
 class BookingService implements BookingServiceInterface {
 	use EntityIdOf;
 	use NullablePayloadToArray;
+	use ConfiguredRegisterId;
+	use AppointmentServiceLookup;
+	use InjectedObjectService;
+	use ByteTruncate;
+	use WithoutSelf;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
@@ -1226,24 +1235,7 @@ class BookingService implements BookingServiceInterface {
 			return null;
 		}
 
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: service load failed', ['service' => $serviceId]);
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findServiceObject(serviceId: $serviceId, failure: 'Pipelinq: service load failed');
 	}//end loadServiceQuiet()
 
 	/**
@@ -1659,25 +1651,6 @@ class BookingService implements BookingServiceInterface {
 	}//end chargeCancellationFee()
 
 	/**
-	 * Strip OpenRegister metadata before re-saving an existing object.
-	 *
-	 * The OR engine reads `@self` for register/schema/id; including it on save
-	 * is harmless but `register`/`schema`/`uuid` are passed explicitly so we
-	 * remove the duplicate to keep payloads small.
-	 *
-	 * @param array<string, mixed> $payload Booking payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function stripSelf(array $payload): array {
-		if (array_key_exists('@self', $payload) === true) {
-			unset($payload['@self']);
-		}
-
-		return $payload;
-	}//end stripSelf()
-
-	/**
 	 * Normalise the resourceAssignments payload list.
 	 *
 	 * @param mixed $value Raw value.
@@ -1721,22 +1694,6 @@ class BookingService implements BookingServiceInterface {
 
 		return 'portal';
 	}//end normaliseSource()
-
-	/**
-	 * Truncate a string to a maximum length.
-	 *
-	 * @param string $value Raw value.
-	 * @param int $max Maximum length.
-	 *
-	 * @return string
-	 */
-	private function truncate(string $value, int $max): string {
-		if (strlen($value) <= $max) {
-			return $value;
-		}
-
-		return substr($value, 0, $max);
-	}//end truncate()
 
 	/**
 	 * True when the value is a parseable ISO-8601 datetime.
@@ -1800,49 +1757,4 @@ class BookingService implements BookingServiceInterface {
 	private function nowIso(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 	}//end nowIso()
-
-	/**
-	 * The pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

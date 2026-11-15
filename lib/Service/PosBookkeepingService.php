@@ -55,6 +55,8 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PosObjectReadWrite;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -101,6 +103,8 @@ use Psr\Log\LoggerInterface;
  */
 class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	use CastingPayloadToArray;
+	use PosObjectReadWrite;
+	use InjectedObjectService;
 
 	/**
 	 * CloudEvent type emitted when a Z-report is generated.
@@ -889,58 +893,6 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	}//end fetchZReport()
 
 	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException When the object is not found.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
-
-	/**
-	 * Persist an object via the OR ObjectService for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID (empty to create).
-	 * @param array<string, mixed> $object The object data.
-	 *
-	 * @return array<string, mixed> The saved object.
-	 */
-	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		unset($object['@self']);
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
-
-		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
-
-	/**
 	 * Resolve the register + a schema config key into their stored IDs.
 	 *
 	 * @param string $schemaKey The app-config schema key.
@@ -983,17 +935,6 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		return self::DEFAULT_MAX_ATTEMPTS;
 	}//end maxAttempts()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * The greater of two ISO 8601 timestamp strings (null-safe).

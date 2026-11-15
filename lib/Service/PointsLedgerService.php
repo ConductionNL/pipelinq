@@ -37,6 +37,8 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LedgerMovement;
 use OCA\Pipelinq\Service\Loyalty\LedgerOrigin;
+use OCA\Pipelinq\Util\ConfiguredObjectSave;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\Lock\ILockingProvider;
@@ -60,6 +62,8 @@ use RuntimeException;
  */
 class PointsLedgerService implements PointsLedgerServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use ConfiguredObjectSave;
 
 	/**
 	 * The operation id the next movement carries; '' for none.
@@ -693,20 +697,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	 * @return array<string, mixed> The saved entry.
 	 */
 	private function persist(array $payload): array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('PointsLedgerEntry schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: null
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(), payload: $payload, uuid: null, label: 'PointsLedgerEntry');
 	}//end persist()
 
 	/**
@@ -733,17 +724,6 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.

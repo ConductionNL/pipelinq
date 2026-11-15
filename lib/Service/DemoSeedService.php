@@ -54,6 +54,7 @@ use OCA\Pipelinq\Service\Demo\DemoSeedContext;
 use OCA\Pipelinq\Service\Demo\DemoSeedTarget;
 use OCA\Pipelinq\Service\Demo\DemoSeedValues;
 use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 
 /**
  * Idempotent demo-data seeding + removal against OpenRegister.
@@ -62,6 +63,8 @@ use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class DemoSeedService implements DemoSeedServiceInterface {
+	use JsonSerializableToArray;
+
 	/**
 	 * Marker prefix carried by every seeded object's lookup field.
 	 *
@@ -602,7 +605,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * @return array{value: string, uuid: string, data: array<string, mixed>}|null
 	 */
 	private function lookupEntry(mixed $row, array $lookup): ?array {
-		$data = $this->rowToArray(row: $row);
+		$data = $this->toArray(row: $row);
 		if ($data === null) {
 			return null;
 		}
@@ -677,28 +680,6 @@ class DemoSeedService implements DemoSeedServiceInterface {
 
 		return $data;
 	}//end toTicketData()
-
-	/**
-	 * Normalise a findAll row (ObjectEntity or rendered array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The rendered data, or null when unreadable.
-	 */
-	private function rowToArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if ($row instanceof \JsonSerializable === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end rowToArray()
 
 	/**
 	 * Resolve the contact-first identity for a client/contact payload.

@@ -39,6 +39,7 @@ namespace OCA\Pipelinq\Service\Competitor;
 
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
+use OCA\Pipelinq\Util\ShortPlainText;
 use SimpleXMLElement;
 
 /**
@@ -54,6 +55,7 @@ use SimpleXMLElement;
  *  the method name does.
  */
 class FeedWatchReader {
+	use ShortPlainText;
 
 	/**
 	 * Entries returned from one feed, at most.
@@ -283,20 +285,4 @@ class FeedWatchReader {
 
 		return gmdate('Y-m-d\TH:i:s\Z', $parsed);
 	}//end instant()
-
-	/**
-	 * A plain-text summary, capped so a whole article body cannot become one.
-	 *
-	 * @param string $value The description or summary.
-	 *
-	 * @return string
-	 */
-	private function shorten(string $value): string {
-		$text = trim(strip_tags($value));
-		if (mb_strlen($text, 'UTF-8') <= 500) {
-			return $text;
-		}
-
-		return (mb_substr($text, 0, 497, 'UTF-8') . '...');
-	}//end shorten()
 }//end class

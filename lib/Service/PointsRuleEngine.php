@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -45,6 +46,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class PointsRuleEngine {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -501,15 +503,4 @@ class PointsRuleEngine {
 			$this->appConfig->getValueString(AppIdentity::APP_ID, 'pointsRule_schema', ''),
 		];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

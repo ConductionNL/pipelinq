@@ -49,6 +49,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -61,6 +62,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The app-config key holding the instance's default progress mode.
 	 *
@@ -510,47 +513,6 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return [];
 		}
 	}//end findRows()
-
-	/**
-	 * Keep the rows that are, or serialise to, plain arrays.
-	 *
-	 * @param iterable<mixed> $rows The raw rows.
-	 *
-	 * @return array<int, array<string, mixed>> The rows.
-	 */
-	private function plainRows(iterable $rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			$data = $this->plainRow(row: $row);
-			if ($data !== null) {
-				$out[] = $data;
-			}
-		}
-
-		return $out;
-	}//end plainRows()
-
-	/**
-	 * One row as a plain array: an array as is, a JsonSerializable serialised.
-	 *
-	 * @param mixed $row The raw row.
-	 *
-	 * @return array<string, mixed>|null Null when the row is neither.
-	 */
-	private function plainRow(mixed $row): array|null {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end plainRow()
 
 	/**
 	 * Save one object of a programme schema.
