@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Service\Support\LoggedObjectSave;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -50,6 +51,7 @@ use Throwable;
 class AttributionService implements AttributionServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use LoggedObjectSave;
 	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
@@ -577,27 +579,7 @@ class AttributionService implements AttributionServiceInterface {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $register,
-				schema: $schemaSlug,
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'AttributionService.saveObject: save failed',
-				['schema' => $schemaSlug, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
+		return $this->saveLogged(payload: $payload, target: [$register, $schemaSlug, $id, ['schema' => $schemaSlug]]);
 	}//end saveObject()
 
 	/**

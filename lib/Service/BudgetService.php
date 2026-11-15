@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\Contracts\BudgetServiceInterface;
+use OCA\Pipelinq\Service\Support\LoggedObjectSave;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -61,6 +62,7 @@ use Throwable;
 class BudgetService implements BudgetServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use LoggedObjectSave;
 	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ContainerObjectService;
@@ -317,32 +319,12 @@ class BudgetService implements BudgetServiceInterface {
 	 *   intentionally discard the saved row; the return type is kept for future callers.
 	 */
 	private function saveObject(array $payload, string $id = ''): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
+		$saveUuid = null;
+		if ($id !== '') {
+			$saveUuid = $id;
 		}
 
-		try {
-			$saveUuid = null;
-			if ($id !== '') {
-				$saveUuid = $id;
-			}
-
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: $saveUuid,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BudgetService.saveObject: save failed',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
+		return $this->saveLogged(payload: $payload, target: [$this->getRegisterSlug(), $this->getSchemaSlug(), $saveUuid, ['id' => $id]]);
 	}//end saveObject()
 
 	/**

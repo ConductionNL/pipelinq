@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
+use OCA\Pipelinq\Service\Support\LoggedObjectSave;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -69,6 +70,7 @@ use Throwable;
 class ConsentService implements ConsentServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use LoggedObjectSave;
 	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ContainerObjectService;
@@ -817,27 +819,7 @@ class ConsentService implements ConsentServiceInterface {
 	 * @return array<string, mixed>|null Saved row or null.
 	 */
 	private function saveObject(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.saveObject: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
+		return $this->saveLogged(payload: $payload, target: [$this->getRegisterSlug(), $this->getSchemaSlug(), null, []]);
 	}//end saveObject()
 
 	/**

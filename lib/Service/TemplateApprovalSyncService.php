@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
+use OCA\Pipelinq\Service\Support\LoggedObjectSave;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -56,6 +57,7 @@ use Throwable;
 class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use LoggedObjectSave;
 	use ConfiguredSchemaSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
@@ -402,27 +404,7 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 	 *   the saved row; the return type is preserved for future use.
 	 */
 	private function saveObject(array $payload, ?string $id): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TemplateApprovalSyncService.saveObject: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
+		return $this->saveLogged(payload: $payload, target: [$this->getRegisterSlug(), $this->getSchemaSlug(), $id, []]);
 	}//end saveObject()
 
 	/**

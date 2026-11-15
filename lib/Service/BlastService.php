@@ -44,6 +44,7 @@ use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\ObjectQuery;
 use OCA\Pipelinq\Service\Marketing\ObjectSelection;
 use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Service\Support\LoggedObjectSave;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -83,6 +84,7 @@ use Throwable;
 class BlastService implements BlastServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use LoggedObjectSave;
 	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
@@ -1615,33 +1617,8 @@ class BlastService implements BlastServiceInterface {
 			return null;
 		}
 
-		return $this->persistObject(target: $target, payload: $payload, schemaSlug: $schemaSlug, id: $id);
+		return $this->saveLogged(payload: $payload, target: [$target[0], $schemaSlug, $id, ['schema' => $schemaSlug]]);
 	}//end saveObject()
-
-	/**
-	 * Save a payload and return the saved row, logging a failed save.
-	 *
-	 * @param array{0: string, 1: mixed} $target     The register slug and ObjectService.
-	 * @param array<string, mixed>       $payload    Payload.
-	 * @param string                     $schemaSlug Schema slug.
-	 * @param string|null                $id         Existing object id or null.
-	 *
-	 * @return array<string, mixed>|null Saved row or null on failure.
-	 */
-	private function persistObject(array $target, array $payload, string $schemaSlug, string|null $id): array|null {
-		[$register, $objectService] = $target;
-		try {
-			$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schemaSlug, uuid: $id);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.saveObject: save failed',
-				['schema' => $schemaSlug, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistObject()
 
 	/**
 	 * Load one Blast payload.
