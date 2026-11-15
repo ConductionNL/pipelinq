@@ -24,45 +24,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Util;
 
-use OCP\AppFramework\OCS\OCSNotFoundException;
-
 /**
- * Reads one object (OCS not-found when absent) and saves one object by id
+ * Reads one object through {@see PosObjectFetch} and saves one object by id
  * against the register and schema that the host's config() resolves. The host
  * class provides config(), getObjectService() and toArray().
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait PosObjectReadWrite {
-
-	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException If the object is not found.
-	 *
-	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
+	use PosObjectFetch;
 
 	/**
 	 * Persist an object via the OR ObjectService for a schema config key.

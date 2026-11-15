@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\PosObjectFetch;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -87,6 +88,7 @@ use RuntimeException;
 class PosTransactionService implements PosTransactionServiceInterface {
 	use CastingPayloadToArray;
 	use RandomUuid;
+	use PosObjectFetch;
 
 	/**
 	 * CloudEvent type emitted on confirmation.
@@ -1397,19 +1399,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-31-pos-transaction-core/tasks.md#2.1
 	 */
 	private function fetchTransaction(string $id): array {
-		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('Transactie niet gevonden.');
-		}
-
-		return $this->toArray(object: $object);
+		return $this->fetchOne(schemaKey: 'posTransaction_schema', id: $id, label: 'Transactie niet gevonden.');
 	}//end fetchTransaction()
 
 	/**

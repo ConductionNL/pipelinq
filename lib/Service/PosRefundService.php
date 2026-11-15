@@ -34,6 +34,7 @@ use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PosObjectFetch;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -81,6 +82,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	use RandomUuid;
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
+	use PosObjectFetch;
 
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
@@ -612,19 +614,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchRefund(string $id): array {
-		[$register, $schema] = $this->config(schemaKey: 'posRefund_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('Retour niet gevonden.');
-		}
-
-		return $this->toArray(object: $object);
+		return $this->fetchOne(schemaKey: 'posRefund_schema', id: $id, label: 'Retour niet gevonden.');
 	}//end fetchRefund()
 
 	/**
@@ -674,19 +664,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchOriginalLine(string $id): array {
-		[$register, $schema] = $this->config(schemaKey: 'posTransactionLine_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('Originele regel niet gevonden.');
-		}
-
-		return $this->toArray(object: $object);
+		return $this->fetchOne(schemaKey: 'posTransactionLine_schema', id: $id, label: 'Originele regel niet gevonden.');
 	}//end fetchOriginalLine()
 
 	/**
@@ -725,17 +703,11 @@ class PosRefundService implements PosRefundServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-31-pos-refund-return/tasks.md#2.1
 	 */
 	private function fetchTransaction(string $id): void {
-		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('Originele kassabon niet gevonden. Kan refund niet verwerken.');
-		}
+		$this->fetchOne(
+			schemaKey: 'posTransaction_schema',
+			id: $id,
+			label: 'Originele kassabon niet gevonden. Kan refund niet verwerken.'
+		);
 	}//end fetchTransaction()
 
 	/**

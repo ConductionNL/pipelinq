@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
  * fetchOne finds or throws; saveObjectFor strips @self and saves by id.
  *
  * @covers \OCA\Pipelinq\Util\PosObjectReadWrite
+ * @covers \OCA\Pipelinq\Util\PosObjectFetch
  */
 class PosObjectReadWriteTest extends TestCase {
 

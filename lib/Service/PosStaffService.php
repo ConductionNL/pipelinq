@@ -31,6 +31,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PosObjectFetch;
 use OCA\Pipelinq\Util\PosRegisterSchemaIds;
 use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -62,6 +63,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	use RandomUuid;
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
+	use PosObjectFetch;
 
 	/**
 	 * Maximum consecutive failed PIN attempts before a 15-minute lockout.
@@ -475,19 +477,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	 * @throws OCSNotFoundException If not found.
 	 */
 	private function fetchStaff(string $id): array {
-		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('Medewerker niet gevonden.');
-		}
-
-		$staff = $this->toArray(object: $object);
+		$staff = $this->fetchOne(schemaKey: 'posStaff_schema', id: $id, label: 'Medewerker niet gevonden.');
 		$staff['id'] = (string)($staff['id'] ?? $id);
 
 		return $staff;
