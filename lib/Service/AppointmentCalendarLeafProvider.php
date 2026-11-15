@@ -256,7 +256,15 @@ class AppointmentCalendarLeafProvider {
 			return;
 		}
 
-		$this->pushEventsForBooking(leaf: $leaf, bookingId: $bookingId, booking: $booking);
+		$event = $this->eventBase(booking: $booking);
+		$push = new BookingEventPush(
+			leaf: $leaf,
+			register: $this->registerNumeric(),
+			schema: $this->schemaNumeric(key: self::BOOKING_SCHEMA_KEY),
+			bookingId: $bookingId,
+			event: $event
+		);
+		$this->pushEventsForBooking(push: $push, booking: $booking);
 	}//end pushBookingEvent()
 
 	/**
@@ -283,26 +291,16 @@ class AppointmentCalendarLeafProvider {
 	/**
 	 * Replace a confirmed Booking's VEVENTs with one per staff resource.
 	 *
-	 * @param object               $leaf      The calendar leaf.
-	 * @param string               $bookingId Booking UUID.
-	 * @param array<string, mixed> $booking   The confirmed Booking.
+	 * @param BookingEventPush     $push    The leaf, ids and event base of the push.
+	 * @param array<string, mixed> $booking The confirmed Booking.
 	 *
 	 * @return void
 	 */
-	private function pushEventsForBooking(object $leaf, string $bookingId, array $booking): void {
-		$event = $this->eventBase(booking: $booking);
-		$push = new BookingEventPush(
-			leaf: $leaf,
-			register: $this->registerNumeric(),
-			schema: $this->schemaNumeric(key: self::BOOKING_SCHEMA_KEY),
-			bookingId: $bookingId,
-			event: $event
-		);
-
+	private function pushEventsForBooking(BookingEventPush $push, array $booking): void {
 		// Reschedule contract: drop existing VEVENTs first so the move
 		// semantics hold (the leaf's `unlinkEventsForObject` removes the
 		// linkage; the next createEvent installs the fresh time + linkage).
-		$this->dropExistingEvents(leaf: $leaf, bookingUuid: $bookingId);
+		$this->dropExistingEvents(leaf: $push->leaf, bookingUuid: $push->bookingId);
 
 		foreach ($this->resourcesFromBooking(booking: $booking) as $resourceId) {
 			if ($this->pushResourceEvent(push: $push, resourceId: $resourceId) === false) {
