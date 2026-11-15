@@ -722,13 +722,12 @@ class BrpController extends Controller {
 		}
 
 		$rawBsn = (string)$this->request->getParam('bsn', '');
-		$note = $this->request->getParam('note');
 		$validation = $this->validation->validate($rawBsn);
 		if ($validation['isFormalValid'] === false) {
 			return $this->invalidBsnResponse(validation: $validation);
 		}
 
-		return $this->recordOptOut(rawBsn: $rawBsn, actor: $actor, note: $note);
+		return $this->recordOptOut(rawBsn: $rawBsn, actor: $actor);
 	}//end optOutCreate()
 
 	/**
@@ -772,9 +771,10 @@ class BrpController extends Controller {
 	/**
 	 * Record a local opt-out and answer 201, or 500 when it was not recorded.
 	 *
+	 * The optional `note` request parameter is kept with the opt-out when it is a string.
+	 *
 	 * @param string $rawBsn The validated BSN.
 	 * @param string $actor  The caller's uid.
-	 * @param mixed  $note   The optional note parameter.
 	 *
 	 * @return JSONResponse
 	 */
@@ -782,8 +782,8 @@ class BrpController extends Controller {
 		#[\SensitiveParameter]
 		string $rawBsn,
 		string $actor,
-		mixed $note,
 	): JSONResponse {
+		$note = $this->request->getParam('note');
 		$noteValue = null;
 		if (is_string($note) === true) {
 			$noteValue = $note;
@@ -1043,7 +1043,10 @@ class BrpController extends Controller {
 				return;
 			}
 
-			$client = $this->withIdentityStamp(client: $client, verifiedAt: $verifiedAt, identityCheck: $identityCheck);
+			$client = $this->withIdentityStamp(client: $client, verifiedAt: $verifiedAt);
+			if ($identityCheck !== '') {
+				$client['identityCheck'] = $identityCheck;
+			}
 
 			$this->getObjectService()->saveObject(object: $client, extend: [], register: $register, schema: $schema, uuid: $clientId);
 		} catch (Throwable $e) {
@@ -1072,18 +1075,14 @@ class BrpController extends Controller {
 	/**
 	 * Set the BRP identity-verification fields on a client.
 	 *
-	 * @param array<string,mixed> $client        The client.
-	 * @param DateTimeImmutable   $verifiedAt    When the lookup ran.
-	 * @param string              $identityCheck What the employee checked ('' keeps the earlier one).
+	 * @param array<string,mixed> $client     The client.
+	 * @param DateTimeImmutable   $verifiedAt When the lookup ran.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function withIdentityStamp(array $client, DateTimeImmutable $verifiedAt, string $identityCheck): array {
+	private function withIdentityStamp(array $client, DateTimeImmutable $verifiedAt): array {
 		$client['identityVerifiedAt'] = $verifiedAt->format(DATE_ATOM);
 		$client['identityVerifiedVia'] = 'BRP';
-		if ($identityCheck !== '') {
-			$client['identityCheck'] = $identityCheck;
-		}
 
 		return $client;
 	}//end withIdentityStamp()
