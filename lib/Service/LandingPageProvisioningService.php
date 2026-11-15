@@ -444,8 +444,8 @@ class LandingPageProvisioningService implements LandingPageProvisioningServiceIn
 	private function failure(string $error, ?LandingPlacement $placement = null): array {
 		return [
 			'error' => $error,
-			'portal' => ($placement?->portal ?? ''),
-			'route' => ($placement?->route ?? ''),
+			'portal' => ($placement->portal ?? ''),
+			'route' => ($placement->route ?? ''),
 			'pageId' => '',
 			'publicUrl' => '',
 			'formId' => '',
