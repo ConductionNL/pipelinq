@@ -135,14 +135,14 @@ class BackfillLeadRelations implements IRepairStep {
 	/**
 	 * Compute the fields one lead is missing.
 	 *
-	 * @param array<string,mixed>             $lead      The lead row.
-	 * @param string|null                     $pipeline  The pipeline to assign, or null when none exists.
-	 * @param array<int,array<string,mixed>> $pipelines Stored pipelines, to place the lead in a stage.
+	 * @param array<string,mixed> $lead The lead row.
+	 * @param LeadBackfillPass    $pass The pipeline to assign (null when none exists) and the stored pipelines, to place the lead in a stage.
 	 *
 	 * @return array<string,mixed>|null The fields to merge, [] when already complete,
 	 *                                  or null when the lead cannot be resolved.
 	 */
-	private function missingFor(array $lead, ?string $pipeline, array $pipelines = []): ?array {
+	private function missingFor(array $lead, LeadBackfillPass $pass): ?array {
+		$pipeline = $pass->pipeline;
 		$patch = [];
 
 		if (trim((string)($lead['pipeline'] ?? '')) === '') {
@@ -157,7 +157,7 @@ class BackfillLeadRelations implements IRepairStep {
 		// entry time is the lead's creation, not now, so aging stays honest.
 		$placement = $this->placer->forStoredLead(
 			lead: array_merge($lead, $patch),
-			pipelines: $pipelines,
+			pipelines: $pass->pipelines,
 			enteredAt: (string)($lead['@self']['created'] ?? ''),
 		);
 
@@ -231,18 +231,15 @@ class BackfillLeadRelations implements IRepairStep {
 
 		$pipeline = $this->pickPipeline(pipelines: $pipelines);
 		$actingAdmin = $this->actingAdmin();
+		$target = new SchemaWriteTarget(
+			objectService: $objectService, register: $context['register'], schema: $context['schema'], actingAdmin: $actingAdmin
+		);
+		$pass = new LeadBackfillPass(target: $target, pipeline: $pipeline, pipelines: $pipelines, output: $output);
 
 		$counts = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 
 		foreach ($leads as $lead) {
-			$outcome = $this->backfillOne(
-				lead: $lead,
-				pipeline: $pipeline,
-				context: $context,
-				actingAdmin: $actingAdmin,
-				output: $output,
-				pipelines: $pipelines
-			);
+			$outcome = $this->backfillOne(lead: $lead, pass: $pass);
 			$counts[$outcome]++;
 		}
 
@@ -272,33 +269,22 @@ class BackfillLeadRelations implements IRepairStep {
 	/**
 	 * Backfill one lead.
 	 *
-	 * @param array<string,mixed>             $lead        The lead row.
-	 * @param string|null                     $pipeline    Pipeline to assign when missing.
-	 * @param array<string,string>            $context     Register and schema ids.
-	 * @param mixed                           $actingAdmin User to save as.
-	 * @param IOutput                         $output      Output.
-	 * @param array<int,array<string,mixed>> $pipelines   Stored pipelines, to place the lead in a stage.
+	 * @param array<string,mixed> $lead The lead row.
+	 * @param LeadBackfillPass    $pass Where to save and as whom, the pipeline to assign, the stored pipelines and the output.
 	 *
 	 * @return string One of 'fixed', 'skipped' or 'stuck'.
 	 *
 	 * @spec openspec/specs/lead-management/spec.md
 	 */
-	private function backfillOne(
-		array $lead,
-		?string $pipeline,
-		array $context,
-		mixed $actingAdmin,
-		IOutput $output,
-		array $pipelines = [],
-	): string {
+	private function backfillOne(array $lead, LeadBackfillPass $pass): string {
 		$uuid = (string)($lead['id'] ?? '');
 		if ($uuid === '') {
 			return 'skipped';
 		}
 
-		$patch = $this->missingFor(lead: $lead, pipeline: $pipeline, pipelines: $pipelines);
+		$patch = $this->missingFor(lead: $lead, pass: $pass);
 		if ($patch === null) {
-			$this->warnUnresolvedPipeline(lead: $lead, uuid: $uuid, output: $output);
+			$this->warnUnresolvedPipeline(lead: $lead, uuid: $uuid, output: $pass->output);
 
 			return 'stuck';
 		}
@@ -307,7 +293,7 @@ class BackfillLeadRelations implements IRepairStep {
 			return 'skipped';
 		}
 
-		return $this->saveBackfilledLead(lead: array_merge($lead, $patch), uuid: $uuid, context: $context, actingAdmin: $actingAdmin);
+		return $this->saveBackfilledLead(lead: array_merge($lead, $patch), uuid: $uuid, target: $pass->target);
 	}//end backfillOne()
 
 	/**
@@ -331,14 +317,15 @@ class BackfillLeadRelations implements IRepairStep {
 	/**
 	 * Save a backfilled lead as the acting admin.
 	 *
-	 * @param array<string,mixed>  $lead        The lead with its patch applied.
-	 * @param string               $uuid        The lead uuid.
-	 * @param array<string,string> $context     Register and schema ids.
-	 * @param mixed                $actingAdmin User to save as.
+	 * @param array<string,mixed> $lead   The lead with its patch applied.
+	 * @param string              $uuid   The lead uuid.
+	 * @param SchemaWriteTarget   $target Register and schema ids, and the user to save as.
 	 *
 	 * @return string 'fixed', or 'stuck' when the save fails.
 	 */
-	private function saveBackfilledLead(array $lead, string $uuid, array $context, mixed $actingAdmin): string {
+	private function saveBackfilledLead(array $lead, string $uuid, SchemaWriteTarget $target): string {
+		$context = ['register' => $target->register, 'schema' => $target->schema];
+		$actingAdmin = $target->actingAdmin;
 		try {
 			$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')->saveObject(
 				object: $lead,
