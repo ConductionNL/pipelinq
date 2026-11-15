@@ -30,6 +30,7 @@ use Psr\Log\LoggerInterface;
  * Found entities serialise; misses, odd shapes and failures are null.
  *
  * @covers \OCA\Pipelinq\Util\PartyObjectRead
+ * @uses   \OCA\Pipelinq\Util\SerialisedEntity
  */
 class PartyObjectReadTest extends TestCase {
 

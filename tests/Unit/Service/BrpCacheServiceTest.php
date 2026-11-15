@@ -38,6 +38,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\BrpCacheService
  * @uses   \OCA\Pipelinq\Service\BsnValidationService
+ * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */

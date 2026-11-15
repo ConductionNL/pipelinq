@@ -43,6 +43,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Pipelinq\Service\Export\ExportExecutionService
  * @uses \OCA\Pipelinq\Service\Export\PendingExportRun
+ * @uses   \OCA\Pipelinq\Service\Export\ExportExtraction
  */
 class ExportExecutionMailTest extends TestCase {
 

@@ -43,6 +43,7 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Listener\TimeApprovalListener
  * @covers \OCA\Pipelinq\Event\TimeEntryApprovedEvent
+ * @uses \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
  */
 class TimeApprovalListenerTest extends TestCase {
 

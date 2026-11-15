@@ -80,6 +80,8 @@ if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === fa
  *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md
  * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses   \OCA\Pipelinq\Util\SchemaRowQuery
  */
 class ConsentDecisionGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/ConsentDecisionGolden.json';

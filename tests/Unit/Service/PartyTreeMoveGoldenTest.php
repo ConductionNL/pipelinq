@@ -40,6 +40,7 @@ use RuntimeException;
  * without it.
  *
  * @covers \OCA\Pipelinq\Service\PartyOrganisationTreeService
+ * @uses \OCA\Pipelinq\Util\SerialisedEntity
  *
  * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
  */
