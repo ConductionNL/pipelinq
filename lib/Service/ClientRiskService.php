@@ -147,18 +147,9 @@ class ClientRiskService {
 	 * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.2
 	 */
 	public function assess(string $clientId, array $client = [], ?DateTimeImmutable $now = null): array {
-		$now      = ($now ?? new DateTimeImmutable('now'));
-		$tickets  = $this->rows(schemaKey: 'ticket_schema', filters: ['client' => $clientId]);
-		$open     = array_values(array_filter($tickets, static fn (array $t): bool => in_array(($t['status'] ?? ''), self::OPEN_TICKET_STATUSES, true)));
-		$reasons  = array_merge(
-			$this->contractReasons(clientId: $clientId, now: $now),
-			$this->detractorReasons(clientId: $clientId, now: $now),
-			$this->complaintReasons(open: $open),
-			$this->slaReasons(open: $open, now: $now),
-			$this->quietReasons(latest: $this->latestContact(tickets: $tickets, client: $client), now: $now)
-		);
-
-		$score = array_sum(array_column($reasons, 'points'));
+		$now     = ($now ?? new DateTimeImmutable('now'));
+		$reasons = $this->reasonsAt(subject: ['clientId' => $clientId, 'client' => $client], now: $now);
+		$score   = array_sum(array_column($reasons, 'points'));
 
 		return [
 			'level' => $this->level(score: $score),
@@ -167,6 +158,28 @@ class ClientRiskService {
 			'computedAt' => $now->format(DATE_ATOM),
 		];
 	}//end assess()
+
+	/**
+	 * Every reason a client is at risk at a moment, signal by signal.
+	 *
+	 * @param array{clientId: string, client: array<string,mixed>} $subject The client's id and the client.
+	 * @param DateTimeImmutable                                    $now     The moment to judge at.
+	 *
+	 * @return array<int,array{signal:string, points:int, schema:string, records:array<int,string>}>
+	 */
+	private function reasonsAt(array $subject, DateTimeImmutable $now): array {
+		$clientId = $subject['clientId'];
+		$tickets  = $this->rows(schemaKey: 'ticket_schema', filters: ['client' => $clientId]);
+		$open     = array_values(array_filter($tickets, static fn (array $t): bool => in_array(($t['status'] ?? ''), self::OPEN_TICKET_STATUSES, true)));
+
+		return array_merge(
+			$this->contractReasons(clientId: $clientId, now: $now),
+			$this->detractorReasons(clientId: $clientId, now: $now),
+			$this->complaintReasons(open: $open),
+			$this->slaReasons(open: $open, now: $now),
+			$this->quietReasons(latest: $this->latestContact(tickets: $tickets, client: $subject['client']), now: $now)
+		);
+	}//end reasonsAt()
 
 	/**
 	 * Assess one client and store the result when its level or reasons changed.
@@ -251,13 +264,7 @@ class ClientRiskService {
 	 * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.3
 	 */
 	public function store(array $client, array $risk, string $register, string $schema): bool {
-		if ($this->riskUnchanged(stored: ($client['churnRisk'] ?? null), risk: $risk) === true) {
-			return false;
-		}
-
-		// A locked client refuses every write: skip it rather than log a
-		// refusal for it on every daily run (platform-record-lock 1.3).
-		if ($this->clientUuid(client: $client) === '' || LockedRecord::isLocked(record: $client) === true) {
+		if ($this->mayStore(client: $client, risk: $risk) === false) {
 			return false;
 		}
 
@@ -266,6 +273,25 @@ class ClientRiskService {
 
 		return $this->saveRisk(client: $client, location: new RegisterSchema(register: $register, schema: $schema));
 	}//end store()
+
+	/**
+	 * Whether a risk is to be written on a client: it changed, and the client
+	 * has an id and is not locked.
+	 *
+	 * @param array<string,mixed> $client The client as stored.
+	 * @param array<string,mixed> $risk   The risk from assess().
+	 *
+	 * @return bool
+	 */
+	private function mayStore(array $client, array $risk): bool {
+		if ($this->riskUnchanged(stored: ($client['churnRisk'] ?? null), risk: $risk) === true) {
+			return false;
+		}
+
+		// A locked client refuses every write: skip it rather than log a
+		// refusal for it on every daily run (platform-record-lock 1.3).
+		return $this->clientUuid(client: $client) !== '' && LockedRecord::isLocked(record: $client) === false;
+	}//end mayStore()
 
 	/**
 	 * Whether the stored risk already has this level and these reasons.
@@ -541,9 +567,24 @@ class ClientRiskService {
 			return [];
 		}
 
+		return $this->found(
+			config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters), 'limit' => self::BATCH_SIZE, 'offset' => $offset],
+			schemaKey: $schemaKey
+		);
+	}//end rows()
+
+	/**
+	 * Run one read as the system; [] when it fails.
+	 *
+	 * @param array<string,mixed> $config    The findAll config.
+	 * @param string              $schemaKey The app-config key of the schema, for the log.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function found(array $config, string $schemaKey): array {
 		try {
 			$rows = $this->objectService->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters), 'limit' => self::BATCH_SIZE, 'offset' => $offset],
+				config: $config,
 				_rbac: false,
 				_multitenancy: false,
 			);
@@ -553,7 +594,7 @@ class ClientRiskService {
 		}
 
 		return array_map(fn (mixed $row): array => $this->toArray(value: $row), $rows);
-	}//end rows()
+	}//end found()
 
 	/**
 	 * A row's id.
