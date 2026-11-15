@@ -85,12 +85,9 @@ class DocumentSigningService implements DocumentSigningServiceInterface {
 		string $accountId,
 		int $ttlMinutes = self::DEFAULT_TTL_MINUTES,
 	): array {
-		return $this->signedUrl(
-			payload: $this->stamped(
-				subject: ['objectId' => $objectId, 'objectType' => $objectType, 'accountId' => $accountId],
-				ttlMinutes: $ttlMinutes
-			)
-		);
+		return $this->signedUrl(payload: $this->stamped(
+			subject: ['objectId' => $objectId, 'objectType' => $objectType, 'accountId' => $accountId], ttlMinutes: $ttlMinutes
+		));
 	}//end generateUrl()
 
 	/**
