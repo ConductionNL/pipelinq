@@ -266,22 +266,47 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	private function syncSchemas(object $schemas, object $register, array $groups): int {
 		$written = 0;
 		foreach ((array)$register->getSchemas() as $schemaId) {
-			try {
-				$schema = $schemas->find($schemaId, [], _rbac: false, _multitenancy: false);
-			} catch (Throwable $e) {
-				continue;
+			$schema = $this->findSchema(schemas: $schemas, schemaId: $schemaId);
+			if ($schema !== null) {
+				$written += $this->rewrite(mapper: $schemas, entity: $schema, groups: self::schemaGroups(schema: $schema, groups: $groups));
 			}
-
-			$read = '';
-			if (in_array((string)$schema->getSlug(), self::READ_SCHEMAS, true) === true) {
-				$read = $groups['read'];
-			}
-
-			$written += $this->rewrite(mapper: $schemas, entity: $schema, groups: ['read' => $read] + $groups);
 		}
 
 		return $written;
 	}//end syncSchemas()
+
+	/**
+	 * A schema by id, or null when it cannot be read.
+	 *
+	 * @param object $schemas  The schema mapper.
+	 * @param mixed  $schemaId The schema id.
+	 *
+	 * @return object|null
+	 */
+	private function findSchema(object $schemas, mixed $schemaId): ?object {
+		try {
+			return $schemas->find($schemaId, [], _rbac: false, _multitenancy: false);
+		} catch (Throwable $e) {
+			return null;
+		}
+	}//end findSchema()
+
+	/**
+	 * The groups for one schema: it names the read group only when it is one of READ_SCHEMAS.
+	 *
+	 * @param object                $schema The schema.
+	 * @param array<string, string> $groups read, readApplied, crm and crmApplied.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function schemaGroups(object $schema, array $groups): array {
+		$read = '';
+		if (in_array((string)$schema->getSlug(), self::READ_SCHEMAS, true) === true) {
+			$read = $groups['read'];
+		}
+
+		return ['read' => $read] + $groups;
+	}//end schemaGroups()
 
 	/**
 	 * The block with the CRM group granted wherever the staff group is, and the group last applied gone.
@@ -385,14 +410,8 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @return int 1 when written, else 0.
 	 */
 	private function rewrite(object $mapper, object $entity, array $groups): int {
-		$current = $entity->getAuthorization();
-		if (is_array($current) === false || $current === []) {
-			return 0;
-		}
-
-		$next = self::grantRead(authorization: $current, group: $groups['read'], previous: $groups['readApplied']);
-		$next = self::grant(authorization: $next, group: $groups['crm'], previous: $groups['crmApplied']);
-		if ($next === $current) {
+		$next = self::nextBlock(entity: $entity, groups: $groups);
+		if ($next === null) {
 			return 0;
 		}
 
@@ -406,4 +425,27 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 
 		return 1;
 	}//end rewrite()
+
+	/**
+	 * The entity's rewritten block, or null when it has none or nothing changes.
+	 *
+	 * @param object                $entity The register or schema.
+	 * @param array<string, string> $groups The read group for this entity (or ''), readApplied, crm and crmApplied.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function nextBlock(object $entity, array $groups): ?array {
+		$current = $entity->getAuthorization();
+		if (is_array($current) === false || $current === []) {
+			return null;
+		}
+
+		$next = self::grantRead(authorization: $current, group: $groups['read'], previous: $groups['readApplied']);
+		$next = self::grant(authorization: $next, group: $groups['crm'], previous: $groups['crmApplied']);
+		if ($next === $current) {
+			return null;
+		}
+
+		return $next;
+	}//end nextBlock()
 }//end class
