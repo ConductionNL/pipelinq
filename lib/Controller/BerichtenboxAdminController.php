@@ -30,6 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\AppFramework\Controller;
@@ -86,8 +89,10 @@ class BerichtenboxAdminController extends Controller {
 			$service = $this->getObjectService();
 			$message = $service->find(
 				id: $id,
-				register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '')
+				options: new ObjectFindOptions(
+					register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+					schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '')
+				)
 			);
 		} catch (Throwable $e) {
 			return new JSONResponse(
@@ -113,10 +118,13 @@ class BerichtenboxAdminController extends Controller {
 			$service
 				->saveObject(
 					object: $data,
-					extend: [],
-					register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
-					schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', ''),
-					uuid: ($data['uuid'] ?? $id)
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(
+								register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+								schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'berichtenboxMessage_schema', '')
+							),
+						uuid: $data['uuid'] ?? $id
+					)
 				);
 		} catch (Throwable $e) {
 			return new JSONResponse(

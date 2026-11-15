@@ -35,6 +35,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
@@ -243,13 +246,13 @@ class BackfillContactChannelArrays implements IRepairStep {
 		try {
 			$target->objectService->saveObject(
 				object: $record,
-				extend: [],
-				register: $target->register,
-				schema: $target->schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target->register, schema: $target->schema),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $target->actingAdmin)
+				),
 				_rbac: false,
-				_multitenancy: false,
-				currentUser: $target->actingAdmin,
+				_multitenancy: false
 			);
 
 			return 'fixed';

@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Util;
 use OCA\Pipelinq\Util\PosObjectFetch;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * A found object is converted; a missing or unreadable one is a not-found.
@@ -67,7 +68,9 @@ class PosObjectFetchTest extends TestCase {
 					 * @param string $schema   Schema.
 					 * @return object|null
 					 */
-					public function find(string $id, string $register, string $schema): ?object {
+					public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+						$register = $options?->register;
+						$schema = $options?->schema;
 						if ($id === 'boom') {
 							throw new \RuntimeException('down');
 						}

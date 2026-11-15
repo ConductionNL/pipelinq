@@ -31,6 +31,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The BRP person cache: lookup of the newest unexpired entry by BSN hash,
@@ -216,7 +217,10 @@ class BrpCacheServiceTest extends TestCase {
 	public function testSetStampsRetentionWithTheGivenTtl(): void {
 		$saved = null;
 		$this->objectService->expects(self::once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema) use (&$saved) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$saved = [$object, $extend, $register, $schema];
 				return $this->entity(['id' => 'uuid-1'] + $object);
 			}
@@ -305,7 +309,11 @@ class BrpCacheServiceTest extends TestCase {
 		);
 		$saves = [];
 		$this->objectService->expects(self::exactly(2))->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$saves) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves) {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = [$uuid, $object['retentionTo'], $register, $schema];
 				return $this->entity($object);
 			}

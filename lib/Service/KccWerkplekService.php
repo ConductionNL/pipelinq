@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
@@ -351,7 +353,10 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 
 		try {
 			$saveId = $this->profileSaveId(existingData: $existingData);
-			$objectService->saveObject($payload, [], $register, $schema, $saveId);
+			$objectService->saveObject(
+				$payload,
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $saveId)
+			);
 		} catch (\Throwable $e) {
 			throw $this->availabilitySaveFailed(e: $e);
 		}

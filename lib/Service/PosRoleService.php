@@ -26,6 +26,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -112,7 +115,7 @@ class PosRoleService implements PosRoleServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -195,7 +198,9 @@ class PosRoleService implements PosRoleServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to delete posRole', ['exception' => $e->getMessage()]);
 			throw new OCSNotFoundException('POS-rol kon niet worden verwijderd.');

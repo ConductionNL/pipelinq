@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Util;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Throwable;
 
 /**
@@ -52,10 +54,10 @@ trait ContainerObjectSave {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

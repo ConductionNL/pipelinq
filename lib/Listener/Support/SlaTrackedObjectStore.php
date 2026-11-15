@@ -24,6 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use Throwable;
 
@@ -74,7 +77,7 @@ trait SlaTrackedObjectStore {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schemaId);
+			$object = $objectService->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schemaId));
 			if ($object === null) {
 				return null;
 			}
@@ -113,10 +116,10 @@ trait SlaTrackedObjectStore {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schemaId,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schemaId),
+					uuid: $uuid
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

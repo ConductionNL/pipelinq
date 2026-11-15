@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Coverage tests for the AppointmentEmailService send pipeline.
@@ -577,7 +578,13 @@ class AppointmentEmailServiceCoverageTest extends TestCase {
 			}
 		);
 		$objects->expects($this->once())->method('saveObject')
-			->with($this->anything(), [], 'reg-1', 'sch-booking', 'b-1')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->anything(),
+				'extend' => [],
+				'register' => 'reg-1',
+				'schema' => 'sch-booking',
+				'uuid' => 'b-1',
+			]))
 			->willThrowException(new RuntimeException('locked'));
 		$this->objectService = $objects;
 		$this->mailer->method('validateMailAddress')->willReturn(true);

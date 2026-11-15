@@ -36,6 +36,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Service\Marketing\BlastSendRun;
@@ -1634,7 +1637,10 @@ class BlastService implements BlastServiceInterface {
 	private function persistObject(array $target, array $payload, string $schemaSlug, string|null $id): array|null {
 		[$register, $objectService] = $target;
 		try {
-			$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schemaSlug, uuid: $id);
+			$saved = $objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schemaSlug), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'BlastService.saveObject: save failed',
@@ -1722,7 +1728,7 @@ class BlastService implements BlastServiceInterface {
 	private function findOne(array $target, string $id, string $schemaSlug): array|null {
 		[$register, $objectService] = $target;
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schemaSlug);
+			$entity = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schemaSlug));
 		} catch (Throwable $e) {
 			$this->logger->info('BlastService.loadOne: not found', ['id' => $id, 'schema' => $schemaSlug, 'exception' => $e->getMessage()]);
 			return null;

@@ -29,6 +29,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Reads and saves against the configured register and the host's schema key.
@@ -82,7 +84,9 @@ class ConfiguredSchemaObjectReadTest extends TestCase {
 			 * @param string $schema   Schema.
 			 * @return object|null
 			 */
-			public function find(string $id, string $register, string $schema): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($this->fail === true) {
 					throw new RuntimeException('down');
 				}
@@ -115,12 +119,16 @@ class ConfiguredSchemaObjectReadTest extends TestCase {
 			 * @param string               $uuid     Uuid.
 			 * @return void
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($this->fail === true) {
 					throw new RuntimeException('down');
 				}
 
-				$this->calls[] = func_get_args();
+				$this->calls[] = [$object, $extend, $register, $schema, $uuid];
 			}
 		};
 	}//end store()

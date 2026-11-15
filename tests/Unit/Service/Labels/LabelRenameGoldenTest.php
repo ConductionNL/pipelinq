@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every OpenRegister call (findAll configuration, saveObject payload and
@@ -165,6 +166,7 @@ class LabelRenameGoldenTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function find(string $id, mixed ...$args): array {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return ['id' => $id, 'name' => 'Hot'];
 			}
 
@@ -204,6 +206,7 @@ class LabelRenameGoldenTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, mixed ...$args): array {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				LabelRenameGoldenTest::$calls[] = ['saveObject' => $object, 'args' => $args];
 				$id = (string)($args['uuid'] ?? '');
 				if ($id === 'fail') {

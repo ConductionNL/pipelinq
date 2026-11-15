@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SlaSweepSourceInterface;
 use OCA\Pipelinq\Service\Sla\SlaSweepRun;
@@ -328,10 +330,10 @@ class InitSlaStatus implements IRepairStep {
 			objectService: $objectService,
 			operation: static fn () => $objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: $surface->run->register,
-				schema: $surface->schemaId,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $surface->run->register, schema: $surface->schemaId),
+					uuid: $uuid
+				)
 			)
 		);
 	}//end saveInitialised()

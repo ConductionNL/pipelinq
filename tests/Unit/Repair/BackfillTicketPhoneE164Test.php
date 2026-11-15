@@ -33,6 +33,7 @@ use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tickets stored before phoneE164 existed get it once; a second run writes nothing.
@@ -92,6 +93,7 @@ class BackfillTicketPhoneE164Test extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($onSave): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				// Positional: object, extend, register, schema, uuid, _rbac, _multitenancy, silent, _validation, uploadedFiles, currentUser.
 				if ($onSave !== null) {
 					$onSave($args[0]);

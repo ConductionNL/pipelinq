@@ -28,6 +28,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Each lifecycle step reads the run, changes only its own fields and writes
@@ -79,7 +81,11 @@ class ExportRunServiceBehaviourTest extends TestCase {
 	protected function setUp(): void {
 		$this->objects = $this->createMock(ObjectServiceInterface::class);
 		$this->objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntity {
+			function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntity {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$row = ($this->rows[$schema][$id] ?? null);
 				return ($row === null ? null : self::entity((string)$id, $row));
 			}
@@ -103,7 +109,11 @@ class ExportRunServiceBehaviourTest extends TestCase {
 			}
 		);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = [$register, $schema, $uuid, $object];
 				$uuid = ($uuid ?? 'new-' . count($this->saves));
 				$this->rows[$schema][$uuid] = $object;

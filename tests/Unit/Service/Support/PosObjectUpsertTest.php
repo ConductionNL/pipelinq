@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 
 use OCA\Pipelinq\Service\Support\PosObjectUpsert;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * An id is kept; an empty one is replaced by a fresh UUID before the save.
@@ -85,7 +86,11 @@ class PosObjectUpsertTest extends TestCase {
 					 * @param string               $uuid     Uuid.
 					 * @return array<string, mixed>
 					 */
-					public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
+					public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+						$extend = $options->extend;
+						$register = $options->target->register;
+						$schema = $options->target->schema;
+						$uuid = $options->uuid;
 						$this->host->saves[] = [$register, $schema, $uuid];
 						return $object + ['id' => $uuid];
 					}

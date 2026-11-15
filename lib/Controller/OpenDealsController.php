@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\AppFramework\Controller;
@@ -217,7 +218,10 @@ class OpenDealsController extends Controller {
 		}
 
 		try {
-			return $this->objectService->find(id: $id, register: $where['register'], schema: $where['schema'], _audit: false) !== null;
+			return $this->objectService->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $where['register'], schema: $where['schema'], audit: false)
+			) !== null;
 		} catch (Throwable) {
 			return false;
 		}

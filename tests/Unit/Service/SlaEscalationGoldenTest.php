@@ -34,6 +34,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every escalation channel and breach-event outcome of executeEscalations():
@@ -324,12 +326,17 @@ class SlaEscalationGoldenTest extends TestCase {
 			public function __construct(private SlaEscalationGoldenTest $test, private array $store, private string $save) {
 			}
 
-			public function find($id, $register = null, $schema = null): ?array {
+			public function find($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->note(['find' => compact('id', 'register', 'schema')]);
 				return ($this->store[$id] ?? null);
 			}
 
-			public function saveObject(array $object, array $extend = [], $register = null, $schema = null): mixed {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->test->note(['saveObject' => compact('object', 'extend', 'register', 'schema')]);
 				$this->count++;
 				return match ($this->save) {

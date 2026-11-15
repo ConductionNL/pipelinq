@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
@@ -194,10 +195,9 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
+				options: new ObjectFindOptions(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
+				_rbac: $scope['_rbac'] ?? true,
+				_multitenancy: $scope['_multitenancy'] ?? true
 			);
 		} catch (Throwable $e) {
 			$this->logger->info('ChannelProviderRepository.findById: not found', ['id' => $id, 'exception' => $e->getMessage()]);

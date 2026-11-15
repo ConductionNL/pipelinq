@@ -49,7 +49,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
 use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\IURLGenerator;
@@ -59,7 +60,7 @@ use UnexpectedValueException;
 /**
  * Resolves the addressbook identity a client or contact object needs.
  */
-class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
+class ProvisionContactIdentityNode implements ICallFlowNode, IFlowNodeConfigKeys {
 
 	/**
 	 * The node type identifier.
@@ -187,9 +188,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Provision one addressbook identity per item.
 	 *
-	 * @param array<int, array> $items   The incoming items.
-	 * @param array<string, mixed> $config The step configuration.
-	 * @param array<string, mixed> $context The run context.
+	 * @param FlowNodeCall $call The items, the step config and the run context.
 	 *
 	 * @return array<int, array> The items, each with the UID added.
 	 *
@@ -198,7 +197,10 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
 		unset($context);
 
 		// `validateConfig()` only runs on SAVE. A flow imported from an

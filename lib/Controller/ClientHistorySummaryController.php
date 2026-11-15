@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ClientHistorySummaryService;
 use OCA\Pipelinq\Service\RegisterSchema;
@@ -142,10 +143,7 @@ class ClientHistorySummaryController extends Controller {
 		try {
 			$object = $this->objectService->find(
 				id: $clientId,
-				register: $location->register,
-				schema: $location->schema,
-				_rbac: true,
-				_multitenancy: true
+				options: new ObjectFindOptions(register: $location->register, schema: $location->schema)
 			);
 		} catch (NotAuthorizedException) {
 			return Http::STATUS_FORBIDDEN;

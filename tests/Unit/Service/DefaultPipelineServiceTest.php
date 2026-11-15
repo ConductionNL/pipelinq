@@ -30,6 +30,7 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for DefaultPipelineService.
@@ -140,6 +141,7 @@ class DefaultPipelineServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn([]);
 		$objectService->method('saveObject')->willReturnCallback(function (...$args) use (&$writers, &$active) {
+			$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 			$writers[] = $active;
 			return $this->createMock(\OCA\OpenRegister\Contract\ObjectEntityInterface::class);
 		});

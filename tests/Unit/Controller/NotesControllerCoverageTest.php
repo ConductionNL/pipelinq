@@ -41,6 +41,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * @covers \OCA\Pipelinq\Controller\NotesController
@@ -142,7 +143,9 @@ class NotesControllerCoverageTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, ?string $register = null, ?string $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return $this->test->answerFind(id: $id, register: (string)$register, schema: (string)$schema);
 			}
 		};

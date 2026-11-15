@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
 use OCA\Pipelinq\Service\Forecast\SnapshotLevel;
@@ -570,10 +572,7 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 
 		$this->getObjectService()->saveObject(
 			object: $snapshot,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: null
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 	}//end persistSnapshot()
 

@@ -26,6 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\FirstAdminUser;
@@ -168,13 +171,16 @@ class BackfillTicketPhoneE164 implements IRepairStep {
 		try {
 			$this->ticketService->getObjectService()->saveObject(
 				object: $this->ticketService->sanitizeForSave(payload: $row),
-				extend: [],
-				register: $this->ticketService->getRegisterId(),
-				schema: $this->ticketService->getSchemaId(),
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->ticketService->getRegisterId(),
+							schema: $this->ticketService->getSchemaId()
+						),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $this->actingAdmin())
+				),
 				_rbac: false,
-				_multitenancy: false,
-				currentUser: $this->actingAdmin(),
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

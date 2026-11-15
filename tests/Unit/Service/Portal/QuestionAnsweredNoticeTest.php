@@ -41,6 +41,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * @covers \OCA\Pipelinq\Service\Portal\QuestionAnsweredNotice
@@ -90,7 +91,10 @@ class QuestionAnsweredNoticeTest extends TestCase {
 		$this->objects = $this->createMock(ObjectServiceInterface::class);
 		$this->objects->method('runAsSystem')->willReturnCallback(fn (callable $operation): mixed => $operation());
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saved[] = [$object, $register, $schema];
 				return new ObjectEntity();
 			}

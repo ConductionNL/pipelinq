@@ -25,6 +25,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -273,9 +277,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $payload,
-				register: $config['register'],
-				schema: $config['schema'],
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -326,7 +328,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		$objectService
 			->setRegister($config['register'])
 			->setSchema($config['schema'])
-			->deleteObject(uuid: $id);
+			->deleteObject(new ObjectDeletion(uuid: $id));
 
 		$this->logger->info(
 			'Contactmoment deleted',
@@ -353,8 +355,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		// Fetch the object to check ownership.
 		$object = $this->objectService->find(
 			id: $id,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 		);
 
 		if ($object === null) {

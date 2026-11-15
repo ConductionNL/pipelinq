@@ -42,6 +42,8 @@ namespace OCA\Pipelinq\Service;
 
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -150,9 +152,10 @@ class SurveyOptOutService {
 		try {
 			$this->objectService->saveObject(
 				object: $row,
-				register: $where['register'],
-				schema: $where['schema'],
-				uuid: (string)($row['id'] ?? $row['uuid'] ?? ''),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $where['register'], schema: $where['schema']),
+					uuid: (string)($row['id'] ?? $row['uuid'] ?? '')
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

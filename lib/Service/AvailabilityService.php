@@ -30,6 +30,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -483,7 +487,9 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: availability cache invalidation failed', ['resource' => $resourceId, 'date' => $date]);
 		}
@@ -566,7 +572,9 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	 */
 	private function deleteCacheRow(string $uuid, AvailabilityCacheScope $scope): int {
 		try {
-			$this->getObjectService()->deleteObject(uuid: $uuid, register: $scope->register, schema: $scope->schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $scope->register, schema: $scope->schema))
+			);
 			return 1;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -799,7 +807,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		try {
-			$result = $this->getObjectService()->find(id: $resourceId, register: $register, schema: $schema);
+			$result = $this->getObjectService()->find(id: $resourceId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: resource load failed', ['resource' => $resourceId]);
 			return null;
@@ -988,7 +996,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		try {
-			$svc = $this->getObjectService()->find(id: $serviceId, register: $register, schema: $schema);
+			$svc = $this->getObjectService()->find(id: $serviceId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: service lookup failed', ['service' => $serviceId]);
 			return null;
@@ -1103,10 +1111,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $entry,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

@@ -29,6 +29,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Coverage tests for PosRoleService CRUD paths and error branches.
@@ -173,7 +175,13 @@ class PosRoleServiceCoverageTest extends TestCase {
 		$this->configureAll();
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('role-uuid', $this->anything(), $this->anything(), 'reg-1', 'role-s')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'role-uuid',
+					'_extend' => $this->anything(),
+					'files' => $this->anything(),
+					'register' => 'reg-1',
+					'schema' => 'role-s',
+				]))
 			->willReturn($this->entity(['id' => 'role-uuid', 'name' => 'Kassa']));
 
 		self::assertSame(['id' => 'role-uuid', 'name' => 'Kassa'], $this->service()->getRole('role-uuid'));
@@ -264,7 +272,13 @@ class PosRoleServiceCoverageTest extends TestCase {
 		];
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with($expected, [], 'reg-1', 'role-s', 'role-uuid')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $expected,
+					'extend' => [],
+					'register' => 'reg-1',
+					'schema' => 'role-s',
+					'uuid' => 'role-uuid',
+				]))
 			->willReturn($this->entity(['id' => 'role-uuid', 'name' => 'Manager']));
 
 		$saved = $this->service()->saveRole(
@@ -292,7 +306,11 @@ class PosRoleServiceCoverageTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(
-				function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$captured) {
+				function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured) {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
+					$uuid = $options->uuid;
 					$captured = [$object, $register, $schema, $uuid];
 					return $this->entity(['id' => $uuid]);
 				}
@@ -331,7 +349,11 @@ class PosRoleServiceCoverageTest extends TestCase {
 		$this->objectService->method('findAll')->willReturn([['isActive' => false, 'posRole' => 'role-uuid']]);
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('role-uuid', 'reg-1', 'role-s')
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => 'role-uuid',
+					'register' => 'reg-1',
+					'schema' => 'role-s',
+				]))
 			->willReturn(true);
 		$this->logger->expects($this->never())->method('warning');
 

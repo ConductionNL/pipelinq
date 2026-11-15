@@ -33,6 +33,8 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
@@ -107,7 +109,12 @@ class ClientMergeReferenceListener implements IEventListener {
 	 * @return void
 	 */
 	private function handleOne(ObjectsMergedEvent $event, string $fromUuid): void {
-		$record = $this->objects->find(id: $fromUuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$record = $this->objects->find(
+			id: $fromUuid,
+			options: new ObjectFindOptions(render: false, audit: false),
+			_rbac: false,
+			_multitenancy: false
+		);
 		$partyType = $this->partyType(record: $record);
 		if ($record === null || $partyType === '') {
 			return;
@@ -133,8 +140,10 @@ class ClientMergeReferenceListener implements IEventListener {
 	private function moveForward(MergeMove $move, string $partyType): void {
 		$moved = $this->mover->move(partyType: $partyType, fromUuid: $move->fromUuid, intoUuid: $move->intoUuid);
 		$this->objects->patchObject(
-			objectId: $move->fromUuid,
-			data: [PartyReferencesInterface::LEDGER_FIELD => $moved],
+			new ObjectPatch(
+				objectId: $move->fromUuid,
+				data: [PartyReferencesInterface::LEDGER_FIELD => $moved]
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -160,7 +169,11 @@ class ClientMergeReferenceListener implements IEventListener {
 			);
 		}
 
-		$this->objects->patchObject(objectId: $move->fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => null], _rbac: false, _multitenancy: false);
+		$this->objects->patchObject(
+			new ObjectPatch(objectId: $move->fromUuid, data: [PartyReferencesInterface::LEDGER_FIELD => null]),
+			_rbac: false,
+			_multitenancy: false
+		);
 		$this->followCard(move: $move, reversal: true);
 	}//end moveBack()
 
@@ -224,7 +237,7 @@ class ClientMergeReferenceListener implements IEventListener {
 	 * @return string
 	 */
 	private function nameOf(string $uuid): string {
-		$record = $this->objects->find(id: $uuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$record = $this->objects->find(id: $uuid, options: new ObjectFindOptions(render: false, audit: false), _rbac: false, _multitenancy: false);
 		$name = trim((string)($record?->getObject()['name'] ?? ''));
 		if ($name === '') {
 			return $uuid;

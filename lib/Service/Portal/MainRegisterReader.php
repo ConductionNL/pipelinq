@@ -29,6 +29,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
@@ -148,7 +151,12 @@ class MainRegisterReader implements MainRegisterReaderInterface {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+			$object = $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -179,7 +187,7 @@ class MainRegisterReader implements MainRegisterReaderInterface {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -219,10 +227,10 @@ class MainRegisterReader implements MainRegisterReaderInterface {
 			// The register and schema stay pinned above.
 			$saved = $this->objectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

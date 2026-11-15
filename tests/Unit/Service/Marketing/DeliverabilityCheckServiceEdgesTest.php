@@ -26,6 +26,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * What the check does when the transport, OpenRegister or the save is not
@@ -80,7 +82,9 @@ class DeliverabilityCheckServiceEdgesTest extends TestCase {
 			/** @var array<int, array<int, mixed>> The calls seen. */
 			public array $calls = [];
 
-			public function find(string $id, $register = null, $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->calls[] = ['find', $id, $register, $schema];
 				if ($this->found instanceof \Throwable) {
 					throw $this->found;
@@ -89,7 +93,10 @@ class DeliverabilityCheckServiceEdgesTest extends TestCase {
 				return $this->found;
 			}//end find()
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->calls[] = ['save', $object, $register, $schema, $uuid];
 				if ($this->saveFails !== null) {
 					throw $this->saveFails;

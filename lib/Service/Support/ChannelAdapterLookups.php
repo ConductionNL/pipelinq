@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredTenantId;
@@ -101,9 +103,10 @@ trait ChannelAdapterLookups {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(
+						register: $this->getRegisterSlug(),
+						schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+					))
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

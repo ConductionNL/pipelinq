@@ -34,6 +34,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 require_once __DIR__.'/RecordingDeferralService.php';
 
@@ -111,7 +113,9 @@ class DealCreatedListenerRotationTest extends TestCase {
 			 *
 			 * @return ObjectEntity
 			 */
-			public function find(string $id, string $register, string $schema): ObjectEntity {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return $this->found;
 			}//end find()
 
@@ -126,7 +130,11 @@ class DealCreatedListenerRotationTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->recordSave(save: ['object' => $object, 'uuid' => $uuid]);
 			}//end saveObject()
 		};

@@ -28,6 +28,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A party that cannot be read is refused; without a field-set schema the
@@ -86,7 +87,9 @@ class PartyLeafProviderEdgesTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPartyThatCannotBeReadIsRefused(): void {
-		$this->objects->expects($this->once())->method('find')->with('p-1')->willThrowException(new RuntimeException('no access'));
+		$this->objects->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'p-1',
+			]))->willThrowException(new RuntimeException('no access'));
 		$this->logger->expects($this->once())->method('debug')->with(
 			'PartyLeafProvider: the party could not be read',
 			['party' => 'p-1', 'exception' => 'no access']

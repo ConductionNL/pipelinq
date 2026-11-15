@@ -35,6 +35,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * LoyaltyReportingService computes a programme's KPIs, liability, tier report and expiry forecast.
@@ -106,7 +107,11 @@ class LoyaltyReportingServiceTest extends TestCase {
 			return 'csv';
 		});
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturnCallback(function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null): ?ObjectEntity {
+		$objects->method('find')->willReturnCallback(function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntity {
+			$_extend = $options?->extend ?? [];
+			$files = $options?->files ?? false;
+			$register = $options?->register;
+			$schema = $options?->schema;
 			$payload = ($this->objects[(string)$schema][(string)$id] ?? null);
 			if ($payload === null) {
 				return null;

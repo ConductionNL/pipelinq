@@ -38,6 +38,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A deferral failure is logged and swallowed, an expense without a uuid is
@@ -222,6 +223,7 @@ class ExpenseApprovalListenerEdgesTest extends TestCase {
 			 * @return null
 			 */
 			public function find(...$args) {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return null;
 			}//end find()
 		};
@@ -254,6 +256,7 @@ class ExpenseApprovalListenerEdgesTest extends TestCase {
 			 * @return ObjectEntity The expense.
 			 */
 			public function find(...$args): ObjectEntity {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->current;
 			}//end find()
 		};
@@ -290,6 +293,7 @@ class ExpenseApprovalListenerEdgesTest extends TestCase {
 			 * @return never
 			 */
 			public function find(...$args) {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				throw new \RuntimeException('db down');
 			}//end find()
 		};
@@ -326,6 +330,7 @@ class ExpenseApprovalListenerEdgesTest extends TestCase {
 			 * @return ObjectEntity The expense.
 			 */
 			public function find(...$args): ObjectEntity {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->current;
 			}//end find()
 
@@ -337,6 +342,7 @@ class ExpenseApprovalListenerEdgesTest extends TestCase {
 			 * @return never
 			 */
 			public function saveObject(...$args) {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				throw new \RuntimeException('read only');
 			}//end saveObject()
 		};

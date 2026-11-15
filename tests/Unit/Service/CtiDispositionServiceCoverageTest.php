@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The CTI wrap-up: outcome validation, contactmoment write-back and follow-up task creation.
@@ -180,8 +181,8 @@ class CtiDispositionServiceCoverageTest extends TestCase {
 		$this->ticketService->method('isConfigured')->willReturn(false);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				[
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => [
 					'type' => 'followUpTask',
 					'subject' => 'Bouwvergunning',
 					'description' => 'Bel terug',
@@ -189,11 +190,11 @@ class CtiDispositionServiceCoverageTest extends TestCase {
 					'assigneeGroupId' => 'grp-vergunningen',
 					'interaction' => 'cm-1',
 				],
-				[],
-				'reg-1',
-				'task-1',
-				null
-			)
+					'extend' => [],
+					'register' => 'reg-1',
+					'schema' => 'task-1',
+					'uuid' => null,
+				]))
 			->willReturn($this->savedEntity('task-9'));
 
 		$result = $this->service(['cti_escalation_queues' => self::QUEUES, 'register' => 'reg-1', 'task_schema' => 'task-1'])
@@ -211,13 +212,13 @@ class CtiDispositionServiceCoverageTest extends TestCase {
 		$this->ticketService->method('isConfigured')->willReturn(false);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				['type' => 'followUpTask', 'subject' => 'S', 'status' => 'open', 'interaction' => 'cm-1'],
-				[],
-				'reg-1',
-				'task-1',
-				null
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['type' => 'followUpTask', 'subject' => 'S', 'status' => 'open', 'interaction' => 'cm-1'],
+					'extend' => [],
+					'register' => 'reg-1',
+					'schema' => 'task-1',
+					'uuid' => null,
+				]))
 			->willReturn($this->savedEntity('task-2'));
 
 		$result = $this->service()->processDisposition(interactionId: 'cm-1', subject: 'S', outcome: 'escalated', notes: '');

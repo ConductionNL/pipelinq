@@ -31,6 +31,9 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
@@ -755,7 +758,7 @@ class PortalController extends Controller {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(id: $bookingId, register: $register, schema: $schema);
+			$found = $this->getObjectService()->find(id: $bookingId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -897,7 +900,10 @@ class PortalController extends Controller {
 	 */
 	private function createCustomer(array $object, array $where): string {
 		try {
-			$saved = $this->getObjectService()->saveObject(object: $object, extend: [], register: $where['register'], schema: $where['schema'], uuid: null);
+			$saved = $this->getObjectService()->saveObject(
+				object: $object,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $where['register'], schema: $where['schema']))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: customer save failed');
 			return $this->emailToken(email: $object['email']);
@@ -1084,8 +1090,7 @@ class PortalController extends Controller {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return '';

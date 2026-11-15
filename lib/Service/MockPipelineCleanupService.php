@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MockPipelineCleanupServiceInterface;
 use OCP\IAppConfig;
@@ -192,7 +194,9 @@ class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface 
 			return ['bucket' => 'removed', 'entry' => $entry, 'default' => false];
 		}
 
-		if ($this->objectService->deleteObject($entry['id'], $where['register'], $where['schema']) === false) {
+		if ($this->objectService->deleteObject(
+			new ObjectDeletion(uuid: $entry['id'], target: new ObjectFindTarget(register: $where['register'], schema: $where['schema']))
+		) === false) {
 			return ['bucket' => 'failed', 'entry' => $entry, 'default' => $isDefault];
 		}
 
