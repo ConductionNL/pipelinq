@@ -118,12 +118,7 @@ class SocialAccountController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		$account = $this->actableAccount(uid: $uid, accountId: $id);
+		$account = $this->actableAccount(accountId: $id);
 		if ($account instanceof JSONResponse) {
 			return $account;
 		}
@@ -239,12 +234,7 @@ class SocialAccountController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sync(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		$account = $this->actableAccount(uid: $uid, accountId: $id);
+		$account = $this->actableAccount(accountId: $id);
 		if ($account instanceof JSONResponse) {
 			return $account;
 		}
@@ -288,14 +278,18 @@ class SocialAccountController extends Controller {
 	}//end requireCrmUser()
 
 	/**
-	 * The account the user may act on, or the 404 or 403 that refuses it.
+	 * The account the session user may act on, or the 403 or 404 that refuses it.
 	 *
-	 * @param string $uid       The user id.
 	 * @param string $accountId The account UUID or slug.
 	 *
 	 * @return array<string, mixed>|JSONResponse
 	 */
-	private function actableAccount(string $uid, string $accountId): array|JSONResponse {
+	private function actableAccount(string $accountId): array|JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->refuse();
+		}
+
 		$account = $this->accounts->getAccount(accountId: $accountId);
 		if ($account === null) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
