@@ -164,7 +164,7 @@ class ContactAddressLookup {
 
 		foreach (['contact_schema' => 'contact', 'client_schema' => 'client'] as $key => $default) {
 			$schema = $this->configuredOr(key: $key, default: $default);
-			$row = $this->rowInSchema(objectService: $resolved[0], contactId: $contactId, register: $register, schema: $schema);
+			$row = $this->rowInSchema(objectService: $resolved[0], lookup: ['contactId' => $contactId, 'register' => $register, 'schema' => $schema]);
 			if ($row !== []) {
 				return $row;
 			}
@@ -207,17 +207,15 @@ class ContactAddressLookup {
 	 * The contact's row in one schema; empty when it is not found there.
 	 *
 	 * @param mixed $objectService OpenRegister's ObjectService.
-	 * @param string $contactId The UUID.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param array{contactId: string, register: string, schema: string} $lookup The UUID, the register id and the schema id.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function rowInSchema($objectService, string $contactId, string $register, string $schema): array {
+	private function rowInSchema($objectService, array $lookup): array {
 		try {
-			$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $lookup['contactId'], register: $lookup['register'], schema: $lookup['schema']);
 		} catch (Throwable $e) {
-			$this->logger->debug('ContactAddressLookup: not found in '.$schema, ['contactId' => $contactId]);
+			$this->logger->debug('ContactAddressLookup: not found in '.$lookup['schema'], ['contactId' => $lookup['contactId']]);
 			$entity = null;
 		}
 
