@@ -226,7 +226,18 @@ class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 			return ['error' => $context['error']];
 		}
 
-		$publication = $context['publication'];
+		return $this->recordShare(publication: $context['publication'], url: $url);
+	}//end confirmShare()
+
+	/**
+	 * Mark a publication waiting for its share as shared now, with the share's URL when given.
+	 *
+	 * @param array<string, mixed> $publication The authorised publication.
+	 * @param string               $url         The URL of the share, or ''.
+	 *
+	 * @return array<string, mixed> `publication` on success, `error` otherwise.
+	 */
+	private function recordShare(array $publication, string $url): array {
 		if ((string)($publication['status'] ?? '') !== SocialPublicationStore::AWAITING_SHARE) {
 			return ['error' => 'This publication is not waiting for a share.'];
 		}
@@ -243,7 +254,7 @@ class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 		}
 
 		return ['publication' => $saved];
-	}//end confirmShare()
+	}//end recordShare()
 
 	/**
 	 * Load the publication and its account, and refuse a caller who is neither

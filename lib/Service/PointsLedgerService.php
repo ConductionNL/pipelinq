@@ -171,25 +171,37 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 
 		return $this->underAccountLock(
 			accountId: $accountId,
-			write: function () use ($movement, $origin, $amount): array {
-				$first = $this->firstEntryOf(movement: $movement);
-				if ($first !== null) {
-					return $first;
-				}
-
-				$account = $this->accountService->getAccount(accountId: $movement->accountId);
-				if ($account === null) {
-					throw new RuntimeException('Account not found.');
-				}
-
-				if ((int)($account['currentBalance'] ?? 0) < $amount) {
-					throw new RuntimeException('Insufficient balance.');
-				}
-
-				return $this->appendAndUpdate(movement: $movement, origin: $origin);
-			}
+			write: fn (): array => $this->debitOnce(movement: $movement, origin: $origin)
 		);
 	}//end debitPoints()
+
+	/**
+	 * The first entry of this debit, or a new entry when the account holds enough points.
+	 *
+	 * @param LedgerMovement $movement The debit; its signed count is minus the amount.
+	 * @param LedgerOrigin   $origin   The rule, source document and processor.
+	 *
+	 * @return array<string, mixed> The ledger entry.
+	 *
+	 * @throws RuntimeException When the account is missing or its balance is insufficient.
+	 */
+	private function debitOnce(LedgerMovement $movement, LedgerOrigin $origin): array {
+		$first = $this->firstEntryOf(movement: $movement);
+		if ($first !== null) {
+			return $first;
+		}
+
+		$account = $this->accountService->getAccount(accountId: $movement->accountId);
+		if ($account === null) {
+			throw new RuntimeException('Account not found.');
+		}
+
+		if ((int)($account['currentBalance'] ?? 0) < -$movement->signedCount) {
+			throw new RuntimeException('Insufficient balance.');
+		}
+
+		return $this->appendAndUpdate(movement: $movement, origin: $origin);
+	}//end debitOnce()
 
 	/**
 	 * Expire points (system-initiated by PointsExpiryBatchJob).
@@ -327,15 +339,24 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 			fn (array $entry): bool => $this->isWithinWindow(entry: $entry, from: $from, to: $to)
 		);
 
+		return self::oldestFirst(entries: $filtered);
+	}//end getLedgerHistory()
+
+	/**
+	 * The entries ordered by timestamp, oldest first, as a list.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The entries.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function oldestFirst(array $entries): array {
 		usort(
-			$filtered,
+			$entries,
 			static fn (array $a, array $b): int => strcmp((string)($a['timestamp'] ?? ''), (string)($b['timestamp'] ?? ''))
 		);
 
-		// `$filtered` is a list and usort() reindexes in place — the
-		// array_values() this replaces was a no-op.
-		return $filtered;
-	}//end getLedgerHistory()
+		return $entries;
+	}//end oldestFirst()
 
 	/**
 	 * Every ledger entry of an account as an array; none when unconfigured, no account is given or the read fails.
@@ -352,7 +373,7 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 			return [];
 		}
 
-		$rows = $this->findAccountRows(accountId: $accountId, register: $register, schema: $schema);
+		$rows = $this->findAccountRows(accountId: $accountId, filters: ['register' => $register, 'schema' => $schema]);
 
 		$rowsToMap = [];
 		if (is_array($rows) === true) {
@@ -365,19 +386,18 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 	/**
 	 * Find an account's ledger rows, or none when the read fails.
 	 *
-	 * @param string $accountId The account UUID.
-	 * @param string $register The register id.
-	 * @param string $schema The ledger schema id.
+	 * @param string                $accountId The account UUID.
+	 * @param array<string, string> $filters   The register and schema filters.
 	 *
 	 * @return mixed The findAll result.
 	 *
 	 * @spec exclude phpmd mechanical refactor
 	 */
-	private function findAccountRows(string $accountId, string $register, string $schema) {
+	private function findAccountRows(string $accountId, array $filters) {
 		try {
 			return $this->getObjectService()->findAll(
 				config: [
-					'filters' => ['accountId' => $accountId, 'register' => $register, 'schema' => $schema],
+					'filters' => ['accountId' => $accountId] + $filters,
 					'limit' => 10000,
 				]
 			);
@@ -432,20 +452,28 @@ class PointsLedgerService implements PointsLedgerServiceInterface {
 		$entries = [];
 		foreach ($accounts as $account) {
 			$accountId = (string)($account['accountId'] ?? $account['@self']['id'] ?? $account['uuid'] ?? '');
-			if ($accountId === '') {
-				continue;
-			}
-
-			$history = $this->getLedgerHistory(accountId: $accountId, from: $from, to: $to);
-			foreach ($history as $e) {
-				if ((string)($e['type'] ?? '') === $type) {
-					$entries[] = $e;
-				}
+			if ($accountId !== '') {
+				$history = $this->getLedgerHistory(accountId: $accountId, from: $from, to: $to);
+				array_push($entries, ...self::ofType(entries: $history, type: $type));
 			}
 		}
 
 		return $entries;
 	}//end getLedgerEntriesForProgramme()
+
+	/**
+	 * The entries of one type, in their order.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The entries.
+	 * @param string                           $type    The entry type.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function ofType(array $entries, string $type): array {
+		return array_values(
+			array_filter($entries, static fn (array $entry): bool => (string)($entry['type'] ?? '') === $type)
+		);
+	}//end ofType()
 
 	/**
 	 * The first entry of this operation, or a new entry and balance update.

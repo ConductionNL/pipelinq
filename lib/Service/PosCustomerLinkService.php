@@ -143,7 +143,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 			return [];
 		}
 
-		$matches = $this->matchingContacts(rows: $rows, query: mb_strtolower($needle), fields: $fields, cap: $cap);
+		$matches = $this->matchingContacts(rows: $rows, search: new PosContactSearch(query: mb_strtolower($needle), fields: $fields, cap: $cap));
 
 		$this->logger->info('Pipelinq: POS customer search', ['query' => $needle, 'count' => count($matches), 'fields' => $fields]);
 
@@ -178,22 +178,20 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	 * The decorated contacts that match a search, up to the cap.
 	 *
 	 * @param array<int, mixed> $rows   The contact rows.
-	 * @param string            $query  The lower-cased search.
-	 * @param array<int, string> $fields The enabled search fields.
-	 * @param int               $cap    Max results.
+	 * @param PosContactSearch  $search The lower-cased search, its fields and the cap.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function matchingContacts(array $rows, string $query, array $fields, int $cap): array {
+	private function matchingContacts(array $rows, PosContactSearch $search): array {
 		$matches = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
-			if ($this->rowMatches(data: $data, query: $query, fields: $fields) === false) {
+			if ($this->rowMatches(data: $data, search: $search) === false) {
 				continue;
 			}
 
 			$matches[] = $this->decorateContact(data: $data);
-			if (count($matches) >= $cap) {
+			if (count($matches) >= $search->cap) {
 				break;
 			}
 		}
@@ -213,8 +211,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	 * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-002
 	 */
 	public function getCustomer(string $contactUuid): array {
-		[$register, $schema] = $this->configContact();
-		$data = $this->fetchObject(id: $contactUuid, register: $register, schema: $schema);
+		$data = $this->fetchObject(id: $contactUuid, scope: $this->configContact());
 		if ($data === null) {
 			throw new OCSNotFoundException('Klant niet gevonden.');
 		}
@@ -254,12 +251,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		bool $marketingConsent = false,
 	): array {
 		$contact = $this->getCustomer(contactUuid: $contactUuid);
-		$transaction = $this->fetchTransaction(id: $transactionId);
-
-		$status = (string)($transaction['status'] ?? 'draft');
-		if (in_array($status, ['draft', 'parked'], true) === false) {
-			throw new OCSBadRequestException('Klant kan alleen aan een open transactie gekoppeld worden.');
-		}
+		$transaction = $this->openTransaction(id: $transactionId);
 
 		$transaction['customer'] = $contactUuid;
 		$transaction['marketingConsent'] = $marketingConsent;
@@ -285,6 +277,27 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 
 		return $saved;
 	}//end attachCustomer()
+
+	/**
+	 * A transaction a customer may still be attached to: a draft or a parked one.
+	 *
+	 * @param string $id The transaction UUID.
+	 *
+	 * @return array<string, mixed> The transaction data.
+	 *
+	 * @throws OCSNotFoundException When the transaction is missing.
+	 * @throws OCSBadRequestException When the transaction is no longer open.
+	 */
+	private function openTransaction(string $id): array {
+		$transaction = $this->fetchTransaction(id: $id);
+
+		$status = (string)($transaction['status'] ?? 'draft');
+		if (in_array($status, ['draft', 'parked'], true) === false) {
+			throw new OCSBadRequestException('Klant kan alleen aan een open transactie gekoppeld worden.');
+		}
+
+		return $transaction;
+	}//end openTransaction()
 
 	/**
 	 * Detach a customer from a draft / parked transaction.
@@ -485,7 +498,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		// write carries everything the record already had. Falling back to the
 		// projection when the re-read fails would reinstate the bug, so a
 		// failed re-read is a failed sync.
-		$stored = $this->fetchObject(id: $contactUuid, register: $register, schema: $schema);
+		$stored = $this->fetchObject(id: $contactUuid, scope: [$register, $schema]);
 		if ($stored === null) {
 			$this->logger->warning(
 				'Pipelinq: marketing-consent sync could not re-read the contact; not writing a partial record',
@@ -498,7 +511,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		unset($payload['@self'], $payload['doNotContactBadge']);
 		$payload['marketingConsent'] = $consent;
 
-		if ($this->saveConsent(payload: $payload, contactUuid: $contactUuid, register: $register, schema: $schema) === false) {
+		if ($this->saveConsent(payload: $payload, target: ['uuid' => $contactUuid, 'register' => $register, 'schema' => $schema]) === false) {
 			return 'failed';
 		}
 
@@ -510,24 +523,22 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	/**
 	 * Save the consent payload; a failed save is logged.
 	 *
-	 * @param array<string, mixed> $payload     The stored contact with the consent set.
-	 * @param string               $contactUuid The contact UUID.
-	 * @param string               $register    The register.
-	 * @param string               $schema      The contact schema.
+	 * @param array<string, mixed>  $payload The stored contact with the consent set.
+	 * @param array<string, string> $target  The contact UUID (`uuid`), its `register` and its `schema`.
 	 *
 	 * @return bool True when saved.
 	 */
-	private function saveConsent(array $payload, string $contactUuid, string $register, string $schema): bool {
+	private function saveConsent(array $payload, array $target): bool {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $payload,
 				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $contactUuid
+				register: $target['register'],
+				schema: $target['schema'],
+				uuid: $target['uuid']
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: marketing-consent sync failed', ['contact' => $contactUuid, 'exception' => $e->getMessage()]);
+			$this->logger->warning('Pipelinq: marketing-consent sync failed', ['contact' => $target['uuid'], 'exception' => $e->getMessage()]);
 			return false;
 		}
 
@@ -574,16 +585,15 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	/**
 	 * Whether a contact row matches the search query across the enabled fields.
 	 *
-	 * @param array<string, mixed> $data The contact data.
-	 * @param string $query The lower-cased query (already trimmed).
-	 * @param array<int, string> $fields The enabled fields.
+	 * @param array<string, mixed> $data   The contact data.
+	 * @param PosContactSearch     $search The lower-cased query and the enabled fields.
 	 *
 	 * @return bool Whether the row matches.
 	 */
-	private function rowMatches(array $data, string $query, array $fields): bool {
-		foreach ($fields as $field) {
+	private function rowMatches(array $data, PosContactSearch $search): bool {
+		foreach ($search->fields as $field) {
 			$value = mb_strtolower((string)($data[$field] ?? ''));
-			if ($value !== '' && str_contains($value, $query) === true) {
+			if ($value !== '' && str_contains($value, $search->query) === true) {
 				return true;
 			}
 		}
@@ -734,8 +744,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	 * @throws OCSNotFoundException When the transaction is missing.
 	 */
 	private function fetchTransaction(string $id): array {
-		[$register, $schema] = $this->configTransaction();
-		$data = $this->fetchObject(id: $id, register: $register, schema: $schema);
+		$data = $this->fetchObject(id: $id, scope: $this->configTransaction());
 		if ($data === null) {
 			throw new OCSNotFoundException('Transactie niet gevonden.');
 		}
@@ -770,13 +779,13 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	/**
 	 * Try to fetch a single OR object; return null on absence / error.
 	 *
-	 * @param string $id The object UUID.
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID.
+	 * @param string            $id    The object UUID.
+	 * @param array<int, string> $scope The register ID and the schema ID.
 	 *
 	 * @return array<string, mixed>|null The object data, or null on miss.
 	 */
-	private function fetchObject(string $id, string $register, string $schema): ?array {
+	private function fetchObject(string $id, array $scope): ?array {
+		[$register, $schema] = $scope;
 		try {
 			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
 		} catch (Throwable $e) {

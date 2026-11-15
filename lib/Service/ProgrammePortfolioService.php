@@ -157,27 +157,29 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return ['allowed' => false, 'reason' => 'A programme, an object type and an object are required.'];
 		}
 
-		return $this->existingLinkAnswer(existingLinks: $existingLinks, type: $domainObjectType, ref: $domainObjectRef, programmeId: $programmeId);
+		return $this->existingLinkAnswer(
+			existingLinks: $existingLinks,
+			claim: ['domainObjectType' => $domainObjectType, 'domainObjectRef' => $domainObjectRef, 'programme' => $programmeId]
+		);
 	}//end mayLink()
 
 	/**
 	 * Refuse a work item that is already linked to a programme, allow it otherwise.
 	 *
 	 * @param array<int, array<string, mixed>> $existingLinks Every work item already written.
-	 * @param string                           $type          The trimmed `<app>:<schema>` literal.
-	 * @param string                           $ref           The trimmed object uuid.
-	 * @param string                           $programmeId   The programme it would be linked to.
+	 * @param array<string, string>            $claim         The trimmed `domainObjectType` and `domainObjectRef`,
+	 *                                                        and the `programme` it would be linked to.
 	 *
 	 * @return array{allowed: bool, reason: string} The answer.
 	 */
-	private function existingLinkAnswer(array $existingLinks, string $type, string $ref, string $programmeId): array {
+	private function existingLinkAnswer(array $existingLinks, array $claim): array {
 		foreach ($existingLinks as $link) {
-			if ($this->linksSameWork(link: $link, type: $type, ref: $ref) === false) {
+			if (self::linksSameWork(link: $link, work: $claim) === false) {
 				continue;
 			}
 
 			$holder = (string)($link['programme'] ?? '');
-			if ($holder === trim($programmeId)) {
+			if ($holder === trim($claim['programme'])) {
 				return ['allowed' => false, 'reason' => 'This work is already in this programme.'];
 			}
 
@@ -192,14 +194,14 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 	/**
 	 * Whether an existing work item points at the same object.
 	 *
-	 * @param array<string, mixed> $link The existing work item.
-	 * @param string               $type The trimmed `<app>:<schema>` literal.
-	 * @param string               $ref  The trimmed object uuid.
+	 * @param array<string, mixed>  $link The existing work item.
+	 * @param array<string, string> $work The trimmed `domainObjectType` (`<app>:<schema>`) and `domainObjectRef` (object uuid).
 	 *
 	 * @return bool
 	 */
-	private function linksSameWork(array $link, string $type, string $ref): bool {
-		return ((string)($link['domainObjectType'] ?? '') === $type && (string)($link['domainObjectRef'] ?? '') === $ref);
+	private static function linksSameWork(array $link, array $work): bool {
+		return ((string)($link['domainObjectType'] ?? '') === $work['domainObjectType']
+			&& (string)($link['domainObjectRef'] ?? '') === $work['domainObjectRef']);
 	}//end linksSameWork()
 
 	/**
@@ -439,19 +441,30 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return ['status' => 409, 'error' => $answer['reason']];
 		}
 
-		$workItem = [
-			'programme' => trim($programmeId),
-			'domainObjectType' => trim($domainObjectType),
-			'domainObjectRef' => trim($domainObjectRef),
-			'title' => trim($title),
-		];
+		return $this->savedWorkItem(
+			workItem: [
+				'programme' => trim($programmeId),
+				'domainObjectType' => trim($domainObjectType),
+				'domainObjectRef' => trim($domainObjectRef),
+				'title' => trim($title),
+			]
+		);
+	}//end linkWork()
 
+	/**
+	 * Write a work item: 201 with the item, or 500 when it could not be saved.
+	 *
+	 * @param array<string, string> $workItem The trimmed work item.
+	 *
+	 * @return array{status: int, error?: string, workItem?: array<string, mixed>}
+	 */
+	private function savedWorkItem(array $workItem): array {
 		if ($this->write(schemaKey: 'programmeWorkItem_schema', object: $workItem) === false) {
 			return ['status' => 500, 'error' => 'The work item could not be saved.'];
 		}
 
 		return ['status' => 201, 'workItem' => $workItem];
-	}//end linkWork()
+	}//end savedWorkItem()
 
 	/**
 	 * Read rows of one schema as plain arrays.
@@ -555,13 +568,28 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 			return false;
 		}
 
-		try {
-			$this->objectService->saveObject(
+		return $this->landed(
+			save: fn (): mixed => $this->objectService->saveObject(
 				object: $object,
 				register: $register,
 				schema: $schema,
 				uuid: $uuid,
-			);
+			),
+			schemaKey: $schemaKey
+		);
+	}//end write()
+
+	/**
+	 * Run a save; a failure is logged and answers false.
+	 *
+	 * @param callable(): mixed $save      The save.
+	 * @param string            $schemaKey The app-config key of the schema, for the log.
+	 *
+	 * @return bool True when the write landed.
+	 */
+	private function landed(callable $save, string $schemaKey): bool {
+		try {
+			$save();
 
 			return true;
 		} catch (Throwable $e) {
@@ -572,5 +600,5 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 
 			return false;
 		}
-	}//end write()
+	}//end landed()
 }//end class

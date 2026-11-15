@@ -135,6 +135,25 @@ class ConnectorEgress implements ConnectorEgressInterface {
 	 */
 	public function read(string $configKey, string $endpoint, array $config = [], string $method = 'GET'): EgressResult {
 		$sourceId = $this->sourceId(configKey: $configKey);
+		$source = $this->sourceOrFailure(configKey: $configKey, sourceId: $sourceId);
+		if ($source instanceof EgressResult) {
+			return $source;
+		}
+
+		return $this->readThrough(
+			read: new ConnectorRead(source: $source, sourceId: $sourceId, endpoint: $endpoint, config: $config, method: $method)
+		);
+	}//end read()
+
+	/**
+	 * The resolved source, or why there is none: no id configured, or an id that does not resolve.
+	 *
+	 * @param string $configKey The app-config key naming the source, for the message.
+	 * @param string $sourceId  The source id, or ''.
+	 *
+	 * @return object|array<string, mixed>|EgressResult The source, or the failure.
+	 */
+	private function sourceOrFailure(string $configKey, string $sourceId): object|array {
 		if ($sourceId === '') {
 			return EgressResult::failed(
 				failure: EgressResult::NOT_CONFIGURED,
@@ -150,8 +169,8 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			);
 		}
 
-		return $this->readThrough(source: $source, sourceId: $sourceId, endpoint: $endpoint, config: $config, method: $method);
-	}//end read()
+		return $source;
+	}//end sourceOrFailure()
 
 	/**
 	 * Read one absolute URL through a source, resolving the URL against the
@@ -177,19 +196,9 @@ class ConnectorEgress implements ConnectorEgressInterface {
 	 */
 	public function readUrl(string $configKey, string $url, array $config = [], string $sourceId = ''): EgressResult {
 		$resolvedId = $this->resolvedSourceId(configKey: $configKey, sourceId: $sourceId);
-		if ($resolvedId === '') {
-			return EgressResult::failed(
-				failure: EgressResult::NOT_CONFIGURED,
-				reason: 'No OpenConnector source is configured under ' . $configKey . '.'
-			);
-		}
-
-		$source = $this->resolveSource(sourceId: $resolvedId);
-		if ($source === null) {
-			return EgressResult::failed(
-				failure: EgressResult::UNAVAILABLE,
-				reason: 'The OpenConnector source ' . $resolvedId . ' could not be resolved.'
-			);
+		$source = $this->sourceOrFailure(configKey: $configKey, sourceId: $resolvedId);
+		if ($source instanceof EgressResult) {
+			return $source;
 		}
 
 		$endpoint = $this->endpointWithinSource(source: $source, url: $url);
@@ -197,7 +206,9 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			return $endpoint;
 		}
 
-		return $this->readThrough(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET');
+		return $this->readThrough(
+			read: new ConnectorRead(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET')
+		);
 	}//end readUrl()
 
 	/**
@@ -245,15 +256,11 @@ class ConnectorEgress implements ConnectorEgressInterface {
 	/**
 	 * Perform the call once the source is resolved.
 	 *
-	 * @param object|array<string, mixed> $source The resolved OpenConnector source.
-	 * @param string $sourceId The source id, for the log.
-	 * @param string $endpoint The endpoint, relative to the source location.
-	 * @param array<string, mixed> $config Extra call configuration.
-	 * @param string $method The HTTP method.
+	 * @param ConnectorRead $read The source, endpoint, method and configuration.
 	 *
 	 * @return EgressResult
 	 */
-	private function readThrough(object|array $source, string $sourceId, string $endpoint, array $config, string $method): EgressResult {
+	private function readThrough(ConnectorRead $read): EgressResult {
 		$callService = $this->resolveCallService();
 		if ($callService === null) {
 			return EgressResult::failed(
@@ -264,15 +271,15 @@ class ConnectorEgress implements ConnectorEgressInterface {
 
 		try {
 			$callLog = $callService->call(
-				source: $source,
-				endpoint: $endpoint,
-				method: $method,
-				config: $config,
+				source: $read->source,
+				endpoint: $read->endpoint,
+				method: $read->method,
+				config: $read->config,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ConnectorEgress.read: the call failed',
-				['sourceId' => $sourceId, 'endpoint' => $endpoint, 'exception' => $e->getMessage()]
+				['sourceId' => $read->sourceId, 'endpoint' => $read->endpoint, 'exception' => $e->getMessage()]
 			);
 			return EgressResult::failed(
 				failure: EgressResult::UNAVAILABLE,
@@ -280,7 +287,7 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			);
 		}
 
-		return $this->fromCallLog(callLog: $callLog, endpoint: $endpoint);
+		return $this->fromCallLog(callLog: $callLog, endpoint: $read->endpoint);
 	}//end readThrough()
 
 	/**

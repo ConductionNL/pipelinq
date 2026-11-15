@@ -127,7 +127,7 @@ class ShillinqStockReader implements ShillinqStockReaderInterface {
 				return $this->answer(state: 'no-access');
 			}
 
-			$answer = $this->sum(rows: $rows, field: $field, key: $key);
+			$answer = $this->sum(rows: $rows, filter: [$field => $key]);
 			if ($answer['locations'] !== []) {
 				return $answer;
 			}
@@ -233,14 +233,15 @@ class ShillinqStockReader implements ShillinqStockReaderInterface {
 	 * because OpenRegister ignores a filter key it does not recognise and
 	 * would then hand back every stock row.
 	 *
-	 * @param iterable<mixed> $rows The rows read.
-	 * @param string $field The field the read filtered on.
-	 * @param string $key The value it filtered for.
+	 * @param iterable<mixed>       $rows   The rows read.
+	 * @param array<string, string> $filter The one field the read filtered on, with the value it filtered for.
 	 *
 	 * @return array{state: string, available: float, onHand: float, reserved: float,
 	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 */
-	private function sum(iterable $rows, string $field, string $key): array {
+	private function sum(iterable $rows, array $filter): array {
+		$field = (string)array_key_first($filter);
+		$key = $filter[$field];
 		$answer = $this->answer(state: 'ok');
 		foreach ($rows as $value) {
 			$row = $this->toArray(value: $value);

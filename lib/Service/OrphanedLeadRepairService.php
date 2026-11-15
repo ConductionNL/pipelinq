@@ -137,20 +137,33 @@ class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 
 		$payload = $lead;
 		unset($payload['@self']);
+
+		return $this->savedMove(object: array_merge($payload, $patch), target: ['uuid' => $uuid] + $target);
+	}//end moveLead()
+
+	/**
+	 * Save a moved lead: 'moved', or 'failed' (logged) when the save throws.
+	 *
+	 * @param array<string, mixed>  $object The lead with its new pipeline fields.
+	 * @param array<string, string> $target The lead's `uuid`, its `register` and its `schema`.
+	 *
+	 * @return string
+	 */
+	private function savedMove(array $object, array $target): string {
 		try {
 			$this->objectService->saveObject(
-				object: array_merge($payload, $patch),
+				object: $object,
 				extend: [],
 				register: $target['register'],
 				schema: $target['schema'],
-				uuid: $uuid,
+				uuid: $target['uuid'],
 			);
 			return 'moved';
 		} catch (Throwable $e) {
-			$this->logger->error('Pipelinq: could not move a lead off a deleted pipeline', ['uuid' => $uuid, 'exception' => $e->getMessage()]);
+			$this->logger->error('Pipelinq: could not move a lead off a deleted pipeline', ['uuid' => $target['uuid'], 'exception' => $e->getMessage()]);
 			return 'failed';
 		}
-	}//end moveLead()
+	}//end savedMove()
 
 	/**
 	 * Read every object of a schema as plain arrays.

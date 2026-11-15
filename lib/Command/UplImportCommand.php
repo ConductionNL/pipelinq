@@ -115,16 +115,7 @@ class UplImportCommand extends Command {
 	 */
 	private function csv(string $file, string $url, OutputInterface $output): string {
 		if ($file !== '') {
-			$csv = false;
-			if (is_readable($file) === true) {
-				$csv = file_get_contents($file);
-			}
-
-			if ($csv === false) {
-				throw new RuntimeException('The file ' . $file . ' cannot be read.');
-			}
-
-			return $csv;
+			return self::fileContents(file: $file);
 		}
 
 		if ($url === '') {
@@ -135,4 +126,26 @@ class UplImportCommand extends Command {
 
 		return $this->importer->download(url: $url);
 	}//end csv()
+
+	/**
+	 * The contents of a local CSV.
+	 *
+	 * @param string $file The local CSV.
+	 *
+	 * @return string The CSV.
+	 *
+	 * @throws RuntimeException When the file cannot be read.
+	 */
+	private static function fileContents(string $file): string {
+		$csv = false;
+		if (is_readable($file) === true) {
+			$csv = file_get_contents($file);
+		}
+
+		if ($csv === false) {
+			throw new RuntimeException('The file ' . $file . ' cannot be read.');
+		}
+
+		return $csv;
+	}//end fileContents()
 }//end class

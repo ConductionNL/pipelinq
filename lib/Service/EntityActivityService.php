@@ -159,11 +159,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 		$filterType = $this->normaliseTypeFilter(rawType: $type);
 		$window = new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit));
 
-		$registerId = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			'register',
-			''
-		);
+		$registerId = $this->registerId();
 		if ($registerId === '') {
 			return $this->emptyResult(page: $window->page);
 		}
@@ -175,6 +171,19 @@ class EntityActivityService implements EntityActivityServiceInterface {
 
 		return $this->paginate(items: $this->newestFirst(items: $items), window: $window);
 	}//end getActivity()
+
+	/**
+	 * The configured register id, or '' when none is configured.
+	 *
+	 * @return string
+	 */
+	private function registerId(): string {
+		return $this->appConfig->getValueString(
+			AppIdentity::APP_ID,
+			'register',
+			''
+		);
+	}//end registerId()
 
 	/**
 	 * Collect the activity items the type filter asks for: contactmomenten
@@ -382,7 +391,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 			return [];
 		}
 
-		$object = $this->findObject(entityId: $query->entityId, registerId: $query->registerId, schemaId: $schemaId);
+		$object = $this->findObject(query: $query, schemaId: $schemaId);
 		if ($object === null) {
 			return [];
 		}
@@ -500,22 +509,20 @@ class EntityActivityService implements EntityActivityServiceInterface {
 	/**
 	 * Find a single object by UUID, scoped to the given register/schema.
 	 *
-	 * @param string $entityId The OR object UUID.
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
+	 * @param EntityActivityQuery $query    The entity and its register.
+	 * @param string              $schemaId The schema id.
 	 *
 	 * @return array<string,mixed>|null The object payload, or null.
 	 */
-	private function findObject(
-		string $entityId,
-		string $registerId,
-		string $schemaId,
-	): ?array {
+	private function findObject(EntityActivityQuery $query, string $schemaId): ?array {
 		try {
 			$objectService = $this->getObjectService();
-			$entity = $objectService->find(id: $entityId, register: $registerId, schema: $schemaId);
+			$entity = $objectService->find(id: $query->entityId, register: $query->registerId, schema: $schemaId);
 		} catch (Throwable $e) {
-			$this->logger->warning('EntityActivityService: failed to load entity for notes', ['exception' => $e->getMessage(), 'entityId' => $entityId]);
+			$this->logger->warning(
+				'EntityActivityService: failed to load entity for notes',
+				['exception' => $e->getMessage(), 'entityId' => $query->entityId]
+			);
 			return null;
 		}
 
