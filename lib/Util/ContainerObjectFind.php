@@ -47,9 +47,24 @@ trait ContainerObjectFind {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function findObjectData(string $register, string $schema, string $uuid): ?array {
+		return $this->objectDataVia(
+			uuid: $uuid,
+			find: static fn (object $objectService): mixed => $objectService->find(id: $uuid, register: $register, schema: $schema)
+		);
+	}//end findObjectData()
+
+	/**
+	 * An object's data through a find on OpenRegister's ObjectService; null (logged) when gone or unreadable.
+	 *
+	 * @param string   $uuid The object UUID, for the log.
+	 * @param \Closure $find Finds the object on the ObjectService it is given.
+	 *
+	 * @return array<string, mixed>|null Object data, or null.
+	 */
+	private function objectDataVia(string $uuid, \Closure $find): ?array {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
+			$object = $find($objectService);
 			if ($object === null) {
 				return null;
 			}
@@ -62,5 +77,5 @@ trait ContainerObjectFind {
 			);
 			return null;
 		}//end try
-	}//end findObjectData()
+	}//end objectDataVia()
 }//end trait
