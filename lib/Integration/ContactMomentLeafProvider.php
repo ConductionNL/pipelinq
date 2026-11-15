@@ -196,14 +196,12 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 			return $refusal;
 		}
 
-		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
-
-		$refusal = $this->outboundRefusal(partyId: $partyId, payload: $payload);
+		$refusal = $this->outboundRefusal(partyId: self::partyOf(payload: $payload), payload: $payload);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload, partyId: $partyId);
+		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload);
 
 		if ($ticket['title'] === '') {
 			return ['status' => 400, 'error' => 'A contact moment requires a subject.'];
@@ -303,13 +301,13 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	 *
 	 * @param string $hostId The host object's uuid.
 	 * @param array<string, mixed> $payload The append payload.
-	 * @param string $partyId The party the moment names, or an empty string.
 	 *
 	 * @return array<string, mixed> The ticket, ready for TicketService::save().
 	 *
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
-	private function ticketFrom(string $hostId, array $payload, string $partyId): array {
+	private function ticketFrom(string $hostId, array $payload): array {
+		$partyId = self::partyOf(payload: $payload);
 		$ticket = [
 			'title' => trim((string)($payload['title'] ?? $payload['subject'] ?? '')),
 			'channel' => trim((string)($payload['channel'] ?? '')),
@@ -329,6 +327,17 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 
 		return $ticket;
 	}//end ticketFrom()
+
+	/**
+	 * The party an append payload names, or an empty string.
+	 *
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return string The party's uuid.
+	 */
+	private static function partyOf(array $payload): string {
+		return trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
+	}//end partyOf()
 
 	/**
 	 * The outcome and description an append payload names; a later non-empty source wins the description.
