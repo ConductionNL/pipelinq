@@ -111,7 +111,7 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 			return $counts;
 		}
 
-		return $this->backfillSchemas(register: $register, schemas: $schemas, counts: $counts);
+		return $this->backfillSchemas(where: ['register' => $register, 'schemas' => $schemas], counts: $counts);
 	}//end backfill()
 
 	/**
@@ -138,23 +138,25 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 	/**
 	 * Back-fill every schema, or report OpenRegister unavailable.
 	 *
-	 * @param string $register The register id.
-	 * @param list<string> $schemas The schema ids.
+	 * @param array{register: string, schemas: list<string>} $where The register id and the schema ids.
 	 * @param array{status: string, applied: int, skipped: int, failed: int} $counts The counts so far.
 	 *
 	 * @return array{status: string, applied: int, skipped: int, failed: int}
 	 *
 	 * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
 	 */
-	private function backfillSchemas(string $register, array $schemas, array $counts): array {
+	private function backfillSchemas(array $where, array $counts): array {
 		$services = $this->openRegisterServices();
 		if ($services === null) {
 			$counts['status'] = 'openregister-unavailable';
 			return $counts;
 		}
 
-		foreach ($schemas as $schema) {
-			$counts = $this->backfillSchema(services: $services, place: ['register' => $register, 'schema' => $schema], counts: $counts);
+		foreach ($where['schemas'] as $schema) {
+			$place = ['register' => $where['register'], 'schema' => $schema];
+			foreach ($this->backfillSchema(services: $services, place: $place) as $outcome) {
+				$counts = self::counted(counts: $counts, outcome: $outcome);
+			}
 		}
 
 		return $counts;
@@ -163,15 +165,14 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 	/**
 	 * Apply metadata to the records of one schema.
 	 *
-	 * @param array<string, mixed>                                                   $services OpenRegister's services, by role.
-	 * @param array{register: string, schema: string}                                $place    Register and schema ids.
-	 * @param array{status: string, applied: int, skipped: int, failed: int}         $counts   Counts so far.
+	 * @param array<string, mixed>                    $services OpenRegister's services, by role.
+	 * @param array{register: string, schema: string} $place    Register and schema ids.
 	 *
-	 * @return array{status: string, applied: int, skipped: int, failed: int} Counts including this schema.
+	 * @return list<string> One outcome per record (applied, skipped or failed); one failed when the records cannot be read.
 	 *
 	 * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
 	 */
-	private function backfillSchema(array $services, array $place, array $counts): array {
+	private function backfillSchema(array $services, array $place): array {
 		try {
 			$registerEntity = $services['registers']->find($place['register'], false, false);
 			$schemaEntity = $services['schemas']->find($place['schema'], [], false, false);
@@ -181,13 +182,14 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 				'Pipelinq: could not read records for the retention backfill',
 				['schema' => $place['schema'], 'exception' => $e->getMessage()]
 			);
-			$counts['failed']++;
-			return $counts;
+			return ['failed'];
 		}
 
+		$scope = $services + ['register' => $registerEntity, 'schema' => $schemaEntity];
+		$outcomes = [];
 		foreach ($uuids as $uuid) {
 			try {
-				$outcome = $this->backfillRecord(services: $services, uuid: $uuid, register: $registerEntity, schema: $schemaEntity);
+				$outcome = $this->backfillRecord(scope: $scope, uuid: $uuid);
 			} catch (Throwable $e) {
 				$this->logger->error(
 					'Pipelinq: could not apply retention metadata to a record',
@@ -196,37 +198,37 @@ class RetentionMetadataBackfillService implements RetentionMetadataBackfillServi
 				$outcome = 'failed';
 			}
 
-			$counts = self::counted(counts: $counts, outcome: $outcome);
+			$outcomes[] = $outcome;
 		}
 
-		return $counts;
+		return $outcomes;
 	}//end backfillSchema()
 
 	/**
 	 * Apply metadata to one record, unless it has a nomination already.
 	 *
-	 * @param array<string, mixed> $services OpenRegister's services, by role.
-	 * @param string               $uuid     The record.
-	 * @param mixed                $register OpenRegister's register entity.
-	 * @param mixed                $schema   OpenRegister's schema entity.
+	 * @param array<string, mixed> $scope OpenRegister's services by role, plus the register and schema entities.
+	 * @param string               $uuid  The record.
 	 *
 	 * @return string applied or skipped.
 	 *
 	 * @spec openspec/changes/platform-client-retention/tasks.md#3-review-and-back-fill
 	 */
-	private function backfillRecord(array $services, string $uuid, mixed $register, mixed $schema): string {
-		$object = $services['objects']->find($uuid, $register, $schema, false, false, false);
+	private function backfillRecord(array $scope, string $uuid): string {
+		$register = $scope['register'];
+		$schema = $scope['schema'];
+		$object = $scope['objects']->find($uuid, $register, $schema, false, false, false);
 		if (self::isNominated(retention: $object->getRetention()) === true) {
 			return 'skipped';
 		}
 
-		$object = $services['retention']->applyArchivalMetadata($object, $schema);
+		$object = $scope['retention']->applyArchivalMetadata($object, $schema);
 		if (self::isNominated(retention: $object->getRetention()) === false) {
 			// The schema declares no enabled term, so there is nothing to store.
 			return 'skipped';
 		}
 
-		$services['objects']->update($object, $register, $schema);
+		$scope['objects']->update($object, $register, $schema);
 
 		return 'applied';
 	}//end backfillRecord()

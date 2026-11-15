@@ -116,7 +116,7 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 		}
 
 		$result = $this->objectService->runAsSystem(
-			fn (): array => $this->backfillInScope(register: $register, schema: $schema, counts: $counts)
+			fn (): array => $this->backfillInScope(where: ['register' => $register, 'schema' => $schema], counts: $counts)
 		);
 
 		if (is_array($result) === false) {
@@ -139,31 +139,42 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 	 *   NOT withhold the event; the system scope does.
 	 * - `currentUser`: the folder check needs a user to authorise.
 	 *
-	 * @param string                                                     $register The register id.
-	 * @param string                                                     $schema   The crmTask schema id.
-	 * @param array{status: string, named: int, skipped: int, failed: int} $counts   The counts so far.
+	 * Every task that needs it is named and each outcome counted.
+	 *
+	 * @param array{register: string, schema: string}                      $where  The register id and crmTask schema id.
+	 * @param array{status: string, named: int, skipped: int, failed: int} $counts The counts so far.
 	 *
 	 * @return array{status: string, named: int, skipped: int, failed: int} The outcome.
 	 */
-	private function backfillInScope(string $register, string $schema, array $counts): array {
-		$rows = $this->scopedTaskRows(register: $register, schema: $schema);
+	private function backfillInScope(array $where, array $counts): array {
+		$rows = $this->scopedTaskRows(where: $where);
 		if (is_string($rows) === true) {
 			$counts['status'] = $rows;
 			return $counts;
 		}
 
-		return $this->nameTasks(rows: $rows, register: $register, schema: $schema, counts: $counts);
+		$target = $where + ['actingAdmin' => $this->actingAdmin()];
+		foreach ($rows as $row) {
+			$outcome = $this->nameTask(row: $row, target: $target);
+			if ($outcome === 'scope-inactive') {
+				$counts['status'] = 'scope-inactive';
+				break;
+			}
+
+			$counts[$outcome]++;
+		}
+
+		return $counts;
 	}//end backfillInScope()
 
 	/**
 	 * Read every task inside the system scope, or the status that stopped the read.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema   The crmTask schema id.
+	 * @param array{register: string, schema: string} $where The register id and crmTask schema id.
 	 *
 	 * @return iterable<mixed>|string The task rows, or 'scope-inactive' / 'read-failed'.
 	 */
-	private function scopedTaskRows(string $register, string $schema): iterable|string {
+	private function scopedTaskRows(array $where): iterable|string {
 		if ($this->silence->isActive() === false) {
 			return 'scope-inactive';
 		}
@@ -171,7 +182,7 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 		try {
 			return $this->objectService->findAll(
 				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
+					'filters' => ['register' => $where['register'], 'schema' => $where['schema']],
 					'limit' => self::SCAN_LIMIT,
 				],
 				_rbac: false,
@@ -184,42 +195,14 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 	}//end scopedTaskRows()
 
 	/**
-	 * Name every task that needs it, counting each outcome.
-	 *
-	 * @param iterable<mixed>                                              $rows     The task rows.
-	 * @param string                                                       $register The register id.
-	 * @param string                                                       $schema   The crmTask schema id.
-	 * @param array{status: string, named: int, skipped: int, failed: int} $counts   The counts so far.
-	 *
-	 * @return array{status: string, named: int, skipped: int, failed: int} The outcome.
-	 */
-	private function nameTasks(iterable $rows, string $register, string $schema, array $counts): array {
-		$actingAdmin = $this->actingAdmin();
-
-		foreach ($rows as $row) {
-			$outcome = $this->nameTask(row: $row, register: $register, schema: $schema, actingAdmin: $actingAdmin);
-			if ($outcome === 'scope-inactive') {
-				$counts['status'] = 'scope-inactive';
-				break;
-			}
-
-			$counts[$outcome]++;
-		}
-
-		return $counts;
-	}//end nameTasks()
-
-	/**
 	 * Name one task when it needs it.
 	 *
-	 * @param mixed      $row         The task row.
-	 * @param string     $register    The register id.
-	 * @param string     $schema      The crmTask schema id.
-	 * @param IUser|null $actingAdmin The admin the folder check authorises.
+	 * @param mixed                                                         $row    The task row.
+	 * @param array{register: string, schema: string, actingAdmin: IUser|null} $target The register, crmTask schema and the admin to authorise.
 	 *
 	 * @return string 'named', 'skipped', 'failed' or 'scope-inactive'.
 	 */
-	private function nameTask(mixed $row, string $register, string $schema, IUser|null $actingAdmin): string {
+	private function nameTask(mixed $row, array $target): string {
 		$task = $this->toArray(row: $row);
 		$uuid = (string)($task['@self']['id'] ?? $task['id'] ?? '');
 		if ($uuid === '' || $this->needsName(task: $task, uuid: $uuid) === false) {
@@ -232,20 +215,18 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 			return 'scope-inactive';
 		}
 
-		return $this->saveNamedTask(task: $task, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+		return $this->saveNamedTask(task: $task, target: $target);
 	}//end nameTask()
 
 	/**
 	 * Save one task so OpenRegister names it after its subject.
 	 *
-	 * @param array<string, mixed> $task        The task, `@self` included.
-	 * @param string               $register    The register id.
-	 * @param string               $schema      The crmTask schema id.
-	 * @param IUser|null           $actingAdmin The admin the folder check authorises.
+	 * @param array<string, mixed>                                          $task   The task, `@self` included.
+	 * @param array{register: string, schema: string, actingAdmin: IUser|null} $target The register, crmTask schema and the admin to authorise.
 	 *
 	 * @return string 'named' or 'failed'.
 	 */
-	private function saveNamedTask(array $task, string $register, string $schema, IUser|null $actingAdmin): string {
+	private function saveNamedTask(array $task, array $target): string {
 		$uuid = (string)($task['@self']['id'] ?? $task['id'] ?? '');
 		$payload = $task;
 		unset($payload['@self']);
@@ -255,13 +236,13 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 			$this->objectService->saveObject(
 				object: $payload,
 				extend: [],
-				register: $register,
-				schema: $schema,
+				register: $target['register'],
+				schema: $target['schema'],
 				uuid: $uuid,
 				_rbac: false,
 				_multitenancy: false,
 				silent: true,
-				currentUser: $actingAdmin,
+				currentUser: $target['actingAdmin'],
 			);
 			return 'named';
 		} catch (Throwable $e) {

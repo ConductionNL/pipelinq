@@ -72,8 +72,20 @@ class PointsRuleEngine {
 	 */
 	public function evaluateRules(string $programmeId, string $trigger, array $context): array {
 		$rules = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
-		$matches = [];
 
+		return $this->matchingByPriority(rules: $rules, context: $context);
+	}//end evaluateRules()
+
+	/**
+	 * The rules valid and met in the context, highest priority first.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The programme's rules for the trigger.
+	 * @param array<string, mixed> $context The evaluation context.
+	 *
+	 * @return array<int, array<string, mixed>> Matching rules, highest prioriteit first.
+	 */
+	private function matchingByPriority(array $rules, array $context): array {
+		$matches = [];
 		foreach ($rules as $rule) {
 			if ($this->isWithinValidity(rule: $rule, context: $context) === false) {
 				continue;
@@ -95,7 +107,7 @@ class PointsRuleEngine {
 		);
 
 		return $matches;
-	}//end evaluateRules()
+	}//end matchingByPriority()
 
 	/**
 	 * Return the single highest-priority rule (or null if no matches).

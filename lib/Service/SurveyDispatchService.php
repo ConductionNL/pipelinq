@@ -148,9 +148,10 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 */
 	public function matchingRules(string $entityType, string $status, string $channel = ''): array {
 		$matching = [];
+		$interaction = new CompletedInteraction(entityType: $entityType, status: $status, channel: $channel);
 
 		foreach ($this->rules() as $rule) {
-			if ($this->ruleMatches(rule: $rule, entityType: $entityType, status: $status, channel: $channel) === true) {
+			if ($this->ruleMatches(rule: $rule, interaction: $interaction) === true) {
 				$matching[] = $rule;
 			}
 		}
@@ -162,15 +163,13 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 * Whether a rule is enabled and its trigger matches the interaction.
 	 *
 	 * @param array<string, mixed> $rule The dispatch rule.
-	 * @param string $entityType The entity type.
-	 * @param string $status The status reached.
-	 * @param string $channel The interaction channel, or ''.
+	 * @param CompletedInteraction $interaction The completed interaction.
 	 *
 	 * @return bool
 	 *
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
 	 */
-	private function ruleMatches(array $rule, string $entityType, string $status, string $channel): bool {
+	private function ruleMatches(array $rule, CompletedInteraction $interaction): bool {
 		if (($rule['enabled'] ?? false) !== true) {
 			return false;
 		}
@@ -180,37 +179,8 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return false;
 		}
 
-		return $this->triggerMatches(trigger: $trigger, entityType: $entityType, status: $status, channel: $channel);
+		return $interaction->matches(trigger: $trigger);
 	}//end ruleMatches()
-
-	/**
-	 * Whether a rule trigger matches the entity type, status and channel.
-	 *
-	 * @param array<string, mixed> $trigger The rule trigger.
-	 * @param string $entityType The entity type.
-	 * @param string $status The status reached.
-	 * @param string $channel The interaction channel, or ''.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
-	 */
-	private function triggerMatches(array $trigger, string $entityType, string $status, string $channel): bool {
-		if (trim((string)($trigger['entityType'] ?? '')) !== $entityType) {
-			return false;
-		}
-
-		if (trim((string)($trigger['statusEquals'] ?? '')) !== $status) {
-			return false;
-		}
-
-		$channelFilter = trim((string)($trigger['channelEquals'] ?? ''));
-		if ($channelFilter !== '' && $channelFilter !== $channel) {
-			return false;
-		}
-
-		return true;
-	}//end triggerMatches()
 
 	/**
 	 * Why this dispatch must be suppressed, or null to go ahead.
@@ -238,7 +208,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		$now = ($now ?? new DateTimeImmutable());
 
 		return $this->contactSuppression(contact: $contact)
-			?? $this->cooldownSuppression(rule: $rule, recentInvitations: $recentInvitations, now: $now)
+			?? $this->cooldownSuppression(recentInvitations: $recentInvitations, since: $this->cooldownStart(rule: $rule, now: $now))
 			?? $this->channelSuppression(rule: $rule, contact: $contact);
 	}//end suppressionReason()
 
@@ -264,20 +234,36 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	}//end contactSuppression()
 
 	/**
-	 * 'cooldown' when the contact was invited, to any survey, within the rule's cooldown.
+	 * The start of the rule's cooldown, or null when the rule has none.
 	 *
 	 * @param array<string, mixed> $rule The dispatch rule.
-	 * @param array<int, array<string, mixed>> $recentInvitations The contact's recent invitations.
 	 * @param DateTimeImmutable $now The reference time.
+	 *
+	 * @return DateTimeImmutable|null
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function cooldownStart(array $rule, DateTimeImmutable $now): ?DateTimeImmutable {
+		$cooldownDays = (int)($rule['cooldownDays'] ?? self::DEFAULT_COOLDOWN_DAYS);
+		if ($cooldownDays > 0) {
+			return $now->modify("-{$cooldownDays} days");
+		}
+
+		return null;
+	}//end cooldownStart()
+
+	/**
+	 * 'cooldown' when the contact was invited, to any survey, since the cooldown start.
+	 *
+	 * @param array<int, array<string, mixed>> $recentInvitations The contact's recent invitations.
+	 * @param DateTimeImmutable|null $since The cooldown start, or null when the rule has no cooldown.
 	 *
 	 * @return string|null
 	 *
 	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
-	private function cooldownSuppression(array $rule, array $recentInvitations, DateTimeImmutable $now): string|null {
-		$cooldownDays = (int)($rule['cooldownDays'] ?? self::DEFAULT_COOLDOWN_DAYS);
-		if ($cooldownDays > 0) {
-			$since = $now->modify("-{$cooldownDays} days");
+	private function cooldownSuppression(array $recentInvitations, ?DateTimeImmutable $since): string|null {
+		if ($since !== null) {
 			foreach ($recentInvitations as $invitation) {
 				if ($this->sentSince(invitation: $invitation, since: $since) === true) {
 					return 'cooldown';
@@ -379,10 +365,35 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		?DateTimeImmutable $now = null,
 	): array {
 		$now = ($now ?? new DateTimeImmutable());
+		$invitation = $this->draftInvitation(
+			occasion: new SurveyInvitationOccasion(rule: $rule, contact: $contact, entity: $entity, now: $now)
+		);
+
+		$reason = $this->suppressionReason(
+			rule: $rule,
+			contact: $contact,
+			recentInvitations: $recentInvitations,
+			now: $now,
+		);
+
+		return $this->withStatus(invitation: $invitation, reason: $reason);
+	}//end buildInvitation()
+
+	/**
+	 * The invitation fields an occasion produces, before its status is decided.
+	 *
+	 * @param SurveyInvitationOccasion $occasion The rule, recipient, record and moment.
+	 *
+	 * @return array<string, mixed> The invitation without status.
+	 */
+	private function draftInvitation(SurveyInvitationOccasion $occasion): array {
+		$rule = $occasion->rule;
+		$contact = $occasion->contact;
+		$entity = $occasion->entity;
 		$delayMinutes = max(0, (int)($rule['delayMinutes'] ?? 0));
 		$expiryDays = max(1, (int)($rule['expiryDays'] ?? self::DEFAULT_EXPIRY_DAYS));
 
-		$invitation = [
+		return [
 			'token' => $this->random->generate(32, ISecureRandom::CHAR_ALPHANUMERIC),
 			'surveyRef' => trim((string)($rule['surveyRef'] ?? '')),
 			'contactRef' => trim((string)($contact['contactsUid'] ?? $contact['id'] ?? '')),
@@ -395,17 +406,20 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 				channel: trim((string)($rule['channel'] ?? 'email')),
 			),
 			'dispatchRuleId' => trim((string)($rule['id'] ?? '')),
-			'scheduledFor' => $now->modify("+{$delayMinutes} minutes")->format(DateTimeInterface::ATOM),
-			'expiresAt' => $now->modify("+{$expiryDays} days")->format(DateTimeInterface::ATOM),
+			'scheduledFor' => $occasion->now->modify("+{$delayMinutes} minutes")->format(DateTimeInterface::ATOM),
+			'expiresAt' => $occasion->now->modify("+{$expiryDays} days")->format(DateTimeInterface::ATOM),
 		];
+	}//end draftInvitation()
 
-		$reason = $this->suppressionReason(
-			rule: $rule,
-			contact: $contact,
-			recentInvitations: $recentInvitations,
-			now: $now,
-		);
-
+	/**
+	 * The invitation marked suppressed with its reason, or scheduled when there is none.
+	 *
+	 * @param array<string, mixed> $invitation The drafted invitation.
+	 * @param string|null $reason The suppression reason, or null.
+	 *
+	 * @return array<string, mixed> The invitation to persist.
+	 */
+	private function withStatus(array $invitation, ?string $reason): array {
 		if ($reason !== null) {
 			$invitation['status'] = 'suppressed';
 			$invitation['suppressionReason'] = $reason;
@@ -416,7 +430,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		$invitation['status'] = 'scheduled';
 
 		return $invitation;
-	}//end buildInvitation()
+	}//end withStatus()
 
 	/**
 	 * Create the invitations a completed interaction earns.
@@ -443,6 +457,19 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 
+		return $this->writeInvitations(rules: $rules, interaction: ['entity' => $entity, 'contact' => $contact]);
+	}//end onInteractionCompleted()
+
+	/**
+	 * Build and write the invitation each matching rule produces for the contact.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The matching rules.
+	 * @param array{entity: array<string, mixed>, contact: array<string, mixed>} $interaction The completed record and the recipient.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations written.
+	 */
+	private function writeInvitations(array $rules, array $interaction): array {
+		$contact = $interaction['contact'];
 		$recent = $this->invitationsForContact(
 			contactRef: trim((string)($contact['contactsUid'] ?? $contact['id'] ?? ''))
 		);
@@ -452,7 +479,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			$invitation = $this->buildInvitation(
 				rule: $rule,
 				contact: $contact,
-				entity: $entity,
+				entity: $interaction['entity'],
 				recentInvitations: $recent,
 			);
 
@@ -462,7 +489,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		}
 
 		return $written;
-	}//end onInteractionCompleted()
+	}//end writeInvitations()
 
 	/**
 	 * Every invitation already sent to one contact, whatever the survey.
@@ -497,23 +524,21 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 
-		return $this->plainRows(rows: $this->findInvitations(register: $register, schema: $schema, filters: $filters));
+		return $this->plainRows(rows: $this->findInvitations(filters: array_merge(['register' => $register, 'schema' => $schema], $filters)));
 	}//end read()
 
 	/**
 	 * Find invitations matching the filters, or none when the read fails.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The invitation schema id.
-	 * @param array<string, mixed> $filters Extra filters.
+	 * @param array<string, mixed> $filters The register, schema and extra filters.
 	 *
 	 * @return array<mixed>
 	 */
-	private function findInvitations(string $register, string $schema, array $filters): array {
+	private function findInvitations(array $filters): array {
 		try {
 			return $this->objectService->findAll(
 				[
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+					'filters' => $filters,
 					'limit' => self::LIMIT,
 				]
 			);

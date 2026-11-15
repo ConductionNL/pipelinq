@@ -199,10 +199,22 @@ class ShillinqInvoiceReader {
 	public function paidInvoicesFor(string $customerRef, string $from, string $to): array {
 		$rows = $this->customerRows(customerRef: $customerRef, filters: ['lifecycleState' => self::PAID_STATE]);
 
+		return $this->invoicesInWindow(rows: $rows, window: ['from' => $from, 'to' => $to]);
+	}//end paidInvoicesFor()
+
+	/**
+	 * The normalised invoices among the rows that fall inside the window.
+	 *
+	 * @param array<mixed>                     $rows   The customer's invoice rows.
+	 * @param array{from: string, to: string} $window Window start and end `YYYY-MM-DD`, inclusive.
+	 *
+	 * @return array<int, array{id: string, amount: float, currency: string, invoiceDate: string, invoiceNumber: string}>
+	 */
+	private function invoicesInWindow(array $rows, array $window): array {
 		$invoices = [];
 		foreach ($rows as $row) {
 			$invoice = $this->normalise(row: $row);
-			if ($invoice === null || $this->inWindow(date: $invoice['invoiceDate'], from: $from, to: $to) === false) {
+			if ($invoice === null || $this->inWindow(date: $invoice['invoiceDate'], window: $window) === false) {
 				continue;
 			}
 
@@ -210,7 +222,7 @@ class ShillinqInvoiceReader {
 		}
 
 		return $invoices;
-	}//end paidInvoicesFor()
+	}//end invoicesInWindow()
 
 	/**
 	 * Every invoice of one shillinq customer that is past the draft stage.
@@ -370,17 +382,18 @@ class ShillinqInvoiceReader {
 	 * rows, and dropping a paid invoice because a field is blank would
 	 * under-report money that was actually collected.
 	 *
-	 * @param string $date The invoice date `YYYY-MM-DD`, may be empty.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param string                          $date   The invoice date `YYYY-MM-DD`, may be empty.
+	 * @param array{from: string, to: string} $window Window start and end.
 	 *
 	 * @return bool True when it counts.
 	 */
-	private function inWindow(string $date, string $from, string $to): bool {
+	private function inWindow(string $date, array $window): bool {
 		if ($date === '') {
 			return true;
 		}
 
+		$from = $window['from'];
+		$to = $window['to'];
 		if ($from !== '' && $date < $from) {
 			return false;
 		}

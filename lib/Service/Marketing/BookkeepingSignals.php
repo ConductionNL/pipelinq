@@ -186,9 +186,10 @@ class BookkeepingSignals {
 	 * @return array<string, mixed>
 	 */
 	private function purchasedSignals(array $invoices, array $catalogue): array {
+		$items = $this->itemsByKind(invoices: $invoices, catalogue: $catalogue);
 		return [
-			SegmentSignalService::FIELD_PRODUCTS => $this->itemsOf(invoices: $invoices, catalogue: $catalogue, wanted: 'product'),
-			SegmentSignalService::FIELD_SERVICES => $this->itemsOf(invoices: $invoices, catalogue: $catalogue, wanted: 'service'),
+			SegmentSignalService::FIELD_PRODUCTS => ($items['product'] ?? []),
+			SegmentSignalService::FIELD_SERVICES => ($items['service'] ?? []),
 		];
 	}//end purchasedSignals()
 
@@ -281,25 +282,30 @@ class BookkeepingSignals {
 	 *
 	 * @param array<int, array<string, mixed>> $invoices The customer's invoices.
 	 * @param array<string, string> $catalogue Lowercase product name to its kind.
-	 * @param string $wanted `product` or `service`.
 	 *
-	 * @return array<int, string> The matched catalogue names, unique and sorted.
+	 * @return array<string, array<int, string>> Per kind (`product`, `service`), the matched catalogue names, unique and sorted.
 	 */
-	private function itemsOf(array $invoices, array $catalogue, string $wanted): array {
+	private function itemsByKind(array $invoices, array $catalogue): array {
 		$found = [];
 		foreach ($invoices as $invoice) {
 			foreach ((array)($invoice['lines'] ?? []) as $line) {
 				$key = strtolower(trim((string)($line['itemName'] ?? '')));
-				if ($key !== '' && ($catalogue[$key] ?? '') === $wanted) {
-					$found[$key] = true;
+				$kind = ($catalogue[$key] ?? '');
+				if ($key !== '' && in_array($kind, ['product', 'service'], true) === true) {
+					$found[$kind][$key] = true;
 				}
 			}
 		}
 
-		$names = array_keys($found);
-		sort($names);
-		return $names;
-	}//end itemsOf()
+		$byKind = [];
+		foreach ($found as $kind => $keys) {
+			$names = array_keys($keys);
+			sort($names);
+			$byKind[$kind] = $names;
+		}
+
+		return $byKind;
+	}//end itemsByKind()
 
 	/**
 	 * Where the customer stands with the credit control.

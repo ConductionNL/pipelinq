@@ -128,7 +128,7 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 	 */
 	private function outcome(array $ticket, DateTimeImmutable $now): array {
 		$url = trim((string) ($ticket['recording_url'] ?? ''));
-		$blocked = $this->blockedStatus(ticket: $ticket, url: $url, now: $now);
+		$blocked = $this->blockedStatus(ticket: $ticket, now: $now);
 		if ($blocked !== null) {
 			return ['transcriptStatus' => $blocked];
 		}
@@ -138,19 +138,19 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 			return ['transcriptStatus' => self::STATUS_FAILED];
 		}
 
-		return $this->withSummary(fields: ['transcript' => $transcript, 'transcriptStatus' => self::STATUS_DONE], transcript: $transcript, ticket: $ticket);
+		return $this->withSummary(fields: ['transcript' => $transcript, 'transcriptStatus' => self::STATUS_DONE], ticket: $ticket);
 	}//end outcome()
 
 	/**
 	 * The status for a call that cannot be transcribed (expired or no speech-to-text), else null.
 	 *
-	 * @param array<string,mixed> $ticket The contact moment.
-	 * @param string              $url    The recording URL.
+	 * @param array<string,mixed> $ticket The contact moment, with its recording URL.
 	 * @param DateTimeImmutable   $now    The moment to judge the retention at.
 	 *
 	 * @return string|null
 	 */
-	private function blockedStatus(array $ticket, string $url, DateTimeImmutable $now): string|null {
+	private function blockedStatus(array $ticket, DateTimeImmutable $now): string|null {
+		$url = trim((string) ($ticket['recording_url'] ?? ''));
 		if ($url === '' || $this->expired(ticket: $ticket, now: $now) === true) {
 			return self::STATUS_EXPIRED;
 		}
@@ -191,14 +191,13 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 	/**
 	 * Add the call summary when one was written and the ticket has none yet.
 	 *
-	 * @param array<string,string> $fields     The transcript fields.
-	 * @param string               $transcript The transcript.
-	 * @param array<string,mixed>  $ticket     The contact moment.
+	 * @param array<string,string> $fields The transcript fields, the transcript included.
+	 * @param array<string,mixed>  $ticket The contact moment.
 	 *
 	 * @return array<string,string>
 	 */
-	private function withSummary(array $fields, string $transcript, array $ticket): array {
-		$summary = $this->summaryWriter->summarise(transcript: $transcript, userId: ($ticket['assignee'] ?? null));
+	private function withSummary(array $fields, array $ticket): array {
+		$summary = $this->summaryWriter->summarise(transcript: $fields['transcript'], userId: ($ticket['assignee'] ?? null));
 		if ($summary !== '' && trim((string) ($ticket['callSummary'] ?? '')) === '') {
 			$fields['callSummary'] = $summary;
 		}

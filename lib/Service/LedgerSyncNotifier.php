@@ -66,17 +66,27 @@ class LedgerSyncNotifier {
 			return;
 		}
 
-		foreach ($adminGroup->getUsers() as $user) {
+		$parameters = ['projectName' => $projectName, 'eventType' => $eventType];
+		$this->notifyEach(users: $adminGroup->getUsers(), notice: ['objectId' => $uuid, 'parameters' => $parameters]);
+	}//end notifyFailure()
+
+	/**
+	 * Send the ledger failure notification about one project to each user.
+	 *
+	 * @param array<int, \OCP\IUser> $users The administrators.
+	 * @param array{objectId: string, parameters: array<string, string>} $notice The project UUID and the notification parameters.
+	 *
+	 * @return void
+	 */
+	private function notifyEach(array $users, array $notice): void {
+		foreach ($users as $user) {
 			$this->notificationService->sendNotification(
 				userId: $user->getUID(),
 				subject: 'ledger_sync_failed',
-				parameters: [
-					'projectName' => $projectName,
-					'eventType' => $eventType,
-				],
+				parameters: $notice['parameters'],
 				objectType: 'project',
-				objectId: $uuid
+				objectId: $notice['objectId']
 			);
 		}
-	}//end notifyFailure()
+	}//end notifyEach()
 }//end class
