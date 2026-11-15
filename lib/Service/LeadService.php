@@ -135,16 +135,25 @@ class LeadService {
 		?string $source = null,
 		?string $assignee = null,
 	): array {
-		$title = trim($title);
+		return $this->createdLead(title: trim($title), optional: ['client' => $client, 'value' => $value, 'source' => $source, 'assignee' => $assignee]);
+	}//end createLead()
+
+	/**
+	 * Save a lead with a trimmed title and the optional fields that carry a value.
+	 *
+	 * @param string                           $title    The trimmed title.
+	 * @param array<string, string|float|null> $optional The client, value, source and assignee.
+	 *
+	 * @return array<string, mixed> The saved lead, or an MCP error envelope.
+	 */
+	private function createdLead(string $title, array $optional): array {
 		$config = $this->leadContextFor(title: $title);
 		if (isset($config['error']) === true) {
 			return $config;
 		}
 
-		$optional = ['client' => $client, 'value' => $value, 'source' => $source, 'assignee' => $assignee];
-
 		return $this->saveLead(payload: ['title' => $title] + $this->presentFields(fields: $optional), config: $config);
-	}//end createLead()
+	}//end createdLead()
 
 	/**
 	 * The lead context for a trimmed title: an invalid_arguments error when the title is empty.
