@@ -509,7 +509,7 @@ class Application extends App implements IBootstrap {
 
 		$dependencyStatus = [];
 		foreach ($dependencies as $depId) {
-			$dependencyStatus[$depId] = $this->dependencyStatus(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
+			$dependencyStatus[$depId] = $this->dependencyStatus(appManager: $appManager, dependency: ['id' => $depId, 'appStoreLookup' => $appStoreLookup]);
 		}
 
 		// 5 minutes: an app being installed or enabled is a rare, operator-driven
@@ -523,15 +523,15 @@ class Application extends App implements IBootstrap {
 	/**
 	 * Whether a dependency is installed and enabled, and its category.
 	 *
-	 * @param IAppManager $appManager The app manager.
-	 * @param string $depId The dependency app id.
-	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
+	 * @param IAppManager                                           $appManager The app manager.
+	 * @param array{id: string, appStoreLookup: array<string, mixed>} $dependency The dependency app id and the app store categories by app id.
 	 *
 	 * @return array{installed: bool, enabled: bool, category: string} The dependency status.
 	 */
-	private function dependencyStatus(IAppManager $appManager, string $depId, array $appStoreLookup): array {
+	private function dependencyStatus(IAppManager $appManager, array $dependency): array {
+		$depId = $dependency['id'];
 		[$onDisk, $category] = $this->dependencyPresence(appManager: $appManager, depId: $depId);
-		$category ??= self::storeCategory(depId: $depId, appStoreLookup: $appStoreLookup);
+		$category ??= self::storeCategory(depId: $depId, appStoreLookup: $dependency['appStoreLookup']);
 
 		return [
 			'installed' => $onDisk,

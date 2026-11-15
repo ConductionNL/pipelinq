@@ -194,7 +194,10 @@ class BrpController extends Controller {
 	 */
 	private function privilegeRefusal(string $actor, LookupQuery $query): JSONResponse|null {
 		if ($this->accessPolicy->isPrivileged(uid: $actor) === false) {
-			$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-unauthorised', responseCode: Http::STATUS_FORBIDDEN);
+			$this->auditRefusal(
+				query: $query,
+				refusal: ['actor' => $actor, 'outcome' => 'refused-unauthorised', 'responseCode' => Http::STATUS_FORBIDDEN]
+			);
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -227,7 +230,10 @@ class BrpController extends Controller {
 	private function formalBsnRefusal(string $actor, LookupQuery $query): JSONResponse|null {
 		$validation = $this->validation->validate($query->rawBsn);
 		if ($validation['isFormalValid'] === false) {
-			$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-invalid-bsn', responseCode: Http::STATUS_BAD_REQUEST);
+			$this->auditRefusal(
+				query: $query,
+				refusal: ['actor' => $actor, 'outcome' => 'refused-invalid-bsn', 'responseCode' => Http::STATUS_BAD_REQUEST]
+			);
 			return $this->badLookupRequest(errorCode: 'invalid-bsn', message: $validation['errorMessage'] ?? $this->l10n->t('Ongeldig BSN.'));
 		}
 
@@ -244,7 +250,10 @@ class BrpController extends Controller {
 	 */
 	private function purposeRefusal(string $actor, LookupQuery $query): JSONResponse|null {
 		if ($query->hasPurpose() === false) {
-			$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-missing-purpose', responseCode: Http::STATUS_BAD_REQUEST);
+			$this->auditRefusal(
+				query: $query,
+				refusal: ['actor' => $actor, 'outcome' => 'refused-missing-purpose', 'responseCode' => Http::STATUS_BAD_REQUEST]
+			);
 			return $this->badLookupRequest(errorCode: 'doelbinding-missing', message: $this->l10n->t('Verzoekreden en doelbinding zijn verplicht.'));
 		}
 
@@ -294,7 +303,10 @@ class BrpController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function refuseLookup(string $actor, LookupQuery $query): JSONResponse {
-		$this->auditRefusal(actor: $actor, query: $query, outcome: 'refused-unauthorised', responseCode: Http::STATUS_FORBIDDEN);
+		$this->auditRefusal(
+			query: $query,
+			refusal: ['actor' => $actor, 'outcome' => 'refused-unauthorised', 'responseCode' => Http::STATUS_FORBIDDEN]
+		);
 		return new JSONResponse(
 			[
 				'errorCode' => 'unauthorized',
@@ -307,20 +319,18 @@ class BrpController extends Controller {
 	/**
 	 * Write the audit record of a refused lookup.
 	 *
-	 * @param string      $actor        The session user.
-	 * @param LookupQuery $query        The lookup.
-	 * @param string      $outcome      Why the lookup was refused.
-	 * @param int         $responseCode The status the caller is answered with.
+	 * @param LookupQuery                                            $query   The lookup.
+	 * @param array{actor: string, outcome: string, responseCode: int} $refusal The session user, why the lookup was refused and the status answered.
 	 *
 	 * @return void
 	 */
-	private function auditRefusal(string $actor, LookupQuery $query, string $outcome, int $responseCode): void {
+	private function auditRefusal(LookupQuery $query, array $refusal): void {
 		$this->audit->recordLookup(
-			actor: $actor,
+			actor: $refusal['actor'],
 			lookup: new LookupAudit(
 				subject: new LookupSubject(rawBsn: $query->rawBsn),
 				reason: $query->reason,
-				result: new LookupResult(outcome: $outcome, action: 'brp-lookup-refused', responseCode: $responseCode),
+				result: new LookupResult(outcome: $refusal['outcome'], action: 'brp-lookup-refused', responseCode: $refusal['responseCode']),
 			),
 		);
 	}//end auditRefusal()
