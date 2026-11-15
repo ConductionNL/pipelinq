@@ -161,6 +161,22 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @throws RuntimeException When OpenConnector is unavailable or the write fails.
 	 */
 	protected function transfer(array $credentials, array $destination, string $remotePath, string $contents): array {
+		$result = $this->uploadService()->put($credentials, $destination, $remotePath, $contents);
+		if (is_array($result) === false) {
+			return ['path' => $remotePath];
+		}
+
+		return $result;
+	}//end transfer()
+
+	/**
+	 * OpenConnector's CallService, when it is there and can upload files.
+	 *
+	 * @return object The CallService.
+	 *
+	 * @throws RuntimeException When OpenConnector is unavailable or cannot upload.
+	 */
+	private function uploadService(): object {
 		$callService = $this->getCallService();
 		if ($callService === null) {
 			throw new RuntimeException('OpenConnector CallService is not available for export upload.');
@@ -176,13 +192,8 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 			throw new RuntimeException('OpenConnector CallService does not support file uploads.');
 		}
 
-		$result = $callService->put($credentials, $destination, $remotePath, $contents);
-		if (is_array($result) === false) {
-			return ['path' => $remotePath];
-		}
-
-		return $result;
-	}//end transfer()
+		return $callService;
+	}//end uploadService()
 
 	/**
 	 * Resolve the CallService, or null when the connector app is absent.
