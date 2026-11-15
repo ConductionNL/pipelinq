@@ -36,12 +36,12 @@ use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
 use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
 use OCA\Pipelinq\Service\Consent\SendPermitRequest;
+use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
-use OCA\Pipelinq\Service\Support\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -73,7 +73,6 @@ class ComplianceService implements ComplianceServiceInterface {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
-	use PageCount;
 	use ObjectServiceTarget;
 
 	/**
@@ -900,20 +899,8 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
 	 */
 	public function listTemplates(int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
-		$all = $this->loadTemplatesRaw();
-		$total = count($all);
-		$slice = array_slice($all, (($page - 1) * $limit), $limit);
-		return [
-			'data' => $slice,
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		$window = new ListPage(page: max(1, $page), limit: min(100, max(1, $limit)));
+		return $window->slice(rows: $this->loadTemplatesRaw());
 	}//end listTemplates()
 
 	/**

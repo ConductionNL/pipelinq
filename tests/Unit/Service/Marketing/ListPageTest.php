@@ -85,4 +85,19 @@ class ListPageTest extends TestCase {
 		self::assertSame(1, $page->envelope(data: [], total: 10)['pagination']['pages']);
 		self::assertSame(0, (new ListPage(page: 1, limit: 0))->envelope(data: [], total: 5)['pagination']['pages']);
 	}//end testTheEnvelope()
+
+	/**
+	 * A slice cuts the page out of all rows and counts every row.
+	 *
+	 * @return void
+	 */
+	public function testTheSlice(): void {
+		$rows = [['id' => 'a'], ['id' => 'b'], ['id' => 'c']];
+
+		self::assertSame(
+			['data' => [['id' => 'c']], 'pagination' => ['page' => 2, 'limit' => 2, 'total' => 3, 'pages' => 2]],
+			(new ListPage(page: 2, limit: 2))->slice(rows: $rows)
+		);
+		self::assertSame([], (new ListPage(page: 3, limit: 2))->slice(rows: $rows)['data']);
+	}//end testTheSlice()
 }//end class

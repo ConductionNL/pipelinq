@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
+use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\ListQueryWhereCapability;
 use OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
@@ -36,7 +37,6 @@ use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
-use OCA\Pipelinq\Service\Support\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -79,7 +79,6 @@ class SegmentService implements SegmentServiceInterface {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
-	use PageCount;
 	use ObjectServiceTarget;
 
 	/**
@@ -393,20 +392,8 @@ class SegmentService implements SegmentServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
 	 */
 	public function listSegments(int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
-		$all = $this->loadEntities(schemaSlug: $this->getSegmentSchemaSlug(), filters: []);
-		$total = count($all);
-		$slice = array_slice($all, (($page - 1) * $limit), $limit);
-		return [
-			'data' => $slice,
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		$window = new ListPage(page: max(1, $page), limit: min(100, max(1, $limit)));
+		return $window->slice(rows: $this->loadEntities(schemaSlug: $this->getSegmentSchemaSlug(), filters: []));
 	}//end listSegments()
 
 	/**
