@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
+use OCA\Pipelinq\Util\FirstValue;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
@@ -39,6 +40,7 @@ use RuntimeException;
  */
 class ContactSyncService implements ContactSyncServiceInterface {
 	use InjectedObjectService;
+	use FirstValue;
 
 	/**
 	 * Constructor.
@@ -385,19 +387,4 @@ class ContactSyncService implements ContactSyncServiceInterface {
 		$status['updatedAt'] = $this->revisions->toIso(rev: $this->extractFirstValue(value: ($card['REV'] ?? '')));
 		return $status;
 	}//end cardStatus()
-
-	/**
-	 * Extract first value from a vCard property that may be an array or string.
-	 *
-	 * @param mixed $value The value to extract from.
-	 *
-	 * @return string The extracted string value.
-	 */
-	private function extractFirstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			return (string)($value[0] ?? '');
-		}
-
-		return (string)$value;
-	}//end extractFirstValue()
 }//end class

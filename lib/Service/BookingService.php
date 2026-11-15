@@ -42,6 +42,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\WithoutSelf;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -79,6 +80,7 @@ class BookingService implements BookingServiceInterface {
 	use AppointmentServiceLookup;
 	use InjectedObjectService;
 	use ByteTruncate;
+	use WithoutSelf;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
@@ -1647,25 +1649,6 @@ class BookingService implements BookingServiceInterface {
 			);
 		}
 	}//end chargeCancellationFee()
-
-	/**
-	 * Strip OpenRegister metadata before re-saving an existing object.
-	 *
-	 * The OR engine reads `@self` for register/schema/id; including it on save
-	 * is harmless but `register`/`schema`/`uuid` are passed explicitly so we
-	 * remove the duplicate to keep payloads small.
-	 *
-	 * @param array<string, mixed> $payload Booking payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function stripSelf(array $payload): array {
-		if (array_key_exists('@self', $payload) === true) {
-			unset($payload['@self']);
-		}
-
-		return $payload;
-	}//end stripSelf()
 
 	/**
 	 * Normalise the resourceAssignments payload list.

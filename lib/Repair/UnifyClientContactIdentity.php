@@ -55,6 +55,7 @@ use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Util\SystemRunner;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -78,6 +79,7 @@ use Psr\Log\LoggerInterface;
 class UnifyClientContactIdentity implements IRepairStep {
 	use CastingPayloadToArray;
 	use ContainerObjectServiceLookup;
+	use SystemRunner;
 
 	/**
 	 * Source-system tag written on every MDM sourceRecord this repair creates.
@@ -519,30 +521,6 @@ class UnifyClientContactIdentity implements IRepairStep {
 
 		return $uid;
 	}//end createContactViaSync()
-
-	/**
-	 * Execute an OpenRegister write under the scoped system-operation context.
-	 *
-	 * Repair steps run without a user session (web-triggered upgrades, webcron),
-	 * so OpenRegister RBAC denies every write as 'Anonymous'
-	 * (NotAuthorizedException). ObjectService::runAsSystem scopes trusted-system
-	 * elevation to the callable; older OpenRegister versions without it fall
-	 * back to the direct call.
-	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param callable $operation The write operation to execute.
-	 *
-	 * @return mixed Whatever the operation returns.
-	 *
-	 * @spec exclude system-context adoption — back-compat elevation shim around OR writes, no behavioural spec surface.
-	 */
-	private function execAsSystem(object $objectService, callable $operation): mixed {
-		if (method_exists($objectService, 'runAsSystem') === true) {
-			return $objectService->runAsSystem($operation);
-		}
-
-		return $operation();
-	}//end execAsSystem()
 
 	/**
 	 * Persist a matched contactsUid back on the object, keeping every existing

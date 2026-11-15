@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -52,6 +53,7 @@ use RuntimeException;
  */
 class KccWerkplekService implements KccWerkplekServiceInterface {
 	use SerialisedPayload;
+	use ConfiguredRegisterId;
 
 	/**
 	 * Request statuses considered "open" for the inbox (REQ-KWP-020).
@@ -135,31 +137,6 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	}//end getSchema()
 
 	/**
-	 * Read the pipelinq register slug from the app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string Register slug (typically `pipelinq`); '' when unconfigured.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
-	 */
-	private function getRegister(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end getRegister()
-
-	/**
 	 * Normalise an OpenRegister entity (object or array) to a plain array.
 	 *
 	 * @param mixed $object The object or array returned by ObjectService.
@@ -222,7 +199,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @return array<int, array<string, mixed>> Plain object arrays.
 	 */
 	private function findSafe(string $schemaKey, array $filters, string $failure): array {
-		$register = $this->getRegister();
+		$register = $this->registerId();
 		$schema = $this->getSchema(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			$this->logger->info(
@@ -390,7 +367,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @throws RuntimeException When the agentProfile schema is not configured.
 	 */
 	private function agentProfileScope(): array {
-		$register = $this->getRegister();
+		$register = $this->registerId();
 		$schema = $this->getSchema(schemaKey: 'agentProfile_schema');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('agentProfile schema is not configured');

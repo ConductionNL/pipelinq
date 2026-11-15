@@ -39,6 +39,7 @@ use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\WithoutSelf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -70,6 +71,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	use AppointmentServiceLookup;
 	use InjectedObjectService;
 	use ByteTruncate;
+	use WithoutSelf;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -849,21 +851,6 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 		$arr = $this->toArray(object: $value);
 		return ($arr ?? []);
 	}//end ticketAsArray()
-
-	/**
-	 * Strip OpenRegister metadata before re-saving.
-	 *
-	 * @param array<string, mixed> $payload Ticket payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function stripSelf(array $payload): array {
-		if (array_key_exists('@self', $payload) === true) {
-			unset($payload['@self']);
-		}
-
-		return $payload;
-	}//end stripSelf()
 
 	/**
 	 * Compose a UTC ISO-8601 timestamp from a date + local HH:MM time.

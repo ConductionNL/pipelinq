@@ -25,7 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\InjectedObjectService;
-use OCP\Constants;
+use OCA\Pipelinq\Util\WritableAddressBook;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IAppConfig;
@@ -39,6 +39,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactVcardWriterService {
 	use InjectedObjectService;
+	use WritableAddressBook;
 
 	/**
 	 * Constructor.
@@ -322,21 +323,6 @@ class ContactVcardWriterService {
 
 		return '';
 	}//end newCardAddressBookName()
-
-	/**
-	 * Whether pipelinq may write cards in this addressbook.
-	 *
-	 * @param IAddressBook $addressBook The addressbook.
-	 *
-	 * @return bool True for a writable, non-system addressbook.
-	 */
-	private function isWritable(IAddressBook $addressBook): bool {
-		if ($addressBook->isSystemAddressBook() === true) {
-			return false;
-		}
-
-		return ($addressBook->getPermissions() & Constants::PERMISSION_UPDATE) !== 0;
-	}//end isWritable()
 
 	/**
 	 * Extract the contacts UID from an addressbook create/update result.
