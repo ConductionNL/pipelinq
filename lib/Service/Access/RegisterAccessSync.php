@@ -324,19 +324,15 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public static function grant(array $authorization, string $group, string $previous=''): array {
-		$addable   = (in_array($group, self::RESERVED, true) === false);
-		$removable = (in_array($previous, self::RESERVED, true) === false && $previous !== $group);
+		$plan = self::plan(group: $group, previous: $previous);
 
 		foreach ($authorization as $verb => $rules) {
 			if (is_array($rules) === false || in_array(self::STAFF_GROUP, $rules, true) === false) {
 				continue;
 			}
 
-			if ($removable === true) {
-				$rules = array_values(array_filter($rules, static fn ($rule): bool => $rule !== $previous));
-			}
-
-			if ($addable === true && in_array($group, $rules, true) === false) {
+			$rules = self::withoutPrevious(rules: $rules, plan: $plan);
+			if ($plan['addable'] === true && in_array($group, $rules, true) === false) {
 				$rules[] = $group;
 			}
 
@@ -345,6 +341,39 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 
 		return $authorization;
 	}//end grant()
+
+	/**
+	 * Whether a group may be added and the group last applied may be taken out.
+	 *
+	 * @param string $group    The configured group, or ''.
+	 * @param string $previous The group last applied, or ''.
+	 *
+	 * @return array{previous: string, addable: bool, removable: bool}
+	 */
+	private static function plan(string $group, string $previous): array {
+		return [
+			'previous'  => $previous,
+			'addable'   => (in_array($group, self::RESERVED, true) === false),
+			'removable' => (in_array($previous, self::RESERVED, true) === false && $previous !== $group),
+		];
+	}//end plan()
+
+	/**
+	 * The rules with the group last applied taken out, when it may be.
+	 *
+	 * @param array<int, mixed>                                      $rules The verb's rules.
+	 * @param array{previous: string, addable: bool, removable: bool} $plan  The plan.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function withoutPrevious(array $rules, array $plan): array {
+		if ($plan['removable'] === false) {
+			return $rules;
+		}
+
+		$previous = $plan['previous'];
+		return array_values(array_filter($rules, static fn ($rule): bool => $rule !== $previous));
+	}//end withoutPrevious()
 
 	/**
 	 * The block with the read group granted `read` and `export`, and the group last applied gone.
@@ -363,20 +392,16 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public static function grantRead(array $authorization, string $group, string $previous=''): array {
-		$addable   = (in_array($group, self::RESERVED, true) === false);
-		$removable = (in_array($previous, self::RESERVED, true) === false && $previous !== $group);
+		$plan = self::plan(group: $group, previous: $previous);
 
 		foreach ($authorization as $verb => $rules) {
 			if (is_array($rules) === false) {
 				continue;
 			}
 
-			if ($removable === true) {
-				$rules = array_values(array_filter($rules, static fn ($rule): bool => $rule !== $previous));
-			}
-
+			$rules = self::withoutPrevious(rules: $rules, plan: $plan);
 			$reads = in_array($verb, self::READ_VERBS, true) === true && in_array(self::STAFF_GROUP, $rules, true) === true;
-			if ($addable === true && $reads === true && in_array($group, $rules, true) === false) {
+			if ($plan['addable'] === true && $reads === true && in_array($group, $rules, true) === false) {
 				$rules[] = $group;
 			}
 
