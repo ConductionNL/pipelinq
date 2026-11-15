@@ -195,17 +195,18 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 			throw new OCSBadRequestException('reportDate moet in YYYY-MM-DD formaat zijn.');
 		}
 
-		$transactions = $this->fetchTransactionsForDate(reportDate: $reportDate, terminalId: $terminalId);
+		$scope = new ZReportScope(reportDate: $reportDate, terminalId: $terminalId);
+		$transactions = $this->fetchTransactionsForDate(scope: $scope);
 
 		$aggregate = $this->aggregateTransactions(transactions: $transactions);
 
-		$report = $this->buildZReport(reportDate: $reportDate, terminalId: $terminalId, aggregate: $aggregate);
+		$report = $this->buildZReport(scope: $scope, aggregate: $aggregate);
 
 		$persisted = $this->saveObjectFor(schemaKey: 'posZReport_schema', id: '', object: $report);
 
 		$this->emitZReportSubmittedEvent(zReport: $persisted);
 
-		$this->logZReportGenerated(reportDate: $reportDate, terminalId: $terminalId, aggregate: $aggregate);
+		$this->logZReportGenerated(scope: $scope, aggregate: $aggregate);
 
 		return $persisted;
 	}//end generateZReport()
@@ -213,27 +214,26 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	/**
 	 * Build the Z-report object from the day's aggregate.
 	 *
-	 * @param string $reportDate The report date (YYYY-MM-DD).
-	 * @param string|null $terminalId The terminal filter, or null for all terminals.
+	 * @param ZReportScope         $scope     The report date and terminal filter.
 	 * @param array<string, mixed> $aggregate The aggregated totals.
 	 *
 	 * @return array<string, mixed> The Z-report object.
 	 */
-	private function buildZReport(string $reportDate, string|null $terminalId, array $aggregate): array {
+	private function buildZReport(ZReportScope $scope, array $aggregate): array {
 		$status = 'draft';
 		if ($aggregate['transactionCount'] > 0) {
 			$status = 'ready';
 		}
 
-		$reference = 'Z-' . $reportDate;
-		if ($terminalId !== null && $terminalId !== '') {
-			$reference .= '-' . strtoupper($terminalId);
+		$reference = 'Z-' . $scope->reportDate;
+		if ($scope->hasTerminal() === true) {
+			$reference .= '-' . strtoupper((string) $scope->terminalId);
 		}
 
 		return [
 			'reference' => $reference,
-			'reportDate' => $reportDate,
-			'terminalId' => $terminalId,
+			'reportDate' => $scope->reportDate,
+			'terminalId' => $scope->terminalId,
 			'transactionIds' => $aggregate['transactionIds'],
 			'transactionCount' => $aggregate['transactionCount'],
 			'subtotal' => $aggregate['subtotal'],
@@ -252,18 +252,17 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	/**
 	 * Log that a Z-report was generated.
 	 *
-	 * @param string $reportDate The report date (YYYY-MM-DD).
-	 * @param string|null $terminalId The terminal filter, or null for all terminals.
+	 * @param ZReportScope         $scope     The report date and terminal filter.
 	 * @param array<string, mixed> $aggregate The aggregated totals.
 	 *
 	 * @return void
 	 */
-	private function logZReportGenerated(string $reportDate, string|null $terminalId, array $aggregate): void {
+	private function logZReportGenerated(ZReportScope $scope, array $aggregate): void {
 		$this->logger->info(
 			'Pipelinq: Z-report generated',
 			[
-				'reportDate' => $reportDate,
-				'terminalId' => $terminalId,
+				'reportDate' => $scope->reportDate,
+				'terminalId' => $scope->terminalId,
 				'transactionCount' => $aggregate['transactionCount'],
 				'total' => $aggregate['total'],
 			]
@@ -801,16 +800,15 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	 * `settledAt` or `confirmedAt` in UTC). A row that cannot be parsed simply
 	 * does not contribute — the report degrades gracefully rather than aborting.
 	 *
-	 * @param string $reportDate The settlement date in YYYY-MM-DD.
-	 * @param string|null $terminalId Optional terminal filter.
+	 * @param ZReportScope $scope The settlement date and optional terminal filter.
 	 *
 	 * @return array<int, array<string, mixed>> The matching transactions.
 	 */
-	private function fetchTransactionsForDate(string $reportDate, ?string $terminalId): array {
+	private function fetchTransactionsForDate(ZReportScope $scope): array {
 		$matches = [];
 		foreach ($this->readPosTransactions() as $result) {
 			$txn = $this->toArray(object: $result);
-			if ($this->isZReportTransaction(txn: $txn, reportDate: $reportDate, terminalId: $terminalId) === true) {
+			if ($this->isZReportTransaction(txn: $txn, scope: $scope) === true) {
 				$matches[] = $txn;
 			}
 		}
@@ -842,25 +840,24 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	/**
 	 * Whether a transaction is confirmed/settled on the report date and, when given, on the terminal.
 	 *
-	 * @param array<string, mixed> $txn The transaction.
-	 * @param string $reportDate The report date (YYYY-MM-DD).
-	 * @param string|null $terminalId The terminal filter, or null for all terminals.
+	 * @param array<string, mixed> $txn   The transaction.
+	 * @param ZReportScope         $scope The report date and terminal filter.
 	 *
 	 * @return bool True when the transaction belongs in the Z-report.
 	 */
-	private function isZReportTransaction(array $txn, string $reportDate, string|null $terminalId): bool {
+	private function isZReportTransaction(array $txn, ZReportScope $scope): bool {
 		$status = (string)($txn['status'] ?? '');
 		if (in_array($status, ['confirmed', 'settled'], true) === false) {
 			return false;
 		}
 
-		if ($terminalId !== null && $terminalId !== '' && (string)($txn['terminalId'] ?? '') !== $terminalId) {
+		if ($scope->hasTerminal() === true && (string)($txn['terminalId'] ?? '') !== $scope->terminalId) {
 			return false;
 		}
 
 		$stamp = (string)($txn['settledAt'] ?? $txn['confirmedAt'] ?? '');
 		$day = $this->isoDay(value: $stamp);
-		return $day === $reportDate;
+		return $day === $scope->reportDate;
 	}//end isZReportTransaction()
 
 	/**
