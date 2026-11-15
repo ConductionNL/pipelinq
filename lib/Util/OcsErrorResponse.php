@@ -5,15 +5,15 @@
  *
  * The JSON response a service's OCS exception maps to.
  *
- * @category Controller
- * @package  OCA\Pipelinq\Controller
+ * @category Util
+ * @package  OCA\Pipelinq\Util
  *
  * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @version GIT: <git_id>
  *
@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Pipelinq\Controller;
+namespace OCA\Pipelinq\Util;
 
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -35,9 +35,9 @@ use Throwable;
  * Maps OCS not-found, forbidden and bad-request exceptions to 404, 403 and 422
  * responses carrying the exception message; anything else maps to nothing.
  *
- * @spec exclude shared plumbing of the controllers that use it, no spec surface of its own.
+ * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
-final class OcsErrorResponse {
+trait OcsErrorResponse {
 
 	/**
 	 * The response for an OCS exception, or null for any other failure.
@@ -46,9 +46,9 @@ final class OcsErrorResponse {
 	 *
 	 * @return JSONResponse|null The 404 / 403 / 422 response, or null.
 	 *
-	 * @spec exclude shared plumbing of the controllers that use it, no spec surface of its own.
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
-	public static function of(Throwable $failure): ?JSONResponse {
+	private function ocsErrorResponse(Throwable $failure): ?JSONResponse {
 		if ($failure instanceof OCSNotFoundException) {
 			return new JSONResponse(['error' => $failure->getMessage()], Http::STATUS_NOT_FOUND);
 		}
@@ -62,5 +62,5 @@ final class OcsErrorResponse {
 		}
 
 		return null;
-	}//end of()
-}//end class
+	}//end ocsErrorResponse()
+}//end trait

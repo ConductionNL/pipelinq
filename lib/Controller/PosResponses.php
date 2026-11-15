@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Util\OcsErrorResponse;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -41,6 +42,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-cash-management/spec.md
  */
 final class PosResponses {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -91,7 +94,7 @@ final class PosResponses {
 		try {
 			return $respond();
 		} catch (\Throwable $e) {
-			$mapped = OcsErrorResponse::of(failure: $e);
+			$mapped = $this->ocsErrorResponse(failure: $e);
 			if ($mapped !== null) {
 				return $mapped;
 			}

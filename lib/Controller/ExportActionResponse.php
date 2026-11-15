@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Util\OcsErrorResponse;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -37,6 +38,8 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 final class ExportActionResponse {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -63,7 +66,7 @@ final class ExportActionResponse {
 		try {
 			return new JSONResponse($action());
 		} catch (Throwable $e) {
-			return (OcsErrorResponse::of(failure: $e) ?? $this->unexpectedFailure(failure: $e, label: $label));
+			return ($this->ocsErrorResponse(failure: $e) ?? $this->unexpectedFailure(failure: $e, label: $label));
 		}
 	}//end respond()
 

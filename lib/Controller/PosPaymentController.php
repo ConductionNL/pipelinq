@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
+use OCA\Pipelinq\Util\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -68,6 +69,8 @@ use Throwable;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PosPaymentController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -472,7 +475,7 @@ class PosPaymentController extends Controller {
 		try {
 			return new JSONResponse($action());
 		} catch (Throwable $e) {
-			return (OcsErrorResponse::of(failure: $e) ?? $this->serverError(label: $label, exception: $e));
+			return ($this->ocsErrorResponse(failure: $e) ?? $this->serverError(label: $label, exception: $e));
 		}//end try
 	}//end run()
 

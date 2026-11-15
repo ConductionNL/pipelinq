@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
+use OCA\Pipelinq\Util\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -69,6 +70,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -337,7 +340,7 @@ class KassakoppelingAuditController extends Controller {
 		try {
 			return new JSONResponse($action(), $successStatus);
 		} catch (\Throwable $e) {
-			$mapped = OcsErrorResponse::of(failure: $e);
+			$mapped = $this->ocsErrorResponse(failure: $e);
 			if ($mapped !== null) {
 				return $mapped;
 			}
