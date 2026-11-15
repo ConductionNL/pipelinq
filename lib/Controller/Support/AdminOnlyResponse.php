@@ -30,7 +30,7 @@ use OCP\AppFramework\Http\JSONResponse;
 /**
  * Answers 401 without a session user and 403 for a non-admin, null otherwise.
  * The host class provides IUserSession `$userSession`, IGroupManager
- * `$groupManager` and IL10N `$l10n` properties.
+ * `$groupManager` and IL10N `$l10n` properties, and runAsAdmin() its run().
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
@@ -61,4 +61,23 @@ trait AdminOnlyResponse {
 
 		return null;
 	}//end requireAdmin()
+
+	/**
+	 * Run an action through the host's run() once the caller is an admin.
+	 *
+	 * @param callable $action The action.
+	 * @param string   $label  A short label for log context.
+	 *
+	 * @return JSONResponse The 401/403, or the action's response.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function runAsAdmin(callable $action, string $label): JSONResponse {
+		$forbidden = $this->requireAdmin();
+		if ($forbidden instanceof JSONResponse) {
+			return $forbidden;
+		}
+
+		return $this->run(action: $action, label: $label);
+	}//end runAsAdmin()
 }//end trait

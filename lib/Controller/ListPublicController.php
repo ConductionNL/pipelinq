@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\RejectedTokenCount;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
@@ -69,6 +70,8 @@ use Throwable;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class ListPublicController extends Controller {
+	use RejectedTokenCount;
+
 	/**
 	 * Brute-force throttler action for rejected list tokens.
 	 *
@@ -380,27 +383,6 @@ class ListPublicController extends Controller {
 			Http::STATUS_OK
 		);
 	}//end savePreferences()
-
-	/**
-	 * Count a rejected token with the brute-force throttler.
-	 *
-	 * The half that COUNTS; `#[BruteForceProtection]` is the half that
-	 * ENFORCES. Either alone is inert — see ADR-082.
-	 *
-	 * @return void
-	 */
-	private function registerRejectedToken(): void {
-		try {
-			$this->throttler->registerAttempt(
-				action: self::THROTTLE_ACTION,
-				ip: $this->request->getRemoteAddress()
-			);
-		} catch (Throwable $throttlerFailure) {
-			$this->logger->warning(
-				'ListPublicController: registerAttempt failed: ' . $throttlerFailure->getMessage()
-			);
-		}
-	}//end registerRejectedToken()
 
 	/**
 	 * Render the shared refusal page.

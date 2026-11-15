@@ -122,14 +122,9 @@ class KeywordIntelligenceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function proposals(): Response {
-		$window = $this->typedRequestParameters(spec: self::WINDOW_PARAMETERS);
-		if ($window === null) {
-			return new Response(Http::STATUS_BAD_REQUEST);
-		}
-
-		$refusal = $this->privilege->refusal();
-		if ($refusal !== null) {
-			return $refusal;
+		$window = $this->permittedParameters(spec: self::WINDOW_PARAMETERS);
+		if ($window instanceof Response) {
+			return $window;
 		}
 
 		$body = $this->proposals->forWindow(window: $window);
@@ -167,14 +162,9 @@ class KeywordIntelligenceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function confirm(): Response {
-		$payload = $this->typedRequestParameters(spec: self::CONFIRM_PARAMETERS);
-		if ($payload === null) {
-			return new Response(Http::STATUS_BAD_REQUEST);
-		}
-
-		$refusal = $this->privilege->refusal();
-		if ($refusal !== null) {
-			return $refusal;
+		$payload = $this->permittedParameters(spec: self::CONFIRM_PARAMETERS);
+		if ($payload instanceof Response) {
+			return $payload;
 		}
 
 		try {
@@ -189,4 +179,26 @@ class KeywordIntelligenceController extends Controller {
 
 		return new JSONResponse($saved, Http::STATUS_CREATED);
 	}//end confirm()
+
+	/**
+	 * The typed request parameters for a CRM user, or the bare 400 for a
+	 * non-string value, or the refusal.
+	 *
+	 * @param array<string, array{0: string, 1: mixed}> $spec Name => [type, default].
+	 *
+	 * @return array<string, mixed>|Response
+	 */
+	private function permittedParameters(array $spec): array|Response {
+		$parameters = $this->typedRequestParameters(spec: $spec);
+		if ($parameters === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $parameters;
+	}//end permittedParameters()
 }//end class

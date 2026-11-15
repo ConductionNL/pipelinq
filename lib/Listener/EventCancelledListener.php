@@ -30,10 +30,10 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\EventEmailServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
+use OCA\Pipelinq\Listener\Support\DefersObjectWork;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -48,6 +48,8 @@ use Throwable;
  * @spec openspec/changes/marketing-events/tasks.md#3.1
  */
 class EventCancelledListener implements IEventListener, DeferredObjectWork {
+	use DefersObjectWork;
+
 
 	/**
 	 * The deferred-work handler key.
@@ -105,11 +107,7 @@ class EventCancelledListener implements IEventListener, DeferredObjectWork {
 			return;
 		}
 
-		$this->deferral->defer(
-			jobClass: DeferredObjectListenerJob::class,
-			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid],
-			dedupeKey: self::HANDLER_KEY.'|'.$uuid
-		);
+		$this->deferObjectWork(uuid: $uuid);
 	}//end handle()
 
 	/**

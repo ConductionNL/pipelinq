@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
@@ -186,13 +187,9 @@ class MailingListController extends Controller {
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (['name', 'description', 'optInMode', 'senderName', 'senderEmail', 'replyTo', 'footerAddress', 'status'] as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
+		$body = (new RequestFields(request: $this->request))->strings(
+			keys: ['name', 'description', 'optInMode', 'senderName', 'senderEmail', 'replyTo', 'footerAddress', 'status']
+		);
 
 		$publicSignup = $this->request->getParam('publicSignup');
 		if ($publicSignup !== null) {
