@@ -178,13 +178,8 @@ class PosStaffService implements PosStaffServiceInterface {
 
 		$hash = $this->resolvePinHash(data: $data, isUpdate: $isUpdate, existing: $existing);
 
-		$payload = $this->buildStaffPayload(
-			data: $data,
-			posRole: $posRole,
-			displayName: $displayName,
-			hash: $hash,
-			existing: $existing
-		);
+		$validated = ['displayName' => $displayName, 'posRole' => $posRole, 'pinHash' => $hash] + $data;
+		$payload = $this->buildStaffPayload(data: $validated, existing: $existing);
 
 		return $this->stripSensitive(staff: $this->upsertObject(schemaKey: 'posStaff_schema', id: $id, payload: $payload));
 	}//end saveStaff()
@@ -256,20 +251,17 @@ class PosStaffService implements PosStaffServiceInterface {
 	/**
 	 * Build the persisted payload for a saveStaff() call.
 	 *
-	 * @param array<string, mixed> $data The staff data.
-	 * @param string $posRole The posRole UUID.
-	 * @param string $displayName The trimmed display name.
-	 * @param string $hash The resolved pinHash.
+	 * @param array<string, mixed>  $data     The staff data with its trimmed displayName, posRole UUID and resolved pinHash.
 	 * @param ?array<string, mixed> $existing The existing staff record, if any.
 	 *
 	 * @return array<string, mixed> The payload to save.
 	 */
-	private function buildStaffPayload(array $data, string $posRole, string $displayName, string $hash, ?array $existing): array {
+	private function buildStaffPayload(array $data, ?array $existing): array {
 		$payload = [
-			'displayName' => $displayName,
+			'displayName' => $data['displayName'],
 			'userId' => (string)($data['userId'] ?? ($existing['userId'] ?? '')),
-			'posRole' => $posRole,
-			'pinHash' => $hash,
+			'posRole' => $data['posRole'],
+			'pinHash' => $data['pinHash'],
 			'isActive' => (bool)($data['isActive'] ?? ($existing['isActive'] ?? true)),
 			'failedPinAttempts' => (int)($existing['failedPinAttempts'] ?? 0),
 		];
