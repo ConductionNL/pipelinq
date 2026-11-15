@@ -200,14 +200,31 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
      */
     public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both', array $listRefs=[]): array
     {
+        return $this->renderedLetter(
+            letter: ['templateId' => $templateId, 'dataRefs' => $dataRefs],
+            output: ['filename' => $filename, 'mode' => $outputMode, 'listRefs' => $listRefs]
+        );
+
+    }//end render()
+
+    /**
+     * Render a letter through filinq for the acting user.
+     *
+     * @param array{templateId: string, dataRefs: array<mixed>}             $letter The template and the data references.
+     * @param array{filename: string, mode: string, listRefs: array<mixed>} $output The filename, the output mode and the list
+     *                                                                              references.
+     *
+     * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
+     */
+    private function renderedLetter(array $letter, array $output): array
+    {
         $service = $this->requireService(service: $this->documentService());
-        $output  = ['filename' => $filename, 'mode' => $outputMode, 'listRefs' => $listRefs];
         $options = $this->letterOptions(userId: $this->actingUserId(), output: $output);
-        $result  = $this->generateLetter(service: $service, letter: ['templateId' => $templateId, 'dataRefs' => $dataRefs, 'options' => $options]);
+        $result  = $this->generateLetter(service: $service, letter: $letter + ['options' => $options]);
 
         return $this->letterFrom(result: $result);
 
-    }//end render()
+    }//end renderedLetter()
 
     /**
      * The acting user's id; a letter is filed in that user's Files.

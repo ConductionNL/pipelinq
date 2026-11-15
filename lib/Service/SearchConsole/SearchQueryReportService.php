@@ -98,17 +98,29 @@ class SearchQueryReportService implements SearchQueryReportServiceInterface {
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 	 */
 	public function topQueries(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): array {
-		[$from, $to] = $this->window(from: $from, to: $to);
-		$rows = $this->loadRows(window: [$from, $to], property: $property);
+		return $this->topQueriesIn(window: $this->window(from: $from, to: $to), query: ['limit' => $limit, 'property' => $property]);
+	}//end topQueries()
+
+	/**
+	 * The top queries of a resolved window, at most the limit.
+	 *
+	 * @param array{0: string, 1: string}               $window The window's start and end.
+	 * @param array{limit: int, property: string|null} $query  The row limit and the property, if any.
+	 *
+	 * @return array<string, mixed> The report.
+	 */
+	private function topQueriesIn(array $window, array $query): array {
+		[$from, $to] = $window;
+		$rows = $this->loadRows(window: [$from, $to], property: $query['property']);
 		$aggregated = $this->aggregate(rows: $rows);
 
 		return [
 			'from' => $from,
 			'to' => $to,
-			'rows' => array_slice($aggregated, 0, max(1, min(500, $limit))),
+			'rows' => array_slice($aggregated, 0, max(1, min(500, $query['limit']))),
 			'totalQueries' => count($aggregated),
 		];
-	}//end topQueries()
+	}//end topQueriesIn()
 
 	/**
 	 * The raw rows of a window.

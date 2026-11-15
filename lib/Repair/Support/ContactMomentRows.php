@@ -49,11 +49,25 @@ trait ContactMomentRows {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function contactMomentRows(ObjectServiceInterface $objectService, string $register, string $schema): array {
+		return $this->systemRowsOf(objectService: $objectService, location: ['register' => $register, 'schema' => $schema]);
+	}//end contactMomentRows()
+
+	/**
+	 * Fetch every stored contact moment of a register and schema, with RBAC off.
+	 *
+	 * @param ObjectServiceInterface                 $objectService The OR object service.
+	 * @param array{register: string, schema: string} $location      The register id and the ticket schema id.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function systemRowsOf(ObjectServiceInterface $objectService, array $location): array {
 		return $objectService->findAll(
 			config: [
 				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
+					'register' => $location['register'],
+					'schema' => $location['schema'],
 					'ticketType' => TicketServiceInterface::TYPE_CONTACTMOMENT,
 				],
 				'limit' => self::BATCH_LIMIT,
@@ -61,5 +75,5 @@ trait ContactMomentRows {
 			_rbac: false,
 			_multitenancy: false,
 		);
-	}//end contactMomentRows()
+	}//end systemRowsOf()
 }//end trait

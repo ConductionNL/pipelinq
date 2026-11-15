@@ -246,12 +246,10 @@ class IntegriqMarketingConsent {
 		string $source,
 		array $evidence,
 	): bool {
-		return $this->recordGrant(
-			grant: new ListConsentGrant(
-				contactId: $contactId, listId: $listId, channel: $channel,
-				lawfulBasis: $lawfulBasis, source: $source, evidence: $evidence
-			)
-		);
+		return $this->recordGrant(grant: new ListConsentGrant(
+			contactId: $contactId, listId: $listId, channel: $channel,
+			lawfulBasis: $lawfulBasis, source: $source, evidence: $evidence
+		));
 	}//end recordListConsent()
 
 	/**

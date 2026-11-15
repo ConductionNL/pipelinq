@@ -181,15 +181,25 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 		// never passed through that path.
 		$this->validateConfig(config: $config);
 
-		$journeyId = trim((string)($config['journey'] ?? ''));
-		$flowRunUuid = (string)($context['runUuid'] ?? ($context['uuid'] ?? ''));
-
-		foreach ($this->subjectsOf(items: $items) as $subject) {
-			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
-		}
+		$run = ['journeyId' => trim((string)($config['journey'] ?? '')), 'flowRunUuid' => (string)($context['runUuid'] ?? ($context['uuid'] ?? ''))];
+		$this->runFor(items: $items, run: $run);
 
 		return $items;
 	}//end execute()
+
+	/**
+	 * Run the journey for every subject of the items.
+	 *
+	 * @param array<int, mixed>                          $items The items passing through the node.
+	 * @param array{journeyId: string, flowRunUuid: string} $run   The journey and the flow run that triggers it.
+	 *
+	 * @return void
+	 */
+	private function runFor(array $items, array $run): void {
+		foreach ($this->subjectsOf(items: $items) as $subject) {
+			$this->runner->run(journeyId: $run['journeyId'], subject: $subject, flowRunUuid: $run['flowRunUuid']);
+		}
+	}//end runFor()
 
 	/**
 	 * The subject the journey runs for, per item; one empty subject when there are no items.

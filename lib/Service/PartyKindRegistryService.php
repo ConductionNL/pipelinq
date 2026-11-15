@@ -200,19 +200,12 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function mayLink(string $recordType, string $recordId, string $kind, string $party = ''): array {
-		$recordType = trim($recordType);
-		$kind = trim($kind);
-
-		$refusal = $this->kindRefusal(recordType: $recordType, kind: $kind);
-		if ($refusal !== '') {
-			return ['allowed' => false, 'reason' => $refusal];
-		}
-
-		return $this->slotAnswer(record: ['recordType' => $recordType, 'recordId' => $recordId], slot: ['kind' => $kind, 'party' => $party]);
+		return $this->slotAnswer(record: ['recordType' => trim($recordType), 'recordId' => $recordId], slot: ['kind' => trim($kind), 'party' => $party]);
 	}//end mayLink()
 
 	/**
-	 * Refuse a kind that holds one party when another party already holds it on the record.
+	 * Refuse a kind the record type does not accept, and a kind that holds one
+	 * party when another party already holds it on the record.
 	 *
 	 * @param array{recordType: string, recordId: string} $record The trimmed record type and the record.
 	 * @param array{kind: string, party: string}          $slot   The trimmed kind and the party being linked.
@@ -220,6 +213,11 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 	 * @return array{allowed: bool, reason: string} The answer.
 	 */
 	private function slotAnswer(array $record, array $slot): array {
+		$refusal = $this->kindRefusal(recordType: $record['recordType'], kind: $slot['kind']);
+		if ($refusal !== '') {
+			return ['allowed' => false, 'reason' => $refusal];
+		}
+
 		if ($this->holdsOne(kind: $slot['kind']) === false) {
 			return ['allowed' => true, 'reason' => ''];
 		}
@@ -329,16 +327,29 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function judgeBatch(string $recordType, string $recordId, array $rows): array {
-		$verdict = ['accepted' => [], 'refused' => [], 'taken' => []];
-
-		foreach ($rows as $row) {
-			$slot = ['kind' => trim((string)($row['kind'] ?? '')), 'party' => trim((string)($row['party'] ?? ''))];
-			$answer = $this->mayLink(recordType: $recordType, recordId: $recordId, kind: $slot['kind'], party: $slot['party']);
-			$verdict = $this->judgeRow(judged: $answer + $slot, verdict: $verdict);
-		}
+		$verdict = $this->batchVerdict(record: ['recordType' => $recordType, 'recordId' => $recordId], rows: $rows);
 
 		return ['accepted' => $verdict['accepted'], 'refused' => $verdict['refused']];
 	}//end judgeBatch()
+
+	/**
+	 * Judge every row of a batch for one record, in order.
+	 *
+	 * @param array{recordType: string, recordId: string} $record The record type literal and the record.
+	 * @param array<int, array<string, string>>           $rows   Each with `party` and `kind`.
+	 *
+	 * @return array<string, array<array-key, mixed>> The accepted and refused rows, and the party taking each kind.
+	 */
+	private function batchVerdict(array $record, array $rows): array {
+		$verdict = ['accepted' => [], 'refused' => [], 'taken' => []];
+		foreach ($rows as $row) {
+			$slot = ['kind' => trim((string)($row['kind'] ?? '')), 'party' => trim((string)($row['party'] ?? ''))];
+			$answer = $this->mayLink(recordType: $record['recordType'], recordId: $record['recordId'], kind: $slot['kind'], party: $slot['party']);
+			$verdict = $this->judgeRow(judged: $answer + $slot, verdict: $verdict);
+		}
+
+		return $verdict;
+	}//end batchVerdict()
 
 	/**
 	 * Judge one row, already judged against the store, against the rows of the batch accepted so far.

@@ -134,15 +134,26 @@ class CampaignAttributionService {
 	public function forCampaign(string $campaignId, string $from = '', string $to = ''): array {
 		$touchpoints = $this->touchpoints->forCampaign(campaignId: $campaignId);
 		$leads = $this->leadsFor(campaignId: $campaignId, touchpoints: $touchpoints);
-		$closes = $this->closeAll(leads: $leads, window: [$from, $to]);
 
+		return $this->attribution(touchpoints: $touchpoints, closes: $this->closeAll(leads: $leads, window: [$from, $to]));
+	}//end forCampaign()
+
+	/**
+	 * The attribution record of a campaign's touchpoints and its leads' closes.
+	 *
+	 * @param array<int, array<string, mixed>>    $touchpoints The campaign's touchpoints.
+	 * @param array<string, array<string, mixed>> $closes      Lead id to closed record.
+	 *
+	 * @return array<string, mixed> `touchpoints[]`, `leads[]`, `totals` and `models`.
+	 */
+	private function attribution(array $touchpoints, array $closes): array {
 		return [
 			'touchpoints' => $touchpoints,
 			'leads' => array_values($closes),
 			'totals' => $this->totals(closes: $closes),
 			'models' => $this->models(touchpoints: $touchpoints, closes: $closes),
 		];
-	}//end forCampaign()
+	}//end attribution()
 
 	/**
 	 * Split one lead's value over its touchpoints, in one model.
@@ -167,16 +178,29 @@ class CampaignAttributionService {
 			return [];
 		}
 
-		if ($model === 'first') {
+		return self::modelSplit(ids: $ids, rule: ['model' => $model, 'value' => $value]);
+	}//end split()
+
+	/**
+	 * Split a value over the distinct touchpoint ids by one model.
+	 *
+	 * @param list<string>                      $ids  The distinct touchpoint ids, oldest first; not empty.
+	 * @param array{model: string, value: float} $rule The model and the lead's closed value.
+	 *
+	 * @return array<string, float> Touchpoint id to attributed value.
+	 */
+	private static function modelSplit(array $ids, array $rule): array {
+		$value = $rule['value'];
+		if ($rule['model'] === 'first') {
 			return [$ids[0] => $value];
 		}
 
-		if ($model === 'last') {
+		if ($rule['model'] === 'last') {
 			return [$ids[(count($ids) - 1)] => $value];
 		}
 
 		return self::evenSplit(ids: $ids, value: $value);
-	}//end split()
+	}//end modelSplit()
 
 	/**
 	 * The distinct, non-empty touchpoint ids, in order.
@@ -233,17 +257,30 @@ class CampaignAttributionService {
 	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function closeFor(array $lead, string $from, string $to, array $claimed = []): array {
+		$close = $this->paidInvoiceClose(lead: $lead, query: ['from' => $from, 'to' => $to, 'claimed' => $claimed]);
+
+		return ($close ?? $this->leadClose(lead: $lead));
+	}//end closeFor()
+
+	/**
+	 * The close on an unclaimed paid invoice of the lead's customer in the window, or null.
+	 *
+	 * @param array<string, mixed>                                            $lead  The lead row.
+	 * @param array{from: string, to: string, claimed: array<string, string>} $query The window, and invoice id to the lead
+	 *                                                                              that already counted it.
+	 *
+	 * @return array{basis: string, value: float, currency: string, invoiceIds: array<int, string>}|null
+	 */
+	private function paidInvoiceClose(array $lead, array $query): ?array {
 		$customerRef = $this->customerRefFor(lead: $lead);
-		if ($customerRef !== '') {
-			$invoices = $this->invoices->paidInvoicesFor(customerRef: $customerRef, from: $from, to: $to);
-			$close = self::invoiceClose(invoices: $invoices, claimed: $claimed);
-			if ($close !== null) {
-				return $close;
-			}
+		if ($customerRef === '') {
+			return null;
 		}
 
-		return $this->leadClose(lead: $lead);
-	}//end closeFor()
+		$invoices = $this->invoices->paidInvoicesFor(customerRef: $customerRef, from: $query['from'], to: $query['to']);
+
+		return self::invoiceClose(invoices: $invoices, claimed: $query['claimed']);
+	}//end paidInvoiceClose()
 
 	/**
 	 * The close of a lead without an unclaimed paid invoice: its value when won, else open.
@@ -458,8 +495,9 @@ class CampaignAttributionService {
 		}
 
 		$models = [];
+		$data = ['perLead' => $perLead, 'closes' => $closes, 'channels' => $channels];
 		foreach (self::MODELS as $model) {
-			$models[$model] = $this->oneModel(perLead: $perLead, closes: $closes, channels: $channels, model: $model);
+			$models[$model] = $this->oneModel(data: $data, model: $model);
 		}
 
 		return $models;
@@ -468,15 +506,15 @@ class CampaignAttributionService {
 	/**
 	 * One model over every lead.
 	 *
-	 * @param array<string, array<int, array<string, mixed>>> $perLead Lead id to its touchpoints.
-	 * @param array<string, array<string, mixed>> $closes Lead id to closed record.
-	 * @param array<string, string> $channels Touchpoint id to channel.
-	 * @param string $model The model.
+	 * @param array<string, array<string, mixed>> $data  `perLead` (lead id to its touchpoints), `closes` (lead id to
+	 *                                                   closed record) and `channels` (touchpoint id to channel).
+	 * @param string                              $model The model.
 	 *
 	 * @return array{byTouchpoint: array<string, float>, byChannel: array<string, float>, total: float}
 	 *         The model's answer.
 	 */
-	private function oneModel(array $perLead, array $closes, array $channels, string $model): array {
+	private function oneModel(array $data, string $model): array {
+		['perLead' => $perLead, 'closes' => $closes, 'channels' => $channels] = $data;
 		$byTouchpoint = [];
 		$byChannel = [];
 		$total = 0.0;

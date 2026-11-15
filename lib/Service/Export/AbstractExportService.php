@@ -154,7 +154,20 @@ abstract class AbstractExportService {
 	 * @return array<string, mixed> The saved object as an array.
 	 */
 	protected function saveObjectData(string $schemaKey, array $data, ?string $id = null): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		return $this->savedTo(location: $this->config(schemaKey: $schemaKey), object: ['data' => $data, 'id' => $id]);
+	}//end saveObjectData()
+
+	/**
+	 * Persist an object into a register and schema, without its `@self`.
+	 *
+	 * @param array{0: string, 1: string}                         $location The register and the schema.
+	 * @param array{data: array<string, mixed>, id: string|null} $object   The object data and its UUID (null to create).
+	 *
+	 * @return array<string, mixed> The saved object as an array.
+	 */
+	private function savedTo(array $location, array $object): array {
+		[$register, $schema] = $location;
+		['data' => $data, 'id' => $id] = $object;
 
 		unset($data['@self']);
 
@@ -167,7 +180,7 @@ abstract class AbstractExportService {
 		);
 
 		return $this->toArray(object: $saved);
-	}//end saveObjectData()
+	}//end savedTo()
 
 	/**
 	 * Delete an object by UUID from this app's register/schema.

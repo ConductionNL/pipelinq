@@ -155,9 +155,21 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
 	 */
 	public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array {
+		return $this->kpisOver(programmeId: $programmeId, period: ['from' => $from, 'to' => $to]);
+	}//end getKpis()
+
+	/**
+	 * The KPIs of a programme over a period.
+	 *
+	 * @param string                                $programmeId The programme.
+	 * @param array{from: string|null, to: string|null} $period      The period's start and end, either may be null.
+	 *
+	 * @return array<string, mixed> The KPIs and the period.
+	 */
+	private function kpisOver(string $programmeId, array $period): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 		$totals = $this->accountTotals(accounts: $accounts);
-		[$debits, $points] = $this->ledgerPoints(query: ['programmeId' => $programmeId, 'from' => $from, 'to' => $to]);
+		[$debits, $points] = $this->ledgerPoints(query: ['programmeId' => $programmeId, 'from' => $period['from'], 'to' => $period['to']]);
 
 		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
 		$pointValue = (float)($programme['pointValue'] ?? 0.01);
@@ -165,8 +177,8 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 		return ['activeAccounts' => $totals['activeAccounts']]
 			+ $points
 			+ $this->valueKpis(totals: $totals + ['pointValue' => $pointValue], debits: $debits)
-			+ ['period' => ['from' => $from, 'to' => $to]];
-	}//end getKpis()
+			+ ['period' => $period];
+	}//end kpisOver()
 
 	/**
 	 * Count active accounts, the tier distribution and the outstanding points.

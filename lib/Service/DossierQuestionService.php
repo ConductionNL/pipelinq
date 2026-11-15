@@ -154,19 +154,32 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$snapshot = $this->snapshot(collectionId: $collectionId, collection: $collection);
-		$asked = [
-			'title' => $this->subjectLine(title: $title, snapshot: $snapshot),
-			'description' => $question,
-			'portalSubject' => $subjectRef,
-		];
+		return $this->filedQuestion(
+			snapshot: $this->snapshot(collectionId: $collectionId, collection: $collection),
+			asked: ['title' => $title, 'description' => $question, 'portalSubject' => $subjectRef]
+		);
+	}//end ask()
+
+	/**
+	 * Save the ticket of a resident's question about a dossier.
+	 *
+	 * @param array<string, mixed>                                              $snapshot The dossier snapshot.
+	 * @param array{title: string, description: string, portalSubject: string} $asked    The optional subject line, question and
+	 *                                                                                   portal subject.
+	 *
+	 * @return array<string, mixed> The new ticket's id and status.
+	 *
+	 * @throws \RuntimeException When the ticket cannot be saved.
+	 */
+	private function filedQuestion(array $snapshot, array $asked): array {
+		$asked['title'] = $this->subjectLine(title: $asked['title'], snapshot: $snapshot);
 		$saved = $this->tickets->save(schemaKey: self::TICKET, data: $this->questionTicket(asked: $asked, snapshot: $snapshot));
 
 		return [
 			'id' => $this->idOf(object: $saved),
 			'status' => (string)($saved['status'] ?? 'new'),
 		];
-	}//end ask()
+	}//end filedQuestion()
 
 	/**
 	 * The new ticket of a resident's question.
@@ -225,10 +238,24 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$ticket['portalReplies'] = $this->repliesWith(ticket: $ticket, message: $message);
-
-		return $this->savedReply(ticket: $this->resumeIfAwaiting(ticket: $ticket), ticketId: $ticketId);
+		return $this->replied(ticket: $ticket, reply: ['ticketId' => $ticketId, 'message' => $message]);
 	}//end reply()
+
+	/**
+	 * Add a reply to the resident's own ticket and save it, resumed when it awaited them.
+	 *
+	 * @param array<string, mixed>                     $ticket The resident's ticket.
+	 * @param array{ticketId: string, message: string} $reply  The ticket id and the reply text.
+	 *
+	 * @return array<string, mixed> The ticket's id, status and replies.
+	 *
+	 * @throws \RuntimeException When the ticket cannot be saved.
+	 */
+	private function replied(array $ticket, array $reply): array {
+		$ticket['portalReplies'] = $this->repliesWith(ticket: $ticket, message: $reply['message']);
+
+		return $this->savedReply(ticket: $this->resumeIfAwaiting(ticket: $ticket), ticketId: $reply['ticketId']);
+	}//end replied()
 
 	/**
 	 * Save a ticket that carries a new reply.

@@ -45,9 +45,24 @@ trait PosObjectUpsert {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function upsertObject(string $schemaKey, string $id, array $payload): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		return $this->upsertInto(location: $this->config(schemaKey: $schemaKey), object: ['id' => $id, 'payload' => $payload]);
+	}//end upsertObject()
 
-		$uuid = $id;
+	/**
+	 * Save one object into a register and schema, under its id or a fresh UUID.
+	 *
+	 * @param array{0: string, 1: string}                    $location The register and the schema.
+	 * @param array{id: string, payload: array<string, mixed>} $object   The object id (empty to create) and its data.
+	 *
+	 * @return array<string, mixed> The saved object.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function upsertInto(array $location, array $object): array {
+		[$register, $schema] = $location;
+		$payload = $object['payload'];
+
+		$uuid = $object['id'];
 		if ($uuid === '') {
 			$uuid = $this->uuid();
 		}
@@ -61,5 +76,5 @@ trait PosObjectUpsert {
 		);
 
 		return $this->toArray(object: $saved);
-	}//end upsertObject()
+	}//end upsertInto()
 }//end trait

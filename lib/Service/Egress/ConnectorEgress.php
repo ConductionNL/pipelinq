@@ -134,6 +134,19 @@ class ConnectorEgress implements ConnectorEgressInterface {
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function read(string $configKey, string $endpoint, array $config = [], string $method = 'GET'): EgressResult {
+		return $this->readConfigured(configKey: $configKey, call: ['endpoint' => $endpoint, 'config' => $config, 'method' => $method]);
+	}//end read()
+
+	/**
+	 * Read one endpoint through the source the key names, or say why there is no source.
+	 *
+	 * @param string                                                         $configKey The app-config key holding the source id.
+	 * @param array{endpoint: string, config: array<string, mixed>, method: string} $call      The endpoint, the extra call
+	 *                                                                                         configuration and the method.
+	 *
+	 * @return EgressResult The body, or the reason there is none.
+	 */
+	private function readConfigured(string $configKey, array $call): EgressResult {
 		$sourceId = $this->sourceId(configKey: $configKey);
 		$source = $this->sourceOrFailure(configKey: $configKey, sourceId: $sourceId);
 		if ($source instanceof EgressResult) {
@@ -141,9 +154,15 @@ class ConnectorEgress implements ConnectorEgressInterface {
 		}
 
 		return $this->readThrough(
-			read: new ConnectorRead(source: $source, sourceId: $sourceId, endpoint: $endpoint, config: $config, method: $method)
+			read: new ConnectorRead(
+				source: $source,
+				sourceId: $sourceId,
+				endpoint: $call['endpoint'],
+				config: $call['config'],
+				method: $call['method']
+			)
 		);
-	}//end read()
+	}//end readConfigured()
 
 	/**
 	 * The resolved source, or why there is none: no id configured, or an id that does not resolve.
@@ -201,15 +220,34 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			return $source;
 		}
 
-		$endpoint = $this->endpointWithinSource(source: $source, url: $url);
+		return $this->readWithin(source: $source, request: ['sourceId' => $resolvedId, 'url' => $url, 'config' => $config]);
+	}//end readUrl()
+
+	/**
+	 * Read an absolute URL through a resolved source, refusing a URL outside its location.
+	 *
+	 * @param object|array<string, mixed>                                      $source  The resolved source.
+	 * @param array{sourceId: string, url: string, config: array<string, mixed>} $request The source id, the URL and the
+	 *                                                                                   extra call configuration.
+	 *
+	 * @return EgressResult The body, or the reason there is none.
+	 */
+	private function readWithin(object|array $source, array $request): EgressResult {
+		$endpoint = $this->endpointWithinSource(source: $source, url: $request['url']);
 		if ($endpoint instanceof EgressResult) {
 			return $endpoint;
 		}
 
 		return $this->readThrough(
-			read: new ConnectorRead(source: $source, sourceId: $resolvedId, endpoint: $endpoint, config: $config, method: 'GET')
+			read: new ConnectorRead(
+				source: $source,
+				sourceId: $request['sourceId'],
+				endpoint: $endpoint,
+				config: $request['config'],
+				method: 'GET'
+			)
 		);
-	}//end readUrl()
+	}//end readWithin()
 
 	/**
 	 * The explicit source id, else the one configured under the key.

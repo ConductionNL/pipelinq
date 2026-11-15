@@ -112,12 +112,7 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function upload(array $credentials, array $destination, string $remotePath, string $contents): string {
-		$result = $this->transfer(
-			credentials: $credentials,
-			destination: $destination,
-			remotePath: $remotePath,
-			contents: $contents
-		);
+		$result = $this->transfer(credentials: $credentials, destination: $destination, remotePath: $remotePath, contents: $contents);
 
 		return $this->acknowledge(result: $result);
 	}//end upload()
@@ -161,13 +156,24 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @throws RuntimeException When OpenConnector is unavailable or the write fails.
 	 */
 	protected function transfer(array $credentials, array $destination, string $remotePath, string $contents): array {
-		$result = $this->uploadService()->put($credentials, $destination, $remotePath, $contents);
+		return self::resultOrPath(result: $this->uploadService()->put($credentials, $destination, $remotePath, $contents), remotePath: $remotePath);
+	}//end transfer()
+
+	/**
+	 * The transfer result metadata, or the path when the transfer answered none.
+	 *
+	 * @param mixed  $result     What the transfer answered.
+	 * @param string $remotePath The remote object key/path.
+	 *
+	 * @return array<string, mixed> The transfer result metadata.
+	 */
+	private static function resultOrPath(mixed $result, string $remotePath): array {
 		if (is_array($result) === false) {
 			return ['path' => $remotePath];
 		}
 
 		return $result;
-	}//end transfer()
+	}//end resultOrPath()
 
 	/**
 	 * OpenConnector's CallService, when it is there and can upload files.
