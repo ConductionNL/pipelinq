@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Util;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ContactmomentService;
 use Throwable;
 
@@ -39,6 +38,7 @@ use Throwable;
  */
 trait ChannelAdapterLookups {
 	use ConfiguredTenantId;
+	use ConfiguredSchemaSlug;
 
 	/**
 	 * The contact moment service, resolved lazily; null when it is absent.
@@ -80,25 +80,6 @@ trait ChannelAdapterLookups {
 
 		return '';
 	}//end extractPhone()
-
-	/**
-	 * App-config schema slug override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 *
-	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
 
 	/**
 	 * Persist a message payload via OpenRegister.

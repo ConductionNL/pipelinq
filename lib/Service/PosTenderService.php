@@ -54,6 +54,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
+use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
@@ -84,6 +85,8 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
 class PosTenderService implements PosTenderServiceInterface {
+	use RandomUuid;
+
 	/**
 	 * Money comparison tolerance: floating-point amounts within this epsilon
 	 * are treated as exactly equal. €0.005 = half a cent; below the rounding
@@ -1414,18 +1417,6 @@ class PosTenderService implements PosTenderServiceInterface {
 
 		return '';
 	}//end extractId()
-
-	/**
-	 * Generate a v4-ish UUID string.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$bytes = random_bytes(16);
-		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-	}//end uuid()
 
 	/**
 	 * Now in ISO-8601 UTC.
