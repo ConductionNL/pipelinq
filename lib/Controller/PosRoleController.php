@@ -131,12 +131,7 @@ class PosRoleController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function create(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['role' => $this->service->saveRole(data: $this->payload())],
 			label: 'create'
 		);
@@ -183,12 +178,7 @@ class PosRoleController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function destroy(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: function () use ($id): array {
 				$this->service->deleteRole(id: $id);
 				return ['deleted' => true];

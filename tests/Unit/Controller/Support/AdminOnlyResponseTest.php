@@ -74,6 +74,23 @@ class AdminOnlyResponseTest extends TestCase {
 			public function gate(): ?JSONResponse {
 				return $this->requireAdmin();
 			}
+
+			/**
+			 * @param callable $action The action.
+			 * @param string   $label  The label.
+			 *
+			 * @return JSONResponse
+			 */
+			private function run(callable $action, string $label): JSONResponse {
+				return new JSONResponse(['label' => $label, 'data' => $action()]);
+			}
+
+			/**
+			 * @return JSONResponse
+			 */
+			public function adminRun(): JSONResponse {
+				return $this->runAsAdmin(action: fn (): array => ['ok' => true], label: 'probe');
+			}
 		};
 	}//end host()
 
@@ -94,4 +111,19 @@ class AdminOnlyResponseTest extends TestCase {
 
 		$this->assertNull($this->host($user, true)->gate());
 	}//end testGate()
+
+	/**
+	 * @return void
+	 */
+	public function testRunAsAdminRefusesBeforeRunning(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('u1');
+
+		$this->assertSame(401, $this->host(null, false)->adminRun()->getStatus());
+		$this->assertSame(403, $this->host($user, false)->adminRun()->getStatus());
+		$this->assertSame(
+			['label' => 'probe', 'data' => ['ok' => true]],
+			$this->host($user, true)->adminRun()->getData()
+		);
+	}//end testRunAsAdminRefusesBeforeRunning()
 }//end class

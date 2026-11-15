@@ -122,13 +122,9 @@ class SocialAccountController extends Controller {
 			return $this->refuse();
 		}
 
-		$account = $this->accounts->getAccount(accountId: $id);
-		if ($account === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
-			return $this->refuse();
+		$account = $this->actableAccount(uid: $uid, accountId: $id);
+		if ($account instanceof JSONResponse) {
+			return $account;
 		}
 
 		return new JSONResponse(['account' => $account]);
@@ -247,13 +243,9 @@ class SocialAccountController extends Controller {
 			return $this->refuse();
 		}
 
-		$account = $this->accounts->getAccount(accountId: $id);
-		if ($account === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
-			return $this->refuse();
+		$account = $this->actableAccount(uid: $uid, accountId: $id);
+		if ($account instanceof JSONResponse) {
+			return $account;
 		}
 
 		return new JSONResponse(['account' => $this->accounts->syncStatus(accountId: $id)]);
@@ -293,6 +285,27 @@ class SocialAccountController extends Controller {
 
 		return $uid;
 	}//end requireCrmUser()
+
+	/**
+	 * The account the user may act on, or the 404 or 403 that refuses it.
+	 *
+	 * @param string $uid       The user id.
+	 * @param string $accountId The account UUID or slug.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function actableAccount(string $uid, string $accountId): array|JSONResponse {
+		$account = $this->accounts->getAccount(accountId: $accountId);
+		if ($account === null) {
+			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
+			return $this->refuse();
+		}
+
+		return $account;
+	}//end actableAccount()
 
 	/**
 	 * The single refusal, so an unauthenticated and an unprivileged caller

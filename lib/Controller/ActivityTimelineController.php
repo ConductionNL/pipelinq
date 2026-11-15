@@ -190,21 +190,9 @@ class ActivityTimelineController extends Controller {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
 	 */
 	public function getTimeline(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$entityType = (string)$this->request->getParam('entityType', '');
-		$entityId = (string)$this->request->getParam('entityId', '');
-
-		if ($entityType === '' || $entityId === '') {
-			return new JSONResponse(['message' => 'entityType and entityId are required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		$notFound = $this->entityNotFound(entityId: $entityId, userId: $user->getUID());
-		if ($notFound !== null) {
-			return $notFound;
+		$scope = $this->requestedEntity();
+		if ($scope instanceof JSONResponse) {
+			return $scope;
 		}
 
 		$params = [
@@ -215,30 +203,11 @@ class ActivityTimelineController extends Controller {
 			'_limit' => $this->request->getParam('_limit'),
 		];
 
-		return $this->loadTimeline(entityType: $entityType, entityId: $entityId, params: $params);
+		return $this->serviceRead(
+			read: fn (): array => $this->service->getTimeline(entityType: $scope['entityType'], entityId: $scope['entityId'], params: $params),
+			subject: 'timeline'
+		);
 	}//end getTimeline()
-
-	/**
-	 * Load the merged timeline; a failure is logged and answered with a 500.
-	 *
-	 * @param string               $entityType The entity type.
-	 * @param string               $entityId   The OR object UUID.
-	 * @param array<string, mixed> $params     The timeline filters and paging.
-	 *
-	 * @return JSONResponse
-	 */
-	private function loadTimeline(string $entityType, string $entityId, array $params): JSONResponse {
-		try {
-			$result = $this->service->getTimeline(
-				entityType: $entityType,
-				entityId: $entityId,
-				params: $params
-			);
-			return new JSONResponse($result);
-		} catch (\Throwable $e) {
-			return $this->serviceFailure(logMessage: 'ActivityTimelineController: failed to load timeline', userMessage: 'Failed to load timeline', error: $e);
-		}
-	}//end loadTimeline()
 
 	/**
 	 * Return worklog entries (contactmomenten with channel=worklog) for an entity.
@@ -250,49 +219,18 @@ class ActivityTimelineController extends Controller {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
 	 */
 	public function getWorklog(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$entityType = (string)$this->request->getParam('entityType', '');
-		$entityId = (string)$this->request->getParam('entityId', '');
-
-		if ($entityType === '' || $entityId === '') {
-			return new JSONResponse(['message' => 'entityType and entityId are required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		$notFound = $this->entityNotFound(entityId: $entityId, userId: $user->getUID());
-		if ($notFound !== null) {
-			return $notFound;
+		$scope = $this->requestedEntity();
+		if ($scope instanceof JSONResponse) {
+			return $scope;
 		}
 
 		$params = ['_page' => $this->request->getParam('_page'), '_limit' => $this->request->getParam('_limit')];
 
-		return $this->loadWorklog(entityType: $entityType, entityId: $entityId, params: $params);
+		return $this->serviceRead(
+			read: fn (): array => $this->service->getWorklog(entityType: $scope['entityType'], entityId: $scope['entityId'], params: $params),
+			subject: 'worklog'
+		);
 	}//end getWorklog()
-
-	/**
-	 * Load the worklog; a failure is logged and answered with a 500.
-	 *
-	 * @param string               $entityType The entity type.
-	 * @param string               $entityId   The OR object UUID.
-	 * @param array<string, mixed> $params     The paging.
-	 *
-	 * @return JSONResponse
-	 */
-	private function loadWorklog(string $entityType, string $entityId, array $params): JSONResponse {
-		try {
-			$result = $this->service->getWorklog(
-				entityType: $entityType,
-				entityId: $entityId,
-				params: $params
-			);
-			return new JSONResponse($result);
-		} catch (\Throwable $e) {
-			return $this->serviceFailure(logMessage: 'ActivityTimelineController: failed to load worklog', userMessage: 'Failed to load worklog', error: $e);
-		}
-	}//end loadWorklog()
 
 	/**
 	 * Create a worklog entry for an entity.
@@ -356,6 +294,52 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 	}//end storeWorklog()
+
+	/**
+	 * The entityType and entityId of the request, or the 401/400/404 that refuses it.
+	 *
+	 * @return array{entityType: string, entityId: string}|JSONResponse
+	 */
+	private function requestedEntity(): array|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$entityType = (string)$this->request->getParam('entityType', '');
+		$entityId = (string)$this->request->getParam('entityId', '');
+
+		if ($entityType === '' || $entityId === '') {
+			return new JSONResponse(['message' => 'entityType and entityId are required'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$notFound = $this->entityNotFound(entityId: $entityId, userId: $user->getUID());
+		if ($notFound !== null) {
+			return $notFound;
+		}
+
+		return ['entityType' => $entityType, 'entityId' => $entityId];
+	}//end requestedEntity()
+
+	/**
+	 * Run a timeline read; a failure is logged and answered with a 500.
+	 *
+	 * @param \Closure $read    The service read.
+	 * @param string   $subject What is read, for the messages.
+	 *
+	 * @return JSONResponse
+	 */
+	private function serviceRead(\Closure $read, string $subject): JSONResponse {
+		try {
+			return new JSONResponse($read());
+		} catch (\Throwable $e) {
+			return $this->serviceFailure(
+				logMessage: 'ActivityTimelineController: failed to load ' . $subject,
+				userMessage: 'Failed to load ' . $subject,
+				error: $e
+			);
+		}
+	}//end serviceRead()
 
 	/**
 	 * The 404 for an entity the caller may not see, or null when they may.
