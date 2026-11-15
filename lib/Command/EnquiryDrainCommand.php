@@ -128,7 +128,7 @@ class EnquiryDrainCommand extends Command {
 			}
 
 			$pending += $report['pending'];
-			$this->print(label: $label, report: $report, apply: $apply, output: $output);
+			$this->print(run: ['label' => $label, 'report' => $report, 'apply' => $apply], output: $output);
 		}
 
 		return self::pendingExit(output: $output, pending: $pending);
@@ -176,46 +176,40 @@ class EnquiryDrainCommand extends Command {
 	/**
 	 * Print one schema's report.
 	 *
-	 * @param string               $label  The held schema.
-	 * @param array<string, mixed> $report The drain report.
-	 * @param bool                 $apply  Whether this run wrote.
-	 * @param OutputInterface      $output Console output.
+	 * @param array{label: string, report: array<string, mixed>, apply: bool} $run    The held schema, its drain report and whether this run wrote.
+	 * @param OutputInterface                                                 $output Console output.
 	 *
 	 * @return void
 	 */
-	private function print(string $label, array $report, bool $apply, OutputInterface $output): void {
-		$verb = 'would be delivered';
-		if ($apply === true) {
-			$verb = 'delivered';
-		}
-
-		$this->printSummary(label: $label, report: $report, verb: $verb, output: $output);
-		$this->printDelivered(rows: $report['delivered'], output: $output);
-		$this->printRejected(report: $report, output: $output);
+	private function print(array $run, OutputInterface $output): void {
+		$output->writeln(self::summaryLine(run: $run));
+		$this->printDelivered(rows: $run['report']['delivered'], output: $output);
+		$this->printRejected(report: $run['report'], output: $output);
 	}//end print()
 
 	/**
-	 * Print the one-line summary of a schema's report.
+	 * The one-line summary of a schema's report.
 	 *
-	 * @param string               $label  The held schema.
-	 * @param array<string, mixed> $report The drain report.
-	 * @param string               $verb   How the delivered count reads.
-	 * @param OutputInterface      $output Console output.
+	 * @param array{label: string, report: array<string, mixed>, apply: bool} $run The held schema, its drain report and whether this run wrote.
 	 *
-	 * @return void
+	 * @return string
 	 */
-	private function printSummary(string $label, array $report, string $verb, OutputInterface $output): void {
-		$output->writeln(
-			sprintf(
-				'%s: %d %s, %d refused, %d unmapped.',
-				$label,
-				count($report['delivered']),
-				$verb,
-				count($report['refused']),
-				count($report['unmapped'])
-			)
+	private static function summaryLine(array $run): string {
+		$verb = 'would be delivered';
+		if ($run['apply'] === true) {
+			$verb = 'delivered';
+		}
+
+		$report = $run['report'];
+		return sprintf(
+			'%s: %d %s, %d refused, %d unmapped.',
+			$run['label'],
+			count($report['delivered']),
+			$verb,
+			count($report['refused']),
+			count($report['unmapped'])
 		);
-	}//end printSummary()
+	}//end summaryLine()
 
 	/**
 	 * Print a line per delivered enquiry.

@@ -228,6 +228,7 @@ import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue
 import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { serializeStep } from '../../services/serviceSteps.js'
 import { CANCELLATION_POLICY_LABELS, enumOptions } from '../../utils/enumLabels.js'
+import { populateFormWatcher } from '../../utils/formFields.js'
 
 export default {
 	name: 'ServiceForm',
@@ -280,14 +281,7 @@ export default {
 	},
 
 	watch: {
-		service: {
-			immediate: true,
-			handler(val) {
-				if (val && Object.keys(val).length > 0) {
-					this.populateForm(val)
-				}
-			},
-		},
+		service: populateFormWatcher(),
 	},
 
 	methods: {
@@ -403,18 +397,16 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .service-form {
 	max-width: 960px;
 	padding: 0 4px;
 }
 
 .form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
+	@include textarea-field;
 }
 
 .service-form__actions {

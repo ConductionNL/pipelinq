@@ -105,14 +105,7 @@ class PartyKindController extends Controller {
 		string $party = '',
 		string $kind = '',
 	): JSONResponse {
-		return $this->respond(
-			result: $this->linkService->link(
-				recordType: $recordType,
-				recordId: $recordId,
-				party: $party,
-				kind: $kind,
-			)
-		);
+		return $this->respond(result: $this->linkService->link(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind));
 	}//end link()
 
 	/**
@@ -128,13 +121,7 @@ class PartyKindController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function import(string $recordType = '', string $recordId = '', array $rows = []): JSONResponse {
-		return $this->respond(
-			result: $this->linkService->import(
-				recordType: $recordType,
-				recordId: $recordId,
-				rows: $rows,
-			)
-		);
+		return $this->respond(result: $this->linkService->import(recordType: $recordType, recordId: $recordId, rows: $rows));
 	}//end import()
 
 	/**

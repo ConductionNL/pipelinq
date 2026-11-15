@@ -119,9 +119,27 @@ class JourneyFlowCompiler {
 		$schema = (self::TRIGGER_SCHEMAS[$kind] ?? '');
 		$condition = $this->gateCondition(kind: $kind, journey: $journey);
 
+		return $this->assembled(
+			journey: $journey,
+			plan: ['trigger' => $trigger, 'schema' => $schema, 'condition' => $condition, 'journeyId' => $journeyId, 'runAs' => $runAs]
+		);
+	}//end documentFor()
+
+	/**
+	 * The flow document of a journey from its resolved trigger, gate and identities.
+	 *
+	 * @param array<string, mixed> $journey The journey payload.
+	 * @param array<string, mixed> $plan    Keys: trigger, schema (its object schema, '' for a schedule), condition
+	 *   (the gate condition or null), journeyId and runAs.
+	 *
+	 * @return array<string, mixed> The document `FlowService::save()` accepts.
+	 */
+	private function assembled(array $journey, array $plan): array {
+		['trigger' => $trigger, 'schema' => $schema, 'condition' => $condition, 'journeyId' => $journeyId] = $plan;
+
 		$nodes = [$this->objectNode(schema: $schema)];
 		if ($schema === '') {
-			$nodes = [$this->scheduleNode(trigger: $trigger, runAs: $runAs)];
+			$nodes = [$this->scheduleNode(trigger: $trigger, runAs: $plan['runAs'])];
 		}
 
 		array_push($nodes, ...$this->middleNodes(journey: $journey, condition: $condition), ...$this->closingNodes(journeyId: $journeyId));
@@ -130,7 +148,7 @@ class JourneyFlowCompiler {
 			+ $this->triggerFields(schema: $schema, trigger: $trigger)
 			+ $this->runFields(journey: $journey, nodes: $nodes)
 			+ ['edges' => $this->edgesFor(order: array_column($nodes, 'id'), hasCondition: ($condition !== null))];
-	}//end documentFor()
+	}//end assembled()
 
 	/**
 	 * The optional wait node and the optional gate node, in that order.

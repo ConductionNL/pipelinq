@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\RejectedTokenCount;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
 use OCP\AppFramework\Controller;
@@ -53,39 +54,19 @@ use Throwable;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class BlastTrackingController extends Controller {
+	use RejectedTokenCount;
 
 	/**
 	 * Brute-force throttler action for rejected tracking tokens.
-	 *
-	 * @var string
-	 */
-	private const THROTTLE_ACTION = 'pipelinq_blast_tracking_token';
-
-	/**
-	 * Record a rejected tracking token with the brute-force throttler.
 	 *
 	 * The tokens are signed, so guessing one is expensive already — but these
 	 * two endpoints are the most-fetched public surface the app has (every
 	 * recipient's mail client hits them), which makes them the cheapest place
 	 * to probe from and the easiest to overlook.
 	 *
-	 * The half that COUNTS; `#[BruteForceProtection]` is the half that
-	 * ENFORCES. Either alone is inert — see ADR-082.
-	 *
-	 * @return void
+	 * @var string
 	 */
-	private function registerRejectedToken(): void {
-		try {
-			$this->throttler->registerAttempt(
-				action: self::THROTTLE_ACTION,
-				ip: $this->request->getRemoteAddress()
-			);
-		} catch (\Throwable $throttlerFailure) {
-			$this->logger->warning(
-				'BlastTrackingController: registerAttempt failed: ' . $throttlerFailure->getMessage()
-			);
-		}
-	}//end registerRejectedToken()
+	private const THROTTLE_ACTION = 'pipelinq_blast_tracking_token';
 
 	/**
 	 * A minimal 1x1 transparent GIF89a (43 bytes) — the open pixel.

@@ -324,8 +324,19 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public static function grant(array $authorization, string $group, string $previous=''): array {
-		$plan = self::plan(group: $group, previous: $previous);
+		return self::grantedBlock(authorization: $authorization, plan: self::plan(group: $group, previous: $previous));
+	}//end grant()
 
+	/**
+	 * The block with the planned group granted wherever the staff group is, and the group last applied gone.
+	 *
+	 * @param array<string, mixed>                                                  $authorization The block.
+	 * @param array{group: string, previous: string, addable: bool, removable: bool} $plan          The plan.
+	 *
+	 * @return array<string, mixed> The rewritten block.
+	 */
+	private static function grantedBlock(array $authorization, array $plan): array {
+		$group = $plan['group'];
 		foreach ($authorization as $verb => $rules) {
 			if (is_array($rules) === false || in_array(self::STAFF_GROUP, $rules, true) === false) {
 				continue;
@@ -340,7 +351,7 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 		}
 
 		return $authorization;
-	}//end grant()
+	}//end grantedBlock()
 
 	/**
 	 * Whether a group may be added and the group last applied may be taken out.
@@ -348,10 +359,11 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @param string $group    The configured group, or ''.
 	 * @param string $previous The group last applied, or ''.
 	 *
-	 * @return array{previous: string, addable: bool, removable: bool}
+	 * @return array{group: string, previous: string, addable: bool, removable: bool}
 	 */
 	private static function plan(string $group, string $previous): array {
 		return [
+			'group'     => $group,
 			'previous'  => $previous,
 			'addable'   => (in_array($group, self::RESERVED, true) === false),
 			'removable' => (in_array($previous, self::RESERVED, true) === false && $previous !== $group),
@@ -361,8 +373,8 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	/**
 	 * The rules with the group last applied taken out, when it may be.
 	 *
-	 * @param array<int, mixed>                                      $rules The verb's rules.
-	 * @param array{previous: string, addable: bool, removable: bool} $plan  The plan.
+	 * @param array<int, mixed>                                                     $rules The verb's rules.
+	 * @param array{group: string, previous: string, addable: bool, removable: bool} $plan  The plan.
 	 *
 	 * @return array<int, mixed>
 	 */
@@ -392,8 +404,19 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public static function grantRead(array $authorization, string $group, string $previous=''): array {
-		$plan = self::plan(group: $group, previous: $previous);
+		return self::readBlock(authorization: $authorization, plan: self::plan(group: $group, previous: $previous));
+	}//end grantRead()
 
+	/**
+	 * The block with the planned read group granted `read` and `export` where the staff group reads.
+	 *
+	 * @param array<string, mixed>                                                  $authorization The block.
+	 * @param array{group: string, previous: string, addable: bool, removable: bool} $plan          The plan.
+	 *
+	 * @return array<string, mixed> The rewritten block.
+	 */
+	private static function readBlock(array $authorization, array $plan): array {
+		$group = $plan['group'];
 		foreach ($authorization as $verb => $rules) {
 			if (is_array($rules) === false) {
 				continue;
@@ -409,7 +432,7 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 		}
 
 		return $authorization;
-	}//end grantRead()
+	}//end readBlock()
 
 	/**
 	 * A setting's trimmed value.

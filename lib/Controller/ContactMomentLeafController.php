@@ -179,11 +179,7 @@ class ContactMomentLeafController extends Controller {
 	#[NoAdminRequired]
 	public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): JSONResponse {
 		return $this->respond(
-			result: $this->filingService->unfileFromCase(
-				momentId: $momentId,
-				caseId: $caseId,
-				newPrimary: $newPrimary,
-			)
+			result: $this->filingService->unfileFromCase(momentId: $momentId, caseId: $caseId, newPrimary: $newPrimary)
 		);
 	}//end unfileFromCase()
 }//end class

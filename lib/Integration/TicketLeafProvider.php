@@ -141,15 +141,11 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 		[$register, $clientSchema, $ticketSchema] = array_values($ids);
 
 		$refOfClient = $this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: $refs);
+		$found = $this->ticketsOf(refOfClient: $refOfClient, query: ['register' => $register, 'schema' => $ticketSchema, 'status' => $status]);
 
 		return [
 			'status' => 200,
-			'tickets' => $this->ticketsOf(
-				refs: $refs,
-				refOfClient: $refOfClient,
-				filters: ['register' => $register, 'schema' => $ticketSchema],
-				status: $status
-			),
+			'tickets' => array_replace(array_fill_keys($refs, []), $found),
 		];
 	}//end byMasterEntity()
 
@@ -186,22 +182,21 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 	}//end surfaceIds()
 
 	/**
-	 * The tickets of the clients, grouped by their master entity, every
-	 * reference present.
+	 * The tickets of the clients, grouped by their master entity; a reference without tickets is absent.
 	 *
-	 * @param array<int, string>    $refs        The master entity references.
 	 * @param array<string, string> $refOfClient Master entity per client id.
-	 * @param array<string, string> $filters     The register and ticket schema.
-	 * @param string                $status      `open`, `closed` or `all`.
+	 * @param array<string, string> $query       The register, the ticket schema and the status (`open`, `closed` or `all`).
 	 *
 	 * @return array<string, array<int, array<string, string>>> Tickets per reference.
 	 */
-	private function ticketsOf(array $refs, array $refOfClient, array $filters, string $status): array {
-		$tickets = array_fill_keys($refs, []);
+	private function ticketsOf(array $refOfClient, array $query): array {
+		$tickets = [];
 		if ($refOfClient === []) {
 			return $tickets;
 		}
 
+		$status = $query['status'];
+		$filters = ['register' => $query['register'], 'schema' => $query['schema']];
 		$filters['client'] = ['in' => array_keys($refOfClient)];
 		$filters['ticketType'] = ['in' => self::TICKET_TYPES];
 		$filters += self::statusFilter(status: $status);

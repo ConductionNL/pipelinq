@@ -92,11 +92,26 @@ class DemoUserFields {
 	 */
 	public function assign(array $objects, array $schemas, callable $userExists, ?string $actingUid): array {
 		$accounts = new ExampleUserAccounts(userExists: $userExists(...), actingUid: $actingUid);
+		return self::assignedWith(accounts: $accounts, records: ['objects' => $objects, 'schemas' => $schemas]);
+	}//end assign()
+
+	/**
+	 * Every record with its user fields pointed at the accounts.
+	 *
+	 * @param ExampleUserAccounts $accounts The real accounts.
+	 * @param array{objects: array<int, array<string, mixed>>, schemas: array<string, array<string, mixed>>} $records The records
+	 *                                                                                                        and schemas by slug.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function assignedWith(ExampleUserAccounts $accounts, array $records): array {
+		$objects = $records['objects'];
 		foreach ($objects as $index => $object) {
 			$schemaSlug = (string)($object['@self']['schema'] ?? '');
-			$objects[$index] = $accounts->assignFields(object: $object, properties: (array)($schemas[$schemaSlug]['properties'] ?? []));
+			$properties = (array)($records['schemas'][$schemaSlug]['properties'] ?? []);
+			$objects[$index] = $accounts->assignFields(object: $object, properties: $properties);
 		}
 
 		return $objects;
-	}//end assign()
+	}//end assignedWith()
 }//end class

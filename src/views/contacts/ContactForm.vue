@@ -127,6 +127,7 @@ import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { NcButton, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { populateFormWatcher } from '../../utils/formFields.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
@@ -244,18 +245,8 @@ export default {
 	},
 
 	watch: {
-		contact: {
-			immediate: true,
-			/**
-			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
-			 */
-			handler(val) {
-				if (val && Object.keys(val).length > 0) {
-					this.populateForm(val)
-				}
-			},
-		},
+		/** @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42 */
+		contact: populateFormWatcher(),
 
 		/**
 		 * @param {string} val Identifier of the newly selected client.

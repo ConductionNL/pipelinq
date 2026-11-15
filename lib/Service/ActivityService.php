@@ -98,10 +98,8 @@ class ActivityService {
 			return;
 		}
 
-		$this->publish(
-			subject: new ActivitySubject(subject: $type, type: 'pipelinq_assignment', parameters: ['title' => $title, 'entityType' => $entityType]),
-			object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $affectedUser)
-		);
+		$subject = new ActivitySubject(subject: $type, type: 'pipelinq_assignment', parameters: ['title' => $title, 'entityType' => $entityType]);
+		$this->publish(subject: $subject, object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $affectedUser));
 	}//end publishCreated()
 
 	/**
@@ -127,14 +125,9 @@ class ActivityService {
 			$type = 'request_assigned';
 		}
 
-		$this->publish(
-			subject: new ActivitySubject(
-				subject: $type,
-				type: 'pipelinq_assignment',
-				parameters: ['title' => $title, 'entityType' => $entityType, 'assignee' => $newAssignee]
-			),
-			object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $newAssignee)
-		);
+		$parameters = ['title' => $title, 'entityType' => $entityType, 'assignee' => $newAssignee];
+		$subject = new ActivitySubject(subject: $type, type: 'pipelinq_assignment', parameters: $parameters);
+		$this->publish(subject: $subject, object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $newAssignee));
 	}//end publishAssigned()
 
 	/**
@@ -155,14 +148,9 @@ class ActivityService {
 		string $objectId,
 		?string $affectedUser = null,
 	): void {
-		$this->publish(
-			subject: new ActivitySubject(
-				subject: 'lead_stage_changed',
-				type: 'pipelinq_stage_status',
-				parameters: ['title' => $title, 'stage' => $newStage]
-			),
-			object: new ActivityObject(objectType: 'lead', objectId: $objectId, affectedUser: $affectedUser)
-		);
+		$parameters = ['title' => $title, 'stage' => $newStage];
+		$subject = new ActivitySubject(subject: 'lead_stage_changed', type: 'pipelinq_stage_status', parameters: $parameters);
+		$this->publish(subject: $subject, object: new ActivityObject(objectType: 'lead', objectId: $objectId, affectedUser: $affectedUser));
 	}//end publishStageChanged()
 
 	/**
@@ -183,14 +171,9 @@ class ActivityService {
 		string $objectId,
 		?string $affectedUser = null,
 	): void {
-		$this->publish(
-			subject: new ActivitySubject(
-				subject: 'request_status_changed',
-				type: 'pipelinq_stage_status',
-				parameters: ['title' => $title, 'status' => $newStatus]
-			),
-			object: new ActivityObject(objectType: 'request', objectId: $objectId, affectedUser: $affectedUser)
-		);
+		$parameters = ['title' => $title, 'status' => $newStatus];
+		$subject = new ActivitySubject(subject: 'request_status_changed', type: 'pipelinq_stage_status', parameters: $parameters);
+		$this->publish(subject: $subject, object: new ActivityObject(objectType: 'request', objectId: $objectId, affectedUser: $affectedUser));
 	}//end publishStatusChanged()
 
 	/**
@@ -211,14 +194,9 @@ class ActivityService {
 		string $objectId,
 		?string $affectedUser = null,
 	): void {
-		$this->publish(
-			subject: new ActivitySubject(
-				subject: 'note_added',
-				type: 'pipelinq_notes',
-				parameters: ['title' => $entityTitle, 'entityType' => $entityType]
-			),
-			object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $affectedUser)
-		);
+		$parameters = ['title' => $entityTitle, 'entityType' => $entityType];
+		$subject = new ActivitySubject(subject: 'note_added', type: 'pipelinq_notes', parameters: $parameters);
+		$this->publish(subject: $subject, object: new ActivityObject(objectType: $entityType, objectId: $objectId, affectedUser: $affectedUser));
 	}//end publishNoteAdded()
 
 	/**

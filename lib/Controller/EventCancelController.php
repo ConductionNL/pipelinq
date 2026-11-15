@@ -81,15 +81,15 @@ class EventCancelController extends Controller {
 	public function show(string $token = ''): TemplateResponse {
 		$registration = $this->registrationFor(token: $token);
 		if ($registration === null) {
-			return $this->page(state: 'invalid', event: [], token: '', status: Http::STATUS_NOT_FOUND);
+			return $this->page(view: ['state' => 'invalid', 'token' => '', 'status' => Http::STATUS_NOT_FOUND], event: []);
 		}
 
 		$event = ($this->registrations->event(eventId: (string)($registration['event'] ?? '')) ?? []);
 		if ((string)($registration['status'] ?? '') === 'cancelled') {
-			return $this->page(state: 'done', event: $event, token: '');
+			return $this->page(view: ['state' => 'done', 'token' => ''], event: $event);
 		}
 
-		return $this->page(state: 'confirm', event: $event, token: $token);
+		return $this->page(view: ['state' => 'confirm', 'token' => $token], event: $event);
 	}//end show()
 
 	/**
@@ -107,7 +107,7 @@ class EventCancelController extends Controller {
 	public function cancel(string $token = ''): TemplateResponse {
 		$registration = $this->registrationFor(token: $token);
 		if ($registration === null) {
-			return $this->page(state: 'invalid', event: [], token: '', status: Http::STATUS_NOT_FOUND);
+			return $this->page(view: ['state' => 'invalid', 'token' => '', 'status' => Http::STATUS_NOT_FOUND], event: []);
 		}
 
 		$outcome = $this->registrations->cancel(registrationId: (string)($registration['uuid'] ?? $registration['id'] ?? ''));
@@ -116,7 +116,7 @@ class EventCancelController extends Controller {
 			$this->registrations->stamp(registration: $outcome->promoted, field: 'confirmationSentAt');
 		}
 
-		return $this->page(state: 'done', event: $event, token: '');
+		return $this->page(view: ['state' => 'done', 'token' => ''], event: $event);
 	}//end cancel()
 
 	/**
@@ -138,27 +138,27 @@ class EventCancelController extends Controller {
 	/**
 	 * Render the guest page.
 	 *
-	 * @param string               $state  `confirm`, `done` or `invalid`.
-	 * @param array<string, mixed> $event  The event.
-	 * @param string               $token  The token the button posts back.
-	 * @param int                  $status The HTTP status.
+	 * @param array{state: string, token: string, status?: int} $view  The `state` (`confirm`, `done` or `invalid`), the
+	 *                                                               `token` the button posts back and the HTTP `status`
+	 *                                                               (200 when absent).
+	 * @param array<string, mixed>                              $event The event.
 	 *
 	 * @return TemplateResponse The page.
 	 */
-	private function page(string $state, array $event, string $token, int $status = Http::STATUS_OK): TemplateResponse {
+	private function page(array $view, array $event): TemplateResponse {
 		$response = new TemplateResponse(
 			AppIdentity::APP_ID,
 			'event-cancel',
 			[
-				'state' => $state,
+				'state' => $view['state'],
 				'title' => (string)($event['title'] ?? ''),
 				'startAt' => (string)($event['startAt'] ?? ''),
-				'token' => $token,
+				'token' => $view['token'],
 				'action' => $this->urls->linkToRoute('pipelinq.eventCancel.cancel'),
 			],
 			TemplateResponse::RENDER_AS_GUEST
 		);
-		$response->setStatus($status);
+		$response->setStatus($view['status'] ?? Http::STATUS_OK);
 		return $response;
 	}//end page()
 }//end class

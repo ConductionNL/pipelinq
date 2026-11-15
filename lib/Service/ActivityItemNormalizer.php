@@ -70,18 +70,26 @@ class ActivityItemNormalizer {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalize(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		$item = $this->normalizeBySource(
-			sourceType: $sourceType,
-			object: $object,
-			origin: new ActivityOrigin(entityType: $entityType, entityId: $entityId)
-		);
+		$origin = new ActivityOrigin(entityType: $entityType, entityId: $entityId);
+		$item = $this->normalizeBySource(source: ['type' => $sourceType, 'object' => $object], origin: $origin);
+		return $this->withUserName(item: $item);
+	}//end normalize()
+
+	/**
+	 * The item with its author's display name as `userName`, unless it already carries one.
+	 *
+	 * @param array<string,mixed>|null $item The normalised item, or null.
+	 *
+	 * @return array<string,mixed>|null The item, or null when it was skipped.
+	 */
+	private function withUserName(?array $item): ?array {
 		if ($item === null) {
 			return null;
 		}
 
 		$item['userName'] ??= $this->displayName(userId: $item['user']);
 		return $item;
-	}//end normalize()
+	}//end withUserName()
 
 	/**
 	 * The display name of a user, the id itself when the user is unknown.
@@ -210,14 +218,14 @@ class ActivityItemNormalizer {
 	/**
 	 * Normalise a raw object of one source into the unified activity item shape.
 	 *
-	 * @param string $sourceType The internal source-type key.
-	 * @param array<string,mixed> $object The raw object array.
+	 * @param array{type: string, object: array<string,mixed>} $source The internal source-type key and the raw object array.
 	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 */
-	private function normalizeBySource(string $sourceType, array $object, ActivityOrigin $origin): ?array {
-		return match ($sourceType) {
+	private function normalizeBySource(array $source, ActivityOrigin $origin): ?array {
+		$object = $source['object'];
+		return match ($source['type']) {
 			'interaction' => $this->normalizeInteraction(object: $object, origin: $origin),
 			'task' => $this->normalizeTask(object: $object, origin: $origin),
 			'emailLink' => $this->normalizeEmailLink(object: $object, origin: $origin),

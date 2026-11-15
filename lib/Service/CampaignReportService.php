@@ -96,20 +96,31 @@ class CampaignReportService implements CampaignReportServiceInterface {
 			start: $this->startDay(campaign: $campaign, from: $from),
 			end: $this->endDay(campaign: $campaign, to: $to)
 		);
+		$head = ['campaign' => $this->summary(campaignId: $campaignId, campaign: $campaign), 'window' => $window];
+
+		return ($head + $this->figures(campaignId: $campaignId, window: $window) + ['cost' => $this->cost(campaign: $campaign)]);
+	}//end forCampaign()
+
+	/**
+	 * The channel, engagement, lead and attribution figures of a campaign in a window.
+	 *
+	 * @param string                          $campaignId The campaign.
+	 * @param array{from: string, to: string} $window     The report window.
+	 *
+	 * @return array<string, mixed> Keys: channels, engagement, leads, totals, models.
+	 */
+	private function figures(string $campaignId, array $window): array {
 		$blasts = $this->store->findAll(schemaSlug: self::BLAST_SCHEMA_SLUG, filters: ['campaignId' => $campaignId]);
 		$attribution = $this->attribution->forCampaign(campaignId: $campaignId, from: $window['from'], to: $window['to']);
 
 		return [
-			'campaign' => $this->summary(campaignId: $campaignId, campaign: $campaign),
-			'window' => $window,
 			'channels' => $this->channels(blasts: $blasts, touchpoints: $attribution['touchpoints']),
 			'engagement' => $this->engagement(touchpoints: $attribution['touchpoints']),
 			'leads' => $attribution['leads'],
 			'totals' => $attribution['totals'],
 			'models' => $attribution['models'],
-			'cost' => $this->cost(campaign: $campaign),
 		];
-	}//end forCampaign()
+	}//end figures()
 
 	/**
 	 * The campaign's own fields the report shows.

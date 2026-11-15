@@ -373,7 +373,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .article-edit {
 	display: flex;
 	flex-direction: column;
@@ -422,10 +424,7 @@ export default {
 }
 
 .article-edit__grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: start;
-	gap: 12px 16px;
+	@include two-column-form-grid;
 }
 
 .article-edit__language {

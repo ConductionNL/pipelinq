@@ -36,6 +36,7 @@ use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\JsonConfigArray;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -56,6 +57,7 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  */
 class BlastSendJob extends TimedJob implements BlastSendJobInterface {
+	use JsonConfigArray;
 	use PayloadToArray;
 	use ContainerObjectService;
 	use SavedPayloadId;
@@ -312,17 +314,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @return array<int, array<string, mixed>> Queue entries.
 	 */
 	private function readQueue(): array {
-		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, '');
-		if ($raw === '') {
-			return [];
-		}
-
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		return $decoded;
+		return $this->jsonConfigArray(key: self::WEBHOOK_QUEUE_KEY);
 	}//end readQueue()
 
 	/**

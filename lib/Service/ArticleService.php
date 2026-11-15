@@ -223,31 +223,36 @@ class ArticleService implements ArticleServiceInterface {
 	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function createArticle(array $payload, string $authorUid, string $agent = ''): array {
+		$named = $this->namedDraft(payload: $payload);
+		if (is_string($named) === true) {
+			return ['error' => $named];
+		}
+
+		$stamp = ['status' => 'draft', 'author' => $authorUid, 'agentAuthored' => ($agent !== ''), 'agentAuthoredBy' => $agent];
+		return $this->saveDraft(record: array_merge($named, $stamp));
+	}//end createArticle()
+
+	/**
+	 * The sanitised new article with its title and slug set, or why it is refused.
+	 *
+	 * @param array<string, mixed> $payload Inbound payload.
+	 *
+	 * @return array<string, mixed>|string The named article, or the refusal.
+	 */
+	private function namedDraft(array $payload): array|string {
 		$clean = $this->sanitise(payload: $payload);
 		$title = trim((string)($clean['title'] ?? ''));
 		if ($title === '') {
-			return ['error' => 'A title is required'];
+			return 'A title is required';
 		}
 
 		$slug = $this->resolveSlug(candidate: (string)($clean['slug'] ?? ''), title: $title);
 		if ($this->slugTaken(slug: $slug, exceptId: '') === true) {
-			return ['error' => 'That slug is already in use'];
+			return 'That slug is already in use';
 		}
 
-		return $this->saveDraft(
-			record: array_merge(
-				$clean,
-				[
-					'title' => $title,
-					'slug' => $slug,
-					'status' => 'draft',
-					'author' => $authorUid,
-					'agentAuthored' => ($agent !== ''),
-					'agentAuthoredBy' => $agent,
-				]
-			)
-		);
-	}//end createArticle()
+		return array_merge($clean, ['title' => $title, 'slug' => $slug]);
+	}//end namedDraft()
 
 	/**
 	 * Stamp a new article's creation time and save it.
@@ -286,14 +291,28 @@ class ArticleService implements ArticleServiceInterface {
 			return ['error' => 'Not found'];
 		}
 
-		$clean = $this->checkedPatch(existing: $existing, patch: $patch);
+		return $this->patched(existing: $existing, change: ['patch' => $patch, 'agent' => $agent]);
+	}//end updateArticle()
+
+	/**
+	 * Apply a checked patch to an article, stamped with who wrote it and when.
+	 *
+	 * @param array<string, mixed>                              $existing The stored article.
+	 * @param array{patch: array<string, mixed>, agent: string} $change   The fields to change, and the agent identity
+	 *                                                                    when an agent is writing (empty for a person).
+	 *
+	 * @return array{article?: array<string, mixed>, error?: string}
+	 */
+	private function patched(array $existing, array $change): array {
+		$clean = $this->checkedPatch(existing: $existing, patch: $change['patch']);
 		if (is_string($clean) === true) {
 			return ['error' => $clean];
 		}
 
+		$agent = $change['agent'];
 		$stamp = ['updatedAt' => $this->nowIso(), 'agentAuthored' => ($agent !== ''), 'agentAuthoredBy' => $agent];
 		return $this->savedOver(existing: $existing, merged: array_merge($existing, $clean, $stamp));
-	}//end updateArticle()
+	}//end patched()
 
 	/**
 	 * The sanitised patch with its slug resolved, or why it is refused.
@@ -594,16 +613,28 @@ class ArticleService implements ArticleServiceInterface {
 	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	public function expandArticlesMarker(string $body, array $articles, string $format): string {
+		return $this->expanded(body: $body, render: ['articles' => $articles, 'format' => $format]);
+	}//end expandArticlesMarker()
+
+	/**
+	 * The body with its `{{articles}}` marker replaced; the body itself when it has none.
+	 *
+	 * @param string                                                       $body   The template body.
+	 * @param array{articles: array<int, array<string, mixed>>, format: string} $render The articles and the format.
+	 *
+	 * @return string The body with the marker expanded.
+	 */
+	private function expanded(string $body, array $render): string {
 		if (str_contains($body, self::ARTICLES_MARKER) === false) {
 			return $body;
 		}
 
 		return str_replace(
 			self::ARTICLES_MARKER,
-			$this->renderArticlesBlock(articles: $articles, format: $format),
+			$this->renderArticlesBlock(articles: $render['articles'], format: $render['format']),
 			$body,
 		);
-	}//end expandArticlesMarker()
+	}//end expanded()
 
 	/**
 	 * Render articles as an HTML or plain-text block.

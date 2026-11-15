@@ -134,6 +134,7 @@
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
 import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
+import { populateFormWatcher } from '../../utils/formFields.js'
 import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
 
 export default {
@@ -216,14 +217,7 @@ export default {
 	},
 
 	watch: {
-		resource: {
-			immediate: true,
-			handler(val) {
-				if (val && Object.keys(val).length > 0) {
-					this.populateForm(val)
-				}
-			},
-		},
+		resource: populateFormWatcher(),
 	},
 
 	methods: {

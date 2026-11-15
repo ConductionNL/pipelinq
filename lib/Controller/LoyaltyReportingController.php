@@ -83,14 +83,10 @@ class LoyaltyReportingController extends Controller {
 	): JSONResponse|DataDownloadResponse {
 		// Loyalty reporting is a CRM capability, not an any-authenticated-user
 		// one. Admins bypass; see ObjectOwnerAccessPolicy.
-		$refusal = $this->privilege->refusal();
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$window = $this->reportingWindow(window: ['from' => $from, 'to' => $to], days: $days);
-
-		return $this->kpisResponse(query: ['programmeId' => $programmeId] + $window, format: $format);
+		return $this->privilege->refusal() ?? $this->kpisResponse(
+			query: ['programmeId' => $programmeId] + $this->reportingWindow(window: ['from' => $from, 'to' => $to], days: $days),
+			format: $format
+		);
 	}//end kpis()
 
 	/**

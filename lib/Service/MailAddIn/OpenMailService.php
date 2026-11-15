@@ -228,18 +228,29 @@ class OpenMailService implements OpenMailServiceInterface {
 	 */
 	public function logMail(string $entityType, string $entityId, string $subject, string $sentAt, string $preview): array {
 		$payload = $this->contactMomentFor(entityType: $entityType, entityId: $entityId);
-		$title = $this->required(value: $subject, field: 'subject');
-		$occurredAt = $this->occurredAt(sentAt: $sentAt);
+		$mail = ['title' => $this->required(value: $subject, field: 'subject'), 'occurredAt' => $this->occurredAt(sentAt: $sentAt)];
 
-		$payload['title'] = mb_substr($title, 0, self::TITLE_MAX_CHARS);
+		return $this->savedMail(payload: $payload, mail: $mail + ['preview' => trim($preview)]);
+	}//end logMail()
+
+	/**
+	 * Save the mail as an inbound contact moment on the target's payload.
+	 *
+	 * @param array<string, string>                                    $payload The contact moment fields of the target.
+	 * @param array{title: string, occurredAt: string, preview: string} $mail    The trimmed subject, the sent-at instant and the trimmed preview.
+	 *
+	 * @return array<string, string> The contact moment's id and the fields written.
+	 */
+	private function savedMail(array $payload, array $mail): array {
+		$payload['title'] = mb_substr($mail['title'], 0, self::TITLE_MAX_CHARS);
 		$payload['channel'] = 'email';
 		$payload['direction'] = 'inbound';
-		$payload['occurredAt'] = $occurredAt;
-		$payload = self::withPreview(payload: $payload, preview: trim($preview));
+		$payload['occurredAt'] = $mail['occurredAt'];
+		$payload = self::withPreview(payload: $payload, preview: $mail['preview']);
 
 		$saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
 		return (['id' => $this->uuidOf(saved: $saved)] + $payload);
-	}//end logMail()
+	}//end savedMail()
 
 	/**
 	 * The payload with the opening of the mail as its description, when there is one.
