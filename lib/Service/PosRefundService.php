@@ -32,6 +32,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\PosTransitionErrors;
 use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -86,6 +87,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	use PosObjectFetch;
 	use RegisterSchemaObjects;
 	use PosTransitionErrors;
+	use ObjectArrayReads;
 
 	/**
 	 * The 403 message of an RBAC transition denial without a message of its own.
@@ -570,12 +572,7 @@ class PosRefundService implements PosRefundServiceInterface {
 			return [];
 		}
 
-		$lines = [];
-		foreach (($results ?? []) as $result) {
-			$lines[] = $this->toArray(object: $result);
-		}
-
-		return $lines;
+		return $this->allAsArrays(results: $results);
 	}//end fetchRefundLines()
 
 	/**

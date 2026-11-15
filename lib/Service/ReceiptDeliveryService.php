@@ -35,6 +35,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -67,6 +68,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
 	use RegisterSchemaObjects;
+	use ObjectArrayReads;
 
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
@@ -713,12 +715,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			return [];
 		}
 
-		$lines = [];
-		foreach (($results ?? []) as $result) {
-			$lines[] = $this->toArray(object: $result);
-		}
-
-		return $lines;
+		return $this->allAsArrays(results: $results);
 	}//end loadLines()
 
 	/**

@@ -31,6 +31,7 @@ use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\PosTransitionErrors;
 use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -92,6 +93,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	use PosObjectFetch;
 	use RegisterSchemaObjects;
 	use PosTransitionErrors;
+	use ObjectArrayReads;
 
 	/**
 	 * The 403 message of an RBAC transition denial without a message of its own.
@@ -1450,12 +1452,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			return [];
 		}//end try
 
-		$lines = [];
-		foreach (($results ?? []) as $result) {
-			$lines[] = $this->toArray(object: $result);
-		}
-
-		return $lines;
+		return $this->allAsArrays(results: $results);
 	}//end fetchLines()
 
 	/**
@@ -1489,12 +1486,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			return [];
 		}
 
-		$transactions = [];
-		foreach (($results ?? []) as $result) {
-			$transactions[] = $this->toArray(object: $result);
-		}
-
-		return $transactions;
+		return $this->allAsArrays(results: $results);
 	}//end fetchAllTransactions()
 
 	/**

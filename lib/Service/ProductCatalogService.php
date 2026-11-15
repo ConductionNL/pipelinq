@@ -30,6 +30,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -63,6 +64,7 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
 	use RegisterSchemaObjects;
+	use ObjectArrayReads;
 
 	/**
 	 * Canonical Dutch BTW class to tax-rate mapping.
@@ -386,12 +388,7 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 			return [];
 		}
 
-		$lists = [];
-		foreach (($results ?? []) as $result) {
-			$lists[] = $this->toArray(object: $result);
-		}
-
-		return $lists;
+		return $this->allAsArrays(results: $results);
 	}//end fetchPriceLists()
 
 	/**
@@ -719,12 +716,7 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 			return [];
 		}
 
-		$products = [];
-		foreach (($results ?? []) as $result) {
-			$products[] = $this->toArray(object: $result);
-		}
-
-		return $products;
+		return $this->allAsArrays(results: $results);
 	}//end fetchProducts()
 
 	/**
