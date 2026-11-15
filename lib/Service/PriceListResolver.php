@@ -129,8 +129,8 @@ class PriceListResolver {
 
 		$segment = self::normalise(value: ($client['segment'] ?? ''));
 		$country = self::normalise(value: ($client['country'] ?? ''));
-		foreach ([['segments', $segment], ['countries', $country]] as [$field, $value]) {
-			array_push($ordered, ...self::listsFor(lists: $lists, field: $field, value: $value));
+		foreach ([['segments', $segment], ['countries', $country]] as $criterion) {
+			array_push($ordered, ...self::listsFor(lists: $lists, criterion: $criterion));
 		}
 
 		return $ordered;
@@ -157,13 +157,13 @@ class PriceListResolver {
 	/**
 	 * The lists naming a segment or country, best first; none for an empty value.
 	 *
-	 * @param array<int, array<string, mixed>> $lists The usable lists.
-	 * @param string                           $field segments or countries.
-	 * @param string                           $value The client's normalised value.
+	 * @param array<int, array<string, mixed>> $lists     The usable lists.
+	 * @param array{0: string, 1: string}      $criterion segments or countries, and the client's normalised value.
 	 *
 	 * @return list<array<string, mixed>> The matching lists, ordered.
 	 */
-	private static function listsFor(array $lists, string $field, string $value): array {
+	private static function listsFor(array $lists, array $criterion): array {
+		[$field, $value] = $criterion;
 		if ($value === '') {
 			return [];
 		}
