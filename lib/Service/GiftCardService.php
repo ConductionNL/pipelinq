@@ -808,8 +808,9 @@ class GiftCardService implements GiftCardServiceInterface {
 			return [];
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
+		return array_map(
+			[$this, 'toArray'],
+			$this->rowList(
 				config: [
 					'filters' => [
 						'customerId' => $customerId,
@@ -818,17 +819,8 @@ class GiftCardService implements GiftCardServiceInterface {
 					],
 					'limit' => 1000,
 				]
-			);
-		} catch (\Throwable $e) {
-			return [];
-		}
-
-		$rowList = [];
-		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
-		}
-
-		return array_map([$this, 'toArray'], $rowList);
+			)
+		);
 	}//end listForKlant()
 
 	/**

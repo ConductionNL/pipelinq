@@ -42,9 +42,9 @@ class RegisterSchemaObjectsTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $config The config.
-			 * @return array<int, string>
+			 * @return mixed
 			 */
-			public function findAll(array $config): array {
+			public function findAll(array $config): mixed {
 				$this->configs[] = $config;
 				return ['row'];
 			}
@@ -109,4 +109,50 @@ class RegisterSchemaObjectsTest extends TestCase {
 		$this->assertSame([['a' => 1], [], 'r', 's', null], $host->save(['r', 's', null], ['a' => 1]));
 		$this->assertSame([['a' => 1], [], 'r', 's', 'u1'], $host->save(['r', 's', 'u1'], ['a' => 1]));
 	}//end testFindAllIn()
+
+	/**
+	 * @return void
+	 */
+	public function testRowList(): void {
+		$host = new class(new class {
+			/**
+			 * @param array<string, mixed> $config The config.
+			 * @return mixed
+			 */
+			public function findAll(array $config): mixed {
+				if (($config['fail'] ?? false) === true) {
+					throw new \RuntimeException('down');
+				}
+
+				return $config['reply'];
+			}
+		}) {
+			use RegisterSchemaObjects;
+
+			/**
+			 * @param object $store The object service.
+			 */
+			public function __construct(private object $store) {
+			}
+
+			/**
+			 * @return object
+			 */
+			private function getObjectService(): object {
+				return $this->store;
+			}
+
+			/**
+			 * @param array<string, mixed> $config The config.
+			 * @return array<int, mixed>
+			 */
+			public function rows(array $config): array {
+				return $this->rowList(config: $config);
+			}
+		};
+
+		$this->assertSame(['a', 'b'], $host->rows(['reply' => ['x' => 'a', 'y' => 'b']]));
+		$this->assertSame([], $host->rows(['reply' => 'not a list']));
+		$this->assertSame([], $host->rows(['fail' => true]));
+	}//end testRowList()
 }//end class

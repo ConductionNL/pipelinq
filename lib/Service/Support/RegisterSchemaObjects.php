@@ -26,7 +26,8 @@ namespace OCA\Pipelinq\Service\Support;
 
 /**
  * Runs the host's ObjectService findAll() over a register and schema plus
- * extra equality filters, and its saveObject() into a register and schema.
+ * extra equality filters or a given config, and its saveObject() into a
+ * register and schema.
  * The host class provides getObjectService().
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
@@ -72,4 +73,28 @@ trait RegisterSchemaObjects {
 			uuid: $uuid
 		);
 	}//end saveIn()
+
+	/**
+	 * Run a findAll and answer its rows as a list; none when the read fails or answers no list.
+	 *
+	 * @param array<string, mixed> $config The findAll config.
+	 *
+	 * @return array<int, mixed> The rows.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function rowList(array $config): array {
+		try {
+			$rows = $this->getObjectService()->findAll(config: $config);
+		} catch (\Throwable $e) {
+			return [];
+		}
+
+		$rowList = [];
+		if (is_array($rows) === true) {
+			$rowList = array_values($rows);
+		}
+
+		return $rowList;
+	}//end rowList()
 }//end trait

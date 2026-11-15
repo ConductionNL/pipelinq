@@ -32,6 +32,7 @@ use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
 use OCA\Pipelinq\Service\Support\ConfiguredSchemaCount;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -55,6 +56,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
 	use ConfiguredObjectFind;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Constructor.
@@ -312,18 +314,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return array<int, mixed>
 	 */
 	private function findRowList(array $filters, int $limit): array {
-		try {
-			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => $limit]);
-		} catch (\Throwable $e) {
-			return [];
-		}
-
-		$rowList = [];
-		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
-		}
-
-		return $rowList;
+		return $this->rowList(config: ['filters' => $filters, 'limit' => $limit]);
 	}//end findRowList()
 
 	/**
