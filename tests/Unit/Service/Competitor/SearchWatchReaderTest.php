@@ -177,4 +177,100 @@ class SearchWatchReaderTest extends TestCase {
 
 		$this->assertSame(EgressResult::NOT_CONFIGURED, $outcome->outcome);
 	}//end testAnEmptyQueryIsRefused()
+
+	/**
+	 * An answer that is not an array is unparsable, not an empty result.
+	 *
+	 * @return void
+	 */
+	public function testANonArrayAnswerIsUnparsable(): void {
+		$client = new class {
+			/**
+			 * Answer with something that is not a result set.
+			 *
+			 * @param string $query The query.
+			 * @param string|null $actingUserId The acting user.
+			 *
+			 * @return string
+			 */
+			public function search(string $query, ?string $actingUserId = null): string {
+				return 'no results today';
+			}//end search()
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($client);
+		$reader = new SearchWatchReader(container: $container, logger: $this->createMock(LoggerInterface::class));
+
+		$outcome = $reader->read(query: 'voorbeeld');
+
+		$this->assertFalse($outcome->succeeded());
+		$this->assertSame(EgressResult::UNPARSABLE, $outcome->outcome);
+		$this->assertSame('The web search answered nothing usable.', $outcome->reason);
+		$this->assertSame([], $outcome->items);
+	}//end testANonArrayAnswerIsUnparsable()
+
+	/**
+	 * A resolved service without a `search` method counts as hermiq being
+	 * absent, and the client is never called.
+	 *
+	 * @return void
+	 */
+	public function testAServiceWithoutSearchCountsAsAbsent(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->once())
+			->method('get')
+			->with(SearchWatchReader::CLIENT_CLASS)
+			->willReturn(new \stdClass());
+		$reader = new SearchWatchReader(container: $container, logger: $this->createMock(LoggerInterface::class));
+
+		$outcome = $reader->read(query: 'voorbeeld');
+
+		$this->assertFalse($outcome->succeeded());
+		$this->assertSame(EgressResult::NOT_CONFIGURED, $outcome->outcome);
+		$this->assertStringContainsString('Hermiq', $outcome->reason);
+	}//end testAServiceWithoutSearchCountsAsAbsent()
+
+	/**
+	 * Non-array results are skipped, titles fall back to the URL, text is
+	 * trimmed, and at most MAX_RESULTS items are kept.
+	 *
+	 * @return void
+	 */
+	public function testResultsAreNormalisedAndCapped(): void {
+		$results = ['not a result', ['url' => '  https://example.org/0  ', 'snippet' => '  Tekst.  ']];
+		for ($i = 1; $i <= (SearchWatchReader::MAX_RESULTS + 5); $i++) {
+			$results[] = ['url' => 'https://example.org/' . $i, 'title' => ' Titel ' . $i . ' '];
+		}
+
+		$client = new FakeWebSearchClient();
+		$client->answer = ['results' => $results];
+
+		$outcome = $this->reader(client: $client)->read(query: '  voorbeeld  ');
+
+		$this->assertTrue($outcome->succeeded());
+		$this->assertCount(SearchWatchReader::MAX_RESULTS, $outcome->items);
+		$this->assertSame(
+			['url' => 'https://example.org/0', 'title' => 'https://example.org/0', 'summary' => 'Tekst.', 'stamp' => 'https://example.org/0'],
+			$outcome->items[0]
+		);
+		$this->assertSame('Titel 1', $outcome->items[1]['title']);
+		$this->assertSame('', $outcome->items[1]['summary']);
+		$this->assertSame('https://example.org/' . (SearchWatchReader::MAX_RESULTS - 1), $outcome->items[SearchWatchReader::MAX_RESULTS - 1]['url']);
+	}//end testResultsAreNormalisedAndCapped()
+
+	/**
+	 * A success without a results key is an empty, successful read.
+	 *
+	 * @return void
+	 */
+	public function testAnAnswerWithoutResultsIsEmpty(): void {
+		$client = new FakeWebSearchClient();
+		$client->answer = ['query' => 'voorbeeld'];
+
+		$outcome = $this->reader(client: $client)->read(query: 'voorbeeld');
+
+		$this->assertTrue($outcome->succeeded());
+		$this->assertSame([], $outcome->items);
+	}//end testAnAnswerWithoutResultsIsEmpty()
+
 }//end class

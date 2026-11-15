@@ -1,0 +1,38 @@
+{
+  "_note": "pipeline-lead-rotation. LeadRotationService assigns a new lead without an assignee to the eligible colleague with the fewest leads in 30 days when app config lead_rotation_enabled is true. agentProfile gains a 30-day cap and a pause switch (1.1.0); lead gains the read-only assignmentReason (1.8.0). Named to merge after the last lead fragment so its version wins.",
+  "components": {
+    "schemas": {
+      "agentProfile": {
+        "slug": "agentProfile",
+        "version": "1.1.0",
+        "properties": {
+          "leadCapPer30Days": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Lead cap per 30 days",
+            "description": "The most leads this colleague receives through automatic assignment in 30 days. Empty means no cap."
+          },
+          "pauseLeadAssignment": {
+            "type": "boolean",
+            "default": false,
+            "title": "Pause lead assignment",
+            "description": "While on, this colleague receives no leads through automatic assignment."
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "version": "1.8.0",
+        "properties": {
+          "assignmentReason": {
+            "type": "string",
+            "maxLength": 255,
+            "readOnly": true,
+            "title": "Assignment reason",
+            "description": "Why automatic assignment gave this lead to its owner, or why it found nobody."
+          }
+        }
+      }
+    }
+  }
+}

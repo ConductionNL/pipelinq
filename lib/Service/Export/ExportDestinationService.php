@@ -32,10 +32,14 @@ namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
+use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
+use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -44,7 +48,9 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
  */
-class ExportDestinationService extends AbstractExportService {
+class ExportDestinationService extends AbstractExportService implements ExportDestinationServiceInterface {
+	use ExportSourceCredentials;
+
 	/**
 	 * The exportDestination schema config key.
 	 *
@@ -65,7 +71,15 @@ class ExportDestinationService extends AbstractExportService {
 		'snowflake',
 		'sftp',
 		'postgres',
+		self::TYPE_MAIL,
 	];
+
+	/**
+	 * The destination type that mails the report to users and groups.
+	 *
+	 * @var string
+	 */
+	public const TYPE_MAIL = 'mail';
 
 	/**
 	 * OpenConnector's Source schema slug.
@@ -79,6 +93,13 @@ class ExportDestinationService extends AbstractExportService {
 	 * @var string
 	 */
 	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
+
+	/**
+	 * Log line when the connector source behind a destination cannot be read.
+	 *
+	 * @var string
+	 */
+	private const CREDENTIALS_FAILURE_MESSAGE = 'Pipelinq: export destination credential resolution failed';
 
 	/**
 	 * Legacy write-only credential fields still present on some Source
@@ -99,6 +120,8 @@ class ExportDestinationService extends AbstractExportService {
 	 * @param ExportSinkRegistry $sinks The sink adapter registry.
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger The logger.
+	 * @param IUserManager|null $userManager Checks that a mail recipient user exists.
+	 * @param IGroupManager|null $groupManager Checks that a mail recipient group exists.
 	 */
 	public function __construct(
 		ContainerInterface $container,
@@ -107,6 +130,8 @@ class ExportDestinationService extends AbstractExportService {
 		private ExportSinkRegistry $sinks,
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
+		private ?IUserManager $userManager=null,
+		private ?IGroupManager $groupManager=null,
 	) {
 		parent::__construct(
 			container: $container,
@@ -236,7 +261,9 @@ class ExportDestinationService extends AbstractExportService {
 		$type = (string)($destination['type'] ?? '');
 
 		$valid = false;
-		if ($this->sinks->supports(type: $type) === true) {
+		if ($type === self::TYPE_MAIL) {
+			$valid = ($this->missingRecipient(recipients: $destination['recipients'] ?? null) === null);
+		} else if ($this->sinks->supports(type: $type) === true) {
 			$credentials = $this->resolveCredentials(destination: $destination);
 			$valid = $this->sinks->get(type: $type)->testConnection($credentials, $destination);
 		}
@@ -291,6 +318,11 @@ class ExportDestinationService extends AbstractExportService {
 			throw new OCSBadRequestException("Unsupported destination type '{$type}'.");
 		}
 
+		if ($type === self::TYPE_MAIL) {
+			$this->validateRecipients(recipients: $data['recipients'] ?? null);
+			return;
+		}
+
 		if (trim((string)($data['connectorSourceId'] ?? '')) === '') {
 			throw new OCSBadRequestException('An OpenConnector source is required for credentials.');
 		}
@@ -299,6 +331,79 @@ class ExportDestinationService extends AbstractExportService {
 			throw new OCSBadRequestException('A path template is required.');
 		}
 	}//end validate()
+
+	/**
+	 * Require at least one mail recipient, each a user or group that exists.
+	 *
+	 * @param mixed $recipients The recipients as posted.
+	 *
+	 * @return void
+	 *
+	 * @throws OCSBadRequestException When there is none, or one is malformed or unknown.
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	private function validateRecipients(mixed $recipients): void {
+		if (is_array($recipients) === false || $recipients === []) {
+			throw new OCSBadRequestException('A mailed report needs at least one recipient.');
+		}
+
+		$missing = $this->missingRecipient(recipients: $recipients);
+		if ($missing !== null) {
+			throw new OCSBadRequestException("Recipient '{$missing}' does not exist.");
+		}
+	}//end validateRecipients()
+
+	/**
+	 * The first recipient that is malformed or does not exist, or null when
+	 * every one is a user or group that exists.
+	 *
+	 * @param mixed $recipients The recipients.
+	 *
+	 * @return string|null The recipient as `type:id`, or null.
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	private function missingRecipient(mixed $recipients): ?string {
+		if (is_array($recipients) === false || $recipients === []) {
+			return '';
+		}
+
+		foreach ($recipients as $recipient) {
+			$type = '';
+			$id = '';
+			if (is_array($recipient) === true) {
+				$type = (string)($recipient['type'] ?? '');
+				$id = trim((string)($recipient['id'] ?? ''));
+			}
+
+			if ($this->recipientExists(type: $type, id: $id) === false) {
+				return $type . ':' . $id;
+			}
+		}
+
+		return null;
+	}//end missingRecipient()
+
+	/**
+	 * Whether a recipient is a user or group that exists.
+	 *
+	 * @param string $type 'user' or 'group'.
+	 * @param string $id The user or group id.
+	 *
+	 * @return bool
+	 */
+	private function recipientExists(string $type, string $id): bool {
+		if ($id === '') {
+			return false;
+		}
+
+		return match ($type) {
+			'user' => ($this->userManager?->userExists($id) === true),
+			'group' => ($this->groupManager?->groupExists($id) === true),
+			default => false,
+		};
+	}//end recipientExists()
 
 	/**
 	 * Strip never-trusted fields and normalise the destination payload.
@@ -342,96 +447,9 @@ class ExportDestinationService extends AbstractExportService {
 			'namingConvention',
 			'validationStatus',
 			'lastValidatedAt',
+			'recipients',
 		];
 
 		return array_intersect_key($data, array_flip($allowed));
 	}//end sanitize()
-
-	/**
-	 * Resolve OC credentials for a destination (never returned to clients).
-	 *
-	 * `OCA\OpenConnector\Service\SourceService` — the class this used to
-	 * resolve credentials through — no longer exists; Source objects moved
-	 * onto OpenRegister's generic object API (register `openconnector`,
-	 * schema `source`). A RENDERED read strips every write-only secret field
-	 * unconditionally (admins included); only `_render: false` survives that
-	 * boundary — the same raw re-read OpenConnector's own CallService /
-	 * RawSourceResolver use internally (ocon#242). `_rbac`/`_multitenancy`
-	 * stay true, so this is access-neutral, not a widened read.
-	 *
-	 * @param array<string, mixed> $destination The destination config.
-	 *
-	 * @return array<string, mixed> The credentials (empty when unavailable).
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function resolveCredentials(array $destination): array {
-		$sourceId = (string)($destination['connectorSourceId'] ?? '');
-		if ($sourceId === '') {
-			return [];
-		}
-
-		// The register is asked for, never assumed. Reading with a slug this
-		// instance does not carry returns no source, and this method's empty
-		// return then reads as "the destination has no credentials" rather than
-		// "the register those credentials live in is not here".
-		// ConnectorSourceRegister logs which it was.
-		$registerSlug = $this->connectorRegister->slugOrNull(
-			operation: 'ExportDestinationService.resolveCredentials',
-			sourceId: $sourceId
-		);
-		if ($registerSlug === null) {
-			return [];
-		}
-
-		try {
-			$source = $this->getObjectService()->find(
-				id: $sourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
-				_rbac: true,
-				_multitenancy: true,
-				_render: false,
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: export destination credential resolution failed',
-				['sourceId' => $sourceId, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		if ($source === null) {
-			return [];
-		}
-
-		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
-	}//end resolveCredentials()
-
-	/**
-	 * Extract the legacy write-only credential fields (and any non-secret
-	 * broker authentication config) from a raw OpenConnector Source.
-	 *
-	 * @param array<string, mixed> $source The raw (unrendered) Source object.
-	 *
-	 * @return array<string, mixed> The extracted credentials.
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function extractSourceCredentials(array $source): array {
-		$credentials = [];
-		foreach (self::OPENCONNECTOR_LEGACY_SECRET_FIELDS as $field) {
-			$value = $source[$field] ?? null;
-			if (is_string($value) === true && $value !== '') {
-				$credentials[$field] = $value;
-			}
-		}
-
-		$authentication = $source['configuration']['authentication'] ?? null;
-		if (is_array($authentication) === true && $authentication !== []) {
-			$credentials['authentication'] = $authentication;
-		}
-
-		return $credentials;
-	}//end extractSourceCredentials()
 }//end class

@@ -25,15 +25,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
-use OCA\Pipelinq\Service\ProductCatalogService;
+use OCA\Pipelinq\Service\CallerObjectReader;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -54,28 +53,30 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/specs/pos-product-catalogue/spec.md
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
  */
 class ProductCatalogController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ProductCatalogService $service The product catalogue service.
+	 * @param ProductCatalogServiceInterface $service The product catalogue service.
 	 * @param IUserSession $userSession The user session.
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param CallerObjectReader $reader Reads a client with the caller's rights.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ProductCatalogService $service,
+		private ProductCatalogServiceInterface $service,
 		private IUserSession $userSession,
 		private PosAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
+		private CallerObjectReader $reader,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -122,11 +123,14 @@ class ProductCatalogController extends Controller {
 	 * Accepts a product object payload plus quantity and optional variantSku,
 	 * and returns the resolved unitPrice, source, tax rate and BTW class. The
 	 * client-supplied price is ignored; the figure is derived from the product's
-	 * own tiers / variant overrides and BTW class.
+	 * own tiers / variant overrides and BTW class. With a clientId (and an
+	 * optional currency) the client's price lists go first; a client the
+	 * caller cannot read gives 404.
 	 *
 	 * @return JSONResponse The resolved price.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
 	#[NoAdminRequired]
 	public function resolvePrice(): JSONResponse {
@@ -152,20 +156,68 @@ class ProductCatalogController extends Controller {
 				Http::STATUS_BAD_REQUEST
 			);
 		}
-		$variantSku = $this->request->getParam('variantSku');
-		if ($variantSku !== null) {
-			$variantSku = (string)$variantSku;
+		$variantSku = $this->optionalStringParam(name: 'variantSku');
+
+		$client = $this->clientParam();
+		if ($client instanceof JSONResponse) {
+			return $client;
 		}
+
+		$currency = $this->optionalStringParam(name: 'currency');
 
 		return $this->run(
 			action: fn (): array => $this->service->resolveEffectivePrice(
 				product: $product,
 				quantity: $quantity,
-				variantSku: $variantSku
+				variantSku: $variantSku,
+				client: $client,
+				currency: $currency
 			),
 			label: 'resolvePrice'
 		);
 	}//end resolvePrice()
+
+	/**
+	 * A request parameter as a string, or null when it is absent.
+	 *
+	 * @param string $name The parameter.
+	 *
+	 * @return string|null The value.
+	 */
+	private function optionalStringParam(string $name): ?string {
+		$value = $this->request->getParam($name);
+		if ($value === null) {
+			return null;
+		}
+
+		return (string)$value;
+	}//end optionalStringParam()
+
+	/**
+	 * The client named by the clientId parameter, read with the caller's rights.
+	 *
+	 * A client prices from its price lists (products-price-lists D3). A client
+	 * the caller cannot read is answered as not found, and never priced.
+	 *
+	 * @return array<string, mixed>|JSONResponse|null The client; null when no
+	 *                                                clientId is given; a 404
+	 *                                                when it cannot be read.
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function clientParam(): array|JSONResponse|null {
+		$clientId = trim((string)$this->request->getParam('clientId', ''));
+		if ($clientId === '') {
+			return null;
+		}
+
+		$client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
+		if ($client === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Client not found')], Http::STATUS_NOT_FOUND);
+		}
+
+		return $client;
+	}//end clientParam()
 
 	/**
 	 * Require an authenticated POS operator, returning their UID.
@@ -177,7 +229,7 @@ class ProductCatalogController extends Controller {
 	 *
 	 * @return string|JSONResponse The acting user UID, or a 401/403 response.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
 	 */
 	private function requireUserId(): string|JSONResponse {
 		$user = $this->userSession->getUser();
@@ -208,20 +260,18 @@ class ProductCatalogController extends Controller {
 	 * @return JSONResponse The response.
 	 */
 	private function run(callable $action, string $label): JSONResponse {
-		try {
-			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('ProductCatalogController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->posResponses()->run(
+			respond: fn (): JSONResponse => new JSONResponse($action()),
+			logLabel: 'ProductCatalogController::' . $label
+		);
 	}//end run()
+
+	/**
+	 * The login check and error mapping shared by the POS controllers.
+	 *
+	 * @return PosResponses The shared responses.
+	 */
+	private function posResponses(): PosResponses {
+		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
+	}//end posResponses()
 }//end class

@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Pipelinq\Event\ExpenseApprovedEvent;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Service\ApSyncNotifier;
 use OCA\Pipelinq\Service\SchemaMapService;
@@ -229,6 +230,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 * @param ShillinqApService $apService The AP service.
 	 * @param ApFakeObjectService $objects The fake object service.
 	 * @param ApSyncNotifier|null $notify The failure notifier (optional).
+	 * @param IEventDispatcher|null $dispatcher The event dispatcher (optional).
 	 *
 	 * @return ExpenseApprovalListener The listener under test.
 	 */
@@ -237,6 +239,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 		ShillinqApService $apService,
 		ApFakeObjectService $objects,
 		?ApSyncNotifier $notify = null,
+		?IEventDispatcher $dispatcher = null,
 	): ExpenseApprovalListener {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
@@ -267,7 +270,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 			schemaMapService: $schemaMap,
 			apService: $apService,
 			notifier: ($notify ?? $this->createMock(ApSyncNotifier::class)),
-			eventDispatcher: $this->createMock(IEventDispatcher::class),
+			eventDispatcher: ($dispatcher ?? $this->createMock(IEventDispatcher::class)),
 			container: $container,
 			appConfig: $appConfig,
 			deferral: $this->deferral,
@@ -558,4 +561,60 @@ class ExpenseApprovalListenerTest extends TestCase {
 		// non-empty list here is that loop.
 		$this->assertCount(0, $this->deferral->entries);
 	}//end testOwnWriteDoesNotReEnterTheListener()
+	/**
+	 * The approval is re-emitted as an ExpenseApprovedEvent carrying the expense,
+	 * its approver and approval time, before the AP webhook is called; without an
+	 * approval time the service's clock stands in (REQ-AP-002).
+	 *
+	 * @return void
+	 */
+	public function testTheApprovalIsReEmittedAsADomainEvent(): void {
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
+
+		$order = [];
+		$apService = $this->createMock(ShillinqApService::class);
+		$apService->method('shouldDispatch')->willReturn(true);
+		$apService->method('now')->willReturn('2026-05-15T14:35:00Z');
+		$apService->method('dispatchApEvent')->willReturnCallback(
+			function () use (&$order): bool {
+				$order[] = 'webhook';
+				return true;
+			}
+		);
+
+		$emitted = [];
+		$dispatcher = $this->createMock(IEventDispatcher::class);
+		$dispatcher->method('dispatchTyped')->willReturnCallback(
+			function (Event $event) use (&$emitted, &$order): void {
+				$emitted[] = $event;
+				$order[] = 'event';
+			}
+		);
+
+		$expense = [
+			'uuid' => 'exp-7',
+			'title' => 'Train',
+			'amount' => 42.10,
+			'status' => 'approved',
+			'approvedBy' => 'bob',
+		];
+		$objects = new ApFakeObjectService();
+		$objects->stored['exp-7'] = $expense;
+		$listener = $this->listener($schemaMap, $apService, $objects, null, $dispatcher);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', $expense)));
+		$this->assertSame([], $emitted, 'nothing is emitted on the request itself');
+		$this->drain($listener);
+
+		$this->assertCount(1, $emitted);
+		$event = $emitted[0];
+		$this->assertInstanceOf(ExpenseApprovedEvent::class, $event);
+		$this->assertSame('exp-7', $event->getExpenseUuid());
+		$this->assertSame('Train', $event->getExpense()['title']);
+		$this->assertSame(42.10, $event->getExpense()['amount']);
+		$this->assertSame('bob', $event->getApprovedBy());
+		$this->assertSame('2026-05-15T14:35:00Z', $event->getApprovedAt());
+		$this->assertSame(['event', 'webhook'], $order);
+	}//end testTheApprovalIsReEmittedAsADomainEvent()
 }//end class

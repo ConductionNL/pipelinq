@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\Pipelinq\Service\InvalidTenderException;
 use OCA\Pipelinq\Service\PosTenderService;
 use OCA\Pipelinq\Service\TenderTypeNotFoundException;

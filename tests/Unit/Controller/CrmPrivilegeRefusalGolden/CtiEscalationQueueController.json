@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "CtiService::escalationQueues": []
+                "CtiServiceInterface::escalationQueues": []
             }
         ]
     }

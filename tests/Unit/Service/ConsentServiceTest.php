@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\ContactAddressLookup;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;

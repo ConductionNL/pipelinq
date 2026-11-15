@@ -25,13 +25,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\JourneyServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,9 +41,9 @@ use Throwable;
 /**
  * JourneyService: journeys, and the flows they compile into.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
-class JourneyService {
+class JourneyService implements JourneyServiceInterface {
 
 	/**
 	 * The journey schema slug.
@@ -81,7 +82,7 @@ class JourneyService {
 	 * @param ITimeFactory $time Clock.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -99,7 +100,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The journey, or null.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function find(string $journeyId): ?array {
 		return $this->store->find(schemaSlug: $this->schema(), id: $journeyId);
@@ -110,7 +111,7 @@ class JourneyService {
 	 *
 	 * @return array<int, array<string, mixed>> The journeys.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function listJourneys(): array {
 		return $this->store->findAll(schemaSlug: $this->schema());
@@ -125,7 +126,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The stored journey, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function save(array $payload, string $createdByUid, ?string $journeyId = null): ?array {
 		$now = date('c', $this->time->getTime());
@@ -160,7 +161,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The journey with its flow status, or null when unknown.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function setStatus(string $journeyId, string $status, string $runAs = ''): ?array {
 		$journey = $this->find(journeyId: $journeyId);
@@ -189,7 +190,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The journey with its flow status, or null when unknown.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function compile(string $journeyId, string $runAs = ''): ?array {
 		$journey = $this->find(journeyId: $journeyId);
@@ -197,36 +198,75 @@ class JourneyService {
 			return null;
 		}
 
+		$run = new JourneyCompileRun(journeyId: $journeyId, journey: $journey, runAs: $runAs);
 		$flowService = $this->service(name: self::FLOW_SERVICE);
 		if ($flowService === null) {
-			return $this->record(journey: $journey, journeyId: $journeyId, status: 'engine_missing', error: '', flowUuid: '');
+			return $this->record(run: $run, outcome: ['flowStatus' => 'engine_missing', 'flowError' => '', 'flowUuid' => '']);
 		}
 
-		$document = $this->compiler->documentFor(journey: $journey, journeyId: $journeyId, runAs: $runAs);
-		$existing = trim((string)($journey['flowUuid'] ?? ''));
-		$target = null;
-		if ($existing !== '') {
-			$target = $existing;
-		}
+		return $this->saveFlow(flowService: $flowService, run: $run);
+	}//end compile()
+
+	/**
+	 * Save the journey's flow document and record the outcome.
+	 *
+	 * @param object            $flowService The flow engine's service.
+	 * @param JourneyCompileRun $run         The journey, its id and the identity it runs as.
+	 *
+	 * @return array<string, mixed> The journey with its flow status.
+	 */
+	private function saveFlow(object $flowService, JourneyCompileRun $run): array {
+		$document = $this->compiler->documentFor(journey: $run->journey, journeyId: $run->journeyId, runAs: $run->runAs);
+		$existing = trim((string)($run->journey['flowUuid'] ?? ''));
+		$target = $this->flowTarget(existing: $existing);
 
 		try {
 			$flow = $flowService->save($document, $target);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'JourneyService.compile: the flow engine refused the document',
-				['journeyId' => $journeyId, 'exception' => $e->getMessage()]
+				['journeyId' => $run->journeyId, 'exception' => $e->getMessage()]
 			);
-			return $this->record(journey: $journey, journeyId: $journeyId, status: 'refused', error: $e->getMessage(), flowUuid: $existing);
+			return $this->record(run: $run, outcome: ['flowStatus' => 'refused', 'flowError' => $e->getMessage(), 'flowUuid' => $existing]);
 		}
 
+		return $this->recordCompiled(flow: $flow, run: $run);
+	}//end saveFlow()
+
+	/**
+	 * The flow uuid to update, or null to create a new flow.
+	 *
+	 * @param string $existing The journey's stored flow uuid, or ''.
+	 *
+	 * @return string|null
+	 */
+	private function flowTarget(string $existing): string|null {
+		$target = null;
+		if ($existing !== '') {
+			$target = $existing;
+		}
+
+		return $target;
+	}//end flowTarget()
+
+	/**
+	 * Publish the saved flow and record the journey as compiled.
+	 *
+	 * @param mixed             $flow The saved flow.
+	 * @param JourneyCompileRun $run  The journey and its id.
+	 *
+	 * @return array<string, mixed> The journey with its flow status.
+	 */
+	private function recordCompiled(mixed $flow, JourneyCompileRun $run): array {
 		$flowUuid = $this->uuidOf(flow: $flow);
-		$this->publish(flow: $flow, journeyId: $journeyId);
-		if (trim((string)($journey['compiledAt'] ?? '')) === '') {
-			$journey['compiledAt'] = date('c', $this->time->getTime());
+		$this->publish(flow: $flow, journeyId: $run->journeyId);
+		$outcome = [];
+		if (trim((string)($run->journey['compiledAt'] ?? '')) === '') {
+			$outcome['compiledAt'] = date('c', $this->time->getTime());
 		}
 
-		return $this->record(journey: $journey, journeyId: $journeyId, status: 'compiled', error: '', flowUuid: $flowUuid);
-	}//end compile()
+		return $this->record(run: $run, outcome: $outcome + ['flowStatus' => 'compiled', 'flowError' => '', 'flowUuid' => $flowUuid]);
+	}//end recordCompiled()
 
 	/**
 	 * Record one outcome of a journey run.
@@ -235,7 +275,7 @@ class JourneyService {
 	 *
 	 * @return array<string, mixed>|null The stored run.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function recordRun(array $run): ?array {
 		$run['occurredAt'] = date('c', $this->time->getTime());
@@ -252,7 +292,7 @@ class JourneyService {
 	 *
 	 * @return array<int, array<string, mixed>> The runs.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	public function runsFor(string $journeyId): array {
 		$runs = [];
@@ -289,20 +329,16 @@ class JourneyService {
 	/**
 	 * Store the compilation outcome on the journey.
 	 *
-	 * @param array<string, mixed> $journey The journey payload.
-	 * @param string $journeyId The journey id.
-	 * @param string $status One of the flowStatus values.
-	 * @param string $error The engine's own words, or empty.
-	 * @param string $flowUuid The flow uuid, or empty.
+	 * @param JourneyCompileRun    $run     The journey payload and its id.
+	 * @param array<string, mixed> $outcome The flowStatus value, the engine's own words (`flowError`, or empty)
+	 *                                      and the `flowUuid` (or empty), after any fields stamped with them.
 	 *
 	 * @return array<string, mixed> The journey as recorded.
 	 */
-	private function record(array $journey, string $journeyId, string $status, string $error, string $flowUuid): array {
-		$journey['flowStatus'] = $status;
-		$journey['flowError'] = $error;
-		$journey['flowUuid'] = $flowUuid;
+	private function record(JourneyCompileRun $run, array $outcome): array {
+		$journey = array_merge($run->journey, $outcome);
 
-		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $journeyId);
+		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $run->journeyId);
 		return ($stored ?? $journey);
 	}//end record()
 

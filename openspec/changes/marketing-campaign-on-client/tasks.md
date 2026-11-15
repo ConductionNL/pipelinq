@@ -1,14 +1,20 @@
 # Tasks: marketing-campaign-on-client
 
-- [ ] 1.1 Schema: `touchpoint.clientId`, `touchpoint.landingPage`; fragment giving `contact` and `client` `firstTouch` and `lastTouch` (read only in forms)
+- [x] 1.1 Schema: `touchpoint.clientId`, `touchpoint.landingPage`; fragment giving `contact` and `client` `firstTouch` and `lastTouch` (read only in forms)
   - Verify: register import logs no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
-- [ ] 1.2 `TouchpointService::recordSubmission()` per D1 and D2: first touch written once, last touch replaced, client resolved from the contact
+  - done: `lib/Settings/register.d/99-zzzzzzz-marketing-origin-on-client.json` (touchpoint 1.1.0, contact 1.3.0, client 1.8.0; the touches are the lead's shape plus `campaignId`, `landingPage`, `at`, `readOnly`). The nine new schema strings are in `l10n/en.json` and `l10n/nl.json`; `check:schema-l10n` reports only the 2 strings development already had uncovered. The PARTIAL IMPORT check is a live import, not run here.
+- [x] 1.2 `TouchpointService::recordSubmission()` per D1 and D2: first touch written once, last touch replaced, client resolved from the contact
   - Verify: PHPUnit `tests/Unit/Service/TouchpointServiceTest.php`: first submission sets both touches, second changes only the last, a contact without a client writes only the contact
-- [ ] 1.3 `LandingPageFormSubmittedListener::ingest()` calls it with the event's UTM values and page route
+  - done: `TouchpointService::recordSubmission(touchpoint, landingPage)`; the contact's `client` is read as a plain uuid or an expanded object. Tests in `tests/Unit/Service/TouchpointServiceTest.php`.
+- [x] 1.3 `LandingPageFormSubmittedListener::ingest()` calls it with the event's UTM values and page route
   - Verify: PHPUnit on the listener with a real `LandingPageFormSubmittedEvent`
-- [ ] 1.4 `EnquiryIntakeService`: UTM fields in `SUBMITTER_FIELDS`, capped and trimmed; `recordSubmission()` when the email matches a contact
+  - done: the listener calls `recordSubmission()` with the landing page `<portal>/<route>`; `LandingPageSubmissionGoldenTest` (real event, real TouchpointService over the in-memory store) regenerated: the touchpoint now carries `clientId` and `landingPage`, the contact and client their touches.
+- [x] 1.4 `EnquiryIntakeService`: UTM fields in `SUBMITTER_FIELDS`, capped and trimmed; `recordSubmission()` when the email matches a contact
   - Verify: PHPUnit: a 500 character `utmCampaign` is capped; `source` from the payload is still ignored; hydra gates route-auth and route-reachability pass on the diff
-- [ ] 1.5 How they found us widget and Touchpoints list on ContactDetail and ClientDetail
+  - done: `EnquiryIntakeService` was replaced on development by `WebFormIntakeService` (`POST /api/enquiry` is now `webForm#submitBySource`), so the step is built there. A new `Service/WebForm/SubmissionTouchRecorder` runs after a stored submit: it reads `utmCampaign`/`utmSource`/`utmMedium`/`utmContent`/`utmTerm` (or the `utm_*` spelling), trimmed and capped at 100 characters, and `pageUrl` (2048) as the landing page; resolves the campaign by its `utmCampaign`; matches a contact by `contactEmail`/`email` (lowercased, then as sent, never creating one); and calls `recordSubmission()`. A repeated Idempotency-Key records once; a failure is logged and never fails the submit. The values are read only for the touchpoint and never reach the destination unless the form maps them, so the form's fixed values still win. The touchpoint fragment no longer requires `campaignId`, because an enquiry whose campaign value names no campaign is still a submission (D1). Tests: `tests/Unit/Service/WebForm/SubmissionTouchRecorderTest.php` (7) and two in `WebFormIntakeServiceTest.php`. No route changed.
+- [x] 1.5 How they found us widget and Touchpoints list on ContactDetail and ClientDetail
   - Verify: Playwright `tests/e2e/client-campaign-origin.spec.ts` submits an enquiry with `utm_campaign=voorjaar` for a known contact and sees it as last touch on ClientDetail
-- [ ] 1.6 Embed snippet in `docs/Features/website-enquiry.md` that passes the page's UTM values; Dutch strings
+  - done: manifest only, over the shared widgets: `contact-found-us` / `client-found-us` (`facts`, first and last touch, read only, plain text) and `contact-touchpoints` / `client-touchpoints` (`object-list` of `touchpoint` filtered on `contactId` / `clientId`, newest first, no create). Contact: two new sections at the end of Overview; client: in the Overview tab before the activity card. The board-pinned vitest expectations (`clientDetailAsBoard`, `contactPersonPage`) now list them. The Playwright spec is an e2e test and was not written or run here.
+- [x] 1.6 Embed snippet in `docs/Features/website-enquiry.md` that passes the page's UTM values; Dutch strings
   - Verify: docs build exit 0; `npm run test:l10n` exit 0
+  - done: `docs/Features/website-enquiry.md` (new) with the fields, limits and the embed snippet. The 15 new screen strings are in `l10n/en.json` and `l10n/nl.json`, `.js` regenerated; `test:l10n` and `check:l10n-js` pass. The docs site build was not run here.

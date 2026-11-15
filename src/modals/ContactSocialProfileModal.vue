@@ -7,7 +7,7 @@
   - back to the caller (ContactChannelsSection), which splices it into the
   - array and persists the whole client/contact object.
   -
-  - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+  - @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
   -->
 <template>
 	<CnDialog
@@ -75,6 +75,45 @@ import {
 
 const URL_REGEX = /^https?:\/\/.+\..+/
 
+/** The networks a profile can be on, in picker order. */
+const NETWORK_OPTIONS = [
+	'linkedin',
+	'x',
+	'mastodon',
+	'bluesky',
+	'facebook',
+	'instagram',
+	'threads',
+	'tiktok',
+	'youtube',
+	'other',
+]
+
+/** The profile form's fields in form order, each with its empty value. */
+const PROFILE_DEFAULTS = {
+	network: 'linkedin',
+	handle: '',
+	url: '',
+	verified: false,
+	followedByUs: false,
+	followsUs: false,
+}
+
+/**
+ * The profile form filled from a stored profile, a missing field taking
+ * its empty value.
+ *
+ * @param {object|null} profile The profile being edited, or none.
+ * @return {object} The form.
+ */
+function profileForm(profile) {
+	const form = {}
+	for (const [field, empty] of Object.entries(PROFILE_DEFAULTS)) {
+		form[field] = profile?.[field] || empty
+	}
+	return form
+}
+
 export default {
 	name: 'ContactSocialProfileModal',
 	components: {
@@ -97,27 +136,9 @@ export default {
 
 	data() {
 		return {
-			networkOptions: [
-				'linkedin',
-				'x',
-				'mastodon',
-				'bluesky',
-				'facebook',
-				'instagram',
-				'threads',
-				'tiktok',
-				'youtube',
-				'other',
-			],
+			networkOptions: [...NETWORK_OPTIONS],
 
-			form: {
-				network: this.profile?.network || 'linkedin',
-				handle: this.profile?.handle || '',
-				url: this.profile?.url || '',
-				verified: this.profile?.verified || false,
-				followedByUs: this.profile?.followedByUs || false,
-				followsUs: this.profile?.followsUs || false,
-			},
+			form: profileForm(this.profile),
 
 			error: '',
 		}
@@ -134,7 +155,7 @@ export default {
 		 * Validate and emit the built entry; the parent owns persistence.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 * @spec openspec/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		submit() {
 			const handle = (this.form.handle || '').trim()

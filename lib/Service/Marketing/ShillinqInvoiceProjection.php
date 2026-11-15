@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 /**
  * ShillinqInvoiceProjection: one shillinq row, reduced.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
  */
 class ShillinqInvoiceProjection {
 
@@ -57,7 +57,7 @@ class ShillinqInvoiceProjection {
 	 * @return array<string, mixed>|null The reduced invoice, or null when the
 	 *         row is a draft or carries no id.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function whole(array $row): ?array {
 		$state = strtolower(trim((string)($row['lifecycleState'] ?? '')));
@@ -88,7 +88,7 @@ class ShillinqInvoiceProjection {
 	 *
 	 * @return string The id, empty when the row carries none.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function identify(array $row): string {
 		foreach ([$row, (array)($row['@self'] ?? [])] as $source) {
@@ -113,7 +113,7 @@ class ShillinqInvoiceProjection {
 	 *
 	 * @return array<int, array<string, mixed>> One entry per named line.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function lines(mixed $value): array {
 		if (is_array($value) === false) {
@@ -122,23 +122,38 @@ class ShillinqInvoiceProjection {
 
 		$lines = [];
 		foreach ($value as $line) {
-			if (is_array($line) === false) {
-				continue;
+			$projected = $this->lineOf(line: $line);
+			if ($projected !== null) {
+				$lines[] = $projected;
 			}
-
-			$itemName = trim((string)($line['itemName'] ?? ''));
-			if ($itemName === '') {
-				continue;
-			}
-
-			$lines[] = [
-				'itemName' => $itemName,
-				'netAmount' => (float)($line['netAmount'] ?? 0),
-				'quantity' => (float)($line['quantity'] ?? 0),
-				'unitCode' => (string)($line['unitCode'] ?? ''),
-			];
 		}
 
 		return $lines;
 	}//end lines()
+
+	/**
+	 * One invoice line with its trimmed name, amounts as numbers and unit;
+	 * null for a line that is not a list or has no name.
+	 *
+	 * @param mixed $line The invoice line.
+	 *
+	 * @return array{itemName: string, netAmount: float, quantity: float, unitCode: string}|null
+	 */
+	private function lineOf(mixed $line): ?array {
+		$itemName = '';
+		if (is_array($line) === true) {
+			$itemName = trim((string)($line['itemName'] ?? ''));
+		}
+
+		if ($itemName === '') {
+			return null;
+		}
+
+		return [
+			'itemName' => $itemName,
+			'netAmount' => (float)($line['netAmount'] ?? 0),
+			'quantity' => (float)($line['quantity'] ?? 0),
+			'unitCode' => (string)($line['unitCode'] ?? ''),
+		];
+	}//end lineOf()
 }//end class

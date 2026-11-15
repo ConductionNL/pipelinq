@@ -24,7 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSeedContext;
@@ -72,6 +72,9 @@ class DemoSeedGoldenTest extends TestCase {
 		'contactmomenten' => ['ticket_schema', 'title', 'contactmoment'],
 		'tasks'           => ['task_schema', 'subject', null],
 		'contracts'       => ['contract_schema', 'title', null],
+		'appointmentServices'  => ['service_schema', 'name', null],
+		'appointmentResources' => ['resource_schema', 'name', null],
+		'appointmentBookings'  => ['booking_schema', 'subject', null],
 	];
 
 	/**

@@ -25,6 +25,60 @@
           "forms"
         ],
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
+          "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "Whether the ticket is in a final lifecycle state (completed, converted, resolved, rejected or closed). Not materialised, so it is always fresh on read; the Lock action on TicketDetail shows only when it is true (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "completed"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "converted"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "resolved"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "rejected"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "closed"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
           "x-openregister-archival": {
             "_note": "unify-ticket-supertype: the retired `contactmoment` schema carried a VNG/AVG retention policy (default P2Y, plus outcome rules). `request` and `complaint` carried NONE. A merged schema can hold only ONE archival block, and the condition DSL supports a single comparison (no AND), so the two postures are reconciled with ordered, first-match-wins rules: the two ticketType rules below exempt request/complaint tickets (P100Y == effectively never disposed, matching their previous no-retention behaviour), and everything after them applies only to contactmoment tickets, whose original default (P2Y) is preserved below. CONSEQUENCE: OpenRegister's SCHEMA_ARCHIVAL_IMMUTABLE guard is schema-level, so tickets can no longer be hard-deleted by hand — they expire via ArchivalRetentionTask. That is the intended posture for an auditable client-interaction record, but it IS a change for request/complaint tickets.",
             "retention": {

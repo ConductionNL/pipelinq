@@ -9,7 +9,7 @@
   - native picker rather than typed as a bare path, the same
   - `getFilePickerBuilder` pattern the library's own `CnFilesWidgetForm` uses.
   -
-  - @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+  - @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
   -->
 <template>
 	<CnDialog
@@ -140,6 +140,45 @@ import { createArticle, updateArticle } from '../services/articlesApi.js'
 
 import '@nextcloud/dialogs/style.css'
 
+/**
+ * The article's text fields in form order, each with its empty value.
+ */
+const ARTICLE_TEXT_DEFAULTS = {
+	title: '',
+	slug: '',
+	summary: '',
+	body: '',
+	heroImage: '',
+	language: 'nl',
+	portalPageRef: '',
+}
+
+/**
+ * The article's text fields, a missing one taking its empty value.
+ *
+ * @param {object} source The article, or an empty object for a new one.
+ * @return {object} The model.
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+ */
+function articleModel(source) {
+	const model = {}
+	for (const [field, empty] of Object.entries(ARTICLE_TEXT_DEFAULTS)) {
+		model[field] = source[field] || empty
+	}
+	return model
+}
+
+/**
+ * A stored list, or an empty one for anything else.
+ *
+ * @param {unknown} value The stored value.
+ * @return {Array} The list.
+ * @spec exclude a type guard, no behaviour of its own.
+ */
+function listOf(value) {
+	return Array.isArray(value) ? value : []
+}
+
 const LANGUAGE_OPTIONS = [
 	{ value: 'nl', label: 'Nederlands' },
 	{ value: 'en', label: 'English' },
@@ -176,20 +215,10 @@ export default {
 		return {
 			saving: false,
 			error: '',
-			model: {
-				title: source.title || '',
-				slug: source.slug || '',
-				summary: source.summary || '',
-				body: source.body || '',
-				heroImage: source.heroImage || '',
-				language: source.language || 'nl',
-				portalPageRef: source.portalPageRef || '',
-			},
+			model: articleModel(source),
 
-			tags: Array.isArray(source.tags) ? [...source.tags] : [],
-			links: Array.isArray(source.links)
-				? source.links.map((link) => ({ ...link }))
-				: [],
+			tags: [...listOf(source.tags)],
+			links: listOf(source.links).map((link) => ({ ...link })),
 		}
 	},
 
@@ -202,7 +231,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The modal title.
 		 */
 		modalTitle() {
@@ -212,7 +241,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Array<{value: string, label: string}>} The two language options.
 		 */
 		languageOptions() {
@@ -226,7 +255,7 @@ export default {
 		 */
 		languageOption: {
 			/**
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+			 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 * @return {string} The current language code.
 			 */
 			get() {
@@ -235,7 +264,7 @@ export default {
 
 			/**
 			 * @param {string} value The language code just picked.
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+			 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 */
 			set(value) {
 				this.model.language = value || 'nl'
@@ -243,7 +272,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {boolean} Whether the form has enough to attempt a save.
 		 */
 		canSave() {
@@ -256,7 +285,7 @@ export default {
 		 * Open the Nextcloud Files picker restricted to images, and store the
 		 * picked node's path.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves once a pick has been applied, or declined.
 		 */
 		async openHeroPicker() {
@@ -298,7 +327,7 @@ export default {
 		/**
 		 * Build the payload from the model.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {object} The payload the API expects.
 		 */
 		buildPayload() {
@@ -312,7 +341,7 @@ export default {
 		/**
 		 * Create or update the article.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the caller has been told.
 		 */
 		async save() {

@@ -20,7 +20,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Demo;
 use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Demo\DemoRecordSweeper;
 use OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor;
@@ -41,6 +41,7 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Pipelinq\Service\Demo\DemoRecordSweeper
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  * @uses   \OCA\Pipelinq\Service\Demo\DemoUserFields
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class DemoRegisterImporterTest extends TestCase {
 	/**

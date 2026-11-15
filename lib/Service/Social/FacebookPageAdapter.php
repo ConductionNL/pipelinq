@@ -29,7 +29,7 @@
  *
  * @link https://developers.facebook.com/docs/pages-api/posts
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * A Facebook page.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 class FacebookPageAdapter extends AbstractSocialAdapter {
 	/**
@@ -56,7 +56,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'facebook';
@@ -67,7 +67,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The provider identifier.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function brokerProvider(): string {
 		return 'meta-graph';
@@ -79,7 +79,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 5000;
@@ -93,7 +93,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		$payload = ['message' => trim($request->body)];
@@ -119,7 +119,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The composite id already
 	 *  carries the page.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$id = (string)($payload['id'] ?? '');
@@ -142,7 +142,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an id.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) A post is addressed by
 	 *  its own composite id.
@@ -169,7 +169,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -192,41 +192,83 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return array<string, int> The values by metric name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function seriesByName(array $payload): array {
-		$out = [];
 		$data = ($payload['data'] ?? []);
 		if (is_array($data) === false) {
-			return $out;
+			return [];
 		}
 
+		$out = [];
 		foreach ($data as $entry) {
-			if (is_array($entry) === false) {
-				continue;
+			$series = $this->namedSeries(entry: $entry);
+			if ($series !== null) {
+				$out[$series[0]] = $series[1];
 			}
-
-			$name = (string)($entry['name'] ?? '');
-			$values = ($entry['values'] ?? []);
-			if ($name === '' || is_array($values) === false || $values === []) {
-				continue;
-			}
-
-			$first = $values[0];
-			$value = 0;
-			if (is_array($first) === true) {
-				$value = ($first['value'] ?? 0);
-			}
-
-			if (is_array($value) === true) {
-				$value = array_sum(array_map('intval', $value));
-			}
-
-			$out[$name] = (int)$value;
 		}
 
 		return $out;
 	}//end seriesByName()
+
+	/**
+	 * One insights entry as its name and value; null for an entry that is
+	 * not a list or has no name or no values.
+	 *
+	 * @param mixed $entry The insights entry.
+	 *
+	 * @return array{0: string, 1: int}|null
+	 */
+	private function namedSeries($entry): ?array {
+		if (is_array($entry) === false) {
+			return null;
+		}
+
+		$name = (string)($entry['name'] ?? '');
+		$values = $this->seriesValues(entry: $entry);
+		if ($name === '' || $values === []) {
+			return null;
+		}
+
+		return [$name, $this->firstValue(first: $values[0])];
+	}//end namedSeries()
+
+	/**
+	 * An entry's values; none when they are not a list.
+	 *
+	 * @param array<string, mixed> $entry The insights entry.
+	 *
+	 * @return array<mixed>
+	 */
+	private function seriesValues(array $entry): array {
+		$values = ($entry['values'] ?? []);
+		if (is_array($values) === false) {
+			return [];
+		}
+
+		return $values;
+	}//end seriesValues()
+
+	/**
+	 * The first value of a series as a whole number: a by-type value is
+	 * summed, a missing one is zero.
+	 *
+	 * @param mixed $first The first value entry.
+	 *
+	 * @return int
+	 */
+	private function firstValue($first): int {
+		$value = 0;
+		if (is_array($first) === true) {
+			$value = ($first['value'] ?? 0);
+		}
+
+		if (is_array($value) === true) {
+			$value = array_sum(array_map('intval', $value));
+		}
+
+		return (int)$value;
+	}//end firstValue()
 
 	/**
 	 * Meta's allow-rules reach no page follower count, so this reports none
@@ -236,7 +278,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null Always null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) There is no reachable
 	 *  endpoint for this, whatever the account.
@@ -252,7 +294,7 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string An address that opens the sharer.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function composerUrl(SocialPublishRequest $request): string {
 		if ($request->link !== '') {

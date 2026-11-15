@@ -36,7 +36,7 @@
  *
  * @link https://developers.facebook.com/docs/instagram-platform/content-publishing
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * An Instagram business account, published in two steps.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  *
  * @SuppressWarnings(PHPMD.StaticAccess) `SocialGatewayResult` and
  *  `SocialPublishOutcome` are value objects with NAMED CONSTRUCTORS
@@ -54,13 +54,13 @@ namespace OCA\Pipelinq\Service\Social;
  *  definition, and the alternative PHPMD is asking for, a factory injected
  *  into every adapter, would add a collaborator that constructs a struct.
  */
-class InstagramBusinessAdapter extends FacebookPageAdapter {
+class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesThroughContainer {
 	/**
 	 * The network name, matching the schema enum.
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'instagram';
@@ -71,7 +71,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 2200;
@@ -88,7 +88,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return SocialAdapterCall The container request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		$media = $request->firstPublicMedia();
@@ -111,7 +111,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return SocialAdapterCall The publish request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishContainerCall(SocialPublishRequest $request, string $containerId): SocialAdapterCall {
 		return new SocialAdapterCall(
@@ -128,7 +128,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return SocialPublishOutcome The outcome.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publish(SocialPublishRequest $request): SocialPublishOutcome {
 		$refusal = $this->refuseWhenNotConfigured();
@@ -143,53 +143,11 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 			);
 		}
 
-		$container = $this->send(call: $this->publishCall(request: $request), request: $request);
-		if ($container->accepted === false) {
-			// The publish step is deliberately NOT attempted. Publishing a
-			// container that was never created would report the second call's
-			// error and hide the one that actually happened.
-			return SocialPublishOutcome::fromGatewayFailure(result: $container);
-		}
-
-		$containerId = (string)($container->body['id'] ?? '');
-		if ($containerId === '') {
-			return SocialPublishOutcome::refused(
-				code: SocialGatewayResult::REJECTED_BY_NETWORK,
-				reason: 'Instagram accepted the media but named no container, so there is nothing to publish.',
-			);
-		}
-
-		$published = $this->send(
-			call: $this->publishContainerCall(request: $request, containerId: $containerId),
+		return $this->publishContainer(
 			request: $request,
-		);
-		if ($published->accepted === false) {
-			return SocialPublishOutcome::fromGatewayFailure(result: $published);
-		}
-
-		return SocialPublishOutcome::published(
-			externalId: $this->readPublishedId(payload: $published->body),
-			url: $this->readPublishedUrl(payload: $published->body, request: $request),
+			noContainerReason: 'Instagram accepted the media but named no container, so there is nothing to publish.',
 		);
 	}//end publish()
-
-	/**
-	 * Instagram answers with a media id and no address, so none is built.
-	 *
-	 * @param array<string, mixed> $payload The response body.
-	 * @param SocialPublishRequest $request The post, unused here.
-	 *
-	 * @return string Always an empty string.
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Instagram publishes no
-	 *  permalink on this response, and guessing one would be wrong more often
-	 *  than right.
-	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
-	 */
-	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
-		return '';
-	}//end readPublishedUrl()
 
 	/**
 	 * GET /{version}/{media-id}/insights, for the metrics Instagram still
@@ -200,7 +158,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an id.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) A media item is addressed
 	 *  by its own id.
@@ -226,7 +184,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -250,7 +208,7 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 *
 	 * @return string An address that opens Instagram.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Instagram accepts no
 	 *  prefilled text on any address it publishes.

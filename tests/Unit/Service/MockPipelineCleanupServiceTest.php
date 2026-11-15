@@ -20,7 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\Pipelinq\Service\MockPipelineCleanupService;
 use OCA\Pipelinq\Service\PipelineStageData;
 use OCA\Pipelinq\Service\SystemServiceAccount;

@@ -211,21 +211,45 @@ class ReferencesAuditRun {
 		$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
 
 		if ($reference !== '') {
-			// An empty owner index means the owner could not be read at all.
-			// That is reported as presence, never as a dangling link, or an
-			// outage would look like data loss.
-			if ($this->ownerIds === [] || isset($this->ownerIds[$reference]) === true) {
-				return ['outcome' => 'set', 'id' => $id, 'owner' => '', 'message' => ''];
-			}
-
-			return [
-				'outcome' => 'dangling',
-				'id' => $id,
-				'owner' => '',
-				'message' => '  <error>dangling</error>  '.$id.' -> '.$reference,
-			];
+			return $this->classifyReferenced(id: $id, reference: $reference);
 		}
 
+		return $this->classifyByIdentity(id: $id, identity: $identity);
+	}//end classifyRow()
+
+	/**
+	 * Classify a row that carries a reference: set, or dangling.
+	 *
+	 * @param string $id        The row id.
+	 * @param string $reference The referenced owner id.
+	 *
+	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
+	 */
+	private function classifyReferenced(string $id, string $reference): array {
+		// An empty owner index means the owner could not be read at all.
+		// That is reported as presence, never as a dangling link, or an
+		// outage would look like data loss.
+		if ($this->ownerIds === [] || isset($this->ownerIds[$reference]) === true) {
+			return ['outcome' => 'set', 'id' => $id, 'owner' => '', 'message' => ''];
+		}
+
+		return [
+			'outcome' => 'dangling',
+			'id' => $id,
+			'owner' => '',
+			'message' => '  <error>dangling</error>  '.$id.' -> '.$reference,
+		];
+	}//end classifyReferenced()
+
+	/**
+	 * Classify a row without a reference by its identity key: unmatched, ambiguous or backfillable.
+	 *
+	 * @param string $id       The row id.
+	 * @param string $identity The row's identity key value.
+	 *
+	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
+	 */
+	private function classifyByIdentity(string $id, string $identity): array {
 		$candidates = ($this->owners[$identity] ?? []);
 		if ($identity === '' || $candidates === []) {
 			return ['outcome' => 'unmatched', 'id' => $id, 'owner' => '', 'message' => ''];
@@ -242,7 +266,7 @@ class ReferencesAuditRun {
 		}
 
 		return ['outcome' => 'backfillable', 'id' => $id, 'owner' => $candidates[0], 'message' => ''];
-	}//end classifyRow()
+	}//end classifyByIdentity()
 
 	/**
 	 * Write one unambiguous owner reference onto a satellite row.

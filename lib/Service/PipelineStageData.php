@@ -30,6 +30,70 @@ namespace OCA\Pipelinq\Service;
  */
 class PipelineStageData {
 	/**
+	 * The default sales pipeline stages, in order.
+	 *
+	 * @var array<int, array{name: string, order: int, probability: int, color: string, isClosed: bool, isWon: bool}>
+	 */
+	private const SALES_STAGES = [
+		[
+			'name' => 'New',
+			'order' => 0,
+			'probability' => 10,
+			'color' => '#3b82f6',
+			'isClosed' => false,
+			'isWon' => false,
+		],
+		[
+			'name' => 'Contacted',
+			'order' => 1,
+			'probability' => 20,
+			'color' => '#8b5cf6',
+			'isClosed' => false,
+			'isWon' => false,
+		],
+		[
+			'name' => 'Qualified',
+			'order' => 2,
+			'probability' => 40,
+			'color' => '#f59e0b',
+			'isClosed' => false,
+			'isWon' => false,
+		],
+		[
+			'name' => 'Proposal',
+			'order' => 3,
+			'probability' => 60,
+			'color' => '#f97316',
+			'isClosed' => false,
+			'isWon' => false,
+		],
+		[
+			'name' => 'Negotiation',
+			'order' => 4,
+			'probability' => 80,
+			'color' => '#ef4444',
+			'isClosed' => false,
+			'isWon' => false,
+		],
+		[
+			'name' => 'Won',
+			'order' => 5,
+			'probability' => 100,
+			'color' => '#22c55e',
+			'isClosed' => true,
+			'isWon' => true,
+		],
+		[
+			'name' => 'Lost',
+			'order' => 6,
+			'probability' => 0,
+			'color' => '#6b7280',
+			'isClosed' => true,
+			'isWon' => false,
+		],
+	];
+
+	/**
 	 * Get the default sales pipeline data.
 	 *
 	 * A mapping without a stage total leaves `totalsProperty` out: the schema
@@ -108,64 +172,7 @@ class PipelineStageData {
 	 * @return array The sales pipeline stages.
 	 */
 	private function getSalesStages(): array {
-		return [
-			[
-				'name' => 'New',
-				'order' => 0,
-				'probability' => 10,
-				'color' => '#3b82f6',
-				'isClosed' => false,
-				'isWon' => false,
-			],
-			[
-				'name' => 'Contacted',
-				'order' => 1,
-				'probability' => 20,
-				'color' => '#8b5cf6',
-				'isClosed' => false,
-				'isWon' => false,
-			],
-			[
-				'name' => 'Qualified',
-				'order' => 2,
-				'probability' => 40,
-				'color' => '#f59e0b',
-				'isClosed' => false,
-				'isWon' => false,
-			],
-			[
-				'name' => 'Proposal',
-				'order' => 3,
-				'probability' => 60,
-				'color' => '#f97316',
-				'isClosed' => false,
-				'isWon' => false,
-			],
-			[
-				'name' => 'Negotiation',
-				'order' => 4,
-				'probability' => 80,
-				'color' => '#ef4444',
-				'isClosed' => false,
-				'isWon' => false,
-			],
-			[
-				'name' => 'Won',
-				'order' => 5,
-				'probability' => 100,
-				'color' => '#22c55e',
-				'isClosed' => true,
-				'isWon' => true,
-			],
-			[
-				'name' => 'Lost',
-				'order' => 6,
-				'probability' => 0,
-				'color' => '#6b7280',
-				'isClosed' => true,
-				'isWon' => false,
-			],
-		];
+		return self::SALES_STAGES;
 	}//end getSalesStages()
 
 	/**

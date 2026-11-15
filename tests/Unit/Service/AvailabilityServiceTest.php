@@ -27,7 +27,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;

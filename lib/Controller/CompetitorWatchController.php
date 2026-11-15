@@ -24,17 +24,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
+use OCA\Pipelinq\Kernel\Contracts\WatchEventStoreInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
-use OCA\Pipelinq\Service\Competitor\WatchEventStore;
-use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,7 +44,7 @@ use OCP\IRequest;
 /**
  * Watch events, and a manual run.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
  */
 class CompetitorWatchController extends Controller {
 
@@ -60,19 +60,19 @@ class CompetitorWatchController extends Controller {
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param CompetitorWatchService $watches The watch service.
-	 * @param WatchEventStore $events The event store.
-	 * @param ConnectorEgress $egress Whether an egress source is configured at all.
+	 * @param CompetitorWatchServiceInterface $watches The watch service.
+	 * @param WatchEventStoreInterface $events The event store.
+	 * @param ConnectorEgressInterface $egress Whether an egress source is configured at all.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CompetitorWatchService $watches,
-		private readonly WatchEventStore $events,
-		private readonly ConnectorEgress $egress,
+		private readonly CompetitorWatchServiceInterface $watches,
+		private readonly WatchEventStoreInterface $events,
+		private readonly ConnectorEgressInterface $egress,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -84,7 +84,7 @@ class CompetitorWatchController extends Controller {
 	 *
 	 * @return JSONResponse `{configured, reason, competitors[], watches[], events[]}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -93,7 +93,7 @@ class CompetitorWatchController extends Controller {
 			return $refusal;
 		}
 
-		$configured = $this->egress->isConfigured(configKey: CompetitorWatchService::SOURCE_KEY);
+		$configured = $this->egress->isConfigured(configKey: CompetitorWatchServiceInterface::SOURCE_KEY);
 		$reason = '';
 		if ($configured === false) {
 			$reason = 'No egress source is configured for competitor watches, so nothing is read.';
@@ -117,7 +117,7 @@ class CompetitorWatchController extends Controller {
 	 *
 	 * @return JSONResponse The outcome, or the refusal.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {

@@ -101,4 +101,39 @@ class MainRegisterReaderTest extends TestCase {
 		$this->assertNotNull($reader->find(schemaKey: 'ticket', id: 't-1'));
 		$reader->findAll(schemaKey: 'ticket', filters: ['portalSubject' => 's-1']);
 	}//end testAPortalReadIsNotEmptiedForHavingNoNextcloudUser()
+
+	/**
+	 * An employee's read keeps OpenRegister's RBAC and organisation filter
+	 * on, so a ticket of another organisation answers null.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeesReadKeepsTheirRbacAndOrganisation(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => '7',
+				'ticket_schema' => '42',
+				default => $default,
+			}
+		);
+
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objectService->expects($this->once())
+			->method('find')
+			->with(
+				$this->equalTo(value: 't-other-organisation'),
+				$this->anything(),
+				$this->anything(),
+				$this->equalTo(value: '7'),
+				$this->equalTo(value: '42'),
+				$this->isTrue(),
+				$this->isTrue(),
+			)
+			->willReturn(null);
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$reader = new MainRegisterReader(appConfig: $appConfig, logger: $logger, objectService: $objectService);
+		$this->assertNull(actual: $reader->findAsCaller(schemaKey: 'ticket', id: 't-other-organisation'));
+	}//end testAnEmployeesReadKeepsTheirRbacAndOrganisation()
 }//end class

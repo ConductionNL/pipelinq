@@ -27,14 +27,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\GiftCardService;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
-use OCA\Pipelinq\Service\LoyaltyProgrammeService;
-use OCA\Pipelinq\Service\PointsLedgerService;
-use OCA\Pipelinq\Service\RedemptionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -61,25 +61,25 @@ class LoyaltyController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param LoyaltyAccountService $accountService The account service.
-	 * @param PointsLedgerService $ledgerService The ledger service.
-	 * @param RedemptionService $redemptionService The redemption service.
-	 * @param GiftCardService $giftCardService The gift card service.
-	 * @param LoyaltyProgrammeService $programmeService The programme service.
+	 * @param LoyaltyAccountServiceInterface $accountService The account service.
+	 * @param PointsLedgerServiceInterface $ledgerService The ledger service.
+	 * @param RedemptionServiceInterface $redemptionService The redemption service.
+	 * @param GiftCardServiceInterface $giftCardService The gift card service.
+	 * @param LoyaltyProgrammeServiceInterface $programmeService The programme service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localiser.
 	 */
 	public function __construct(
 		IRequest $request,
-		private LoyaltyAccountService $accountService,
-		private PointsLedgerService $ledgerService,
-		private RedemptionService $redemptionService,
-		private GiftCardService $giftCardService,
-		private LoyaltyProgrammeService $programmeService,
+		private LoyaltyAccountServiceInterface $accountService,
+		private PointsLedgerServiceInterface $ledgerService,
+		private RedemptionServiceInterface $redemptionService,
+		private GiftCardServiceInterface $giftCardService,
+		private LoyaltyProgrammeServiceInterface $programmeService,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -254,45 +254,18 @@ class LoyaltyController extends Controller {
 			return $refusal;
 		}
 
-		$validation = $this->redemptionService->validateCode(code: $code);
-		if ($validation['valid'] === false) {
-			return new JSONResponse(
-				['error' => $validation['reason'] ?? 'Invalid code'],
-				Http::STATUS_BAD_REQUEST
-			);
+		$redemption = $this->usableRedemption(code: $code);
+		if ($redemption instanceof JSONResponse) {
+			return $redemption;
 		}
 
-		$redemption = $validation['redemption'] ?? null;
-		if ($redemption === null) {
-			return new JSONResponse(['error' => 'Redemption missing'], Http::STATUS_BAD_REQUEST);
-		}
-
-		$self = $redemption['@self'] ?? [];
-		$selfId = '';
-		if (is_array($self) === true) {
-			$selfId = ($self['id'] ?? '');
-		}
-
-		$redemptionId = (string)$selfId;
-		if ($redemptionId === '') {
-			$redemptionId = (string)($redemption['uuid'] ?? $redemption['id'] ?? '');
-		}
-
-		try {
-			$posTransactionId = $this->request->getParam('posTransactionId');
-			$posTransactionRef = null;
-			if (is_string($posTransactionId) === true) {
-				$posTransactionRef = $posTransactionId;
-			}
-
-			$updated = $this->redemptionService->markRedemptionUsed(
+		$redemptionId = $this->redemptionIdOf(redemption: $redemption);
+		return $this->answerOrBadRequest(
+			answer: fn (): array => $this->redemptionService->markRedemptionUsed(
 				redemptionId: $redemptionId,
-				posTransactionId: $posTransactionRef
-			);
-			return new JSONResponse($updated);
-		} catch (Throwable $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
-		}
+				posTransactionId: $this->posTransactionRef()
+			)
+		);
 	}//end useRedemptionCode()
 
 	/**
@@ -349,7 +322,7 @@ class LoyaltyController extends Controller {
 		$giftCardId = (string)$this->request->getParam('giftCardId', '');
 		$pin = (string)$this->request->getParam('pin', '');
 		$amount = (float)$this->request->getParam('amount', 0);
-		$posTransactionId = $this->request->getParam('posTransactionId');
+		$posTransactionRef = $this->posTransactionRef();
 		if ($giftCardId === '' || $pin === '' || $amount <= 0) {
 			return new JSONResponse(
 				['error' => 'giftCardId, pin and amount (>0) are required'],
@@ -357,22 +330,14 @@ class LoyaltyController extends Controller {
 			);
 		}
 
-		$posTransactionRef = null;
-		if (is_string($posTransactionId) === true) {
-			$posTransactionRef = $posTransactionId;
-		}
-
-		try {
-			$result = $this->giftCardService->redeemGiftCard(
+		return $this->answerOrBadRequest(
+			answer: fn (): array => $this->giftCardService->redeemGiftCard(
 				giftCardId: $giftCardId,
 				pin: $pin,
 				amount: $amount,
 				posTransactionId: $posTransactionRef
-			);
-			return new JSONResponse($result);
-		} catch (Throwable $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
-		}
+			)
+		);
 	}//end redeemGiftCard()
 
 	/**
@@ -396,11 +361,7 @@ class LoyaltyController extends Controller {
 			return $refusal;
 		}
 
-		$posTransactionId = $this->request->getParam('posTransactionId');
-		$posTransactionRef = null;
-		if (is_string($posTransactionId) === true) {
-			$posTransactionRef = $posTransactionId;
-		}
+		$posTransactionRef = $this->posTransactionRef();
 
 		try {
 			$card = $this->giftCardService->activateGiftCard(
@@ -439,15 +400,9 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse The created card + one-time PIN (200), or 400 on invalid input.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch over, from the
-	 * CRM guard added at the top of this method. Issuing a gift card creates a
-	 * bearer instrument, so the guard stays and the count is accepted.
-	 * @SuppressWarnings(PHPMD.NPathComplexity) Same cause: the guard is an
-	 * early return, which multiplies NPath without deepening the logic.
-	 *
-	 * @spec exclude Reinstates loyalty gift-card issuance (money-and-bridge-fixes); loyalty-program canonical spec archived 2026-06-14.
+	* @spec exclude Reinstates loyalty gift-card issuance (money-and-bridge-fixes); loyalty-program canonical spec archived 2026-06-14.
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function issueGiftCard(): JSONResponse {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
@@ -467,36 +422,19 @@ class LoyaltyController extends Controller {
 			);
 		}
 
-		$programmeIdRaw = $this->request->getParam('programmeId');
-		$programmeId = null;
-		if (is_string($programmeIdRaw) === true && $programmeIdRaw !== '') {
-			$programmeId = $programmeIdRaw;
-		}
-
-		$expiryDays = (int)$this->request->getParam('expiryDays', 365);
-		if ($expiryDays <= 0) {
-			$expiryDays = 365;
-		}
-
+		$programmeId = $this->nonEmptyStringParam(key: 'programmeId');
+		$expiryDays = $this->expiryDays();
 		$channel = (string)$this->request->getParam('channel', 'purchased');
-		$uitgegevenInRaw = $this->request->getParam('issuedIn');
-		$issuedIn = null;
-		if (is_string($uitgegevenInRaw) === true && $uitgegevenInRaw !== '') {
-			$issuedIn = $uitgegevenInRaw;
-		}
-
-		try {
-			$result = $this->giftCardService->issueGiftCard(
+		$issuedIn = $this->nonEmptyStringParam(key: 'issuedIn');
+		return $this->answerOrBadRequest(
+			answer: fn (): array => $this->giftCardService->issueGiftCard(
 				programmeId: $programmeId,
 				initialBalance: $initialBalance,
 				expiryDays: $expiryDays,
 				channel: $channel,
 				issuedIn: $issuedIn
-			);
-			return new JSONResponse($result);
-		} catch (Throwable $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
-		}
+			)
+		);
 	}//end issueGiftCard()
 
 	/**
@@ -508,7 +446,7 @@ class LoyaltyController extends Controller {
 	 *
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001-01
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function activateProgramme(string $programmeId): JSONResponse {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
@@ -532,4 +470,109 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
 	}//end activateProgramme()
+
+	/**
+	 * The redemption a valid code names, or the 400 that refuses the code.
+	 *
+	 * @param string $code The beloningCode.
+	 *
+	 * @return array<string, mixed>|JSONResponse The redemption, or the refusal.
+	 */
+	private function usableRedemption(string $code): array|JSONResponse {
+		$validation = $this->redemptionService->validateCode(code: $code);
+		if ($validation['valid'] === false) {
+			return new JSONResponse(
+				['error' => $validation['reason'] ?? 'Invalid code'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$redemption = $validation['redemption'] ?? null;
+		if ($redemption === null) {
+			return new JSONResponse(['error' => 'Redemption missing'], Http::STATUS_BAD_REQUEST);
+		}
+
+		return $redemption;
+	}//end usableRedemption()
+
+	/**
+	 * A redemption's id: its `@self.id`, else its `uuid`, else its `id`.
+	 *
+	 * @param array<string, mixed> $redemption The redemption.
+	 *
+	 * @return string The id, or ''.
+	 */
+	private function redemptionIdOf(array $redemption): string {
+		$self = $redemption['@self'] ?? [];
+		$selfId = '';
+		if (is_array($self) === true) {
+			$selfId = ($self['id'] ?? '');
+		}
+
+		$redemptionId = (string)$selfId;
+		if ($redemptionId === '') {
+			$redemptionId = (string)($redemption['uuid'] ?? $redemption['id'] ?? '');
+		}
+
+		return $redemptionId;
+	}//end redemptionIdOf()
+
+	/**
+	 * The `posTransactionId` parameter when it is a string, else null.
+	 *
+	 * @return string|null The POS transaction reference.
+	 */
+	private function posTransactionRef(): ?string {
+		$posTransactionId = $this->request->getParam('posTransactionId');
+		if (is_string($posTransactionId) === true) {
+			return $posTransactionId;
+		}
+
+		return null;
+	}//end posTransactionRef()
+
+	/**
+	 * A parameter when it is a non-empty string, else null.
+	 *
+	 * @param string $key The parameter.
+	 *
+	 * @return string|null The value.
+	 */
+	private function nonEmptyStringParam(string $key): ?string {
+		$value = $this->request->getParam($key);
+		if (is_string($value) === true && $value !== '') {
+			return $value;
+		}
+
+		return null;
+	}//end nonEmptyStringParam()
+
+	/**
+	 * The requested gift card validity in days; 365 when absent or not positive.
+	 *
+	 * @return int The validity.
+	 */
+	private function expiryDays(): int {
+		$expiryDays = (int)$this->request->getParam('expiryDays', 365);
+		if ($expiryDays <= 0) {
+			return 365;
+		}
+
+		return $expiryDays;
+	}//end expiryDays()
+
+	/**
+	 * Answer what the service returns, or a 400 carrying its exception message.
+	 *
+	 * @param callable(): array<string, mixed> $answer Calls the service.
+	 *
+	 * @return JSONResponse The answer, or the refusal.
+	 */
+	private function answerOrBadRequest(callable $answer): JSONResponse {
+		try {
+			return new JSONResponse($answer());
+		} catch (Throwable $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
+	}//end answerOrBadRequest()
 }//end class
