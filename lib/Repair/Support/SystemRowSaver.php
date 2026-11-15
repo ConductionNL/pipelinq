@@ -48,18 +48,35 @@ trait SystemRowSaver {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function rowSaver(ObjectServiceInterface $objectService, string $register, string $schema, IUser|null $actingAdmin): callable {
+		return self::systemRowSaverFor(
+			objectService: $objectService,
+			target: ['register' => $register, 'schema' => $schema, 'actingAdmin' => $actingAdmin]
+		);
+	}//end rowSaver()
+
+	/**
+	 * The writer that saves one row at the target as its acting admin.
+	 *
+	 * @param ObjectServiceInterface                                          $objectService The OR object service.
+	 * @param array{register: string, schema: string, actingAdmin: IUser|null} $target        The register, schema and admin to act as.
+	 *
+	 * @return callable(array<string, mixed>): mixed
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private static function systemRowSaverFor(ObjectServiceInterface $objectService, array $target): callable {
 		// Bypass RBAC here — and ONLY here: this is a system context
 		// reshaping data it already owns. TicketService::save() keeps
 		// RBAC on, because controllers call it.
 		return static fn (array $data): mixed => $objectService->saveObject(
 			object: $data,
 			extend: [],
-			register: $register,
-			schema: $schema,
+			register: $target['register'],
+			schema: $target['schema'],
 			uuid: (string)($data['id'] ?? ''),
 			_rbac: false,
 			_multitenancy: false,
-			currentUser: $actingAdmin,
+			currentUser: $target['actingAdmin'],
 		);
-	}//end rowSaver()
+	}//end systemRowSaverFor()
 }//end trait

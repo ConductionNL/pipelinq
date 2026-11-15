@@ -182,15 +182,7 @@ class NaviService implements NaviServiceInterface {
 		}
 
 		$run->conversationId = $conversationId;
-		$context = $this->contextFor(run: $run);
-		$this->rememberTurn(run: $run);
-
-		// No data: degrade to a polite text response (REQ-DASH-001 empty result).
-		if ($context === [] && $run->intent !== 'unknown') {
-			return $this->textAnswer(query: $query, text: 'I could not find any matching data for that question.');
-		}
-
-		return $this->answer(run: $run, context: $context);
+		return $this->answer(run: $run);
 	}//end processQuery()
 
 	/**
@@ -228,14 +220,21 @@ class NaviService implements NaviServiceInterface {
 	}//end rememberTurn()
 
 	/**
-	 * Build, log and wrap the intent answer for rows that were found.
+	 * Fetch the rows for a question, remember the turn, then build, log and wrap the answer.
 	 *
-	 * @param NaviQueryRun $run The question being answered.
-	 * @param array<int, array<string, mixed>> $context Rows for the intent.
+	 * @param NaviQueryRun $run The question being answered, its conversation set.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function answer(NaviQueryRun $run, array $context): array {
+	private function answer(NaviQueryRun $run): array {
+		$context = $this->contextFor(run: $run);
+		$this->rememberTurn(run: $run);
+
+		// No data: degrade to a polite text response (REQ-DASH-001 empty result).
+		if ($context === [] && $run->intent !== 'unknown') {
+			return $this->textAnswer(query: $run->asked, text: 'I could not find any matching data for that question.');
+		}
+
 		$llmResponse = $this->buildResponseForIntent(run: $run, context: $context);
 		$this->logger->info(
 			message: '[NaviService] processed query',
@@ -413,7 +412,7 @@ class NaviService implements NaviServiceInterface {
 	private function buildTrendResponse(array $rows): array {
 		return [
 			'resultType' => 'chart',
-			'chartData' => $this->chartData(type: 'line', counts: $this->rowCounts()->weeklyCounts(rows: $rows)),
+			'chartData' => $this->chartData(type: 'line', counts: (new NaviRowCounts())->weeklyCounts(rows: $rows)),
 			'textResponse' => sprintf('Found %d leads in the dataset.', count($rows)),
 			'suggestedFollowUps' => self::TREND_FOLLOWUPS,
 		];
@@ -438,15 +437,6 @@ class NaviService implements NaviServiceInterface {
 	}//end chartData()
 
 	/**
-	 * The stateless counters behind the chart and table answers.
-	 *
-	 * @return NaviRowCounts
-	 */
-	private function rowCounts(): NaviRowCounts {
-		return new NaviRowCounts();
-	}//end rowCounts()
-
-	/**
 	 * Compute won / lost / open counts and a percentage.
 	 *
 	 * @param array<int, array<string, mixed>> $rows Lead rows.
@@ -454,9 +444,9 @@ class NaviService implements NaviServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function buildConversionResponse(array $rows): array {
-		$counts = $this->rowCounts()->statusCounts(rows: $rows);
+		$counts = (new NaviRowCounts())->statusCounts(rows: $rows);
 		$total = array_sum($counts);
-		$rate = $this->rowCounts()->wonRate(won: $counts['won'], total: $total);
+		$rate = (new NaviRowCounts())->wonRate(won: $counts['won'], total: $total);
 
 		$tableRows = [['Open leads', $counts['open']], ['Won leads', $counts['won']], ['Lost leads', $counts['lost']]];
 		$tableRows[] = ['Conversion rate (%)', $rate];
@@ -476,7 +466,7 @@ class NaviService implements NaviServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function buildBreakdownResponse(array $rows): array {
-		$counts = $this->rowCounts()->categoryCounts(rows: $rows);
+		$counts = (new NaviRowCounts())->categoryCounts(rows: $rows);
 		return [
 			'resultType' => 'chart',
 			'chartData' => $this->chartData(type: 'bar', counts: $counts),
@@ -518,6 +508,22 @@ class NaviService implements NaviServiceInterface {
 	 * @spec openspec/specs/dashboard/spec.md#requirement-navi-ai-analytics-widget-req-dash-001
 	 */
 	public function formatResponse(string $query, array $llmResponse, array $rawData): array {
+		// Suppress unused-parameter warning. $rawData is reserved for v2
+		// (LLM context attachment) — the parameter is contract-stable.
+		unset($rawData);
+
+		return $this->envelope(query: $query, llmResponse: $llmResponse);
+	}//end formatResponse()
+
+	/**
+	 * The final API response envelope.
+	 *
+	 * @param string               $query       Original user query.
+	 * @param array<string, mixed> $llmResponse Intermediate envelope.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function envelope(string $query, array $llmResponse): array {
 		$followUps = array_slice(
 			array: (array)($llmResponse['suggestedFollowUps'] ?? []),
 			offset: 0,
@@ -539,12 +545,8 @@ class NaviService implements NaviServiceInterface {
 			$envelope['tableData'] = (array)$llmResponse['tableData'];
 		}
 
-		// Suppress unused-parameter warning. $rawData is reserved for v2
-		// (LLM context attachment) — the parameter is contract-stable.
-		unset($rawData);
-
 		return $envelope;
-	}//end formatResponse()
+	}//end envelope()
 
 	/**
 	 * Default follow-up suggestions used as fallback.

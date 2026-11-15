@@ -74,14 +74,24 @@ class PartyLinkService implements PartyLinkServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function link(string $recordType, string $recordId, string $party, string $kind): array {
-		$draft = ['party' => trim($party), 'kind' => trim($kind), 'recordType' => trim($recordType), 'recordId' => trim($recordId)];
+		return $this->linkDraft(draft: ['party' => trim($party), 'kind' => trim($kind), 'recordType' => trim($recordType), 'recordId' => trim($recordId)]);
+	}//end link()
+
+	/**
+	 * Save a trimmed link draft, unless it is refused.
+	 *
+	 * @param array{party: string, kind: string, recordType: string, recordId: string} $draft The trimmed link.
+	 *
+	 * @return array<string, mixed> `status` plus either `partyLink` or `error`.
+	 */
+	private function linkDraft(array $draft): array {
 		$refusal = $this->linkRefusal(draft: $draft);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
 		return $this->saveLink(draft: $draft);
-	}//end link()
+	}//end linkDraft()
 
 	/**
 	 * Why a link may not be written: missing input, or the registry refuses the kind. Null when it may.
@@ -176,18 +186,30 @@ class PartyLinkService implements PartyLinkServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function import(string $recordType, string $recordId, array $rows): array {
+		return $this->importRows(record: ['recordType' => trim($recordType), 'recordId' => trim($recordId)], rows: $rows);
+	}//end import()
+
+	/**
+	 * Judge a batch for a record, write the accepted rows and report the refused ones.
+	 *
+	 * @param array{recordType: string, recordId: string} $record The trimmed record type and record.
+	 * @param array<int, array<string, string>>           $rows   Each with `party` and `kind`.
+	 *
+	 * @return array<string, mixed> `status`, the rows that landed and the rows refused.
+	 */
+	private function importRows(array $record, array $rows): array {
 		$verdict = $this->registry->judgeBatch(
-			recordType: trim($recordType),
-			recordId: trim($recordId),
+			recordType: $record['recordType'],
+			recordId: $record['recordId'],
 			rows: $rows,
 		);
 
 		return [
 			'status' => 200,
-			'linked' => $this->writeAccepted(accepted: $verdict['accepted'], record: ['recordType' => trim($recordType), 'recordId' => trim($recordId)]),
+			'linked' => $this->writeAccepted(accepted: $verdict['accepted'], record: $record),
 			'refused' => $verdict['refused'],
 		];
-	}//end import()
+	}//end importRows()
 
 	/**
 	 * Write a link valid from today for every accepted row; the links that landed.

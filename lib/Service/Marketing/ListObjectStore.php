@@ -232,18 +232,30 @@ class ListObjectStore implements ListObjectStoreInterface {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 	 */
 	public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
-		$context = $this->context(schemaSlug: $schemaSlug);
+		return $this->saveTo(target: ['schemaSlug' => $schemaSlug, 'id' => $id], payload: $payload);
+	}//end save()
+
+	/**
+	 * Persist an object in a schema, creating it when the target has no id.
+	 *
+	 * @param array{schemaSlug: string, id: string|null} $target  The schema to write to and the existing id when updating.
+	 * @param array<string, mixed>                       $payload The payload to store.
+	 *
+	 * @return array<string, mixed>|null Saved row, or null on failure.
+	 */
+	private function saveTo(array $target, array $payload): ?array {
+		$context = $this->context(schemaSlug: $target['schemaSlug']);
 		if ($context === null) {
 			return null;
 		}
 
-		$saved = $this->writeEntity(target: $context + ['id' => $id], payload: $payload);
+		$saved = $this->writeEntity(target: $context + ['id' => $target['id']], payload: $payload);
 		if ($saved === []) {
 			return null;
 		}
 
 		return $this->toArray(value: $saved[0]);
-	}//end save()
+	}//end saveTo()
 
 	/**
 	 * Write an object, creating it when the id is null or empty.

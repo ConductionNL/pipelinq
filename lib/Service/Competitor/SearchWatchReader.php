@@ -113,7 +113,7 @@ class SearchWatchReader {
 			);
 		}
 
-		$answer = $this->search(client: $client, query: $trimmed, actingUserId: $actingUserId);
+		$answer = $this->search(client: $client, request: ['query' => $trimmed, 'actingUserId' => $actingUserId]);
 		if ($answer instanceof WatchOutcome) {
 			return $answer;
 		}
@@ -124,15 +124,14 @@ class SearchWatchReader {
 	/**
 	 * Run the search, or answer with an unavailable outcome (logged) when it throws.
 	 *
-	 * @param object $client The Hermiq search client.
-	 * @param string $query The trimmed query.
-	 * @param string|null $actingUserId The acting user id, if any.
+	 * @param object                                         $client  The Hermiq search client.
+	 * @param array{query: string, actingUserId: string|null} $request The trimmed query and the acting user id, if any.
 	 *
 	 * @return mixed The search answer, or the failed outcome.
 	 */
-	private function search(object $client, string $query, string|null $actingUserId) {
+	private function search(object $client, array $request) {
 		try {
-			return $client->search(query: $query, actingUserId: $actingUserId);
+			return $client->search(query: $request['query'], actingUserId: $request['actingUserId']);
 		} catch (Throwable $e) {
 			$this->logger->info('SearchWatchReader: the search failed', ['exception' => $e->getMessage()]);
 			return WatchOutcome::failed(outcome: EgressResult::UNAVAILABLE, reason: 'The web search failed.');

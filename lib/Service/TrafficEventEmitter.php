@@ -123,16 +123,24 @@ class TrafficEventEmitter {
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function emitEmailEvent(string $kind, array $delivery, array $blast, ?string $clickedUrl = null): void {
-		$portalSlug = $this->reportingPortal(kind: $kind);
+		$this->emit(interaction: new MailTrafficInteraction(kind: $kind, delivery: $delivery, blast: $blast, clickedUrl: $clickedUrl));
+	}//end emitEmailEvent()
+
+	/**
+	 * Report a mail interaction to its portal, when its kind has one.
+	 *
+	 * @param MailTrafficInteraction $interaction The open or click.
+	 *
+	 * @return void
+	 */
+	private function emit(MailTrafficInteraction $interaction): void {
+		$portalSlug = $this->reportingPortal(kind: $interaction->kind);
 		if ($portalSlug === '') {
 			return;
 		}
 
-		$this->report(
-			interaction: new MailTrafficInteraction(kind: $kind, delivery: $delivery, blast: $blast, clickedUrl: $clickedUrl),
-			portalSlug: $portalSlug
-		);
-	}//end emitEmailEvent()
+		$this->report(interaction: $interaction, portalSlug: $portalSlug);
+	}//end emit()
 
 	/**
 	 * Ingest the interaction's event into the portal; a failure is logged, never thrown.

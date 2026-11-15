@@ -69,13 +69,25 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	 * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
 	 */
 	public function move(string $partyType, string $fromUuid, string $intoUuid): array {
+		return $this->movedFor(partyType: $partyType, merge: ['from' => $fromUuid, 'into' => $intoUuid]);
+	}//end move()
+
+	/**
+	 * Point every reference to a party type's merged-away record at the record that stays.
+	 *
+	 * @param string                           $partyType The party type whose references move.
+	 * @param array{from: string, into: string} $merge     The merged-away record and the record that stays.
+	 *
+	 * @return list<array<string, string>> The rows moved.
+	 */
+	private function movedFor(string $partyType, array $merge): array {
 		$moved = [];
 		foreach ($this->referencesOf(partyType: $partyType) as $reference) {
-			array_push($moved, ...$this->movedRows(reference: $reference, merge: ['from' => $fromUuid, 'into' => $intoUuid]));
+			array_push($moved, ...$this->movedRows(reference: $reference, merge: $merge));
 		}
 
 		return $moved;
-	}//end move()
+	}//end movedFor()
 
 	/**
 	 * Point every row of one reference at the record that stays.
@@ -110,6 +122,18 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	 * @spec openspec/changes/clients-reversible-merge/specs/client-reversible-merge/spec.md
 	 */
 	public function restore(array $ledger, string $fromUuid, string $intoUuid): array {
+		return $this->restoredFrom(ledger: $ledger, merge: ['from' => $fromUuid, 'into' => $intoUuid]);
+	}//end restore()
+
+	/**
+	 * Point the ledger's rows back at the merged-away record, sorted into restored and skipped.
+	 *
+	 * @param array<int, mixed>                 $ledger The rows the merge moved.
+	 * @param array{from: string, into: string} $merge  The merged-away record and the record that stayed.
+	 *
+	 * @return array{restored: list<array<string, string>>, skipped: list<array<string, string>>}
+	 */
+	private function restoredFrom(array $ledger, array $merge): array {
 		$result = ['restored' => [], 'skipped' => []];
 		foreach ($ledger as $row) {
 			if (is_array($row) === false) {
@@ -117,11 +141,11 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 			}
 
 			$entry = $this->ledgerEntry(row: $row);
-			$result[$this->restoredOrSkipped(entry: $entry, merge: ['from' => $fromUuid, 'into' => $intoUuid])][] = $entry;
+			$result[$this->restoredOrSkipped(entry: $entry, merge: $merge)][] = $entry;
 		}
 
 		return $result;
-	}//end restore()
+	}//end restoredFrom()
 
 	/**
 	 * Point one moved row back at the merged-away record, unless it is
