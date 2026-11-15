@@ -192,33 +192,21 @@ class SubscriptionService implements SubscriptionServiceInterface {
 			return ['status' => 'invalid'];
 		}
 
-		$run->list = (array)$list;
-		$run->contactId = $contactId;
-		$this->acceptSignup(run: $run, honeypot: $honeypot);
-		return ['status' => 'accepted'];
-	}//end subscribe()
-
-	/**
-	 * Start the confirmation of a public signup, or discard it when the honeypot is filled.
-	 *
-	 * @param ListSignupRun $run      The signup, its list and contact set.
-	 * @param string        $honeypot The decoy field; a non-empty value is a bot.
-	 *
-	 * @return void
-	 */
-	private function acceptSignup(ListSignupRun $run, string $honeypot): void {
 		if (trim($honeypot) !== '') {
 			$this->logger->info(
 				'SubscriptionService.subscribe: honeypot filled, discarding',
-				['listId' => $run->listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
+				['listId' => $listId, 'emailHash' => $this->tokens->hashAddress(address: $run->email)]
 			);
-			return;
+			return ['status' => 'accepted'];
 		}
 
-		$run->existing = $this->findSubscription(listId: $run->listId, email: $run->email);
+		$run->existing = $this->findSubscription(listId: $listId, email: $run->email);
+		$run->list = (array)$list;
+		$run->contactId = $contactId;
 		$run->source = 'public-signup';
 		$this->startConfirmation(run: $run);
-	}//end acceptSignup()
+		return ['status' => 'accepted'];
+	}//end subscribe()
 
 	/**
 	 * Confirm a membership from its signed link.
