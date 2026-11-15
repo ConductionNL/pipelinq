@@ -49,11 +49,28 @@ trait SchemaRowQuery {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function findSchemaRows(object $objectService, array $filters, string $failure, array $context): mixed {
+		return $this->readSchemaRowsOrLog(
+			read: ['objectService' => $objectService, 'filters' => $filters],
+			log: ['failure' => $failure, 'context' => $context]
+		);
+	}//end findSchemaRows()
+
+	/**
+	 * Rows of the host's schema matching the filters, or null after logging a failed read.
+	 *
+	 * @param array{objectService: object, filters: array<string, mixed>}     $read The ObjectService and the filters.
+	 * @param array{failure: string, context: array<string, mixed>}            $log  The warning and its log context.
+	 *
+	 * @return mixed The rows as OpenRegister returns them, or null when the read failed.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function readSchemaRowsOrLog(array $read, array $log): mixed {
 		try {
-			return $objectService->findAll(
+			return $read['objectService']->findAll(
 				config: [
 					'filters' => array_merge(
-						$filters,
+						$read['filters'],
 						[
 							'register' => $this->getRegisterSlug(),
 							'schema' => $this->getSchemaSlug(),
@@ -62,8 +79,8 @@ trait SchemaRowQuery {
 				]
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning($failure, $context + ['exception' => $e->getMessage()]);
+			$this->logger->warning($log['failure'], $log['context'] + ['exception' => $e->getMessage()]);
 			return null;
 		}
-	}//end findSchemaRows()
+	}//end readSchemaRowsOrLog()
 }//end trait

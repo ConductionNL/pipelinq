@@ -49,6 +49,20 @@ trait QuietObjectSave {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function saveQuietly(array $payload, string $schema, string $id, string $failure): void {
+		$this->saveRowOrLog(row: ['payload' => $payload, 'schema' => $schema, 'id' => $id], failure: $failure);
+	}//end saveQuietly()
+
+	/**
+	 * Persist a row when OpenRegister is available, logging a failed save.
+	 *
+	 * @param array{payload: array<string, mixed>, schema: string, id: string} $row     The row, its schema slug and id.
+	 * @param string                                                            $failure Warning logged when the save fails.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function saveRowOrLog(array $row, string $failure): void {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return;
@@ -56,13 +70,13 @@ trait QuietObjectSave {
 
 		try {
 			$objectService->saveObject(
-				object: $payload,
+				object: $row['payload'],
 				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: $id,
+				schema: $row['schema'],
+				uuid: $row['id'],
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning($failure, ['id' => $id, 'exception' => $e->getMessage()]);
+			$this->logger->warning($failure, ['id' => $row['id'], 'exception' => $e->getMessage()]);
 		}
-	}//end saveQuietly()
+	}//end saveRowOrLog()
 }//end trait
