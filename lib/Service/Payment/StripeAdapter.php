@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
+use OCA\Pipelinq\Service\Payment\Support\PspReplies;
 
 /**
  * Stripe payment adapter.
@@ -38,6 +39,8 @@ namespace OCA\Pipelinq\Service\Payment;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
  */
 class StripeAdapter extends AbstractPaymentAdapter {
+	use PspReplies;
+
 	/**
 	 * Stripe API base.
 	 *
@@ -227,12 +230,7 @@ class StripeAdapter extends AbstractPaymentAdapter {
 			'metadata[app]' => 'pipelinq',
 		];
 		$response = $this->send(call: new PspCall(url: self::BASE_URL . '/refunds', context: 'refund failed'), body: http_build_query($form));
-		$error = $this->replyError(response: $response);
-		if ($error !== null) {
-			return $this->failedRefund(sessionId: $sessionId, message: $error);
-		}
-
-		return $this->refunded(sessionId: $sessionId, refundId: (string)($response['body']['id'] ?? ''));
+		return $this->refundedById(response: $response, sessionId: $sessionId);
 	}//end refund()
 
 	/**
@@ -246,11 +244,7 @@ class StripeAdapter extends AbstractPaymentAdapter {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
-		if ($rawPayload === '' || $signature === '') {
-			return false;
-		}
-
-		$secret = $this->credential(key: 'webhookSecret');
+		$secret = $this->webhookSecret(rawPayload: $rawPayload, signature: $signature);
 		if ($secret === '') {
 			return false;
 		}
