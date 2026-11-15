@@ -206,12 +206,9 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 		// the configuration is checked again here rather than assumed.
 		$this->validateConfig(config: $config);
 
-		$type = trim((string)$config['objectType']);
-		$outKey = trim((string)$config['output']);
 		$out = [];
-
 		foreach ($items as $item) {
-			$out[] = $this->provisionItem(item: $item, config: $config, type: $type, outKey: $outKey);
+			$out[] = $this->provisionItem(item: $item, config: $config);
 		}
 
 		return $out;
@@ -220,21 +217,23 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Provision the identity of one item and write its UID to the output field.
 	 *
+	 * The object type (`contact` or `client`) and the item field to write the
+	 * UID to are the step's `objectType` and `output`.
+	 *
 	 * @param array<string, mixed> $item   The incoming item.
-	 * @param array<string, mixed> $config The step configuration.
-	 * @param string               $type   The object type (`contact` or `client`).
-	 * @param string               $outKey The item field to write the UID to.
+	 * @param array<string, mixed> $config The validated step configuration.
 	 *
 	 * @return array<string, mixed> The item, with the UID added.
 	 *
 	 * @throws RuntimeException When the identity could not be provisioned.
 	 */
-	private function provisionItem(array $item, array $config, string $type, string $outKey): array {
+	private function provisionItem(array $item, array $config): array {
+		$type = trim((string)$config['objectType']);
 		$json = (array)($item['json'] ?? []);
-		$form = $this->identityForm(json: $json, config: $config, type: $type);
+		$form = $this->identityForm(json: $json, config: $config);
 		$resolved = $this->provisionIdentity(form: $form, type: $type);
 
-		$json[$outKey] = (string)$resolved['contactsUid'];
+		$json[trim((string)$config['output'])] = (string)$resolved['contactsUid'];
 		$item['json'] = $json;
 		return $item;
 	}//end provisionItem()
@@ -243,19 +242,18 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 * The vCard form for one item.
 	 *
 	 * @param array<string, mixed> $json   The item's data.
-	 * @param array<string, mixed> $config The step configuration.
-	 * @param string               $type   The object type.
+	 * @param array<string, mixed> $config The validated step configuration.
 	 *
 	 * @return array{name: string, email: string, phone: string, type: string}
 	 *
 	 * @throws RuntimeException When the item has neither a name nor an email address.
 	 */
-	private function identityForm(array $json, array $config, string $type): array {
+	private function identityForm(array $json, array $config): array {
 		$form = [
 			'name' => $this->field(json: $json, path: (string)($config['nameFrom'] ?? '')),
 			'email' => $this->field(json: $json, path: (string)($config['emailFrom'] ?? '')),
 			'phone' => $this->field(json: $json, path: (string)($config['phoneFrom'] ?? '')),
-			'type' => $this->formTypeFor(type: $type),
+			'type' => $this->formTypeFor(type: trim((string)$config['objectType'])),
 		];
 
 		if ($form['name'] === '' && $form['email'] === '') {
