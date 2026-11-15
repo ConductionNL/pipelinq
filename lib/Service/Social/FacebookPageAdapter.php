@@ -36,12 +36,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Service\Social\Support\PostMetricsCall;
+
 /**
  * A Facebook page.
  *
  * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 class FacebookPageAdapter extends AbstractSocialAdapter {
+	use PostMetricsCall;
+
 	/**
 	 * The Graph API version every path is prefixed with. It is pinned rather
 	 * than floating, because Meta deprecates versions on a schedule and a
@@ -148,14 +152,10 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *  its own composite id.
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {
-		if (trim($externalId) === '') {
-			return null;
-		}
-
-		return new SocialAdapterCall(
-			method: 'GET',
+		return $this->postMetricsGet(
+			externalId: $externalId,
 			path: '/' . self::GRAPH_VERSION . '/' . rawurlencode($externalId)
-				. '/insights?metric=post_video_views,post_clicks,post_reactions_by_type_total',
+				. '/insights?metric=post_video_views,post_clicks,post_reactions_by_type_total'
 		);
 	}//end metricsCall()
 

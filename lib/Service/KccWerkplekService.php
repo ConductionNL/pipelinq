@@ -32,8 +32,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
+use OCA\Pipelinq\Service\Support\CastingSerialisedToArray;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
-use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -52,7 +52,7 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekService implements KccWerkplekServiceInterface {
-	use SerialisedPayload;
+	use CastingSerialisedToArray;
 	use ConfiguredRegisterId;
 
 	/**
@@ -137,24 +137,6 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	}//end getSchema()
 
 	/**
-	 * Normalise an OpenRegister entity (object or array) to a plain array.
-	 *
-	 * @param mixed $object The object or array returned by ObjectService.
-	 *
-	 * @return array<string, mixed> Plain associative array.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
-	 */
-	private function toArray(mixed $object): array {
-		$serialised = $this->serialisedPayload(value: $object);
-		if ($serialised === null && is_object($object) === true) {
-			return (array)$object;
-		}
-
-		return ($serialised ?? []);
-	}//end toArray()
-
-	/**
 	 * Find all objects of a given schema, swallowing OR outages so a partial
 	 * workspace still renders (REQ-KWP-010 - the page must remain usable).
 	 *
@@ -221,12 +203,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 			return [];
 		}
 
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
+		return $this->resultsToArrays(results: $results);
 	}//end findSafe()
 
 	/**

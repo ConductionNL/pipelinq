@@ -32,6 +32,7 @@ use DateTime;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Service\Support\ClientRecordRead;
 use OCA\Pipelinq\Service\Support\SerialisedCast;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -47,6 +48,7 @@ use Throwable;
  */
 class ClientBusinessReader implements ClientBusinessReaderInterface {
 	use SerialisedCast;
+	use ClientRecordRead;
 
 	private const OBJECT_SERVICE = 'OCA\OpenRegister\Service\ObjectService';
 
@@ -310,13 +312,12 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 	 * @return array<string, mixed> The client, or `status` and `message`.
 	 */
 	private function client(string $clientId): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
-		if ($clientId === '' || $register === '' || $schema === '') {
+		$location = $this->clientLocation(clientId: $clientId);
+		if ($location === null) {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
-		return $this->readClient(clientId: $clientId, location: new RegisterSchema(register: $register, schema: $schema));
+		return $this->readClient(clientId: $clientId, location: $location);
 	}//end client()
 
 	/**
@@ -329,13 +330,7 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 	 */
 	private function readClient(string $clientId, RegisterSchema $location): array {
 		try {
-			$object = $this->container->get(self::OBJECT_SERVICE)->find(
-				id: $clientId,
-				register: $location->register,
-				schema: $location->schema,
-				_rbac: true,
-				_multitenancy: true,
-			);
+			$object = $this->findClientAsCaller(clientId: $clientId, location: $location);
 		} catch (NotAuthorizedException $e) {
 			return ['status' => 403, 'message' => 'Forbidden'];
 		} catch (Throwable $e) {

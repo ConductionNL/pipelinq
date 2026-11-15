@@ -34,8 +34,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
+use OCA\Pipelinq\Service\Support\ClientRecordRead;
 use OCA\Pipelinq\Service\Support\SerialisedCast;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -49,6 +49,7 @@ use Throwable;
  */
 class ClientCaseReader implements ClientCaseReaderInterface {
 	use SerialisedCast;
+	use ClientRecordRead;
 
 	/**
 	 * Dossiq's case leaf, resolved by name: it exists exactly when dossiq is installed.
@@ -133,13 +134,12 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 	 * @return array<string, mixed> `client`, or `status` and `message`.
 	 */
 	private function client(string $clientId): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
-		if ($clientId === '' || $register === '' || $schema === '') {
+		$location = $this->clientLocation(clientId: $clientId);
+		if ($location === null) {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
-		return $this->findClient(clientId: $clientId, location: new RegisterSchema(register: $register, schema: $schema));
+		return $this->findClient(clientId: $clientId, location: $location);
 	}//end client()
 
 	/**
@@ -152,13 +152,7 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 	 */
 	private function findClient(string $clientId, RegisterSchema $location): array {
 		try {
-			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
-				id: $clientId,
-				register: $location->register,
-				schema: $location->schema,
-				_rbac: true,
-				_multitenancy: true,
-			);
+			$object = $this->findClientAsCaller(clientId: $clientId, location: $location);
 		} catch (NotAuthorizedException $e) {
 			return ['status' => 403, 'message' => 'Forbidden'];
 		} catch (Throwable $e) {
