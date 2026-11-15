@@ -43,7 +43,7 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
@@ -111,7 +111,7 @@ class CashShiftService implements CashShiftServiceInterface {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
 	 * @param WebhookService $webhookService Dispatches POS webhooks.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
@@ -119,7 +119,7 @@ class CashShiftService implements CashShiftServiceInterface {
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
 		private readonly ObjectServiceInterface $objectService,

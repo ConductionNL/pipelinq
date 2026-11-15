@@ -20,8 +20,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\BillingHandoffAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
+use OCA\Pipelinq\Lifecycle\BillingHandoffAccessPolicy;
 use OCA\Pipelinq\Lifecycle\ForecastAccess;
 use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -83,7 +86,7 @@ class LifecycleRegistrarTest extends TestCase {
 			}
 		);
 		$this->aliases   = [];
-		$context->expects($this->exactly(2))->method('registerServiceAlias')->willReturnCallback(
+		$context->expects($this->exactly(4))->method('registerServiceAlias')->willReturnCallback(
 			function (string $alias, string $target): void {
 				$this->aliases[$alias] = $target;
 			}
@@ -171,8 +174,10 @@ class LifecycleRegistrarTest extends TestCase {
 	public function testRegisterAliasesTheLifecycleContracts(): void {
 		$this->assertSame(
 			[
-				ForecastAccessInterface::class => ForecastAccess::class,
-				SessionUserInterface::class    => SessionUser::class,
+				BillingHandoffAccessPolicyInterface::class => BillingHandoffAccessPolicy::class,
+				ForecastAccessInterface::class             => ForecastAccess::class,
+				PosAccessPolicyInterface::class            => PosAccessPolicy::class,
+				SessionUserInterface::class                => SessionUser::class,
 			],
 			$this->aliases
 		);

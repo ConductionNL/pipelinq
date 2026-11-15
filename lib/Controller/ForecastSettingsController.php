@@ -27,11 +27,11 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ExchangeRateServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SnapshotGenerationServiceInterface;
-use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -109,7 +109,7 @@ class ForecastSettingsController extends Controller {
 	 * @var array<string, array<string, mixed>>
 	 */
 	private const GROUP_FIELDS = [
-		'manager_group' => ['type' => 'string', 'key' => ForecastAccessPolicy::MANAGER_GROUP_KEY],
+		'manager_group' => ['type' => 'string', 'key' => ForecastAccessPolicyInterface::MANAGER_GROUP_KEY],
 		'team_groups' => ['type' => 'string', 'key' => SnapshotGenerationServiceInterface::TEAMS_KEY],
 	];
 
@@ -163,7 +163,7 @@ class ForecastSettingsController extends Controller {
 				'rate_overrides' => (object)$this->exchangeRate->overrideStore()->getOverrides(),
 				'rate_sources' => (object)$this->exchangeRate->describeRates(),
 				'max_rate_age_days' => $this->exchangeRate->getMaxRateAgeDays(),
-				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicy::MANAGER_GROUP_KEY, ''),
+				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicyInterface::MANAGER_GROUP_KEY, ''),
 				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationServiceInterface::TEAMS_KEY, ''),
 			]
 		);

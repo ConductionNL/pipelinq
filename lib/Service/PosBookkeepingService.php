@@ -52,8 +52,8 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
@@ -139,7 +139,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param IMailer $mailer The mailer (alert dispatch).
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
 	 * @param WebhookService $webhookService Dispatches POS webhooks.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
@@ -148,7 +148,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	public function __construct(
 		private IAppConfig $appConfig,
 		private IMailer $mailer,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
 		private readonly ObjectServiceInterface $objectService,

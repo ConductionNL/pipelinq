@@ -27,8 +27,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -62,7 +62,7 @@ class ProductCatalogController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ProductCatalogServiceInterface $service The product catalogue service.
 	 * @param IUserSession $userSession The user session.
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 * @param CallerObjectReaderInterface $reader Reads a client with the caller's rights.
@@ -71,7 +71,7 @@ class ProductCatalogController extends Controller {
 		IRequest $request,
 		private ProductCatalogServiceInterface $service,
 		private IUserSession $userSession,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private CallerObjectReaderInterface $reader,
