@@ -242,14 +242,31 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 		$teams = $hierarchy['teams'] ?? [];
 		$divisions = $hierarchy['divisions'] ?? [];
 
+		$rep = $this->repLevel(run: $run, input: ['teams' => $teams, 'dealsByRep' => $dealsByRep]);
+		$team = $this->rollUpLevel(run: $run, level: new SnapshotLevel(level: 'team', groups: $teams, childTotals: $rep['totals']));
+		$division = $this->rollUpLevel(run: $run, level: new SnapshotLevel(level: 'division', groups: $divisions, childTotals: $team['totals']));
+
+		$snapshots = [...$rep['snapshots'], ...$team['snapshots'], ...$division['snapshots']];
+		$snapshots[] = $this->companyRecord(run: $run, levelTotals: ['team' => $team['totals'], 'division' => $division['totals']]);
+
+		return $this->withRates(snapshots: $snapshots, rates: $rep['rates']);
+	}//end buildSnapshots()
+
+	/**
+	 * Snapshot every rep of every team from the rep's own deals.
+	 *
+	 * @param SnapshotRun          $run   The run.
+	 * @param array<string, mixed> $input `teams` (team=>reps) and `dealsByRep` (deals keyed by rep id).
+	 *
+	 * @return array{snapshots: array<int, array<string, mixed>>, totals: array<int|string, mixed>, rates: array<mixed>}
+	 */
+	private function repLevel(SnapshotRun $run, array $input): array {
 		$snapshots = [];
 		$repTotals = [];
 		$rates = [];
-
-		// Rep level.
-		foreach ($teams as $repIds) {
+		foreach ($input['teams'] as $repIds) {
 			foreach ($repIds as $repId) {
-				$bucket = $this->rollup->bucketDeals($dealsByRep[$repId] ?? []);
+				$bucket = $this->rollup->bucketDeals($input['dealsByRep'][$repId] ?? []);
 				$repTotals[$repId] = $bucket['totals'];
 				$rates = array_merge($rates, ($bucket['rates'] ?? []));
 				$record = $this->snapshotRecord(run: $run, node: new SnapshotNode(ownerId: $repId, level: 'rep', totals: $bucket['totals']));
@@ -258,14 +275,8 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 			}
 		}
 
-		$team = $this->rollUpLevel(run: $run, level: new SnapshotLevel(level: 'team', groups: $teams, childTotals: $repTotals));
-		$division = $this->rollUpLevel(run: $run, level: new SnapshotLevel(level: 'division', groups: $divisions, childTotals: $team['totals']));
-
-		$snapshots = [...$snapshots, ...$team['snapshots'], ...$division['snapshots']];
-		$snapshots[] = $this->companyRecord(run: $run, levelTotals: ['team' => $team['totals'], 'division' => $division['totals']]);
-
-		return $this->withRates(snapshots: $snapshots, rates: $rates);
-	}//end buildSnapshots()
+		return ['snapshots' => $snapshots, 'totals' => $repTotals, 'rates' => $rates];
+	}//end repLevel()
 
 	/**
 	 * The company snapshot, rolled up from the divisions, or from the teams when no divisions are configured.
