@@ -271,19 +271,28 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 		$register = $this->registerId();
 		$schema = $this->schemaId(schemaSlug: $schemaSlug);
 
-		$saved = $this->savedAsServiceAccount(
-			save: fn (): mixed => $this->objectService()->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			),
-			schemaSlug: $schemaSlug
-		);
+		$save = $this->saveCall(data: $data, target: ['register' => $register, 'schema' => $schema, 'uuid' => $id]);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(object: $this->savedAsServiceAccount(save: $save, schemaSlug: $schemaSlug));
 	}//end save()
+
+	/**
+	 * The ObjectService save of a payload, to run later.
+	 *
+	 * @param array<string, mixed>                                  $data   The object payload.
+	 * @param array{register: string, schema: string, uuid: ?string} $target The register and schema ids, and the id for an update.
+	 *
+	 * @return \Closure The save; it returns the saved object.
+	 */
+	private function saveCall(array $data, array $target): \Closure {
+		return fn (): mixed => $this->objectService()->saveObject(
+			object: $data,
+			extend: [],
+			register: $target['register'],
+			schema: $target['schema'],
+			uuid: $target['uuid']
+		);
+	}//end saveCall()
 
 	/**
 	 * Run a save as the portal service account; a failed save is logged and becomes a RuntimeException.

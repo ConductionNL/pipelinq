@@ -693,17 +693,29 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return $this->cachedSnapshot(entry: $entry, nowIso: $nowIso);
 		}
 
+		return $this->freshSnapshot(key: ['resourceId' => $resourceId, 'date' => $date, 'duration' => $duration], nowIso: $nowIso);
+	}//end getOrComputeCache()
+
+	/**
+	 * Compute the free blocks of a resource on a date, persist them and answer their snapshot.
+	 *
+	 * @param array{resourceId: string, date: string, duration: int} $key    The resource, the ISO date and the duration in minutes.
+	 * @param string                                                 $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function freshSnapshot(array $key, string $nowIso): array {
 		$free = $this->computeAvailability(
-			resourceId: $resourceId,
-			date: $date,
-			serviceDurationMinutes: $duration
+			resourceId: $key['resourceId'],
+			date: $key['date'],
+			serviceDurationMinutes: $key['duration']
 		);
 
 		return $this->storedSnapshot(
-			entry: ['resourceId' => $resourceId, 'date' => $date, 'freeBlocks' => $free],
+			entry: ['resourceId' => $key['resourceId'], 'date' => $key['date'], 'freeBlocks' => $free],
 			nowIso: $nowIso
 		);
-	}//end getOrComputeCache()
+	}//end freshSnapshot()
 
 	/**
 	 * The snapshot of a cached entry, flagged stale once past its `expiresAt`.
