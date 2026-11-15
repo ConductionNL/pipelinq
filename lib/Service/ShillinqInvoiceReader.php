@@ -360,13 +360,7 @@ class ShillinqInvoiceReader {
 			return null;
 		}
 
-		return [
-			'id' => $id,
-			'amount' => (float)($row['grossAmount'] ?? 0),
-			'currency' => (string)($row['currency'] ?? 'EUR'),
-			'invoiceDate' => substr((string)($row['invoiceDate'] ?? ''), 0, 10),
-			'invoiceNumber' => (string)($row['invoiceNumber'] ?? ''),
-		];
+		return $this->projection->head(row: $row, id: $id) + ['invoiceNumber' => (string)($row['invoiceNumber'] ?? '')];
 	}//end normalise()
 
 	/**
