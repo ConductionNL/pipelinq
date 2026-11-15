@@ -49,18 +49,34 @@ trait PosObjectFetch {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		return $this->fetchedOrThrow(ids: $this->config(schemaKey: $schemaKey), lookup: ['id' => $id, 'label' => $label]);
+	}//end fetchOne()
+
+	/**
+	 * Fetch one object of a configured register and schema, or throw.
+	 *
+	 * @param array{0: string, 1: string}       $ids    The [register, schema] ids.
+	 * @param array{id: string, label: string} $lookup The object UUID and the not-found error message.
+	 *
+	 * @return array<string, mixed> The object.
+	 *
+	 * @throws OCSNotFoundException If the object is not found.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function fetchedOrThrow(array $ids, array $lookup): array {
+		[$register, $schema] = $ids;
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $lookup['id'], register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			$object = null;
 		}
 
 		if ($object === null) {
-			throw new OCSNotFoundException($label);
+			throw new OCSNotFoundException($lookup['label']);
 		}
 
 		return $this->toArray(object: $object);
-	}//end fetchOne()
+	}//end fetchedOrThrow()
 }//end trait
