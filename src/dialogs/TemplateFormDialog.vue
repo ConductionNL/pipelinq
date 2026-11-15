@@ -309,6 +309,7 @@ import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import MailBlockEditor from '../components/templates/MailBlockEditor.vue'
 import { fetchArticles } from '../services/articlesApi.js'
 import { starterBlocks, withFooterLast } from '../services/mailBlocks.js'
+import { mailPreviewDocument } from '../services/mailPreview.js'
 import {
 	orderedArticleIds,
 	publishedOnly,
@@ -542,14 +543,7 @@ export default {
 		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
 		 */
 		previewDocument() {
-			const csp =
-				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return (
-				'<!DOCTYPE html><html><head><meta charset="utf-8">'
-				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
-				+ `</head><body>${this.isBlocks ? this.blocksPreviewHtml : withAddress(this.model.bodyHtml, this.model.footerOverride)}</body></html>`
-			)
+			return mailPreviewDocument(this.isBlocks ? this.blocksPreviewHtml : withAddress(this.model.bodyHtml, this.model.footerOverride))
 		},
 
 		/**
