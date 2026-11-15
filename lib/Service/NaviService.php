@@ -518,24 +518,6 @@ class NaviService implements NaviServiceInterface {
 	 * @spec openspec/specs/dashboard/spec.md#requirement-navi-ai-analytics-widget-req-dash-001
 	 */
 	public function formatResponse(string $query, array $llmResponse, array $rawData): array {
-		$envelope = $this->envelopeOf(query: $query, llmResponse: $llmResponse);
-
-		// Suppress unused-parameter warning. $rawData is reserved for v2
-		// (LLM context attachment) — the parameter is contract-stable.
-		unset($rawData);
-
-		return $envelope;
-	}//end formatResponse()
-
-	/**
-	 * The response envelope: the query, the answer and up to the maximum follow-ups, with any chart or table.
-	 *
-	 * @param string               $query       Original user query.
-	 * @param array<string, mixed> $llmResponse Intermediate envelope.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function envelopeOf(string $query, array $llmResponse): array {
 		$followUps = array_slice(
 			array: (array)($llmResponse['suggestedFollowUps'] ?? []),
 			offset: 0,
@@ -557,8 +539,12 @@ class NaviService implements NaviServiceInterface {
 			$envelope['tableData'] = (array)$llmResponse['tableData'];
 		}
 
+		// Suppress unused-parameter warning. $rawData is reserved for v2
+		// (LLM context attachment) — the parameter is contract-stable.
+		unset($rawData);
+
 		return $envelope;
-	}//end envelopeOf()
+	}//end formatResponse()
 
 	/**
 	 * Default follow-up suggestions used as fallback.
