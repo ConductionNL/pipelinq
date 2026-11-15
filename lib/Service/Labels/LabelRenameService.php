@@ -138,7 +138,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 
 		$objects = $this->objectService();
 		$label = $this->existingLabel(objects: $objects, labelId: $labelId);
-		$this->assertNameIsFree(objects: $objects, labelId: $labelId, name: $name);
+		$this->assertNameIsFree(objects: $objects, candidate: ['id' => $labelId, 'name' => $name]);
 
 		$from = (string)($label['name'] ?? '');
 		if ($from === $name) {
@@ -146,8 +146,9 @@ class LabelRenameService implements LabelRenameServiceInterface {
 		}
 
 		$this->saveName(objects: $objects, label: $label, labelId: $labelId, name: $name);
-		$rewritten = $this->rewrite(rename: ['objects' => $objects, 'from' => $from, 'to' => $name], budget: self::INLINE_LIMIT);
-		$queued = $this->queueRemainder(objects: $objects, from: $from, to: $name, userId: $userId);
+		$rename = ['objects' => $objects, 'from' => $from, 'to' => $name];
+		$rewritten = $this->rewrite(rename: $rename, budget: self::INLINE_LIMIT);
+		$queued = $this->queueRemainder(rename: $rename, userId: $userId);
 
 		return ['id' => $labelId, 'name' => $name, 'rewritten' => $rewritten, 'queued' => $queued];
 	}//end rename()
@@ -231,18 +232,16 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	/**
 	 * Queue the rest of the rewrite when items still carry the old name.
 	 *
-	 * @param object $objects The ObjectService.
-	 * @param string $from The old name.
-	 * @param string $to The new name.
-	 * @param string $userId The administrator who renamed.
+	 * @param array{objects: object, from: string, to: string} $rename The ObjectService, the old and the new name.
+	 * @param string                                           $userId The administrator who renamed.
 	 *
 	 * @return bool Whether a job was queued.
 	 *
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
-	private function queueRemainder(object $objects, string $from, string $to, string $userId): bool {
-		if ($this->anyCarries(objects: $objects, name: $from) === true) {
-			$this->jobList->add(LabelRenameJob::class, ['from' => $from, 'to' => $to, 'userId' => $userId]);
+	private function queueRemainder(array $rename, string $userId): bool {
+		if ($this->anyCarries(objects: $rename['objects'], name: $rename['from']) === true) {
+			$this->jobList->add(LabelRenameJob::class, ['from' => $rename['from'], 'to' => $rename['to'], 'userId' => $userId]);
 			return true;
 		}
 
@@ -274,22 +273,21 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	/**
 	 * Refuse a name another label already has, whatever the case.
 	 *
-	 * @param object $objects The ObjectService.
-	 * @param string $labelId The label being renamed.
-	 * @param string $name    The new name.
+	 * @param object                         $objects   The ObjectService.
+	 * @param array{id: string, name: string} $candidate The label being renamed and its new name.
 	 *
 	 * @return void
 	 *
 	 * @throws LabelRenameException With 409 when the name is taken.
 	 */
-	private function assertNameIsFree(object $objects, string $labelId, string $name): void {
+	private function assertNameIsFree(object $objects, array $candidate): void {
 		$rows = $objects->findAll(
 			config: ['limit' => 1000, 'filters' => ['register' => self::REGISTER, 'schema' => self::LABEL_SCHEMA]]
 		);
 		foreach ($rows as $row) {
 			$other = $this->toArray(value: $row);
 			$otherId = (string)($other['id'] ?? ($other['@self']['id'] ?? ''));
-			if ($otherId !== $labelId && mb_strtolower((string)($other['name'] ?? '')) === mb_strtolower($name)) {
+			if ($otherId !== $candidate['id'] && mb_strtolower((string)($other['name'] ?? '')) === mb_strtolower($candidate['name'])) {
 				throw new LabelRenameException(message: 'Another label already has this name.', status: 409);
 			}
 		}
@@ -306,8 +304,8 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	private function rewrite(array $rename, int $budget): int {
 		$done = 0;
 		foreach (self::TARGETS as $schema => $field) {
-			$scan = ['objects' => $rename['objects'], 'schema' => $schema, 'field' => $field, 'name' => $rename['from']];
-			$done = $this->rewriteTarget(rename: $rename, scan: $scan, budget: $budget, done: $done);
+			$scan = ['objects' => $rename['objects'], 'schema' => $schema, 'field' => $field, 'name' => $rename['from'], 'to' => $rename['to']];
+			$done = $this->rewriteTarget(scan: $scan, quota: ['budget' => $budget, 'done' => $done]);
 		}
 
 		return $done;
@@ -316,20 +314,24 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	/**
 	 * Rewrite the items of one schema page by page until the budget is spent or no new item turns up.
 	 *
-	 * @param array{objects: object, from: string, to: string} $rename The ObjectService, the old and the new name.
-	 * @param array{objects: object, schema: string, field: string, name: string} $scan The schema, field and name to scan for.
-	 * @param integer $budget How many items to rewrite at most, over all schemas.
-	 * @param integer $done How many items were rewritten so far.
+	 * @param array{objects: object, schema: string, field: string, name: string, to: string} $scan  The ObjectService, the schema,
+	 *                                                                                       field and old name to scan for,
+	 *                                                                                       and the new name.
+	 * @param array{budget: int, done: int}                                                  $quota How many items to rewrite at most,
+	 *                                                                                       over all schemas, and how many
+	 *                                                                                       were rewritten so far.
 	 *
 	 * @return integer How many items were rewritten, including the earlier ones.
 	 *
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
-	private function rewriteTarget(array $rename, array $scan, int $budget, int $done): int {
+	private function rewriteTarget(array $scan, array $quota): int {
+		$budget = $quota['budget'];
+		$done = $quota['done'];
 		$seen = [];
 		while ($done < $budget) {
 			$rows = $this->carriers(scan: $scan, limit: min(self::PAGE, $budget - $done));
-			[$fresh, $written, $seen] = $this->rewritePage(rename: $rename, scan: $scan, rows: $rows, seen: $seen);
+			[$fresh, $written, $seen] = $this->rewritePage(scan: $scan, page: ['rows' => $rows, 'seen' => $seen]);
 			$done += $written;
 
 			if ($fresh === 0) {
@@ -343,19 +345,22 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	/**
 	 * Rewrite the items of one page that were not seen before.
 	 *
-	 * @param array{objects: object, from: string, to: string} $rename The ObjectService, the old and the new name.
-	 * @param array{objects: object, schema: string, field: string, name: string} $scan The schema, field and name scanned for.
-	 * @param array<int, array<string, mixed>> $rows The page.
-	 * @param array<string, bool> $seen The ids seen so far in this schema.
+	 * @param array{objects: object, schema: string, field: string, name: string, to: string} $scan The ObjectService, the schema,
+	 *                                                                                      field and old name scanned for,
+	 *                                                                                      and the new name.
+	 * @param array{rows: array<int, array<string, mixed>>, seen: array<string, bool>}       $page The page, and the ids seen so
+	 *                                                                                      far in this schema.
 	 *
 	 * @return array{0: int, 1: int, 2: array<string, bool>} The new items, the items rewritten, and the ids seen.
 	 *
 	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
-	private function rewritePage(array $rename, array $scan, array $rows, array $seen): array {
+	private function rewritePage(array $scan, array $page): array {
+		$rename = ['objects' => $scan['objects'], 'from' => $scan['name'], 'to' => $scan['to']];
+		$seen = $page['seen'];
 		$fresh = 0;
 		$written = 0;
-		foreach ($rows as $row) {
+		foreach ($page['rows'] as $row) {
 			$id = (string)($row['id'] ?? ($row['@self']['id'] ?? ''));
 			if ($id === '' || isset($seen[$id]) === true) {
 				continue;
