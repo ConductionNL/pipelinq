@@ -115,6 +115,18 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'channelConversation';
 
 	/**
+	 * What a failed conversation lookup logs; empty logs nothing.
+	 */
+	private const CONVERSATION_LOOKUP_FAILURE = '';
+
+	/**
+	 * The fields a newly opened conversation is stamped with the current time on.
+	 *
+	 * @var list<string>
+	 */
+	private const CONVERSATION_OPENING_STAMPS = [];
+
+	/**
 	 * Default contact schema slug.
 	 */
 	private const DEFAULT_CONTACT_SCHEMA_SLUG = 'contact';
@@ -1398,84 +1410,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 			'raw' => $decoded,
 		];
 	}//end extractMetaMessage()
-
-	/**
-	 * Find or open a conversation row for (contact, provider, channel).
-	 *
-	 * @param string $contactId Contact UUID.
-	 * @param string $providerId Provider UUID.
-	 * @param string $channel Channel.
-	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
-	 *
-	 * @return string Conversation UUID.
-	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return '';
-		}
-
-		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
-		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
-
-		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
-		if ($existingId !== null) {
-			return $existingId;
-		}
-
-		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
-	}//end findOrOpenConversation()
-
-	/**
-	 * The id of the first open conversation matching the identity, or null when there is none.
-	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param array<string, string> $conversation The contact, provider, channel and open status.
-	 * @param string $schema The conversation schema slug.
-	 * @param array<string, bool> $scope OpenRegister access scope for the lookup.
-	 *
-	 * @return string|null The conversation id, or null when none is open.
-	 */
-	private function findOpenConversation(object $objectService, array $conversation, string $schema, array $scope): string|null {
-		try {
-			$rows = $objectService->findAll(
-				config: ['filters' => $conversation + ['register' => $this->getRegisterSlug(), 'schema' => $schema]],
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
-			);
-		} catch (Throwable $e) {
-			$rows = [];
-		}
-
-		if (is_array($rows) === true && $rows !== []) {
-			return $this->extractId(payload: $this->toArray(value: $rows[0]));
-		}
-
-		return null;
-	}//end findOpenConversation()
-
-	/**
-	 * Open a new conversation, returning its id or '' when the save fails.
-	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param array<string, string> $conversation The contact, provider, channel and open status.
-	 * @param string $schema The conversation schema slug.
-	 *
-	 * @return string The new conversation id.
-	 */
-	private function openConversation(object $objectService, array $conversation, string $schema): string {
-		try {
-			$saved = $objectService->saveObject(object: $conversation, register: $this->getRegisterSlug(), schema: $schema, uuid: null);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.findOrOpenConversation: open failed',
-				['exception' => $e->getMessage()]
-			);
-			return '';
-		}
-
-		return $this->extractId(payload: $this->toArray(value: $saved));
-	}//end openConversation()
 
 	/**
 	 * Refresh the conversation's lastInboundAt + windowExpiresAt.
