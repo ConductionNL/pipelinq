@@ -39,7 +39,6 @@ use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
-use OCA\Pipelinq\Util\RequiredResourceTypes;
 use OCA\Pipelinq\Util\WithoutSelf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -73,7 +72,6 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	use InjectedObjectService;
 	use ByteTruncate;
 	use WithoutSelf;
-	use RequiredResourceTypes;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -720,7 +718,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	private function loadCandidateResources(array $service): array {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: 'resource_schema');
-		$requiredTypes = $this->requiredResourceTypes(service: $service);
+		$requiredTypes = $this->resolveRequiredTypes(service: $service);
 
 		if ($register === '' || $schema === '') {
 			return [];
@@ -741,6 +739,22 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 
 		return $candidates;
 	}//end loadCandidateResources()
+
+	/**
+	 * Normalise a service's `requiredResourceTypes` filter.
+	 *
+	 * @param array<string, mixed> $service Service entity.
+	 *
+	 * @return array<int, string>
+	 */
+	private function resolveRequiredTypes(array $service): array {
+		$requiredTypes = ($service['requiredResourceTypes'] ?? []);
+		if (is_array($requiredTypes) === false) {
+			return [];
+		}
+
+		return $requiredTypes;
+	}//end resolveRequiredTypes()
 
 	/**
 	 * Fetch resource rows for candidate resolution (best-effort, empty on failure).
