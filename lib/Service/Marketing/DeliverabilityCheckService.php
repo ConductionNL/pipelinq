@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -48,6 +49,7 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 	use ConfiguredRegisterSlug;
 	use SavedPayloadId;
 	use ConfiguredMailTransportSchemaSlug;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -337,12 +339,7 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 	 * @return object|null
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('DeliverabilityCheckService.getObjectService: unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'DeliverabilityCheckService.getObjectService: unavailable', errorKey: 'exception');
 	}//end getObjectService()
 
 	/**

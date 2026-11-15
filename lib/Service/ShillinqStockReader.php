@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,6 +44,7 @@ use Throwable;
  */
 class ShillinqStockReader implements ShillinqStockReaderInterface {
 	use SerialisedToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Shillinq's register slug.
@@ -302,14 +304,6 @@ class ShillinqStockReader implements ShillinqStockReaderInterface {
 	 * @return object|null The service.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ShillinqStockReader: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ShillinqStockReader: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
 }//end class

@@ -24,8 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Util;
 
-use Throwable;
-
 /**
  * Fetches the ObjectService from the container on each call and logs a
  * warning, prefixed with the host class's short name, when OpenRegister is
@@ -35,6 +33,7 @@ use Throwable;
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait ContainerObjectService {
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Resolve the OpenRegister ObjectService lazily.
@@ -44,14 +43,9 @@ trait ContainerObjectService {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				substr(strrchr(self::class, '\\'), 1).'.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(
+			failure: substr(strrchr(self::class, '\\'), 1).'.getObjectService: OpenRegister unavailable',
+			errorKey: 'exception'
+		);
 	}//end getObjectService()
 }//end trait

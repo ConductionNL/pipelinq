@@ -39,6 +39,7 @@ namespace OCA\Pipelinq\Service\Marketing\Transport;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCA\Pipelinq\Util\CastSerialisedToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -55,6 +56,7 @@ use Throwable;
  */
 final class ConnectorSourceTransport implements TransportInterface {
 	use CastSerialisedToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * OpenConnector's Source schema slug.
@@ -450,15 +452,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 	 * @return object|null
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConnectorSourceTransport.resolveObjectService: unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ConnectorSourceTransport.resolveObjectService: unavailable', errorKey: 'exception');
 	}//end resolveObjectService()
 
 	/**

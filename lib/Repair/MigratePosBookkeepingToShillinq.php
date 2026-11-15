@@ -46,6 +46,7 @@ namespace OCA\Pipelinq\Repair;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -61,6 +62,7 @@ use Psr\Log\LoggerInterface;
  */
 class MigratePosBookkeepingToShillinq implements IRepairStep {
 	use CastingPayloadToArray;
+	use ContainerObjectServiceLookup;
 	use \OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 
 	/**
@@ -371,14 +373,6 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 * @return object|null The object service, or null.
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'POS bookkeeping migration: OpenRegister ObjectService not resolvable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'POS bookkeeping migration: OpenRegister ObjectService not resolvable', errorKey: 'exception');
 	}//end resolveObjectService()
 }//end class

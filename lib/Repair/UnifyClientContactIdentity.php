@@ -54,6 +54,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -76,6 +77,7 @@ use Psr\Log\LoggerInterface;
  */
 class UnifyClientContactIdentity implements IRepairStep {
 	use CastingPayloadToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Source-system tag written on every MDM sourceRecord this repair creates.
@@ -845,14 +847,6 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * @return object|null The object service, or null.
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Identity unify: OpenRegister ObjectService not resolvable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'Identity unify: OpenRegister ObjectService not resolvable', errorKey: 'exception');
 	}//end resolveObjectService()
 }//end class

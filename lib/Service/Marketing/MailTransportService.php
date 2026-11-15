@@ -47,6 +47,7 @@ use OCA\Pipelinq\Util\CastSerialisedToArray;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -80,6 +81,7 @@ class MailTransportService {
 	use SavedPayloadId;
 	use ConfiguredMailTransportSchemaSlug;
 	use CastSerialisedToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -861,12 +863,7 @@ class MailTransportService {
 	 * @return object|null
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('MailTransportService.getObjectService: unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'MailTransportService.getObjectService: unavailable', errorKey: 'exception');
 	}//end getObjectService()
 
 	/**
