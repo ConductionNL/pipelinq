@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const get = vi.fn()
 const channels = vi.hoisted(() => ({ subscribed: [], unsubscribed: [] }))
-vi.mock('@nextcloud/axios', () => ({ default: { get: (...args) => get(...args) } }))
+vi.mock('@nextcloud/axios', () => ({ default: { get: (...args) => get(...args), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } } }))
 vi.mock('@nextcloud/event-bus', () => ({
 	subscribe: (channel) => channels.subscribed.push(channel),
 	unsubscribe: (channel) => channels.unsubscribed.push(channel),
