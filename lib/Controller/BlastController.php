@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\MarketingCallerGate;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
@@ -49,6 +50,8 @@ use OCP\IUserSession;
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 class BlastController extends Controller {
+	use MarketingCallerGate;
+
 	/**
 	 * Constructor.
 	 *
@@ -349,22 +352,4 @@ class BlastController extends Controller {
 
 		return new JSONResponse($result['blast'] ?? null, Http::STATUS_CREATED);
 	}//end renderCreate()
-
-	/**
-	 * Generic 404 response.
-	 *
-	 * @return JSONResponse
-	 */
-	private function notFound(): JSONResponse {
-		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-	}//end notFound()
-
-	/**
-	 * The caller check shared by the marketing controllers.
-	 *
-	 * @return CrmCallerGate The gate.
-	 */
-	private function crmGate(): CrmCallerGate {
-		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
-	}//end crmGate()
 }//end class
