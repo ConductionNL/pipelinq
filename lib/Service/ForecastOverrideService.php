@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ConfiguredObjectFind;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -45,6 +46,7 @@ use RuntimeException;
 class ForecastOverrideService {
 	use PayloadToArray;
 	use InjectedObjectService;
+	use ConfiguredObjectFind;
 
 	/**
 	 * The categories that may be overridden.
@@ -167,22 +169,7 @@ class ForecastOverrideService {
 	 *   scenario to admin-settings, which never grew one
 	 */
 	public function getOverride(string $id): ?array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '' || $id === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(), id: $id);
 	}//end getOverride()
 
 	/**

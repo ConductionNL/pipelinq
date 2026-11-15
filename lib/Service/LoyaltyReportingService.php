@@ -651,19 +651,7 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	 * @return ?array<string, mixed>
 	 */
 	private function getOption(string $optionId): ?array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'redemptionOption_schema', '');
-		if ($register === '' || $schema === '' || $optionId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $optionId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->findObject(schemaKey: 'redemptionOption_schema', id: $optionId);
 	}//end getOption()
 
 	/**

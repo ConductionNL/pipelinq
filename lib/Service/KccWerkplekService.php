@@ -188,34 +188,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function findAllSafe(string $schemaKey): array {
-		$register = $this->getRegister();
-		$schema = $this->getSchema(schemaKey: $schemaKey);
-		if ($register === '' || $schema === '') {
-			$this->logger->info(
-				message: '[KccWerkplekService] register or schema not configured',
-				context: ['schemaKey' => $schemaKey]
-			);
-			return [];
-		}
-
-		try {
-			$results = $this->getObjectService()->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema]]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[KccWerkplekService] findAll failed',
-				context: ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
+		return $this->findSafe(schemaKey: $schemaKey, filters: [], failure: '[KccWerkplekService] findAll failed');
 	}//end findAllSafe()
 
 	/**
@@ -235,6 +208,20 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
 	 */
 	private function findFilteredSafe(string $schemaKey, array $filters): array {
+		return $this->findSafe(schemaKey: $schemaKey, filters: $filters, failure: '[KccWerkplekService] filtered findAll failed');
+	}//end findFilteredSafe()
+
+	/**
+	 * Find objects of a schema matching the filters, logging an unconfigured
+	 * schema or a failed read and answering [] for either.
+	 *
+	 * @param string               $schemaKey App config key (e.g. `task_schema`).
+	 * @param array<string, mixed> $filters   Field criteria (eq / IN).
+	 * @param string               $failure   Warning logged when the read fails.
+	 *
+	 * @return array<int, array<string, mixed>> Plain object arrays.
+	 */
+	private function findSafe(string $schemaKey, array $filters, string $failure): array {
 		$register = $this->getRegister();
 		$schema = $this->getSchema(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
@@ -251,7 +238,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				message: '[KccWerkplekService] filtered findAll failed',
+				message: $failure,
 				context: ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
 			);
 			return [];
@@ -263,7 +250,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 		}
 
 		return $out;
-	}//end findFilteredSafe()
+	}//end findSafe()
 
 	/**
 	 * Find tickets of one subtype matching the given equality / IN filters.
