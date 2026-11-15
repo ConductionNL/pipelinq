@@ -79,11 +79,22 @@ class PortalMailService {
 		string $subject,
 		string $intro,
 	): bool {
-		$link = $this->urlGenerator->getAbsoluteURL($route) . '?token=' . rawurlencode($token);
-		$body = $intro . "\n\n" . $link . "\n\n" . $this->l10n->t('If you did not request this, you can ignore this email.');
-
-		return $this->send(recipient: $recipient, subject: $subject, body: $body);
+		return $this->send(recipient: $recipient, subject: $subject, body: $this->tokenLinkBody(intro: $intro, link: [$route, $token]));
 	}//end sendTokenLink()
+
+	/**
+	 * The body of a tokenised action link mail: the intro, the link and the ignore line.
+	 *
+	 * @param string                      $intro The localised intro line.
+	 * @param array{0: string, 1: string} $link  The frontend route and the plaintext token.
+	 *
+	 * @return string The plain-text body.
+	 */
+	private function tokenLinkBody(string $intro, array $link): string {
+		$url = $this->urlGenerator->getAbsoluteURL($link[0]) . '?token=' . rawurlencode($link[1]);
+
+		return $intro . "\n\n" . $url . "\n\n" . $this->l10n->t('If you did not request this, you can ignore this email.');
+	}//end tokenLinkBody()
 
 	/**
 	 * Send a plain informational message.
