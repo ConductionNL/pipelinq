@@ -291,11 +291,8 @@ class ArticleService implements ArticleServiceInterface {
 			return ['error' => $clean];
 		}
 
-		$merged = array_merge($existing, $clean);
-		$merged['updatedAt'] = $this->nowIso();
-		$merged['agentAuthored'] = ($agent !== '');
-		$merged['agentAuthoredBy'] = $agent;
-		return $this->savedOver(existing: $existing, merged: $merged);
+		$stamp = ['updatedAt' => $this->nowIso(), 'agentAuthored' => ($agent !== ''), 'agentAuthoredBy' => $agent];
+		return $this->savedOver(existing: $existing, merged: array_merge($existing, $clean, $stamp));
 	}//end updateArticle()
 
 	/**
