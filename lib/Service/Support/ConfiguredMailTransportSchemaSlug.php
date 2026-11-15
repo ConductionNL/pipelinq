@@ -25,11 +25,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Support;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use Throwable;
 
 /**
- * Reads the 'mailTransport_schema' app-config value. The host class provides
- * an IAppConfig `$appConfig` property and a DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG
- * constant.
+ * Reads the 'mailTransport_schema' app-config value and finds one mail
+ * transport in it. The host class provides IAppConfig `$appConfig` and
+ * LoggerInterface `$logger` properties, a getRegisterSlug() step and a
+ * DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG constant.
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
@@ -50,4 +52,35 @@ trait ConfiguredMailTransportSchemaSlug {
 
 		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
 	}//end getMailTransportSchemaSlug()
+
+	/**
+	 * Find one `mailTransport` by id as OpenRegister returns it; null when
+	 * there is no ObjectService or the lookup throws (logged).
+	 *
+	 * @param object|null $objectService The OpenRegister ObjectService, or null when unavailable.
+	 * @param string      $id            MailTransport UUID or slug.
+	 *
+	 * @return mixed The found object, or null.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function findMailTransport(?object $objectService, string $id): mixed {
+		if ($objectService === null) {
+			return null;
+		}
+
+		try {
+			return $objectService->find(
+				id: $id,
+				register: $this->getRegisterSlug(),
+				schema: $this->getMailTransportSchemaSlug(),
+			);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				substr(strrchr(self::class, '\\'), 1).'.loadOne: not found',
+				['id' => $id, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end findMailTransport()
 }//end trait
