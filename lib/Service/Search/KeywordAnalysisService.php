@@ -297,7 +297,7 @@ class KeywordAnalysisService {
 				continue;
 			}
 
-			$contenders = $this->contenders(pages: $pages, queryImpressions: $totals['impressions'], minPageShare: $minPageShare);
+			$contenders = $this->contenders(pages: $pages, minPageShare: $minPageShare);
 			$finding = $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $materiality);
 			if ($finding !== null) {
 				$out[] = (['query' => $query] + $finding);
@@ -624,13 +624,13 @@ class KeywordAnalysisService {
 	/**
 	 * The pages carrying at least the minimum share of the query.
 	 *
-	 * @param array<string, array<string, mixed>> $pages The per-page entries.
-	 * @param int $queryImpressions The query's total impressions.
+	 * @param array<string, array<string, mixed>> $pages The per-page entries of a query with impressions.
 	 * @param float $minPageShare The minimum share.
 	 *
 	 * @return array<string, array<string, mixed>> The contenders, with their rates.
 	 */
-	private function contenders(array $pages, int $queryImpressions, float $minPageShare): array {
+	private function contenders(array $pages, float $minPageShare): array {
+		$queryImpressions = $this->pageTotals(pages: $pages)['impressions'];
 		$out = [];
 		foreach ($pages as $page => $entry) {
 			$impressions = (int)$entry['impressions'];
