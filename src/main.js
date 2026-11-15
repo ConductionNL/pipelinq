@@ -3,6 +3,7 @@
 
 import {
 	buildManifest,
+	buildManifestRoutes,
 	CnPageRenderer,
 	defaultPageTypes,
 	registerBuiltinDashboardWidgets,
@@ -52,6 +53,7 @@ import {
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
+import { menuRuntime, seedMenuRuntime } from './utils/menuRuntime.js'
 import { pageAppConfig, seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
@@ -160,16 +162,14 @@ const fragments = fragmentCtx
 const structureProfile = resolveStructureProfile(
 	loadState('pipelinq', STRUCTURE_SETTING, ''),
 )
+const enabledModules = resolveMenuModules(
+	loadState('pipelinq', MODULES_SETTING, ''),
+	simpleMenuLayout,
+)
 const profileFile =
 	structureProfile === STRUCTURE_FULL
 		? menuLayout
-		: applyMenuModules(
-				simpleMenuLayout,
-				resolveMenuModules(
-					loadState('pipelinq', MODULES_SETTING, ''),
-					simpleMenuLayout,
-				),
-			)
+		: applyMenuModules(simpleMenuLayout, enabledModules)
 const { manifest: profiledManifest, homePage } = applyHomePage(
 	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
 		theming: navTheming(getCapabilities()),
@@ -199,6 +199,18 @@ const mergedManifest = seedVatClassLabels(
 )
 // The index pages' chips, count line and header buttons, in the same way.
 translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
+// The Advanced page's status pills and menu structure panel read the menu as
+// it is set from `runtime.menu`.
+seedMenuRuntime(
+	mergedManifest,
+	menuRuntime({
+		profile: structureProfile,
+		profileFile: simpleMenuLayout,
+		enabled: enabledModules,
+		manifest: mergedManifest,
+		translate: (text) => t('pipelinq', text),
+	}),
+)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -210,7 +222,7 @@ translateIndexPageLabels(mergedManifest, (text) => t('pipelinq', text))
  * @param {object} manifest The bundled manifest (with `pages[]`).
  * @return {Array<object>} vue-router 3 routes config.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -219,6 +231,10 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
+	// An index page declaring `splitView` opens a row beside the list at a
+	// second address (`<route>/split/:id`); the library builds that record.
+	routes.push(...buildManifestRoutes(manifest, { component: RoutePageRenderer, props: true })
+		.filter((record) => record.meta?.cnSplitOf))
 	// vue-router matches in declaration order, so a param route like `/pos/:id`
 	// would otherwise swallow a static sibling like `/pos/tender-types` on a
 	// direct (non-SPA) load. Manifest page order isn't guaranteed — manifest.d
@@ -233,6 +249,9 @@ function routesFromManifest(manifest) {
 	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
 		routes.push({ path: '/', redirect: { name: homePage } })
 	}
+	// The cash register audit log moved from /kassakoppeling/audit; old links still land.
+	routes.push({ path: '/kassakoppeling/audit', redirect: '/cash-register-audit' })
+	routes.push({ path: '/kassakoppeling/audit/:id', redirect: (to) => `/cash-register-audit/${encodeURIComponent(to.params.id)}` })
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —

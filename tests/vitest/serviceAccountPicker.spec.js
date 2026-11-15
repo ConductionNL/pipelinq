@@ -5,7 +5,7 @@
  *
  * The service account picker, shared by the customer portal settings and the
  * messaging settings. It reads the account in use, warns while there is none,
- * and saves the one an admin types. The last spec pins both callers.
+ * and saves the one an admin chooses. The last spec pins both callers.
  *
  * @spec exclude shared admin control for the portal and messaging service accounts;
  *   no requirement owns the acting identity
@@ -24,17 +24,21 @@ vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text, vars = {}) =>
 		text.replace(/\{(\w+)\}/g, (match, key) => vars[key] ?? match),
 }))
+vi.mock('../../src/services/userDisplayName.js', () => ({
+	listAssignableUserIds: vi.fn(async () => ['sms-bot', 'pipelinq-berichten']),
+}))
 vi.mock('@nextcloud/vue', () => ({
-	NcButton: {
-		name: 'NcButton',
-		props: ['disabled'],
-		emits: ['click'],
+	NcSelect: {
+		name: 'NcSelect',
+		props: ['modelValue', 'options', 'inputLabel', 'inputId', 'disabled'],
+		emits: ['update:modelValue'],
 		render() {
-			return h(
-				'button',
-				{ disabled: this.disabled, onClick: () => this.$emit('click') },
-				this.$slots.default?.(),
-			)
+			return h('div', {
+				'data-stub': 'NcSelect',
+				'data-label': this.inputLabel,
+				'data-value': this.modelValue,
+				'data-options': (this.options || []).join(','),
+			})
 		},
 	},
 	NcNoteCard: {
@@ -45,6 +49,18 @@ vi.mock('@nextcloud/vue', () => ({
 		},
 	},
 }))
+
+/**
+ * Choose an account in the select, as an admin does.
+ *
+ * @param {object} wrapper The picker.
+ * @param {string} userId The account.
+ * @return {Promise<void>}
+ */
+async function choose(wrapper, userId) {
+	wrapper.findComponent({ name: 'NcSelect' }).vm.$emit('update:modelValue', userId)
+	await flushPromises()
+}
 
 const { default: ServiceAccountPicker } =
 	await import('../../src/components/admin/ServiceAccountPicker.vue')
@@ -93,7 +109,34 @@ describe('ServiceAccountPicker', () => {
 		expect(wrapper.text()).toContain('in pipelinq-messaging-service.')
 	})
 
-	it('saves the typed account and confirms it', async () => {
+	it('offers the accounts in a select labelled as the board draws it', async () => {
+		axiosMock.get.mockResolvedValue({
+			data: { userId: 'pipelinq-berichten', usable: true, reason: null },
+		})
+
+		const wrapper = picker()
+		await flushPromises()
+
+		const select = wrapper.get('[data-stub="NcSelect"]')
+		expect(select.attributes('data-label')).toBe('SMS and WhatsApp service account')
+		expect(select.attributes('data-value')).toBe('pipelinq-berichten')
+		expect(select.attributes('data-options')).toBe('sms-bot,pipelinq-berichten')
+		expect(wrapper.find('legend').exists()).toBe(false)
+	})
+
+	it('says which account is in use as soon as it loads', async () => {
+		axiosMock.get.mockResolvedValue({
+			data: { userId: 'pipelinq-berichten', usable: true, reason: null },
+		})
+
+		const wrapper = picker()
+		await flushPromises()
+
+		expect(wrapper.find('.note-success').text()).toBe('Now saved as pipelinq-berichten.')
+		expect(wrapper.find('.note-warning').exists()).toBe(false)
+	})
+
+	it('saves the chosen account and confirms it', async () => {
 		axiosMock.get.mockResolvedValue({
 			data: { userId: '', usable: false, reason: 'unset' },
 		})
@@ -108,9 +151,7 @@ describe('ServiceAccountPicker', () => {
 
 		const wrapper = picker()
 		await flushPromises()
-		await wrapper.find('#messaging-service-account').setValue('sms-bot')
-		await wrapper.find('button').trigger('click')
-		await flushPromises()
+		await choose(wrapper, 'sms-bot')
 
 		expect(axiosMock.put).toHaveBeenCalledWith(
 			'/index.php/apps/pipelinq/api/messaging/service-account',
@@ -130,9 +171,7 @@ describe('ServiceAccountPicker', () => {
 
 		const wrapper = picker()
 		await flushPromises()
-		await wrapper.find('#messaging-service-account').setValue('ghost')
-		await wrapper.find('button').trigger('click')
-		await flushPromises()
+		await choose(wrapper, 'ghost')
 
 		expect(wrapper.find('.note-error').text()).toBe('No account "ghost" exists.')
 	})

@@ -23,14 +23,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -43,7 +43,7 @@ use Throwable;
  *   is currently available.
  * - getRate(currency) — current rate or null.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class MessagingExchangeRateService {
 	/**
@@ -67,7 +67,7 @@ class MessagingExchangeRateService {
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -86,7 +86,7 @@ class MessagingExchangeRateService {
 	 *
 	 * @return float|null EUR amount or null.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function toEur(float $amount, string $currency): ?float {
 		$currency = strtoupper(trim($currency));
@@ -116,30 +116,46 @@ class MessagingExchangeRateService {
 			return null;
 		}
 
-		$override = $this->appConfig->getValueString(
-			Application::APP_ID,
-			'messaging.exchange_rates_json',
-			''
-		);
+		return ($this->configuredRate(currency: $currency) ?? (self::FALLBACK_RATES[$currency] ?? null));
+	}//end getRate()
 
-		if ($override !== '') {
-			try {
-				$decoded = json_decode($override, true, 512, JSON_THROW_ON_ERROR);
-				if (is_array($decoded) === true && isset($decoded[$currency]) === true && is_numeric($decoded[$currency]) === true) {
-					return (float)$decoded[$currency];
-				}
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'MessagingExchangeRateService.getRate: invalid exchange_rates_json',
-					['exception' => $e->getMessage()]
-				);
-			}
+	/**
+	 * The rate the admin configured for the currency; null when none is
+	 * configured, it is not numeric, or the JSON does not parse (logged).
+	 *
+	 * @param string $currency The upper-cased currency.
+	 *
+	 * @return float|null
+	 */
+	private function configuredRate(string $currency): ?float {
+		$override = $this->appConfig->getValueString(AppIdentity::APP_ID, 'messaging.exchange_rates_json', '');
+		if ($override === '') {
+			return null;
 		}
 
-		if (isset(self::FALLBACK_RATES[$currency]) === true) {
-			return self::FALLBACK_RATES[$currency];
+		try {
+			$decoded = json_decode($override, true, 512, JSON_THROW_ON_ERROR);
+		} catch (Throwable $e) {
+			$this->logger->warning('MessagingExchangeRateService.getRate: invalid exchange_rates_json', ['exception' => $e->getMessage()]);
+			return null;
+		}
+
+		return $this->rateIn(rates: $decoded, currency: $currency);
+	}//end configuredRate()
+
+	/**
+	 * The currency's numeric rate in a decoded rates object; null otherwise.
+	 *
+	 * @param mixed  $rates    The decoded JSON.
+	 * @param string $currency The upper-cased currency.
+	 *
+	 * @return float|null
+	 */
+	private function rateIn($rates, string $currency): ?float {
+		if (is_array($rates) === true && isset($rates[$currency]) === true && is_numeric($rates[$currency]) === true) {
+			return (float)$rates[$currency];
 		}
 
 		return null;
-	}//end getRate()
+	}//end rateIn()
 }//end class

@@ -41,7 +41,8 @@
 		"KeywordIntelligence",
 		"CompetitorWatches",
 		"ConnectionAudit",
-		"SearchQueries"
+		"SearchQueries",
+		"CallReviews"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -54,19 +55,23 @@
 		"Tasks": "Modules",
 		"OperationalDashboard": "Modules",
 		"SlaAttainment": "Reports",
-		"Bookings": "AppointmentsMenu"
+		"Bookings": "AppointmentsMenu",
+		"CallReviews": "Modules"
 	},
 	"settingsSection": [
 		"Pipelines",
+		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
+		"RetentionReview",
 		"Services",
 		"Resources",
-		"SavedReplies"
+		"SavedReplies",
+		"BulkChanges"
 	],
 	"nav": {
 		"brand": {
-			"name": "pipelinq",
+			"name": "Pipelinq",
 			"caption": "@theming.name",
 			"logo": "@theming.emblem|@theming.logo"
 		},
@@ -508,6 +513,41 @@
 			}
 		},
 		{
+			"id": "TaskDetail",
+			"_note": "Board PqTaak draws no follow row under the header, as the ticket page (openspec/changes/detail-follow-row-off). The full profile keeps it.",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "ZReportDetail",
+			"_note": "Board PqZRapport draws no follow row under the header (openspec/changes/detail-follow-row-off).",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "SocialPostDetail",
+			"_note": "Board PqSocialBericht draws no follow row under the header (openspec/changes/detail-follow-row-off).",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "ClientDetail",
+			"_note": "Boards PqKlant and PqOrganisatie draw no follow row under the header, as DqContact and DqOrganisatie (openspec/changes/client-contact-follow-row-off). The full profile keeps it.",
+			"config": {
+				"follow": false
+			}
+		},
+		{
+			"id": "ContactDetail",
+			"_note": "Board PqContactpersoon draws no follow row under the header (openspec/changes/client-contact-follow-row-off). The full profile keeps it.",
+			"config": {
+				"follow": false
+			}
+		},
+		{
 			"id": "TicketDetail",
 			"_note": "The ticket page in the simple structure (openspec/changes/simple-ticket-page). The full structure has no overlay, so its page is today's page. STAGE: `status`, the ticket's own lifecycle field. EVERY STATUS CHANGE HERE IS A TRANSITION OF THE SCHEMA'S x-openregister-lifecycle, posted to OpenRegister's transition endpoint, which checks the `from` state and the authorization again. `visibleWhen` only hides a button on a status its transition cannot leave; it decides nothing. The spec fails when an action names a transition the schema lacks or shows on a status outside the transition's `from`. THE DESIGN NAMES THREE THINGS PIPELINQ DOES NOT HAVE and they are not invented: a reminder to a customer who does not answer (the waiting stage offers Answer again), a step from answered to closed (resolved, completed, rejected, converted and closed are all final, so a finished ticket has no primary button), and a convert-to-case header action (conversion needs an availability answer first, so it stays the self-hiding section it is). A CONTACT MOMENT HAS NO CUSTOMER TO ANSWER: Answer hides on it, the stage then has no primary button, and Close the ticket is in the More menu. THE ANSWER IS WRITTEN IN ONE PLACE: `customer-reply` leaves the body and opens as a dialog from the Answer button, and the body shows the conversation to read. THE GRID IS ONE TABS WIDGET, full width: beside the side column the grid is narrow, and three cards side by side would stack. LOG CONTACT SEEDS THE TICKET AND NOT THE CUSTOMER: the library leaves a token it cannot resolve in place, so `@object.contact` on a ticket without a contact would be saved as those fifteen characters, a foreign key to nothing. `@objectId` always resolves. The contact moment hangs on the ticket, and the ticket names the customer. THE WHAT-NOW CARD (DqZaak, Acties: one next-step button inside a card that lists what the step still needs): `nextStep` names a checklist per stage on fields the ticket has (assignee, client, slaDeadline, portalReplies), and the stage's primary button sits in the card. A finished ticket has no stage entry, so it shows no card. Nothing in the checklist is a guess: an item is done when its field holds a value.",
 			"config": {
@@ -542,11 +582,19 @@
 						}
 					},
 					{
+						"id": "link-to-client",
+						"label": "Link to a client",
+						"type": "open-modal",
+						"target": "LinkSubmissionToClientModal",
+						"icon": "AccountArrowRightOutline",
+						"props": { "ticketId": "@objectId" },
+						"visibleWhen": { "field": "client", "op": "empty" }
+					},
+					{
 						"id": "ticket-answer",
 						"type": "open-modal",
 						"target": "TicketAnswerDialog",
 						"label": "Answer the customer",
-						"icon": "ForumOutline",
 						"visibleWhen": {
 							"field": "ticketType",
 							"op": "neq",
@@ -555,65 +603,10 @@
 					},
 					{
 						"id": "ticket-log-contact",
-						"type": "open-form",
+						"type": "open-modal",
+						"target": "ContactLogDialog",
 						"label": "Log contact",
-						"formTitle": "Log contact",
-						"icon": "Phone",
-						"register": "pipelinq",
-						"schema": "ticket",
-						"props": {
-							"ticketType": "interaction",
-							"parentTicket": "@objectId"
-						},
-						"formEyebrow": "Contact moment",
-						"formSubtitle": "A contact moment with the customer, saved with this ticket",
-						"includeFields": [
-							"channel",
-							"direction",
-							"occurredAt",
-							"duration",
-							"title",
-							"notes",
-							"client"
-						],
-						"columns": 2,
-						"fieldOverrides": {
-							"channel": {
-								"order": 1,
-								"label": "Channel",
-								"description": ""
-							},
-							"direction": {
-								"order": 2,
-								"label": "Direction",
-								"description": ""
-							},
-							"occurredAt": {
-								"order": 3,
-								"label": "When",
-								"description": ""
-							},
-							"duration": {
-								"order": 4,
-								"label": "Duration",
-								"description": ""
-							},
-							"title": {
-								"order": 5,
-								"label": "Subject",
-								"description": ""
-							},
-							"notes": {
-								"order": 6,
-								"label": "Notes",
-								"description": ""
-							},
-							"client": {
-								"order": 7,
-								"label": "Client",
-								"description": ""
-							}
-						}
+						"icon": "Phone"
 					},
 					{
 						"id": "ticket-resume",
@@ -749,6 +742,48 @@
 							]
 						},
 						"group": "Finish"
+					},
+					{
+						"id": "lock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this ticket?",
+						"confirmMessage": "Nobody can change this ticket while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Ticket locked.",
+						"errorMessage": "Could not lock this ticket.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"id": "unlock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"successMessage": "Ticket unlocked.",
+						"errorMessage": "Could not unlock this ticket.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"primaryActionByStage": {
@@ -803,9 +838,61 @@
 							],
 							"after": "Then: back to in progress, or finish"
 						}
-					}
+					},
+					"variants": [
+						{
+							"when": {
+								"field": "ticketType",
+								"op": "eq",
+								"value": "interaction"
+							},
+							"stages": {
+								"new": {
+									"title": "What now? Step 1: new",
+									"checklist": [
+										{
+											"label": "The customer is known",
+											"doneField": "client"
+										},
+										{
+											"label": "Linked to the request it was about",
+											"doneField": "parentTicket"
+										},
+										{
+											"label": "The outcome is noted",
+											"doneField": "outcome",
+											"hint": "What was agreed, and who does what"
+										}
+									],
+									"afterTitle": "A contact moment has no customer to answer.",
+									"after": "Close it via More, Close the contact moment."
+								},
+								"in_progress": {
+									"title": "What now? Step 2: in progress",
+									"checklist": [
+										{
+											"label": "The customer is known",
+											"doneField": "client"
+										},
+										{
+											"label": "Linked to the request it was about",
+											"doneField": "parentTicket"
+										},
+										{
+											"label": "The outcome is noted",
+											"doneField": "outcome",
+											"hint": "What was agreed, and who does what"
+										}
+									],
+									"afterTitle": "A contact moment has no customer to answer.",
+									"after": "Close it via More, Close the contact moment."
+								}
+							}
+						}
+					]
 				},
 				"quickActions": [
+					"link-to-client",
 					"ticket-answer",
 					"ticket-log-contact"
 				],
@@ -817,7 +904,14 @@
 					"labels": {
 						"request": "Request",
 						"complaint": "Complaint",
+						"melding": "Public-space report",
 						"interaction": "Contact moment"
+					},
+					"colorMap": {
+						"request": "info",
+						"complaint": "error",
+						"melding": "warning",
+						"interaction": "default"
 					}
 				},
 				"statusPill": {
@@ -831,73 +925,553 @@
 						"rejected": "Rejected",
 						"converted": "Converted to a case",
 						"closed": "Closed"
+					},
+					"colorMap": {
+						"new": "info",
+						"in_progress": "purple",
+						"awaiting_customer": "warning",
+						"resolved": "success",
+						"completed": "success",
+						"rejected": "default",
+						"converted": "default",
+						"closed": "default"
 					}
 				},
 				"sideColumn": [
 					{
+						"id": "side-cm-client",
+						"type": "facts",
+						"title": "Client",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": [
+										{
+											"path": "name"
+										}
+									],
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										}
+									]
+								},
+								{
+									"from": "object",
+									"label": "Called from",
+									"path": "from_number",
+									"format": "phone"
+								},
+								{
+									"key": "preference",
+									"label": "Preference",
+									"parts": [
+										{
+											"path": "preferredChannel",
+											"map": {
+												"phone": "phone",
+												"email": "email",
+												"whatsapp": "WhatsApp",
+												"linkedin": "LinkedIn",
+												"x": "X",
+												"mastodon": "Mastodon",
+												"bluesky": "Bluesky",
+												"other": "other"
+											}
+										},
+										{
+											"path": "preferredContactTime"
+										}
+									],
+									"separator": ", "
+								}
+							],
+							"link": {
+								"label": "Client page, {count} earlier contacts",
+								"fallbackLabel": "Client page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@object.client"
+									}
+								},
+								"countFrom": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"client": "@object.client",
+										"ticketType": "interaction",
+										"occurredAt[lt]": "@object.occurredAt"
+									}
+								}
+							},
+							"emptyText": "No client linked to this contact moment yet"
+						}
+					},
+					{
+						"id": "side-cm-handling",
+						"type": "facts",
+						"title": "Handling",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"fields": [
+								{
+									"from": "object",
+									"label": "Handler",
+									"path": "assignee",
+									"format": "user"
+								},
+								{
+									"from": "object",
+									"key": "channel",
+									"label": "Channel",
+									"parts": [
+										{
+											"path": "channel",
+											"map": {
+												"telefoon": "Phone",
+												"phone": "Phone",
+												"email": "Email",
+												"balie": "Desk",
+												"counter": "Desk",
+												"chat": "Chat",
+												"social": "Social media",
+												"brief": "Letter",
+												"letter": "Letter",
+												"sms": "Text message",
+												"web": "Web form"
+											}
+										},
+										{
+											"path": "direction",
+											"map": {
+												"inbound": "incoming",
+												"outbound": "outgoing",
+												"internal": "internal"
+											}
+										}
+									],
+									"separator": ", "
+								},
+								{
+									"from": "object",
+									"label": "Duration",
+									"path": "duration",
+									"format": "duration"
+								}
+							]
+						}
+					},
+					{
+						"id": "side-cm-case",
+						"type": "facts",
+						"title": "Linked case",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"fields": [
+								{
+									"from": "object",
+									"label": "Case",
+									"path": "caseReference",
+									"resolve": {
+										"register": "dossiq",
+										"schema": "case",
+										"labelField": "title"
+									}
+								}
+							],
+							"emptyText": "Not saved with a case.",
+							"actions": [
+								{
+									"id": "file-on-case",
+									"type": "open-form",
+									"label": "Save with a case",
+									"formTitle": "Save with a case",
+									"visibleWhen": {
+										"field": "caseReference",
+										"op": "empty"
+									},
+									"endpoint": {
+										"url": "/apps/pipelinq/api/contact-moments/@objectId/cases",
+										"method": "POST"
+									},
+									"formProperties": {
+										"caseId": {
+											"type": "string",
+											"title": "Case"
+										}
+									},
+									"fieldOverrides": {
+										"caseId": {
+											"widget": "resource",
+											"label": "Case",
+											"placeholder": "Pick a case",
+											"resource": {
+												"register": "dossiq",
+												"schema": "case",
+												"labelField": "title"
+											}
+										}
+									},
+									"successMessage": "The contact moment is saved with the case."
+								}
+							]
+						}
+					},
+					{
+						"id": "side-cm-colleagues",
+						"type": "RoutingSuggestionWidget",
+						"title": "Suggested colleagues",
+						"icon": "AccountArrowRightOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"title": "Suggested colleagues",
+							"entityType": "ticket",
+							"objectType": "ticket"
+						}
+					},
+					{
+						"id": "side-cm-follow-up",
+						"type": "record-list",
+						"title": "Follow-up",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"contactMoment": "@objectId",
+								"type": "callbackRequest",
+								"status": "open"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"title": "{subject}",
+							"meta": "{deadline|date}",
+							"rowRoute": "TaskDetail",
+							"emptyText": "No callback planned.",
+							"footerAction": {
+								"type": "open-form",
+								"variant": "tonal",
+								"label": "Plan a callback",
+								"icon": "Phone",
+								"formTitle": "Plan a callback",
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"props": {
+									"type": "callbackRequest",
+									"status": "open",
+									"contactMoment": "@objectId",
+									"clientId": "@object.client"
+								},
+								"includeFields": [
+									"subject",
+									"deadline",
+									"preferredTimeSlot",
+									"callbackPhoneNumber",
+									"assigneeUserId"
+								]
+							}
+						}
+					},
+					{
 						"id": "side-customer",
-						"type": "data",
+						"type": "facts",
 						"title": "Customer",
 						"content": {
-							"title": "Customer",
-							"columns": 1,
-							"include": [
-								"client",
-								"contact",
-								"channel"
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@object.client"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"initialsPath": "name",
+									"title": [
+										{
+											"path": "name"
+										}
+									],
+									"subtitle": [
+										{
+											"path": "type",
+											"map": {
+												"organization": "Organisation",
+												"person": "Resident"
+											}
+										},
+										{
+											"path": "address"
+										}
+									]
+								},
+								{
+									"from": "object",
+									"label": "Channel",
+									"path": "channel",
+									"map": {
+										"telefoon": "Phone",
+										"phone": "Phone",
+										"email": "Email",
+										"balie": "Desk",
+										"counter": "Desk",
+										"chat": "Chat",
+										"social": "Social media",
+										"brief": "Letter",
+										"letter": "Letter",
+										"sms": "Text message",
+										"web": "Web form"
+									}
+								},
+								{
+									"from": "object",
+									"label": "Contact",
+									"path": "contact",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "contact",
+										"labelField": "name"
+									}
+								}
 							],
 							"hideEmpty": true,
-							"editable": false
+							"link": {
+								"label": "Contact details and earlier tickets",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@object.client"
+									}
+								}
+							},
+							"emptyText": "No client linked to this ticket yet."
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
 						"id": "side-deadline",
-						"type": "data",
-						"title": "Deadline",
+						"type": "facts",
+						"title": "Time limit",
 						"content": {
-							"title": "Deadline",
-							"columns": 1,
-							"include": [
-								"slaDeadline",
-								"priority",
-								"assignee"
+							"fields": [
+								{
+									"as": "title",
+									"path": "slaDeadline",
+									"format": "longdatetime",
+									"size": 26
+								},
+								{
+									"label": "Priority",
+									"path": "priority",
+									"map": {
+										"low": "Low",
+										"normal": "Normal",
+										"high": "High",
+										"urgent": "Urgent"
+									}
+								},
+								{
+									"label": "Handler",
+									"path": "assignee",
+									"format": "user"
+								}
 							],
 							"hideEmpty": true,
-							"editable": false
+							"actions": [
+								{
+									"id": "set-term",
+									"type": "open-form",
+									"variant": "tonal",
+									"label": "Set the term",
+									"formTitle": "Set the term",
+									"requires": "update",
+									"endpoint": {
+										"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId",
+										"method": "PATCH"
+									},
+									"formProperties": {
+										"slaDeadline": {
+											"type": "string",
+											"format": "date-time",
+											"title": "Time limit"
+										}
+									},
+									"successMessage": "The term is set."
+								}
+							]
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
 						"id": "side-case",
-						"type": "data",
+						"type": "facts",
 						"title": "Linked case",
 						"content": {
-							"title": "Linked case",
-							"columns": 1,
-							"include": [
-								"caseReference",
-								"primaryCaseReference"
+							"fields": [
+								{
+									"label": "Case",
+									"path": "caseReference",
+									"resolve": {
+										"register": "dossiq",
+										"schema": "case",
+										"labelField": "title"
+									}
+								}
 							],
 							"hideEmpty": true,
-							"editable": false
+							"emptyText": "No case linked yet.",
+							"actions": [
+								{
+									"id": "link-case",
+									"type": "open-form",
+									"label": "Link an existing case",
+									"formTitle": "Link an existing case",
+									"requires": "update",
+									"visibleWhen": {
+										"all": [
+											{
+												"field": "caseReference",
+												"op": "empty"
+											},
+											{
+												"appInstalled": "dossiq"
+											}
+										]
+									},
+									"endpoint": {
+										"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId",
+										"method": "PATCH"
+									},
+									"formProperties": {
+										"caseReference": {
+											"type": "string",
+											"title": "Case"
+										}
+									},
+									"fieldOverrides": {
+										"caseReference": {
+											"widget": "resource",
+											"label": "Case",
+											"placeholder": "Pick a case",
+											"resource": {
+												"register": "dossiq",
+												"schema": "case",
+												"labelField": "title"
+											}
+										}
+									},
+									"successMessage": "The request is linked to the case."
+								}
+							]
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
-					"ticket-related",
+					{
+						"id": "side-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
+					},
 					"ticket-resident-view"
 				],
 				"layout": [
 					{
+						"id": "lock",
+						"widgetId": "ticket-locked",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"sizeToContent": true,
+						"showTitle": false
+					},
+					{
 						"id": "1",
 						"widgetId": "ticket-panels",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 8
 					}
 				],
-				"breadcrumb": {
-					"label": "Questions and reports",
-					"route": "Tickets"
-				},
+				"breadcrumb": [
+					{
+						"label": "Questions and reports",
+						"route": "Tickets",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
+					},
+					{
+						"label": "Contact moments",
+						"route": "Tickets",
+						"query": {
+							"ticketType": "interaction"
+						},
+						"currentField": "reference",
+						"separator": "/",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						}
+					}
+				],
 				"showTypeEyebrow": false,
 				"headerCard": true,
 				"follow": false,
@@ -928,12 +1502,15 @@
 					"title": {
 						"order": 1,
 						"description": "",
-						"section": "The ticket"
+						"section": "The ticket",
+						"width": "full"
 					},
 					"description": {
 						"order": 2,
 						"description": "",
-						"section": "The ticket"
+						"section": "The ticket",
+						"widget": "textarea",
+						"rows": 3
 					},
 					"ticketType": {
 						"order": 3,
@@ -1008,9 +1585,16 @@
 					"customerMessage": {
 						"order": 17,
 						"description": "",
-						"section": "Visible to the customer"
+						"section": "Visible to the customer",
+						"widget": "textarea",
+						"rows": 2
 					}
-				}
+				},
+				"editTitle": "Edit ticket",
+				"editEyebrow": "Edit · {reference}",
+				"editSubtitle": "{reference} · {ticketType}",
+				"editConfirmLabel": "Save changes",
+				"editFootnote": "You do not change the status here: it moves through the ticket's steps, Answer the customer, Complete or Reject, so every change is checked."
 			},
 			"configPatch": {
 				"bodyWidgets": {
@@ -1019,7 +1603,12 @@
 					"woo-conversion": null,
 					"resident-view": null,
 					"routing-suggestions": {
-						"title": "Suggested colleagues"
+						"title": "Suggested colleagues",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
 					}
 				},
 				"widgets": {
@@ -1040,6 +1629,20 @@
 							"moreLabel": "More",
 							"tabs": [
 								{
+									"widgetId": "contact-overview",
+									"label": "Overview",
+									"visibleWhen": {
+										"field": "ticketType",
+										"op": "eq",
+										"value": "interaction"
+									}
+								},
+								{
+									"visibleWhen": {
+										"field": "ticketType",
+										"op": "neq",
+										"value": "interaction"
+									},
 									"widgetIds": [
 										"ticket-data",
 										"ticket-conversation",
@@ -1052,7 +1655,8 @@
 								{
 									"widgetId": "ticket-contactmoments",
 									"label": "Contact moments",
-									"countFrom": "widget"
+									"countFrom": "widget",
+									"showTitle": true
 								},
 								{
 									"widgetId": "ticket-related",
@@ -1068,6 +1672,17 @@
 									"label": "Decisions",
 									"visibleWhen": {
 										"appInstalled": "decidiq"
+									}
+								},
+								{
+									"widgetIds": [
+										"ticket-call-summary",
+										"ticket-call-transcript"
+									],
+									"label": "Call",
+									"visibleWhen": {
+										"field": "recording_url",
+										"op": "notEmpty"
 									}
 								},
 								{
@@ -1100,11 +1715,26 @@
 								},
 								"description": {
 									"gridColumn": 2
+								},
+								"category": {
+									"formatter": "enumText"
+								},
+								"channel": {
+									"formatter": "enumText"
+								},
+								"priority": {
+									"formatter": "enumText"
 								}
-							}
+							},
+							"_overridesNote": "Category, channel and priority are stored as codes (phone, vergunningen, normal); enumText prints them as translated words, as board PqTicket draws them."
 						},
 						"_note": "Board PqTicket: the overview card names the ticket in two columns, the description across both. What the type does not use stays hidden (hideEmpty).",
-						"icon": ""
+						"icon": "",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
 					}
 				}
 			},
@@ -1126,6 +1756,8 @@
 								"field": "occurredAt",
 								"dir": "desc"
 							},
+							"sortable": true,
+							"filterable": true,
 							"columns": [
 								{
 									"key": "title",
@@ -1149,6 +1781,10 @@
 							"emptyText": "No contact moments on this ticket yet.",
 							"allowCreate": true,
 							"addLabel": "Log contact",
+							"_addPlacementNote": "Board PqTicketContactmomenten: Log contact is the outlined phone button in the tab's title row, with the count line under the title.",
+							"addPlacement": "header",
+							"addIcon": "Phone",
+							"headerSubtitle": "{total} on this ticket, newest first",
 							"formIncludeFields": [
 								"channel",
 								"direction",
@@ -1205,19 +1841,34 @@
 						"icon": "ForumOutline",
 						"content": {
 							"title": "Conversation"
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
 						"id": "ticket-dossier",
 						"type": "DossierSnapshotWidget",
 						"title": "Asked about",
-						"icon": "FolderOutline"
+						"icon": "FolderOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
 					},
 					{
 						"id": "ticket-woo",
 						"type": "WooConversionWidget",
 						"title": "Woo request",
-						"icon": "FileDocumentOutline"
+						"icon": "FileDocumentOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
 					},
 					{
 						"id": "ticket-case",
@@ -1226,54 +1877,347 @@
 						"icon": "Gavel",
 						"content": {
 							"title": "Case"
+						},
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
 						}
 					},
 					{
 						"id": "ticket-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"_note": "The same words as the full TicketDetail History tab (ticket-handover-history); tests/vitest/ticketHandoverHistory.spec.js keeps the two equal.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {changed.assignee} by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
 					},
 					{
 						"id": "ticket-resident-view",
 						"type": "ResidentViewWidget",
 						"title": "What the resident sees",
-						"icon": "EyeOutline"
+						"icon": "EyeOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
+					},
+					{
+						"id": "contact-overview",
+						"type": "sections",
+						"_note": "Board PqContactmoment draws the Overview as one panel: three headed sections with a rule between them, not three cards. A single widget in a tab renders bare in the panel, and with no title of its own it draws no heading row. About this request follows its own visibleWhen (nc-vue feat/sections-child-visible-when).",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"sections": [
+								{
+									"title": "Contact details",
+									"widgetId": "contact-details"
+								},
+								{
+									"title": "Conversation notes",
+									"widgetId": "contact-notes"
+								},
+								{
+									"title": "About this request",
+									"widgetId": "contact-request"
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-details",
+						"type": "facts",
+						"title": "Contact details",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"key": "client",
+									"label": "Client",
+									"path": "client",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "client",
+										"labelField": "name"
+									}
+								},
+								{
+									"key": "channel",
+									"label": "Channel",
+									"parts": [
+										{
+											"path": "channel",
+											"map": {
+												"telefoon": "Phone",
+												"phone": "Phone",
+												"email": "Email",
+												"balie": "Desk",
+												"counter": "Desk",
+												"chat": "Chat",
+												"social": "Social media",
+												"brief": "Letter",
+												"letter": "Letter",
+												"sms": "Text message",
+												"web": "Web form"
+											}
+										},
+										{
+											"path": "direction",
+											"map": {
+												"inbound": "incoming",
+												"outbound": "outgoing",
+												"internal": "internal"
+											}
+										}
+									],
+									"separator": ", "
+								},
+								{
+									"key": "when",
+									"label": "When",
+									"path": "occurredAt",
+									"format": "longdatetime"
+								},
+								{
+									"key": "duration",
+									"label": "Duration",
+									"path": "duration",
+									"format": "duration"
+								},
+								{
+									"key": "assignee",
+									"label": "Handler",
+									"path": "assignee",
+									"format": "user"
+								},
+								{
+									"key": "subject",
+									"label": "Subject",
+									"firstOf": [
+										"disposition_subject",
+										"category"
+									]
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-notes",
+						"type": "record-notes",
+						"title": "Conversation notes",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "eq",
+							"value": "interaction"
+						},
+						"content": {
+							"field": "notes",
+							"hideLabel": true,
+							"label": "Conversation notes",
+							"rows": 5,
+							"savedText": "Saved automatically as you type. Last saved {time}.",
+							"outcomeBelow": true,
+							"outcome": {
+								"field": "outcome",
+								"label": "Outcome",
+								"placeholder": "Outcome: choose",
+								"saveLabel": "Note the outcome",
+								"options": [
+									{
+										"value": "handled",
+										"label": "Answered directly"
+									},
+									{
+										"value": "transferred",
+										"label": "Passed on to the request"
+									},
+									{
+										"value": "callbackRequest",
+										"label": "Callback arranged"
+									}
+								],
+								"saveVariant": "primary"
+							}
+						}
+					},
+					{
+						"id": "contact-request",
+						"type": "facts",
+						"title": "About this request",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "interaction"
+								},
+								{
+									"field": "parentTicket",
+									"op": "notEmpty"
+								}
+							]
+						},
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"id": "@object.parentTicket"
+							},
+							"fields": [
+								{
+									"as": "lead",
+									"icon": "MessageTextOutline",
+									"title": [
+										{
+											"path": "title"
+										}
+									],
+									"subtitle": [
+										"reference",
+										{
+											"path": "ticketType",
+											"map": {
+												"request": "request",
+												"complaint": "complaint",
+												"melding": "public-space report"
+											}
+										},
+										{
+											"path": "occurredAt",
+											"format": "days-since",
+											"phrase": "waiting {n} days",
+											"phraseOne": "waiting for 1 day",
+											"phraseZero": "waiting since today"
+										},
+										{
+											"path": "assignee",
+											"format": "user",
+											"empty": "not assigned"
+										}
+									],
+									"card": true,
+									"route": {
+										"name": "TicketDetail",
+										"params": {
+											"id": "@object.parentTicket"
+										}
+									},
+									"pill": {
+										"path": "status",
+										"map": {
+											"new": "New",
+											"in_progress": "In progress",
+											"awaiting_customer": "Waiting for customer",
+											"resolved": "Resolved",
+											"completed": "Completed",
+											"rejected": "Rejected",
+											"converted": "Converted to a case",
+											"closed": "Closed"
+										},
+										"variantMap": {
+											"new": "info",
+											"in_progress": "purple",
+											"awaiting_customer": "warning",
+											"resolved": "success",
+											"completed": "success",
+											"rejected": "default",
+											"converted": "default",
+											"closed": "default"
+										}
+									}
+								}
+							],
+							"footnote": "The notes above are kept with the request as a contact moment, with your name and the time."
+						}
 					}
 				]
 			}
 		},
 		{
 			"id": "KccWerkplek",
-			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text. THE BOARD (PqDashboard, 6 October 2026): the attention card's first action is the primary one; the two lists that are the reader's own work (Waiting for me, Contact today per channel) take two thirds of the row and the two the reader looks up (Callbacks, Latest contact) the right third; the type of a waiting ticket is a pill, drawn by the cell renderer from the column's enum with the same labels the ticket page's type pill uses; and Waiting for me links to the whole list with the filter it counts by. The customer's initials and name and the waiting time as a duration stay out, as above.",
+			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text. THE BOARD (PqDashboard, 6 October 2026): the attention card's first action is the primary one; the two lists that are the reader's own work (Waiting for me, Contact today per channel) take two thirds of the row and the two the reader looks up (Callbacks, Latest contact) the right third; the type of a waiting ticket is a pill, drawn by the cell renderer from the column's enum with the same labels the ticket page's type pill uses; and Waiting for me links to the whole list with the filter it counts by. The customer's initials and name and the waiting time as a duration stay out, as above. ROUND 12 (PqDashboard, 16 October 2026): the page header carries the title, the greeting with the date and the Log contact button beside availability, so the greeting and the availability widgets left the grid (availability is the page's own header component), and the client picker beside the title is taken out because the Start a contact card does that job; the four counts carry no icon and a caption with its own count; the three lists draw rows (initials, title, customer and channel, a type pill, how many days it waits, a chevron) instead of tables; the grid closes up behind each card.",
+			"title": "My customer contact",
 			"config": {
 				"layout": [
-					{
-						"id": "s1",
-						"widgetId": "simple-greeting",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 9,
-						"gridHeight": 2,
-						"showTitle": false,
-						"sizeToContent": true
-					},
-					{
-						"id": "s0",
-						"widgetId": "simple-availability",
-						"gridX": 9,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 2,
-						"showTitle": false,
-						"borderless": true,
-						"sizeToContent": true
-					},
 					{
 						"id": "s2",
 						"widgetId": "simple-first-today",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 0,
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
@@ -1283,7 +2227,7 @@
 						"id": "s3",
 						"widgetId": "simple-new",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1294,7 +2238,7 @@
 						"id": "s4",
 						"widgetId": "simple-waiting-for-me",
 						"gridX": 3,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1305,7 +2249,7 @@
 						"id": "s5",
 						"widgetId": "simple-callbacks",
 						"gridX": 6,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1316,7 +2260,7 @@
 						"id": "s6",
 						"widgetId": "simple-waiting-for-customer",
 						"gridX": 9,
-						"gridY": 4,
+						"gridY": 2,
 						"gridWidth": 3,
 						"gridHeight": 3,
 						"showTitle": false,
@@ -1327,22 +2271,25 @@
 						"id": "s7",
 						"widgetId": "simple-waiting-list",
 						"gridX": 0,
-						"gridY": 9,
+						"gridY": 7,
 						"gridWidth": 8,
 						"gridHeight": 5,
+						"track": "main",
 						"showTitle": true,
 						"headerLink": {
 							"label": "Whole queue",
 							"route": "Queue"
-						}
+						},
+						"sizeToContent": true
 					},
 					{
 						"id": "s8",
 						"widgetId": "simple-per-channel",
 						"gridX": 0,
-						"gridY": 14,
+						"gridY": 12,
 						"gridWidth": 8,
 						"gridHeight": 3,
+						"track": "main",
 						"showTitle": true,
 						"sizeToContent": true
 					},
@@ -1350,101 +2297,293 @@
 						"id": "s9",
 						"widgetId": "simple-callback-list",
 						"gridX": 8,
-						"gridY": 9,
+						"gridY": 7,
 						"gridWidth": 4,
 						"gridHeight": 5,
-						"showTitle": true
+						"track": "side",
+						"showTitle": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "s10",
 						"widgetId": "simple-latest-contact",
 						"gridX": 8,
-						"gridY": 14,
+						"gridY": 12,
 						"gridWidth": 4,
 						"gridHeight": 4,
-						"showTitle": true
+						"track": "side",
+						"showTitle": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "s11",
 						"widgetId": "simple-client-in-focus",
 						"gridX": 0,
-						"gridY": 7,
+						"gridY": 5,
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
-						"borderless": true,
 						"sizeToContent": true
 					},
 					{
 						"id": "wr",
 						"widgetId": "requests",
 						"gridX": 0,
-						"gridY": 18,
+						"gridY": 16,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "wi",
 						"widgetId": "interaction",
 						"gridX": 8,
-						"gridY": 18,
+						"gridY": 16,
 						"gridWidth": 4,
-						"gridHeight": 8
+						"gridHeight": 8,
+						"track": "side"
 					},
 					{
 						"id": "wt",
 						"widgetId": "tasks",
 						"gridX": 0,
-						"gridY": 22,
+						"gridY": 20,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 4,
+						"track": "main"
 					},
 					{
 						"id": "wk",
 						"widgetId": "knowledge",
 						"gridX": 8,
-						"gridY": 26,
+						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "side"
 					},
 					{
 						"id": "wc",
 						"widgetId": "client-cases",
 						"gridX": 0,
-						"gridY": 26,
+						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "main"
 					},
 					{
 						"id": "wm",
 						"widgetId": "client-contacts",
 						"gridX": 4,
-						"gridY": 26,
+						"gridY": 24,
 						"gridWidth": 4,
-						"gridHeight": 5
+						"gridHeight": 5,
+						"track": "main"
+					},
+					{
+						"id": "sct",
+						"widgetId": "simple-call-tasks",
+						"gridX": 0,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "main"
+					},
+					{
+						"id": "who",
+						"widgetId": "simple-call-who",
+						"gridX": 8,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "side",
+						"sizeToContent": true
+					},
+					{
+						"id": "scm",
+						"widgetId": "simple-call-matters",
+						"gridX": 4,
+						"gridY": 29,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "main"
+					},
+					{
+						"id": "sce",
+						"widgetId": "simple-call-earlier",
+						"gridX": 8,
+						"gridY": 33,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "side"
+					},
+					{
+						"id": "sca",
+						"widgetId": "simple-call-actions",
+						"gridX": 0,
+						"gridY": 33,
+						"gridWidth": 8,
+						"gridHeight": 2,
+						"track": "main",
+						"showTitle": false,
+						"borderless": true,
+						"sizeToContent": true
 					}
 				],
-				"description": "Your customer contact today, then the workplace",
-				"showHeader": false,
-				"showWidgetActions": false
+				"titleWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"title": "Call with {workspace.selectedClientName}"
+					}
+				],
+				"headerPills": [
+					{
+						"label": "Phone, incoming",
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						}
+					},
+					{
+						"label": "Identified",
+						"variant": "success",
+						"when": {
+							"workspace": "callIdentified",
+							"op": "eq",
+							"value": true
+						}
+					}
+				],
+				"description": "your queue, callbacks and contact today",
+				"showHeader": true,
+				"showWidgetActions": false,
+				"greeting": {
+					"label": "Contact centre"
+				},
+				"descriptionSource": {
+					"url": "/apps/pipelinq/api/kcc-werkplek/state",
+					"path": "availabilityLine"
+				},
+				"actionsPlacement": "start",
+				"gridFloat": false,
+				"gridSideColumn": {
+					"width": 320
+				},
+				"gridMargin": 10,
+				"_gridMarginNote": "10px: the board spaces these cards 20px apart, as the Dq dashboards do; GridStack's default 12 drew them 24 apart. The cards from row 7 down carry a `track`, so the side column is drawn at gridSideColumn's width (without one every card keeps its twelfth shares, 357px).",
+				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"type": "open-form",
+						"formTitle": "Log contact",
+						"icon": "Phone",
+						"variant": "primary",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
+						}
+					}
+				],
+				"showActionsMenu": false,
+				"layoutWhen": [
+					{
+						"when": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"layout": [
+							{
+								"id": "cq",
+								"widgetId": "simple-call-actions",
+								"gridX": 0,
+								"gridY": 0,
+								"gridWidth": 12,
+								"gridHeight": 2,
+								"showTitle": false,
+								"borderless": true,
+								"sizeToContent": true
+							},
+							{
+								"id": "cw",
+								"widgetId": "simple-call-who",
+								"gridX": 0,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ci",
+								"widgetId": "interaction",
+								"title": "This contact moment",
+								"gridX": 4,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 6,
+								"sizeToContent": true
+							},
+							{
+								"id": "cc",
+								"widgetId": "simple-call-matters",
+								"title": "Open matters",
+								"gridX": 4,
+								"gridY": 8,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "ck",
+								"widgetId": "knowledge",
+								"gridX": 8,
+								"gridY": 2,
+								"gridWidth": 4,
+								"gridHeight": 5,
+								"sizeToContent": true
+							},
+							{
+								"id": "ct",
+								"widgetId": "simple-call-tasks",
+								"gridX": 8,
+								"gridY": 7,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							},
+							{
+								"id": "cm",
+								"widgetId": "simple-call-earlier",
+								"title": "Earlier contact",
+								"gridX": 8,
+								"gridY": 11,
+								"gridWidth": 4,
+								"gridHeight": 4,
+								"sizeToContent": true
+							}
+						],
+						"gridColumnWeights": [
+							{ "span": 4, "weight": 352 },
+							{ "span": 4, "weight": 435 },
+							{ "span": 4, "weight": 352 }
+						]
+					}
+				],
+				"_inCallNote": "In a call (the header sets @workspace.callActive from client=<id>&call=active or inCallPreview=<number>), the dashboard cards step aside and the client-bound cards float up: the contact form, the open requests, the knowledge base, the tasks and callbacks for the client and the earlier contact (board PqWerkplekKlant). `layoutWhen` gives the call its own arrangement in three columns: who is it on the left, the contact form and the open requests in the middle, the knowledge base, the tasks and the earlier contact on the right (nextcloud-vue dashboard-layout-when; before it the key is ignored and the cards close up as before)."
 			},
 			"configAppend": {
 				"widgets": [
-					{
-						"id": "simple-availability",
-						"type": "custom",
-						"title": "Availability"
-					},
-					{
-						"id": "simple-greeting",
-						"type": "header",
-						"title": "Greeting",
-						"content": {
-							"title": "My customer contact",
-							"showDate": true,
-							"ground": true
-						}
-					},
 					{
 						"id": "simple-first-today",
 						"type": "banner",
@@ -1452,41 +2591,35 @@
 						"content": {
 							"layout": "attention",
 							"variant": "error",
-							"kicker": "First today",
-							"title": "Tickets past their deadline",
-							"text": "Tickets past their deadline",
-							"reason": "{value} of your tickets in progress are past their deadline or end today.",
+							"kicker": "First, today",
+							"title": "Question from {subject.clientName} about {subject.title}",
+							"fallbackTitle": "{subject.title}",
+							"text": "{subject.title}",
+							"reason": "Via {subject.channel|enumWord} · waiting {subject.waitingDays} days for an answer.",
+							"fallbackReason": "Waiting {subject.waitingDays} days for an answer.",
 							"visibleWhen": {
-								"source": {
-									"register": "pipelinq",
-									"schema": "ticket",
-									"filter": {
-										"assignee": "@me",
-										"status": "in_progress",
-										"slaDeadline[lt]": "@today+1d"
-									}
-								},
-								"op": "gt",
-								"value": 0
+								"endpoint": "/apps/pipelinq/api/worklist/first",
+								"field": "found",
+								"op": "eq",
+								"value": true
 							},
 							"actions": [
 								{
-									"label": "Open these tickets",
+									"label": "Answer it",
 									"route": {
-										"name": "Tickets",
-										"query": {
-											"assignee": "@me",
-											"status": "in_progress",
-											"slaDeadline[lt]": "@today+1d"
+										"name": "TicketDetail",
+										"params": {
+											"id": "@subject.id"
 										}
 									},
 									"primary": true
-								},
-								{
-									"label": "Open the queue",
-									"route": "Queue"
 								}
 							]
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1495,8 +2628,7 @@
 						"title": "New",
 						"content": {
 							"label": "New",
-							"caption": "Not picked up yet",
-							"icon": "TrayFull",
+							"caption": "{count} came in today",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1515,7 +2647,22 @@
 									"status": "new"
 								}
 							},
-							"layout": "stacked"
+							"layout": "stacked",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"status": "new",
+									"occurredAt[gte]": "@today"
+								},
+								"zeroText": "none came in today"
+							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1524,8 +2671,7 @@
 						"title": "Waiting for me",
 						"content": {
 							"label": "Waiting for me",
-							"caption": "Assigned to you",
-							"icon": "ClipboardAccountOutline",
+							"caption": "{count} longer than 2 days",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1546,8 +2692,24 @@
 									"status": "in_progress"
 								}
 							},
-							"variant": "warning",
-							"layout": "stacked"
+							"variant": "error",
+							"layout": "stacked",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "in_progress",
+									"occurredAt[lt]": "@today-2d"
+								},
+								"zeroText": "none longer than 2 days"
+							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1556,8 +2718,7 @@
 						"title": "Callback requests",
 						"content": {
 							"label": "Callback requests",
-							"caption": "Still to call back",
-							"icon": "Phone",
+							"caption": "{count} due today",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1580,7 +2741,24 @@
 									"assigneeUserId": "@me"
 								}
 							},
-							"layout": "stacked"
+							"layout": "stacked",
+							"captionSource": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "callbackRequest",
+									"status": "open",
+									"assigneeUserId": "@me",
+									"deadline[lt]": "@today+1d"
+								},
+								"zeroText": "none due today"
+							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1590,7 +2768,6 @@
 						"content": {
 							"label": "Waiting for customer",
 							"caption": "No action needed now",
-							"icon": "AccountClock",
 							"format": {
 								"style": "decimal",
 								"decimals": 0
@@ -1612,12 +2789,16 @@
 								}
 							},
 							"layout": "stacked"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
 						"id": "simple-waiting-list",
-						"type": "object-list",
-						"hideRefresh": true,
+						"type": "record-list",
 						"title": "Waiting for me",
 						"content": {
 							"register": "pipelinq",
@@ -1630,52 +2811,54 @@
 								"field": "occurredAt",
 								"dir": "asc"
 							},
-							"limit": 8,
-							"rowRoute": "TicketDetail",
-							"columns": [
-								{
-									"key": "title",
-									"label": "Subject",
-									"secondary": "channel"
-								},
-								{
-									"key": "ticketType",
-									"label": "Type",
-									"enum": [
-										"request",
-										"complaint",
-										"interaction"
-									],
-									"enumLabels": {
-										"request": "Request",
-										"complaint": "Complaint",
-										"interaction": "Contact moment"
-									}
-								},
-								{
-									"key": "occurredAt",
-									"label": "Waiting since",
-									"widget": "age",
-									"widgetProps": {
-										"variantWhen": [
-											{
-												"op": "gte",
-												"value": 3,
-												"variant": "error"
-											}
-										]
-									},
-									"format": "date-time"
-								}
+							"limit": 5,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"extend": [
+								"client"
 							],
-							"emptyText": "Nothing is waiting for you.",
-							"viewAllRoute": "Tickets",
-							"viewAllQuery": {
-								"assignee": "@me",
-								"status": "in_progress"
+							"avatar": "{client.name}",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{client.name}",
+									"{channel}"
+								]
 							},
-							"hideHeader": true,
-							"allowCreate": false
+							"pill": {
+								"field": "ticketType",
+								"labels": {
+									"request": "Request",
+									"complaint": "Complaint",
+									"melding": "Public-space report",
+									"interaction": "Contact moment"
+								},
+								"colorMap": {
+									"request": "info",
+									"complaint": "error",
+									"melding": "warning",
+									"interaction": "default"
+								}
+							},
+							"trailing": "{occurredAt|days} days",
+							"rowRoute": "TicketDetail",
+							"emptyText": "Nothing is waiting for you.",
+							"valueLabels": {
+								"channel": {
+									"telefoon": "Phone",
+									"email": "Email",
+									"balie": "Counter",
+									"chat": "Chat",
+									"social": "Social media",
+									"brief": "Letter",
+									"portal": "Mijn Zuiddrecht"
+								}
+							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1699,15 +2882,24 @@
 								"balie": "Counter",
 								"chat": "Chat",
 								"social": "Social media",
-								"brief": "Letter"
+								"brief": "Letter",
+								"phone": "By phone",
+								"portal": "Mijn Zuiddrecht",
+								"web": "Web form",
+								"sms": "SMS",
+								"whatsapp": "WhatsApp"
 							},
 							"emptyText": "No contact yet today"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
 						"id": "simple-callback-list",
-						"type": "object-list",
-						"hideRefresh": true,
+						"type": "record-list",
 						"title": "Callback requests",
 						"content": {
 							"register": "pipelinq",
@@ -1721,29 +2913,34 @@
 								"field": "deadline",
 								"dir": "asc"
 							},
-							"limit": 6,
-							"rowRoute": "TaskDetail",
-							"columns": [
-								{
-									"key": "subject",
-									"label": "Subject",
-									"secondary": "callbackPhoneNumber"
-								},
-								{
-									"key": "deadline",
-									"label": "Deadline",
-									"format": "date-time"
-								}
+							"limit": 5,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"extend": [
+								"clientId"
 							],
-							"emptyText": "You have no callbacks to make.",
-							"hideHeader": true,
-							"allowCreate": false
+							"title": [
+								"{clientId.name}",
+								"{subject}"
+							],
+							"meta": "{subject}",
+							"trailing": "{deadline|soon}",
+							"rowRoute": "TaskDetail",
+							"emptyText": "You have no callbacks to make."
+						},
+						"headerLink": {
+							"label": "All tasks",
+							"route": "Tasks"
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
 						"id": "simple-latest-contact",
-						"type": "object-list",
-						"hideRefresh": true,
+						"type": "record-list",
 						"title": "Latest contact",
 						"content": {
 							"register": "pipelinq",
@@ -1755,23 +2952,29 @@
 								"field": "occurredAt",
 								"dir": "desc"
 							},
-							"limit": 6,
+							"limit": 3,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"dot": {
+								"color": "var(--color-primary-element)",
+								"size": 10
+							},
+							"title": "{title}",
+							"meta": "{occurredAt|ago}",
 							"rowRoute": "TicketDetail",
-							"columns": [
-								{
-									"key": "title",
-									"label": "Subject",
-									"secondary": "channel"
-								},
-								{
-									"key": "occurredAt",
-									"label": "When",
-									"format": "date-time"
-								}
-							],
 							"emptyText": "No contact moments yet.",
-							"hideHeader": true,
-							"allowCreate": false
+							"headerLink": {
+								"label": "All {total}",
+								"route": "Tickets",
+								"query": {
+									"ticketType": "interaction"
+								}
+							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
 						}
 					},
 					{
@@ -1784,24 +2987,439 @@
 							"title": "Start a contact",
 							"description": "Find the client on the phone or at the desk. Their requests, tasks and earlier contact open below, with a form to log this contact.",
 							"writes": "@workspace.selectedClient",
+							"default": "",
 							"objectSource": {
 								"register": "pipelinq",
 								"schema": "client",
 								"labelField": "name",
-								"placeholder": "Name, phone, email, postcode or client number"
+								"placeholder": "Name, phone, email, postcode or client number",
+								"ariaLabel": "Client search"
+							},
+							"link": {
+								"label": "See an example",
+								"value": "@config.example_client?"
 							}
+						},
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "neq",
+							"value": true
+						}
+					},
+					{
+						"id": "simple-call-actions",
+						"type": "action-tiles",
+						"title": "Next steps",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"tiles": [
+								{
+									"id": "new-request",
+									"label": "New request",
+									"icon": "MessageOutline",
+									"action": {
+										"type": "open-modal",
+										"target": "RequestCreateDialog",
+										"props": {
+											"clientId": "@workspace.selectedClient"
+										}
+									}
+								},
+								{
+									"id": "call-back",
+									"label": "Call back",
+									"icon": "PhoneReturnOutline",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Plan a callback",
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"props": {
+											"type": "callbackRequest",
+											"status": "open",
+											"clientId": "@workspace.selectedClient"
+										},
+										"includeFields": [
+											"subject",
+											"deadline",
+											"preferredTimeSlot",
+											"callbackPhoneNumber",
+											"assigneeUserId"
+										]
+									}
+								},
+								{
+									"id": "book-appointment",
+									"label": "Book an appointment",
+									"icon": "CalendarPlus",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Book an appointment",
+										"register": "pipelinq",
+										"schema": "appointmentBooking",
+										"props": {
+											"customerId": "@workspace.selectedClient",
+											"status": "confirmed"
+										},
+										"includeFields": [
+											"serviceId",
+											"startAt",
+											"endAt",
+											"subject"
+										]
+									}
+								},
+								{
+									"id": "back-office",
+									"label": "To the back office",
+									"icon": "Send",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Hand over to the back office",
+										"register": "pipelinq",
+										"schema": "crmTask",
+										"props": {
+											"type": "followUpTask",
+											"status": "open",
+											"clientId": "@workspace.selectedClient"
+										},
+										"includeFields": [
+											"subject",
+											"assigneeGroupId",
+											"assigneeUserId",
+											"priority",
+											"deadline"
+										]
+									}
+								},
+								{
+									"id": "complaint",
+									"label": "Register a complaint",
+									"icon": "AlertCircleOutline",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Register a complaint",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"props": {
+											"ticketType": "complaint",
+											"client": "@workspace.selectedClient",
+											"direction": "inbound"
+										},
+										"includeFields": [
+											"title",
+											"description",
+											"priority"
+										]
+									}
+								},
+								{
+									"id": "other-channel",
+									"label": "Another channel",
+									"icon": "SwapHorizontal",
+									"action": {
+										"type": "open-form",
+										"formTitle": "Log contact on another channel",
+										"register": "pipelinq",
+										"schema": "ticket",
+										"props": {
+											"ticketType": "interaction",
+											"client": "@workspace.selectedClient",
+											"direction": "outbound"
+										},
+										"includeFields": [
+											"title",
+											"channel",
+											"description"
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"id": "simple-call-tasks",
+						"type": "record-list",
+						"title": "Tasks and callback requests",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"clientId": "@workspace.selectedClient",
+								"status": {
+									"in": [
+										"open",
+										"in_progress"
+									]
+								}
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 6,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{subject}",
+							"meta": {
+								"parts": [
+									"{type}",
+									"for {assigneeUserId|user}",
+									"{deadline|soon}"
+								]
+							},
+							"pill": {
+								"field": "status",
+								"labels": {
+									"open": "Open",
+									"in_progress": "In progress"
+								},
+								"colorMap": {
+									"open": "info",
+									"in_progress": "info"
+								}
+							},
+							"valueLabels": {
+								"type": {
+									"callbackRequest": "Call back",
+									"followUpTask": "Follow-up task",
+									"informationRequest": "Information request"
+								}
+							},
+							"rowRoute": "TaskDetail",
+							"emptyText": "No open tasks for this client."
+						}
+					},
+					{
+						"id": "simple-call-matters",
+						"type": "record-list",
+						"title": "Open matters",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@workspace.selectedClient",
+								"ticketType": {
+									"in": [
+										"request",
+										"complaint"
+									]
+								}
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 4,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{reference}",
+									"{ticketType|lowerfirst}",
+									"{assignee|user}"
+								]
+							},
+							"pill": {
+								"cases": [
+									{
+										"when": {
+											"field": "status",
+											"op": "in",
+											"value": [
+												"resolved",
+												"completed",
+												"closed",
+												"rejected",
+												"converted"
+											]
+										},
+										"label": "Done"
+									},
+									{
+										"when": {
+											"field": "slaDeadline",
+											"op": "notEmpty"
+										},
+										"label": "By {slaDeadline|date}",
+										"variant": "warning"
+									}
+								]
+							},
+							"valueLabels": {
+								"ticketType": {
+									"request": "Request",
+									"complaint": "Complaint"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No open matters for this client."
+						}
+					},
+					{
+						"id": "simple-call-earlier",
+						"type": "record-list",
+						"title": "Earlier contact",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"client": "@workspace.selectedClient",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 3,
+							"presentation": "rows",
+							"ruleAbove": true,
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{occurredAt|datetime}",
+									"{channel}",
+									"{direction}"
+								]
+							},
+							"valueLabels": {
+								"channel": {
+									"telefoon": "Phone",
+									"email": "Email",
+									"balie": "Counter",
+									"chat": "Chat",
+									"social": "Social media",
+									"brief": "Letter",
+									"portal": "Mijn Zuiddrecht"
+								},
+								"direction": {
+									"inbound": "inbound",
+									"outbound": "outbound",
+									"internal": "internal"
+								}
+							},
+							"rowRoute": "TicketDetail",
+							"emptyText": "No earlier contact with this client.",
+							"headerLink": {
+								"label": "All {total}",
+								"route": "Tickets",
+								"query": {
+									"client": "@workspace.selectedClient",
+									"ticketType": "interaction"
+								}
+							}
+						}
+					},
+					{
+						"id": "simple-call-who",
+						"type": "facts",
+						"title": "Who is it",
+						"visibleWhen": {
+							"workspace": "callActive",
+							"op": "eq",
+							"value": true
+						},
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "client",
+								"id": "@workspace.selectedClient"
+							},
+							"fields": [
+								{
+									"as": "title",
+									"path": "name",
+									"route": {
+										"name": "ClientDetail",
+										"params": {
+											"id": "@source.id"
+										}
+									}
+								},
+								{
+									"as": "line",
+									"parts": [
+										"type",
+										"address"
+									]
+								},
+								{
+									"path": "identityCheck",
+									"label": "Checked"
+								},
+								{
+									"label": "Source",
+									"template": "{identityVerifiedVia}, looked up {identityVerifiedAt:today-time}, recorded"
+								},
+								{
+									"path": "source",
+									"label": "Signed up via"
+								},
+								{
+									"path": "preferredChannel",
+									"label": "Preference"
+								},
+								{
+									"path": "language",
+									"label": "Language"
+								}
+							],
+							"hideEmpty": true,
+							"actions": [
+								{
+									"type": "open-modal",
+									"target": "BrpClientCheckDialog",
+									"variant": "tonal",
+									"icon": "CardAccountDetailsOutline",
+									"label": "Look up in the BRP",
+									"props": {
+										"clientId": "@source.id"
+									}
+								}
+							],
+							"link": {
+								"label": "Customer page",
+								"route": {
+									"name": "ClientDetail",
+									"params": {
+										"id": "@source.id"
+									}
+								}
+							},
+							"emptyText": "No customer in this call yet."
 						}
 					}
 				]
 			},
 			"slots": {
-				"widget-simple-availability": "WerkplekHeaderActions"
+				"title-meta": null
 			}
 		},
 		{
 			"id": "Tickets",
 			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past. BOARD PqTickets: no menu per row (a row opens the ticket, where Edit and the rest live; copy and delete stay on the selection), and the footer says how the list is sorted.",
 			"config": {
+				"createModal": "RequestCreateDialog",
 				"quickFilterMaxVisible": 6,
 				"columns": [
 					{
@@ -1820,7 +3438,8 @@
 						"widgetProps": {
 							"colorMap": {
 								"request": "primary",
-								"complaint": "error"
+								"complaint": "error",
+								"melding": "warning"
 							}
 						}
 					},
@@ -1858,7 +3477,8 @@
 						"label": "Handler",
 						"widget": "avatar",
 						"widgetProps": {
-							"user": true
+							"user": true,
+							"size": 28
 						}
 					}
 				],
@@ -1868,13 +3488,31 @@
 						"label": "Download"
 					},
 					{
-						"action": "actions-menu"
+						"action": "actions-menu",
+						"items": [
+							"import"
+						]
 					},
 					{
 						"action": "add",
 						"variant": "primary",
 						"icon": "Plus",
 						"label": "New request"
+					}
+				],
+				"_headerActionsNote": "Log contact is the contact moments view's primary button (its preset names it in headerButtons). The requests list's Actions menu names only Import, so it does not list it.",
+				"headerActions": [
+					{
+						"id": "log-contact",
+						"label": "Log contact",
+						"type": "open-form",
+						"formTitle": "Log contact",
+						"icon": "Plus",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction"
+						}
 					}
 				],
 				"countText": "{shown} of {total} tickets · customer contact · newest first",
@@ -1886,7 +3524,175 @@
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
-				"footerNote": "newest first · click a column header to sort"
+				"footerNote": "newest first · click a column header to sort",
+				"_queryPresetsNote": "The Contact moments entry opens this list with ?ticketType=interaction; the preset gives that view the lenses, columns and copy of board PqContactmomenten. The default lens is the last 30 days, so the list opens with the recent moments, as the board opens on this month. The board's Mijn Zuiddrecht lens is the online channel, labelled Online because the portal's name belongs to the instance. Channel lenses list both vocabularies the channel field carries (phone and telefoon, counter and balie).",
+				"queryPresets": [
+					{
+						"id": "contact-moments",
+						"match": {
+							"ticketType": "interaction"
+						},
+						"title": "Contact moments",
+						"showAdd": false,
+						"countText": "{shown} of {total} contact moments · all channels · newest first",
+						"searchPlaceholder": "Filter by subject or client",
+						"defaultSort": [
+							{
+								"field": "occurredAt",
+								"order": "desc"
+							}
+						],
+						"quickFilters": [
+							{
+								"label": "Today",
+								"filter": {
+									"occurredAt[gte]": "@today"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Mine",
+								"filter": {
+									"assignee": "@me"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Phone",
+								"filter": {
+									"channel": [
+										"phone",
+										"telefoon"
+									]
+								},
+								"showCount": true
+							},
+							{
+								"label": "Counter",
+								"filter": {
+									"channel": [
+										"counter",
+										"balie"
+									]
+								},
+								"showCount": true
+							},
+							{
+								"label": "Online",
+								"filter": {
+									"channel": [
+										"web",
+										"portal"
+									]
+								},
+								"showCount": true
+							},
+							{
+								"label": "Callback agreed",
+								"filter": {
+									"outcome": "callbackRequest"
+								},
+								"showCount": true
+							},
+							{
+								"label": "Last 30 days",
+								"filter": {
+									"occurredAt[gte]": "@today-30d"
+								},
+								"default": true,
+								"showCount": true
+							}
+						],
+						"headerButtons": [
+							{
+								"action": "export",
+								"label": "Download"
+							},
+							{
+								"action": "log-contact",
+								"variant": "primary",
+								"icon": "Plus",
+								"label": "Log contact"
+							}
+						],
+						"columns": [
+							{
+								"key": "title",
+								"label": "Subject",
+								"secondary": "{reference}",
+								"cellClass": "cn-cell--strong cn-cell--wrap"
+							},
+							{
+								"key": "client",
+								"label": "Client",
+								"labelField": "name",
+								"cellClass": "cn-cell--wrap"
+							},
+							{
+								"key": "channel",
+								"label": "Channel",
+								"template": "{channel} · {direction}",
+								"secondaryLabels": {
+									"channel": {
+										"telefoon": "Phone",
+										"phone": "Phone",
+										"balie": "Counter",
+										"counter": "Counter",
+										"email": "Email",
+										"portal": "Online",
+										"web": "Web form",
+										"chat": "Chat",
+										"brief": "Letter",
+										"letter": "Letter",
+										"sms": "SMS",
+										"whatsapp": "WhatsApp",
+										"social": "Social media"
+									},
+									"direction": {
+										"inbound": "incoming",
+										"outbound": "outgoing",
+										"internal": "internal"
+									}
+								}
+							},
+							{
+								"key": "outcome",
+								"label": "Outcome",
+								"formatter": "enumLabel",
+								"cellClass": "cn-cell--wrap"
+							},
+							{
+								"key": "duration",
+								"label": "Duration",
+								"formatter": "callDuration"
+							},
+							{
+								"key": "status",
+								"label": "Status",
+								"widget": "badge",
+								"widgetProps": {
+									"colorMap": {
+										"new": "primary",
+										"in_progress": "purple",
+										"closed": "success",
+										"resolved": "success"
+									}
+								}
+							},
+							{
+								"key": "occurredAt",
+								"label": "When",
+								"template": "{occurredAt|relativetime}"
+							},
+							{
+								"key": "assignee",
+								"label": "Handler",
+								"formatter": "userDisplayName"
+							}
+						],
+						"footerNote": "A contact moment is one conversation, by any channel. Most hang on a request; some stand alone."
+					}
+				]
 			},
 			"configPatch": {
 				"quickFilters": {
@@ -2111,10 +3917,56 @@
 			"title": "Transactions",
 			"config": {
 				"addLabel": "New transaction",
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "create",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New transaction"
+					}
+				],
+				"filterMenu": true,
+				"countText": "{shown} of {total} transactions · newest first",
+				"sortKey": "momentAt",
+				"sortOrder": "desc",
+				"footerNote": "Open a transaction to print or mail the receipt, or to register a refund.",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Today",
+						"filter": {
+							"momentAt[gte]": "@today"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Parked",
+						"filter": {
+							"status": "parked"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Refunded",
+						"filter": {
+							"status": "refunded"
+						},
+						"showCount": true
+					}
+				],
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Reference"
+						"label": "Reference code"
 					},
 					{
 						"key": "cashier",
@@ -2142,17 +3994,78 @@
 						"formatterOptions": {
 							"decimals": 2
 						}
+					},
+					{
+						"key": "momentAt",
+						"label": "Created",
+						"formatter": "transactionMoment"
+					}
+				]
+			}
+		},
+		{
+			"id": "KassakoppelingAuditList",
+			"_note": "The cash register audit log as its board draws it (PqKassaAudit): the tax authority export is the only header button. The log is append-only, so the index defaults (Download, Actions, Add) do not apply.",
+			"config": {
+				"headerButtons": [
+					{
+						"action": "audit-export",
+						"icon": "Download",
+						"label": "Export for the tax authority"
 					}
 				]
 			}
 		},
 		{
 			"id": "CashShifts",
+			"_note": "The cash shifts as their board draws them (PqKassadiensten): Download and Open shift as the header buttons, the All / Open / To check lenses (To check: counted, the difference not yet approved or rejected), the board's columns and the blind-count note.",
 			"config": {
+				"headerButtons": [
+					{
+						"action": "export",
+						"label": "Download"
+					},
+					{
+						"action": "open-shift",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "Open shift"
+					}
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true,
+						"showCount": true
+					},
+					{
+						"label": "Open",
+						"filter": {
+							"status": "open"
+						},
+						"showCount": true
+					},
+					{
+						"label": "To check",
+						"filter": {
+							"status": "closed",
+							"reconciliationStatus": "pending"
+						},
+						"showCount": true
+					}
+				],
+				"filterMenu": true,
+				"searchPlaceholder": "Filter by cashier or till",
+				"countText": "{shown} of {total}",
+				"footerNote": "A shift is closed with a blind count. The difference is checked against the margin.",
+				"sortKey": "floatAt",
+				"sortOrder": "desc",
 				"columns": [
 					{
 						"key": "reference",
-						"label": "Shift"
+						"label": "Shift",
+						"template": "Shift {floatAt|date}, {drawer}"
 					},
 					{
 						"key": "operator",
@@ -2162,22 +4075,61 @@
 					{
 						"key": "status",
 						"label": "Status",
-						"formatter": "enumText"
+						"formatter": "enumText",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"open": "info",
+								"counted": "warning",
+								"approved": "success",
+								"within the margin": "success",
+								"outside the margin": "error",
+								"rejected": "error"
+							}
+						},
+						"aggregate": {
+							"endpoint": "/apps/pipelinq/api/pos-shifts/summary/outcome",
+							"key": "id"
+						}
 					},
 					{
 						"key": "floatAt",
-						"label": "Opened"
+						"label": "Opened",
+						"formatter": "timeOfDay"
 					},
 					{
 						"key": "closedAt",
-						"label": "Closed"
+						"label": "Closed",
+						"formatter": "timeOfDay"
 					},
 					{
 						"key": "floatAmount",
-						"label": "Opening balance",
+						"label": "Opening float",
 						"formatter": "objectCurrency",
 						"formatterOptions": {
 							"decimals": 2
+						}
+					},
+					{
+						"key": "dropCount",
+						"label": "Drops",
+						"align": "right",
+						"aggregate": {
+							"endpoint": "/apps/pipelinq/api/pos-shifts/summary/dropCount",
+							"key": "id"
+						}
+					},
+					{
+						"key": "difference",
+						"label": "Difference",
+						"align": "right",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						},
+						"aggregate": {
+							"endpoint": "/apps/pipelinq/api/pos-shifts/summary/difference",
+							"key": "id"
 						}
 					}
 				]
@@ -2251,7 +4203,7 @@
 		},
 		{
 			"id": "Queue",
-			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, past the deadline), the type tabs with a channel strip under them, and per row the wait, the title with the customer and channel, the type, the priority, Take on and View. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated.",
+			"_note": "The queue in the simple structure, as board PqWachtrij: Download and Take the oldest in the header, three tiles (unassigned, how long the oldest has waited, and within the deadline: the waiting tickets minus those past their deadline, out of all waiting ones, through `limitSource` and `limitStyle: \"of\"`, nextcloud-vue stat-limit-of-a-count), the type tabs with a channel strip under them, as DqTeamwachtrij draws its lenses (Dq wins over the board's in-card lenses), rows without column heads (`hideTableHeader`), and per row the wait, the title with the customer and channel, the type, the priority, Take on as a pill and View as an eye beside it with no menu (`rowInlineActions`, nextcloud-vue index-row-inline-actions). No search field, no add button and no column filters: a queue is worked from the top. No checkbox: a queue row is picked up, not selected. TAKE THE OLDEST is POST /api/tickets/assign-oldest, which assigns the first open unassigned ticket by occurredAt to the reader. THE LONGEST WAIT is the occurredAt of the first row of the same list, oldest first, read through the list endpoint and drawn as a day count. BESIDE THE LIST: Team today reads GET /api/routing/team-load (every agent profile, its open items and its capacity) and draws a load bar per colleague (record-list `bar`, nextcloud-vue L28); Agreements is a text card with a link to the service levels (text `link` and translated text, nextcloud-vue L27). Until those land the bar and the link are ignored and the text shows untranslated. THE CHANNEL STRIP: channel is a free string and each ticket type stores its own spelling (phone and web on requests and complaints, telefoon and balie on contact moments), so each pill lists its spellings in `values` (nextcloud-vue filter-strip-option-values). Before that library change an option without `value` is skipped and the strip stays away, as it was.",
 			"config": {
 				"headerButtons": [
 					{
@@ -2268,11 +4220,50 @@
 				"selectable": false,
 				"showViewToggle": false,
 				"inlineActionCount": 2,
+				"rowInlineActions": 2,
+				"search": false,
+				"showAdd": false,
+				"headerFilters": false,
+				"hideTableHeader": true,
 				"footerNote": "Oldest first. A ticket leaves the queue as soon as someone takes it on.",
+				"pagerOnOnePage": false,
+				"sidebar": {
+					"enabled": false
+				},
 				"filterStrip": {
 					"field": "channel",
 					"label": "Kind, then channel",
-					"showCount": true
+					"allLabel": "All",
+					"showCount": true,
+					"options": [
+						{
+							"values": [
+								"phone",
+								"telefoon"
+							],
+							"label": "Phone"
+						},
+						{
+							"values": [
+								"portal",
+								"web"
+							],
+							"label": "Portal"
+						},
+						{
+							"values": [
+								"email"
+							],
+							"label": "Email"
+						},
+						{
+							"values": [
+								"balie",
+								"counter"
+							],
+							"label": "Desk"
+						}
+					]
 				},
 				"columns": [
 					{
@@ -2303,7 +4294,8 @@
 						"widgetProps": {
 							"colorMap": {
 								"request": "primary",
-								"complaint": "error"
+								"complaint": "error",
+								"melding": "warning"
 							}
 						}
 					},
@@ -2323,7 +4315,10 @@
 								"url": "/apps/pipelinq/api/routing/team-load",
 								"responsePath": "results"
 							},
-							"avatar": "{displayName}",
+							"avatar": {
+								"text": "{displayName}",
+								"size": 32
+							},
 							"title": "{displayName}",
 							"meta": "{isAvailable}",
 							"valueLabels": {
@@ -2399,19 +4394,96 @@
 							},
 							"caption": "the oldest ticket nobody has picked up"
 						}
+					},
+					{
+						"id": "queue-within-deadline",
+						"type": "stat",
+						"title": "Within the deadline",
+						"content": {
+							"label": "Within the deadline",
+							"caption": "take the red ones first",
+							"format": {
+								"style": "number",
+								"decimals": 0
+							},
+							"source": {
+								"kind": "computed",
+								"register": "pipelinq",
+								"schema": "ticket",
+								"formula": "A - B",
+								"parts": {
+									"A": {
+										"filter": {
+											"assignee": {
+												"isnull": true
+											},
+											"status": {
+												"notIn": [
+													"resolved",
+													"completed",
+													"rejected",
+													"converted",
+													"closed"
+												]
+											}
+										}
+									},
+									"B": {
+										"filter": {
+											"assignee": {
+												"isnull": true
+											},
+											"status": {
+												"notIn": [
+													"resolved",
+													"completed",
+													"rejected",
+													"converted",
+													"closed"
+												]
+											},
+											"slaDeadline[lt]": "@now"
+										}
+									}
+								}
+							},
+							"limitSource": {
+								"filter": {
+									"assignee": {
+										"isnull": true
+									},
+									"status": {
+										"notIn": [
+											"resolved",
+											"completed",
+											"rejected",
+											"converted",
+											"closed"
+										]
+									}
+								}
+							},
+							"limitStyle": "of"
+						}
 					}
 				]
+			},
+			"configPatch": {
+				"statRow": {
+					"queue-past-deadline": null
+				}
 			},
 			"configOrder": {
 				"statRow": [
 					"queue-unassigned",
-					"queue-longest-waiting"
+					"queue-longest-waiting",
+					"queue-within-deadline"
 				]
 			}
 		},
 		{
 			"id": "Clients",
-			"_note": "The Organisations entry opens this list with ?type=organization; the preset gives that view the columns, lenses and copy of board PqOrganisaties. Open cases counts the client's requests that became a case (status converted). The board's With open case chip is not drawn: a lens filters clients by their own fields and cannot ask about their tickets.",
+			"_note": "The Organisations entry opens this list with ?type=organization; the preset gives that view the columns, lenses and copy of board PqOrganisaties. Open cases counts the client's requests that became a case (status converted); open tickets counts its requests and complaints that are new, in progress or waiting on the customer; last contact is its newest contact moment. The board's With open case chip is not drawn: a lens filters clients by their own fields and cannot ask about their tickets.",
 			"config": {
 				"queryPresets": [
 					{
@@ -2420,6 +4492,7 @@
 							"type": "organization"
 						},
 						"title": "Organisations",
+						"addLabel": "Add organisation",
 						"countText": "{shown} of {total} organisations · sorted by name",
 						"searchPlaceholder": "Search by name, KvK number or place",
 						"footerNote": "click a column heading to sort",
@@ -2480,10 +4553,6 @@
 								"label": "Legal form"
 							},
 							{
-								"key": "industry",
-								"label": "Industry"
-							},
-							{
 								"key": "place",
 								"label": "Place"
 							},
@@ -2512,16 +4581,35 @@
 									"op": "count",
 									"where": {
 										"client": "@self.id",
-										"status": {
-											"ne": "closed"
-										}
+										"ticketType": [
+											"request",
+											"complaint"
+										],
+										"status": [
+											"new",
+											"in_progress",
+											"awaiting_customer"
+										]
 									}
 								},
 								"widget": "badge"
 							},
 							{
-								"key": "phone",
-								"label": "Phone"
+								"key": "lastContact",
+								"label": "Last contact",
+								"sortable": false,
+								"aggregate": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"op": "max",
+									"field": "occurredAt",
+									"where": {
+										"client": "@self.id",
+										"ticketType": "interaction"
+									},
+									"zeroLabel": "No contact yet"
+								},
+								"formatter": "date"
 							}
 						]
 					}

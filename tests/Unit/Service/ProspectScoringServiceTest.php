@@ -250,4 +250,35 @@ class ProspectScoringServiceTest extends TestCase {
 		$this->assertSame(0, $result['fitBreakdown']['locationMatch']);
 		$this->assertSame(0, $result['fitBreakdown']['legalFormMatch']);
 	}//end testScorePartialMatch()
+	/**
+	 * Every scoring rule at once: the breakdown keys and their order, each
+	 * rule's points and its miss, trimming and case for location and legal
+	 * form, a numeric SBI target, only a literal true as active, and the
+	 * prospect's other fields kept.
+	 *
+	 * @return void
+	 */
+	public function testEveryScoringRule(): void {
+		$criteria = ['sbiCodes' => [62, '47'], 'employeeCountMin' => 5, 'employeeCountMax' => 50, 'provinces' => [' Utrecht '], 'legalForms' => ['BV ']];
+		$scored = $this->service->score(
+			prospect: ['name' => 'Acme', 'sbiCode' => '6201', 'employeeCount' => 50, 'address' => ['province' => 'utrecht'], 'legalForm' => ' bv', 'isActive' => true],
+			criteria: $criteria
+		);
+		$this->assertSame(
+			['name' => 'Acme', 'sbiCode' => '6201', 'employeeCount' => 50, 'address' => ['province' => 'utrecht'], 'legalForm' => ' bv', 'isActive' => true, 'fitScore' => 100,
+				'fitBreakdown' => ['sbiMatch' => 30, 'employeeMatch' => 25, 'locationMatch' => 20, 'legalFormMatch' => 15, 'activeMatch' => 10]],
+			$scored
+		);
+
+		$scored = $this->service->score(
+			prospect: ['sbiCode' => '1062', 'employeeCount' => 51, 'address' => ['province' => 'Gelderland'], 'legalForm' => 'NV', 'isActive' => 1],
+			criteria: $criteria
+		);
+		$this->assertSame(0, $scored['fitScore']);
+		$this->assertSame(['sbiMatch' => 0, 'employeeMatch' => 0, 'locationMatch' => 0, 'legalFormMatch' => 0, 'activeMatch' => 0], $scored['fitBreakdown']);
+
+		$scored = $this->service->score(prospect: ['employeeCount' => 4, 'legalForm' => 'bv'], criteria: ['employeeCountMin' => 4, 'legalForms' => ['BV']]);
+		$this->assertSame(['sbiMatch' => 0, 'employeeMatch' => 25, 'locationMatch' => 0, 'legalFormMatch' => 15, 'activeMatch' => 0], $scored['fitBreakdown']);
+		$this->assertSame(40, $scored['fitScore']);
+	}//end testEveryScoringRule()
 }//end class

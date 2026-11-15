@@ -21,13 +21,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalDelegationServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -39,7 +40,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalDelegationService {
+class PortalDelegationService implements PortalDelegationServiceInterface {
 	/**
 	 * Schema slug for delegations.
 	 *
@@ -99,9 +100,85 @@ class PortalDelegationService {
 		array $scopes,
 		?string $validUntil,
 	): array {
-		$granteeEmail = strtolower(trim($granteeEmail));
-		$scopes = $this->sanitiseScopes(scopes: $scopes);
+		$request = [
+			'granterAccountId' => $granterAccountId,
+			'tenantId' => $tenantId,
+			'granteeEmail' => $granteeEmail,
+			'scopes' => $scopes,
+			'validUntil' => $validUntil,
+		];
 
+		return $this->storeGrant(request: $request);
+	}//end grant()
+
+	/**
+	 * Validate a grant request, store the delegation and audit it.
+	 *
+	 * @param array<string, mixed> $request The grant as asked: granterAccountId, tenantId, granteeEmail, scopes, validUntil.
+	 *
+	 * @return array<string, mixed> The created delegation.
+	 *
+	 * @throws PortalException On invalid scopes or a self-grant.
+	 */
+	private function storeGrant(array $request): array {
+		$granterAccountId = $request['granterAccountId'];
+		$tenantId = $request['tenantId'];
+		$granteeEmail = strtolower(trim($request['granteeEmail']));
+		$scopes = $this->sanitiseScopes(scopes: $request['scopes']);
+
+		$this->refuseSelfGrant(granterAccountId: $granterAccountId, granteeEmail: $granteeEmail);
+		$granteeId = $this->granteeIdOf(granteeEmail: $granteeEmail, tenantId: $tenantId);
+
+		$record = [
+			'granterAccountId' => $granterAccountId,
+			'granteeAccountId' => $granteeId,
+			'granteeEmail' => $granteeEmail,
+			'tenantId' => $tenantId,
+			'scopes' => $scopes,
+			'validFrom' => $this->time->getDateTime()->format(DATE_ATOM),
+			'validUntil' => $request['validUntil'],
+			'revokedAt' => null,
+		];
+		$delegation = $this->repository->save(self::SCHEMA, $record);
+		$this->auditGrant(record: $record, delegationId: $this->repository->idOf(object: $delegation));
+
+		return $delegation;
+	}//end storeGrant()
+
+	/**
+	 * Audit a stored grant against its granter and tenant.
+	 *
+	 * @param array<string, mixed> $record       The delegation as it was stored.
+	 * @param string|null          $delegationId The stored delegation's id.
+	 *
+	 * @return void
+	 */
+	private function auditGrant(array $record, ?string $delegationId): void {
+		$this->audit->log(
+			$record['granterAccountId'],
+			$record['tenantId'],
+			'delegation-grant',
+			'success',
+			[
+				'targetObjectType' => 'portalDelegation',
+				'targetObjectId' => $delegationId,
+				'granteeEmail' => $record['granteeEmail'],
+				'scopes' => $record['scopes'],
+			]
+		);
+	}//end auditGrant()
+
+	/**
+	 * Refuse a grant to the granter's own email.
+	 *
+	 * @param string $granterAccountId The authenticated granter.
+	 * @param string $granteeEmail     The normalised colleague email.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException When the granter delegates to themself.
+	 */
+	private function refuseSelfGrant(string $granterAccountId, string $granteeEmail): void {
 		$granter = $this->repository->find(self::ACCOUNT_SCHEMA, $granterAccountId);
 		if ($granter !== null && strtolower((string)($granter['email'] ?? '')) === $granteeEmail) {
 			throw new PortalException(
@@ -110,45 +187,27 @@ class PortalDelegationService {
 				'U kunt geen toegang aan uzelf verlenen.'
 			);
 		}
+	}//end refuseSelfGrant()
 
+	/**
+	 * The id of the tenant's portal account with the colleague email, or null when there is none yet.
+	 *
+	 * @param string $granteeEmail The normalised colleague email.
+	 * @param string $tenantId     The tenant id.
+	 *
+	 * @return string|null
+	 */
+	private function granteeIdOf(string $granteeEmail, string $tenantId): ?string {
 		$grantee = $this->repository->findOneBy(
 			self::ACCOUNT_SCHEMA,
 			['email' => $granteeEmail, 'tenantId' => $tenantId]
 		);
-		$granteeId = null;
-		if ($grantee !== null) {
-			$granteeId = $this->repository->idOf(object: $grantee);
+		if ($grantee === null) {
+			return null;
 		}
 
-		$delegation = $this->repository->save(
-			self::SCHEMA,
-			[
-				'granterAccountId' => $granterAccountId,
-				'granteeAccountId' => $granteeId,
-				'granteeEmail' => $granteeEmail,
-				'tenantId' => $tenantId,
-				'scopes' => $scopes,
-				'validFrom' => $this->time->getDateTime()->format(DATE_ATOM),
-				'validUntil' => $validUntil,
-				'revokedAt' => null,
-			]
-		);
-
-		$this->audit->log(
-			$granterAccountId,
-			$tenantId,
-			'delegation-grant',
-			'success',
-			[
-				'targetObjectType' => 'portalDelegation',
-				'targetObjectId' => $this->repository->idOf(object: $delegation),
-				'granteeEmail' => $granteeEmail,
-				'scopes' => $scopes,
-			]
-		);
-
-		return $delegation;
-	}//end grant()
+		return $this->repository->idOf(object: $grantee);
+	}//end granteeIdOf()
 
 	/**
 	 * Revoke a delegation owned by the authenticated granter.
@@ -169,20 +228,49 @@ class PortalDelegationService {
 	 *   audit are all unspecified
 	 */
 	public function revoke(string $delegationId, string $granterAccountId, string $tenantId): void {
+		$owner = ['granterAccountId' => $granterAccountId, 'tenantId' => $tenantId];
+		$delegation = $this->ownedDelegation(delegationId: $delegationId, owner: $owner);
+
+		$delegation['revokedAt'] = $this->time->getDateTime()->format(DATE_ATOM);
+		$this->repository->save(self::SCHEMA, $delegation, $delegationId);
+		$this->auditRevoke(delegationId: $delegationId, owner: $owner);
+	}//end revoke()
+
+	/**
+	 * The stored delegation when the granter and tenant own it.
+	 *
+	 * @param string                                          $delegationId The delegation id.
+	 * @param array{granterAccountId: string, tenantId: string} $owner        The authenticated granter and tenant.
+	 *
+	 * @return array<string, mixed> The delegation.
+	 *
+	 * @throws PortalException 404 when it does not exist or is not theirs.
+	 */
+	private function ownedDelegation(string $delegationId, array $owner): array {
 		$delegation = $this->repository->find(self::SCHEMA, $delegationId);
 		if ($delegation === null
-			|| ($delegation['granterAccountId'] ?? null) !== $granterAccountId
-			|| ($delegation['tenantId'] ?? null) !== $tenantId
+			|| ($delegation['granterAccountId'] ?? null) !== $owner['granterAccountId']
+			|| ($delegation['tenantId'] ?? null) !== $owner['tenantId']
 		) {
 			// 404, not 403: do not reveal the existence of another's delegation.
 			throw new PortalException(Http::STATUS_NOT_FOUND, 'notFound', 'Niet gevonden.');
 		}
 
-		$delegation['revokedAt'] = $this->time->getDateTime()->format(DATE_ATOM);
-		$this->repository->save(self::SCHEMA, $delegation, $delegationId);
+		return $delegation;
+	}//end ownedDelegation()
+
+	/**
+	 * Audit a revoked delegation against its granter and tenant.
+	 *
+	 * @param string                                          $delegationId The delegation id.
+	 * @param array{granterAccountId: string, tenantId: string} $owner        The granter and tenant.
+	 *
+	 * @return void
+	 */
+	private function auditRevoke(string $delegationId, array $owner): void {
 		$this->audit->log(
-			$granterAccountId,
-			$tenantId,
+			$owner['granterAccountId'],
+			$owner['tenantId'],
 			'delegation-revoke',
 			'success',
 			[
@@ -190,7 +278,7 @@ class PortalDelegationService {
 				'targetObjectId' => $delegationId,
 			]
 		);
-	}//end revoke()
+	}//end auditRevoke()
 
 	/**
 	 * List delegations granted by an account (its own grants only).

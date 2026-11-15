@@ -37,7 +37,7 @@ test('my work page loads without error', async ({ page }) => {
 	})
 })
 
-// @e2e openspec/specs/my-work/spec.md#quick-action-buttons-displayed
+// @e2e openspec/changes/archive/2026-03-21-my-work/specs/my-work/spec.md#quick-action-buttons-displayed
 test('my work page main content renders', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
 	await expect(
@@ -45,7 +45,7 @@ test('my work page main content renders', async ({ page }) => {
 	).toBeVisible({ timeout: 10000 })
 })
 
-// @e2e openspec/specs/my-work/spec.md#manual-refresh
+// @e2e openspec/changes/archive/2026-03-21-my-work/specs/my-work/spec.md#manual-refresh
 test('my work page renders without uncaught errors', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
 	await page.waitForLoadState('domcontentloaded').catch(() => {})
@@ -54,7 +54,7 @@ test('my work page renders without uncaught errors', async ({ page }) => {
 	})
 })
 
-// @e2e openspec/specs/my-work/spec.md#display-personal-kpi-tiles
+// @e2e openspec/changes/archive/2026-03-21-my-work/specs/my-work/spec.md#display-personal-kpi-tiles
 test('my work navigation entry in sidebar', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Scope to the app sidebar: an unscoped getByText('My Work') would also
@@ -65,7 +65,7 @@ test('my work navigation entry in sidebar', async ({ page }) => {
 	})
 })
 
-// @e2e openspec/specs/my-work/spec.md#view-assigned-leads--requests-and-tasks (V1)
+// @e2e openspec/changes/archive/2026-03-22-callback-management/specs/my-work/spec.md#view-assigned-leads--requests-and-tasks (V1)
 test('my work page loads for V1 expanded view', async ({ page }) => {
 	const response = await page.goto('/apps/pipelinq/my-work')
 	// Was `not.toContainText('not installed')`, which is a false positive: the

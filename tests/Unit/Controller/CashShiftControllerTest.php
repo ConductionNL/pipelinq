@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\CashShiftController;
 use OCA\Pipelinq\Service\CashShiftService;
+use OCA\Pipelinq\Service\CashShiftSummaryService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -51,6 +52,9 @@ class CashShiftControllerTest extends TestCase {
 	/** @var CashShiftService&MockObject */
 	private CashShiftService $service;
 
+	/** @var CashShiftSummaryService&MockObject */
+	private CashShiftSummaryService $summaries;
+
 	/** @var IRequest&MockObject */
 	private IRequest $request;
 
@@ -65,6 +69,7 @@ class CashShiftControllerTest extends TestCase {
 	protected function setUp(): void {
 		$this->request = $this->createMock(IRequest::class);
 		$this->service = $this->createMock(CashShiftService::class);
+		$this->summaries = $this->createMock(originalClassName: CashShiftSummaryService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
 		$l10n = $this->createMock(IL10N::class);
@@ -72,6 +77,7 @@ class CashShiftControllerTest extends TestCase {
 
 		$this->controller = new CashShiftController($this->request,
 			$this->service,
+			$this->summaries,
 			$this->userSession,
 			$l10n,
 			$this->createMock(LoggerInterface::class),
@@ -138,7 +144,7 @@ class CashShiftControllerTest extends TestCase {
 	public function testCountDelegates(): void {
 		$this->loginAs('clerk');
 		$this->request->method('getParam')->willReturnMap([
-			['amount', 0, '625.50'],
+			['amount', null, '625.50'],
 			['notes', '', 'blind'],
 		]);
 
@@ -151,6 +157,28 @@ class CashShiftControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 	}//end testCountDelegates()
+
+	/**
+	 * A count without a number is refused and never reaches the service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pos-cash-management/spec.md#requirement-a-shift-is-counted-only-with-an-amount
+	 */
+	public function testCountWithoutAnAmountIsRefused(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->request->method('getParam')->willReturnMap([
+			['amount', null, null],
+			['notes', '', ''],
+		]);
+
+		$this->service->expects($this->never())->method('recordCount');
+
+		$response = $this->controller->count(id: 'shift-1');
+
+		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+		$this->assertSame(expected: 'Enter the counted amount.', actual: $response->getData()['error']);
+	}//end testCountWithoutAnAmountIsRefused()
 
 	/**
 	 * A service OCSForbiddenException maps to HTTP 403.
@@ -217,4 +245,105 @@ class CashShiftControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$this->assertStringNotContainsString('secret', (string)($data['error'] ?? ''));
 	}//end testUnexpectedErrorIsGeneric()
+
+	/**
+	 * approve() without a diffId approves the shift's pending difference.
+	 *
+	 * @return void
+	 */
+	public function testApproveWithoutDiffIdUsesThePendingDiff(): void {
+		$this->loginAs(uid: 'boss');
+		$this->request->method('getParam')->willReturnMap([
+			['diffId', '', ''],
+		]);
+		$this->service->expects($this->once())
+			->method('pendingDiffId')
+			->with('shift-1')
+			->willReturn('diff-7');
+		$this->service->expects($this->once())
+			->method('approveDiff')
+			->with('diff-7', 'boss')
+			->willReturn(['id' => 'diff-7', 'status' => 'approved']);
+
+		$response = $this->controller->approve('shift-1');
+
+		$this->assertSame(expected: 'approved', actual: $response->getData()['diff']['status']);
+	}//end testApproveWithoutDiffIdUsesThePendingDiff()
+
+	/**
+	 * approve() with a diffId approves that difference.
+	 *
+	 * @return void
+	 */
+	public function testApproveWithDiffIdUsesIt(): void {
+		$this->loginAs(uid: 'boss');
+		$this->request->method('getParam')->willReturnMap([
+			['diffId', '', 'diff-3'],
+		]);
+		$this->service->expects($this->never())->method('pendingDiffId');
+		$this->service->expects($this->once())
+			->method('approveDiff')
+			->with('diff-3', 'boss')
+			->willReturn(['id' => 'diff-3', 'status' => 'approved']);
+
+		$this->controller->approve('shift-1');
+	}//end testApproveWithDiffIdUsesIt()
+
+	/**
+	 * summary() answers one measure per shift key, in the shape a list's
+	 * endpoint aggregate reads.
+	 *
+	 * @return void
+	 */
+	public function testSummaryAnswersOneMeasurePerShift(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->request->method('getParam')->willReturnMap([
+			['keys', [], ['s-1', 's-2']],
+		]);
+		$this->summaries->expects($this->once())
+			->method('summarise')
+			->with(['s-1', 's-2'])
+			->willReturn([
+				's-1' => ['dropCount' => 2, 'difference' => -12.4, 'outcome' => 'outside the margin'],
+				's-2' => ['dropCount' => 0, 'difference' => null, 'outcome' => 'open'],
+			]);
+
+		$response = $this->controller->summary(measure: 'outcome');
+
+		$this->assertSame(
+			expected: ['available' => true, 'values' => ['s-1' => 'outside the margin', 's-2' => 'open']],
+			actual: $response->getData()
+		);
+	}//end testSummaryAnswersOneMeasurePerShift()
+
+	/**
+	 * summary() refuses a measure it does not know.
+	 *
+	 * @return void
+	 */
+	public function testSummaryRefusesAnUnknownMeasure(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->summaries->expects($this->never())->method('summarise');
+
+		$response = $this->controller->summary(measure: 'floatAmount; drop');
+
+		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+	}//end testSummaryRefusesAnUnknownMeasure()
+
+	/**
+	 * shiftSummary() answers the page summary of one shift.
+	 *
+	 * @return void
+	 */
+	public function testShiftSummaryDelegates(): void {
+		$this->loginAs(uid: 'clerk');
+		$this->summaries->expects($this->once())
+			->method('shiftSummary')
+			->with('shift-1')
+			->willReturn(['id' => 'shift-1', 'dropCount' => 2]);
+
+		$response = $this->controller->shiftSummary(id: 'shift-1');
+
+		$this->assertSame(expected: 2, actual: $response->getData()['dropCount']);
+	}//end testShiftSummaryDelegates()
 }//end class

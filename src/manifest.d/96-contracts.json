@@ -20,7 +20,7 @@
 				"columns": [
 					{
 						"key": "contractNumber",
-						"label": "Contract number",
+						"label": "Number",
 						"link": true
 					},
 					{
@@ -49,7 +49,8 @@
 					},
 					{
 						"key": "billingInterval",
-						"label": "Billing period"
+						"label": "Billing period",
+						"hidden": true
 					},
 					{
 						"key": "valuePerInterval",
@@ -69,6 +70,14 @@
 					"status",
 					"ownerId",
 					"clientRef"
+				],
+				"filterMenu": true,
+				"filterMenuFields": [
+					{
+						"key": "ownerId",
+						"label": "Owner",
+						"referenceType": "nextcloud-user"
+					}
 				],
 				"_note": "Board look (PqContracten, round 12): the count line, three KPI tiles above the list, quick filters by status, the status as a coloured pill and the client by name. Ending soonest first.",
 				"showTitle": true,
@@ -187,8 +196,7 @@
 							}
 						}
 					}
-				],
-				"filterMenu": true
+				]
 			}
 		},
 		{
@@ -260,19 +268,64 @@
 					},
 					{
 						"id": "contract-billing",
-						"type": "data",
+						"type": "sections",
 						"title": "Billing",
 						"icon": "CurrencyEur",
 						"content": {
-							"columns": 3,
+							"sections": [
+								{ "widgetId": "contract-billing-fields" },
+								{ "widgetId": "contract-invoice" },
+								{ "title": "Lines", "widgetId": "contract-lines" }
+							]
+						}
+					},
+					{
+						"id": "contract-billing-fields",
+						"type": "data",
+						"title": "Billing",
+						"content": {
+							"columns": 2,
 							"include": [
 								"billingInterval",
 								"valuePerInterval",
 								"value",
-								"currency",
-								"invoiceReference",
-								"lineItems"
+								"currency"
 							]
+						}
+					},
+					{
+						"id": "contract-invoice",
+						"type": "facts",
+						"title": "Invoice reference",
+						"_note": "PqContract Facturering: the invoice reference with a copy button, and when and by whom the contract went to invoicing (invoicedAt / invoicedBy, written by Send to invoicing).",
+						"content": {
+							"fields": [
+								{ "label": "Invoice reference", "path": "invoiceReference", "copy": true },
+								{ "as": "line", "template": "On {invoicedAt:date-long} sent to invoicing by {invoicedBy:user}" }
+							],
+							"emptyText": "Not sent to invoicing yet."
+						}
+					},
+					{
+						"id": "contract-lines",
+						"type": "record-list",
+						"title": "Lines",
+						"content": {
+							"presentation": "table",
+							"limit": 50,
+							"objectRows": {
+								"path": "lineItems",
+								"refs": [
+									{ "field": "productRef", "register": "pipelinq", "schema": "product", "as": "productRecord" }
+								]
+							},
+							"columns": [
+								{ "label": "Product", "value": ["{productRecord.name}", "{product}"] },
+								{ "label": "Description", "value": "{description}" },
+								{ "label": "Quantity", "value": "{quantity}", "align": "end" },
+								{ "label": "Unit value", "value": ["{unitValue|currency}", "{unitPrice|currency}"], "align": "end" }
+							],
+							"emptyText": "No lines on this contract."
 						}
 					},
 					{
@@ -292,7 +345,42 @@
 						"id": "contract-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"content": {
+							"layout": "stacked",
+							"density": "compact",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"valueLabels": {
+								"status": {
+									"draft": "Draft",
+									"active": "Active",
+									"expiring": "Expires soon",
+									"renewed": "Renewed",
+									"churned": "Churned",
+									"cancelled": "Cancelled"
+								}
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"label": "Status changed to {changed.status}"
+								},
+								{
+									"field": "renewalLeadRef",
+									"label": "Renewal lead created"
+								},
+								{
+									"field": "invoiceReference",
+									"label": "Sent to invoicing, {changed.invoiceReference}"
+								}
+							]
+						}
 					},
 					{
 						"id": "contract-kpi-recurring",
@@ -305,16 +393,9 @@
 								"currencyField": "currency",
 								"decimals": 0
 							},
-							"caption": "per period",
-							"source": {
-								"register": "pipelinq",
-								"schema": "salesContract",
-								"metric": "sum",
-								"field": "valuePerInterval",
-								"filter": {
-									"id": "@objectId"
-								}
-							}
+							"caption": "per month, from {annualValue|currency} a year",
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "monthlyValue"
 						}
 					},
 					{
@@ -323,35 +404,25 @@
 						"title": "Days to end date",
 						"content": {
 							"label": "Days to end date",
-							"objectField": "endDate",
-							"display": "countdown",
-							"countdown": {
-								"unit": "days"
-							},
-							"caption": "until the end date"
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "daysToEnd",
+							"caption": "notice date {noticeDate|date}"
 						}
 					},
 					{
 						"id": "contract-kpi-invoiced",
 						"type": "stat",
-						"title": "Contract value",
+						"title": "Invoiced this year",
 						"content": {
-							"label": "Value",
+							"label": "Invoiced this year",
 							"format": {
 								"style": "currency",
 								"currencyField": "currency",
 								"decimals": 0
 							},
-							"caption": "{billingInterval}",
-							"source": {
-								"register": "pipelinq",
-								"schema": "salesContract",
-								"metric": "sum",
-								"field": "value",
-								"filter": {
-									"id": "@objectId"
-								}
-							}
+							"caption": "{invoicesSent} of {invoicesDue} invoices sent",
+							"endpointSource": { "url": "/apps/pipelinq/api/contracts/@objectId/figures" },
+							"valueField": "invoicedThisYear"
 						}
 					},
 					{
@@ -425,37 +496,49 @@
 						}
 					},
 					{
-						"id": "contract-kpis",
-						"type": "stats-block",
-						"title": "Value",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "Recurring value",
-									"register": "pipelinq",
-									"schema": "salesContract",
-									"metric": "sum",
-									"field": "valuePerInterval",
-									"currencyField": "currency",
-									"countLabel": "per interval",
-									"filter": {
-										"id": "@objectId"
-									}
-								}
-							]
-						}
-					},
-					{
 						"id": "side-history",
 						"type": "audit-trail",
 						"title": "History",
 						"icon": "History",
 						"content": {
-							"limit": 4
+							"limit": 4,
+							"layout": "stacked",
+							"density": "compact",
+							"excludeActions": [
+								"read"
+							],
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated"
+							},
+							"valueLabels": {
+								"status": {
+									"draft": "Draft",
+									"active": "Active",
+									"expiring": "Expires soon",
+									"renewed": "Renewed",
+									"churned": "Churned",
+									"cancelled": "Cancelled"
+								}
+							},
+							"changeLabels": [
+								{
+									"field": "status",
+									"label": "Status changed to {changed.status}"
+								},
+								{
+									"field": "renewalLeadRef",
+									"label": "Renewal lead created"
+								},
+								{
+									"field": "invoiceReference",
+									"label": "Sent to invoicing, {changed.invoiceReference}"
+								}
+							]
 						}
 					}
 				],
+				"gridFloat": false,
 				"layout": [
 					{
 						"id": "k1",
@@ -464,6 +547,7 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
+						"sizeToContent": true,
 						"showTitle": false
 					},
 					{
@@ -473,6 +557,7 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
+						"sizeToContent": true,
 						"showTitle": false
 					},
 					{
@@ -482,6 +567,7 @@
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2,
+						"sizeToContent": true,
 						"showTitle": false
 					},
 					{
@@ -491,6 +577,7 @@
 						"gridY": 2,
 						"gridWidth": 12,
 						"gridHeight": 18,
+						"sizeToContent": true,
 						"showTitle": false
 					}
 				],
@@ -612,7 +699,6 @@
 						"id": "open-renewal-lead",
 						"type": "navigate",
 						"label": "Open renewal lead",
-						"icon": "TrendingUp",
 						"target": "/leads/@object.renewalLeadRef",
 						"visibleWhen": {
 							"field": "renewalLeadRef",

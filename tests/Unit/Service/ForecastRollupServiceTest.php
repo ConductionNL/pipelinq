@@ -81,6 +81,40 @@ class ForecastRollupServiceTest extends TestCase {
 	}//end testBucketDealsByCategory()
 
 	/**
+	 * A foreign deal reports the rate it converted at, with source and date;
+	 * reporting-currency deals add no rate.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates/spec.md#requirement-rates-come-from-the-fleets-rate-store-before-the-hand-kept-table-req-dxr-001
+	 */
+	public function testBucketDealsCarriesTheRateMetadata(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => [
+				ExchangeRateService::REPORTING_CURRENCY_KEY => 'EUR',
+				ExchangeRateService::RATES_KEY => '{"USD":0.9}',
+				ExchangeRateService::RATE_DATES_KEY => '{"USD":"2026-10-06"}',
+			][$key] ?? $default
+		);
+		$service = new ForecastRollupService(exchangeRate: new ExchangeRateService(appConfig: $appConfig));
+
+		$result = $service->bucketDeals(
+			[
+				['forecast_category' => 'commit', 'value' => 10000, 'currency' => 'USD', 'uuid' => 'a'],
+				['forecast_category' => 'commit', 'value' => 1000, 'currency' => 'EUR', 'uuid' => 'b'],
+			]
+		);
+
+		$this->assertSame(10000.0, $result['totals']['commit_amount']);
+		$this->assertSame(['USD'], array_keys($result['rates']));
+		$this->assertSame(0.9, $result['rates']['USD']['rate']);
+		$this->assertSame('manual', $result['rates']['USD']['source']);
+		$this->assertSame('2026-10-06', $result['rates']['USD']['rateDate']);
+		$this->assertArrayHasKey('stale', $result['rates']['USD']);
+	}//end testBucketDealsCarriesTheRateMetadata()
+
+	/**
 	 * Team totals are the sum of rep totals across all four amounts.
 	 *
 	 * @return void
@@ -107,4 +141,30 @@ class ForecastRollupServiceTest extends TestCase {
 		$this->assertSame(0.0, $team['commit_amount']);
 		$this->assertSame(0.0, $team['closed_won_amount']);
 	}//end testSumChildTotalsEmpty()
+
+	/**
+	 * The whole bucket is exact: rounding to cents, unknown categories, deals without an id.
+	 *
+	 * @return void
+	 */
+	public function testBucketDealsIsExact(): void {
+		$this->assertSame(
+			[
+				'totals'   => ['commit_amount' => 0.66, 'best_case_amount' => 10.0, 'pipeline_amount' => 0.0, 'closed_won_amount' => 1.24],
+				'deal_ids' => ['a', 'c'],
+				'currency' => 'EUR',
+				'rates'    => [],
+			],
+			$this->service->bucketDeals(
+				[
+					['forecast_category' => 'commit', 'value' => 0.333, 'uuid' => 'a'],
+					['forecast_category' => 'commit', 'value' => '0.333'],
+					['forecast_category' => 'best_case', 'value' => 10, 'id' => 'c'],
+					['forecast_category' => 'closed_won', 'value' => 1.235],
+					['forecast_category' => 'upside', 'value' => 5, 'uuid' => 'x'],
+					['value' => 7, 'uuid' => 'y'],
+				]
+			)
+		);
+	}//end testBucketDealsIsExact()
 }//end class

@@ -1,0 +1,488 @@
+{
+    "sms sent": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "status": "sent",
+            "messageId": "m-1"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": "cmcom",
+                        "clientId": "cl-1",
+                        "inReplyTo": "in-1"
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "Hallo",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "whatsapp template sent": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "status": "sent",
+            "messageId": "m-1"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": null,
+                        "clientId": "",
+                        "inReplyTo": ""
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "whatsapp",
+                        "body": "",
+                        "templateId": "tpl-1",
+                        "parameters": [
+                            "Jan",
+                            3
+                        ]
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "defaults only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "status": "invalid-channel"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            }
+        ]
+    },
+    "channel only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "status": "sent",
+            "messageId": "m-1"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": ""
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "",
+                            "phone": "+316"
+                        },
+                        "providerHint": null,
+                        "clientId": "",
+                        "inReplyTo": ""
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "unknown channel": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "status": "invalid-channel"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            }
+        ]
+    },
+    "upper-case channel": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "status": "invalid-channel"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            }
+        ]
+    },
+    "contact not readable": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            }
+        ]
+    },
+    "refused without consent": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 422,
+        "data": {
+            "status": "consent-refused",
+            "reason": "no opt-in"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": "cmcom",
+                        "clientId": "cl-1",
+                        "inReplyTo": "in-1"
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "Hallo",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "consent authority unavailable": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 422,
+        "data": {
+            "status": "consent-unavailable"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": "cmcom",
+                        "clientId": "cl-1",
+                        "inReplyTo": "in-1"
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "Hallo",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "budget exhausted": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 422,
+        "data": {
+            "status": "budget-exhausted"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": "cmcom",
+                        "clientId": "cl-1",
+                        "inReplyTo": "in-1"
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "Hallo",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "provider failed": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 502,
+        "data": {
+            "status": "failed",
+            "error": "gateway"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": "cmcom",
+                        "clientId": "cl-1",
+                        "inReplyTo": "in-1"
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "Hallo",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "numeric outcome status": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 422,
+        "data": {
+            "status": 0
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": "cmcom",
+                        "clientId": "cl-1",
+                        "inReplyTo": "in-1"
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "Hallo",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "null values fall back": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "status": "sent",
+            "messageId": "m-1"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": null,
+                        "clientId": "",
+                        "inReplyTo": ""
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "sms",
+                        "body": "",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "integer contact id": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "array body": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "boolean template": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "string parameters": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "float provider hint": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "empty parameters list": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "status": "sent",
+            "messageId": "m-1"
+        },
+        "trace": [
+            {
+                "isPrivileged": "agent"
+            },
+            {
+                "loadContact": "c-1"
+            },
+            {
+                "send": {
+                    "route": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageRoute",
+                        "contact": {
+                            "uuid": "c-1",
+                            "phone": "+316"
+                        },
+                        "providerHint": null,
+                        "clientId": "",
+                        "inReplyTo": ""
+                    },
+                    "content": {
+                        "class": "OCA\\Pipelinq\\Service\\Messaging\\MessageContent",
+                        "channel": "whatsapp",
+                        "body": "",
+                        "templateId": null,
+                        "parameters": []
+                    },
+                    "actor": "agent"
+                }
+            }
+        ]
+    },
+    "not privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "status": "forbidden"
+        },
+        "trace": [
+            {
+                "isPrivileged": "intern"
+            }
+        ]
+    },
+    "not privileged, integer id": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "status": "unauthorized"
+        },
+        "trace": []
+    },
+    "no session, array body": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    }
+}

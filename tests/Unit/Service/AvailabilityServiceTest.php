@@ -471,7 +471,7 @@ class AvailabilityServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function testInvalidateResourceDeletesEveryCachedDay(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
@@ -507,7 +507,7 @@ class AvailabilityServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function testInvalidateForResourceTypesExpiresTheMatchingResources(): void {
 		$resources = [

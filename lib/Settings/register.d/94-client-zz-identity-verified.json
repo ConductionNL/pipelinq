@@ -1,0 +1,33 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "Whether the customer's identity was verified, how and when (PqWerkplekKlant 'Wie is het': Gecontroleerd, Bron). Sorted after 94-client-number-and-source, so its client version (1.4.0) wins."
+	},
+	"components": {
+		"schemas": {
+			"client": {
+				"slug": "client",
+				"version": "1.4.0",
+				"properties": {
+					"identityVerifiedAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Identity verified at",
+						"description": "When the customer's identity was last verified, for example by a lookup in the population register."
+					},
+					"identityVerifiedVia": {
+						"type": "string",
+						"title": "Identity verified via",
+						"description": "The source the identity was verified against, such as BRP."
+					},
+					"identityCheck": {
+						"type": "string",
+						"title": "Identity check",
+						"description": "What the employee checked with the customer, such as their date of birth and address."
+					}
+				}
+			}
+		}
+	}
+}

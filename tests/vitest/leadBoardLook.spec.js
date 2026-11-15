@@ -55,6 +55,21 @@ describe('lead list board look', () => {
 		expect(chip.showCount).toBe(true)
 	})
 
+	it('names the Open lens by a key whose translation is not the key itself', () => {
+		// The bar translates the label; "Open" -> "Open" would fall back to the
+		// library catalogue's verb "Openen".
+		const lens = LeadList.computed.quickFilters.call(list())[0]
+		expect(lens.label).toBe('Open (lead status)')
+		const en = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/en.json'), 'utf8')).translations
+		const nl = JSON.parse(readFileSync(resolve(__dirname, '../../l10n/nl.json'), 'utf8')).translations
+		expect([en[lens.label], nl[lens.label]]).toEqual(['Open', 'Open'])
+	})
+
+	it('draws the owner as the 28px grey chip of the Pq boards', () => {
+		const owner = list().columns.find((c) => c.key === 'assignee')
+		expect(owner.widgetProps).toEqual({ user: true, tone: 'neutral', size: 28 })
+	})
+
 	it('draws the stage as a pill coloured per stage', () => {
 		const stage = list().columns.find((c) => c.key === 'stage')
 		expect(stage.widget).toBe('badge')

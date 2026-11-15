@@ -118,7 +118,7 @@ The system MUST provide a list view for browsing and managing products, followin
 - WHEN the user navigates to the Products section
 - THEN the system MUST display a table with columns: Name, SKU, Type, Category, Unit Price, Status
 - AND the list MUST support pagination (matching OpenRegister default page size)
-- AND the list MUST show a "New Product" action button
+- AND the list MUST show a "Nieuw product" (New Product) action button
 
 #### Scenario: Product list search
 - GIVEN multiple products exist
@@ -163,7 +163,7 @@ The system MUST provide admin settings for managing the product catalog configur
 #### Scenario: Product categories management
 - GIVEN the user is an admin
 - WHEN they navigate to Pipelinq admin settings
-- THEN there MUST be a "Product Categories" section
+- THEN there MUST be a "Productcategorieën" (Product Categories) section
 - AND the admin MUST be able to create, edit, reorder, and delete categories
 
 #### Scenario: Default tax rate setting
@@ -179,7 +179,7 @@ The system MUST support flexible pricing on product line items (LeadProduct), in
 
 #### Scenario: Price pre-population from catalog
 - GIVEN a product with unitPrice of 150.00 EUR exists in the catalog
-- WHEN the user adds this product to a lead via the "Add Product" dialog
+- WHEN the user adds this product to a lead via the "Product toevoegen" (Add Product) dialog
 - THEN the unitPrice field MUST be pre-populated with 150.00
 - AND the user MUST be able to override this price for the specific lead
 
@@ -256,7 +256,7 @@ The system MUST support a many-to-many relationship between products and leads t
 The system MUST provide efficient product search for both the product list view and the lead product selection dialog. Products MUST be searchable by name and SKU to support quick lookup during sales conversations.
 
 #### Scenario: Product search by name in lead dialog
-- GIVEN the "Add Product" dialog is open on a lead detail page
+- GIVEN the "Product toevoegen" (Add Product) dialog is open on a lead detail page
 - WHEN the user types "consul" in the product search dropdown
 - THEN the dropdown MUST show products whose name contains "consul" (case-insensitive)
 - AND each option MUST display the product name
@@ -277,7 +277,7 @@ The system MUST provide efficient product search for both the product list view 
 - GIVEN no products match the search term
 - WHEN the search completes
 - THEN the system MUST display an empty state message: "No products found"
-- AND the "New Product" action MUST remain available
+- AND the "Nieuw product" (New Product) action MUST remain available
 
 ---
 
@@ -329,7 +329,7 @@ The system MUST support product lifecycle management through the `status` field,
 
 #### Scenario: Only active products in lead dialog
 - GIVEN both active and inactive products exist
-- WHEN the user opens the "Add Product" dialog on a lead
+- WHEN the user opens the "Product toevoegen" (Add Product) dialog on a lead
 - THEN the product dropdown MUST only show products with status "active"
 - AND the user MUST NOT be able to add an inactive product to a lead
 
@@ -349,14 +349,14 @@ The system MUST support bulk import and export of products via CSV to facilitate
 
 #### Scenario: Export products to CSV
 - GIVEN the user is on the product list page
-- WHEN they click an "Export" action
+- WHEN they click an "Exporteren" (Export) action
 - THEN the system MUST generate a CSV file containing all products (respecting current filters)
 - AND the CSV MUST include columns: name, sku, type, unitPrice, cost, category (name), status, unit, taxRate, description
 - AND the file MUST be downloadable with a filename like `pipelinq-products-YYYY-MM-DD.csv`
 
 #### Scenario: Import products from CSV
 - GIVEN the user has a CSV file with product data
-- WHEN they upload the CSV via an "Import" action on the product list page
+- WHEN they upload the CSV via an "Importeren" (Import) action on the product list page
 - THEN the system MUST validate each row for required fields (name, unitPrice, type)
 - AND valid rows MUST create new Product objects in the pipelinq register
 - AND invalid rows MUST be reported with row number and error description
@@ -384,7 +384,7 @@ The system MUST provide reporting on product performance to help sales teams und
 #### Scenario: Top products by pipeline value
 - GIVEN products are linked to leads via LeadProduct line items
 - WHEN the user views the dashboard
-- THEN the system MUST display a "Top Products by Pipeline Value" widget
+- THEN the system MUST display a "Top producten op pijplijnwaarde" (Top Products by Pipeline Value) widget
 - AND the widget MUST show the top 3 products ranked by total pipeline value (sum of LeadProduct totals)
 - AND each entry MUST show: product name, number of leads, total value in EUR
 
@@ -601,6 +601,35 @@ The products list SHALL show the category's name, not its uuid, and its price co
 - THEN the Category cell SHALL read "Licences"
 
 @e2e exclude the column uses nextcloud-vue's `fkResolve` cell widget; checked live on the review instance.
+
+### Requirement: The product page shows the tariffs in force
+
+A product MAY carry tariffs with a label, amount, valid-from date and note. The product page MUST show per label the tariff whose valid-from date is the latest on or before today, an amount of zero as "Free", the tariff source under the table, and the first later valid-from date as a scheduled publication.
+
+#### Scenario: next year's tariffs are scheduled
+
+- GIVEN the waste pass has a replacement tariff of 15 from 1 January 2026 and of 16 from 1 January 2027
+- WHEN the product page opens on 7 October 2026
+- THEN the table shows the replacement tariff at 15
+- AND a note says the tariffs of 2027 go live on 1 January 2027
+
+### Requirement: The product page shows its publication
+
+The publication card MUST show the status, the publication date with the month written out, the languages in capitals and the audience as one phrase.
+
+#### Scenario: a product for residents and businesses
+
+- GIVEN a product published on 1 January 2026 in nl and en for residents and businesses
+- THEN the card reads "1 januari 2026", "NL, EN" and "Inwoner, bedrijf"
+
+### Requirement: A light item's weight reads in grams
+
+The supply card MUST show a weight under one kilogram in grams, from `weightGrams` when set, else from `weight` in kilograms.
+
+#### Scenario: a card weighing 5 grams
+
+- GIVEN a product with `weightGrams` 5
+- THEN the supply card reads "5 g"
 
 ## Current Implementation Status
 

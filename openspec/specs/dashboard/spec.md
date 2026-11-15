@@ -9,40 +9,16 @@ status: done
 The Pipelinq CRM dashboard provides an at-a-glance overview of key performance indicators, pipeline health, assigned work, and client activity. It uses the `CnDashboardPage` component from `@conduction/nextcloud-vue` for a configurable grid layout and integrates with the Nextcloud Dashboard Widget API (`OCP\Dashboard\IWidget`) for platform-level widget exposure.
 
 ---
+
 ## Requirements
 
 ### Requirement: CRM Dashboard Layout
 
-The dashboard MUST use the `CnDashboardPage` component to render a configurable widget grid with a 12-column layout system.
+The dashboard SHALL be the contact centre dashboard (pipelinq/PqDashboard) with its Operationeel view (pipelinq/PqOperationeel): the period chips Afgelopen 7, 30, 90 and 365 dagen, Rapport exporteren and the Klantoverzicht. The boards are the layout; the English widget names and the welcome banner are not used.
 
-#### Scenario: Default grid layout on first load
-- GIVEN the user has not customized their dashboard layout
-- WHEN the user navigates to the dashboard
-- THEN the layout MUST render with the default configuration:
-  - Row 1: Four KPI cards (3 columns each, `gridHeight: 2`) spanning the full 12-column width
-  - Row 2: "Requests by Status" chart (6 columns) and "My Work" widget (6 columns) side by side
-  - Row 3: "Client Overview" widget spanning full width (12 columns)
-- AND each widget MUST be rendered inside a `CnDashboardPage` widget slot (`#widget-{widgetId}`)
-
-#### Scenario: Dashboard page title and empty state
-- WHEN the dashboard loads
-- THEN the page title MUST be "Dashboard" (translatable via `t('pipelinq', 'Dashboard')`)
-- AND if no data exists (no leads, requests, or clients), a welcome message MUST be displayed: "Welcome to Pipelinq! Get started by creating your first client, lead, or request using the buttons above."
-
-#### Scenario: Quick action buttons in header
-- WHEN the user views the dashboard
-- THEN the header MUST contain three quick action buttons: "New Lead" (primary style), "New Request", and "New Client"
-- AND clicking each button MUST open the corresponding create dialog (`LeadCreateDialog`, `RequestCreateDialog`, `ClientCreateDialog`)
-- AND upon successful creation, the user MUST be navigated to the detail view of the created entity
-
-#### Scenario: Error state with retry
-@e2e exclude backend API error injection; covered by unit tests
-- GIVEN a network error occurs during dashboard data fetching
-- WHEN the dashboard fails to load
-- THEN an error message MUST be displayed with a "Retry" button
-- AND clicking "Retry" MUST re-invoke the full data fetch
-
----
+#### Scenario: A user opens the dashboard
+- WHEN a user opens Pipelinq
+- THEN the contact centre dashboard opens with the period on Afgelopen 7 dagen and the widgets of PqDashboard
 
 ### Requirement: KPI Cards Row
 
@@ -699,6 +675,28 @@ The default Operational dashboard SHALL NOT include a widget whose data source i
 
 - WHEN the Operational dashboard renders after removal
 - THEN the KPI row MUST show no empty grid slot where the widget was
+
+### Requirement: The sales overview says what its figures are made of
+
+Every KPI tile of the sales overview SHALL carry a caption from the commercial overview, the closing and closed deal
+lists SHALL keep their meta line when a part is empty, and a closed deal SHALL show its amount as a pill toned won or
+lost.
+
+#### Scenario: Board PqVerkoopoverzicht
+
+- **WHEN** one deal was won and one lost in the window
+- **THEN** the win rate tile reads "1 gewonnen, 1 verloren" under its figure
+- **AND** the won deal shows its amount in a green pill and the lost deal in a red one
+
+### Requirement: The sales overview draws cover, won against open and matching prospects
+
+The sales overview SHALL draw the pipeline cover as a multiple, won against open as two figures with the share, and
+the two best matching prospects with their fit and a link to the prospects page.
+
+#### Scenario: No pipeline target
+
+- **WHEN** no pipeline target is set
+- **THEN** the pipeline cover card reads "Stel een pijplijndoel in"
 
 ## Current Implementation Status
 

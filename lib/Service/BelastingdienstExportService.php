@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -40,6 +40,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use DOMDocument;
+use DOMElement;
 
 /**
  * Format kassakoppelingAuditLog entries for the Belastingdienst audit pack.
@@ -68,7 +69,7 @@ use DOMDocument;
  * { "exportMetadata": {…}, "entries": [{…}] }
  * ```
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class BelastingdienstExportService {
 	/**
@@ -103,7 +104,7 @@ class BelastingdienstExportService {
 	 *
 	 * @return string The XML body.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportAsXml(array $entries, ?array $manifest = null): string {
 		if ($manifest === null) {
@@ -115,60 +116,108 @@ class BelastingdienstExportService {
 
 		$root = $document->createElement('KassakoppelingExport');
 		$document->appendChild($root);
+		$root->appendChild($this->xmlMetadata(document: $document, manifest: $manifest));
+		$root->appendChild($this->xmlEntries(document: $document, entries: $entries));
 
+		return (string)$document->saveXML();
+	}//end exportAsXml()
+
+	/**
+	 * The XML Metadata element of a manifest.
+	 *
+	 * @param DOMDocument          $document The document.
+	 * @param array<string, mixed> $manifest The manifest.
+	 *
+	 * @return DOMElement The element.
+	 */
+	private function xmlMetadata(DOMDocument $document, array $manifest): DOMElement {
 		$metadata = $document->createElement('Metadata');
 		$metadata->appendChild($document->createElement('ExportDate', (string)$manifest['exportDate']));
 		$metadata->appendChild($document->createElement('EntryCount', (string)$manifest['entryCount']));
-
-		$dateRange = $document->createElement('DateRange');
-		$dateRange->setAttribute('from', (string)$manifest['dateRange']['from']);
-		$dateRange->setAttribute('to', (string)$manifest['dateRange']['to']);
-		$metadata->appendChild($dateRange);
-
+		$metadata->appendChild($this->xmlDateRange(document: $document, dateRange: $manifest['dateRange']));
 		$registerList = $document->createElement('RegisterList');
 		$registerList->appendChild(
 			$document->createTextNode(implode(', ', (array)($manifest['registerList'] ?? [])))
 		);
 		$metadata->appendChild($registerList);
-
 		$metadata->appendChild($document->createElement('ChainIntegrity', (string)$manifest['chainIntegrity']));
 		if (($manifest['chainStatus'] ?? '') !== '') {
 			$metadata->appendChild($document->createElement('ChainStatus', (string)$manifest['chainStatus']));
 		}
 
 		$metadata->appendChild($document->createElement('SignatureAlgorithm', self::SIGNATURE_ALGORITHM));
-		$root->appendChild($metadata);
+		return $metadata;
+	}//end xmlMetadata()
 
+	/**
+	 * The XML DateRange element.
+	 *
+	 * @param DOMDocument          $document  The document.
+	 * @param array<string, mixed> $dateRange The `from` / `to` bounds.
+	 *
+	 * @return DOMElement The element.
+	 */
+	private function xmlDateRange(DOMDocument $document, array $dateRange): DOMElement {
+		$element = $document->createElement('DateRange');
+		$element->setAttribute('from', (string)$dateRange['from']);
+		$element->setAttribute('to', (string)$dateRange['to']);
+		return $element;
+	}//end xmlDateRange()
+
+	/**
+	 * The XML Entries element.
+	 *
+	 * @param DOMDocument                      $document The document.
+	 * @param array<int, array<string, mixed>> $entries  The entries.
+	 *
+	 * @return DOMElement The element.
+	 */
+	private function xmlEntries(DOMDocument $document, array $entries): DOMElement {
 		$entriesNode = $document->createElement('Entries');
 		foreach ($entries as $entry) {
-			$entryNode = $document->createElement('Entry');
-			foreach ($this->canonicalEntry(entry: $entry) as $field => $value) {
-				$childValue = $value;
-				if (is_bool($childValue) === true) {
-					$boolAsString = 'false';
-					if ($childValue === true) {
-						$boolAsString = 'true';
-					}
+			$entriesNode->appendChild($this->xmlEntry(document: $document, entry: $entry));
+		}
 
-					$childValue = $boolAsString;
-				}
+		return $entriesNode;
+	}//end xmlEntries()
 
-				if ($childValue === null) {
-					$childValue = '';
-				}
+	/**
+	 * One XML Entry element, its fields in canonical order.
+	 *
+	 * @param DOMDocument          $document The document.
+	 * @param array<string, mixed> $entry    The entry.
+	 *
+	 * @return DOMElement The element.
+	 */
+	private function xmlEntry(DOMDocument $document, array $entry): DOMElement {
+		$entryNode = $document->createElement('Entry');
+		foreach ($this->canonicalEntry(entry: $entry) as $field => $value) {
+			$child = $document->createElement($field);
+			$child->appendChild($document->createTextNode($this->xmlValue(value: $value)));
+			$entryNode->appendChild($child);
+		}
 
-				$child = $document->createElement($field);
-				$child->appendChild($document->createTextNode((string)$childValue));
-				$entryNode->appendChild($child);
-			}
+		return $entryNode;
+	}//end xmlEntry()
 
-			$entriesNode->appendChild($entryNode);
-		}//end foreach
+	/**
+	 * A canonical field value as XML text: booleans as `true` / `false`, null as ''.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string The text.
+	 */
+	private function xmlValue(mixed $value): string {
+		if ($value === true) {
+			return 'true';
+		}
 
-		$root->appendChild($entriesNode);
+		if ($value === false) {
+			return 'false';
+		}
 
-		return (string)$document->saveXML();
-	}//end exportAsXml()
+		return (string)($value ?? '');
+	}//end xmlValue()
 
 	/**
 	 * Render the export pack as pretty-printed JSON.
@@ -179,7 +228,7 @@ class BelastingdienstExportService {
 	 *
 	 * @return string The JSON body.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function exportAsJson(array $entries, ?array $manifest = null): string {
 		if ($manifest === null) {
@@ -226,9 +275,34 @@ class BelastingdienstExportService {
 	 *
 	 * @return array<string, mixed> The manifest.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.3
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function buildManifest(array $entries, string $fromDate, string $toDate): array {
+		$registers = $this->registerList(entries: $entries);
+		$perRegisterStatus = $this->perRegisterStatus(entries: $entries, registers: $registers);
+		return [
+			'exportDate' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
+			'entryCount' => count($entries),
+			'dateRange' => [
+				'from' => $fromDate,
+				'to' => $toDate,
+			],
+			'registerList' => $registers,
+			'chainIntegrity' => $this->chainIntegrity(perRegisterStatus: $perRegisterStatus),
+			'chainStatus' => $this->chainStatus(perRegisterStatus: $perRegisterStatus),
+			'perRegisterStatus' => $perRegisterStatus,
+			'signatureAlgorithm' => self::SIGNATURE_ALGORITHM,
+		];
+	}//end buildManifest()
+
+	/**
+	 * The distinct non-empty register numbers of the entries, sorted.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The entries.
+	 *
+	 * @return array<int, string> The register numbers.
+	 */
+	private function registerList(array $entries): array {
 		$registers = [];
 		foreach ($entries as $entry) {
 			$register = (string)($entry['registerNumber'] ?? '');
@@ -238,51 +312,86 @@ class BelastingdienstExportService {
 		}
 
 		sort($registers);
+		return $registers;
+	}//end registerList()
 
+	/**
+	 * The hash-chain verification of every register, keyed by register.
+	 *
+	 * @param array<int, array<string, mixed>> $entries   The entries.
+	 * @param array<int, string>               $registers The register numbers.
+	 *
+	 * @return array<string, array<string, mixed>> The verification results.
+	 */
+	private function perRegisterStatus(array $entries, array $registers): array {
 		$perRegisterStatus = [];
-		$chainIntegrity = 'valid';
-		$chainStatus = '';
-
 		foreach ($registers as $register) {
-			$forRegister = array_values(
-				array_filter(
-					$entries,
-					fn (array $row): bool => (string)($row['registerNumber'] ?? '') === $register
-				)
-			);
+			$forRegister = $this->registerEntries(entries: $entries, register: $register);
+			$perRegisterStatus[$register] = $this->signature->verifyHashChain(entries: $forRegister);
+		}
 
-			usort(
-				$forRegister,
-				fn (array $left, array $right): int => strcmp(
-					(string)($left['timestamp'] ?? ''),
-					(string)($right['timestamp'] ?? '')
-				)
-			);
+		return $perRegisterStatus;
+	}//end perRegisterStatus()
 
-			$result = $this->signature->verifyHashChain(entries: $forRegister);
-			$perRegisterStatus[$register] = $result;
+	/**
+	 * One register's entries in timestamp order.
+	 *
+	 * @param array<int, array<string, mixed>> $entries  The entries.
+	 * @param string                           $register The register number.
+	 *
+	 * @return array<int, array<string, mixed>> The register's entries.
+	 */
+	private function registerEntries(array $entries, string $register): array {
+		$forRegister = array_values(
+			array_filter(
+				$entries,
+				fn (array $row): bool => (string)($row['registerNumber'] ?? '') === $register
+			)
+		);
+
+		usort(
+			$forRegister,
+			fn (array $left, array $right): int => strcmp(
+				(string)($left['timestamp'] ?? ''),
+				(string)($right['timestamp'] ?? '')
+			)
+		);
+		return $forRegister;
+	}//end registerEntries()
+
+	/**
+	 * `invalid` when any register's chain is broken, else `valid`.
+	 *
+	 * @param array<string, array<string, mixed>> $perRegisterStatus The verification results.
+	 *
+	 * @return string The chain integrity.
+	 */
+	private function chainIntegrity(array $perRegisterStatus): string {
+		foreach ($perRegisterStatus as $result) {
 			if ($result['chainValid'] === false) {
-				$chainIntegrity = 'invalid';
-				if ($chainStatus === '') {
-					$chainStatus = 'Broken at entry ' . ((int)($result['brokenAt'] ?? 0)) . ' on register ' . $register;
-				}
+				return 'invalid';
 			}
-		}//end foreach
+		}
 
-		return [
-			'exportDate' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
-			'entryCount' => count($entries),
-			'dateRange' => [
-				'from' => $fromDate,
-				'to' => $toDate,
-			],
-			'registerList' => $registers,
-			'chainIntegrity' => $chainIntegrity,
-			'chainStatus' => $chainStatus,
-			'perRegisterStatus' => $perRegisterStatus,
-			'signatureAlgorithm' => self::SIGNATURE_ALGORITHM,
-		];
-	}//end buildManifest()
+		return 'valid';
+	}//end chainIntegrity()
+
+	/**
+	 * Where the first broken register's chain breaks, or '' when none is broken.
+	 *
+	 * @param array<string, array<string, mixed>> $perRegisterStatus The verification results.
+	 *
+	 * @return string The chain status.
+	 */
+	private function chainStatus(array $perRegisterStatus): string {
+		foreach ($perRegisterStatus as $register => $result) {
+			if ($result['chainValid'] === false) {
+				return 'Broken at entry ' . ((int)($result['brokenAt'] ?? 0)) . ' on register ' . $register;
+			}
+		}
+
+		return '';
+	}//end chainStatus()
 
 	/**
 	 * Project an entry into the canonical export field order.

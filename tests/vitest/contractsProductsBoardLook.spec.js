@@ -71,6 +71,18 @@ describe('contract page', () => {
 		])
 	})
 
+	it('draws the billing card as the fields and a table of the lines, with the product names', () => {
+		const billing = widget(detail, 'contract-billing')
+		expect(billing.type).toBe('sections')
+		expect(billing.content.sections.map((s) => s.widgetId)).toEqual(['contract-billing-fields', 'contract-invoice', 'contract-lines'])
+		expect(widget(detail, 'contract-billing-fields').content.include).not.toContain('lineItems')
+		const lines = widget(detail, 'contract-lines').content
+		expect(lines.presentation).toBe('table')
+		expect(lines.objectRows.refs).toEqual([{ field: 'productRef', register: 'pipelinq', schema: 'product', as: 'productRecord' }])
+		// A line names its product by reference (the schema) or by name (older data).
+		expect(lines.columns.map((c) => c.value)).toEqual([['{productRecord.name}', '{product}'], '{description}', '{quantity}', ['{unitValue|currency}', '{unitPrice|currency}']])
+	})
+
 	it('keeps sending to invoicing and the status transitions', () => {
 		expect(detail.config.bodyWidgets[0].component).toBe(
 			'ContractInvoicingSection',
@@ -86,6 +98,16 @@ describe('contract page', () => {
 	})
 })
 
+describe('product status', () => {
+	const fragment = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/register.d/93-product-status.json'), 'utf8'))
+	const status = fragment.components.schemas.product.properties.status
+
+	it('knows draft, active and discontinued, and still reads the old inactive', () => {
+		expect(status.enum).toEqual(['active', 'draft', 'discontinued', 'inactive'])
+		expect(status['x-enum-labels'].inactive).toBe(status['x-enum-labels'].discontinued)
+	})
+})
+
 describe('product pages', () => {
 	it('filters the list on type and status and counts the deals a product is on', () => {
 		const list = page(base.pages, 'Products')
@@ -93,8 +115,11 @@ describe('product pages', () => {
 			'All',
 			'Products',
 			'Services',
+			'Draft',
 			'Discontinued',
 		])
+		const discontinued = list.config.quickFilters.find((f) => f.label === 'Discontinued')
+		expect(discontinued.filter.status).toEqual(['discontinued', 'inactive'])
 		const onDeals = list.config.columns.find((c) => c.key === 'onDeals')
 		expect(onDeals.aggregate).toMatchObject({
 			schema: 'leadProduct',
@@ -115,5 +140,57 @@ describe('product pages', () => {
 			'product-related',
 			'side-history',
 		])
+	})
+
+	it('puts the price tiers and the fee table side by side, as PqProduct draws them', () => {
+		const detail = page(base.pages, 'ProductDetail')
+		const overview = widget(detail, 'product-panels').content.tabs[0]
+		expect(overview.layout).toEqual([
+			{ widgetId: 'product-tiers', gridWidth: 6 },
+			{ widgetId: 'product-tariffs', gridWidth: 6 },
+		])
+		const ids = overview.widgetIds
+		expect(ids.indexOf('product-tariffs')).toBe(ids.indexOf('product-tiers') + 1)
+	})
+
+	it('draws the price tiers as a small table of quantity, unit price and label', () => {
+		const tiers = widget(page(base.pages, 'ProductDetail'), 'product-tiers')
+		expect(tiers.type).toBe('record-list')
+		expect(tiers.content.presentation).toBe('table')
+		expect(tiers.content.objectRows).toEqual({ path: 'priceTiers' })
+		expect(tiers.content.columns.map((c) => c.value)).toEqual(['{minQuantity}', '{unitPrice|currency}', '{label}'])
+	})
+
+	it('draws the variants as a table with a status pill', () => {
+		const variants = widget(page(base.pages, 'ProductDetail'), 'product-variants')
+		expect(variants.content.objectRows).toEqual({ path: 'variants' })
+		expect(variants.content.columns.find((c) => c.label === 'Status').tone.map).toEqual({ active: 'success' })
+	})
+
+	it('draws the price tiers and variants as data tables whose heads sort and filter, as PqProduct draws them', () => {
+		const detail = page(base.pages, 'ProductDetail')
+		for (const id of ['product-tiers', 'product-variants']) {
+			const content = widget(detail, id).content
+			expect(content.tableLook).toBe('data')
+			expect(content.sortable).toBe(true)
+			expect(content.filterable).toBe(true)
+		}
+	})
+
+	it('shows each variant\'s characteristics after its name', () => {
+		const variants = widget(page(base.pages, 'ProductDetail'), 'product-variants')
+		expect(variants.content.columns.map((c) => c.label)).toEqual(['SKU', 'Name', 'Characteristics', 'Price', 'Barcode', 'Status'])
+		expect(variants.content.columns[2].value).toBe('{attributes|values}')
+	})
+
+	it('lays the publication out in three columns: status, publication date, languages, then audience', () => {
+		const publication = widget(page(base.pages, 'ProductDetail'), 'product-publication')
+		expect(publication.content.columns).toBe(3)
+		expect(publication.content.include).toEqual(['status', 'publishedAt', 'languages', 'audience'])
+	})
+
+	it('draws a service in the teal pill, a product in the blue one', () => {
+		const detail = page(base.pages, 'ProductDetail')
+		expect(detail.config.typePill.colorMap).toEqual({ product: 'info', service: 'teal' })
 	})
 })

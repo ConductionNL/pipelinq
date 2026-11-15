@@ -21,13 +21,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-002
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Util\ContrastRatioCalculator;
 use OCP\AppFramework\Http;
 
@@ -39,7 +40,7 @@ use OCP\AppFramework\Http;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalTenantService {
+class PortalTenantService implements PortalTenantServiceInterface {
 	/**
 	 * Schema slug for tenant config.
 	 *
@@ -48,11 +49,11 @@ class PortalTenantService {
 	private const SCHEMA = 'portalTenantConfig';
 
 	/**
-	 * The default tenant id for single-tenant instances.
+	 * The status of a portal residents can use.
 	 *
 	 * @var string
 	 */
-	public const DEFAULT_TENANT = 'default';
+	public const STATUS_LIVE = 'live';
 
 	/**
 	 * Public (client-safe) config fields. Everything else is admin-only.
@@ -219,6 +220,30 @@ class PortalTenantService {
 
 		return $this->repository->save(self::SCHEMA, $config, $id);
 	}//end saveConfig()
+
+	/**
+	 * Every stored tenant config, sorted by display name. A record without a
+	 * status reads as live.
+	 *
+	 * @return array<int, array<string, mixed>> The configs.
+		 * @spec openspec/changes/portal-tenants-on-one-admin-tab/specs/customer-portal/spec.md#requirement-the-admin-tab-lists-every-portal-tenant
+	 */
+	public function listConfigs(): array {
+		$configs = [];
+		foreach ($this->repository->findAll(self::SCHEMA) as $config) {
+			$config['status'] = (string)($config['status'] ?? self::STATUS_LIVE);
+			$configs[] = $config;
+		}
+
+		usort(
+			$configs,
+			static function (array $left, array $right): int {
+				return strcmp((string)($left['displayName'] ?? ''), (string)($right['displayName'] ?? ''));
+			}
+		);
+
+		return $configs;
+	}//end listConfigs()
 
 	/**
 	 * Whether a feature is enabled for a tenant.

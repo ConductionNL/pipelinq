@@ -8,7 +8,7 @@
  * + #[NoCSRFRequired] because openconnector cannot present a Nextcloud
  * session cookie or CSRF token; authenticity is enforced via HMAC-SHA256
  * over the raw body using the per-instance shared secret stored at
- * {@see AppointmentDepositService::WEBHOOK_SECRET_KEY}.
+ * {@see AppointmentDepositServiceInterface::WEBHOOK_SECRET_KEY}.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentDepositService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -54,6 +54,7 @@ use Throwable;
  * authentication boundary.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class AppointmentPaymentWebhookController extends Controller {
 	/**
@@ -61,7 +62,7 @@ class AppointmentPaymentWebhookController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig App configuration (webhook secret).
-	 * @param AppointmentDepositService $deposit The deposit service (callback handler).
+	 * @param AppointmentDepositServiceInterface $deposit The deposit service (callback handler).
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
@@ -69,10 +70,10 @@ class AppointmentPaymentWebhookController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
-		private AppointmentDepositService $deposit,
+		private AppointmentDepositServiceInterface $deposit,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -110,21 +111,52 @@ class AppointmentPaymentWebhookController extends Controller {
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function callback(): JSONResponse {
 		$rawBody = $this->readRawBody();
-		$signature = (string)$this->request->getHeader('X-Pipelinq-Signature');
-
-		if ($this->verifySignature(rawBody: $rawBody, signature: $signature) === false) {
-			$this->logger->warning(
-				'AppointmentPaymentWebhookController: invalid signature',
-				['ip' => $this->request->getRemoteAddress()]
-			);
-			// 422 — matches BlastWebhookController convention; signals
-			// signature failure without surfacing session-auth status.
-			return new JSONResponse(
-				['error' => 'Invalid webhook signature'],
-				Http::STATUS_UNPROCESSABLE_ENTITY
-			);
+		$refusal = $this->signatureRefusal(rawBody: $rawBody);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
+		$payment = $this->paymentNotice(rawBody: $rawBody);
+		if ($payment instanceof JSONResponse) {
+			return $payment;
+		}
+
+		return $this->handledCallback(bookingId: $payment[0], status: $payment[1]);
+	}//end callback()
+
+	/**
+	 * The 422 for a body whose signature does not verify, or null.
+	 *
+	 * @param string $rawBody The raw request body.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function signatureRefusal(string $rawBody): ?JSONResponse {
+		$signature = (string)$this->request->getHeader('X-Pipelinq-Signature');
+		if ($this->verifySignature(rawBody: $rawBody, signature: $signature) === true) {
+			return null;
+		}
+
+		$this->logger->warning(
+			'AppointmentPaymentWebhookController: invalid signature',
+			['ip' => $this->request->getRemoteAddress()]
+		);
+		// 422 — matches BlastWebhookController convention; signals
+		// signature failure without surfacing session-auth status.
+		return new JSONResponse(
+			['error' => 'Invalid webhook signature'],
+			Http::STATUS_UNPROCESSABLE_ENTITY
+		);
+	}//end signatureRefusal()
+
+	/**
+	 * The notice's booking id and status, or the 400 for a malformed one.
+	 *
+	 * @param string $rawBody The verified raw body.
+	 *
+	 * @return array{0: string, 1: string}|JSONResponse The booking id and status, or the refusal.
+	 */
+	private function paymentNotice(string $rawBody): array|JSONResponse {
 		$payload = json_decode($rawBody, true);
 		if (is_array($payload) === false) {
 			return new JSONResponse(
@@ -142,6 +174,18 @@ class AppointmentPaymentWebhookController extends Controller {
 			);
 		}
 
+		return [$bookingId, $status];
+	}//end paymentNotice()
+
+	/**
+	 * Hand the notice to the deposit service; a failure is acknowledged as deferred.
+	 *
+	 * @param string $bookingId The booking.
+	 * @param string $status    The payment status.
+	 *
+	 * @return JSONResponse The acknowledgement.
+	 */
+	private function handledCallback(string $bookingId, string $status): JSONResponse {
 		try {
 			$outcome = $this->deposit->handlePaymentCallback(
 				bookingId: $bookingId,
@@ -159,7 +203,7 @@ class AppointmentPaymentWebhookController extends Controller {
 		}
 
 		return new JSONResponse(['ok' => true, 'outcome' => $outcome]);
-	}//end callback()
+	}//end handledCallback()
 
 	/**
 	 * Read the raw request body (form-encoded fallback to JSON-encoded
@@ -168,21 +212,7 @@ class AppointmentPaymentWebhookController extends Controller {
 	 * @return string
 	 */
 	protected function readRawBody(): string {
-		$body = file_get_contents('php://input');
-		if (is_string($body) === true && $body !== '') {
-			return $body;
-		}
-
-		// Fallback for the unit-test boundary (IRequest::getParams).
-		$params = $this->request->getParams();
-		if (is_array($params) === true && $params !== []) {
-			$encoded = json_encode($params);
-			if (is_string($encoded) === true) {
-				return $encoded;
-			}
-		}
-
-		return '';
+		return (new RequestBody(request: $this->request))->raw();
 	}//end readRawBody()
 
 	/**
@@ -203,8 +233,8 @@ class AppointmentPaymentWebhookController extends Controller {
 		}
 
 		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
-			AppointmentDepositService::WEBHOOK_SECRET_KEY,
+			AppIdentity::APP_ID,
+			AppointmentDepositServiceInterface::WEBHOOK_SECRET_KEY,
 			''
 		);
 		if ($secret === '') {

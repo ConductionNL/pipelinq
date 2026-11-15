@@ -9,7 +9,7 @@
  * source strings in English, and words its hint by provider type, not by a
  * provider name written into the code.
  *
- * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+ * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

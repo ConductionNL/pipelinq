@@ -60,4 +60,21 @@ describe('project page', () => {
 			'side-history',
 		])
 	})
+
+	it('lays the plan out in three columns, as PqProject draws it', () => {
+		expect(widget('prog-plan').content.columns).toBe(3)
+	})
+
+	it('names people by their display name, not their user id', () => {
+		const owner = widget('prog-plan').content.fields.find((f) => f.path === 'owner')
+		expect(owner.format).toBe('user')
+		expect(widget('side-team').content.title).toBe('{user|user}')
+		for (const id of ['prog-tasks', 'prog-tasks-tab']) {
+			const assignee = widget(id).content.columns.find((c) => c.key === 'assignee')
+			expect(assignee.formatter, id).toBe('userDisplayName')
+		}
+		const person = widget('prog-team').content.columns.find((c) => c.key === 'user')
+		expect(person.formatter).toBe('userDisplayName')
+	})
 })
+

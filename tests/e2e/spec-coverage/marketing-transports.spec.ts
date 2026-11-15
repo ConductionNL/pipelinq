@@ -77,9 +77,9 @@ test.describe('Blast wizard transport step', () => {
 
 		// The stepper names every step, including Delivery, which holds the
 		// transport choice.
-		await expect(dialog.locator('.blast-wizard__step')).toHaveCount(6)
+		await expect(dialog.locator('.cn-stepper__item')).toHaveCount(6)
 		await expect(
-			dialog.locator('.blast-wizard__step').filter({ hasText: 'Delivery' }),
+			dialog.locator('.cn-stepper__item').filter({ hasText: 'Delivery' }),
 		).toBeVisible()
 
 		// Basics: the name is required; email is the default channel.

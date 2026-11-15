@@ -7,7 +7,7 @@
  * permission matrix and the PIN validation; this store just caches the
  * result for the terminal UI.
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#5.2
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#5.2
  */
 
 import { defineStore } from 'pinia'

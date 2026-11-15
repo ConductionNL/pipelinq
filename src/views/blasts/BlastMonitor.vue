@@ -2,19 +2,14 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
 	<div class="blast-monitor">
-		<NcButton
-			class="blast-monitor__back"
-			variant="tertiary"
-			:to="{ name: 'Blasts' }">
-			<template #icon>
-				<ArrowLeft :size="18" />
-			</template>
+		<router-link class="blast-monitor__back" :to="{ name: 'Blasts' }">
+			<ArrowLeft :size="16" />
 			{{ t('pipelinq', 'Back to blasts') }}
-		</NcButton>
+		</router-link>
 
 		<header class="blast-monitor__header">
 			<div class="blast-monitor__heading">
-				<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
+				<h1>{{ blast?.name || t('pipelinq', 'Blast') }}</h1>
 				<div class="blast-monitor__meta">
 					<CnStatusBadge
 						v-if="blast?.status"
@@ -35,7 +30,8 @@
 <div class="cn-header-actions">
 			<NcButton
 				v-if="canCancel"
-				variant="error"
+				class="blast-monitor__cancel"
+				variant="secondary"
 				:disabled="cancelling"
 				@click="cancel">
 				<template #icon>
@@ -129,6 +125,24 @@
 					{{ t('pipelinq', 'No events yet.') }}
 				</p>
 			</section>
+
+			<!-- @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004 -->
+			<section v-if="hasSentContent" class="blast-monitor__card blast-monitor__sent">
+				<header class="blast-monitor__timeline-head">
+					<h3>{{ t('pipelinq', 'Sent content') }}</h3>
+					<span>{{ t('pipelinq', 'As sent; later changes to the template do not alter it') }}</span>
+				</header>
+				<dl>
+					<dt>{{ t('pipelinq', 'Subject') }}</dt>
+					<dd>{{ blast.sentSubject }}</dd>
+					<template v-if="blast.sentText">
+						<dt>{{ t('pipelinq', 'Text') }}</dt>
+						<dd class="blast-monitor__sent-text">
+							{{ blast.sentText }}
+						</dd>
+					</template>
+				</dl>
+			</section>
 		</section>
 	</div>
 </template>
@@ -188,6 +202,15 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether the blast holds the content it was sent with (REQ-MMT-004).
+		 *
+		 * @return {boolean}
+		 */
+		hasSentContent() {
+			return typeof this.blast?.sentSubject === 'string'
+		},
+
 		/**
 		 * Convenience accessor for the blast's totals counter map.
 		 *
@@ -372,9 +395,12 @@ export default {
 
 		/**
 		 * Build the reverse-chronological event timeline (capped at 50 entries).
+		 * Events of the same moment keep the order the deliveries come in.
 		 *
 		 * @param {Array} deliveries Raw delivery objects.
 		 * @return {Array} Trimmed timeline entries.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-events-of-the-same-moment-keep-their-order-in-the-send-monitor
 		 */
 		buildTimeline(deliveries) {
 			if (!Array.isArray(deliveries)) {
@@ -397,7 +423,12 @@ export default {
 						|| d.createdAt,
 				}))
 				.filter((d) => d.timestamp)
-				.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+				.sort((a, b) => {
+					if (a.timestamp === b.timestamp) {
+						return 0
+					}
+					return a.timestamp < b.timestamp ? 1 : -1
+				})
 				.slice(0, TIMELINE_MAX)
 		},
 
@@ -436,7 +467,7 @@ export default {
 			const map = {
 				draft: this.t('pipelinq', 'Draft'),
 				scheduled: this.t('pipelinq', 'Scheduled'),
-				sending: this.t('pipelinq', 'Sending'),
+				sending: this.t('pipelinq', 'Being sent'),
 				cancelling: this.t('pipelinq', 'Cancelling'),
 				sent: this.t('pipelinq', 'Sent'),
 				paused: this.t('pipelinq', 'Paused'),
@@ -563,7 +594,7 @@ export default {
 				if (isNaN(date.getTime())) {
 					return ts
 				}
-				return date.toLocaleTimeString()
+				return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 			} catch {
 				return ts
 			}
@@ -585,12 +616,19 @@ export default {
 	padding: 24px 28px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
 }
 
 .blast-monitor__back {
 	align-self: flex-start;
-	margin-inline-start: -12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: normal;
+	text-decoration: none;
+	color: var(--color-primary-element);
 }
 
 .blast-monitor__header {
@@ -598,11 +636,32 @@ export default {
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
+	padding: 4px 0 8px;
 }
 
-.blast-monitor__header h2 {
-	margin: 0 0 8px;
+.blast-monitor__heading {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.blast-monitor__header h1 {
+	margin: 0;
 	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+/* The page's class outranks the board look's neutral secondary (0,3,0). */
+.blast-monitor .blast-monitor__cancel.button-vue {
+	min-height: 40px;
+	border: 1px solid var(--nldesign-component-status-badge-error-color, var(--nl-color-red-text, var(--color-error-text)));
+	background-color: var(--color-main-background);
+	color: var(--nldesign-component-status-badge-error-color, var(--nl-color-red-text, var(--color-error-text)));
+}
+
+.blast-monitor .blast-monitor__cancel.button-vue :deep(.button-vue__text) {
+	color: inherit;
 }
 
 .blast-monitor__meta {
@@ -610,6 +669,8 @@ export default {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
+	font-size: 14px;
+	line-height: normal;
 	color: var(--color-text-maxcontrast);
 }
 
@@ -651,7 +712,8 @@ export default {
 	gap: 8px;
 
 	strong {
-		font-size: 26px;
+		font-size: 28px;
+		line-height: 1.2;
 	}
 }
 
@@ -695,6 +757,10 @@ export default {
 	gap: 4px;
 }
 
+.blast-monitor__card.blast-monitor__total {
+	padding: 16px 18px;
+}
+
 .blast-monitor__total-label,
 .blast-monitor__total-caption {
 	color: var(--color-text-maxcontrast);
@@ -728,6 +794,8 @@ export default {
 		margin: 0 0 8px;
 		color: var(--color-main-text);
 		font-size: 17px;
+		font-weight: 700;
+		line-height: normal;
 	}
 }
 
@@ -738,6 +806,7 @@ export default {
 }
 
 .blast-monitor__timeline li {
+	font-size: 14px;
 	display: grid;
 	grid-template-columns: 100px 1fr auto;
 	align-items: center;
@@ -752,6 +821,20 @@ export default {
 
 .blast-monitor__event-target {
 	font-weight: 600;
+}
+
+.blast-monitor__sent dt {
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
+	margin-top: 8px;
+}
+
+.blast-monitor__sent dd {
+	margin: 0;
+}
+
+.blast-monitor__sent-text {
+	white-space: pre-wrap;
 }
 
 .blast-monitor__empty {

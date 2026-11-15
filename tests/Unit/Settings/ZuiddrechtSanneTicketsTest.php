@@ -64,7 +64,11 @@ class ZuiddrechtSanneTicketsTest extends TestCase {
 	public function testSannesTwoTicketsCarryTheirReferences(): void {
 		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
 		$objects = array_column($set['objects'], 'data', 'key');
-		$hers    = array_filter($objects, static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-sanne.id}}' && isset($data['ticketType']));
+		$hers    = array_filter(
+			$objects,
+			static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-sanne.id}}'
+				&& in_array(($data['ticketType'] ?? null), ['request', 'complaint'], true)
+		);
 
 		$this->assertSame(
 			expected: ['PQ-2026-0417', 'PQ-2026-0351'],

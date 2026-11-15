@@ -17,10 +17,33 @@
   - schema and cannot break one field out into four counts on one strip.
   -
   - @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+  - @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-table-fits-its-card
   -->
 <template>
-	<div class="subscriptions-section">
-		<header v-if="listId" class="subscriptions-section__head">
+	<component
+		:is="card ? 'CnDetailCard' : 'div'"
+		v-bind="cardProps"
+		class="subscriptions-section"
+		:class="{ 'subscriptions-section--card': card }">
+		<template v-if="card" #actions>
+			<NcButton variant="secondary" data-testid="subscriptions-refresh" @click="load">
+				<template #icon>
+					<Refresh :size="18" />
+				</template>
+				{{ t('pipelinq', 'Refresh') }}
+			</NcButton>
+			<NcButton
+				v-if="listId"
+				variant="secondary"
+				data-testid="subscriptions-manage-signups"
+				@click="showSignups = true">
+				<template #icon>
+					<AccountGroup :size="18" />
+				</template>
+				{{ t('pipelinq', 'Manage sign-ups') }}
+			</NcButton>
+		</template>
+		<header v-if="listId && !card" class="subscriptions-section__head">
 			<p class="subscriptions-section__subtitle">
 				{{ t('pipelinq', 'Subscribers on this list') }}
 			</p>
@@ -51,15 +74,41 @@
 				</caption>
 				<thead>
 					<tr>
-						<th scope="col">{{ t('pipelinq', 'Subscriber') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Source') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Ground') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Confirmed') }}</th>
+						<th
+							v-for="column in columns"
+							:key="column.key"
+							scope="col"
+							:aria-sort="sortKey === column.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'">
+							<span class="subscriptions-section__th">
+								<button
+									type="button"
+									class="subscriptions-section__sort"
+									:data-testid="`subscriptions-sort-${column.key}`"
+									@click="sortBy(column.key)">
+									{{ column.label }}
+									<MenuUp v-if="sortKey === column.key && sortDir === 'desc'" :size="16" />
+									<MenuDown v-else :size="16" />
+								</button>
+								<NcActions
+									:aria-label="t('pipelinq', 'Filter on {column}', { column: column.label })"
+									:data-testid="`subscriptions-filter-${column.key}`">
+									<template #icon>
+										<FilterOutline :size="16" />
+									</template>
+									<NcActionCheckbox
+										v-for="option in filterOptions(column)"
+										:key="option"
+										:modelValue="isFiltered(column.key, option)"
+										@update:modelValue="toggleFilter(column.key, option, $event)">
+										{{ option }}
+									</NcActionCheckbox>
+								</NcActions>
+							</span>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="row in rows" :key="rowKey(row)">
+					<tr v-for="row in shownRows" :key="rowKey(row)">
 						<td>
 							<strong class="subscriptions-section__who">{{ subscriberLabel(row) }}</strong>
 							<span v-if="listId && row.name && row.email" class="subscriptions-section__email">{{ row.email }}</span>
@@ -96,19 +145,32 @@
 			</div>
 		</template>
 
+		<ListSignupsManageDialog
+			v-if="showSignups"
+			:listId="listId"
+			:subscriptions="rows"
+			@close="showSignups = false"
+			@changed="load" />
+
 		<SubscriptionManageModal
 			v-if="showManage"
 			:contactId="contactId"
 			:subscriptions="rows"
 			@close="showManage = false"
 			@changed="onChanged" />
-	</div>
+	</component>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { getLanguage } from '@nextcloud/l10n'
+import { NcActionCheckbox, NcActions, NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
+import MenuDown from 'vue-material-design-icons/MenuDown.vue'
+import MenuUp from 'vue-material-design-icons/MenuUp.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ListSignupsManageDialog from '../../dialogs/ListSignupsManageDialog.vue'
 import SubscriptionManageModal from '../../modals/SubscriptionManageModal.vue'
 import {
 	fetchContactSubscriptions,
@@ -123,6 +185,14 @@ export default {
 	name: 'SubscriptionsSection',
 
 	components: {
+		AccountGroup,
+		CnDetailCard,
+		FilterOutline,
+		ListSignupsManageDialog,
+		MenuDown,
+		MenuUp,
+		NcActionCheckbox,
+		NcActions,
 		CnStatusBadge,
 		NcButton,
 		NcLoadingIcon,
@@ -147,6 +217,15 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Draw the section as its own titled card, with the subtitle and
+		 * Refresh in the card's header (the list page's Subscribers card).
+		 */
+		card: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	data() {
@@ -156,10 +235,68 @@ export default {
 			rows: [],
 			counts: countByState([]),
 			showManage: false,
+			showSignups: false,
+			sortKey: '',
+			sortDir: 'asc',
+			filters: {},
 		}
 	},
 
 	computed: {
+		/**
+		 * The table's columns: each a label, the value a filter offers and
+		 * the value a sort compares.
+		 *
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @return {Array<{key: string, label: string, text: (row: object) => string, sort: (row: object) => string}>}
+		 */
+		columns() {
+			return [
+				{ key: 'subscriber', label: this.t('pipelinq', 'Subscriber'), text: (row) => this.subscriberLabel(row), sort: (row) => this.subscriberLabel(row).toLowerCase() },
+				{ key: 'state', label: this.t('pipelinq', 'Status'), text: (row) => this.stateLabel(row.state), sort: (row) => this.stateLabel(row.state) },
+				{ key: 'source', label: this.t('pipelinq', 'Source'), text: (row) => row.source || '—', sort: (row) => row.source || '' },
+				{ key: 'ground', label: this.t('pipelinq', 'Ground'), text: (row) => this.groundLabel(row.lawfulBasis), sort: (row) => this.groundLabel(row.lawfulBasis) },
+				{ key: 'confirmed', label: this.t('pipelinq', 'Confirmed'), text: (row) => (row.confirmedAt ? this.formatDate(row.confirmedAt) : this.t('pipelinq', 'not yet')), sort: (row) => row.confirmedAt || '' },
+			]
+		},
+
+		/**
+		 * The rows the table shows: those every column filter lets through,
+		 * in the chosen order.
+		 *
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 * @return {Array<object>}
+		 */
+		shownRows() {
+			const columns = this.columns
+			let out = this.rows.filter((row) => columns.every((column) => {
+				const chosen = this.filters[column.key]
+				return !chosen || chosen.length === 0 || chosen.includes(column.text(row))
+			}))
+			const column = columns.find((c) => c.key === this.sortKey)
+			if (column) {
+				const dir = this.sortDir === 'desc' ? -1 : 1
+				out = [...out].sort((a, b) => String(column.sort(a)).localeCompare(String(column.sort(b))) * dir)
+			}
+			return out
+		},
+
+		/**
+		 * The card's title and subtitle, when the section is its own card.
+		 *
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
+		 * @return {object} Props for CnDetailCard, or none.
+		 */
+		cardProps() {
+			if (!this.card) {
+				return {}
+			}
+			return {
+				title: this.t('pipelinq', 'Subscribers'),
+				subtitle: this.listId ? this.t('pipelinq', 'Subscribers on this list') : '',
+			}
+		},
+
 		/**
 		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 		 * @return {string} What an empty result means here.
@@ -198,22 +335,14 @@ export default {
 		 * @return {Promise<void>} Resolves when the rows are in place.
 		 */
 		async load() {
-			const listId = this.listId || this.contextId('listId')
-			const contactId = this.contactId || this.contextId('contactId')
+			const { listId, contactId } = this.subscriptionsOf()
 			if (!listId && !contactId) {
 				return
 			}
 			this.loading = true
 			this.error = ''
 			try {
-				if (listId) {
-					const envelope = await fetchListSubscriptions(listId)
-					this.rows = envelope.data || []
-					this.counts = envelope.counts || countByState(this.rows)
-				} else {
-					this.rows = await fetchContactSubscriptions(contactId)
-					this.counts = countByState(this.rows)
-				}
+				await (listId ? this.loadListRows(listId) : this.loadContactRows(contactId))
 			} catch {
 				this.error = this.t(
 					'pipelinq',
@@ -222,6 +351,54 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Sort on a column; the same column again turns the order around.
+		 *
+		 * @param {string} key The column.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 */
+		sortBy(key) {
+			if (this.sortKey === key) {
+				this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'
+				return
+			}
+			this.sortKey = key
+			this.sortDir = 'asc'
+		},
+
+		/**
+		 * The values a column's filter offers: those its rows hold.
+		 *
+		 * @param {object} column The column.
+		 * @return {Array<string>}
+		 */
+		filterOptions(column) {
+			return [...new Set(this.rows.map((row) => column.text(row)))].sort()
+		},
+
+		/**
+		 * Whether a column's filter holds a value.
+		 *
+		 * @param {string} key The column.
+		 * @param {string} option The value.
+		 * @return {boolean}
+		 */
+		isFiltered(key, option) {
+			return (this.filters[key] || []).includes(option)
+		},
+
+		/**
+		 * Add a value to a column's filter, or take it out.
+		 *
+		 * @param {string} key The column.
+		 * @param {string} option The value.
+		 * @param {boolean} on Whether the value is chosen.
+		 */
+		toggleFilter(key, option, on) {
+			const now = (this.filters[key] || []).filter((value) => value !== option)
+			this.filters = { ...this.filters, [key]: on ? [...now, option] : now }
 		},
 
 		/**
@@ -243,13 +420,61 @@ export default {
 		 * @return {string} The id, or an empty string.
 		 */
 		contextId(key) {
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = this.sectionBag()
 			if (!bag) {
 				return ''
 			}
 			return (key === 'listId' ? bag.listId : bag.contactId) || ''
+		},
+
+		/**
+		 * What the page host resolved, unwrapped when it is a ref.
+		 *
+		 * @return {object|null} The host's values.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+		 */
+		sectionBag() {
+			const ctx = this.cnSectionContext
+			return ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+		},
+
+		/**
+		 * Whose subscriptions to show: the bound list or contact, else the one
+		 * the page host resolved.
+		 *
+		 * @return {{listId: string, contactId: string}} The ids.
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
+		 */
+		subscriptionsOf() {
+			const listId = this.listId || this.contextId('listId')
+			const contactId = this.contactId || this.contextId('contactId')
+			return { listId, contactId }
+		},
+
+		/**
+		 * A contact's subscriptions, counted here.
+		 *
+		 * @param {string} contactId The contact.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 */
+		async loadContactRows(contactId) {
+			this.rows = await fetchContactSubscriptions(contactId)
+			this.counts = countByState(this.rows)
+		},
+
+		/**
+		 * A list's subscriptions, with the counts the server gave or else
+		 * counted here.
+		 *
+		 * @param {string} listId The list.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-subscribers-can-be-sorted-and-filtered
+		 */
+		async loadListRows(listId) {
+			const envelope = await fetchListSubscriptions(listId)
+			this.rows = envelope.data || []
+			this.counts = envelope.counts || countByState(this.rows)
 		},
 
 		/**
@@ -344,7 +569,7 @@ export default {
 			if (Number.isNaN(date.getTime())) {
 				return String(value).slice(0, 10)
 			}
-			return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+			return date.toLocaleDateString(getLanguage(), { day: 'numeric', month: 'short', year: 'numeric' })
 		},
 	},
 }
@@ -411,6 +636,72 @@ export default {
 	text-align: start;
 	padding: 0.4rem 0.6rem;
 	border-block-end: 1px solid var(--color-border);
+}
+
+/* The filter funnel is a 22px button with a 4px radius, as the boards draw
+   it, not Nextcloud's 34px clickable area. */
+.subscriptions-section__th {
+	--default-clickable-area: 22px;
+	--border-radius-element: 4px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* The sort button is the bare label: Nextcloud's `button` rule gives it a
+   34px height, a width and a radius the boards do not draw. */
+.subscriptions-section__sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	width: auto;
+	min-height: 0;
+	height: auto;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+/* In a card the table runs to the card's edges, as every Pq card table does
+   (PqMailinglijst): the board look's card padding is taken back, and the
+   first column starts 18px in. */
+.subscriptions-section--card .subscriptions-section__table {
+	width: calc(100% + 2 * var(--cn-board-card-inline-padding, 0px));
+	margin-inline: calc(-1 * var(--cn-board-card-inline-padding, 0px));
+	line-height: normal;
+}
+
+/* The head sits on the card's ground. The theme paints every `th` and the
+   buttons in it through its table-header and button tokens, so those get
+   the board's ground and weight too. */
+.subscriptions-section--card .subscriptions-section__table th {
+	--nldesign-component-table-header-background-color: var(--color-main-background);
+	--nldesign-component-table-header-color: var(--color-text-maxcontrast);
+	--nldesign-component-button-font-weight: 600;
+	padding: 10px 12px;
+	background: var(--color-main-background);
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.subscriptions-section--card .subscriptions-section__table td {
+	padding: 12px;
+	vertical-align: middle;
+	white-space: normal;
+}
+
+.subscriptions-section--card .subscriptions-section__table th:first-child,
+.subscriptions-section--card .subscriptions-section__table td:first-child {
+	padding-inline-start: 18px;
+}
+
+.subscriptions-section--card .subscriptions-section__who {
+	font-size: 15px;
 }
 
 .subscriptions-section__chip {

@@ -22,13 +22,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 
@@ -40,7 +41,7 @@ use OCP\IRequest;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalRequestGuard {
+class PortalRequestGuard implements PortalRequestGuardInterface {
 	/**
 	 * Schema slug for accounts.
 	 *

@@ -62,30 +62,54 @@ export function stepAmount(step) {
  * @param {object} step The step from the editor.
  * @return {object} The step for the schema.
  *
- * @spec openspec/changes/round3-review-points/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function serializeStep(step) {
 	const source = step || {}
-	const saved = {
+	return {
+		...baseStepFields(source),
+		...optionalStepFields(source),
+	}
+}
+
+/**
+ * @param {object} source The step from the editor.
+ * @return {object} The duration, resource type, skill and gap every step has.
+ */
+function baseStepFields(source) {
+	return {
 		durationMinutes: Number(source.durationMinutes) || 0,
 		resourceType: source.resourceType || 'staff',
 		skillRequired: String(source.skillRequired || '').trim(),
 		allowGap: !!source.allowGap,
 	}
+}
+
+/**
+ * @param {object} source The step from the editor.
+ * @return {object} The product, quantity and unit, each only when set.
+ */
+function optionalStepFields(source) {
+	const saved = {}
 	if (source.productId) {
 		saved.productId = String(source.productId)
 	}
-	const quantity = Number(source.quantity)
-	if (
-		source.quantity !== null
-		&& source.quantity !== undefined
-		&& source.quantity !== ''
-		&& Number.isFinite(quantity)
-	) {
-		saved.quantity = quantity
+	if (hasQuantity(source)) {
+		saved.quantity = Number(source.quantity)
 	}
 	if (STEP_UNITS.includes(source.unit)) {
 		saved.unit = source.unit
 	}
 	return saved
+}
+
+/**
+ * @param {object} source The step from the editor.
+ * @return {boolean} Whether it carries a quantity that is a finite number.
+ */
+function hasQuantity(source) {
+	return source.quantity !== null
+		&& source.quantity !== undefined
+		&& source.quantity !== ''
+		&& Number.isFinite(Number(source.quantity))
 }

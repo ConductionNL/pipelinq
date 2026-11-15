@@ -15,7 +15,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/pipeline/spec.md#pipelines-index
+// @e2e openspec/specs/pipeline/spec.md
 test('Pipelines: navigates from sidebar and shows index surface', async ({
 	page,
 }) => {
@@ -34,7 +34,7 @@ test('Pipelines: navigates from sidebar and shows index surface', async ({
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/pipeline/spec.md#pipelines-list-table
+// @e2e openspec/specs/pipeline/spec.md
 test('Pipelines: list table, pagination and primary actions render', async ({
 	page,
 }) => {
@@ -50,7 +50,7 @@ test('Pipelines: list table, pagination and primary actions render', async ({
 	).toBeVisible()
 })
 
-// @e2e openspec/specs/pipeline/spec.md#pipelines-create-modal
+// @e2e openspec/specs/pipeline/spec.md
 test('Pipelines: Add Pipeline opens a create modal with a form', async ({
 	page,
 }) => {

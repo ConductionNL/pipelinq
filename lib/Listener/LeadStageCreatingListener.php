@@ -21,7 +21,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LeadStagePlacer;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -80,15 +80,15 @@ class LeadStageCreatingListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false) {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		$entity = $event->getObject();
 		if ($leadSchema === '' || (string)$entity->getSchema() !== $leadSchema) {
 			return;
@@ -117,16 +117,35 @@ class LeadStageCreatingListener implements IEventListener {
 	 * @return array<int, array<string, mixed>> The pipelines, [] when unreadable.
 	 */
 	private function readPipelines(string $register): array {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
+		$pipelines = [];
+		foreach ($this->pipelineRows(filters: ['register' => $register, 'schema' => $schema]) as $row) {
+			$data = $this->rowData(row: $row);
+			if ($data !== null) {
+				$pipelines[] = $data;
+			}
+		}
+
+		return $pipelines;
+	}//end readPipelines()
+
+	/**
+	 * The pipeline rows of the register and schema, RBAC and multitenancy off, or [] when unreadable (logged).
+	 *
+	 * @param array<string, string> $filters The register and schema filters.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function pipelineRows(array $filters): iterable {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$rows = $objectService->findAll(
 				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
+					'filters' => $filters,
 					'limit' => self::PIPELINE_LIMIT,
 				],
 				_rbac: false,
@@ -140,21 +159,45 @@ class LeadStageCreatingListener implements IEventListener {
 			return [];
 		}
 
-		$pipelines = [];
-		foreach (($rows ?? []) as $row) {
-			if (is_array($row) === true) {
-				$pipelines[] = $row;
-				continue;
-			}
+		return ($rows ?? []);
+	}//end pipelineRows()
 
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$pipelines[] = $data;
-				}
-			}
+	/**
+	 * A row's data: the row itself when it is an array, its serialisation when that is one, else null.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>|null The data.
+	 */
+	private function rowData(mixed $row): ?array {
+		if (is_array($row) === true) {
+			return $row;
 		}
 
-		return $pipelines;
-	}//end readPipelines()
+		if (is_object($row) === false) {
+			return null;
+		}
+
+		return $this->serialisedData(row: $row);
+	}//end rowData()
+
+	/**
+	 * An object row's serialisation when it is an array, else null.
+	 *
+	 * @param object $row The row.
+	 *
+	 * @return array<string, mixed>|null The data.
+	 */
+	private function serialisedData(object $row): ?array {
+		if (method_exists($row, 'jsonSerialize') === false) {
+			return null;
+		}
+
+		$data = $row->jsonSerialize();
+		if (is_array($data) === true) {
+			return $data;
+		}
+
+		return null;
+	}//end serialisedData()
 }//end class

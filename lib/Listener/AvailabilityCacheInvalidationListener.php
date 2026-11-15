@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+ * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
  */
 
 declare(strict_types=1);
@@ -28,9 +28,9 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\AvailabilityService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -51,7 +51,7 @@ use OCP\IAppConfig;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+ * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
  */
 class AvailabilityCacheInvalidationListener implements IEventListener, DeferredObjectWork {
 
@@ -65,12 +65,12 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 	/**
 	 * Constructor.
 	 *
-	 * @param AvailabilityService $availability The availability engine that owns the cache.
+	 * @param AvailabilityServiceInterface $availability The availability engine that owns the cache.
 	 * @param IAppConfig $appConfig The app configuration (schema ids).
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 */
 	public function __construct(
-		private AvailabilityService $availability,
+		private AvailabilityServiceInterface $availability,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
 	) {
@@ -83,7 +83,7 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function handle(Event $event): void {
 		[$entity, $previous] = $this->entitiesOf(event: $event);
@@ -97,25 +97,51 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 			return;
 		}
 
-		$entry = ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'kind' => $kind];
-		if ($kind === 'service') {
-			$before = null;
-			if ($previous !== null) {
-				$before = $this->resourceTypes(data: (array)$previous->getObject());
-			}
+		$entry = $this->deferredEntry(
+			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'kind' => $kind],
+			versions: [$entity, $previous]
+		);
+		$this->deferral->defer(jobClass: DeferredObjectListenerJob::class, entry: $entry, dedupeKey: self::HANDLER_KEY . '|' . $uuid);
+	}//end handle()
 
-			$entry['resourceTypes'] = $this->affectedTypes(
-				current: $this->resourceTypes(data: (array)$entity->getObject()),
-				previous: $before
-			);
+	/**
+	 * The deferred entry; a service change also names the resource types it affects.
+	 *
+	 * @param array{handler: string, uuid: string, kind: string} $entry    The entry: handler, the changed object's uuid and
+	 *                                                                   its kind (`resource` or `service`).
+	 * @param array{0: object, 1: object|null}                   $versions The object as it is now, and as it was (or null).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function deferredEntry(array $entry, array $versions): array {
+		if ($entry['kind'] === 'service') {
+			$entry = $this->withAffectedTypes(entry: $entry, versions: $versions);
 		}
 
-		$this->deferral->defer(
-			jobClass: DeferredObjectListenerJob::class,
-			entry: $entry,
-			dedupeKey: self::HANDLER_KEY . '|' . $uuid
+		return $entry;
+	}//end deferredEntry()
+
+	/**
+	 * The entry with the resource types a service change affects, before and after.
+	 *
+	 * @param array<string, mixed>             $entry    The deferred entry.
+	 * @param array{0: object, 1: object|null} $versions The service as it is now, and as it was (or null).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withAffectedTypes(array $entry, array $versions): array {
+		[$entity, $previous] = $versions;
+		$before = null;
+		if ($previous !== null) {
+			$before = $this->resourceTypes(data: (array)$previous->getObject());
+		}
+
+		$entry['resourceTypes'] = $this->affectedTypes(
+			current: $this->resourceTypes(data: (array)$entity->getObject()),
+			previous: $before
 		);
-	}//end handle()
+		return $entry;
+	}//end withAffectedTypes()
 
 	/**
 	 * Delete the cached availability the change made wrong.
@@ -124,7 +150,7 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
+	 * @spec openspec/specs/appointment-booking/spec.md#requirement-the-server-expires-cached-availability-when-a-resource-or-service-changes
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');
@@ -175,11 +201,11 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 		}
 
 		$kinds = [
-			'resource' => AvailabilityService::RESOURCE_SCHEMA_KEY,
-			'service' => AvailabilityService::SERVICE_SCHEMA_KEY,
+			'resource' => AvailabilityServiceInterface::RESOURCE_SCHEMA_KEY,
+			'service' => AvailabilityServiceInterface::SERVICE_SCHEMA_KEY,
 		];
 		foreach ($kinds as $kind => $key) {
-			if ($this->appConfig->getValueString(Application::APP_ID, $key, '') === $schemaId) {
+			if ($this->appConfig->getValueString(AppIdentity::APP_ID, $key, '') === $schemaId) {
 				return $kind;
 			}
 		}

@@ -255,6 +255,7 @@
           "ownerId": {
             "type": "string",
             "format": "user",
+            "facetable": true,
             "description": "Owning account-manager user ID; defaults to the client's owner.",
             "title": "Owner ID"
           },

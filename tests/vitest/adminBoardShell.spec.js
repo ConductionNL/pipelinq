@@ -76,7 +76,7 @@ describe('the admin page', () => {
 			"t('pipelinq', 'xWiki integration')",
 			'<MessagingSettings',
 			'<DeliverabilitySettings',
-			'<CtiPage',
+			'<CtiSettings',
 			'<PortalSettings',
 			'<PaymentSettingsForm',
 			'<PosTenderTypeManager',
@@ -84,7 +84,6 @@ describe('the admin page', () => {
 			'<PosRoleManager',
 			'<MarketingTrafficSettings',
 			'v-bind="sections.marketingIntel"',
-			'v-bind="sections.brpMonitor"',
 		]) {
 			at(tag)
 		}

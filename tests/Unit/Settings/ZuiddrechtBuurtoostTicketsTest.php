@@ -31,21 +31,32 @@ use PHPUnit\Framework\TestCase;
 class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 
 	/**
-	 * Three tickets on the association's client, which shares dossiq's master entity: the collection permit in
-	 * progress with Fatma Yildiz, the two older ones resolved by Pieter and Fatma, as DqOrganisatie draws them.
+	 * Four tickets on the association's client, which shares dossiq's master entity: the collection permit in
+	 * progress with Fatma Yildiz, the two older ones resolved by Pieter and Fatma, as DqOrganisatie draws them, and
+	 * the new question about subsidy documents with Fatma that PqNieuwVerzoek draws.
 	 *
 	 * @return void
 	 */
-	public function testTheAssociationHasItsThreeTickets(): void {
+	public function testTheAssociationHasItsFourTickets(): void {
 		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
 		$objects = array_column($set['objects'], 'data', 'key');
 
 		$client = $objects['client-buurtoost'];
 		$this->assertSame(expected: ['organization', '0f5e0000-0000-4000-8000-000000000007'], actual: [$client['type'], $client['masterEntityRef']]);
 
-		$tickets = array_filter($objects, static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-buurtoost.id}}');
+		$ticketRows = array_filter($set['objects'], static fn (array $object): bool => $object['schema'] === 'ticket');
+		$tickets    = array_filter(
+			array_column($ticketRows, 'data'),
+			static fn (array $data): bool => ($data['client'] ?? null) === '{{object:client-buurtoost.id}}'
+				&& ($data['ticketType'] ?? null) !== 'interaction'
+		);
 		$this->assertSame(
-			expected: ['Aanvraag collectevergunning', 'Vraag over huur buurthuis', 'Melding verlichting Oosthavenweg'],
+			expected: [
+				'Aanvraag collectevergunning buurtfeest',
+				'Vraag over huur buurthuis',
+				'Melding verlichting Oosthavenweg',
+				'Subsidie voor een straatfeest: welke documenten?',
+			],
 			actual: array_values(array_column($tickets, 'title'))
 		);
 		$this->assertSame(
@@ -53,10 +64,11 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 				['in_progress', '{{cast:fatmayildiz.uid}}', false],
 				['resolved', '{{cast:pieter.uid}}', true],
 				['resolved', '{{cast:fatmayildiz.uid}}', true],
+				['new', '{{cast:fatmayildiz.uid}}', false],
 			],
 			actual: array_values(array_map(static fn (array $t): array => [$t['status'], $t['assignee'] ?? null, isset($t['resolvedAt'])], $tickets))
 		);
-	}//end testTheAssociationHasItsThreeTickets()
+	}//end testTheAssociationHasItsFourTickets()
 
 	/**
 	 * DqOrganisatie and the ticket leaf draw the three tickets by their references; a declared reference is kept
@@ -80,7 +92,8 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 
 	/**
 	 * The ticket counter starts above the highest reference the set names, so no new ticket repeats one; both keys are
-	 * integers, as TicketReferenceSequence reads them.
+	 * integers, as TicketReferenceSequence reads them. The counter is a floor (`atLeast`): the set never lowers it, and
+	 * the app moves it on with every new ticket.
 	 *
 	 * @return void
 	 */
@@ -88,7 +101,8 @@ class ZuiddrechtBuurtoostTicketsTest extends TestCase {
 		$set    = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
 		$config = array_column($set['appConfig'], null, 'key');
 
-		$this->assertSame(expected: ['value' => '417', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
+		$this->assertSame(expected: ['value' => '423', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter'] ?? [], ['value' => 1, 'type' => 1]));
+		$this->assertTrue(condition: ($config['ticket_reference_counter']['atLeast'] ?? false) === true, message: 'the counter is a floor, so the app may move it on');
 		$this->assertSame(expected: ['value' => '2026', 'type' => 'int'], actual: array_intersect_key($config['ticket_reference_counter_year'] ?? [], ['value' => 1, 'type' => 1]));
 	}//end testTheTicketCounterStartsAboveTheSetsReferences()
 }//end class

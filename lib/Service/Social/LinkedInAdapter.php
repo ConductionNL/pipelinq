@@ -31,7 +31,7 @@
  *
  * @link https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * LinkedIn, member and organisation.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 class LinkedInAdapter extends AbstractSocialAdapter {
 	/**
@@ -57,7 +57,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'linkedin';
@@ -68,7 +68,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The provider identifier.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function brokerProvider(): string {
 		return 'linkedin';
@@ -79,7 +79,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 3000;
@@ -93,7 +93,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		return new SocialAdapterCall(
@@ -126,7 +126,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The author URN.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function authorUrn(SocialPublishRequest $request): string {
 		$id = trim($request->externalAccountId);
@@ -150,7 +150,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The post URN.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		foreach (['id', 'urn'] as $field) {
@@ -174,7 +174,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) LinkedIn's address is
 	 *  derived from the URN alone.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$urn = $this->readPublishedId(payload: $payload);
@@ -194,7 +194,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an id.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) A social action is
 	 *  addressed by the post URN alone.
@@ -222,7 +222,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -245,7 +245,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null for a member.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function followersCall(array $account): ?SocialAdapterCall {
 		$id = trim((string)($account['externalAccountId'] ?? ''));
@@ -273,41 +273,50 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The follower count.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function readFollowers(array $payload): int {
 		$elements = ($payload['elements'] ?? []);
-		if (is_array($elements) === false || $elements === []) {
+		if (is_array($elements) === false) {
 			return 0;
 		}
 
 		$total = 0;
 		foreach ($elements as $element) {
-			if (is_array($element) === false) {
-				continue;
-			}
-
-			// LinkedIn answers in one of two shapes: a flat `followerCounts`
-			// on the element, or one entry per association type (organic,
-			// sponsored, employee) that has to be summed. Both are read, so a
-			// change of shape loses nothing and never double-counts, because
-			// only one of the two is ever present on an element.
-			$total += $this->readInt(payload: $element, path: ['followerCounts', 'organicFollowerCount']);
-
-			$byType = ($element['followerCountsByAssociationType'] ?? []);
-			if (is_array($byType) === false) {
-				continue;
-			}
-
-			foreach ($byType as $entry) {
-				if (is_array($entry) === true) {
-					$total += $this->readInt(payload: $entry, path: ['followerCounts', 'organicFollowerCount']);
-				}
+			if (is_array($element) === true) {
+				$total += $this->elementFollowers(element: $element);
 			}
 		}
 
 		return $total;
 	}//end readFollowers()
+
+	/**
+	 * One element's followers. LinkedIn answers in one of two shapes: a flat
+	 * `followerCounts` on the element, or one entry per association type
+	 * (organic, sponsored, employee) that has to be summed. Both are read, so
+	 * a change of shape loses nothing and never double-counts, because only
+	 * one of the two is ever present on an element.
+	 *
+	 * @param array<string, mixed> $element The element.
+	 *
+	 * @return int
+	 */
+	private function elementFollowers(array $element): int {
+		$total = $this->readInt(payload: $element, path: ['followerCounts', 'organicFollowerCount']);
+		$byType = ($element['followerCountsByAssociationType'] ?? []);
+		if (is_array($byType) === false) {
+			return $total;
+		}
+
+		foreach ($byType as $entry) {
+			if (is_array($entry) === true) {
+				$total += $this->readInt(payload: $entry, path: ['followerCounts', 'organicFollowerCount']);
+			}
+		}
+
+		return $total;
+	}//end elementFollowers()
 
 	/**
 	 * LinkedIn's own share intent.
@@ -316,7 +325,7 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string An address that opens the composer.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function composerUrl(SocialPublishRequest $request): string {
 		if ($request->link !== '') {

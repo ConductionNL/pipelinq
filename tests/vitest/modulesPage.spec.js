@@ -9,9 +9,10 @@
  * export. The page rendered an empty content area with no error, and every
  * assertion on the manifest still passed, because the manifest was right.
  *
- * The page is now `type: "links"`, the library's typed page of link cards.
- * That page leaves out a card whose route does not resolve, so a manifest
- * assertion still cannot tell 31 cards from none. This spec mounts the
+ * The page is now `type: "links"`, the library's typed page of link cards,
+ * drawn as board PqModules: module cards, then two list cards. That page
+ * leaves out a link whose route does not resolve, so a manifest assertion
+ * still cannot tell the links from none. This spec mounts the
  * library's real CnPageRenderer on the real `/modules` route, with the simple
  * structure's built manifest and a router built from its own pages, and counts
  * what a reader would see.
@@ -51,15 +52,7 @@ const { manifest } = applyHomePage(
 	simpleFile.home,
 )
 const page = manifest.pages.find((item) => item.id === 'Modules')
-const GROUPS = [
-	'sales',
-	'marketing',
-	'pos',
-	'products',
-	'contracts',
-	'loyalty',
-	'other',
-]
+const GROUPS = ['other', 'more']
 
 /**
  * Open `/modules` the way the app does: every manifest page is a route that
@@ -110,43 +103,42 @@ describe('the Modules page, through the page renderer', () => {
 		).not.toContain('ModulesPage')
 	})
 
-	it('names a route that resolves on every one of its 31 cards', async () => {
+	it('names a route that resolves on every module page and every list row', async () => {
 		const { router } = await openModules()
-		expect(page.config.cards).toHaveLength(31)
-		for (const card of page.config.cards) {
+		for (const module of page.config.modules) {
+			for (const target of module.pages) {
+				expect(router.hasRoute(target.route), `${module.id} ${target.route}`).toBe(true)
+			}
+		}
+		for (const card of page.config.cards.filter((item) => item.route)) {
 			expect(router.hasRoute(card.route), card.id).toBe(true)
 		}
 	})
 
-	it('shows all 31 cards in seven groups, each a link to its own page', async () => {
+	it('shows the six modules and the rest as two list cards, each row a link to its own page', async () => {
 		const { wrapper } = await openModules()
-		expect(wrapper.find('[data-testid="cn-link-cards-page"]').exists()).toBe(
-			true,
-		)
-
-		const cards = wrapper.findAll('[data-testid="cn-link-card"]')
-		expect(cards).toHaveLength(31)
-		const hrefs = cards.map((card) => card.attributes('href'))
-		const expected = page.config.cards.map(
-			(card) =>
-				'/apps/pipelinq'
-				+ manifest.pages.find((item) => item.id === card.route).route,
-		)
-		expect([...hrefs].sort()).toEqual([...expected].sort())
-		expect(new Set(hrefs).size).toBe(31)
-		expect(hrefs).toContain('/apps/pipelinq/leads')
-		// The sales overview is reached at the address the start page gave it.
-		expect(hrefs).toContain('/apps/pipelinq/sales-overview')
-
+		expect(wrapper.find('[data-testid="cn-link-cards-page"]').exists()).toBe(true)
+		expect(wrapper.find('[data-testid="cn-link-cards-modules"]').exists()).toBe(true)
+		const rows = wrapper.findAll('[data-testid="cn-link-card"]')
+		expect(rows).toHaveLength(page.config.cards.length)
+		const hrefs = rows.map((row) => row.attributes('href'))
+		expect(hrefs).toContain('/apps/pipelinq/tasks')
 		const groups = wrapper.findAll('[data-testid="cn-link-cards-group"]')
 		expect(groups.map((group) => group.attributes('data-group'))).toEqual(GROUPS)
-		expect(groups[1].findAll('[data-testid="cn-link-card"]')).toHaveLength(15)
+		// Every module page is a link on its module card.
+		const html = wrapper.html()
+		expect(html).toContain('/apps/pipelinq/leads')
+		expect(html).toContain('/apps/pipelinq/sales-overview')
 	})
 
-	it('shows every card with its own words', async () => {
+	it('shows every module and row with its own words', async () => {
 		const { wrapper } = await openModules()
 		expect(wrapper.text()).toContain('Modules and more')
 		expect(wrapper.text()).toContain(page.config.description)
+		for (const module of page.config.modules) {
+			expect(wrapper.text(), module.id).toContain(module.label)
+			expect(wrapper.text(), module.id).toContain(module.description)
+		}
 		for (const card of page.config.cards) {
 			expect(wrapper.text(), card.id).toContain(card.label)
 			expect(wrapper.text(), card.id).toContain(card.description)
@@ -159,7 +151,10 @@ describe('the Modules page, through the page renderer', () => {
 		const strings = [
 			page.title,
 			page.config.description,
+			page.config.modulesTitle,
+			page.config.footnote,
 			...Object.values(page.config.categories),
+			...page.config.modules.flatMap((module) => [module.label, module.description, ...module.pages.map((item) => item.label)]),
 			...page.config.cards.flatMap((card) => [card.label, card.description]),
 		]
 		for (const text of strings) {
@@ -170,7 +165,6 @@ describe('the Modules page, through the page renderer', () => {
 		expect(wrapper.text()).toContain('Modules en meer')
 		expect(wrapper.text()).toContain('Verkoopoverzicht')
 		expect(wrapper.text()).not.toContain('Sales overview')
-		expect(wrapper.findAll('[data-testid="cn-link-card"]')).toHaveLength(31)
 	})
 
 	it('opens the page a card names', async () => {

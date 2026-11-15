@@ -1,0 +1,243 @@
+{
+    "sales": {
+        "boardSaleInclusive": {
+            "lines": [
+                {
+                    "taxAmount": 0.0,
+                    "lineTotal": 75.0
+                },
+                {
+                    "taxAmount": 2.17,
+                    "lineTotal": 12.5
+                },
+                {
+                    "taxAmount": 0.74,
+                    "lineTotal": 8.91
+                }
+            ],
+            "totals": {
+                "priceMode": "incl",
+                "subtotal": 93.5,
+                "discountTotal": 0.91,
+                "taxBreakdown": [
+                    {
+                        "rate": 0.0,
+                        "base": 75.0,
+                        "tax": 0.0
+                    },
+                    {
+                        "rate": 9.0,
+                        "base": 8.17,
+                        "tax": 0.74
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 10.33,
+                        "tax": 2.17
+                    }
+                ],
+                "invoiceBreakdown": [
+                    {
+                        "rate": 0.0,
+                        "base": 75.0,
+                        "tax": 0.0,
+                        "description": "Nultarief (0%)"
+                    },
+                    {
+                        "rate": 9.0,
+                        "base": 8.17,
+                        "tax": 0.74,
+                        "description": "Verlaagd tarief (9%)"
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 10.33,
+                        "tax": 2.17,
+                        "description": "Standaardtarief (21%)"
+                    }
+                ],
+                "totalTax": 2.91,
+                "total": 96.41
+            }
+        },
+        "mixedRatesExclusive": {
+            "lines": [
+                {
+                    "taxAmount": 1.15,
+                    "lineTotal": 13.9
+                },
+                {
+                    "taxAmount": 10.39,
+                    "lineTotal": 59.87
+                },
+                {
+                    "taxAmount": 0.0,
+                    "lineTotal": 10.0
+                }
+            ],
+            "totals": {
+                "priceMode": "excl",
+                "subtotal": 72.23,
+                "discountTotal": 5.5,
+                "taxBreakdown": [
+                    {
+                        "rate": 0.0,
+                        "base": 10.0,
+                        "tax": 0.0
+                    },
+                    {
+                        "rate": 9.0,
+                        "base": 12.75,
+                        "tax": 1.15
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 49.48,
+                        "tax": 10.39
+                    }
+                ],
+                "invoiceBreakdown": [
+                    {
+                        "rate": 0.0,
+                        "base": 10.0,
+                        "tax": 0.0,
+                        "description": "Nultarief (0%)"
+                    },
+                    {
+                        "rate": 9.0,
+                        "base": 12.75,
+                        "tax": 1.15,
+                        "description": "Verlaagd tarief (9%)"
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 49.48,
+                        "tax": 10.39,
+                        "description": "Standaardtarief (21%)"
+                    }
+                ],
+                "totalTax": 11.54,
+                "total": 83.77
+            }
+        },
+        "giftCardSale": {
+            "lines": [
+                {
+                    "taxAmount": 0.0,
+                    "lineTotal": 25.0
+                },
+                {
+                    "taxAmount": 4.2,
+                    "lineTotal": 24.19
+                }
+            ],
+            "totals": {
+                "priceMode": "excl",
+                "subtotal": 44.99,
+                "discountTotal": 0.0,
+                "taxBreakdown": [
+                    {
+                        "rate": 0.0,
+                        "base": 25.0,
+                        "tax": 0.0
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 19.99,
+                        "tax": 4.2
+                    }
+                ],
+                "invoiceBreakdown": [
+                    {
+                        "rate": 0.0,
+                        "base": 25.0,
+                        "tax": 0.0,
+                        "description": "Nultarief (0%)"
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 19.99,
+                        "tax": 4.2,
+                        "description": "Standaardtarief (21%)"
+                    }
+                ],
+                "totalTax": 4.2,
+                "total": 49.19
+            }
+        },
+        "roundingInclusive": {
+            "lines": [
+                {
+                    "taxAmount": 0.39,
+                    "lineTotal": 2.24
+                },
+                {
+                    "taxAmount": 0.25,
+                    "lineTotal": 3.03
+                },
+                {
+                    "taxAmount": 0.57,
+                    "lineTotal": 3.27
+                }
+            ],
+            "totals": {
+                "priceMode": "incl",
+                "subtotal": 7.33,
+                "discountTotal": 0.45,
+                "taxBreakdown": [
+                    {
+                        "rate": 9.0,
+                        "base": 2.78,
+                        "tax": 0.25
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 4.55,
+                        "tax": 0.96
+                    }
+                ],
+                "invoiceBreakdown": [
+                    {
+                        "rate": 9.0,
+                        "base": 2.78,
+                        "tax": 0.25,
+                        "description": "Verlaagd tarief (9%)"
+                    },
+                    {
+                        "rate": 21.0,
+                        "base": 4.55,
+                        "tax": 0.96,
+                        "description": "Standaardtarief (21%)"
+                    }
+                ],
+                "totalTax": 1.21,
+                "total": 8.54
+            }
+        }
+    },
+    "taxReport": {
+        "rates": [
+            {
+                "rate": 0.0,
+                "base": 110.0,
+                "tax": 0.0,
+                "description": "Nultarief (0%)"
+            },
+            {
+                "rate": 9.0,
+                "base": 23.7,
+                "tax": 2.14,
+                "description": "Verlaagd tarief (9%)"
+            },
+            {
+                "rate": 21.0,
+                "base": 84.35,
+                "tax": 17.72,
+                "description": "Standaardtarief (21%)"
+            }
+        ],
+        "totalBase": 218.05,
+        "totalTax": 19.86,
+        "transactionCount": 4
+    }
+}

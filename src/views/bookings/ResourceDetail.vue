@@ -10,7 +10,7 @@
   ObjectService; the server expires this resource's cached availability
   (AvailabilityCacheInvalidationListener, REQ-APT-002).
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
 	<div v-if="isNew">
@@ -34,13 +34,16 @@
 		:breadcrumb="{ label: t('pipelinq', 'Resources'), route: 'Resources' }"
 		:typePill="typePill"
 		:statusPill="statusPill"
+		:headerMeta="headerMeta"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
 		objectType="appointmentResource"
 		:objectStore="objectStore"
 		:objectId="resourceId"
 		:follow="false"
-		:sidebarProps="sidebarProps">
+		:sidebarProps="sidebarProps"
+		:sideColumn="sideColumn"
+		:headerActions="headerActions">
 		<template #actions>
 			<NcButton variant="secondary" @click="openEditDialog">
 				<template #icon>
@@ -48,12 +51,17 @@
 				</template>
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
-			<NcButton variant="tertiary" @click="showDelete = true">
-				{{ t('pipelinq', 'Delete') }}
-			</NcButton>
 		</template>
 
-		<CnTabs card :ariaLabel="t('pipelinq', 'Resource')">
+		<template #widget-resource-week>
+			<CnDetailCard :title="t('pipelinq', 'This week')">
+				<KpiFigure
+					:value="weekLoad.count"
+					:caption="weekCaption" />
+			</CnDetailCard>
+		</template>
+
+		<CnTabs :ariaLabel="t('pipelinq', 'Resource')">
 			<CnTab :title="t('pipelinq', 'Overview')">
 		<CnDetailCard :title="t('pipelinq', 'Resource details')">
 			<div class="resource-facts">
@@ -208,14 +216,19 @@ import {
 	CnTabs,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
 import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
+import KpiFigure from '../../components/KpiFigure.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import ResourceForm from './ResourceForm.vue'
+import { weekLoadOf } from '../../services/bookingFigures.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
 
@@ -235,6 +248,7 @@ export default {
 		ResourceHoursEditor,
 		ResourceVacationsEditor,
 		DeleteResourceDialog,
+		KpiFigure,
 	},
 
 	props: {
@@ -271,10 +285,29 @@ export default {
 		return {
 			showEditDialog: false,
 			showDelete: false,
+			weekFigures: { bookingsThisWeek: 0, bookedShare: null },
+			staffLine: { function: '', department: '' },
 		}
 	},
 
 	computed: {
+		/**
+		 * Delete sits in the header's More menu, as the board draws it (Edit,
+		 * the buildiq square, More); it opens the same confirm dialog.
+		 *
+		 * @return {Array<object>} The menu entries.
+		 * @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
+		 */
+		headerActions() {
+			return [{
+				id: 'delete',
+				label: t('pipelinq', 'Delete'),
+				onSelect: () => {
+					this.showDelete = true
+				},
+			}]
+		},
+
 		objectStore() {
 			return useObjectStore()
 		},
@@ -297,6 +330,54 @@ export default {
 				this.objectStore.getObject('appointmentResource', this.resourceId)
 				|| {}
 			)
+		},
+
+		/**
+		 * The line under the name: the linked colleague's function and
+		 * department from their Nextcloud profile ("Woo-adviseur · Woo en
+		 * informatie"); empty for a resource without a user.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		headerMeta() {
+			return [this.staffLine.function, this.staffLine.department]
+				.filter((part) => typeof part === 'string' && part.trim() !== '')
+				.join(' · ')
+		},
+
+		/**
+		 * The side card the PqResource board draws beside the tabs.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		sideColumn() {
+			return [{ id: 'resource-week', type: 'custom', title: t('pipelinq', 'This week') }]
+		},
+
+		/**
+		 * This week's bookings and their share of the bookable time, as the
+		 * server computed them.
+		 *
+		 * @return {{count: number, percent: (number|null)}}
+		 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-resource-page-shows-how-much-of-its-bookable-time-is-booked-req-srg-004
+		 */
+		weekLoad() {
+			return weekLoadOf(this.weekFigures)
+		},
+
+		/**
+		 * The line under the week's count: "bookings, 74% of the bookable time".
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		weekCaption() {
+			if (this.weekLoad.percent === null) {
+				return t('pipelinq', 'bookings, no bookable time this week')
+			}
+			return t('pipelinq', 'bookings, {percent}% of the bookable time', { percent: this.weekLoad.percent })
 		},
 
 		workingHours() {
@@ -458,10 +539,48 @@ export default {
 				'appointmentResource',
 				this.resourceId,
 			)
+			await Promise.all([this.fetchWeekFigures(), this.fetchStaffLine()])
 		}
 	},
 
 	methods: {
+		/**
+		 * Read the linked colleague's function and department. A resource
+		 * without a user, or a failed read, leaves the line empty.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
+		 */
+		async fetchStaffLine() {
+			const userId = this.resourceData.userId
+			if (typeof userId !== 'string' || userId === '') {
+				return
+			}
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/staff/{userId}/profile', { userId }))
+				this.staffLine = { function: data?.function || '', department: data?.department || '' }
+			} catch {
+				this.staffLine = { function: '', department: '' }
+			}
+		},
+
+		/**
+		 * Load this week's figures for the "This week" card: one request, the
+		 * server counts the bookings and the bookable time. A failed load
+		 * leaves the card at zero rather than blanking the page.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-resource-page-shows-how-much-of-its-bookable-time-is-booked-req-srg-004
+		 */
+		async fetchWeekFigures() {
+			try {
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/appointment-resources/{id}/figures', { id: this.resourceId }))
+				this.weekFigures = data && typeof data === 'object' ? data : { bookingsThisWeek: 0, bookedShare: null }
+			} catch {
+				this.weekFigures = { bookingsThisWeek: 0, bookedShare: null }
+			}
+		},
+
 		/**
 		 * A stored weekday ("tuesday") as its label ("Dinsdag").
 		 *
@@ -638,7 +757,9 @@ export default {
 .resource-schedule {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	align-items: start;
 	gap: 20px;
+	margin-top: 20px;
 }
 
 .resource-schedule__note {
@@ -649,15 +770,17 @@ export default {
 
 .viewTableContainer {
 	background: var(--color-main-background);
-	border-radius: var(--border-radius);
+	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
+	box-shadow: none;
 	border: 1px solid var(--color-border);
 }
 
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
+	font-size: 14px;
+	line-height: 1.2;
 }
 
 .viewTable th,
@@ -668,9 +791,18 @@ export default {
 }
 
 .viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
+	padding-block: 10px;
+	background-color: var(--color-main-background);
+	font-weight: 600;
 	color: var(--color-text-maxcontrast);
+}
+
+.viewTable :is(th, td):first-child {
+	padding-inline-start: 18px;
+}
+
+.viewTable :is(th, td):last-child {
+	padding-inline-end: 18px;
 }
 
 .section-empty {

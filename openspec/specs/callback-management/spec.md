@@ -509,7 +509,7 @@ The system MUST calculate task deadlines respecting business hours and MUST supp
 
 #### Scenario: Bulk reassignment
 
-- **GIVEN** 5 open tasks are assigned to agent "Petra Bakker" who is unexpectedly absent
+- **GIVEN** 5 open tasks are assigned to agent "Pieter Jansen" who is unexpectedly absent
 - **WHEN** a manager selects all 5 tasks and chooses "Hertoewijzen aan" > "Mark de Groot"
 - **THEN** all 5 tasks MUST be reassigned to Mark de Groot
 - AND Mark MUST receive a single notification summarizing all reassigned tasks
@@ -556,3 +556,44 @@ Operations for callback call-timer component MUST tolerate missing, empty, or ma
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
+
+### Requirement: A task is finished from its page
+
+The task page SHALL show "Finish this task" between the task and its documents while the task is open or in progress. It SHALL ask the result and SHALL send it with "Log attempt" to the task's attempts endpoint and with "Finish" to its complete endpoint, first moving an open task to in progress through the lifecycle's claim transition. Both endpoints SHALL check the user may change the task before writing.
+
+#### Scenario: An attempt without an answer
+
+- **GIVEN** an open callback task
+- **WHEN** the agent writes "Geen gehoor, voicemail ingesproken" and clicks Poging vastleggen
+- **THEN** the attempt is added to the task's attempt log with that result and the card says "Poging vastgelegd."
+
+#### Scenario: Finishing an open task
+
+- **GIVEN** an open callback task
+- **WHEN** the agent writes the result and clicks Afronden
+- **THEN** the task moves to in progress and is completed with that result, in one click
+
+#### Scenario: Finishing
+
+- **GIVEN** a callback task in progress
+- **WHEN** the agent writes the result and clicks Afronden
+- **THEN** the task is completed with that result and the card leaves the page
+
+### Requirement: Task values read as words (REQ-CBM-TASK-LABELS)
+The crmTask properties `type`, `status` and `priority` MUST declare
+`x-enum-labels` for every enum value. Every label MUST have an en and an nl
+catalogue entry. The create form, the filters and the task list MUST show the
+label, never the stored code.
+
+#### Scenario: Creating a task
+@e2e exclude Asserted in tests/vitest/taskEnumLabels.spec.js on the merged register; the library renders x-enum-labels through the app's translate.
+- **GIVEN** a user opens Create task
+- **WHEN** they open the Type list
+- **THEN** they MUST see "Callback request", "Follow-up task" and "Information request"
+- **AND** never `callbackRequest` or `followUpTask`
+
+#### Scenario: The task list
+@e2e exclude Asserted in tests/vitest/taskEnumLabels.spec.js.
+- **GIVEN** a task of type `callbackRequest`, status `in_progress`, priority `normal`
+- **WHEN** a Dutch user reads the task list
+- **THEN** the row MUST read "Terugbelverzoek", "In behandeling" and "Normaal"

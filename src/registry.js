@@ -19,20 +19,23 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
-import ActivityTimeline from './components/ActivityTimeline.vue'
 // --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
 //     real emit side of the delegated time-approval-workflow. Self-fetches
 //     its availability endpoint and falls back to the existing Shillinq
 //     deep-link — same self-fetching-by-props pattern as the sections above. ---
+import * as NextcloudVue from '@conduction/nextcloud-vue'
 import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
 // BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
 // declarative); its array-on-object tables + computed timeline + notes editor
 // stay in the page body via this kind:'section', and its TIME-WINDOW-gated admin
 // actions are the page's actionsComponent.
+import BookingAssignments from './components/bookings/BookingAssignments.vue'
 import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
+import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
@@ -46,6 +49,7 @@ import ContactChannelsSection from './components/ContactChannelsSection.vue'
 import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
+import ContactsSyncSection from './components/ContactsSyncSection.vue'
 import CustomerReplySection from './components/CustomerReplySection.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -53,6 +57,8 @@ import CustomerReplySection from './components/CustomerReplySection.vue'
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
+import LeadContactRoles from './components/LeadContactRoles.vue'
+import LeadExchangeRate from './components/leads/LeadExchangeRate.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
@@ -80,27 +86,24 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import RecordMergesSection from './components/merge/RecordMergesSection.vue'
+import PartyContactStrip from './components/PartyContactStrip.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
 //     actionsComponent; the drops (with Add drop) and the latest/pending
 //     cashDiff variance are grid widgets. ---
 import CashShiftDropsWidget from './components/pos/CashShiftDropsWidget.vue'
-import CashShiftHeaderActions from './components/pos/CashShiftHeaderActions.vue'
-import CashShiftVarianceWidget from './components/pos/CashShiftVarianceWidget.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
 //     actions are its actionsComponent, and the cross-schema "Returned items"
 //     join and the totals are grid widgets. ---
-import PosRefundHeaderActions from './components/pos/PosRefundHeaderActions.vue'
 import PosRefundItemsWidget from './components/pos/PosRefundItemsWidget.vue'
-import PosRefundTotalsWidget from './components/pos/PosRefundTotalsWidget.vue'
 // --- POS transactions. The detail page is a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative). The status-gated actions are its
 //     actionsComponent (bespoke /api/pos-transactions endpoints); the totals
 //     and the tender / provider payment panel are grid widgets beside the
 //     schema-driven data, related and line-item widgets. The form is a bespoke
 //     cart editor. ---
-import PosTransactionHeaderActions from './components/pos/PosTransactionHeaderActions.vue'
 import PosTransactionPaymentWidget from './components/pos/PosTransactionPaymentWidget.vue'
 import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWidget.vue'
 // --- POS end-of-day Z-report. The per-report page is now a declarative
@@ -108,10 +111,9 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
 //     breakdown tables (array fields on the object) and the shillinq
 //     bookkeeping-status projection + manager-gated re-raise live in one
-//     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
+//     grid widget in the Overview tab (ZReportBookkeepingWidget). The GL journal
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
-import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
-import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
+import ZReportBookkeepingWidget from './components/pos/ZReportBookkeepingWidget.vue'
 import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
@@ -166,25 +168,38 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     (marketing-segments-ui-repair) on their index pages. ---
 import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
+import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from './dialogs/ContactCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
+import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
+import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
+import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+// Paste or scan (clients-contact-capture): the header action on the Clients and
+//     Contacts index pages opens ContactCaptureModal. ---
+import ContactCaptureModal from './modals/ContactCaptureModal.vue'
+import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
+import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
+import PrintReceiptModal from './modals/PrintReceiptModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
 //     missing-consent modal) and the live monitor, which polls /api/blasts/:id
 //     every 2s and stops on terminal status.
-//     SegmentBuilder + SegmentRuleNode live under components/, mounted by
-//     SegmentFormDialog above (marketing-segments-ui-repair, pipelinq#773). ---
+//     SegmentBuilder lives under components/ and mounts nc-vue's
+//     CnConditionGroupEditor; SegmentFormDialog above mounts it
+//     (segment-groups-its-rules). ---
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
@@ -192,6 +207,7 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import BulkChangesView from './views/bulk/BulkChanges.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
@@ -227,22 +243,12 @@ import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
-import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
-// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
-//     append-only HMAC-SHA256 signed register actions chained per-register
-//     with an admin-gated Belastingdienst export pack. Lib gap: declarative
-//     type:"index" cannot express the bespoke /api/kassakoppeling/audit
-//     endpoint, the verify-button + verification badge ramp on the detail
-//     view, or the date-range + format export modal. ---
-import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
 import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 // --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
 //     Wraps CnIndexPage to add the stale filter, overdue row highlighting
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
-// --- Loyalty program (loyalty-program). ---
-import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 // --- Articles new/edit route wrapper (marketing-article-hub): thin host for
 //     ArticleEditModal, the one editing surface the change owns. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
@@ -265,12 +271,15 @@ import MessagingConversationSection from './views/messaging/MessagingConversatio
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
 import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
+// --- Cash register audit log (pos-kassakoppeling-audit): append-only HMAC-SHA256
+//     signed register actions chained per register, with an admin-only tax
+//     authority export. The list keeps its date range and export dialog; the
+//     entry is a declarative detail page over the endpoint. ---
 // --- POS cash drawer. The detail page is now a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
 //     the drops are a relatedCollections table, and the variance/diff projection
 //     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
 //     kind:'section' bodyWidget. ---
-import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
@@ -284,14 +293,15 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+import RetentionReviewView from './views/settings/RetentionReview.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
-import StoreGallery from './views/store/StoreGallery.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
+import { ProductSupplyCard, ProductTariffsCard } from './components/products/productCards.js'
 import ContactAwareObjectListWidget from './components/widgets/ContactAwareObjectListWidget.js'
 import { sectionWidget } from './components/widgets/sectionWidget.js'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
@@ -352,12 +362,6 @@ const registry = {
 		kind: 'page',
 		component: FeaturesRoadmapView,
 		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage and adds one link to the help desk capability comparison on pipelinq.conduction.nl/compare. The library component declares no slots, so the link cannot be added from the manifest; the page moves back to type:"roadmap" the day the library can carry it.',
-	},
-
-	StoreGallery: {
-		kind: 'page',
-		component: StoreGallery,
-		_note: "ADR-080 store plane. Reads /api/store/items, a thin action over AppHost GenericStoreService, so the SSRF guard, the redirect refusal and the token all live in the engine and pipelinq builds no registry URL. A custom component rather than type:index because store items are REMOTE objects and the object-backed index renderer resolves a local register plus schema, which cannot address them. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only; the record schemas are refused by StoreController::INSTALLABLE_SLUGS.",
 	},
 
 	// --- Dashboard widgets (rendered as #widget-{id} slots inside
@@ -468,11 +472,6 @@ const registry = {
 		_note: 'Win/loss pie chart + KPI stats block with a date-range selector (REQ-LM-008).',
 	},
 	// --- Loyalty program (loyalty-program). ---
-	LoyaltyReportingView: {
-		kind: 'page',
-		component: LoyaltyReportingView,
-		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): programme reporting (active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability per IFRS 15 / RJ 270, tier distribution, CSV export). The 8 KPIs come from one summary endpoint GET /api/loyalty/reporting/{programmeId}/kpis, but {programmeId} is a PATH segment requiring a programme UUID picked from a DYNAMIC selector (options from the OR loyaltyProgramme collection); pageFilters only support static options, so @page.programmeId cannot enumerate programmes, and there is no all-programmes aggregate. Missing primitives: an OR-collection-sourced pageFilter (dynamic options) + a relative-window period token (30d/90d/365d -> from/to). Same dynamic-selector blocker as PipelineAnalytics/Forecast; kept custom.',
-	},
 	LoyaltyAccountCreationView: {
 		kind: 'page',
 		component: LoyaltyAccountCreationView,
@@ -483,12 +482,6 @@ const registry = {
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative); only the bespoke cart-editor form view, the detail's
 	//     header actions and its two grid widgets stay registered. ---
-	PosTransactionHeaderActions: {
-		kind: 'widget',
-		component: PosTransactionHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'PosTransactionDetail actionsComponent: Edit (to the cart editor) and the status-gated confirm/park/resume/settle/refund/receipt actions. They POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR /transition, and posTransaction has no x-openregister-lifecycle, so CnLifecycleActions cannot drive them. The page sets showEditAction:false because the schema form cannot edit line items.',
-	},
 	PosTransactionTotalsWidget: {
 		kind: 'widget',
 		component: PosTransactionTotalsWidget,
@@ -499,7 +492,7 @@ const registry = {
 		kind: 'widget',
 		component: PosTransactionPaymentWidget,
 		...PANEL_WIDGET_META,
-		_note: 'PosTransactionDetail grid widget: the split tenders with their balance (TenderEntryPanel) and the payment provider status (PaymentStatusCard) when a provider handled the payment. Reloads its tenders on cn:page:refresh.',
+		_note: 'PosTransactionDetail grid widget: the split tenders with their balance (TenderEntryPanel). Reloads its tenders on cn:page:refresh.',
 	},
 	PosTransactionFormView: {
 		kind: 'page',
@@ -510,18 +503,6 @@ const registry = {
 	// --- POS refunds / returns. The PosRefunds list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative). ---
-	PosRefundHeaderActions: {
-		kind: 'widget',
-		component: PosRefundHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'PosRefundDetail actionsComponent: manager-gated Confirm/Reject, which POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle).',
-	},
-	PosRefundTotalsWidget: {
-		kind: 'widget',
-		component: PosRefundTotalsWidget,
-		...PANEL_WIDGET_META,
-		_note: 'PosRefundDetail grid widget: refund amount excl. VAT, VAT and total refund over the refund lines. Re-reads on cn:page:refresh.',
-	},
 	PosRefundItemsWidget: {
 		kind: 'widget',
 		component: PosRefundItemsWidget,
@@ -535,28 +516,11 @@ const registry = {
 	},
 
 	// --- POS cash drawer. ---
-	CashShiftListView: {
-		kind: 'page',
-		component: CashShiftListView,
-		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
-	},
-	CashShiftHeaderActions: {
-		kind: 'widget',
-		component: CashShiftHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'CashShiftDetail actionsComponent: Close and count shift, which POSTs to the bespoke /api/pos-shifts/{id}/count endpoint (cashShift has no x-openregister-lifecycle).',
-	},
 	CashShiftDropsWidget: {
 		kind: 'widget',
 		component: CashShiftDropsWidget,
 		...PANEL_WIDGET_META,
 		_note: "CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list's generic create.",
-	},
-	CashShiftVarianceWidget: {
-		kind: 'widget',
-		component: CashShiftVarianceWidget,
-		...PANEL_WIDGET_META,
-		_note: 'CashShiftDetail grid widget: the latest/pending cashDiff VARIANCE projection (an object-list lists ALL children; it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject via /api/pos-shifts/{id}/diff/{approve|reject}. Re-reads on cn:page:refresh.',
 	},
 
 	// POS staff, POS roles and POS tender types are administrator configuration,
@@ -569,12 +533,14 @@ const registry = {
 	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
 	//     type:"index" page and the per-report page is now a declarative
 	//     type:"detail" page (pipelinq-detail-pages-declarative-r3); only this
-	//     in-body section (breakdown tables + bookkeeping projection + re-raise)
+	//     grid widget (breakdown tables + bookkeeping projection + re-raise)
 	//     stays as host-app code. ---
-	ZReportBookkeepingSection: {
-		kind: 'section',
-		component: ZReportBookkeepingSection,
-		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
+	// @custom-widget-ratchet exclude replaces the ZReportBookkeepingSection body section (same host code, now a card in the Overview tab); no built-in widget draws an array field as a table
+	ZReportBookkeepingWidget: {
+		kind: 'widget',
+		component: ZReportBookkeepingWidget,
+		...PANEL_WIDGET_META,
+		_note: 'ZReportDetail grid widget, board PqZRapport\'s Boekhouding card: the shillinq bookkeeping status and journal entry id, the manager-gated, idempotent pass-on-again action (POST /api/pos-bookkeeping/post) and the VAT and payment-method breakdowns (arrays on the Z-report, not child records). The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
 	},
 	PosCustomerSettingsView: {
 		kind: 'page',
@@ -582,16 +548,14 @@ const registry = {
 		_note: 'Admin settings panel for the POS customer-link lookup: search fields, purchase-history depth, marketing-consent sync toggle and the on-account-requires-customer invariant (pos-customer-link, REQ-PCL-006).',
 	},
 
-	// --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit). ---
-	KassakoppelingAuditListView: {
-		kind: 'page',
-		component: KassakoppelingAuditListView,
-		_note: 'Append-only Kassakoppeling audit log list: streams from the bespoke /api/kassakoppeling/audit endpoint (NOT the OR object store, which only stores entries), drives the date / register / operator / action filter bar and the admin-only Belastingdienst export modal (pos-kassakoppeling-audit REQ-AUDIT-003 / REQ-AUDIT-005).',
-	},
-	KassakoppelingAuditDetailView: {
-		kind: 'page',
-		component: KassakoppelingAuditDetailView,
-		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
+	// --- Cash register audit log (pos-kassakoppeling-audit). The list is a
+	//     declared index (KassakoppelingAuditList); its export header action
+	//     opens this dialog. ---
+	TaxAuthorityExportModal: {
+		kind: 'modal',
+		component: TaxAuthorityExportDialog,
+		propsSchema: null,
+		_note: 'Admin-only tax authority export: date range and format, then downloads the signed export package (pos-kassakoppeling-audit REQ-AUDIT-005).',
 	},
 
 	// --- Billing categories (billable-categories-and-tags). The Billing categories
@@ -635,13 +599,13 @@ const registry = {
 	},
 	ListSignupFormWidget: {
 		kind: 'widget',
-		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId })),
+		component: sectionWidget('ListSignupFormWidget', ListSignupFormSection, ({ objectId }) => ({ listId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'The embed code of a mailing list sign-up form, posting to the public subscribe endpoint, with a copy button. Side card on MailingListDetail (PqMailinglijst).',
 	},
 	ListSubscriberViewWidget: {
 		kind: 'widget',
-		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId })),
+		component: sectionWidget('ListSubscriberViewWidget', ListSubscriberViewSection, ({ objectId }) => ({ listId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
@@ -676,15 +640,32 @@ const registry = {
 		...HEADER_ACTIONS_META,
 		_note: 'SocialPostDetail actionsComponent: the approval step beside Edit, Submit for approval on a draft and Approve / Reject while it waits. POSTs to /api/social-posts/{id}/{submit|approve|reject}, not lifecycleActions (ADR-062 rule 10): an approval has to record WHO decided and when, stamped from the session, which the transition grammar has no field for.',
 	},
+	SocialPostVariantsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'SocialPostVariantsWidget',
+			SocialPostVariantsSection,
+			({ objectId }) => ({ postId: String(objectId || ''), hideApprovals: true }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'SocialPostVariantsSection as a tab widget (board PqSocialBericht: "Wat dit per netwerk zegt" in the Overview tab). The approvals stand in the side column\'s Approvals card there, so the section leaves them out.',
+	},
+	SocialPublicationsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'SocialPublicationsWidget',
+			SocialPublicationsSection,
+			({ objectId }) => ({ postId: String(objectId || '') }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'SocialPublicationsSection as a tab widget (board PqSocialBericht: "Waar het heen ging" in the Overview tab).',
+	},
 	SocialPublicationsSection: {
 		kind: 'section',
 		component: SocialPublicationsSection,
 		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement end). One row per account the post named, with the failure reason where it did not go out. The Retry button appears only on the two of six failure codes a retry can fix, because a Retry on a dead grant or an unfiled developer application is a button that cannot work. Also hosts the share path for accounts no application may post to: the prepared text, a copy action, a link into the network\'s own composer and the confirmation.',
-	},
-	ActivityTimeline: {
-		kind: 'section',
-		component: ActivityTimeline,
-		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
 	},
 	CommunicationHistory: {
 		kind: 'section',
@@ -693,9 +674,15 @@ const registry = {
 	},
 	ProductSupplyWidget: {
 		kind: 'widget',
-		component: ProductSupplyWidget,
+		component: ProductSupplyCard,
 		...PANEL_WIDGET_META,
 		_note: 'Supply card on ProductDetail (board PqProduct): manufacturer, unit, weight, dimensions and the Stock tracked line read live from shillinq via GET /api/products/{id}/stock (products-stock-on-hand).',
+	},
+	ProductTariffsWidget: {
+		kind: 'widget',
+		component: ProductTariffsCard,
+		...PANEL_WIDGET_META,
+		_note: 'Fee table on ProductDetail (board PqProduct): the tariffs in force today from product.tariffs, the tariff source, and the day the next tariffs go live.',
 	},
 	BookingsCard: {
 		kind: 'section',
@@ -716,6 +703,27 @@ const registry = {
 		kind: 'section',
 		component: LogVisitAction,
 		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store. Also the LeadDetail actionsComponent, where it binds to the lead and its client from the slot.',
+	},
+	PartyContactStrip: {
+		kind: 'section',
+		component: PartyContactStrip,
+		_note: 'The client page contact strip (PqKlant, PqOrganisatie): the warnings line and the call, mail, directions and log-a-visit buttons in one card, before the body.',
+	},
+	PartyContactStripWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'PartyContactStripWidget',
+			PartyContactStrip,
+			({ objectId, objectData }) => ({
+				partyId: objectId,
+				partyKind: objectData.type || '',
+				phone: objectData.phone || '',
+				email: objectData.email || '',
+				address: objectData.address || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The contact strip as a widget, so ClientDetail places it in the band across the page, above the tabs and the side column (PqKlant, PqOrganisatie). It draws its own card.',
 	},
 	PartyIndicatorPanel: {
 		kind: 'section',
@@ -740,11 +748,37 @@ const registry = {
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
 				entityName: objectData.name || '',
+				compact: content.compact === true,
 			}),
 			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+	},
+	LeadContactRolesWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'LeadContactRolesWidget',
+			LeadContactRoles,
+			({ objectId }) => ({ leadId: objectId }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The contacts on a lead with the role each plays in the deal (PqLead): role relationships, category CRM Rol, from the lead to the contact.',
+	},
+	LeadExchangeRateWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'LeadExchangeRateWidget',
+			LeadExchangeRate,
+			({ objectData }) => ({
+				value: objectData.value ?? 0,
+				currency: objectData.currency || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The deal value in the client\'s currency, the converted value and the rate with its source and date (PqLead, pipeline-live-exchange-rates). The server resolves the rate: override, shillinq, then the hand-kept table.',
 	},
 	TicketDecisionRoutesWidget: {
 		kind: 'widget',
@@ -820,6 +854,21 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'ResidentViewSection as a tab widget.',
 	},
+	ContactsSyncWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactsSyncWidget',
+			ContactsSyncSection,
+			({ objectId, objectData, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				contactsUid: objectData.contactsUid || '',
+			}),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The record\'s card in Nextcloud Contacts: synced or not, its address book, its last change, and Update in Contacts (write-back). Side card on ContactDetail (PqContactpersoon).',
+	},
 	ContactChannelsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -828,6 +877,7 @@ const registry = {
 			({ objectId, content }) => ({
 				entityId: objectId,
 				entityType: content.entityType || 'contact',
+				compact: content.compact === true,
 			}),
 			{ card: true },
 		),
@@ -878,6 +928,11 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	RecordMergesSection: {
+		kind: 'section',
+		component: RecordMergesSection,
+		_note: 'Merges section on a client or contact (clients-reversible-merge REQ-CRM-002/003): the OpenRegister mergeOperation rows this record survived, with Undo through merge#reverse while the reversal window is open and the date the merge became final after it. Kept custom because no declarative widget offers a per-row action that posts to an endpoint and the open/final state is computed from mergedAt plus the window. Self-fetches by recordId (@objectId).',
+	},
 	ClientSatisfactionSection: {
 		kind: 'section',
 		component: ClientSatisfactionSection,
@@ -888,6 +943,16 @@ const registry = {
 		component: SurveyResponseRateWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
+	},
+	ClientRiskSection: {
+		kind: 'section',
+		component: ClientRiskSection,
+		_note: 'The client\'s churn risk (clients-history-summary-and-risk, D4): the level as a badge with every reason behind it, its points and links to the records it names. Reads `churnRisk` off the client (`@object.churnRisk`); ClientRiskService writes it.',
+	},
+	ClientHistorySummarySection: {
+		kind: 'section',
+		component: ClientHistorySummarySection,
+		_note: 'History summary card (clients-history-summary-and-risk, REQ-CIN-002): Summarise asks GET /api/clients/{id}/history-summary for a few generated sentences about the last 90 days the viewer may read, with the records read and the time. Without hermiq the card says summarising is not available and has no button. Nothing is stored.',
 	},
 	ClientBillingHandoffSection: {
 		kind: 'section',
@@ -969,6 +1034,12 @@ const registry = {
 		component: ExportJobsView,
 		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
 	},
+	// --- Client retention review (platform-client-retention). ---
+	RetentionReviewView: {
+		kind: 'page',
+		component: RetentionReviewView,
+		_note: 'Destruction lists holding clients or contact persons, read from OpenRegister\'s archival API, with Approve and Reject on each list; the lists live in OpenRegister, not in a pipelinq schema, so no index page can render them.',
+	},
 	ExportJobFormView: {
 		kind: 'page',
 		component: ExportJobFormView,
@@ -983,6 +1054,11 @@ const registry = {
 		kind: 'page',
 		component: ExportDestinationFormView,
 		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
+	},
+	BulkChangesView: {
+		kind: 'page',
+		component: BulkChangesView,
+		_note: 'The bulk changes this person made to clients and contacts, with Undo through the OpenRegister reversal while its window is open (clients-bulk-edit-and-undo D4).',
 	},
 	ExportRunsView: {
 		kind: 'page',
@@ -1042,7 +1118,7 @@ const registry = {
 	},
 	CampaignLandingPageWidget: {
 		kind: 'widget',
-		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId })),
+		component: sectionWidget('CampaignLandingPageWidget', CampaignLandingPageSection, ({ objectId }) => ({ campaignId: objectId }), { card: true }),
 		...PANEL_WIDGET_META,
 		_note: 'CampaignLandingPageSection as a card of the campaign page\'s Overview tab (PqCampagne).',
 	},
@@ -1054,9 +1130,10 @@ const registry = {
 	},
 	JourneyRunsWidget: {
 		kind: 'widget',
-		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId })),
+		component: sectionWidget('JourneyRunsWidget', JourneyRunsSection, ({ objectId }) => ({ journeyId: objectId, showSubtitle: false })),
 		...PANEL_WIDGET_META,
-		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney).',
+		chrome: 'card',
+		_note: 'JourneyRunsSection as a card of the journey page\'s Overview tab (PqJourney). `chrome: card` makes the library draw the titled card with the manifest subtitle, so the section leaves its own line out.',
 	},
 	CampaignReportSection: {
 		kind: 'section',
@@ -1126,15 +1203,38 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',
 	},
+	BookingCustomerWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingCustomerWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'customer' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail side card (PqAfspraak Inwoner): the customer with phone, e-mail and a link to their page.',
+	},
+	BookingWhenWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingWhenWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'when' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail side card (PqAfspraak Wanneer en waar): the day and time, the location, the handler, the reminder and Send reminder.',
+	},
 	BookingAssignmentsWidget: {
 		kind: 'widget',
 		component: sectionWidget(
 			'BookingAssignmentsWidget',
-			BookingDetailSection,
-			({ objectId }) => ({ bookingId: objectId, part: 'assignments' }),
+			BookingAssignments,
+			({ objectId }) => ({ bookingId: objectId }),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
-		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
+		_note: 'BookingDetail (PqAfspraak Toegewezen resources): the resourceAssignments array-on-object table in a titled card, with resource names, types, times and a status pill.',
 	},
 	BookingHeaderActions: {
 		kind: 'widget',
@@ -1215,6 +1315,32 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	// "E-mail koppelen" on the client page's Activity card (PqKlant,
+	// PqOrganisatie): the library's Mail picker plus the link to the record.
+	// Registered when the library ships it.
+	...(NextcloudVue.CnEmailLinkDialog
+		? { EmailLinkDialog: { kind: 'modal', component: NextcloudVue.CnEmailLinkDialog, propsSchema: null } }
+		: {}),
+	// Link to a client on the ticket page (PqAanvraagOmzetten, decision 179).
+	LinkSubmissionToClientModal: {
+		kind: 'modal',
+		component: LinkSubmissionToClientModal,
+		propsSchema: null,
+	},
+	PrintReceiptModal: {
+		kind: 'modal',
+		component: PrintReceiptModal,
+		propsSchema: null,
+		_note: 'Print a receipt. Target of the print-receipt header action on PosTransactionDetail (props: transactionId); reads the active receipt templates itself.',
+	},
+
+	EmailReceiptModal: {
+		kind: 'modal',
+		component: EmailReceiptModal,
+		propsSchema: null,
+		_note: 'Email a receipt. Target of the email-receipt header action on PosTransactionDetail (props: transactionId); reads the active receipt templates itself.',
+	},
+
 	LetterFromTemplateModal: {
 		kind: 'modal',
 		component: LetterFromTemplateModal,
@@ -1227,6 +1353,20 @@ const registry = {
 		component: LeadCreateDialog,
 		propsSchema: null,
 		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action and the Leads index Add button.",
+	},
+
+	BrpClientCheckDialog: {
+		kind: 'modal',
+		component: BrpClientCheckDialog,
+		propsSchema: null,
+		_note: 'brp-verifies-the-client. Target of "Look up in the BRP" on the werkplek\'s "Who is it" card (board PqWerkplekKlant): BSN, what was checked and the purpose binding, POST /api/brp/lookup with verifiedClient so the client records its verified identity.',
+	},
+
+	ContactLogDialog: {
+		kind: 'modal',
+		component: ContactLogDialog,
+		propsSchema: null,
+		_note: 'contact-log-dialog. Target of the ticket page Log contact action: board PqTicketContactLoggen (channel, direction, date and time, duration, subject, notes, customer). Saves a ticket of type interaction under the ticket the route names.',
 	},
 
 	TicketAnswerDialog: {
@@ -1250,11 +1390,36 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
+	ContactCreateDialog: {
+		kind: 'modal',
+		component: ContactCreateDialog,
+		propsSchema: null,
+		_note: 'New contact, contact-first via POST /api/contacts-sync/create (the same path as the Contacts index createOverride). Registered so Paste or scan can open it prefilled with `values`; then it opens the new contact after Save.',
+	},
+	ContactCaptureModal: {
+		kind: 'modal',
+		component: ContactCaptureModal,
+		propsSchema: null,
+		_note: 'Paste or scan (clients-contact-capture REQ-CCC-001/002). Target of the paste-or-scan header action on the Clients and Contacts index pages: pasted text or a card photo becomes proposed fields via POST /api/contact-capture/parse, and Use these fields opens the `createModal` (ClientCreateDialog or ContactCreateDialog) prefilled. Saves nothing itself.',
+	},
+
 	ContactImportDialog: {
 		kind: 'modal',
 		component: ContactImportDialog,
 		propsSchema: null,
 		_note: 'Import from Nextcloud Contacts (PqContactenImporteren). Target of the import header button on the Contacts index; imports the marked addressbook cards as contacts.',
+	},
+	OrganisationEnrichDialog: {
+		kind: 'modal',
+		component: OrganisationEnrichDialog,
+		propsSchema: null,
+		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
+	},
+	BulkChangeFieldModal: {
+		kind: 'modal',
+		component: BulkChangeFieldModal,
+		propsSchema: null,
+		_note: 'Change one field on the selected clients or contacts through an OpenRegister bulk job (clients-bulk-edit-and-undo). Target of the Change a field bulk action on the Clients and Contacts lists; receives the selection as selectedIds and the register and schema slugs as props.',
 	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
@@ -1275,7 +1440,7 @@ const registry = {
 		kind: 'modal',
 		component: SegmentFormDialog,
 		propsSchema: null,
-		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
+		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: SegmentBuilder wraps nc-vue's CnConditionGroupEditor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
 	},
 	TemplateFormDialog: {
 		kind: 'modal',

@@ -1,0 +1,75 @@
+{
+	"$comment": "Offerte OFF-2026-0042 for Bakkerij De Graaf as PqOfferte draws it: its contact is the bakery's owner Kees Bakker (his role in part 68), it expires 30 days out (the board's 6 November from 7 October), and its history has three moments by Pieter Jansen: made from the lead as version 1 (subtotal 3720), 10% off the hosting (3678) and the own line for the till link (4428). The contact and expiry are changes because the bakery's contact is declared in a later part; the history entries carry the subtotal each step left. The quote's Voorbeeld pdf names filinq's Offerte template by its slug \"offerte\" in record_document_templates; resolving a slug there needs pipelinq's FilinqLetterAdapter to look slugs up in its namespace (filinq's TemplateSlugResolver), as it takes only an id today. Contract CON-2026-0031 names Joke Smit as its contact (salesContract 1.1.0 contactRef), set here because part 68 declares her after the contract's part 43; her Gerelateerd card on PqContactpersoon then lists it.",
+	"changes": [
+		{
+			"key": "offerte-0042-contact-en-vervaldatum",
+			"register": "pipelinq",
+			"schema": "salesQuote",
+			"where": {
+				"number": "OFF-2026-0042"
+			},
+			"set": {
+				"contact": "{{object:contact-kees-bakker.id}}",
+				"expiresAt": "{{date:30}}"
+			}
+		},
+		{
+			"key": "contract-sportvelden-contact",
+			"register": "pipelinq",
+			"schema": "salesContract",
+			"where": {
+				"contractNumber": "CON-2026-0031"
+			},
+			"set": {
+				"contactRef": "{{object:contact-joke-smit.id}}"
+			}
+		}
+	],
+	"auditEntries": [
+		{
+			"key": "offerte-0042-gemaakt",
+			"data": {
+				"object": "{{object:offerte-0042.id}}",
+				"action": "create",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-1 16:31}}"
+			}
+		},
+		{
+			"key": "offerte-0042-korting-hosting",
+			"data": {
+				"object": "{{object:offerte-0042.id}}",
+				"action": "update",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-1 16:40}}",
+				"changed": {
+					"subtotal": {
+						"old": 3720,
+						"new": 3678
+					}
+				}
+			}
+		},
+		{
+			"key": "offerte-0042-eigen-regel",
+			"data": {
+				"object": "{{object:offerte-0042.id}}",
+				"action": "update",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:0 10:12}}",
+				"changed": {
+					"subtotal": {
+						"old": 3678,
+						"new": 4428
+					}
+				}
+			}
+		}
+	],
+	"appConfig": [
+		{
+			"key": "record_document_templates",
+			"value": "{\"salesQuote\": {\"template\": \"offerte\", \"ownerField\": \"assignee\", \"lists\": [{\"schema\": \"salesQuoteLine\", \"field\": \"quote\", \"as\": \"lines\", \"order\": {\"sortOrder\": \"ASC\"}}]}}"
+		}
+	]
+}

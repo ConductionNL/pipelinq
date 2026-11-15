@@ -13,11 +13,11 @@
   object-list widget cannot express it: the refusal reason has to be read as
   words, not as a raw enum value.
 
-  @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+  @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 -->
 <template>
 	<section class="journey-runs" data-testid="journey-runs-section">
-		<p class="journey-runs__subtitle">
+		<p v-if="showSubtitle" class="journey-runs__subtitle">
 			{{ t('pipelinq', 'Every contact reached and every contact refused') }}
 		</p>
 		<NcLoadingIcon v-if="loading" :size="24" />
@@ -112,6 +112,12 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/** Whether the section draws its own line; a titled card around it draws it instead. */
+		showSubtitle: {
+			type: Boolean,
+			default: true,
+		},
 	},
 
 	data() {
@@ -127,7 +133,7 @@ export default {
 		 * How many runs ended each way.
 		 *
 		 * @return {object} `{sent, refused, failed}`.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		counts() {
 			return runCounts(this.runs)
@@ -142,7 +148,7 @@ export default {
 		/**
 		 * Read this journey's runs.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		async load() {
 			if (!this.journeyId) {
@@ -164,7 +170,7 @@ export default {
 		 *
 		 * @param {string} state The stored state.
 		 * @return {string} The label.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		stateLabel(state) {
 			return runStateLabel(state, this.t)
@@ -175,7 +181,7 @@ export default {
 		 *
 		 * @param {string} reason The stored reason.
 		 * @return {string} The label.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		reasonLabel(reason) {
 			return runReasonLabel(reason, this.t)
@@ -186,7 +192,7 @@ export default {
 		 *
 		 * @param {string} state The stored state.
 		 * @return {string} A CnStatusBadge variant.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		stateVariant(state) {
 			return { sent: 'success', 'task-created': 'success', refused: 'warning', failed: 'error' }[state] || 'default'
@@ -197,7 +203,7 @@ export default {
 		 *
 		 * @param {string} value An ISO date-time.
 		 * @return {string} The moment, or the value as stored when it is not a date.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+		 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 		 */
 		when(value) {
 			const date = new Date(value)
@@ -229,23 +235,41 @@ export default {
 
 .journey-runs__frame {
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
+	border-radius: 8px;
+	background: var(--color-main-background);
 	overflow-x: auto;
 }
 
-.journey-runs__table {
+.journey-runs .journey-runs__frame .journey-runs__table {
 	width: 100%;
 	border-collapse: collapse;
+	line-height: 1.2;
 
 	th,
 	td {
-		padding: 10px 18px;
+		padding: 12px;
 		text-align: start;
+		line-height: 1.2;
+		background: var(--color-main-background);
 		border-bottom: 1px solid var(--color-border);
 	}
 
 	th {
+		--nldesign-component-table-header-background-color: var(--color-main-background);
+		--nldesign-component-table-header-color: var(--color-text-maxcontrast);
+		padding-block: 10px;
 		font-weight: 600;
+		color: var(--color-text-maxcontrast);
+	}
+
+	th:first-child,
+	td:first-child {
+		padding-inline-start: 18px;
+	}
+
+	th:last-child,
+	td:last-child {
+		padding-inline-end: 18px;
 	}
 
 	tbody tr:last-child td {

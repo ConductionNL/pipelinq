@@ -1,0 +1,8258 @@
+{
+    "OCA\\Pipelinq\\BackgroundJob\\AppointmentDepositTimeoutJob::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": ""
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\AppointmentDepositTimeoutJob::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\AvailabilityCacheRefreshJob::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": ""
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\AvailabilityCacheRefreshJob::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\GenerateZReportJob::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\PointsExpiryBatchJob::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\PosRetryBackoffJob::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\BackgroundJob\\ReminderDispatchJob::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": "",
+        "object plain": "plain-id",
+        "object empty": "",
+        "json array": "json-id",
+        "json empty array": "",
+        "json text": "",
+        "json self uuid": "json-self-uuid",
+        "getObject array": "",
+        "getObject text": "",
+        "toArray array": "array-id",
+        "toArray text": "",
+        "json text, getObject": "",
+        "all three": "",
+        "getObject, toArray": "",
+        "getObject text, toArray": "",
+        "null": "threw TypeError",
+        "string": "threw TypeError",
+        "empty string": "threw TypeError",
+        "int": "threw TypeError",
+        "zero": "threw TypeError",
+        "false": "threw TypeError"
+    },
+    "OCA\\Pipelinq\\Controller\\BerichtenboxAdminController::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": null,
+        "object empty": null,
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": null,
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": null,
+        "toArray array": null,
+        "toArray text": null,
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": null,
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Controller\\OpenDealsController::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": [],
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Controller\\PortalController::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": "",
+        "object plain": "plain-id",
+        "object empty": "",
+        "json array": "json-id",
+        "json empty array": "",
+        "json text": "",
+        "json self uuid": "json-self-uuid",
+        "getObject array": "",
+        "getObject text": "",
+        "toArray array": "array-id",
+        "toArray text": "",
+        "json text, getObject": "",
+        "all three": "",
+        "getObject, toArray": "",
+        "getObject text, toArray": "",
+        "null": "threw TypeError",
+        "string": "threw TypeError",
+        "empty string": "threw TypeError",
+        "int": "threw TypeError",
+        "zero": "threw TypeError",
+        "false": "threw TypeError"
+    },
+    "OCA\\Pipelinq\\Controller\\PortalController::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Controller\\SemanticHandoffController::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Lifecycle\\PosRefundManagerGuard::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Repair\\MigratePosBookkeepingToShillinq::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Repair\\UnifyClientContactIdentity::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\AppointmentCalendarLeafProvider::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": ""
+    },
+    "OCA\\Pipelinq\\Service\\AppointmentCalendarLeafProvider::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\AppointmentDepositService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\AppointmentEmailService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\AppointmentPaymentProvider::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\AvailabilityService::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": ""
+    },
+    "OCA\\Pipelinq\\Service\\BerichtenboxService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": null,
+        "object empty": null,
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": null,
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": null,
+        "toArray array": null,
+        "toArray text": null,
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": null,
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\BlastService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\BookingService::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": "",
+        "object plain": "plain-id",
+        "object empty": "",
+        "json array": "json-id",
+        "json empty array": "",
+        "json text": "",
+        "json self uuid": "json-self-uuid",
+        "getObject array": "",
+        "getObject text": "",
+        "toArray array": "array-id",
+        "toArray text": "",
+        "json text, getObject": "",
+        "all three": "",
+        "getObject, toArray": "",
+        "getObject text, toArray": "",
+        "null": "threw TypeError",
+        "string": "threw TypeError",
+        "empty string": "threw TypeError",
+        "int": "threw TypeError",
+        "zero": "threw TypeError",
+        "false": "threw TypeError"
+    },
+    "OCA\\Pipelinq\\Service\\BookingService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\BudgetService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\CashShiftService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ComplianceService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\ConsentService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\ContactAddressLookup::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": [],
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\CostReconciliationService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\Cti\\IncomingCallFinder::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": [],
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\CtiContactMatcher::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\CtiService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\EligibilityService::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": ""
+    },
+    "OCA\\Pipelinq\\Service\\EligibilityService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\EmailMatchService::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": ""
+    },
+    "OCA\\Pipelinq\\Service\\EmailMatchService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\Export\\AbstractExportService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\GiftCardService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\KassakoppelingAuditService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Labels\\LabelRenameService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": [],
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\LinkedContactRecords::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": [],
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\LoyaltyAccountService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\LoyaltyEngineService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\LoyaltyProgrammeService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\LoyaltyReportingService::normalizeOptionResult": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": null,
+        "object empty": null,
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": null,
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": null,
+        "toArray array": null,
+        "toArray text": null,
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": null,
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\MailboxResolver::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": null,
+        "object empty": null,
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": null,
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": null,
+        "toArray array": null,
+        "toArray text": null,
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": null,
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\MessagingService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\NoteEventService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": null,
+        "object empty": null,
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": null,
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": null,
+        "toArray array": null,
+        "toArray text": null,
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": null,
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\PointsLedgerService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\PointsRuleEngine::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\MainRegisterReader::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\PortalCleanupService::idOf": {
+        "empty row": null,
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": null
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\PortalObjectRepository::idOf": {
+        "empty row": null,
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": null
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\PortalObjectRepository::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\PortalRequestService::idOf": {
+        "empty row": null,
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": null
+    },
+    "OCA\\Pipelinq\\Service\\PosBookkeepingService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\PosCustomerLinkService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\PosPaymentService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": {
+            "id": "array-id",
+            "from": "toArray"
+        },
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "toArray"
+        },
+        "getObject text, toArray": {
+            "from": "toArray"
+        },
+        "null": null,
+        "string": null,
+        "empty string": null,
+        "int": null,
+        "zero": null,
+        "false": null
+    },
+    "OCA\\Pipelinq\\Service\\PosRefundService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\PosRoleService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\PosStaffReportService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\PosStaffService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\PosTransactionService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ProductCatalogService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\ReceiptDeliveryService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\RedemptionService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqFxRateReader::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": [],
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": [],
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": [],
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\ShillinqInvoiceReader::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\SmsAdapter::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\SnapshotGenerationService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\TierService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\TimeBillingHandoffService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": {
+            "id": "plain-id"
+        },
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": {
+            "property": "kept"
+        },
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": {
+            "property": "kept"
+        },
+        "toArray array": [],
+        "toArray text": {
+            "property": "kept"
+        },
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [
+            "text"
+        ],
+        "empty string": [
+            ""
+        ],
+        "int": [
+            5
+        ],
+        "zero": [
+            0
+        ],
+        "false": [
+            false
+        ]
+    },
+    "OCA\\Pipelinq\\Service\\WalkInQueueService::idOf": {
+        "empty row": "",
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": "",
+        "object plain": "plain-id",
+        "object empty": "",
+        "json array": "json-id",
+        "json empty array": "",
+        "json text": "",
+        "json self uuid": "json-self-uuid",
+        "getObject array": "",
+        "getObject text": "",
+        "toArray array": "array-id",
+        "toArray text": "",
+        "json text, getObject": "",
+        "all three": "",
+        "getObject, toArray": "",
+        "getObject text, toArray": "",
+        "null": "threw TypeError",
+        "string": "threw TypeError",
+        "empty string": "threw TypeError",
+        "int": "threw TypeError",
+        "zero": "threw TypeError",
+        "false": "threw TypeError"
+    },
+    "OCA\\Pipelinq\\Service\\WebhookProcessorService::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\WhatsAppAdapter::toArray": {
+        "empty row": [],
+        "id": {
+            "id": "top-id"
+        },
+        "uuid": {
+            "uuid": "top-uuid"
+        },
+        "id and uuid": {
+            "uuid": "top-uuid",
+            "id": "top-id"
+        },
+        "int id": {
+            "id": 42
+        },
+        "zero id": {
+            "id": 0
+        },
+        "empty id": {
+            "id": "",
+            "uuid": "top-uuid"
+        },
+        "null id": {
+            "id": null,
+            "uuid": "top-uuid"
+        },
+        "self id": {
+            "@self": {
+                "id": "self-id"
+            },
+            "id": "top-id"
+        },
+        "self uuid": {
+            "@self": {
+                "uuid": "self-uuid"
+            },
+            "uuid": "top-uuid"
+        },
+        "self both": {
+            "@self": {
+                "uuid": "self-uuid",
+                "id": "self-id"
+            }
+        },
+        "self int id": {
+            "@self": {
+                "id": 42
+            }
+        },
+        "self int uuid": {
+            "@self": {
+                "uuid": 42
+            }
+        },
+        "self empty": {
+            "@self": [],
+            "id": "top-id"
+        },
+        "self empty id": {
+            "@self": {
+                "id": ""
+            },
+            "id": "top-id"
+        },
+        "self null id": {
+            "@self": {
+                "id": null,
+                "uuid": "self-uuid"
+            }
+        },
+        "self not array": {
+            "@self": "text",
+            "id": "top-id"
+        },
+        "no identity": {
+            "subject": "x"
+        },
+        "object plain": [],
+        "object empty": [],
+        "json array": {
+            "id": "json-id",
+            "from": "json"
+        },
+        "json empty array": [],
+        "json text": [],
+        "json self uuid": {
+            "@self": {
+                "uuid": "json-self-uuid"
+            },
+            "id": "json-id"
+        },
+        "getObject array": {
+            "id": "object-id",
+            "from": "getObject"
+        },
+        "getObject text": [],
+        "toArray array": [],
+        "toArray text": [],
+        "json text, getObject": {
+            "from": "getObject"
+        },
+        "all three": {
+            "from": "json"
+        },
+        "getObject, toArray": {
+            "from": "getObject"
+        },
+        "getObject text, toArray": [],
+        "null": [],
+        "string": [],
+        "empty string": [],
+        "int": [],
+        "zero": [],
+        "false": []
+    },
+    "OCA\\Pipelinq\\Service\\Portal\\AbstractPortalReadFacade::objectId": {
+        "empty row": null,
+        "id": "top-id",
+        "uuid": "top-uuid",
+        "id and uuid": "top-id",
+        "int id": "42",
+        "zero id": "0",
+        "empty id": "",
+        "null id": "top-uuid",
+        "self id": "self-id",
+        "self uuid": "self-uuid",
+        "self both": "self-id",
+        "self int id": "42",
+        "self int uuid": "42",
+        "self empty": "top-id",
+        "self empty id": "",
+        "self null id": "self-uuid",
+        "self not array": "top-id",
+        "no identity": null
+    }
+}

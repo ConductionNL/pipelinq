@@ -1,0 +1,1319 @@
+{
+    "credit": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 25,
+                    "balanceAfter": 125
+                }
+            }
+        ]
+    },
+    "credit with a tier multiplier": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 37,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.5
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "getTierRules": {
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "applyTierBenefits": {
+                    "tier": {
+                        "uuid": "tier-gold",
+                        "m": 1.5
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5,
+                    "multiplier": 1.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 37,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 37,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 37,
+                    "balanceAfter": 137
+                }
+            }
+        ]
+    },
+    "credit, tier changes": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": true,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 25,
+                    "balanceAfter": 125
+                }
+            }
+        ]
+    },
+    "credit, no terminal, no pos id": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 20,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 10.0,
+                        "category": "",
+                        "channel": "web",
+                        "segment": "",
+                        "timestamp": "<now>"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 10.0
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 20,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": ""
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 20,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": null,
+                        "amount": 10.0,
+                        "channel": "web"
+                    },
+                    "processedBy": "system"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 20,
+                    "balanceAfter": 120
+                }
+            }
+        ]
+    },
+    "credit, amount not a number": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 3,
+                "ruleId": "rule-u",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 0.0,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "flat": 3
+                    },
+                    "amount": 0.0
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 3,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 3,
+                    "ruleId": "rule-u",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 0.0,
+                        "channel": "store"
+                    },
+                    "processedBy": "5"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 3,
+                    "balanceAfter": 103
+                }
+            }
+        ]
+    },
+    "credit, integer pos id": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "7",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "getTierRules": {
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:501"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": 501,
+                        "amount": 12.5,
+                        "channel": "7"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 25,
+                    "balanceAfter": 125
+                }
+            }
+        ]
+    },
+    "credit, rule without id": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 12,
+                "ruleId": null,
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 1
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 12,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 12,
+                    "ruleId": null,
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 12,
+                    "balanceAfter": 112
+                }
+            }
+        ]
+    },
+    "credit, formula not a list": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "skipped",
+                "reason": "max reached for this customer this period",
+                "points": 0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": [],
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 0,
+                    "max": null
+                }
+            },
+            {
+                "log": "info",
+                "message": "Pipelinq: max-per-period reached or zero points; skipping credit",
+                "context": {
+                    "accountId": "acc-1",
+                    "ruleId": "rule-i"
+                }
+            }
+        ]
+    },
+    "credit, under the period max": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 20,
+                "ruleId": "rule-m",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "getLedgerHistory": {
+                    "accountId": "acc-1",
+                    "from": "<now>"
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 10,
+                    "pointsToAward": 25,
+                    "max": 30
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 20,
+                    "ruleId": "rule-m",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 20,
+                    "balanceAfter": 120
+                }
+            }
+        ]
+    },
+    "period max reached": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "skipped",
+                "reason": "max reached for this customer this period",
+                "points": 0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "getLedgerHistory": {
+                    "accountId": "acc-1",
+                    "from": "<now>"
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 10,
+                    "pointsToAward": 25,
+                    "max": 10
+                }
+            },
+            {
+                "log": "info",
+                "message": "Pipelinq: max-per-period reached or zero points; skipping credit",
+                "context": {
+                    "accountId": "acc-1",
+                    "ruleId": "rule-m"
+                }
+            }
+        ]
+    },
+    "zero points": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "skipped",
+                "reason": "max reached for this customer this period",
+                "points": 0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 0.0,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 0.0
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 0,
+                    "max": null
+                }
+            },
+            {
+                "log": "info",
+                "message": "Pipelinq: max-per-period reached or zero points; skipping credit",
+                "context": {
+                    "accountId": "acc-1",
+                    "ruleId": "rule-1"
+                }
+            }
+        ]
+    },
+    "credit throws": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "status": "error",
+                "reason": "ledger write failed"
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "log": "warning",
+                "message": "Pipelinq: loyalty processing failed for programme; POS flow unaffected",
+                "context": {
+                    "programmeId": "prog-1",
+                    "customerId": "cust-1",
+                    "exception": "ledger write failed"
+                }
+            }
+        ]
+    },
+    "event dispatch throws": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 25,
+                    "balanceAfter": 125
+                }
+            },
+            {
+                "log": "warning",
+                "message": "Pipelinq: points-credited event dispatch failed",
+                "context": {
+                    "exception": "dispatch failed"
+                }
+            }
+        ]
+    },
+    "ledger entry without numbers": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 0,
+                    "balanceAfter": 0
+                }
+            }
+        ]
+    },
+    "no matching rule": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "skipped",
+                "reason": "no matching rule"
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            }
+        ]
+    },
+    "account inactive": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "blocked",
+                "reason": "account frozen"
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "log": "info",
+                "message": "Pipelinq: account disabled, points credit skipped",
+                "context": {
+                    "accountId": "acc-1",
+                    "customerId": "cust-1"
+                }
+            }
+        ]
+    },
+    "not enrolled": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "status": "skipped",
+                "reason": "not enrolled"
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            }
+        ]
+    },
+    "two programmes": {
+        "returned": [
+            {
+                "programmeId": "prog-1",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            },
+            {
+                "programmeId": "prog-2",
+                "accountId": "acc-1",
+                "status": "credited",
+                "points": 25,
+                "ruleId": "rule-1",
+                "tierChanged": false,
+                "multiplier": 1.0
+            }
+        ],
+        "trace": [
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-1"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-1",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-1",
+                    "count": 25,
+                    "balanceAfter": 125
+                }
+            },
+            {
+                "findAccountByKlantAndProgramme": {
+                    "customerId": "cust-1",
+                    "programmeId": "prog-2"
+                }
+            },
+            {
+                "evaluateRules": {
+                    "programmeId": "prog-2",
+                    "trigger": "purchase",
+                    "context": {
+                        "amount": 12.5,
+                        "category": "food",
+                        "channel": "store",
+                        "segment": "b2c",
+                        "timestamp": "2026-10-01T10:00:00+00:00"
+                    }
+                }
+            },
+            {
+                "calculatePoints": {
+                    "formula": {
+                        "perEuro": 2
+                    },
+                    "amount": 12.5
+                }
+            },
+            {
+                "applyMaxPerCustomer": {
+                    "earnedInPeriod": 0,
+                    "pointsToAward": 25,
+                    "max": null
+                }
+            },
+            {
+                "forOperation": {
+                    "operationId": "pos:pos-77"
+                }
+            },
+            {
+                "creditPoints": {
+                    "accountId": "acc-1",
+                    "amount": 25,
+                    "ruleId": "rule-1",
+                    "sourceDocument": {
+                        "transactionId": "pos-77",
+                        "amount": 12.5,
+                        "channel": "store"
+                    },
+                    "processedBy": "term-3"
+                }
+            },
+            {
+                "updateTierIfNeeded": {
+                    "accountId": "acc-1"
+                }
+            },
+            {
+                "dispatchTyped": {
+                    "type": "loyalty.points.credited",
+                    "accountId": "acc-1",
+                    "programmeId": "prog-2",
+                    "count": 25,
+                    "balanceAfter": 125
+                }
+            }
+        ]
+    },
+    "empty customer": {
+        "returned": [],
+        "trace": []
+    }
+}

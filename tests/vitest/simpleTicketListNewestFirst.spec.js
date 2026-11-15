@@ -10,7 +10,7 @@
  * worked oldest first; this list is where an agent looks for what just came
  * in. The header still sorts by waiting time on one click.
  *
- * @spec openspec/changes/ticket-list-newest-first/specs/kcc-werkplek/spec.md#requirement-the-ticket-list-shows-the-newest-ticket-first
+ * @spec openspec/specs/kcc-werkplek/spec.md#requirement-the-ticket-list-shows-the-newest-ticket-first
  */
 
 import fs from 'fs'

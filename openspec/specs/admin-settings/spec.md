@@ -310,6 +310,15 @@ The admin settings MUST provide full CRUD operations for pipelines. Pipelines ar
 
 ---
 
+#### Scenario: Deleting a pipeline that holds items is refused
+- GIVEN pipeline Verkoop holds 18 leads
+- WHEN the admin deletes it
+- THEN the deletion is refused with "Verplaats ze eerst naar een andere pijplijn, daarna kun je deze verwijderen" (board pipelinq/PqPipelines)
+
+#### Scenario: Deleting the default pipeline is refused
+- WHEN the admin deletes the default pipeline
+- THEN the deletion is refused with "Stel eerst een andere pijplijn als standaard in"
+
 ### Requirement: REQ-AS-030: Stage Management within Pipelines [MVP]
 
 The admin settings MUST provide CRUD operations for stages within each pipeline via the `PipelineForm` component. Stages are stored as a JSON array on the pipeline object, each with: `name`, `order`, `probability`, `isClosed`, `isWon`, and `color`.
@@ -725,7 +734,7 @@ The admin settings page MUST comply with WCAG AA accessibility standards for all
 
 ### Requirement: Shillinq hand-offs follow the detected app
 
-Pipelinq SHALL hand approved hours (WIP) and approved expenses (AP) to Shillinq only when the Shillinq app is installed on the same server, and SHALL reach it internally through OpenRegister. The admin settings page SHALL NOT ask for a Shillinq webhook URL. The Shillinq options section SHALL only show when Shillinq is installed; otherwise the Detected integrations card SHALL say Shillinq is not installed.
+Pipelinq SHALL hand approved hours (WIP), approved expenses (AP) and the till's day totals (the POS-day journal raise) to Shillinq only when the Shillinq app is installed on the same server, and SHALL reach it internally through OpenRegister. The admin settings page and the setup wizard SHALL NOT ask for a Shillinq webhook URL. The Shillinq options section SHALL only show when Shillinq is installed; otherwise the Detected integrations card SHALL say Shillinq is not installed.
 
 #### Scenario: Shillinq installed, no address typed
 
@@ -764,6 +773,51 @@ The pipelinq admin settings page SHALL offer a "Run the setup wizard again" acti
 - AND closing it SHALL leave the administrator on the admin settings page
 
 @e2e exclude the card is a button over nextcloud-vue's CnSetupWizard, asserted by tests/vitest/setupWizardRerun.spec.js.
+
+### Requirement: The admin forms are declared sections
+
+The Lead Management, Shillinq integration, BI export, marketing intelligence and provision-data sections SHALL be CnSettingsFieldsSection declarations read from `src/views/settings/adminSections.json`. Each SHALL read `GET /api/settings` (`config`), save only the settings it changed with `PUT /api/settings`, check its fields before saving (a stale threshold of at least one whole day, export retention and warning hours of at least one, an email address in the right form), and say whether it saved. The page SHALL keep its own copy of the config in step with what a section saved.
+
+#### Scenario: Changing the stale threshold
+
+- GIVEN the stale threshold is 14 days
+- WHEN the administrator sets it to 21 and saves
+- THEN only `lead_stale_threshold_days: 21` is sent
+
+@e2e exclude the save is the library's, covered by its CnSettingsFieldsSection specs; the declaration is asserted by tests/vitest/adminSections.spec.js.
+
+### Requirement: The setup wizard opens from the admin shell
+
+The admin page SHALL pass `showSetup` and the manifest's `setup.steps` to CnAdminSettingsShell, so an administrator can run the first-time setup again from the version card. It SHALL NOT read whether the wizard was closed before.
+
+#### Scenario: Running the wizard again
+
+- GIVEN an administrator on the admin page
+- WHEN they press "Run setup wizard"
+- THEN the wizard opens with the manifest's steps
+
+@e2e exclude the button and wizard are the library shell's; the wiring is asserted by tests/vitest/setupWizardRerun.spec.js.
+
+### Requirement: No admin surface is an in-app route
+
+No admin settings or diagnostics component SHALL be mounted by the app's vue-router. The BRP monitor SHALL be a read-only section on the admin page that shows the last 24 hours of lookups (count, cache hits, errors, average response time, the period); the mTLS certificate and its expiry are monitored in integriq (changes/brp-monitor-moves-to-integriq). The page `/sync-settings` SHALL NOT exist.
+
+#### Scenario: The BRP monitor reads the last day
+- GIVEN the BRP adapter reported lookups in the last 24 hours
+- WHEN an admin opens the admin page
+- THEN the BRP monitor section shows the count, cache hits, errors, average response time and the period
+- AND the certificate itself is monitored in integriq, not here
+
+### Requirement: A delete on the admin page asks in a dialog
+
+Deleting a skill or an agent profile SHALL ask in CnDeleteDialog, which names the row, and SHALL say in the dialog whether the delete worked. The page SHALL NOT use the browser's `confirm()`.
+
+#### Scenario: Deleting a skill
+
+- WHEN the administrator presses Delete on the skill "Parking"
+- THEN a dialog asks to delete "Parking", and only its confirm button deletes it
+
+@e2e exclude covered by tests/vitest/adminDeleteDialog.spec.js.
 
 ## UI Layout Reference
 

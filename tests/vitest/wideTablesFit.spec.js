@@ -9,7 +9,7 @@
  * wrap. No value is dropped, only moved to a second line.
  *
  * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
- * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md#REQ-AUDIT-003
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
  */
 
@@ -104,28 +104,13 @@ describe('social performance', () => {
 	})
 })
 
-describe('kassakoppeling audit log', () => {
-	it('shows the register under the operator', () => {
-		const source = readFileSync(
-			resolve(
-				__dirname,
-				'../../src/views/kassakoppeling/KassakoppelingAuditList.vue',
-			),
-			'utf8',
-		)
-		expect(source).toContain("label: t('pipelinq', 'Operator and register')")
-		expect(source).toContain("secondary: (row) => row.registerNumber || '—'")
-		expect(source).not.toContain("key: 'registerNumber'")
-	})
-})
-
 describe('competitor watches', () => {
 	it('lets the table cells wrap', () => {
 		const source = readFileSync(
 			resolve(__dirname, '../../src/views/marketing/CompetitorWatches.vue'),
 			'utf8',
 		)
-		const table = source.match(/\.competitors__table \{[\s\S]*?\n\}/)[0]
-		expect(table).toMatch(/white-space: normal/)
+		const columns = source.match(/watchColumns\(\) \{[\s\S]*?\n\t\t\},/)[0]
+		expect(columns).toMatch(/cellClass: 'cn-cell--wrap'/)
 	})
 })

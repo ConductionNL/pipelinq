@@ -2,7 +2,7 @@
 
 /**
  * Example data for PqAfspraakVerplaatsen: Sanne de Vries has a confirmed site
- * visit on the Parkstraat a week from the install, so the booking page offers
+ * visit on the Parkstraat the day after the install, so the booking page offers
  * Verzetten (a confirmed booking that starts more than an hour from now).
  *
  * @category Test
@@ -36,9 +36,10 @@ class ZuiddrechtFutureBookingTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testSanneHasAConfirmedSiteVisitNextWeek(): void {
+	public function testSanneHasAConfirmedSiteVisitTomorrow(): void {
 		$set     = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.json'), true);
-		$objects = array_column($set['objects'], null, 'key');
+		$part    = json_decode((string)file_get_contents(__DIR__.'/../../../lib/Settings/example-sets/zuiddrecht.d/50-bookings.json'), true);
+		$objects = array_column(array_merge($set['objects'], $part['objects']), null, 'key');
 
 		$booking = ($objects['booking-locatiebezoek-parkstraat'] ?? null);
 		$this->assertNotNull(actual: $booking);
@@ -46,7 +47,7 @@ class ZuiddrechtFutureBookingTest extends TestCase {
 		$this->assertSame(expected: 'confirmed', actual: $booking['data']['status']);
 		$this->assertSame(expected: '{{object:client-sanne.id}}', actual: $booking['data']['customerId']);
 		$this->assertSame(expected: '{{object:service-locatiebezoek.id}}', actual: $booking['data']['serviceId']);
-		$this->assertSame(expected: ['{{datetime:7 14:00}}', '{{datetime:7 15:00}}'], actual: [$booking['data']['startAt'], $booking['data']['endAt']]);
+		$this->assertSame(expected: ['{{datetime:1 14:00}}', '{{datetime:1 15:00}}'], actual: [$booking['data']['startAt'], $booking['data']['endAt']]);
 		$this->assertSame(expected: 'active', actual: $objects['service-locatiebezoek']['data']['status']);
-	}//end testSanneHasAConfirmedSiteVisitNextWeek()
+	}//end testSanneHasAConfirmedSiteVisitTomorrow()
 }//end class

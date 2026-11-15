@@ -1,0 +1,2021 @@
+{
+    "nc: three steps, two reached": {
+        "result": {
+            "level": 2,
+            "eventIds": [
+                "ev-1",
+                "ev-2"
+            ]
+        },
+        "calls": [
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "alice"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 1,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 1
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "alice"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            },
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "bob"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 2,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 2
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 2,
+                        "notifiedActors": [
+                            "bob"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "nc: level already fired": {
+        "result": {
+            "level": 2,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "bob"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 2,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 2
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 2,
+                        "notifiedActors": [
+                            "bob"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "nc: unresolved, entity uuid": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-entity-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "resolution",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.7,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "unresolved:assignee"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "nc: fallback actor, notify throws": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-id-1"
+            ]
+        },
+        "calls": [
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "root"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 1,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 1
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: nextcloud-notification dispatch failed",
+                    "context": {
+                        "error": "notify down",
+                        "actor": "root"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:nextcloud-notification:root"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "nc: actor lookup throws": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: notification dispatch failed",
+                    "context": {
+                        "error": "config down",
+                        "channel": "nextcloud-notification"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:nextcloud-notification"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "nc: tie keeps the first kind": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "alice"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 1,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 1
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "alice"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "nc: default trigger at 1.0": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "alice"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 1,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 1
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 1,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "alice"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "breach: not configured": {
+        "result": {
+            "level": 1,
+            "eventIds": []
+        },
+        "calls": [
+            {
+                "INotification::setApp": {
+                    "app": "pipelinq"
+                }
+            },
+            {
+                "INotification::setUser": {
+                    "user": "alice"
+                }
+            },
+            {
+                "INotification::setObject": {
+                    "type": "request",
+                    "id": "req-1"
+                }
+            },
+            {
+                "INotification::setSubject": {
+                    "subject": "sla_breach",
+                    "parameters": {
+                        "level": 1,
+                        "policy": "Gold"
+                    }
+                }
+            },
+            {
+                "INotification::setMessage": {
+                    "message": "sla_breach_message",
+                    "parameters": {
+                        "level": 1
+                    }
+                }
+            },
+            {
+                "INotificationManager::notify": true
+            },
+            {
+                "LoggerInterface::debug": {
+                    "message": "SlaEngineService: breach register/schema not configured; skipping audit row"
+                }
+            }
+        ]
+    },
+    "breach: schema missing": {
+        "result": {
+            "level": 1,
+            "eventIds": []
+        },
+        "calls": [
+            {
+                "LoggerInterface::debug": {
+                    "message": "SlaEngineService: breach register/schema not configured; skipping audit row"
+                }
+            }
+        ]
+    },
+    "breach: object service missing": {
+        "result": {
+            "level": 1,
+            "eventIds": []
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: ObjectService unavailable for breach event write",
+                    "context": {
+                        "error": "not registered: OCA\\OpenRegister\\Service\\ObjectService"
+                    }
+                }
+            }
+        ]
+    },
+    "breach: save throws": {
+        "result": {
+            "level": 1,
+            "eventIds": []
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "unresolved:assignee"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: failed to write breach event",
+                    "context": {
+                        "error": "save down"
+                    }
+                }
+            }
+        ]
+    },
+    "breach: save returns no id": {
+        "result": {
+            "level": 1,
+            "eventIds": []
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "unresolved:assignee"
+                        ],
+                        "channel": "nextcloud-notification",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: sent to the linked contact": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "contact-1"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: client fallback, no consent": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "client-1",
+                    "register": "pipelinq",
+                    "schema": "client"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "id": "client-1",
+                        "phoneNumber": "+31622222222"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "consent-missing:sms"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: contact gone, client used": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "gone",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "client-1",
+                    "register": "pipelinq",
+                    "schema": "client"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "id": "client-1",
+                        "phoneNumber": "+31622222222"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "client-1"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: window expired": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "template-missing:sms"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: other failure": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:sms:noProviderAvailable"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: contact without id": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "phoneNumber": "+316",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "customer"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: not for a team lead": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "unsupported:sms:team-lead"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: no customer": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "unresolved:customer"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: target schema override": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "ticket"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "person"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "contact-1"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: no register for lookups": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "unresolved:customer"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: adapter missing": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: messaging adapter unavailable",
+                    "context": {
+                        "class": "OCA\\Pipelinq\\Service\\SmsAdapter",
+                        "error": "not registered: OCA\\Pipelinq\\Service\\SmsAdapter"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:sms"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: adapter without send": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:sms"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "sms: adapter throws": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\SmsAdapter"
+            },
+            {
+                "SmsAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: SMS escalation dispatch threw",
+                    "context": {
+                        "error": "provider blew up"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:sms"
+                        ],
+                        "channel": "sms",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: template step": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "WhatsAppAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "",
+                    "templateId": "tpl-9",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "contact-1"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: no template, in window": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "WhatsAppAdapter::isWithinSessionWindow": {
+                    "contactId": "contact-1"
+                }
+            },
+            {
+                "WhatsAppAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "Uw serviceverzoek nadert de afgesproken doorlooptijd (Gold, escalatieniveau 1). Ons team pakt dit met prioriteit op.",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "contact-1"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: no template, out of window": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "WhatsAppAdapter::isWithinSessionWindow": {
+                    "contactId": "contact-1"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "template-missing:whatsapp"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: plain adapter, no template": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "template-missing:whatsapp"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: template, adapter throws": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "WhatsAppAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "",
+                    "templateId": "tpl-9",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: WhatsApp escalation dispatch threw",
+                    "context": {
+                        "error": "provider blew up"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:whatsapp"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: template, no consent": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "WhatsAppAdapter::send": {
+                    "contact": {
+                        "uuid": "contact-1",
+                        "phoneNumber": "+31611111111",
+                        "client": "client-1"
+                    },
+                    "body": "",
+                    "templateId": "tpl-9",
+                    "context": {
+                        "clientId": "client-1",
+                        "agent": "system:sla-engine"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "consent-missing:whatsapp"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "whatsapp: adapter missing": {
+        "result": {
+            "level": 1,
+            "eventIds": [
+                "ev-1"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "req-1",
+                    "register": "pipelinq",
+                    "schema": "request"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "find": {
+                    "id": "contact-1",
+                    "register": "pipelinq",
+                    "schema": "contact"
+                }
+            },
+            {
+                "container::get": "OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SlaEngineService: messaging adapter unavailable",
+                    "context": {
+                        "class": "OCA\\Pipelinq\\Service\\WhatsAppAdapter",
+                        "error": "not registered: OCA\\Pipelinq\\Service\\WhatsAppAdapter"
+                    }
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "failed:whatsapp"
+                        ],
+                        "channel": "whatsapp",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "email and webhook deferred": {
+        "result": {
+            "level": 2,
+            "eventIds": [
+                "ev-1",
+                "ev-2"
+            ]
+        },
+        "calls": [
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 1,
+                        "notifiedActors": [
+                            "deferred:email:assignee"
+                        ],
+                        "channel": "email",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            },
+            {
+                "container::get": "OCA\\OpenRegister\\Service\\ObjectService"
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "policyId": "pol-1",
+                        "targetObjectType": "request",
+                        "targetObjectId": "req-1",
+                        "targetKind": "response",
+                        "breachedAt": "<now>",
+                        "consumedPercentage": 0.9,
+                        "escalationLevel": 2,
+                        "notifiedActors": [
+                            "deferred:webhook:manager"
+                        ],
+                        "channel": "webhook",
+                        "acknowledged": false
+                    },
+                    "extend": [],
+                    "register": "sla",
+                    "schema": "slaBreachEvent"
+                }
+            }
+        ]
+    },
+    "empty chain": {
+        "result": {
+            "level": 2,
+            "eventIds": []
+        },
+        "calls": []
+    }
+}

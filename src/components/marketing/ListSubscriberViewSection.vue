@@ -144,8 +144,13 @@ export default {
 
 .list-preview__save {
 	align-self: flex-start;
-	padding: 4px 12px;
-	border-radius: var(--border-radius);
+	display: inline-flex;
+	align-items: center;
+	box-sizing: border-box;
+	height: 34px;
+	padding: 0 14px;
+	border-radius: 8px;
+	font-size: 14px;
 	background: var(--color-primary-element);
 	color: var(--color-primary-element-text);
 	font-weight: 600;

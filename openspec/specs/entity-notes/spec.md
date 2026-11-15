@@ -48,7 +48,7 @@ Users MUST be able to create, view, and delete notes on any Pipelinq entity (cli
 #### Scenario: Empty notes state
 - **GIVEN** an entity has no notes
 - **WHEN** the user views the entity detail page
-- **THEN** a "No notes yet" message MUST be displayed
+- **THEN** a "Nog geen notities" message MUST be displayed
 - **AND** the notes input MUST still be available for creating the first note
 
 #### Scenario: Notes on all four entity types
@@ -436,7 +436,7 @@ Implemented:
   - Notes list in reverse chronological order showing author name, relative timestamp, and message.
   - Delete button visible only on own notes.
   - Loading state via `NcLoadingIcon`.
-  - "No notes yet" empty state.
+  - "Nog geen notities" empty state.
   - Watches `objectId` prop to re-fetch notes when entity changes.
   - Uses plain `fetch()` for API calls with `requesttoken` and `OCS-APIREQUEST` headers.
 - **Integration with detail views**: `ClientDetail.vue` shows a static `notes` field from entity data. The `EntityNotes` component is available for embedding via `CnDetailPage` with `object-type` prop.

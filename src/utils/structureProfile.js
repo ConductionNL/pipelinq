@@ -30,8 +30,9 @@
  *           `null` takes the item out), `configAppend` appends items, and
  *           `configOrder` moves the named items to the front. They apply in
  *           that order. A name is the item's `id`, else its `key`, else its
- *           `label`. `slots` adds entries to the page's slot map. An overlay never
- *           adds a page and never removes one.
+ *           `label`. `slots` adds entries to the page's slot map, and a
+ *           `null` takes one out. An overlay never adds a page and never
+ *           removes one.
  *   nav     Merged over the manifest's `nav` (the brand block and the primary
  *           action CnAppNav draws). A string value `@theming.<key>` is read
  *           from the instance's theming capabilities (`name`, `logo`, ...),
@@ -45,7 +46,7 @@
  * Nothing here deletes anything. The pages, the routes and the fragments are
  * the same in both profiles, which is what keeps every deep link working.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md
+ * @spec openspec/specs/navigation-ia/spec.md
  */
 
 /** The profile a fresh instance gets. */
@@ -75,7 +76,7 @@ const LAYOUT_KEYS = [
  * @param {unknown} raw The stored setting, as initial state hands it over.
  * @return {string} `simple` or `full`.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export function resolveStructureProfile(raw) {
 	return raw === STRUCTURE_FULL ? STRUCTURE_FULL : STRUCTURE_SIMPLE
@@ -89,54 +90,134 @@ export function resolveStructureProfile(raw) {
  *   The order is fixed: replace keys, patch items by name, append, then order.
  * @return {object} A new page object.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-102
  */
 export function applyPageOverlay(pageIn, overlay) {
+	const page = titledPage(pageIn, overlay)
+	const config = mergedConfig(page, overlay)
+	patchConfigItems(config, overlay)
+	appendConfigItems(config, overlay)
+	orderConfigItems(config, overlay)
+	if (overlay.slots && typeof overlay.slots === 'object') {
+		return { ...page, config, slots: overlaySlots(page, overlay) }
+	}
+	return { ...page, config }
+}
+
+/**
+ * The page with the overlay's title, when it gives one.
+ *
+ * @param {object} page The built page.
+ * @param {object} overlay The overlay.
+ * @return {object} The page, or a copy with the new title.
+ */
+function titledPage(page, overlay) {
 	// `title` replaces the page's title (the English source text; the library
 	// translates it), so a page can read as its board does without a new page.
-	const page =
-		typeof overlay.title === 'string' && overlay.title !== ''
-			? { ...pageIn, title: overlay.title }
-			: pageIn
-	const config = { ...(page.config || {}), ...(overlay.config || {}) }
+	return typeof overlay.title === 'string' && overlay.title !== ''
+		? { ...page, title: overlay.title }
+		: page
+}
+
+/**
+ * The page's config with the overlay's keys replaced.
+ *
+ * @param {object} page The page.
+ * @param {object} overlay The overlay.
+ * @return {object} A new config object.
+ */
+function mergedConfig(page, overlay) {
+	return { ...(page.config || {}), ...(overlay.config || {}) }
+}
+
+/**
+ * The list under a config key; anything that is not an array reads as empty.
+ *
+ * @param {object} holder The object holding the list.
+ * @param {string} key The key.
+ * @return {Array} The list.
+ */
+function listAt(holder, key) {
+	return Array.isArray(holder[key]) ? holder[key] : []
+}
+
+/**
+ * Patch list items by name: null removes the item, an object merges into it.
+ *
+ * @param {object} config The config, changed in place.
+ * @param {object} overlay The overlay.
+ * @return {void}
+ */
+function patchConfigItems(config, overlay) {
 	const patch = overlay.configPatch || {}
 	for (const key of Object.keys(patch)) {
 		const byName = patch[key] || {}
-		const current = Array.isArray(config[key]) ? config[key] : []
-		config[key] = current
+		config[key] = listAt(config, key)
 			.filter((item) => byName[overlayItemName(item)] !== null)
-			.map((item) => {
-				const change = byName[overlayItemName(item)]
-				return change === undefined || typeof item !== 'object'
-					? item
-					: { ...item, ...change }
-			})
+			.map((item) => patchedItem(item, byName[overlayItemName(item)]))
 	}
+}
+
+/**
+ * @param {(object|string)} item The list item.
+ * @param {(object|undefined)} change The overlay's change for it.
+ * @return {(object|string)} The item, merged with the change when both are objects.
+ */
+function patchedItem(item, change) {
+	return change === undefined || typeof item !== 'object'
+		? item
+		: { ...item, ...change }
+}
+
+/**
+ * Append the overlay's items to the lists.
+ *
+ * @param {object} config The config, changed in place.
+ * @param {object} overlay The overlay.
+ * @return {void}
+ */
+function appendConfigItems(config, overlay) {
 	const append = overlay.configAppend || {}
 	for (const key of Object.keys(append)) {
-		const current = Array.isArray(config[key]) ? config[key] : []
-		const extra = Array.isArray(append[key]) ? append[key] : []
-		config[key] = [...current, ...extra]
+		config[key] = [...listAt(config, key), ...listAt(append, key)]
 	}
+}
+
+/**
+ * Put the named items first in their lists, in the overlay's order.
+ *
+ * @param {object} config The config, changed in place.
+ * @param {object} overlay The overlay.
+ * @return {void}
+ */
+function orderConfigItems(config, overlay) {
 	const order = overlay.configOrder || {}
 	for (const key of Object.keys(order)) {
-		const current = Array.isArray(config[key]) ? config[key] : []
-		const first = Array.isArray(order[key]) ? order[key] : []
-		const lead = first
+		const current = listAt(config, key)
+		const lead = listAt(order, key)
 			.map((name) => current.find((item) => overlayItemName(item) === name))
 			.filter((item) => item !== undefined)
 		config[key] = [...lead, ...current.filter((item) => !lead.includes(item))]
 	}
-	if (overlay.slots && typeof overlay.slots === 'object') {
-		// A `custom` widget resolves through the page's own top-level `slots`
-		// map, so a page that gains one needs its slot beside it.
-		return {
-			...page,
-			config,
-			slots: { ...(page.slots || {}), ...overlay.slots },
+}
+
+/**
+ * The page's slots with the overlay's merged in; a null slot is taken out.
+ *
+ * @param {object} page The page.
+ * @param {object} overlay The overlay.
+ * @return {object} The slots.
+ */
+function overlaySlots(page, overlay) {
+	// A `custom` widget resolves through the page's own top-level `slots`
+	// map, so a page that gains one needs its slot beside it.
+	const slots = { ...(page.slots || {}), ...overlay.slots }
+	for (const name of Object.keys(slots)) {
+		if (slots[name] === null) {
+			delete slots[name]
 		}
 	}
-	return { ...page, config }
+	return slots
 }
 
 /**
@@ -149,7 +230,7 @@ export function applyPageOverlay(pageIn, overlay) {
  * @param {unknown} item A list item from a page config.
  * @return {string|undefined} Its name, or undefined when it has none.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-102
  */
 export function overlayItemName(item) {
 	if (typeof item === 'string') {
@@ -176,7 +257,7 @@ const THEMING_PLACEHOLDER = '@theming.'
  * @param {object|null} theming The theming capabilities (`name`, `logo`, ...).
  * @return {object} A new nav block with every placeholder resolved.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function resolveNavPlaceholders(nav, theming) {
 	const resolveOne = (placeholder) => {
@@ -227,7 +308,7 @@ export function resolveNavPlaceholders(nav, theming) {
  * @return {object} Nextcloud's theming block plus `emblem`, '' when the set
  *   ships none.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function navTheming(capabilities) {
 	const theming = capabilities?.theming ?? {}
@@ -257,8 +338,8 @@ export function navTheming(capabilities) {
  *   capabilities, for the placeholders a profile's `nav` block may carry.
  * @return {object} The built manifest.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function buildProfiledManifest(
 	buildManifest,
@@ -340,7 +421,7 @@ export function buildProfiledManifest(
  * @param {Array<object>|undefined} tours The profile file's `tours`.
  * @return {object} The manifest with the profile's tours added.
  *
- * @spec openspec/changes/simple-tour-and-readable-labels/specs/navigation-ia/spec.md#requirement-a-tour-only-starts-where-the-menu-can-carry-it-req-nia-106
+ * @spec openspec/specs/navigation-ia/spec.md#requirement-a-tour-only-starts-where-the-menu-can-carry-it-req-nia-106
  */
 export function applyProfileTours(built, tours) {
 	if (!Array.isArray(tours) || tours.length === 0) {
@@ -363,6 +444,23 @@ export function applyProfileTours(built, tours) {
 }
 
 /**
+ * One default config value for a page. A page that hides its Add button
+ * (`showAdd: false`) gets the default header buttons without the Add one.
+ *
+ * @param {string} key The config key.
+ * @param {unknown} value The profile's default for it.
+ * @param {object} config The page's own config.
+ * @return {unknown} The value the page gets.
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
+ */
+function defaultFor(key, value, config) {
+	if (key === 'headerButtons' && config.showAdd === false && Array.isArray(value)) {
+		return value.filter((button) => button?.action !== 'add')
+	}
+	return value
+}
+
+/**
  * Config defaults per page type, from the profile file's `pageDefaults`
  * (`{ "<page type>": { "<config key>": value } }`). A page of that type gets
  * each key it does not set itself; a page that sets the key keeps its own
@@ -370,11 +468,13 @@ export function applyProfileTours(built, tours) {
  * turns on by default (nextcloud-vue 2.62.0 gave every index table header a
  * sort and filter control, `config.headerFilters`), so that profile renders
  * as it did on ^2.61.0. A file without `pageDefaults` returns `built` itself.
+ * A page that sets `showAdd: false` gets the default header buttons without
+ * the Add button.
  *
  * @param {object} built The built manifest.
  * @param {object|undefined} defaults The profile file's `pageDefaults`.
  * @return {object} The manifest with the defaults filled in.
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export function applyPageDefaults(built, defaults) {
 	if (
@@ -392,7 +492,7 @@ export function applyPageDefaults(built, defaults) {
 		const config = { ...(page.config || {}) }
 		for (const [key, value] of Object.entries(forType)) {
 			if (config[key] === undefined) {
-				config[key] = value
+				config[key] = defaultFor(key, value, config)
 			}
 		}
 		return { ...page, config }

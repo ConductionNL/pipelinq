@@ -4,7 +4,7 @@
 // Thin frontend API client for the POS payment provider adapter.
 // All endpoints are documented in lib/Controller/PosPaymentController.php.
 //
-// @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+// @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -26,7 +26,7 @@ export async function listProviders() {
  * active provider. Readable by any signed-in user.
  *
  * @return {Promise<Array<{provider: string, providerLabel: string, type: string, method: string}>>} The methods.
- * @spec openspec/changes/pl2-pos-bookings-server-rules/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+ * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
  */
 export async function listPaymentMethods() {
 	const { data } = await axios.get(base('/api/pos-payments/methods'))
