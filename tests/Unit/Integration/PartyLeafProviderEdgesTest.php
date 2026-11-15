@@ -35,6 +35,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * panel shows no fields and asks OpenRegister for none.
  *
  * @covers \OCA\Pipelinq\Integration\PartyLeafProvider
+ * @uses \OCA\Pipelinq\Util\SerialisedEntity
  */
 class PartyLeafProviderEdgesTest extends TestCase {
 

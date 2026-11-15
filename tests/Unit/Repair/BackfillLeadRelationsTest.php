@@ -121,6 +121,8 @@ class FakeBackfillObjectService {
  *
  * @covers \OCA\Pipelinq\Repair\BackfillLeadRelations
  * @uses   \OCA\Pipelinq\Service\LeadStagePlacer
+ * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
+ * @uses   \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
  */
 class BackfillLeadRelationsTest extends TestCase {
 

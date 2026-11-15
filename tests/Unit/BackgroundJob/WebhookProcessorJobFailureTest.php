@@ -37,6 +37,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * @uses   \OCA\Pipelinq\Util\PayloadToArray
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
  */
 class WebhookProcessorJobFailureTest extends TestCase {
 

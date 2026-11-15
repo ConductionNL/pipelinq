@@ -34,6 +34,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  * Contact-moment, phone, tenant and slug reads, and the message save.
  *
  * @covers \OCA\Pipelinq\Service\Support\ChannelAdapterLookups
+ * @uses \OCA\Pipelinq\Util\ConfiguredSchemaSlug
  */
 class ChannelAdapterLookupsTest extends TestCase {
 

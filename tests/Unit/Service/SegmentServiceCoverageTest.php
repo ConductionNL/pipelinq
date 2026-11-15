@@ -93,6 +93,7 @@ class CoverageSignalService extends SegmentSignalService {
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
  */
 class SegmentServiceCoverageTest extends TestCase {
 

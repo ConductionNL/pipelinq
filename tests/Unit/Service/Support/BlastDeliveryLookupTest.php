@@ -31,6 +31,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
  * A delivery is read from the configured schema; gaps and misses are null.
  *
  * @covers \OCA\Pipelinq\Service\Support\BlastDeliveryLookup
+ * @uses \OCA\Pipelinq\Util\ObjectServiceTarget
  */
 class BlastDeliveryLookupTest extends TestCase {
 

@@ -54,6 +54,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
  * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
  * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\LockedRecord
  *
  * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
  */

@@ -50,6 +50,8 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * @uses   \OCA\Pipelinq\Listener\DeferredWorkGuard
  * @uses   \OCA\Pipelinq\Event\ExpenseApprovedEvent
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectRead
+ * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
  */
 class ExpenseApprovalListenerEdgesTest extends TestCase {
 	/**
