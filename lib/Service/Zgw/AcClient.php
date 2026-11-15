@@ -249,6 +249,24 @@ class AcClient {
 			return false;
 		}
 
+		$bucket = $this->freshBucket(endpoint: $endpoint, endpointId: $endpointId);
+		if ($bucket === null) {
+			return false;
+		}
+
+		$list = $bucket['scopes'][$resourceUrl] ?? $bucket['scopes']['*'] ?? [];
+		return in_array($scope, $list, true);
+	}//end hasScope()
+
+	/**
+	 * The endpoint's cached scope bucket, refreshed when stale; null when missing or too old to trust.
+	 *
+	 * @param array<string, mixed> $endpoint   ZgwEndpoint payload.
+	 * @param string               $endpointId The endpoint's cache key.
+	 *
+	 * @return array<string, mixed>|null The bucket, or null (fail-closed).
+	 */
+	private function freshBucket(array $endpoint, string $endpointId): ?array {
 		// Lazy refresh on stale cache.
 		$bucket = $this->cache[$endpointId] ?? null;
 		if ($bucket === null || (time() - $bucket['refreshedAt']) > $this->refreshInterval()) {
@@ -261,17 +279,16 @@ class AcClient {
 		}
 
 		if ($bucket === null) {
-			return false;
+			return null;
 		}
 
 		// Hard cap: anything older than 2 * refresh interval is unsafe.
 		if ((time() - $bucket['refreshedAt']) > (2 * $this->refreshInterval())) {
-			return false;
+			return null;
 		}
 
-		$list = $bucket['scopes'][$resourceUrl] ?? $bucket['scopes']['*'] ?? [];
-		return in_array($scope, $list, true);
-	}//end hasScope()
+		return $bucket;
+	}//end freshBucket()
 
 	/**
 	 * Return all scopes granted on a specific resource URL.
