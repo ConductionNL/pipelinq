@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006
  */
 
 declare(strict_types=1);
@@ -25,11 +25,17 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Manager-override lifecycle service.
@@ -41,6 +47,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   scenario to admin-settings, which never grew one
  */
 class ForecastOverrideService {
+	use PayloadToArray;
+	use InjectedObjectService;
+	use ConfiguredObjectFind;
+
 	/**
 	 * The categories that may be overridden.
 	 *
@@ -78,7 +88,7 @@ class ForecastOverrideService {
 	 *
 	 * @return string|null An error message, or null when valid.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01
 	 */
 	public function validatePayload(array $payload): ?string {
 		if (trim((string)($payload['period_id'] ?? '')) === '') {
@@ -120,7 +130,7 @@ class ForecastOverrideService {
 	 *
 	 * @return array<string, mixed> The created override data.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-006-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-01
 	 */
 	public function createOverride(array $payload, string $managerId): array {
 		$periodId = (string)$payload['period_id'];
@@ -162,22 +172,7 @@ class ForecastOverrideService {
 	 *   scenario to admin-settings, which never grew one
 	 */
 	public function getOverride(string $id): ?array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '' || $id === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->findConfigured(ids: $this->config(), id: $id);
 	}//end getOverride()
 
 	/**
@@ -196,7 +191,9 @@ class ForecastOverrideService {
 		}
 
 		try {
-			return (bool)$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			return (bool)$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to delete forecast override', ['exception' => $e->getMessage(), 'id' => $id]);
 			return false;
@@ -218,13 +215,10 @@ class ForecastOverrideService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $override,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: null
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 
-		return $this->toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end persist()
 
 	/**
@@ -241,8 +235,8 @@ class ForecastOverrideService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'forecastOverride_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'forecastOverride_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/forecastOverride_schema not configured; OpenRegister calls are refused, not run unscoped'
@@ -251,44 +245,4 @@ class ForecastOverrideService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Normalize an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The object data.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

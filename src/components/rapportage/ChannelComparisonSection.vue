@@ -50,23 +50,12 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
-
-const CHANNEL_COLORS = {
-	telefoon: '#4c84db',
-	email: '#f5a623',
-	balie: '#7ed321',
-	chat: '#9b59b6',
-	social: '#e74c3c',
-	brief: '#1abc9c',
-	unknown: '#95a5a6',
-}
+import { channelColor, reportSectionMixin } from './reportSection.js'
 
 export default {
 	name: 'ChannelComparisonSection',
 	components: { NcLoadingIcon },
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [reportSectionMixin],
 
 	props: {
 		/** Relative period token (today / week / month), from `@workspace`.period. */
@@ -84,36 +73,23 @@ export default {
 
 	computed: {
 		effectivePeriod() {
-			if (this.period) return this.period
-			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
-			return (ctx && ctx.period) || 'month'
+			return this.period || this.fromWorkspace('period', 'month')
 		},
 
 		effectiveGranularity() {
-			if (this.granularity) return this.granularity
-			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
-			return (ctx && ctx.granularity) || 'daily'
+			return this.granularity || this.fromWorkspace('granularity', 'daily')
 		},
 	},
 
 	watch: {
-		effectivePeriod() {
-			this.fetchData()
-		},
-
 		effectiveGranularity() {
 			this.fetchData()
 		},
 	},
 
-	mounted() {
-		this.fetchData()
-	},
-
 	methods: {
-		async fetchData() {
-			this.loading = true
-			try {
+		fetchData() {
+			return this.loadInto('channelRows', async () => {
 				const [channelsResp, slaResp] = await Promise.all([
 					axios.get(
 						generateUrl('/apps/pipelinq/api/rapportage/channels'),
@@ -128,7 +104,7 @@ export default {
 				])
 				const distribution = channelsResp.data.distribution ?? {}
 				const slaTargets = slaResp.data.targets ?? {}
-				this.channelRows = Object.entries(distribution).map(
+				return Object.entries(distribution).map(
 					([channel, total]) => {
 						const target = slaTargets[channel]?.target_percent ?? 90
 						const compliance = total > 0 ? target : 0
@@ -144,15 +120,11 @@ export default {
 							fcrRate: 0,
 							slaCompliance: compliance,
 							slaStatus: status,
-							color: CHANNEL_COLORS[channel] ?? CHANNEL_COLORS.unknown,
+							color: channelColor(channel),
 						}
 					},
 				)
-			} catch {
-				this.channelRows = []
-			} finally {
-				this.loading = false
-			}
+			})
 		},
 	},
 }
@@ -205,7 +177,7 @@ export default {
 }
 
 .channel-comparison__sla--red {
-	color: #e53e3e;
+	color: var(--color-error, #e53e3e);
 }
 
 .channel-comparison__empty {

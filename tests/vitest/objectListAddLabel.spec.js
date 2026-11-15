@@ -8,7 +8,7 @@
  * pipelinq hands it the English source text and does not translate it first.
  * On 2.73.1 the label came back as written.
  *
- * @spec openspec/changes/round4-nextcloud-vue-2-76/specs/client-management/spec.md
+ * @spec openspec/specs/client-management/spec.md
  */
 
 import fs from 'fs'
@@ -31,6 +31,7 @@ describe('CnObjectListWidget Add label', () => {
 	it('reads the Dutch text in a Dutch interface', () => {
 		const label = addLabel.call({
 			content: { addLabel: 'Add contact person' },
+			createState: { action: null },
 			cnTranslate: (text) => nl[text] || text,
 		})
 		expect(label).toBe('Contactpersoon toevoegen')
@@ -39,6 +40,7 @@ describe('CnObjectListWidget Add label', () => {
 	it('reads the English text in an English interface', () => {
 		const label = addLabel.call({
 			content: { addLabel: 'Add contact person' },
+			createState: { action: null },
 			cnTranslate: (text) => en[text] || text,
 		})
 		expect(label).toBe('Add contact person')

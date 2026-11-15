@@ -1,0 +1,98 @@
+// @vitest-environment jsdom
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * The client page's contact strip (PqKlant, PqOrganisatie): one card with the
+ * warnings line, "No warnings on this resident." and an Add a warning link
+ * when there are none, and the call, mail and directions links drawn as
+ * buttons with a verb.
+ *
+ * @spec openspec/specs/client-detail/spec.md#requirement-the-contact-strip-sends-a-message
+ */
+
+import { flushPromises, mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@conduction/nextcloud-vue', () => ({ CnDetailCard: { props: ['title'], template: '<div class="stub-card"><slot /></div>' } }))
+vi.mock('@nextcloud/dialogs', () => ({ showError: () => {}, showSuccess: () => {} }))
+vi.mock('@nextcloud/vue', () => ({
+	NcButton: { template: '<button><slot /></button>' },
+	NcLoadingIcon: { template: '<i />' },
+	NcSelect: { template: '<div />' },
+	NcTextField: { template: '<input />' },
+}))
+vi.mock('../../src/services/partyIndicators.js', () => ({
+	acknowledgeIndicator: vi.fn(),
+	addIndicatorValue: vi.fn(),
+	fetchIndicatorVocabulary: vi.fn(async () => []),
+	fetchPartyIndicators: vi.fn(async () => []),
+	needsAcknowledgement: () => false,
+}))
+vi.mock('../../src/components/LogVisitAction.vue', () => ({ default: { name: 'LogVisitAction', props: ['clientId'], template: '<button class="stub-visit" />' } }))
+
+vi.mock('@nextcloud/event-bus', () => ({ emit: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn() }))
+
+vi.stubGlobal('t', (app, text) => text)
+
+const { emit } = await import('@nextcloud/event-bus')
+
+const { default: PartyContactStrip } = await import('../../src/components/PartyContactStrip.vue')
+const global = { config: { globalProperties: { t: (app, text) => text } } }
+
+describe('PartyContactStrip', () => {
+	it('draws the none line with Add a warning and no card of the panel\'s own', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person' }, global })
+		await flushPromises()
+		expect(wrapper.find('.stub-card').exists()).toBe(false)
+		expect(wrapper.find('.party-indicators__none').text()).toContain('No warnings on this resident.')
+		expect(wrapper.find('[data-testid="party-indicators-add"]').exists()).toBe(true)
+	})
+
+	it('draws the contact links as buttons with a verb, and the visit action', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person', phone: '06 12 34 56 78', email: 's@example.nl', address: 'Parkstraat 24, Zuiddrecht' }, global })
+		await flushPromises()
+		expect(wrapper.find('.contact-links--buttons').exists()).toBe(true)
+		expect(wrapper.findAll('.contact-links__link').map((link) => link.text())).toEqual(['Call them', 'Email them', 'Directions'])
+		expect(wrapper.find('.stub-visit').exists()).toBe(true)
+	})
+
+	it('keeps the add-warning form closed until Add a warning is pressed', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person' }, global })
+		await flushPromises()
+		expect(wrapper.find('.party-indicators__form').exists()).toBe(false)
+		await wrapper.find('[data-testid="party-indicators-add"]').trigger('click')
+		expect(wrapper.find('.party-indicators__form').exists()).toBe(true)
+	})
+
+	it('draws the contact links as buttons the theme does not underline or colour as links', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person', phone: '06 12 34 56 78', email: 's@example.nl', address: 'Parkstraat 24, Zuiddrecht' }, global })
+		await flushPromises()
+		const links = wrapper.findAll('.contact-links__link')
+		expect(links).toHaveLength(3)
+		links.forEach((link) => expect(link.classes()).toContain('button'))
+	})
+
+	it('ends with Send a message, which asks the page to open the message composer for this client', async () => {
+		const wrapper = mount(PartyContactStrip, { props: { partyId: 'c-1', partyKind: 'person' }, global })
+		await flushPromises()
+		const button = wrapper.find('[data-testid="party-contact-strip-message"]')
+		expect(button.text()).toBe('Send a message')
+		await button.trigger('click')
+		expect(emit).toHaveBeenCalledWith('pipelinq:messaging:compose', { entityId: 'c-1' })
+	})
+})
+
+describe('the contact strip card as PqKlant and PqOrganisatie draw it', () => {
+	const style = readFileSync(resolve(__dirname, '../../src/components/PartyContactStrip.vue'), 'utf8').split('<style')[1]
+
+	it('pads the card 12px 16px', () => {
+		expect(style).toMatch(/\.party-contact-strip \{[^}]*padding: 12px 16px;/)
+	})
+
+	it('sets the warnings line on the card inset at 1.2, without state padding or the link margin', () => {
+		expect(style).toMatch(/:deep\(\.party-indicators__none\),\s*\.party-contact-strip :deep\(\.party-indicators__add-link\) \{[^}]*margin: 0;[^}]*padding: 0;[^}]*line-height: 1\.2;/)
+	})
+})

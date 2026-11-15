@@ -80,26 +80,56 @@ describe('contact detail', () => {
 		])
 	})
 
-	it('holds at most seven tabs, History last', () => {
+	it('opens on Overview and ends on History (board PqContactpersoon)', () => {
 		const tabs = widget(contact, 'contact-panels').content.tabs
-		expect(tabs.length).toBeLessThanOrEqual(7)
-		expect(tabs[0].widgetIds).toEqual(['contact-data', 'contact-deals'])
+		expect(tabs[0].widgetId).toBe('contact-overview')
 		expect(tabs[tabs.length - 1].widgetId).toBe('contact-history')
 	})
 
-	it('shows channels and relationships as side cards', () => {
-		expect(contact.config.sideColumn).toEqual(
-			expect.arrayContaining(['contact-channels', 'contact-relationships']),
-		)
+	it('shows channels and relationships in Overview and as tabs, not as side cards', () => {
+		const sections = widget(contact, 'contact-overview').content.sections
+		expect(sections.map((s) => s.widget?.type).filter(Boolean)).toEqual(['ContactRelationshipsWidget', 'ContactChannelsWidget'])
+		const tabIds = widget(contact, 'contact-panels').content.tabs.map((t) => t.widgetId)
+		expect(tabIds).toEqual(expect.arrayContaining(['contact-channels', 'contact-relationships']))
+		expect(contact.config.sideColumn).not.toContain('contact-channels')
 	})
 })
 
 describe('lead detail', () => {
 	const lead = page('LeadDetail')
 
-	it('shows the deal value and line item titles once', () => {
-		expect(layoutItem(lead, 'lead-kpi-value').showTitle).toBe(false)
-		expect(layoutItem(lead, 'lead-kpi-lines').showTitle).toBe(false)
+	it('draws the board: one tab strip as the body and a side column of cards', () => {
+		// The locked line (platform-record-lock) sits above the strip and shows only on a locked lead.
+		expect(lead.config.layout.map((item) => item.widgetId)).toEqual([
+			'lead-locked',
+			'lead-panels',
+		])
+		expect(lead.config.sideColumn).toEqual([
+			'side-client',
+			// Shown only when lead rotation wrote a reason (pipeline-lead-rotation).
+			'side-assignment',
+			'side-suggested',
+			'side-win-chance',
+			'side-next-step',
+			'side-related',
+		])
+		const overview = widget(lead, 'lead-panels').content.tabs[0]
+		expect(overview.widgetIds).toEqual([
+			'lead-stages',
+			'lead-deal',
+			'lead-lines',
+			'lead-exchange-rate',
+			'lead-contacts',
+			'lead-flow-runs',
+		])
+	})
+
+	it('puts logging a visit and the two close buttons in the header', () => {
+		expect(lead.config.quickActions).toEqual(['log-contact', 'close-won', 'close-lost'])
+		expect(lead.actionsComponent).toBe('LogVisitAction')
+		const won = lead.config.headerActions.find((a) => a.id === 'close-won')
+		expect(won.payload).toEqual({ action: 'win' })
+		expect(won.visibleWhen).toEqual({ field: 'status', op: 'eq', value: 'open' })
 	})
 
 	it('names the product of a line item instead of its uuid', () => {
@@ -123,7 +153,7 @@ describe('booking detail', () => {
 
 	it('gives the tab strip room for the whole timeline', () => {
 		expect(
-			layoutItem(booking, 'booking-tabs').gridHeight,
+			layoutItem(booking, 'booking-panels').gridHeight,
 		).toBeGreaterThanOrEqual(10)
 	})
 })

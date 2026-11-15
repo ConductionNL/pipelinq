@@ -19,7 +19,10 @@
   -->
 
 <template>
-	<div class="contactmoment-quicklog" data-testid="contactmoment-quicklog">
+	<div
+		class="contactmoment-quicklog"
+		:class="{ 'cn-board-form': inline }"
+		data-testid="contactmoment-quicklog">
 		<h3 v-if="!inline">
 			{{ t('pipelinq', 'Log contactmoment') }}
 		</h3>
@@ -72,8 +75,9 @@
 			<NcTextField
 				:modelValue="form.title"
 				:label="t('pipelinq', 'Subject')"
-				:error="!!errors.title"
-				:helperText="errors.title"
+				:error="!!shownErrors.title"
+				:helperText="shownErrors.title"
+				@blur="touched.title = true"
 				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
@@ -167,37 +171,45 @@
 
 		<!-- Summary → ticket.description -->
 		<div class="form-group">
-			<NcTextField
+			<NcTextArea
 				:modelValue="form.description"
 				:label="t('pipelinq', 'Summary')"
+				resize="vertical"
+				rows="3"
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Duration -->
 		<div class="form-group">
-			<NcTextField
-				:modelValue="form.duration"
-				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:modelValue="(v) => (form.duration = v)" />
+			<CnDurationField
+				ref="durationClock"
+				:modelValue="form.duration || null"
+				:inputLabel="t('pipelinq', 'Duration')"
+				timer
+				autoStart
+				data-testid="quicklog-duration"
+				@update:modelValue="(v) => (form.duration = v || '')" />
 		</div>
 
 		<!-- Notes -->
 		<div class="form-group">
-			<NcTextField
+			<NcTextArea
 				:modelValue="form.notes"
 				:label="t('pipelinq', 'Notes')"
+				resize="vertical"
+				rows="3"
 				@update:modelValue="(v) => (form.notes = v)" />
 		</div>
 
 		<!-- Actions -->
 		<div class="form-actions">
-			<NcButton variant="tertiary" @click="$emit('cancel')">
+			<NcButton variant="secondary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
 				:disabled="!isValid || saving"
-				@click="onSave">
+				@click="stopClockAndSave">
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
@@ -209,54 +221,32 @@
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDurationField, CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
+import contactMomentDraftMixin from '../mixins/contactMomentDraftMixin.js'
 import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
-import {
-	buildContactMoment,
-	buildDraftTicket,
-	CONTACT_MOMENT_TYPE,
-	DRAFT_TYPE,
-	DraftAutosaver,
-	draftChangedAt,
-	draftFormFrom,
-	isDraftFormEmpty,
-	isSessionEnded,
-	pickDraft,
-	refreshRequestToken,
-	refusalText,
-} from '../services/contactMomentDraft.js'
+import { buildContactMoment } from '../services/contactMomentDraft.js'
+import { openRequestOptions } from '../services/contactMomentRequests.js'
 import { useObjectStore } from '../store/modules/object.js'
-
-/**
- * An error that carries the HTTP status of a failed write.
- *
- * @param {object|null} error The store's error object.
- * @return {Error} The error.
- */
-function draftError(error) {
-	const failure = new Error(error?.message || '')
-	failure.status = error?.status
-	return failure
-}
 
 export default {
 	name: 'ContactmomentQuickLog',
 	components: {
 		ClientCreateDialog,
+		CnDurationField,
 		CnResourceSelect,
 		ContactCreateDialog,
 		NcButton,
 		NcNoteCard,
 		NcSelect,
+		NcTextArea,
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [linkedPartyCascadeMixin, contactMomentDraftMixin],
 
 	props: {
 		clientId: {
@@ -314,39 +304,31 @@ export default {
 
 			saving: false,
 			errorMessage: '',
-
-			// The draft ticket kept on the server for this author, client and request.
-			draftId: null,
-			offeredDraft: null,
-			// Set when a save or an autosave was refused because the session
-			// ended; the next Save fetches a fresh request token first.
-			sessionEnded: false,
-			// Off until the restore question is answered, so a draft that is
-			// still being offered is never overwritten by the empty form.
-			draftWatching: false,
+			// Fields the agent has left; their errors show from then on.
+			touched: { title: false },
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * The open requests of the chosen client.
+		 *
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * @spec openspec/changes/specify-capability-rows/specs/contactmomenten/spec.md#requirement-a-contact-moment-is-filed-on-an-open-request
 		 */
 		requestSelectOptions() {
-			return this.requests.map((r) => ({
-				value: r.id,
-				label: r.title || r.id,
-			}))
+			return openRequestOptions(this.requests, this.form.client, this.form.parentTicket)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
 		errors() {
 			const errors = {}
@@ -359,23 +341,19 @@ export default {
 			return errors
 		},
 
+		/**
+		 * The errors of the fields the agent has left, so an empty form does
+		 * not open with a complaint.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 */
+		shownErrors() {
+			return Object.fromEntries(Object.entries(this.errors).filter(([field]) => this.touched[field]))
+		},
+
 		isValid() {
 			return this.form.title?.trim() && this.form.channel
-		},
-
-		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		author() {
-			return window.OC?.getCurrentUser?.()?.uid || null
-		},
-
-		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		offeredDraftTime() {
-			const changed = draftChangedAt(this.offeredDraft)
-			return changed ? new Date(changed).toLocaleString() : ''
 		},
 
 		/**
@@ -390,45 +368,10 @@ export default {
 		},
 	},
 
-	watch: {
-		form: {
-			deep: true,
-			/**
-			 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-			 */
-			handler() {
-				if (!this.draftWatching || !this.author) {
-					return
-				}
-				this.autosaver.schedule(
-					isDraftFormEmpty(this.form, this.draftContext)
-						? null
-						: buildDraftTicket(this.form),
-				)
-			},
-		},
-	},
-
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
-		this.autosaver = new DraftAutosaver({
-			write: (payload, options) => this.writeDraft(payload, options),
-			remove: (options) => this.removeDraft(options),
-			onError: (error) => {
-				if (isSessionEnded(error)) {
-					this.sessionEnded = true
-				}
-			},
-		})
-		this.onVisibilityChange = () => {
-			if (document.visibilityState === 'hidden') {
-				this.autosaver.flush({ keepalive: true })
-			}
-		}
-		document.addEventListener('visibilitychange', this.onVisibilityChange)
-
 		// Clients and contacts are no longer fetched here: CnResourceSelect
 		// searches them server-side, which is the point — the old preloaded
 		// `_limit: 100` collection made client 101 unselectable with no way to
@@ -457,37 +400,26 @@ export default {
 		await this.loadDraft()
 	},
 
-	/**
-	 * Keep what was typed when the quick log closes without saving.
-	 *
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-	 */
-	beforeUnmount() {
-		document.removeEventListener('visibilitychange', this.onVisibilityChange)
-		this.autosaver.flush()
-	},
-
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
+		 * Stop the running duration clock, so the saved duration is the time it shows, then save.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
+		 */
+		stopClockAndSave() {
+			this.$refs.durationClock?.stop()
+			return this.onSave()
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
 		 */
 		async onSave() {
 			if (!this.isValid) return
 
 			this.saving = true
 			this.errorMessage = ''
-			// Nothing may write the draft back while the contact moment is saved,
-			// and a write already on its way must land first: it may be the one
-			// that creates the draft this save is about to finish.
-			this.autosaver.stop()
-			await this.autosaver.settle()
-
-			if (this.sessionEnded) {
-				await refreshRequestToken(
-					(...args) => fetch(...args),
-					generateUrl('/csrftoken'),
-				)
-			}
 
 			// A contactmoment is a `ticket` with ticketType 'interaction'
 			// (unify-ticket-supertype): subject→title, summary→description,
@@ -498,12 +430,8 @@ export default {
 			})
 
 			try {
-				const result = this.draftId
-					? await this.finishDraft(this.draftId, data)
-					: await this.createContactMoment(data)
+				const result = await this.saveContactMoment(data)
 				if (result) {
-					this.sessionEnded = false
-					this.draftId = null
 					showSuccess(t('pipelinq', 'Contactmoment logged successfully'))
 					this.$emit('saved', result)
 				}
@@ -515,245 +443,20 @@ export default {
 		},
 
 		/**
-		 * Save a contact moment that has no draft to finish.
-		 *
-		 * @param {object} data The ticket fields.
-		 * @return {Promise<object>} The saved ticket.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async createContactMoment(data) {
-			const result = await this.objectStore.saveObject(DRAFT_TYPE, data)
-			if (!result) {
-				throw draftError(this.objectStore.getError(DRAFT_TYPE))
-			}
-			return result
-		},
-
-		/**
-		 * Make the draft the saved contact moment: same object, same id.
-		 *
-		 * OpenRegister's owner action lays the form over the stored draft,
-		 * checks it against the whole ticket schema and moves it out of
-		 * draft. A draft that is gone (removed after seven days, or discarded
-		 * in another tab) is saved as a new contact moment instead.
-		 *
-		 * @param {string} id The draft's id.
-		 * @param {object} data The ticket fields.
-		 * @return {Promise<object>} The saved ticket.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async finishDraft(id, data) {
-			const response = await fetch(
-				generateUrl(
-					'/apps/openregister/api/objects/pipelinq/'
-						+ DRAFT_TYPE
-						+ '/'
-						+ id
-						+ '/activate',
-				),
-				{
-					method: 'POST',
-					credentials: 'same-origin',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: window.OC?.requestToken || '',
-						'OCS-APIREQUEST': 'true',
-					},
-					body: JSON.stringify({ object: data }),
-				},
-			)
-			if (response.ok) {
-				return await response.json()
-			}
-			if (response.status === 404 || response.status === 409) {
-				this.draftId = null
-				return this.createContactMoment(data)
-			}
-			const body = await response.json().catch(() => null)
-			throw draftError({
-				status: response.status,
-				message: refusalText(body),
-			})
-		},
-
-		/**
 		 * A failed save keeps the form and its draft. An ended session gets
 		 * its own message instead of the raw error.
 		 *
-		 * @param {object|null} error The store's error object.
+		 * @param {Error} error The failure `saveContactMoment` threw.
 		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
 		 */
 		keepFormAfterFailure(error) {
-			this.autosaver.resume()
-			if (isSessionEnded(error)) {
-				this.sessionEnded = true
+			if (error?.sessionEnded) {
 				this.errorMessage = ''
 				return
 			}
 			this.errorMessage =
 				error?.message || t('pipelinq', 'Failed to save contactmoment')
 			showError(this.errorMessage)
-		},
-
-		/**
-		 * Find this author's draft for this client and request, and offer it.
-		 *
-		 * `_drafts=true` asks OpenRegister for drafts alone. It answers the
-		 * agent's own, and an administrator's list can hold other people's,
-		 * so the owner is asked for and checked again in `pickDraft`.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async loadDraft() {
-			if (!this.author) {
-				return
-			}
-			let drafts
-			try {
-				drafts = await this.objectStore.fetchCollection(DRAFT_TYPE, {
-					ticketType: CONTACT_MOMENT_TYPE,
-					_drafts: 'true',
-					'@self[owner]': this.author,
-					_limit: 50,
-				})
-			} catch {
-				drafts = []
-			}
-			const offer = pickDraft(drafts || [], {
-				...this.draftContext,
-				now: new Date(),
-			})
-			if (offer) {
-				this.draftId = offer.id
-				this.offeredDraft = offer
-				return
-			}
-			this.draftWatching = true
-		},
-
-		/**
-		 * Put the draft's fields back in the form.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		restoreDraft() {
-			const kept = draftFormFrom(this.offeredDraft)
-			for (const key of Object.keys(this.form)) {
-				if (kept[key] !== undefined) {
-					this.form[key] = kept[key]
-				}
-			}
-			this.offeredDraft = null
-			this.draftWatching = true
-		},
-
-		/**
-		 * Throw the draft away and start from an empty form.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async discardDraft() {
-			this.offeredDraft = null
-			await this.dropDraft()
-			this.autosaver.resume()
-			this.draftWatching = true
-		},
-
-		/**
-		 * Remove the server draft, if there is one.
-		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
-		 */
-		async dropDraft() {
-			this.autosaver.stop()
-			if (this.draftId) {
-				const id = this.draftId
-				this.draftId = null
-				await this.objectStore.deleteObject(DRAFT_TYPE, id)
-			}
-		},
-
-		/**
-		 * Write the draft: create it once, then overwrite it.
-		 *
-		 * @param {object} payload The draft.
-		 * @param {{keepalive: boolean}} options Keepalive for a closing tab.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		async writeDraft(payload, { keepalive }) {
-			if (keepalive) {
-				await this.sendDraftKeepalive(
-					this.draftId ? 'PUT' : 'POST',
-					this.draftId,
-					payload,
-				)
-				return
-			}
-			const data = this.draftId ? { ...payload, id: this.draftId } : payload
-			const saved = await this.objectStore.saveObject(DRAFT_TYPE, data)
-			if (!saved) {
-				throw draftError(this.objectStore.getError(DRAFT_TYPE))
-			}
-			this.draftId = saved.id || this.draftId
-		},
-
-		/**
-		 * Remove the draft because the form was emptied.
-		 *
-		 * @param {{keepalive: boolean}} options Keepalive for a closing tab.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		async removeDraft({ keepalive }) {
-			if (!this.draftId) {
-				return
-			}
-			const id = this.draftId
-			this.draftId = null
-			if (keepalive) {
-				await this.sendDraftKeepalive('DELETE', id, null)
-				return
-			}
-			await this.objectStore.deleteObject(DRAFT_TYPE, id)
-		},
-
-		/**
-		 * The write a closing tab still delivers.
-		 *
-		 * @param {string} method POST, PUT or DELETE.
-		 * @param {string|null} id The draft's id, when it exists.
-		 * @param {object|null} payload The draft.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
-		 */
-		async sendDraftKeepalive(method, id, payload) {
-			const url = generateUrl(
-				'/apps/openregister/api/objects/pipelinq/'
-					+ DRAFT_TYPE
-					+ (id ? '/' + id : ''),
-			)
-			const response = await fetch(url, {
-				method,
-				keepalive: true,
-				credentials: 'same-origin',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: window.OC?.requestToken || '',
-					'OCS-APIREQUEST': 'true',
-				},
-				body: payload ? JSON.stringify(payload) : undefined,
-			})
-			if (!response.ok) {
-				throw draftError({ status: response.status })
-			}
-			// Hidden is also a switch to another tab, after which this page
-			// keeps typing: remember the id so the next write overwrites.
-			if (method === 'POST') {
-				try {
-					const created = await response.json()
-					this.draftId = created?.id || this.draftId
-				} catch {
-					// The tab closed before the answer was read.
-				}
-			}
 		},
 	},
 }
@@ -762,6 +465,7 @@ export default {
 <style scoped>
 .contactmoment-quicklog {
 	max-width: 600px;
+	min-width: 0;
 }
 
 .contactmoment-quicklog h3 {
@@ -769,7 +473,14 @@ export default {
 }
 
 .form-group {
+	min-width: 0;
 	margin-bottom: 16px;
+}
+
+/* NcSelect keeps a 260px minimum, which pushed a half-width card's paired fields past its edge. */
+.form-group :deep(.v-select.select) {
+	min-width: 0;
+	width: 100%;
 }
 
 .form-group label {
@@ -780,13 +491,30 @@ export default {
 	font-size: 13px;
 }
 
-.form-row {
-	display: flex;
-	gap: 16px;
+/* Board look (PqKlant, PqOrganisatie "Contactmoment registreren"): the
+   inline form's own labels are 14/600 in the main ink, 6px above their
+   field, the fields 14px apart and the buttons 10px apart; nc-vue's
+   `cn-board-form` raises the text fields' labels the same way. */
+.cn-look-board .cn-board-form .form-group {
+	margin-bottom: 14px;
 }
 
-.form-row .form-group {
-	flex: 1;
+.cn-look-board .cn-board-form .form-group label {
+	margin-bottom: 6px;
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cn-look-board .cn-board-form .form-actions {
+	gap: 10px;
+	margin-top: 0;
+}
+
+.form-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 12px;
 }
 
 .draft-actions {
@@ -797,6 +525,7 @@ export default {
 
 .form-actions {
 	display: flex;
+	justify-content: flex-end;
 	gap: 8px;
 	margin-top: 20px;
 }

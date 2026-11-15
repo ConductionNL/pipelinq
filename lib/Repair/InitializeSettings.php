@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\SettingsService;
-use OCA\Pipelinq\Service\SystemTagService;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -97,18 +97,44 @@ class InitializeSettings implements IRepairStep {
 		$output->startProgress(5);
 
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-			$output->warning('OpenRegister app is not installed -- skipping configuration import');
-			$this->logger->warning('Pipelinq: OpenRegister not available, skipping register initialization');
-			$output->advance(3);
-			$output->finishProgress();
+			$this->skipWithoutOpenRegister(output: $output);
 			return;
 		}
 
 		$output->info('Loading Pipelinq configuration...');
 		$output->advance(1);
 
+		$this->loadConfiguration(output: $output);
+		$this->createDefaultPipelines(output: $output);
+		$this->createDefaultTags(output: $output);
+		$this->createDefaultSkills(output: $output);
+		$output->finishProgress();
+	}//end run()
+
+	/**
+	 * Warn that OpenRegister is missing and finish the progress early.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 */
+	private function skipWithoutOpenRegister(IOutput $output): void {
+		$output->warning('OpenRegister app is not installed -- skipping configuration import');
+		$this->logger->warning('Pipelinq: OpenRegister not available, skipping register initialization');
+		$output->advance(3);
+		$output->finishProgress();
+	}//end skipWithoutOpenRegister()
+
+	/**
+	 * Import the register and schemas through the settings service.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 */
+	private function loadConfiguration(IOutput $output): void {
 		try {
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$result = $settingsService->loadSettings(force: false);
 
 			$registerCount = count($result['registers'] ?? []);
@@ -122,11 +148,19 @@ class InitializeSettings implements IRepairStep {
 		}
 
 		$output->advance(1);
+	}//end loadConfiguration()
 
-		// Create default pipelines if none exist.
+	/**
+	 * Create the default pipelines if none exist.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 */
+	private function createDefaultPipelines(IOutput $output): void {
 		$output->info('Checking default pipelines...');
 		try {
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$settingsService->createDefaultPipelines();
 			$output->info('Default pipelines checked/created');
 		} catch (\Exception $e) {
@@ -135,19 +169,19 @@ class InitializeSettings implements IRepairStep {
 		}
 
 		$output->advance(1);
+	}//end createDefaultPipelines()
 
-		// Create default lead sources and request channels.
+	/**
+	 * Create the default lead sources and request channels.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 */
+	private function createDefaultTags(IOutput $output): void {
 		$output->info('Checking default lead sources and request channels...');
 		try {
-			$systemTagService = $this->container->get(SystemTagService::class);
-			$systemTagService->ensureDefaults(
-				objectType: 'pipelinq_lead_source',
-				defaults: self::DEFAULT_LEAD_SOURCES
-			);
-			$systemTagService->ensureDefaults(
-				objectType: 'pipelinq_request_channel',
-				defaults: self::DEFAULT_REQUEST_CHANNELS
-			);
+			$this->ensureDefaultTags();
 			$output->info('Default lead sources and request channels checked/created');
 		} catch (\Exception $e) {
 			$output->warning('Failed to create default tags: ' . $e->getMessage());
@@ -155,11 +189,36 @@ class InitializeSettings implements IRepairStep {
 		}
 
 		$output->advance(1);
+	}//end createDefaultTags()
 
-		// Create default skills if none exist.
+	/**
+	 * Make sure the default lead sources and request channels exist.
+	 *
+	 * @return void
+	 */
+	private function ensureDefaultTags(): void {
+		$systemTagService = $this->container->get(SystemTagServiceInterface::class);
+		$systemTagService->ensureDefaults(
+			objectType: 'pipelinq_lead_source',
+			defaults: self::DEFAULT_LEAD_SOURCES
+		);
+		$systemTagService->ensureDefaults(
+			objectType: 'pipelinq_request_channel',
+			defaults: self::DEFAULT_REQUEST_CHANNELS
+		);
+	}//end ensureDefaultTags()
+
+	/**
+	 * Create the default skills if none exist.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 */
+	private function createDefaultSkills(IOutput $output): void {
 		$output->info('Checking default skills...');
 		try {
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$settingsService->createDefaultSkills();
 			$output->info('Default skills checked/created');
 		} catch (\Exception $e) {
@@ -171,6 +230,5 @@ class InitializeSettings implements IRepairStep {
 		}
 
 		$output->advance(1);
-		$output->finishProgress();
-	}//end run()
+	}//end createDefaultSkills()
 }//end class

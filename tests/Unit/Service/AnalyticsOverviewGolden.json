@@ -1,0 +1,262 @@
+{
+    "empty / week": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "week",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "empty / month": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "month",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "empty / quarter": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "quarter",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "empty / year": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "year",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "spread / week": {
+        "leadConversionRate": 33.3,
+        "avgRequestResolutionTime": 30.0,
+        "contactMomentVolume": 3,
+        "customerSatisfactionScore": null,
+        "period": "week",
+        "previousPeriod": {
+            "leadConversionRate": 0.0,
+            "avgRequestResolutionTime": 78.0,
+            "contactMomentVolume": 1,
+            "customerSatisfactionScore": null
+        }
+    },
+    "spread / month": {
+        "leadConversionRate": 33.3,
+        "avgRequestResolutionTime": 34.0,
+        "contactMomentVolume": 6,
+        "customerSatisfactionScore": null,
+        "period": "month",
+        "previousPeriod": {
+            "leadConversionRate": 0.0,
+            "avgRequestResolutionTime": 46.0,
+            "contactMomentVolume": 3,
+            "customerSatisfactionScore": null
+        }
+    },
+    "spread / quarter": {
+        "leadConversionRate": 25.0,
+        "avgRequestResolutionTime": 42.0,
+        "contactMomentVolume": 12,
+        "customerSatisfactionScore": null,
+        "period": "quarter",
+        "previousPeriod": {
+            "leadConversionRate": 0.0,
+            "avgRequestResolutionTime": 30.0,
+            "contactMomentVolume": 3,
+            "customerSatisfactionScore": null
+        }
+    },
+    "spread / year": {
+        "leadConversionRate": 22.2,
+        "avgRequestResolutionTime": 39.33,
+        "contactMomentVolume": 18,
+        "customerSatisfactionScore": null,
+        "period": "year",
+        "previousPeriod": {
+            "leadConversionRate": 33.3,
+            "avgRequestResolutionTime": 46.0,
+            "contactMomentVolume": 3,
+            "customerSatisfactionScore": null
+        }
+    },
+    "lead date fields / week": {
+        "leadConversionRate": 60.0,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "week",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "lead date fields / month": {
+        "leadConversionRate": 60.0,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "month",
+        "previousPeriod": {
+            "leadConversionRate": 100.0,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "lead date fields / quarter": {
+        "leadConversionRate": 66.7,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "quarter",
+        "previousPeriod": {
+            "leadConversionRate": 100.0,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "lead date fields / year": {
+        "leadConversionRate": 71.4,
+        "avgRequestResolutionTime": null,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "year",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "request edges / week": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": 236.4,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "week",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "request edges / month": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": 236.4,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "month",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": 120.0,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "request edges / quarter": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": 217.0,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "quarter",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "request edges / year": {
+        "leadConversionRate": null,
+        "avgRequestResolutionTime": 217.0,
+        "contactMomentVolume": 0,
+        "customerSatisfactionScore": null,
+        "period": "year",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "moment fields / week": {
+        "leadConversionRate": 0.0,
+        "avgRequestResolutionTime": 12.0,
+        "contactMomentVolume": 2,
+        "customerSatisfactionScore": null,
+        "period": "week",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "moment fields / month": {
+        "leadConversionRate": 0.0,
+        "avgRequestResolutionTime": 12.0,
+        "contactMomentVolume": 3,
+        "customerSatisfactionScore": null,
+        "period": "month",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 1,
+            "customerSatisfactionScore": null
+        }
+    },
+    "moment fields / quarter": {
+        "leadConversionRate": 0.0,
+        "avgRequestResolutionTime": 12.0,
+        "contactMomentVolume": 4,
+        "customerSatisfactionScore": null,
+        "period": "quarter",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    },
+    "moment fields / year": {
+        "leadConversionRate": 0.0,
+        "avgRequestResolutionTime": 12.0,
+        "contactMomentVolume": 4,
+        "customerSatisfactionScore": null,
+        "period": "year",
+        "previousPeriod": {
+            "leadConversionRate": null,
+            "avgRequestResolutionTime": null,
+            "contactMomentVolume": 0,
+            "customerSatisfactionScore": null
+        }
+    }
+}

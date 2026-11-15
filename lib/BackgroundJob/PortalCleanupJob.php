@@ -19,14 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-010
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Portal\PortalCleanupService;
+use OCA\Pipelinq\Kernel\Contracts\PortalCleanupServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -51,12 +51,12 @@ class PortalCleanupJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param PortalCleanupService $cleanup The cleanup service.
+	 * @param PortalCleanupServiceInterface $cleanup The cleanup service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private PortalCleanupService $cleanup,
+		private PortalCleanupServiceInterface $cleanup,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

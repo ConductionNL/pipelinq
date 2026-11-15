@@ -33,7 +33,7 @@ vi.mock('../../src/store/modules/object.js', () => ({
 vi.mock('../../src/store/modules/leadSources.js', () => ({
 	useLeadSourcesStore: () => ({
 		fetchSources: vi.fn(async () => []),
-		sources: [],
+		sourceNames: [],
 	}),
 }))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({

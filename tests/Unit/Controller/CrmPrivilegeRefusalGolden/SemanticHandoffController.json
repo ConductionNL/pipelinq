@@ -1,0 +1,186 @@
+{
+    "requestAvailability no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "status": "unauthorized"
+        },
+        "trace": []
+    },
+    "requestAvailability unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "status": "forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "requestAvailability privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "TicketServiceInterface::getSchemaId": []
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            }
+        ]
+    },
+    "convertRequestToCase no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "status": "unauthorized"
+        },
+        "trace": []
+    },
+    "convertRequestToCase unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "status": "forbidden"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "intern"
+                ]
+            }
+        ]
+    },
+    "convertRequestToCase privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "ObjectOwnerAccessPolicy::isPrivileged": [
+                    "crm-user"
+                ]
+            },
+            {
+                "TicketServiceInterface::getSchemaId": []
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            }
+        ]
+    },
+    "contractAvailability no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "status": "unauthorized"
+        },
+        "trace": []
+    },
+    "contractAvailability unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "IAppConfig::getValueString": [
+                    "pipelinq",
+                    "contract_schema"
+                ]
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            }
+        ]
+    },
+    "contractAvailability privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "IAppConfig::getValueString": [
+                    "pipelinq",
+                    "contract_schema"
+                ]
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            }
+        ]
+    },
+    "sendContractToInvoicing no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "status": "unauthorized"
+        },
+        "trace": []
+    },
+    "sendContractToInvoicing unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "IAppConfig::getValueString": [
+                    "pipelinq",
+                    "contract_schema"
+                ]
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            }
+        ]
+    },
+    "sendContractToInvoicing privileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 404,
+        "data": {
+            "status": "not-found"
+        },
+        "trace": [
+            {
+                "IAppConfig::getValueString": [
+                    "pipelinq",
+                    "contract_schema"
+                ]
+            },
+            {
+                "ContainerInterface::get": [
+                    "OCA\\OpenRegister\\Service\\ObjectService"
+                ]
+            }
+        ]
+    }
+}

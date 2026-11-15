@@ -26,10 +26,12 @@ use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\WorkflowEngine\IManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use UnexpectedValueException;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 
 /**
  * @covers \OCA\Pipelinq\Flow\CompetitorWatchRunNode
@@ -134,7 +136,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 			->with(7, 'automation')
 			->willReturn(['watches' => 2, 'events' => 3, 'failures' => []]);
 
-		$out = $this->node->execute(items: [], config: ['limit' => 7], context: ['runAs' => 'automation']);
+		$out = $this->node->execute(new FlowNodeCall(items: [], config: ['limit' => 7], context: ['runAs' => 'automation']));
 
 		$this->assertCount(1, $out);
 		$this->assertSame(2, $out[0]['json'][CompetitorWatchRunNode::OUTCOME_KEY]['watches']);
@@ -151,7 +153,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 			->method('runDue')
 			->willReturn(['watches' => 0, 'events' => 0, 'failures' => []]);
 
-		$this->assertCount(1, $this->node->execute(items: [], config: [], context: []));
+		$this->assertCount(1, $this->node->execute(new FlowNodeCall(items: [], config: [], context: [])));
 	}//end testAnEmptyFiringStillRuns()
 
 	/**
@@ -165,7 +167,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 			['watches' => 3, 'events' => 1, 'failures' => ['watch-2' => 'answered 403']]
 		);
 
-		$out = $this->node->execute(items: [], config: [], context: []);
+		$out = $this->node->execute(new FlowNodeCall(items: [], config: [], context: []));
 		$summary = $out[0]['json'][CompetitorWatchRunNode::OUTCOME_KEY];
 
 		$this->assertSame(3, $summary['watches']);
@@ -205,4 +207,56 @@ class CompetitorWatchRunNodeTest extends TestCase {
 		$this->assertNotSame('', $this->node->getDisplayName());
 		$this->assertNotSame('', $this->node->getDescription());
 	}//end testThePaletteEntryIsFilledIn()
+
+	/**
+	 * Items handed in by an earlier node each keep their own record and gain
+	 * the run summary; the watches still run only once per firing.
+	 *
+	 * @return void
+	 */
+	public function testEachIncomingItemCarriesTheSummary(): void {
+		$summary = ['watches' => 1, 'events' => 0, 'failures' => []];
+		$this->watches->expects($this->once())->method('runDue')->willReturn($summary);
+
+		$out = $this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 'a']], ['json' => ['id' => 'b'], 'binary' => 'x']], config: [], context: []));
+
+		$this->assertSame(
+			[
+				['json' => ['id' => 'a', CompetitorWatchRunNode::OUTCOME_KEY => $summary]],
+				['json' => ['id' => 'b', CompetitorWatchRunNode::OUTCOME_KEY => $summary], 'binary' => 'x'],
+			],
+			$out
+		);
+	}//end testEachIncomingItemCarriesTheSummary()
+
+	/**
+	 * The node is offered in the admin and user scopes and nowhere else.
+	 *
+	 * @return void
+	 */
+	public function testIsOfferedInTheAdminAndUserScopesOnly(): void {
+		$this->assertTrue($this->node->isAvailableForScope(IManager::SCOPE_ADMIN));
+		$this->assertTrue($this->node->isAvailableForScope(IManager::SCOPE_USER));
+		$this->assertFalse($this->node->isAvailableForScope(99));
+	}//end testIsOfferedInTheAdminAndUserScopesOnly()
+
+	/**
+	 * The palette icon is the app's dark icon.
+	 *
+	 * @return void
+	 */
+	public function testThePaletteIconIsTheAppIcon(): void {
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->expects($this->once())
+			->method('imagePath')
+			->with('pipelinq', 'app-dark.svg')
+			->willReturn('/apps/pipelinq/img/app-dark.svg');
+		$node = new CompetitorWatchRunNode(
+			l10n: $this->createMock(IL10N::class),
+			urls: $urls,
+			watches: $this->watches
+		);
+
+		$this->assertSame('/apps/pipelinq/img/app-dark.svg', $node->getIcon());
+	}//end testThePaletteIconIsTheAppIcon()
 }//end class

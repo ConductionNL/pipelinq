@@ -25,15 +25,16 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
+use OCA\Pipelinq\Controller\Support\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -42,8 +43,6 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -66,26 +65,29 @@ use Throwable;
  *  thin payment controller legitimately needs (service + session + l10n +
  *  request + logger); splitting them would add indirection.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PosPaymentController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosPaymentService $service The payment service.
+	 * @param PosPaymentServiceInterface $service The payment service.
 	 * @param IUserSession $session The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosPaymentService $service,
+		private PosPaymentServiceInterface $service,
 		private IUserSession $session,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	// ---------------------------------------------------------------------
@@ -99,7 +101,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function index(): JSONResponse {
 		try {
@@ -119,7 +121,7 @@ class PosPaymentController extends Controller {
 	 * @auth admin-only Reads one payment provider's configuration; restricted
 	 *       to server administrators by the framework default.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function show(string $name): JSONResponse {
 		try {
@@ -141,8 +143,8 @@ class PosPaymentController extends Controller {
 	 * @auth admin-only Writes payment-provider credentials for the instance;
 	 *       restricted to server administrators by the framework default.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function update(string $name): JSONResponse {
 		try {
@@ -166,7 +168,7 @@ class PosPaymentController extends Controller {
 	 *       credentials; restricted to server administrators by the framework
 	 *       default.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 	 */
 	public function test(string $name): JSONResponse {
 		try {
@@ -183,13 +185,36 @@ class PosPaymentController extends Controller {
 	// ---------------------------------------------------------------------
 
 	/**
+	 * GET /api/pos-payments/methods — the payment methods a cashier can choose.
+	 *
+	 * Names only (provider, its label and type, the method): no credential and
+	 * no provider config, so every signed-in user may read it. The provider
+	 * configuration endpoints above stay admin-only.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @no-admin-idor-exempt Takes no object id: the same instance-wide list of provider and method names
+	 *       for every signed-in user, with no credential and no per-object data.
+	 *
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 */
+	#[NoAdminRequired]
+	public function methods(): JSONResponse {
+		try {
+			return new JSONResponse(['methods' => $this->service->listPaymentMethods()]);
+		} catch (Throwable $e) {
+			return $this->serverError(label: 'methods', exception: $e);
+		}
+	}//end methods()
+
+	/**
 	 * POST /api/pos-payments/{id}/initiate — initiate payment.
 	 *
 	 * @param string $id The transaction id.
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
 	 */
 	#[NoAdminRequired]
 	public function initiate(string $id): JSONResponse {
@@ -225,7 +250,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-004
 	 */
 	#[NoAdminRequired]
 	public function capture(string $id): JSONResponse {
@@ -247,7 +272,7 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-005
 	 */
 	#[NoAdminRequired]
 	public function refund(string $id): JSONResponse {
@@ -294,7 +319,7 @@ class PosPaymentController extends Controller {
 	 * The rate-limit ceiling is loose because this is a POS payment provider
 	 * callback.
 	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -334,6 +359,17 @@ class PosPaymentController extends Controller {
 			);
 		}
 
+		return $this->webhookAnswer(result: $result);
+	}//end webhook()
+
+	/**
+	 * The answer to the provider for what the service made of the delivery.
+	 *
+	 * @param array<string, mixed> $result The service's verdict.
+	 *
+	 * @return JSONResponse 400 for an invalid signature, 503 when unmatched, else 200 with the verdict.
+	 */
+	private function webhookAnswer(array $result): JSONResponse {
 		$status = (string)($result['status'] ?? '');
 		if ($status === 'invalid') {
 			return new JSONResponse(
@@ -359,7 +395,7 @@ class PosPaymentController extends Controller {
 		}
 
 		return new JSONResponse($result);
-	}//end webhook()
+	}//end webhookAnswer()
 
 	// ---------------------------------------------------------------------
 	// Helpers.
@@ -391,20 +427,7 @@ class PosPaymentController extends Controller {
 	 * @return string
 	 */
 	private function readRawBody(): string {
-		$body = file_get_contents('php://input');
-		if (is_string($body) === true && $body !== '') {
-			return $body;
-		}
-
-		$params = $this->request->getParams();
-		if (is_array($params) === true && $params !== []) {
-			$encoded = json_encode($params);
-			if (is_string($encoded) === true) {
-				return $encoded;
-			}
-		}
-
-		return '';
+		return (new RequestBody(request: $this->request))->raw();
 	}//end readRawBody()
 
 	/**
@@ -413,15 +436,7 @@ class PosPaymentController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->session->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->session->getUser());
 	}//end requireUserId()
 
 	/**
@@ -451,14 +466,8 @@ class PosPaymentController extends Controller {
 	private function run(callable $action, string $label): JSONResponse {
 		try {
 			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (Throwable $e) {
-			return $this->serverError(label: $label, exception: $e);
+			return ($this->ocsErrorResponse(failure: $e) ?? $this->serverError(label: $label, exception: $e));
 		}//end try
 	}//end run()
 

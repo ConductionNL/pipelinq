@@ -22,7 +22,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Counts satisfaction invitations into response-rate figures.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 class SurveyInvitationFigures {
 
@@ -46,7 +46,7 @@ class SurveyInvitationFigures {
 	 *
 	 * @return array{delivered: int, responded: int, rate: float, suppressed: int, failed: int} The figures.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function rate(array $invitations): array {
 		$counts = ['sent' => 0, 'responded' => 0, 'suppressed' => 0, 'failed' => 0];
@@ -79,7 +79,7 @@ class SurveyInvitationFigures {
 	 *
 	 * @return array<string, array<string, int|float>> The figures by channel, sorted.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function byChannel(array $invitations): array {
 		$groups = [];
@@ -110,16 +110,28 @@ class SurveyInvitationFigures {
 	 *
 	 * @return array<int, array<string, mixed>> The invitations inside the period.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function withinDays(array $invitations, int $days, ?DateTimeImmutable $now = null): array {
 		if ($days <= 0) {
 			return array_values($invitations);
 		}
 
-		$now   = ($now ?? new DateTimeImmutable());
-		$since = $now->modify("-{$days} days");
-		$kept  = [];
+		$now = ($now ?? new DateTimeImmutable());
+		return $this->dueBetween(invitations: $invitations, period: [$now->modify("-{$days} days"), $now]);
+	}//end withinDays()
+
+	/**
+	 * The invitations that fell due inside a period, both ends included.
+	 *
+	 * @param array<int, array<string, mixed>>                   $invitations The invitations.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $period      Its start and its end.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations inside the period.
+	 */
+	private function dueBetween(array $invitations, array $period): array {
+		[$since, $now] = $period;
+		$kept = [];
 		foreach ($invitations as $invitation) {
 			$dueAt = $this->dueAt(invitation: $invitation);
 			if ($dueAt !== null && $dueAt >= $since && $dueAt <= $now) {
@@ -128,7 +140,7 @@ class SurveyInvitationFigures {
 		}
 
 		return $kept;
-	}//end withinDays()
+	}//end dueBetween()
 
 	/**
 	 * When an invitation fell due, or null when it does not say.

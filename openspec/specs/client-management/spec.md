@@ -205,7 +205,8 @@ The system MUST validate client data according to schema rules and field format 
 - GIVEN a user creating or editing a client
 - WHEN they enter invalid data in any field
 - THEN validation errors MUST appear inline next to the relevant field
-- AND the save button MUST be disabled while required fields are empty or validation errors exist
+- AND no error shows before the first save; saving with an empty required field shows the error at that field and saves nothing, as on board `PqKlantNieuw`
+- AND that board draws the e-mail error ("Ongeldig e-mailadres"); the website and name length errors use the same inline pattern
 
 ---
 
@@ -290,7 +291,7 @@ The system MUST provide a detail view for each client showing all properties, su
 - GIVEN a person client "Jan de Vries" with email "jan@devries.nl"
 - WHEN the user navigates to the client detail view
 - THEN the system MUST display all client properties
-- AND the type MUST be displayed as "Person"
+- AND the type MUST be displayed as "Persoon" (Person)
 - AND the taxID field SHOULD NOT be prominently displayed for person clients
 
 #### Scenario: Display summary statistics
@@ -808,8 +809,8 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 - WHEN a user without the "bsn_access" permission views the client detail
 - THEN the BSN field MUST NOT be visible at all (not masked, fully hidden)
 - AND when a user with "bsn_access" permission views the client detail
-- THEN the BSN MUST be displayed masked as "****-**-123" (last 3 digits visible)
-- AND an explicit "Show BSN" action MUST be required to reveal the full number
+- THEN the BSN MUST be displayed masked as "*****4001" (last 4 digits visible), with "Tonen" to show it
+- AND an explicit "BSN tonen" (Show BSN) action MUST be required to reveal the full number
 
 #### Scenario: BSN validation (elfproef)
 @e2e exclude server validation algorithm; covered by PHPUnit
@@ -849,58 +850,17 @@ The system MUST handle BSN (Burgerservicenummer) data in compliance with Dutch p
 
 ### Requirement: Client Deduplication and Merge
 
-The system MUST support merging duplicate client records into a single consolidated record, transferring all linked entities (contact persons, leads, requests) and preserving the full audit history.
+Merging two clients SHALL happen in OpenRegister (REQ-MDM-013), with its field-by-field preview and its reversal. Pipelinq SHALL NOT offer a merge screen of its own; the client page SHALL show one line that the record was merged into another, with a link to that record, and SHALL be read-only from then on. Board: pipelinq/PqKlant (decision 288).
 
-**Feature tier**: V1
+#### Scenario: A merged client is read on its page
+- GIVEN client K-2019-01184 was merged into Sanne J. de Vries in OpenRegister
+- WHEN a user opens the merged client
+- THEN the page shows "Samengevoegd met Sanne J. de Vries (K-2019-01184) op 2 oktober 2026" with Open het samengevoegde record
+- AND editing is disabled on this record
 
-#### Scenario: Identify merge candidates
-@e2e exclude backend algorithm; covered by PHPUnit
-
-- GIVEN existing clients "Gemeente Utrecht" (ID: abc-111, with 3 leads) and "Gem. Utrecht" (ID: abc-222, with 1 lead and 2 contacts)
-- WHEN the user selects both clients in the list view and clicks "Merge"
-- THEN the system MUST display a merge preview showing:
-  - Both client records side-by-side with all fields
-  - A field-by-field selector allowing the user to choose which value to keep for each property
-  - A summary of linked entities that will be transferred: 4 leads, 2 contacts
-  - The target (surviving) client record
-
-#### Scenario: Execute client merge
-@e2e exclude backend merge service; covered by PHPUnit
-
-- GIVEN the user has configured a merge of "Gem. Utrecht" into "Gemeente Utrecht"
-- WHEN the user confirms the merge
-- THEN the system MUST update the surviving client "Gemeente Utrecht" with the selected field values
-- AND the system MUST re-link all contact persons from "Gem. Utrecht" to "Gemeente Utrecht" (update `client` UUID reference)
-- AND the system MUST re-link all leads from "Gem. Utrecht" to "Gemeente Utrecht"
-- AND the system MUST re-link all requests from "Gem. Utrecht" to "Gemeente Utrecht"
-- AND the system MUST delete the source client "Gem. Utrecht"
-- AND the audit trail MUST record the merge operation with both client IDs and the user who performed it
-
-#### Scenario: Merge preserves Nextcloud contact link
-@e2e exclude backend service; covered by PHPUnit
-
-- GIVEN client A has a `contactsUid` linking to a Nextcloud vCard and client B does not
-- WHEN client B is merged into client A
-- THEN the surviving client A MUST retain its `contactsUid` link
-- AND if both clients had `contactsUid` links, the surviving client MUST keep its own link and the system SHOULD log that the duplicate link was discarded
-
-#### Scenario: Merge from duplicate detection
-@e2e exclude requires seed data and dedup service
-
-- GIVEN the duplicate detection system has flagged "Acme B.V." and "ACME BV" as potential duplicates
-- WHEN the user clicks "Merge" on the duplicate warning
-- THEN the system MUST open the merge preview with both clients pre-selected
-- AND the user MUST be able to proceed through the standard merge flow
-
-#### Scenario: Cancel a merge
-@e2e exclude UI flow requiring seed data
-
-- GIVEN the user has opened the merge preview for two clients
-- WHEN the user clicks "Cancel"
-- THEN no changes MUST be made to either client
-- AND no linked entities MUST be modified
-
----
+#### Scenario: Merging and undoing happen in OpenRegister
+- WHEN a user wants to merge or undo a merge
+- THEN pipelinq links to OpenRegister's merge screen and offers no merge dialog of its own
 
 ### Requirement: Client Hierarchy (Parent/Child Organizations)
 
@@ -1012,7 +972,7 @@ The system MUST support tagging and categorizing clients for segmentation purpos
 
 ### Requirement: Client Health Scoring
 
-The system SHOULD calculate and display a client health score based on relationship activity metrics. The health score helps sales teams prioritize follow-ups and identify at-risk client relationships.
+The system SHALL calculate and display a client health score based on relationship activity metrics. The health score helps sales teams prioritize follow-ups and identify at-risk client relationships.
 
 **Feature tier**: Enterprise
 
@@ -1053,14 +1013,14 @@ The system SHOULD calculate and display a client health score based on relations
 
 - GIVEN a client "NewCo B.V." created 3 days ago with 1 lead created
 - WHEN the system calculates the health score
-- THEN the system SHOULD display "New" instead of a numeric score for clients less than 30 days old
+- THEN the system SHOULD display "Nieuw" (New) instead of a numeric score for clients less than 30 days old
 - AND the system MUST NOT penalize new clients for lack of historical activity
 
 ---
 
 ### Requirement: Client Lifecycle Analytics
 
-The system SHOULD provide analytics about the client lifecycle, including acquisition rates, retention metrics, and revenue trends per client.
+The system SHALL provide analytics about the client lifecycle, including acquisition rates, retention metrics, and revenue trends per client.
 
 **Feature tier**: Enterprise
 
@@ -1088,11 +1048,10 @@ The system SHOULD provide analytics about the client lifecycle, including acquis
 @e2e exclude analytics; V1 feature
 
 - GIVEN clients with the following patterns:
-  - "Active Client A": has leads or requests in the last 90 days
-  - "Dormant Client B": last activity was 180 days ago, no open leads or requests
-  - "Churned Client C": last activity was 365+ days ago
+  - "Active Client A": had contact in the last 12 months
+  - "Inactive Client B": last contact was 13 months ago
 - WHEN the user views the client analytics dashboard
-- THEN the system MUST categorize clients as: Active (activity in last 90 days), Dormant (90-365 days), Churned (365+ days)
+- THEN the system MUST categorize clients as Active or Inactive (no contact in the last 12 months), as on board `PqReports`
 - AND display counts and percentages for each category
 - AND the user MUST be able to filter the client list by lifecycle status
 
@@ -1342,7 +1301,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 @e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
-- WHEN they add a custom field with label "Contract Number", type "text", and maxLength 50
+- WHEN they add a custom field with label "Contractnummer" (Contract Number), type "text", and maxLength 50
 - THEN the system MUST add the field to the client schema in OpenRegister
 - AND the field MUST appear in the client create/edit form
 - AND the field MUST appear in the client detail view
@@ -1361,7 +1320,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 @e2e exclude Enterprise custom fields; not yet implemented
 
 - GIVEN an administrator in the Pipelinq settings
-- WHEN they add a custom field with label "Contract Expiry", type "date"
+- WHEN they add a custom field with label "Contract verloopt" (Contract Expiry), type "date"
 - THEN the system MUST render the field with a date picker in the client form
 - AND the system SHOULD support creating notifications/reminders based on this date (e.g., 30 days before expiry)
 
@@ -1370,7 +1329,7 @@ The system MUST support adding custom fields to the client schema to accommodate
 
 - GIVEN a custom field "Contract Number" exists on the client schema
 - WHEN the user imports clients from CSV
-- THEN the column mapping step MUST include "Contract Number" as an available target field
+- THEN the column mapping step MUST include "Contractnummer" (Contract Number) as an available target field
 - AND imported values MUST be validated against the custom field's constraints
 
 #### Scenario: Delete a custom field
@@ -1492,10 +1451,10 @@ The forms SHALL show `correspondenceLanguage` and hide `language`. The repair st
 
 ### Requirement: The contact page shows the person and their deals above the fold (REQ-DPG-001)
 
-ContactDetail SHALL show one "Open deals" KPI: the total value of the person's
+ContactDetail SHALL show one "Openstaande deals" (Open deals) KPI: the total value of the person's
 open deals in the reporting currency, with the number of open deals beside
 it. The relationships, subscriptions and BSN lookup SHALL sit in a "Profile"
-tab strip, and the contact channels and messages in the "Communication" tab
+tab strip, and the contact channels and messages in the "Communicatie" (Communication) tab
 strip, inside the page grid. No section SHALL render below the grid.
 
 #### Scenario: An account manager opens a contact
@@ -1514,7 +1473,7 @@ strip, inside the page grid. No section SHALL render below the grid.
 ### Requirement: Every data block carries its own title (REQ-DPG-002)
 
 Data widgets on the contact, client, lead and ticket pages SHALL declare their
-title in `content.title`, so a block reads "Contact details", "Deal" or
+title in `content.title`, so a block reads "Contactgegevens" (Contact details), "Deal" or
 "Ticket details" instead of "Data".
 
 #### Scenario: A user reads a ticket
@@ -1543,14 +1502,138 @@ lists, filters and detail pages MUST show the label, never the stored code.
 
 ### Requirement: Add buttons speak the interface language (REQ-CLM-ADD-LABEL-L10N)
 The Add button text of every object-list widget in the manifest MUST be English
-source text with an nl catalogue entry, and MUST be translated before it is shown.
+source text with an nl catalogue entry. CnObjectListWidget translates it through
+the app's translate function; pipelinq MUST NOT translate it before the manifest
+reaches CnAppRoot.
 
 #### Scenario: The contact person list on the client page
-@e2e exclude Asserted in tests/vitest/readableValues.spec.js on the manifest and translateWidgetAddLabels.
+@e2e exclude Asserted in tests/vitest/readableValues.spec.js on the manifest and the library's CnObjectListWidget.
 - **GIVEN** a user with an English interface opens a client
 - **WHEN** they look at the contact person list
-- **THEN** the button MUST read "Add contact person"
+- **THEN** the button MUST read "Contactpersoon toevoegen" (Add contact person)
 - **AND** a user with a Dutch interface MUST read "Contactpersoon toevoegen"
+
+### Requirement: Cards on the client page follow a contact added on that page
+When a user adds a contact person on a client's Contacts tab, the client page MUST update without a reload. The Messages card MUST offer the new contact, and the Related card MUST list it with the client's other related records. The contact-first create MUST announce the new object the same way the library's own create does (`cn-walkthrough:object-created` with register `pipelinq` and the schema slug).
+
+#### Scenario: The Messages card after a contact is added
+@e2e exclude Asserted in tests/vitest/r6ContactActivityRelationsCopy.spec.js: the real ContactAwareObjectListWidget create announces the contact, the real page refresh listener answers it, and the real MessagingConversationSection refetches the client's contacts on that refresh.
+- **GIVEN** a client with no contact persons, whose Messages card says no contacts are linked
+- **WHEN** the user adds a contact person on the Contacts tab
+- **THEN** the Messages card MUST fetch the client's contacts again and offer the new contact
+
+#### Scenario: The Related card after a contact is added
+@e2e exclude Asserted in tests/vitest/r6ContactActivityRelationsCopy.spec.js: a new contact sends a refresh on `cn:widget:refresh`, the channel CnRelatedObjectsWidget reloads on. That the contact is in the client's `/used` follows from its `client` reference being in `_relations`.
+- **GIVEN** a client page showing "No relations yet" in its Related card
+- **WHEN** the user adds a contact person on the Contacts tab
+- **THEN** the Related card MUST reload and list the contact
+
+### Requirement: The Messages card empty state reads as plain text
+The Messages card on a client with no contact persons MUST say so without an em-dash, in English and Dutch.
+
+#### Scenario: A client without contacts
+@e2e exclude Copy check; asserted in tests/vitest/r6ContactActivityRelationsCopy.spec.js against the component source and the en and nl catalogues.
+- **GIVEN** a client with no contact persons
+- **WHEN** the user opens the client
+- **THEN** the Messages card MUST read "No contacts are linked to this client yet. Add a contact to send messages."
+
+### Requirement: The organisations list counts open tickets and shows the last contact
+
+The organisations list MUST count, per organisation, its requests and complaints with status new, in progress or awaiting the customer as open tickets. It MUST show the date of the organisation's newest contact moment as its last contact, and "Nog geen contact" when there is none.
+
+#### Scenario: Buurtvereniging Oost
+
+- GIVEN Buurtvereniging Oost has two open requests, two resolved requests and one contact moment on 2 October
+- WHEN the organisations list opens
+- THEN its open tickets read 2
+- AND its last contact reads 2 okt
+
+### Requirement: Selected organisations can be filled in from the KvK
+
+A user with the CRM capability MUST be able to select organisations and get, per organisation the KvK knows, a proposal for each empty field the KvK can fill (KvK number, legal form, place). A different value MUST be proposed unticked and flagged. Only accepted proposals MUST be written. People MUST NOT be looked up.
+
+#### Scenario: an empty KvK number
+
+- GIVEN Bakkerij De Molen has no KvK number
+- WHEN Pieter selects it and chooses "Ontbrekende gegevens aanvullen"
+- THEN the KvK number 00001008 is proposed and ticked
+- AND "5 velden invullen" writes only the ticked fields
+
+#### Scenario: an organisation the KvK does not know
+
+- WHEN the KvK has no company with that exact name
+- THEN the dialog names it as not found and proposes nothing for it
+
+### Requirement: A client shows its customer number and data source
+
+A client MAY carry a customer number and the source of its data. The client page's Identity card MUST show both.
+
+#### Scenario: a resident from the portal and the population register
+
+- GIVEN Sanne de Vries has customer number K-2019-01184 and source "Mijn Zuiddrecht en BRP"
+- WHEN her page opens
+- THEN the Identity card shows both
+
+### Requirement: The client list opens sorted by name
+
+The Clients list SHALL open sorted by client name, ascending, until the user sorts by another column.
+
+#### Scenario: Board PqOrganisaties
+
+- **WHEN** a user opens Organisaties
+- **THEN** the rows run alphabetically by name
+- **AND** the Naam column head shows as the sorted column
+
+### Requirement: The duplicate warning is a bordered notice
+
+The new-client dialog SHALL draw its possible-duplicate warning as a bordered warning notice with a warning icon before
+its title and the links to open that client or save anyway under it.
+
+#### Scenario: Board PqKlantNieuw
+
+- **WHEN** a user types the e-mail address of an existing client in the new-client dialog
+- **THEN** a bordered notice with a warning icon names the existing client
+- **AND** offers "Die klant openen" and "Toch opslaan" under that line
+
+### Requirement: The client page shows what the client is related to (REQ-CLM-RELATED-CARD)
+The client detail page MUST show the Related card, as the contact, lead, task,
+ticket, product, booking and contract pages do. The card MUST have a place in the
+page layout that overlaps no other widget.
+
+#### Scenario: A client with linked records
+@e2e exclude Asserted in tests/vitest/clientRelatedAndServiceList.spec.js on the manifest; the card itself is the library's CnRelatedObjectsWidget.
+- **GIVEN** a client that contacts, leads and requests point to
+- **WHEN** a user opens the client
+- **THEN** the page MUST show a Related card beside the Records tab strip
+- **AND** the card MUST list the related records
+
+### Requirement: A contact person added on a client page is created
+"Contactpersoon toevoegen" (Add contact person) on the Contacts tab of a client page MUST create the
+contact through the contact-first path (`POST /api/contacts-sync/create`), so
+the required `contactsUid` is provisioned, and the new contact MUST be linked
+to that client. A failed create MUST show the reason and MUST NOT report the
+contact as saved. A client or contact list that cannot create through that
+path MUST NOT offer an Add button.
+
+#### Scenario: Add a contact person
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js and live on :8099 (lane R5-PQ-A hand-back).
+- **GIVEN** a user opens a client and the Contacts tab
+- **WHEN** they press "Add contact person", fill in a name and save
+- **THEN** the contact MUST be created with a `contactsUid`
+- **AND** it MUST show in the client's Contacts list
+
+#### Scenario: The create is refused
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js.
+- **GIVEN** the backend refuses the create
+- **WHEN** the user saves the dialog
+- **THEN** the dialog MUST show the backend's message
+- **AND** it MUST NOT report success
+
+#### Scenario: The contacts of a lead
+@e2e exclude Asserted in tests/vitest/round5ContactCreateAndTaskLinks.spec.js on the manifest.
+- **GIVEN** a user opens a lead
+- **WHEN** they look at its Contacts list
+- **THEN** the list MUST NOT offer an Add button
 
 ## Implementation Notes
 
@@ -1562,7 +1645,7 @@ Implemented:
 - **Data model**: `lib/Settings/pipelinq_register.json` defines the `client` schema with properties: `name` (required), `type` (required, enum: person/organization), `email`, `phone`, `address`, `website`, `industry`, `notes`, `contactsUid`. Also defines the `contact` schema with: `name` (required), `email`, `phone`, `role`, `client` (UUID reference), `contactsUid`.
 - **Client CRUD**: `src/store/modules/object.js` provides generic `saveObject()`, `deleteObject()`, `fetchObject()`, `fetchCollection()` via OpenRegister API. No dedicated client controller -- all CRUD goes through OpenRegister's object API directly.
 - **Client List View**: `src/views/clients/ClientList.vue` -- displays client list with search, sort, and filter using OpenRegister's built-in query capabilities. Uses the `CnIndexPage` component.
-- **Client Detail View**: `src/views/clients/ClientDetail.vue` -- displays client info (type, email, phone, website, address, notes), linked contacts table, linked leads table, linked requests table. Shows a "Synced with Contacts" badge when `contactsUid` is set. Uses `CnDetailPage` with sidebar (audit log). Has edit/delete actions with delete confirmation dialog that warns about linked entities.
+- **Client Detail View**: `src/views/clients/ClientDetail.vue` -- displays client info (type, email, phone, website, address, notes), linked contacts table, linked leads table, linked requests table. Shows a "Gesynchroniseerd met Contacten" (Synced with Contacts) badge when `contactsUid` is set. Uses `CnDetailPage` with sidebar (audit log). Has edit/delete actions with delete confirmation dialog that warns about linked entities.
 - **Client Form**: `src/views/clients/ClientForm.vue` -- create/edit form for clients with inline validation (name required, type required, email/phone/website format validation via regex).
 - **Client Create Dialog**: `src/views/clients/ClientCreateDialog.vue` -- quick-create dialog used from the dashboard.
 - **Contact Person CRUD**: `src/views/contacts/ContactDetail.vue`, `ContactForm.vue`, `ContactList.vue` -- full CRUD for contact persons with client linking.

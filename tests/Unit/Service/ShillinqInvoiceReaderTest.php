@@ -146,6 +146,34 @@ class ShillinqInvoiceReaderTest extends TestCase {
 	}//end testTheQueryNamesShillinqsRegisterWithTheAccessFlagsOff()
 
 	/**
+	 * The caller-rights reader turns both access flags on and leaves the
+	 * system reader as it was.
+	 *
+	 * @return void
+	 */
+	public function testTheCallerRightsReaderReadsWithTheAccessFlagsOn(): void {
+		$reader = $this->build();
+
+		$reader->withCallerRights()->invoicesFor(customerRef: 'cust-1');
+		$reader->invoicesFor(customerRef: 'cust-1');
+
+		$this->assertCount(expectedCount: 2, haystack: $this->objectService->calls);
+		$this->assertTrue(condition: $this->objectService->calls[0]['_rbac']);
+		$this->assertTrue(condition: $this->objectService->calls[0]['_multitenancy']);
+		$this->assertFalse(condition: $this->objectService->calls[1]['_rbac']);
+		$this->assertFalse(condition: $this->objectService->calls[1]['_multitenancy']);
+	}//end testTheCallerRightsReaderReadsWithTheAccessFlagsOn()
+
+	/**
+	 * Without shillinq the caller may read nothing, and nothing is asked.
+	 *
+	 * @return void
+	 */
+	public function testWithoutShillinqTheCallerMayNotRead(): void {
+		$this->assertFalse(condition: $this->build(installed: false)->callerMayRead());
+	}//end testWithoutShillinqTheCallerMayNotRead()
+
+	/**
 	 * @return void
 	 */
 	public function testReadsOnlyPaidInvoicesInTheWindow(): void {

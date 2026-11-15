@@ -10,12 +10,12 @@
   - POSTs to /api/pos/staff/auth and, on success, calls
   - posSessionStore.openSession() with the returned envelope.
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#7.1
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#7.1
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'POS terminal — staff sign-in')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="pin-login">
@@ -92,18 +92,32 @@
 				}}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import { usePosSessionStore } from '../store/modules/posSessionStore.js'
+
+/**
+ * Whether the server's refusal says the account is locked (Dutch or English).
+ *
+ * @param {string} message The server's message.
+ * @return {boolean}
+ * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+ *   inherited POS staff, PIN login or roles
+ */
+function isLockMessage(message) {
+	return message.toLowerCase().includes('geblokkeerd')
+		|| message.toLowerCase().includes('locked')
+}
 
 export default {
 	name: 'PinLoginModal',
-	components: { NcButton, NcDialog, NcSelect, NcTextField },
+	components: { NcButton, CnDialog, NcSelect, NcTextField },
 	emits: ['close', 'loginSuccess'],
 	data() {
 		return {
@@ -125,7 +139,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#7.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#7.1
 		 */
 		canSubmit() {
 			return (
@@ -188,41 +202,70 @@ export default {
 			this.errorMessage = ''
 			this.lockedUntil = ''
 			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/staff/auth')
-				const response = await axios.post(url, {
-					staffId: this.selectedStaffId,
-					pin: this.pin,
-				})
-				const session = response?.data?.session
-				if (!session?.staffId) {
-					throw new Error(t('pipelinq', 'Sign-in failed'))
-				}
+				const session = await this.signIn()
 				const store = usePosSessionStore()
 				store.openSession(session)
 				this.$emit('loginSuccess', session)
 				this.$emit('close')
 			} catch (error) {
-				const status = error?.response?.status
-				const serverMessage = error?.response?.data?.error || ''
-				if (status === 403) {
-					if (
-						serverMessage.toLowerCase().includes('geblokkeerd')
-						|| serverMessage.toLowerCase().includes('locked')
-					) {
-						this.lockedUntil = serverMessage
-					} else {
-						this.errorMessage =
-							serverMessage || t('pipelinq', 'Incorrect PIN')
-					}
-				} else {
-					this.errorMessage =
-						serverMessage
-						|| t('pipelinq', 'An unexpected error occurred')
-				}
+				this.showSignInRefusal(error)
 				this.pin = ''
 			} finally {
 				this.submitting = false
 			}
+		},
+
+		/**
+		 * Send the staff member and PIN; only an answer with a session for a
+		 * staff member counts as signed in.
+		 *
+		 * @return {Promise<object>} The session.
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
+		async signIn() {
+			const url = generateUrl('/apps/pipelinq/api/pos/staff/auth')
+			const response = await axios.post(url, {
+				staffId: this.selectedStaffId,
+				pin: this.pin,
+			})
+			const session = response?.data?.session
+			if (!session?.staffId) {
+				throw new Error(t('pipelinq', 'Sign-in failed'))
+			}
+			return session
+		},
+
+		/**
+		 * Say why the sign-in was refused: a locked account, a wrong PIN, or
+		 * another failure, with the server's message when it sent one.
+		 *
+		 * @param {object} error The failure.
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
+		showSignInRefusal(error) {
+			const serverMessage = error?.response?.data?.error || ''
+			if (error?.response?.status === 403) {
+				this.showForbidden(serverMessage)
+				return
+			}
+			this.errorMessage = serverMessage || t('pipelinq', 'An unexpected error occurred')
+		},
+
+		/**
+		 * A 403: the account is locked, or the PIN is wrong.
+		 *
+		 * @param {string} serverMessage The server's message, or ''.
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
+		showForbidden(serverMessage) {
+			if (isLockMessage(serverMessage)) {
+				this.lockedUntil = serverMessage
+				return
+			}
+			this.errorMessage = serverMessage || t('pipelinq', 'Incorrect PIN')
 		},
 	},
 }

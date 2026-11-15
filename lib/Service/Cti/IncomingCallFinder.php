@@ -25,8 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti;
 
+use OCA\Pipelinq\Kernel\Contracts\IncomingCallFinderInterface;
 use OCA\Pipelinq\Service\CtiService;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\SerialisedToArray;
 
 /**
  * Finds the inbound call that is still open on an agent's line.
@@ -37,7 +39,9 @@ use OCA\Pipelinq\Service\TicketService;
  *
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  */
-class IncomingCallFinder {
+class IncomingCallFinder implements IncomingCallFinderInterface {
+	use SerialisedToArray;
+
 	/**
 	 * A call older than this is not "incoming" any more, whatever its record
 	 * says: an `ended` event that never arrived must not keep a card open.
@@ -92,7 +96,7 @@ class IncomingCallFinder {
 		return [
 			'enabled' => true,
 			'delayMs' => max(0, (int)($config['screen_pop_delay_ms'] ?? 0)),
-			'call' => $this->newestOpenCall(rows: $rows, userId: $userId, now: ($now ?? time())),
+			'call' => $this->newestOpenCall(rows: $rows, scope: new IncomingCallScope(userId: $userId, now: ($now ?? time()))),
 		];
 	}//end forAgent()
 
@@ -104,42 +108,80 @@ class IncomingCallFinder {
 	 * an agent a colleague's caller.
 	 *
 	 * @param array<int, mixed> $rows The rows the ticket service returned.
-	 * @param string $userId The agent's uid.
-	 * @param int $now Unix time.
+	 * @param IncomingCallScope $scope The agent and the current time.
 	 *
 	 * @return array<string, string>|null The call, or null when none is open.
 	 */
-	private function newestOpenCall(array $rows, string $userId, int $now): ?array {
+	private function newestOpenCall(array $rows, IncomingCallScope $scope): ?array {
 		$newest = null;
 		$newestStart = 0;
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
-			$started = strtotime((string)($data['started_at'] ?? ''));
-			if ($started === false || $this->isOpenCallOf(data: $data, userId: $userId) === false) {
-				continue;
-			}
-
-			if (($now - $started) > self::MAX_AGE_SECONDS || $started <= $newestStart) {
+			$data = $this->toArray(value: $row);
+			$started = $this->freshOpenCallStart(data: $data, scope: $scope);
+			if ($started === false || $started <= $newestStart) {
 				continue;
 			}
 
 			$newestStart = $started;
-			$newest = [
-				'id' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
-				'fromNumber' => (string)($data['from_number'] ?? ''),
-				'queueName' => (string)($data['queue_name'] ?? ''),
-				'extension' => (string)($data['cti_extension'] ?? ''),
-				'startedAt' => (string)$data['started_at'],
-				'answeredAt' => (string)($data['answered_at'] ?? ''),
-			];
-		}//end foreach
+			$newest = $this->callSummary(data: $data);
+		}
 
-		if ($newest === null || $newest['id'] === '') {
+		return $this->withCallId(call: $newest);
+	}//end newestOpenCall()
+
+	/**
+	 * The start time of an open call of the user that is not too old, else false.
+	 *
+	 * @param array<string, mixed> $data The call data.
+	 * @param IncomingCallScope $scope The agent and the current time.
+	 *
+	 * @return int|false The start timestamp, or false.
+	 */
+	private function freshOpenCallStart(array $data, IncomingCallScope $scope): int|false {
+		$started = strtotime((string)($data['started_at'] ?? ''));
+		if ($started === false || $this->isOpenCallOf(data: $data, userId: $scope->userId) === false) {
+			return false;
+		}
+
+		if (($scope->now - $started) > self::MAX_AGE_SECONDS) {
+			return false;
+		}
+
+		return $started;
+	}//end freshOpenCallStart()
+
+	/**
+	 * The call fields the incoming-call banner shows.
+	 *
+	 * @param array<string, mixed> $data The call data.
+	 *
+	 * @return array<string, string> The call summary.
+	 */
+	private function callSummary(array $data): array {
+		return [
+			'id' => (string)($data['id'] ?? ($data['uuid'] ?? '')),
+			'fromNumber' => (string)($data['from_number'] ?? ''),
+			'queueName' => (string)($data['queue_name'] ?? ''),
+			'extension' => (string)($data['cti_extension'] ?? ''),
+			'startedAt' => (string)$data['started_at'],
+			'answeredAt' => (string)($data['answered_at'] ?? ''),
+		];
+	}//end callSummary()
+
+	/**
+	 * The call when it has an id, else null.
+	 *
+	 * @param array<string, string>|null $call The call summary.
+	 *
+	 * @return array<string, string>|null The call.
+	 */
+	private function withCallId(array|null $call): array|null {
+		if ($call === null || $call['id'] === '') {
 			return null;
 		}
 
-		return $newest;
-	}//end newestOpenCall()
+		return $call;
+	}//end withCallId()
 
 	/**
 	 * Whether a row is an inbound telephone call of this agent that has not ended.
@@ -160,26 +202,4 @@ class IncomingCallFinder {
 
 		return (string)($data['ended_at'] ?? '') === '';
 	}//end isOpenCallOf()
-
-	/**
-	 * A row as a plain array.
-	 *
-	 * @param mixed $row An OpenRegister entity or an array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$value = $row->jsonSerialize();
-			if (is_array($value) === true) {
-				return $value;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

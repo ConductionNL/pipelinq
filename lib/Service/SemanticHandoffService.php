@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -45,7 +46,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges to two OR services
  *  behind a container; the surface is deliberately tiny.
  */
-class SemanticHandoffService {
+class SemanticHandoffService implements SemanticHandoffServiceInterface {
 	/**
 	 * FQCN of the OpenRegister semantic-type resolver (autowired in OR).
 	 *
@@ -121,7 +122,7 @@ class SemanticHandoffService {
 	 *
 	 * @return array{register: string, schema: string}|null The slugs, or null.
 	 *
-	 * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+	 * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
 	 */
 	public function implementerLocation(string $kindUri): ?array {
 		if ($kindUri === '') {
@@ -133,6 +134,19 @@ class SemanticHandoffService {
 			return null;
 		}
 
+		return self::usableLocation(slugs: $this->resolvedSlugs(resolver: $resolver, kindUri: $kindUri));
+	}//end implementerLocation()
+
+	/**
+	 * The schema and register slugs of the kind's implementer; null when the
+	 * kind has no schema, the schema sits in no register, or the resolver threw (logged).
+	 *
+	 * @param object $resolver The OpenRegister semantic resolver.
+	 * @param string $kindUri  Canonical kind URI.
+	 *
+	 * @return array{schema: string, register: string}|null
+	 */
+	private function resolvedSlugs(object $resolver, string $kindUri): ?array {
 		try {
 			$schema = $resolver->resolveSchemaByImplements($kindUri);
 			if (is_object($schema) === false) {
@@ -144,8 +158,7 @@ class SemanticHandoffService {
 				return null;
 			}
 
-			$schemaSlug = (string)$schema->getSlug();
-			$registerSlug = (string)$register->getSlug();
+			return ['schema' => (string)$schema->getSlug(), 'register' => (string)$register->getSlug()];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SemanticHandoffService.implementerLocation: resolver threw',
@@ -153,13 +166,22 @@ class SemanticHandoffService {
 			);
 			return null;
 		}
+	}//end resolvedSlugs()
 
-		if ($schemaSlug === '' || $registerSlug === '') {
+	/**
+	 * The location, when both slugs are filled.
+	 *
+	 * @param array{schema: string, register: string}|null $slugs The resolved slugs.
+	 *
+	 * @return array{register: string, schema: string}|null
+	 */
+	private static function usableLocation(?array $slugs): ?array {
+		if ($slugs === null || $slugs['schema'] === '' || $slugs['register'] === '') {
 			return null;
 		}
 
-		return ['register' => $registerSlug, 'schema' => $schemaSlug];
-	}//end implementerLocation()
+		return ['register' => $slugs['register'], 'schema' => $slugs['schema']];
+	}//end usableLocation()
 
 	/**
 	 * Execute a declared handoff via OpenRegister's engine.
@@ -179,40 +201,73 @@ class SemanticHandoffService {
 	 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 	 */
 	public function handoff(string $register, string $schema, string $id, string $handoffId): array {
+		return $this->handoffOf(source: ['register' => $register, 'schema' => $schema, 'id' => $id], handoffId: $handoffId);
+	}//end handoff()
+
+	/**
+	 * Execute a declared handoff of a source object via OpenRegister's engine.
+	 *
+	 * @param array{register: string, schema: string, id: string} $source    Source register and schema slugs, and object UUID.
+	 * @param string                                              $handoffId The declared `x-openregister-handoff` entry id.
+	 *
+	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string} Outcome.
+	 */
+	private function handoffOf(array $source, string $handoffId): array {
 		$engine = $this->resolveService(fqcn: self::ENGINE_CLASS, method: 'execute');
 		if ($engine === null) {
-			return $this->outcome(succeeded:false, reason: 'engine-unavailable');
+			return $this->outcome(succeeded: false, fields: ['reason' => 'engine-unavailable']);
 		}
 
+		return $this->executedOutcome(
+			execute: static fn () => $engine->execute(register: $source['register'], schema: $source['schema'], id: $source['id'], handoffId: $handoffId),
+			handoffId: $handoffId
+		);
+	}//end handoffOf()
+
+	/**
+	 * Run the engine's execute call and normalise its answer; a throw or a non-array answer is a failure.
+	 *
+	 * @param callable(): mixed $execute   The engine's execute call.
+	 * @param string            $handoffId The declared handoff entry id, for the log.
+	 *
+	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string}
+	 */
+	private function executedOutcome(callable $execute, string $handoffId): array {
 		try {
-			$result = $engine->execute(register: $register, schema: $schema, id: $id, handoffId: $handoffId);
+			$result = $execute();
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SemanticHandoffService.handoff: engine execute failed',
 				['handoffId' => $handoffId, 'error' => $e->getMessage()]
 			);
-			return $this->outcome(succeeded:false, reason: 'handoff-failed');
+			return $this->outcome(succeeded: false, fields: ['reason' => 'handoff-failed']);
 		}
 
 		if (is_array($result) === false) {
-			return $this->outcome(succeeded:false, reason: 'handoff-failed');
+			return $this->outcome(succeeded: false, fields: ['reason' => 'handoff-failed']);
 		}
 
+		return $this->resultOutcome(result: $result);
+	}//end executedOutcome()
+
+	/**
+	 * The outcome of the engine's answer: executed (with the target), parked
+	 * (queued), or a failure named by its status.
+	 *
+	 * @param array<string, mixed> $result The engine's answer.
+	 *
+	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string}
+	 */
+	private function resultOutcome(array $result): array {
 		$status = (string)($result['status'] ?? '');
 		$correlationId = (string)($result['correlationId'] ?? '');
 
 		if ($status === 'executed') {
-			$target = ($result['target'] ?? []);
-			$uuid = '';
-			if (is_array($target) === true) {
-				$uuid = (string)($target['uuid'] ?? '');
-			}
-
-			return $this->outcome(succeeded:true, targetUuid: $uuid, correlationId: $correlationId);
+			return $this->outcome(succeeded: true, fields: ['targetUuid' => self::targetUuidOf(result: $result), 'correlationId' => $correlationId]);
 		}
 
 		if ($status === 'parked') {
-			return $this->outcome(succeeded:true, reason: 'queued', correlationId: $correlationId);
+			return $this->outcome(succeeded: true, fields: ['reason' => 'queued', 'correlationId' => $correlationId]);
 		}
 
 		$reason = $status;
@@ -220,25 +275,42 @@ class SemanticHandoffService {
 			$reason = 'handoff-failed';
 		}
 
-		return $this->outcome(succeeded:false, reason: $reason);
-	}//end handoff()
+		return $this->outcome(succeeded: false, fields: ['reason' => $reason]);
+	}//end resultOutcome()
+
+	/**
+	 * The uuid of the object the handoff created, '' when the answer names none.
+	 *
+	 * @param array<string, mixed> $result The engine's answer.
+	 *
+	 * @return string
+	 */
+	private static function targetUuidOf(array $result): string {
+		$target = ($result['target'] ?? []);
+		if (is_array($target) === true) {
+			return (string)($target['uuid'] ?? '');
+		}
+
+		return '';
+	}//end targetUuidOf()
 
 	/**
 	 * Build a normalised outcome envelope.
 	 *
-	 * @param bool $succeeded Whether the handoff succeeded / was accepted.
-	 * @param string $targetUuid Created target object UUID (executed only).
-	 * @param string $correlationId Engine correlation id.
-	 * @param string $reason Failure / queued reason.
+	 * @param bool                                                             $succeeded Whether the handoff succeeded / was accepted.
+	 * @param array{targetUuid?: string, correlationId?: string, reason?: string} $fields    The created target object UUID
+	 *                                                                                      (executed only), the engine
+	 *                                                                                      correlation id and the failure /
+	 *                                                                                      queued reason; '' when absent.
 	 *
 	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string}
 	 */
-	private function outcome(bool $succeeded, string $targetUuid = '', string $correlationId = '', string $reason = ''): array {
+	private function outcome(bool $succeeded, array $fields = []): array {
 		return [
 			'ok' => $succeeded,
-			'targetUuid' => $targetUuid,
-			'correlationId' => $correlationId,
-			'reason' => $reason,
+			'targetUuid' => ($fields['targetUuid'] ?? ''),
+			'correlationId' => ($fields['correlationId'] ?? ''),
+			'reason' => ($fields['reason'] ?? ''),
 		];
 	}//end outcome()
 

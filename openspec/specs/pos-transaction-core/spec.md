@@ -25,7 +25,7 @@ Provide the core POS transaction model for Pipelinq: two OpenRegister schemas (`
 
 ## Requirements
 
-### REQ-POS-001: Transaction Creation (Draft)
+### Requirement: REQ-POS-001: Transaction Creation (Draft)
 
 The system MUST allow a cashier to open a new POS transaction in `draft` status.
 
@@ -47,7 +47,7 @@ The system MUST allow a cashier to open a new POS transaction in `draft` status.
 
 ---
 
-### REQ-POS-002: Line Item Management
+### Requirement: REQ-POS-002: Line Item Management
 
 The system MUST allow adding, editing, and removing line items on a draft or parked transaction.
 
@@ -96,7 +96,7 @@ The system MUST allow adding, editing, and removing line items on a draft or par
 
 ---
 
-### REQ-POS-003: Real-time Total Calculation
+### Requirement: REQ-POS-003: Real-time Total Calculation
 
 The totals panel MUST update in real time as line items are added, edited, or removed.
 
@@ -126,7 +126,7 @@ The totals panel MUST update in real time as line items are added, edited, or re
 
 ---
 
-### REQ-POS-004: Transaction Confirmation
+### Requirement: REQ-POS-004: Transaction Confirmation
 
 The system MUST support confirming a draft or parked transaction, which locks totals and
 emits a CloudEvent.
@@ -160,7 +160,7 @@ emits a CloudEvent.
 
 ---
 
-### REQ-POS-005: Transaction Settlement
+### Requirement: REQ-POS-005: Transaction Settlement
 
 The system MUST allow settling a confirmed transaction to mark payment received.
 
@@ -183,7 +183,7 @@ The system MUST allow settling a confirmed transaction to mark payment received.
 
 ---
 
-### REQ-POS-006: Refund and Void
+### Requirement: REQ-POS-006: Refund and Void
 
 The system MUST support refunding a confirmed or settled transaction. Refund requires
 manager-level permission.
@@ -215,7 +215,7 @@ manager-level permission.
 
 ---
 
-### REQ-POS-007: Park and Resume
+### Requirement: REQ-POS-007: Park and Resume
 
 The system MUST allow parking a draft transaction to be resumed later.
 
@@ -247,7 +247,7 @@ The system MUST allow parking a draft transaction to be resumed later.
 
 ---
 
-### REQ-POS-008: Transaction List View
+### Requirement: REQ-POS-008: Transaction List View
 
 The system MUST provide a searchable, filterable list of all POS transactions.
 
@@ -281,7 +281,7 @@ The system MUST provide a searchable, filterable list of all POS transactions.
 
 ---
 
-### REQ-POS-009: Transaction Detail View
+### Requirement: REQ-POS-009: Transaction Detail View
 
 The system MUST provide a full detail view of a transaction including line items and tax breakdown.
 
@@ -311,7 +311,7 @@ The system MUST provide a full detail view of a transaction including line items
 
 ---
 
-### REQ-POS-010: CloudEvent Emission on Confirmation
+### Requirement: REQ-POS-010: CloudEvent Emission on Confirmation
 
 The system MUST emit a `pipelinq.PosTransaction.confirmed` CloudEvent when a transaction
 is confirmed, enabling Shillinq to draft a journal entry.
@@ -338,3 +338,31 @@ is confirmed, enabling Shillinq to draft a journal entry.
 - WHEN the transaction is settled or refunded
 - THEN NO CloudEvent MUST be emitted
 - AND only the status and timestamp fields change
+
+### Requirement: A confirmed sale is linked to the open cash shift
+
+A transaction MUST, when it is confirmed, carry a `shift` reference to the cash shift that is open at its till (`terminalId` equals the shift's `drawer`). Without a till, the cashier's open shift MUST be used. When no shift is open, the reference MUST stay empty, and confirming MUST NOT fail.
+
+#### Scenario: a sale at a till with an open shift
+
+- GIVEN shift "Dienst 7 okt, Balie 2" is open on drawer "Balie 2"
+- WHEN a sale rung up at "Balie 2" is confirmed
+- THEN the sale's `shift` is that shift's id
+- AND the shift page counts the sale
+
+#### Scenario: no shift is open
+
+- GIVEN no shift is open on drawer "Balie 3"
+- WHEN a sale rung up at "Balie 3" is confirmed
+- THEN the sale is confirmed with an empty `shift`
+
+### Requirement: The transactions list reads when the sale happened
+
+The transactions list MUST show and filter each transaction by its moment. The moment is its confirmation time, else its parking time; the column falls back to the object's creation time for a draft. The "Vandaag" lens MUST list the transactions whose moment is today.
+
+#### Scenario: a seeded sale
+
+- GIVEN POS-2026-0871 was confirmed 25 days before the set was installed
+- WHEN the transactions list opens
+- THEN its Aangemaakt column reads that date, not the install date
+- AND it is not in the Vandaag lens

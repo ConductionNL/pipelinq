@@ -26,7 +26,7 @@ Adding a line to a lead MUST let the user pick a product and MUST fill the unit 
 
 - **GIVEN** the lead "Nieuw kantoor" has two lines and a contact with an email address
 - **WHEN** Sanne chooses "Send quote", picks the quote template and a valid-until date
-- **THEN** the contact receives a mail with the PDF attached, and the lead's timeline shows an outbound contact moment "Quote Q-2026-0001"
+- **THEN** the contact receives a mail with the PDF attached, and the lead's timeline shows an outbound contact moment "Offerte OFF-2026-0042"
 
 #### Scenario: No recipient
 
@@ -56,7 +56,7 @@ Editing a line after sending MUST NOT alter the stored PDF, and sending again MU
 
 #### Scenario: Second send
 
-- **GIVEN** Sanne sent Q-2026-0001 and then changed a quantity
+- **GIVEN** Sanne sent OFF-2026-0042 and then changed a quantity
 - **WHEN** she sends the quote again
-- **THEN** a new PDF is created as Q-2026-0002 and Q-2026-0001 is unchanged
+- **THEN** a new PDF is created as OFF-2026-0043 and OFF-2026-0042 is unchanged
 

@@ -1,0 +1,24 @@
+{
+	"$comment": "pipelinq's extra for Buurtvereniging Oost in the Zuiddrecht set: Fatma Yildiz's task to check the subsidy documents when they come in, as PqOrganisatie's Activiteit card draws it between the 2 okt e-mail and the 6 okt linked mail. The feed dates a task by its deadline, so the deadline sits before the 16:05 mail. Done once the documents arrived, so it adds no expired task to PqTaken.",
+	"objects": [
+		{
+			"key": "taak-buurtoost-subsidiedocumenten-controleren",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "followUpTask",
+				"subject": "Controleer de subsidiedocumenten als ze binnenkomen.",
+				"status": "completed",
+				"priority": "normal",
+				"deadline": "{{datetime:-1 12:00}}",
+				"assigneeUserId": "{{cast:fatmayildiz.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-buurtoost.id}}",
+				"requestId": "{{object:ticket-buurtoost-subsidiedocumenten.id}}",
+				"completedAt": "{{datetime:-1 16:20}}",
+				"resultText": "Formulier en documentenlijst ontvangen en gecontroleerd.",
+				"createdBy": "{{cast:fatmayildiz.uid}}"
+			}
+		}
+	]
+}

@@ -23,7 +23,7 @@ const TICKET_SUBTYPES = ['request', 'complaint', 'interaction']
  * @return {{objectType: string, ticketType: (string|null)}} Registered object
  *   type plus the `ticketType` filter/field to narrow it, or null when the type
  *   needs no discriminator.
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
  */
 export function resolveObjectType(schemaSlug) {
 	if (TICKET_SUBTYPES.includes(schemaSlug)) {
@@ -77,11 +77,29 @@ export function pipelineAppliesTo(pipeline, slug) {
 }
 
 /**
+ * The default pipeline for `slug`: the one marked default among the pipelines
+ * that apply to it, else the first of those.
+ *
+ * `isDefault` is read per entity, so a request board marked default never
+ * becomes the lead default.
+ *
+ * @param {Array<object>} pipelines The stored pipelines.
+ * @param {string} slug The logical entity slug ('lead', 'request', …).
+ * @return {object|null} The pipeline, or null when none applies.
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function defaultPipelineFor(pipelines, slug) {
+	if (!Array.isArray(pipelines)) return null
+	const applicable = pipelines.filter((p) => pipelineAppliesTo(p, slug))
+	return applicable.find((p) => p.isDefault) || applicable[0] || null
+}
+
+/**
  * Days since an item was last modified (0 when it carries no timestamp).
  *
  * @param {object} item The object, carrying `_dateModified`.
  * @return {number} Whole days elapsed.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-30
  */
 export function getDaysAge(item) {
 	if (!item._dateModified) return 0
@@ -115,7 +133,7 @@ export function getStaleThreshold(config) {
  * @param {string} entityType The logical entity slug; anything but 'lead' is never stale.
  * @param {number} [threshold] Optional explicit threshold (days); defaults to 14.
  * @return {boolean} True when the lead is stale.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-31
  */
 export function isStale(item, entityType, threshold = 14) {
 	if (entityType !== 'lead') return false
@@ -161,7 +179,7 @@ export function getOverdueDays(lead, stages = []) {
  *
  * @param {number} days Whole days elapsed.
  * @return {string} The modifier class, or '' below the first threshold.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-29
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-29
  */
 export function getAgingClass(days) {
 	if (days >= 14) return 'aging-alert'
@@ -174,7 +192,7 @@ export function getAgingClass(days) {
  *
  * @param {number} days Whole days elapsed.
  * @return {string} The display label.
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-28
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-28
  */
 export function formatAge(days) {
 	if (days === 0) return t('pipelinq', 'Today')

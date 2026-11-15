@@ -182,7 +182,7 @@ class CampaignReportServiceTest extends TestCase {
 		$this->assertSame(80, $channels['email']['opened']);
 		$this->assertSame(1, $channels['email']['click']);
 
-		$this->assertSame(['click' => 1, 'visit' => 0, 'submit' => 1, 'reply' => 0], $report['engagement']);
+		$this->assertSame(['click' => 1, 'visit' => 0, 'submit' => 1, 'reply' => 0, 'attend' => 0], $report['engagement']);
 	}//end testReachComesFromTheBlastsAndEngagementFromTheTouchpoints()
 
 	/**
@@ -198,6 +198,51 @@ class CampaignReportServiceTest extends TestCase {
 		$this->assertNull($channels['social']['reach']);
 		$this->assertSame(1, $channels['social']['submit']);
 	}//end testAChannelWithoutABlastReportsNullReach()
+
+	/**
+	 * Each channel counts the distinct leads its touchpoints carry, so a lead
+	 * touched twice on one channel counts once there.
+	 *
+	 * @return void
+	 */
+	public function testEachChannelCountsTheLeadsItsTouchpointsCarry(): void {
+		$rows = $this->build()->channels(
+			blasts: [],
+			touchpoints: [
+				['leadId' => 'lead-1', 'kind' => 'click', 'channel' => 'email'],
+				['leadId' => 'lead-1', 'kind' => 'visit', 'channel' => 'email'],
+				['leadId' => 'lead-2', 'kind' => 'click', 'channel' => 'email'],
+				['leadId' => '', 'kind' => 'click', 'channel' => 'email'],
+				['leadId' => 'lead-1', 'kind' => 'submit', 'channel' => 'mastodon'],
+			]
+		);
+
+		$channels = array_column($rows, null, 'channel');
+		$this->assertSame(expected: 2, actual: $channels['email']['leads']);
+		$this->assertSame(expected: 1, actual: $channels['mastodon']['leads']);
+	}//end testEachChannelCountsTheLeadsItsTouchpointsCarry()
+
+	/**
+	 * An `attend` touchpoint is counted under its own kind, so the report shows how many came.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 */
+	public function testAnAttendTouchpointIsCounted(): void {
+		$rows = $this->build()->channels(
+			blasts: [],
+			touchpoints: [
+				['leadId' => 'lead-1', 'kind' => 'submit', 'channel' => 'event'],
+				['leadId' => 'lead-1', 'kind' => 'attend', 'channel' => 'event'],
+				['leadId' => 'lead-2', 'kind' => 'attend', 'channel' => 'event'],
+			]
+		);
+
+		$channels = array_column($rows, null, 'channel');
+		$this->assertSame(expected: 2, actual: $channels['event']['attend']);
+		$this->assertSame(expected: 1, actual: $channels['event']['submit']);
+	}//end testAnAttendTouchpointIsCounted()
 
 	/**
 	 * @return void
@@ -243,4 +288,46 @@ class CampaignReportServiceTest extends TestCase {
 		$asked = $this->build()->forCampaign(campaignId: 'camp-1', from: '2026-10-10', to: '2026-10-20');
 		$this->assertSame(['from' => '2026-10-10', 'to' => '2026-10-20'], $asked['window']);
 	}//end testTheWindowDefaultsToTheCampaignDatesAndStopsAtToday()
+
+	/**
+	 * Every channel row is exact: keys, order, reach, counts and distinct leads.
+	 *
+	 * @return void
+	 */
+	public function testChannelRowsAreExact(): void {
+		$row = static fn (string $channel, ?int $reach, array $counts, int $leads): array => array_merge(
+			['channel' => $channel, 'reach' => $reach, 'sent' => 0, 'opened' => 0, 'click' => 0, 'visit' => 0, 'submit' => 0, 'reply' => 0, 'attend' => 0],
+			$counts,
+			['leads' => $leads]
+		);
+		$rows = $this->build()->channels(
+			[
+				['channel' => 'email', 'totals' => ['delivered' => 90, 'sent' => 100, 'opened' => 40]],
+				['totals' => ['delivered' => '10', 'sent' => 12]],
+				['channel' => 'sms'],
+				['channel' => 'whatsapp', 'totals' => 'none'],
+			],
+			[
+				['channel' => 'email', 'kind' => 'click', 'leadId' => ' l-1 '],
+				['channel' => 'email', 'kind' => 'click', 'leadId' => 'l-1'],
+				['channel' => 'email', 'kind' => 'reply', 'leadId' => 'l-2'],
+				['channel' => 'email', 'kind' => 'bounce', 'leadId' => ''],
+				['kind' => 'visit'],
+				['channel' => 'social', 'kind' => 'unknown', 'leadId' => 'l-3'],
+				['channel' => 'social', 'kind' => 'submit', 'leadId' => 'l-3'],
+				['channel' => 'sms', 'kind' => 'channel'],
+			]
+		);
+		$this->assertSame(
+			[
+				$row('direct', null, ['visit' => 1], 0),
+				$row('email', 100, ['sent' => 112, 'opened' => 40, 'click' => 2, 'reply' => 1], 2),
+				// A kind that names a row key bumps that key: today the channel name itself.
+				array_replace($row('sms', 0, [], 0), ['channel' => 'smt']),
+				$row('social', null, ['submit' => 1], 1),
+				$row('whatsapp', 0, [], 0),
+			],
+			$rows
+		);
+	}//end testChannelRowsAreExact()
 }//end class

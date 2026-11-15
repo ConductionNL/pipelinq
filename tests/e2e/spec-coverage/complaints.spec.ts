@@ -27,7 +27,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/klachtenregistratie/spec.md#complaints-index
+// @e2e openspec/specs/klachtenregistratie/spec.md
 test('Complaints: reachable as a ticket-type tab on the Tickets workspace', async ({
 	page,
 }) => {
@@ -50,7 +50,7 @@ test('Complaints: reachable as a ticket-type tab on the Tickets workspace', asyn
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/klachtenregistratie/spec.md#complaints-list-table
+// @e2e openspec/specs/klachtenregistratie/spec.md
 test('Complaints: the tab narrows the list to complaint tickets', async ({
 	page,
 }) => {
@@ -103,7 +103,7 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({
 	).toHaveCount(0, { timeout: 15000 })
 })
 
-// @e2e openspec/specs/klachtenregistratie/spec.md#complaints-create-modal
+// @e2e openspec/specs/klachtenregistratie/spec.md
 test('Complaints: Add Ticket opens a create modal with a form', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'All tickets', /\/tickets/)

@@ -1,0 +1,1768 @@
+{
+    "failover through every miss": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "ext-zeta",
+            "providerId": "p6",
+            "vendor": "zeta-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "sms"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p2",
+                        "kind": "sms",
+                        "vendor": "beta"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p3"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p3",
+                        "kind": "sms",
+                        "vendor": "gamma"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "gamma",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "gamma"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p3",
+                        "vendor": "gamma",
+                        "message": "5xx from gamma"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p4"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p4",
+                        "kind": "sms",
+                        "vendor": "delta"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "delta",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "delta"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: unexpected exception — failing over",
+                    "context": {
+                        "providerId": "p4",
+                        "vendor": "delta",
+                        "message": "socket from delta"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p5"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p5",
+                        "kind": "sms",
+                        "vendor": "eps"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "eps",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "eps"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: unexpected exception — failing over",
+                    "context": {
+                        "providerId": "p5",
+                        "vendor": "eps",
+                        "message": "type from eps"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p6"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p6",
+                        "kind": "sms",
+                        "vendor": "zeta"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "zeta",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p6",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p6",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p6",
+                        "externalMessageId": "ext-zeta",
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p6"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "sms",
+                    "subject": "Outbound SMS",
+                    "summary": "Hello there",
+                    "channelMetadata": {
+                        "platform": "sms",
+                        "direction": "outbound",
+                        "messageId": "row-2",
+                        "conversationId": "row-1",
+                        "contactId": "contact-1"
+                    },
+                    "clientId": "cl-1",
+                    "agent": "ann"
+                }
+            }
+        ]
+    },
+    "all transient": {
+        "result": {
+            "status": "failed",
+            "error": "all SMS providers returned transient errors",
+            "providerId": ""
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "sms"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "sms",
+                        "vendor": "a"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "a",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "a"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p1",
+                        "vendor": "a",
+                        "message": "5xx from a"
+                    }
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p2",
+                        "kind": "sms",
+                        "vendor": "b"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "b",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "b"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p2",
+                        "vendor": "b",
+                        "message": "5xx from b"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "all SMS providers returned transient errors"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "error": "all SMS providers returned transient errors"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "permanent stops failover": {
+        "result": {
+            "status": "failed",
+            "error": "4xx from a",
+            "providerId": "p1"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "sms"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "sms",
+                        "vendor": "a"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "a",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "a"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: permanent provider failure",
+                    "context": {
+                        "providerId": "p1",
+                        "vendor": "a",
+                        "message": "4xx from a"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p1",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "4xx from a"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "error": "4xx from a"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "all budgets spent": {
+        "result": {
+            "status": "failed",
+            "error": "all SMS providers returned transient errors",
+            "providerId": ""
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "sms"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p2"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "all SMS providers returned transient errors"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "error": "all SMS providers returned transient errors"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "hint: budget spent": {
+        "result": {
+            "status": "budgetExceeded",
+            "providerId": "p9"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            }
+        ]
+    },
+    "hint: transient": {
+        "result": {
+            "status": "failed",
+            "error": "5xx from hinted",
+            "providerId": "p9"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "hinted",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "hinted"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p9",
+                        "vendor": "hinted",
+                        "message": "5xx from hinted"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p9",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p9",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "5xx from hinted"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "error": "5xx from hinted"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "hint: permanent": {
+        "result": {
+            "status": "failed",
+            "error": "4xx from hinted",
+            "providerId": "p9"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "hinted",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "hinted"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: permanent provider failure",
+                    "context": {
+                        "providerId": "p9",
+                        "vendor": "hinted",
+                        "message": "4xx from hinted"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p9",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p9",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "4xx from hinted"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "error": "4xx from hinted"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "hint: runtime": {
+        "result": {
+            "status": "failed",
+            "error": "socket from hinted",
+            "providerId": "p9"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "hinted",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "hinted"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: unexpected exception — failing over",
+                    "context": {
+                        "providerId": "p9",
+                        "vendor": "hinted",
+                        "message": "socket from hinted"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p9",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p9",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "socket from hinted"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "error": "socket from hinted"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "hint: type error": {
+        "result": {
+            "status": "failed",
+            "error": "type from hinted",
+            "providerId": "p9"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "hinted",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "hinted"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: unexpected exception — failing over",
+                    "context": {
+                        "providerId": "p9",
+                        "vendor": "hinted",
+                        "message": "type from hinted"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p9",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p9",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "type from hinted"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "error": "type from hinted"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "hint: no client": {
+        "result": {
+            "status": "failed",
+            "error": "all SMS providers returned transient errors",
+            "providerId": ""
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "all SMS providers returned transient errors"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "",
+                        "error": "all SMS providers returned transient errors"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            }
+        ]
+    },
+    "hint: success, no audit service": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "ext-hinted",
+            "providerId": "p9",
+            "vendor": "hinted-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "hinted",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p9",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p9",
+                        "externalMessageId": "ext-hinted",
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            }
+        ]
+    },
+    "hint: success, save fails": {
+        "result": {
+            "status": "sent",
+            "messageId": "",
+            "externalMessageId": "ext-hinted",
+            "providerId": "p9",
+            "vendor": "hinted-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "hinted"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p9",
+                        "kind": "sms",
+                        "vendor": "hinted"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "hinted",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p9",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p9",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p9",
+                        "externalMessageId": "ext-hinted",
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.persistMessage: save failed",
+                    "context": {
+                        "exception": "save down"
+                    }
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p9"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "sms",
+                    "subject": "Outbound SMS",
+                    "summary": "Hello there",
+                    "channelMetadata": {
+                        "platform": "sms",
+                        "direction": "outbound",
+                        "messageId": "",
+                        "conversationId": "",
+                        "contactId": "contact-1"
+                    },
+                    "agent": "7"
+                }
+            }
+        ]
+    },
+    "transient, notification fails": {
+        "result": {
+            "status": "failed",
+            "error": "5xx from a",
+            "providerId": "p1"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::findByVendor": {
+                    "kind": "sms",
+                    "vendor": "a"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "sms",
+                        "vendor": "a"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "a",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "client::getVendor": "a"
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.send: transient — failing over",
+                    "context": {
+                        "providerId": "p1",
+                        "vendor": "a",
+                        "message": "5xx from a"
+                    }
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p1",
+                        "deliveryStatus": "failed",
+                        "sentAt": "<now>",
+                        "metadata": {
+                            "error": "5xx from a"
+                        }
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "NotificationService::sendNotification": {
+                    "userId": "admin",
+                    "subject": "messaging_sms_send_failed",
+                    "parameters": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "error": "5xx from a"
+                    },
+                    "objectType": "message",
+                    "objectId": "contact-1"
+                }
+            },
+            {
+                "LoggerInterface::warning": {
+                    "message": "SmsAdapter.persistFailureAndAlert: notification failed",
+                    "context": {
+                        "exception": "notify down"
+                    }
+                }
+            }
+        ]
+    },
+    "empty hint lists active": {
+        "result": {
+            "status": "sent",
+            "messageId": "row-2",
+            "externalMessageId": "ext-a",
+            "providerId": "p1",
+            "vendor": "a-v"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "sms"
+                }
+            },
+            {
+                "BudgetService::canSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "SmsProviderFactory::create": {
+                    "channelProvider": {
+                        "uuid": "p1",
+                        "kind": "sms",
+                        "vendor": "a"
+                    }
+                }
+            },
+            {
+                "client::send": {
+                    "vendor": "a",
+                    "toNumber": "+31611111111",
+                    "body": "Hello there"
+                }
+            },
+            {
+                "findAll": {
+                    "config": {
+                        "filters": {
+                            "contactId": "contact-1",
+                            "providerId": "p1",
+                            "channel": "sms",
+                            "status": "open",
+                            "register": "pipelinq",
+                            "schema": "channelConversation"
+                        }
+                    },
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "providerId": "p1",
+                        "channel": "sms",
+                        "status": "open",
+                        "lastInboundAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelConversation",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "saveObject": {
+                    "object": {
+                        "contactId": "contact-1",
+                        "conversationId": "row-1",
+                        "channel": "sms",
+                        "direction": "outbound",
+                        "body": "Hello there",
+                        "providerId": "p1",
+                        "externalMessageId": "ext-a",
+                        "deliveryStatus": "queued",
+                        "sentAt": "<now>"
+                    },
+                    "register": "pipelinq",
+                    "schema": "channelMessage",
+                    "uuid": null,
+                    "_rbac": true,
+                    "_multitenancy": true
+                }
+            },
+            {
+                "BudgetService::recordSend": {
+                    "tenantId": "tenant-1",
+                    "providerId": "p1"
+                }
+            },
+            {
+                "ContactmomentService::recordOutboundMessage": {
+                    "channel": "sms",
+                    "subject": "Outbound SMS",
+                    "summary": "Hello there",
+                    "channelMetadata": {
+                        "platform": "sms",
+                        "direction": "outbound",
+                        "messageId": "row-2",
+                        "conversationId": "row-1",
+                        "contactId": "contact-1"
+                    }
+                }
+            }
+        ]
+    },
+    "no providers": {
+        "result": {
+            "status": "noProviderAvailable"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            },
+            {
+                "ChannelProviderRepository::listActive": {
+                    "kind": "sms"
+                }
+            }
+        ]
+    },
+    "consent refused": {
+        "result": {
+            "status": "consentMissing"
+        },
+        "calls": [
+            {
+                "ConsentService::canSend": {
+                    "contactId": "contact-1",
+                    "channel": "sms",
+                    "address": "+31611111111"
+                }
+            }
+        ]
+    }
+}

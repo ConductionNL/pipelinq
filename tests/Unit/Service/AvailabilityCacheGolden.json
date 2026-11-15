@@ -1,0 +1,328 @@
+{
+    "monday, 30 minutes": {
+        "result": {
+            "freeBlocks": [
+                {
+                    "startTime": "09:00",
+                    "endTime": "09:30",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "09:15",
+                    "endTime": "09:45",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "09:30",
+                    "endTime": "10:00",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "09:45",
+                    "endTime": "10:15",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "10:30",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "10:15",
+                    "endTime": "10:45",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "10:30",
+                    "endTime": "11:00",
+                    "durationMinutes": 30
+                }
+            ],
+            "stale": false,
+            "ttlIsADay": true,
+            "sameAsAnswer": true
+        },
+        "events": [
+            {
+                "save": {
+                    "resourceId": "res-sarah",
+                    "date": "2026-06-01",
+                    "freeBlocks": [
+                        {
+                            "startTime": "09:00",
+                            "endTime": "09:30",
+                            "durationMinutes": 30
+                        },
+                        {
+                            "startTime": "09:15",
+                            "endTime": "09:45",
+                            "durationMinutes": 30
+                        },
+                        {
+                            "startTime": "09:30",
+                            "endTime": "10:00",
+                            "durationMinutes": 30
+                        },
+                        {
+                            "startTime": "09:45",
+                            "endTime": "10:15",
+                            "durationMinutes": 30
+                        },
+                        {
+                            "startTime": "10:00",
+                            "endTime": "10:30",
+                            "durationMinutes": 30
+                        },
+                        {
+                            "startTime": "10:15",
+                            "endTime": "10:45",
+                            "durationMinutes": 30
+                        },
+                        {
+                            "startTime": "10:30",
+                            "endTime": "11:00",
+                            "durationMinutes": 30
+                        }
+                    ],
+                    "ttlIsADay": true,
+                    "sameAsAnswer": true
+                }
+            }
+        ]
+    },
+    "tuesday, default": {
+        "result": {
+            "freeBlocks": [
+                {
+                    "startTime": "13:00",
+                    "endTime": "13:15",
+                    "durationMinutes": 15
+                },
+                {
+                    "startTime": "13:15",
+                    "endTime": "13:30",
+                    "durationMinutes": 15
+                },
+                {
+                    "startTime": "13:30",
+                    "endTime": "13:45",
+                    "durationMinutes": 15
+                },
+                {
+                    "startTime": "13:45",
+                    "endTime": "14:00",
+                    "durationMinutes": 15
+                }
+            ],
+            "stale": false,
+            "ttlIsADay": true,
+            "sameAsAnswer": true
+        },
+        "events": [
+            {
+                "save": {
+                    "resourceId": "res-sarah",
+                    "date": "2026-06-02",
+                    "freeBlocks": [
+                        {
+                            "startTime": "13:00",
+                            "endTime": "13:15",
+                            "durationMinutes": 15
+                        },
+                        {
+                            "startTime": "13:15",
+                            "endTime": "13:30",
+                            "durationMinutes": 15
+                        },
+                        {
+                            "startTime": "13:30",
+                            "endTime": "13:45",
+                            "durationMinutes": 15
+                        },
+                        {
+                            "startTime": "13:45",
+                            "endTime": "14:00",
+                            "durationMinutes": 15
+                        }
+                    ],
+                    "ttlIsADay": true,
+                    "sameAsAnswer": true
+                }
+            }
+        ]
+    },
+    "sunday": {
+        "result": {
+            "freeBlocks": [],
+            "stale": false,
+            "ttlIsADay": true,
+            "sameAsAnswer": true
+        },
+        "events": [
+            {
+                "save": {
+                    "resourceId": "res-sarah",
+                    "date": "2026-06-07",
+                    "freeBlocks": [],
+                    "ttlIsADay": true,
+                    "sameAsAnswer": true
+                }
+            }
+        ]
+    },
+    "no cache schema": {
+        "result": {
+            "freeBlocks": [
+                {
+                    "startTime": "09:00",
+                    "endTime": "09:30",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "09:15",
+                    "endTime": "09:45",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "09:30",
+                    "endTime": "10:00",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "09:45",
+                    "endTime": "10:15",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "10:30",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "10:15",
+                    "endTime": "10:45",
+                    "durationMinutes": 30
+                },
+                {
+                    "startTime": "10:30",
+                    "endTime": "11:00",
+                    "durationMinutes": 30
+                }
+            ],
+            "stale": false,
+            "ttlIsADay": true,
+            "sameAsAnswer": true
+        },
+        "events": []
+    },
+    "no register": {
+        "result": {
+            "freeBlocks": [],
+            "stale": false,
+            "ttlIsADay": true,
+            "sameAsAnswer": true
+        },
+        "events": [
+            {
+                "warning": "Pipelinq: app-config \"register\" is not configured; OpenRegister calls are refused, not run unscoped",
+                "context": []
+            },
+            {
+                "warning": "Pipelinq: app-config \"register\" is not configured; OpenRegister calls are refused, not run unscoped",
+                "context": []
+            },
+            {
+                "warning": "Pipelinq: app-config \"register\" is not configured; OpenRegister calls are refused, not run unscoped",
+                "context": []
+            }
+        ]
+    },
+    "write fails": {
+        "result": {
+            "freeBlocks": [
+                {
+                    "startTime": "09:00",
+                    "endTime": "09:45",
+                    "durationMinutes": 45
+                },
+                {
+                    "startTime": "09:15",
+                    "endTime": "10:00",
+                    "durationMinutes": 45
+                },
+                {
+                    "startTime": "09:30",
+                    "endTime": "10:15",
+                    "durationMinutes": 45
+                },
+                {
+                    "startTime": "09:45",
+                    "endTime": "10:30",
+                    "durationMinutes": 45
+                },
+                {
+                    "startTime": "10:00",
+                    "endTime": "10:45",
+                    "durationMinutes": 45
+                },
+                {
+                    "startTime": "10:15",
+                    "endTime": "11:00",
+                    "durationMinutes": 45
+                }
+            ],
+            "stale": false,
+            "ttlIsADay": true,
+            "sameAsAnswer": true
+        },
+        "events": [
+            {
+                "save": {
+                    "resourceId": "res-sarah",
+                    "date": "2026-06-01",
+                    "freeBlocks": [
+                        {
+                            "startTime": "09:00",
+                            "endTime": "09:45",
+                            "durationMinutes": 45
+                        },
+                        {
+                            "startTime": "09:15",
+                            "endTime": "10:00",
+                            "durationMinutes": 45
+                        },
+                        {
+                            "startTime": "09:30",
+                            "endTime": "10:15",
+                            "durationMinutes": 45
+                        },
+                        {
+                            "startTime": "09:45",
+                            "endTime": "10:30",
+                            "durationMinutes": 45
+                        },
+                        {
+                            "startTime": "10:00",
+                            "endTime": "10:45",
+                            "durationMinutes": 45
+                        },
+                        {
+                            "startTime": "10:15",
+                            "endTime": "11:00",
+                            "durationMinutes": 45
+                        }
+                    ],
+                    "ttlIsADay": true,
+                    "sameAsAnswer": true
+                }
+            },
+            {
+                "warning": "Pipelinq: availability cache write failed",
+                "context": {
+                    "resource": "res-sarah",
+                    "date": "2026-06-01"
+                }
+            }
+        ]
+    }
+}

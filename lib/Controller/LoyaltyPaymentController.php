@@ -1,0 +1,92 @@
+<?php
+
+/**
+ * Pipelinq LoyaltyPaymentController.
+ *
+ * The cash register spends a customer's loyalty points as one part of a
+ * split payment.
+ *
+ * @category Controller
+ * @package  OCA\Pipelinq\Controller
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Controller;
+
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyPaymentServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
+use OCP\IRequest;
+use Throwable;
+
+/**
+ * Loyalty points as a payment part.
+ *
+ * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+ */
+class LoyaltyPaymentController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param string                  $appName     The app name.
+	 * @param IRequest                $request     The request.
+	 * @param LoyaltyPaymentServiceInterface   $service     The payment service.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
+	 * @param IL10N                   $l10n        The translator.
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private LoyaltyPaymentServiceInterface $service,
+		private CrmPrivilegeCheck $privilege,
+		private IL10N $l10n,
+	) {
+		parent::__construct(appName: $appName, request: $request);
+	}//end __construct()
+
+	/**
+	 * Spend points from an account against a sale.
+	 *
+	 * @param string $accountId The loyalty account UUID.
+	 *
+	 * @return JSONResponse The points spent, their amount and the balance left.
+	 *
+	 * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
+	 */
+	#[NoAdminRequired]
+	public function pay(string $accountId): JSONResponse {
+		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			$result = $this->service->payWithPoints(
+				accountId: $accountId,
+				points: (int)$this->request->getParam('points', 0),
+				posTransactionId: (string)$this->request->getParam('posTransactionId', '')
+			);
+			return new JSONResponse($result);
+		} catch (Throwable $e) {
+			return new JSONResponse(
+				['error' => $e->getMessage()],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+	}//end pay()
+}//end class

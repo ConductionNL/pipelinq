@@ -26,7 +26,8 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import MapMarkerCheckOutline from 'vue-material-design-icons/MapMarkerCheckOutline.vue'
 import LogVisitDialog from '../dialogs/LogVisitDialog.vue'
-import { buildVisitPayloads } from '../services/visitLog.js'
+import detailHeaderActionsMixin from '../mixins/detailHeaderActionsMixin.js'
+import { buildVisitPayloads, linkTaskToContactMoment } from '../services/visitLog.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /**
@@ -37,6 +38,36 @@ import { useObjectStore } from '../store/modules/object.js'
  *
  * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
+/**
+ * Store the visit's contact moment; a store that answers nothing refuses it.
+ *
+ * @param {object} store The object store.
+ * @param {object} ticket The contact moment.
+ * @return {Promise<object>} The stored contact moment.
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ */
+async function storeVisit(store, ticket) {
+	const saved = await store.saveObject('ticket', ticket)
+	if (!saved) {
+		throw new Error(t('pipelinq', 'The visit could not be saved.'))
+	}
+	return saved
+}
+
+/**
+ * Say the visit is stored but its follow-up task is not.
+ *
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ */
+function reportTaskNotSaved() {
+	showError(
+		t(
+			'pipelinq',
+			'The visit is saved, the follow-up task is not. Add it from the task list.',
+		),
+	)
+}
+
 export default {
 	name: 'LogVisitAction',
 	components: {
@@ -44,6 +75,8 @@ export default {
 		LogVisitDialog,
 		MapMarkerCheckOutline,
 	},
+
+	mixins: [detailHeaderActionsMixin],
 
 	// The actions slot also hands over schema / store / openEditForm; none of
 	// them belong on the root element.
@@ -58,18 +91,6 @@ export default {
 
 		/** The lead the visit was about (lead page). */
 		leadId: {
-			type: String,
-			default: '',
-		},
-
-		/** The lead, from CnDetailPage's `#actions` slot (lead page header). */
-		object: {
-			type: Object,
-			default: null,
-		},
-
-		/** The lead id, from CnDetailPage's `#actions` slot (lead page header). */
-		objectId: {
 			type: String,
 			default: '',
 		},
@@ -123,6 +144,25 @@ export default {
 		 * @return {Promise<boolean>}
 		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
 		 */
+		/**
+		 * The contact moment and follow-up task for what the dialog holds, for
+		 * this page's client or lead and the signed-in user.
+		 *
+		 * @param {{note: string, followUpDate: string}} input From the dialog.
+		 * @return {{ticket: object, task: object|null}} The payloads.
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+		 */
+		visitPayloads(input) {
+			return buildVisitPayloads({
+				...input,
+				clientId: this.visitClientId || undefined,
+				leadId: this.visitLeadId || undefined,
+				userId: window.OC?.getCurrentUser?.()?.uid,
+				title: t('pipelinq', 'Visit'),
+				taskSubject: t('pipelinq', 'Follow up on the visit'),
+			})
+		},
+
 		async saveTask(store, task) {
 			try {
 				return Boolean(await store.saveObject('crmTask', task))
@@ -140,31 +180,17 @@ export default {
 		 */
 		async save(input) {
 			const store = useObjectStore()
-			const { ticket, task } = buildVisitPayloads({
-				...input,
-				clientId: this.visitClientId || undefined,
-				leadId: this.visitLeadId || undefined,
-				userId: window.OC?.getCurrentUser?.()?.uid,
-				title: t('pipelinq', 'Visit'),
-				taskSubject: t('pipelinq', 'Follow up on the visit'),
-			})
+			const { ticket, task } = this.visitPayloads(input)
 			this.saving = true
 			this.error = ''
 			try {
-				const saved = await store.saveObject('ticket', ticket)
-				if (!saved)
-					throw new Error(t('pipelinq', 'The visit could not be saved.'))
+				const saved = await storeVisit(store, ticket)
 				this.open = false
 				this.$emit('saved', saved)
 				// The visit is stored now; a failed task must not invite a
 				// second save that would log the visit twice.
-				if (task && !(await this.saveTask(store, task))) {
-					showError(
-						t(
-							'pipelinq',
-							'The visit is saved, the follow-up task is not. Add it from the task list.',
-						),
-					)
+				if (task && !(await this.saveTask(store, linkTaskToContactMoment(task, saved)))) {
+					reportTaskNotSaved()
 					return
 				}
 				showSuccess(t('pipelinq', 'Visit logged'))

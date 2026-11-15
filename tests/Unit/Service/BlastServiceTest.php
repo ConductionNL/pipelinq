@@ -32,6 +32,8 @@ use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for BlastService — A/B split determinism, send orchestration,
@@ -98,7 +100,9 @@ class BlastServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Payload or null.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}//end find()
 
@@ -185,7 +189,10 @@ class BlastServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed> The saved payload.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}
@@ -657,7 +664,140 @@ class BlastServiceTest extends TestCase {
 		);
 		$finalBlast = end($blastSaves);
 		$this->assertSame('sending', $finalBlast['status']);
+
+		// The left-out contact is stored on the blast, for the consent tile.
+		$this->assertSame(1, $finalBlast['skippedNoConsent']);
+		$this->assertSame(0, $finalBlast['skippedSuppressed']);
 	}//end testSendBlastQueuesCompliantSkipsNonCompliant()
+
+	/**
+	 * Send a draft blast through a ComplianceService that passes everyone.
+	 *
+	 * @param array<string, mixed> $blast The stored blast.
+	 *
+	 * @return array<string, mixed> The last saved state of the blast.
+	 */
+	private function sendCompliant(array $blast): array {
+		$this->objectService->store[(string)$blast['uuid']] = $blast;
+		$this->segmentService->method('getMembersForBlast')->willReturn(
+			[['contactId' => 'c-yes', 'email' => 'yes@example.test']]
+		);
+		$compliance = new class {
+			public function checkSegmentCompliance(string $segmentId, string $channel): array {
+				return ['compliant' => true, 'missingConsent' => [], 'missingCount' => 0];
+			}//end checkSegmentCompliance()
+		};
+		$objectService = $this->objectService;
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($compliance, $objectService) {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $objectService;
+				}
+
+				if ($id === 'OCA\\Pipelinq\\Service\\ComplianceService') {
+					return $compliance;
+				}
+
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
+		$this->service = $this->buildService($this->container, $this->appConfig);
+
+		$this->service->sendBlast((string)$blast['uuid'], false);
+
+		$blastSaves = array_values(
+			array_filter($this->objectService->saved, fn (array $row) => ($row['uuid'] ?? null) === $blast['uuid'])
+		);
+
+		return end($blastSaves);
+	}//end sendCompliant()
+
+	/**
+	 * A blast that starts sending keeps the template's subject and bodies, so a
+	 * later template change does not change what it shows it sent (REQ-MMT-004).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 */
+	public function testSendingBlastKeepsTheContentItIsSentWith(): void {
+		$this->objectService->store['tmpl-oct'] = [
+			'uuid' => 'tmpl-oct',
+			'subject' => 'October news',
+			'bodyHtml' => '<p>Hello {{preferredName}}</p>',
+			'bodyText' => 'Hello {{preferredName}}',
+		];
+
+		$final = $this->sendCompliant(
+			[
+				'uuid' => 'blast-oct',
+				'name' => 'October newsletter',
+				'segmentId' => 'seg-1',
+				'templateId' => 'tmpl-oct',
+				'channel' => 'email',
+				'status' => 'draft',
+			]
+		);
+
+		$this->assertSame('sending', $final['status']);
+		$this->assertSame('October news', $final['sentSubject']);
+		$this->assertSame('<p>Hello {{preferredName}}</p>', $final['sentHtml']);
+		$this->assertSame('Hello {{preferredName}}', $final['sentText']);
+
+		// The template changes afterwards; the blast's record does not.
+		$this->objectService->store['tmpl-oct']['subject'] = 'Changed subject';
+		$this->assertSame('October news', $this->objectService->store['blast-oct']['sentSubject']);
+	}//end testSendingBlastKeepsTheContentItIsSentWith()
+
+	/**
+	 * A snapshot already on the blast is never overwritten by the current template.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 */
+	public function testAnExistingSnapshotIsKept(): void {
+		$this->objectService->store['tmpl-oct'] = ['uuid' => 'tmpl-oct', 'subject' => 'New subject', 'bodyHtml' => '<p>new</p>', 'bodyText' => 'new'];
+
+		$final = $this->sendCompliant(
+			[
+				'uuid' => 'blast-old',
+				'name' => 'Resent',
+				'segmentId' => 'seg-1',
+				'templateId' => 'tmpl-oct',
+				'channel' => 'email',
+				'status' => 'draft',
+				'sentSubject' => 'Original subject',
+				'sentHtml' => '<p>original</p>',
+				'sentText' => 'original',
+			]
+		);
+
+		$this->assertSame('Original subject', $final['sentSubject']);
+		$this->assertSame('<p>original</p>', $final['sentHtml']);
+	}//end testAnExistingSnapshotIsKept()
+
+	/**
+	 * Without a readable template the blast still sends, with no snapshot invented.
+	 *
+	 * @return void
+	 */
+	public function testAMissingTemplateLeavesNoSnapshot(): void {
+		$final = $this->sendCompliant(
+			[
+				'uuid' => 'blast-x',
+				'name' => 'No template',
+				'segmentId' => 'seg-1',
+				'templateId' => 'tmpl-gone',
+				'channel' => 'email',
+				'status' => 'draft',
+			]
+		);
+
+		$this->assertSame('sending', $final['status']);
+		$this->assertArrayNotHasKey('sentSubject', $final);
+	}//end testAMissingTemplateLeavesNoSnapshot()
 
 	/**
 	 * Slice 09 — sendBlast with abSplitPercent set on the parent creates
@@ -1181,9 +1321,11 @@ class BlastServiceTest extends TestCase {
 			public function __construct(private object $delegate) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->findCalls[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
-				return $this->delegate->find($id, $register, $schema);
+				return $this->delegate->find($id, $options);
 			}//end find()
 
 			public function findAll(array $config = []): array {
@@ -1194,8 +1336,11 @@ class BlastServiceTest extends TestCase {
 				return $this->delegate->count($config);
 			}//end count()
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
-				return $this->delegate->saveObject($object, $register, $schema, $uuid);
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				return $this->delegate->saveObject($object, $options);
 			}//end saveObject()
 		};
 

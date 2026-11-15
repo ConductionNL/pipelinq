@@ -34,19 +34,43 @@ const CONFIG_TOKEN = /^@config\.([A-Za-z0-9_]+)\??$/
  * @param {object} appConfig The page-level app config map.
  * @return {object} The widget, with its target resolved (a copy when changed).
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function resolveGaugeTarget(widget, appConfig) {
-	const content = widget?.content
-	const raw = content?.target?.value
-	if (widget?.type !== 'gauge' || typeof raw !== 'string') {
+	const key = gaugeConfigKey(widget)
+	if (key === null) {
 		return widget
+	}
+	return { ...widget, content: withTarget(widget.content, Number(appConfig?.[key])) }
+}
+
+/**
+ * The app-config key a gauge's target names (`@config.<key>`), or null for
+ * any other widget or target.
+ *
+ * @param {object|null} widget The widget.
+ * @return {string|null} The key.
+ * @spec openspec/specs/commercial-dashboard/spec.md
+ */
+function gaugeConfigKey(widget) {
+	const raw = widget?.content?.target?.value
+	if (widget?.type !== 'gauge' || typeof raw !== 'string') {
+		return null
 	}
 	const match = CONFIG_TOKEN.exec(raw)
-	if (!match) {
-		return widget
-	}
-	const value = Number(appConfig?.[match[1]])
+	return match ? match[1] : null
+}
+
+/**
+ * The gauge's content with the configured target, or 0 and the label for
+ * a gauge without one when no target is set.
+ *
+ * @param {object} content The gauge's content.
+ * @param {number} value The configured target.
+ * @return {object} The content.
+ * @spec openspec/specs/commercial-dashboard/spec.md
+ */
+function withTarget(content, value) {
 	const hasTarget = Number.isFinite(value) && value > 0
 	const next = {
 		...content,
@@ -55,7 +79,7 @@ export function resolveGaugeTarget(widget, appConfig) {
 	if (!hasTarget && content.labelWithoutTarget) {
 		next.label = content.labelWithoutTarget
 	}
-	return { ...widget, content: next }
+	return next
 }
 
 /** The keys of the `case_target` initial state a page may read. */
@@ -75,7 +99,7 @@ const CASE_TARGET_KEYS = ['caseRegister', 'caseSchema']
  * @param {object} caseTarget The `case_target` initial state.
  * @return {object} The merged map, a new object.
  *
- * @spec openspec/changes/ticket-decisions-tab/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
+ * @spec openspec/specs/ticket-decisions/spec.md#requirement-decisions-on-the-linked-case-show-on-the-ticket-req-tdt-002
  */
 export function pageAppConfig(config, caseTarget) {
 	const merged = { ...(config || {}) }
@@ -103,7 +127,7 @@ export function pageAppConfig(config, caseTarget) {
  * @param {object} appConfig The app config map from the `config` initial state.
  * @return {object} The same manifest, with those pages' config seeded.
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function seedPageAppConfig(manifest, appConfig) {
 	const config = appConfig || {}

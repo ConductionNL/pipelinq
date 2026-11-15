@@ -9,6 +9,7 @@
 			:description="
 				t('pipelinq', 'History of scheduled and manual export runs')
 			"
+			:pageTabs="pageTabs"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -39,12 +40,11 @@
 </template>
 
 <script>
-import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
-import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
-import { useObjectStore } from '../../store/modules/object.js'
+import exportListMixin, { exportListView } from './exportListMixin.js'
 
 export default {
 	name: 'ExportRuns',
@@ -53,21 +53,12 @@ export default {
 		NcButton,
 	},
 
+	mixins: [exportListMixin],
+
 	setup() {
-		const sidebarState = inject('sidebarState', null)
-		const objectStore = useObjectStore()
-		return useListView('exportRun', {
-			sidebarState,
-			objectStore,
+		return exportListView('exportRun', {
 			defaultSort: { key: 'startedAt', order: 'desc' },
 		})
-	},
-
-	data() {
-		return {
-			busyId: null,
-			refreshing: false,
-		}
 	},
 
 	computed: {
@@ -89,21 +80,6 @@ export default {
 	},
 
 	methods: {
-		/**
-		 * Refresh handler for the Actions-menu Refresh item. Drives the
-		 * CnIndexPage `:refreshing` spinner around the underlying fetch.
-		 *
-		 * @spec exclude presentational refresh-button spinner wiring — no business logic
-		 */
-		async onRefresh() {
-			this.refreshing = true
-			try {
-				await this.refresh()
-			} finally {
-				this.refreshing = false
-			}
-		},
-
 		/**
 		 * Whether a run can be retried.
 		 *

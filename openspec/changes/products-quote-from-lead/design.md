@@ -16,7 +16,7 @@ No new schema. Sending freezes what was sent as a PDF in the sender's Files and 
 
 ### D2. Numbers are per year and per app
 
-`Q-2026-0001` style, allocated from the highest number found on contact moments of channel `quote` in that year. Allocation runs inside the request and a collision is retried once; two users sending in the same second is the only race and the retry closes it.
+`OFF-2026-0042` style, allocated from the highest number found on contact moments of channel `quote` in that year. Allocation runs inside the request and a collision is retried once; two users sending in the same second is the only race and the retry closes it.
 
 ### D3. Price comes from the resolver, the user may override
 

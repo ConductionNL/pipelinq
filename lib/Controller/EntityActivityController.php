@@ -20,15 +20,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-3
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\EntityActivityService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EntityActivityServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,24 +48,24 @@ use Throwable;
  * unexpected is logged with full detail and the caller receives a static
  * error message (ADR-015).
  *
- * @spec openspec/changes/entity-notes/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-3
  */
 class EntityActivityController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param EntityActivityService $service The entity-activity service.
+	 * @param EntityActivityServiceInterface $service The entity-activity service.
 	 * @param IUserSession $userSession The current user session.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly EntityActivityService $service,
+		private readonly EntityActivityServiceInterface $service,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -81,10 +81,26 @@ class EntityActivityController extends Controller {
 	 *
 	 * @return JSONResponse The paginated activity feed, or an error body.
 	 *
-	 * @spec openspec/changes/entity-notes/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-3
 	 */
 	#[NoAdminRequired]
 	public function index(string $entityType, string $entityId): JSONResponse {
+		$refusal = $this->refusal(entityType: $entityType);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->activity(entityType: $entityType, entityId: $entityId);
+	}//end index()
+
+	/**
+	 * Refuse an anonymous caller first, then an entity type outside the allowlist.
+	 *
+	 * @param string $entityType The entity type.
+	 *
+	 * @return JSONResponse|null The refusal, or null when the request may go on.
+	 */
+	private function refusal(string $entityType): ?JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(
@@ -94,12 +110,21 @@ class EntityActivityController extends Controller {
 		}
 
 		if ($this->service->isAllowedEntityType(entityType: $entityType) === false) {
-			return new JSONResponse(
-				['message' => 'Invalid entity type'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->invalidEntityType();
 		}
 
+		return null;
+	}//end refusal()
+
+	/**
+	 * Load one page of the feed from the query string, mapping failures to static bodies.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId   The OR object UUID.
+	 *
+	 * @return JSONResponse
+	 */
+	private function activity(string $entityType, string $entityId): JSONResponse {
 		$type = (string)$this->request->getParam('type', 'all');
 		$page = (int)$this->request->getParam('_page', 1);
 		$limit = (int)$this->request->getParam('_limit', 20);
@@ -121,10 +146,7 @@ class EntityActivityController extends Controller {
 			// helper below; the static `message` is the only thing the
 			// caller ever sees (ADR-015-common-patterns).
 			$this->logRejectedRequest(exception: $e);
-			return new JSONResponse(
-				['message' => 'Invalid entity type'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->invalidEntityType();
 		} catch (Throwable $e) {
 			$this->logUnexpectedFailure(exception: $e);
 			return new JSONResponse(
@@ -132,7 +154,19 @@ class EntityActivityController extends Controller {
 				Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}//end try
-	}//end index()
+	}//end activity()
+
+	/**
+	 * The static 400 body for an entity type the feed does not serve (REQ-ENT-003-D).
+	 *
+	 * @return JSONResponse
+	 */
+	private function invalidEntityType(): JSONResponse {
+		return new JSONResponse(
+			['message' => 'Invalid entity type'],
+			Http::STATUS_BAD_REQUEST
+		);
+	}//end invalidEntityType()
 
 	/**
 	 * Log a soft-rejected request (e.g. unknown entity type) at info level.

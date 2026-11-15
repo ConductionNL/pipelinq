@@ -21,7 +21,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Notification\UnsubscribeHeaders;
+use OCA\OpenRegister\Notifications\Service\Notification\UnsubscribeHeaders;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\UnsubscribeMail;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;
@@ -136,6 +136,18 @@ class AppointmentEmailOptOutTest extends TestCase {
 		self::assertSame('List-Unsubscribe=One-Click', $message->headers['List-Unsubscribe-Post']);
 		self::assertNull($service->lastRefusal());
 	}//end testANormalReminderCarriesTheLinkAndTheHeaders()
+
+	/**
+	 * Integriq is asked about the booking's contact by address and contact reference.
+	 *
+	 * @return void
+	 */
+	public function testTheReminderAsksAboutTheBookedContact(): void {
+		$this->service()->sendReminder('b-1');
+
+		self::assertSame([['address' => 'jan@example.nl', 'contactRef' => 'c-1']], $this->integriq->decisionEvents[0]->getRecipients());
+		self::assertSame(['email', false, null, false], [$this->integriq->decisionEvents[0]->getChannel(), $this->integriq->decisionEvents[0]->requiresConsent(), $this->integriq->decisionEvents[0]->getInReplyTo(), $this->integriq->decisionEvents[0]->isProbe()]);
+	}//end testTheReminderAsksAboutTheBookedContact()
 
 	public function testWithoutIntegriqAConfirmationIsRefused(): void {
 		$this->integriq->mode = FakeIntegriq::MODE_UNHANDLED;

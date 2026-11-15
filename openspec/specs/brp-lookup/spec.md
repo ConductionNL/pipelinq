@@ -3,8 +3,10 @@
 **OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/archive/2026-07-12-vng-klantinteracties-leaf/) _(archived 2026-07-12 — consumes this capability's 11-proef + `brpPersoon.bsnHash` flow for the AVG hash-only handling of VNG `partijIdentificator` BSNs; no requirement of this spec changes)_
 
 ## Purpose
-TBD - created by archiving change pipelinq-brp-via-or-leaf. Update Purpose after archive.
+An agent looks up a person in the BRP (Basisregistratie Personen) by BSN to fill in or verify a client, through OpenRegister first with the legacy client as a behaviour-preserving fallback. Every lookup leaves the audit trail the Wet BRP asks for, and a lookup returns the person it asked for or nothing.
+
 ## Requirements
+
 ### Requirement: BRP person lookup is OR-first with a behaviour-preserving legacy fallback and an identical Wet-BRP audit trail
 
 The pipelinq BRP person-lookup client (`HaalCentraalClient`) SHALL query the OpenRegister BRP leaf (`GET /apps/openregister/api/integrations/brp/person?bsn=<bsn>`, ADR-022 — connection + credentials in OpenConnector) **first**, via `IClientService` + `IURLGenerator` as an internal, server-side, `OCS-APIREQUEST` + `allow_local_address` call. The elfproef checksum + BSN masking (`BsnValidationService`) SHALL run before any external call regardless of path, and the raw BSN SHALL NEVER be written to the log on either path.
@@ -46,3 +48,25 @@ When the OR leaf is not usable — it responds 503 with `details.cause` (`openco
 - **WHEN** a BRP lookup runs through the OR-first path or falls back to the legacy path
 - **THEN** only the masked BSN appears in any log message or context, the BSN is passed to the OR leaf in the query string only (the leaf places it in the upstream request body and never logs it), and no raw BSN is written to the log on either leg
 
+### Requirement: A BRP lookup can verify a client's identity
+
+A BRP lookup with `verifiedClient` that finds the person MUST record on that client `identityVerifiedAt` (when), `identityVerifiedVia: BRP`, and the `identityCheck` the employee gave. The purpose binding and the audit record MUST be as for any lookup.
+
+#### Scenario: Pieter verifies Sanne in a call
+- GIVEN a call with Sanne de Vries, BSN 999994001 in the BRP
+- WHEN Pieter looks her up from "Wie is het" with "Geboortedatum en adres gevraagd"
+- THEN Sanne's client reads Gecontroleerd "Geboortedatum en adres gevraagd" and Bron "BRP, opgezocht" with today's date
+
+### Requirement: The lookup reads the person it asked for
+
+When the source answers several people, the lookup MUST read the person whose `burgerservicenummer` is the BSN asked for, and the first person when none of them carries it. It MUST read the name from both the English shape (`name`) and HaalCentraal's Dutch shape (`naam`).
+
+#### Scenario: The source answers several people
+- GIVEN a BRP answer with two persons, the second carrying `burgerservicenummer` 999993653, the BSN asked for
+- WHEN the lookup reads the answer
+- THEN it reads the second person
+
+#### Scenario: The Dutch shape
+- GIVEN a HaalCentraal answer whose person carries `naam.voornamen` and `naam.geslachtsnaam` and no `name`
+- WHEN the lookup reads the answer
+- THEN it reads the given names and surname from `naam`

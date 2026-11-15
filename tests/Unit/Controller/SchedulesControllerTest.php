@@ -33,6 +33,7 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
+use OCA\Pipelinq\Tests\Unit\Support\Autowire;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -89,11 +90,15 @@ class SchedulesControllerTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->controller = new SchedulesController($this->request,
-			$this->tasks,
-			$this->groupManager,
-			$this->userSession,
-			$logger
+		$this->controller = Autowire::build(
+			class: SchedulesController::class,
+			doubles: [
+				IRequest::class => $this->request,
+				ScheduledTaskService::class => $this->tasks,
+				IGroupManager::class => $this->groupManager,
+				IUserSession::class => $this->userSession,
+				LoggerInterface::class => $logger,
+			]
 		);
 	}//end setUp()
 

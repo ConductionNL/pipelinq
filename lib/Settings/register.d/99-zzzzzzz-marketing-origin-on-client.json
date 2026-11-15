@@ -1,0 +1,265 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "marketing-campaign-on-client D1: a touchpoint names the client and the landing page; contact and client carry the first and last touch of their form submissions, written by TouchpointService::recordSubmission(). A website form submit is a touchpoint whether or not its campaign value names a pipelinq campaign, so campaignId is no longer required."
+  },
+  "components": {
+    "schemas": {
+      "touchpoint": {
+        "slug": "touchpoint",
+        "version": "1.1.0",
+        "required": [
+          "kind",
+          "occurredAt"
+        ],
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client",
+            "description": "The client of the contact who submitted the form, when the contact belongs to one."
+          },
+          "landingPage": {
+            "type": "string",
+            "maxLength": 2048,
+            "title": "Landing page",
+            "description": "The page the form was submitted on."
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "version": "1.3.0",
+        "properties": {
+          "firstTouch": {
+            "type": "object",
+            "title": "First touch",
+            "description": "How this person first found you: the campaign parameters, campaign and landing page of their first form submission. Written once.",
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at first touch.",
+                "example": "webinar-ai-voor-gemeenten"
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at first touch.",
+                "example": "nieuwsbrief"
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at first touch.",
+                "example": "email"
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at first touch.",
+                "example": "ai-gemeenten"
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at first touch.",
+                "example": "00000000-0000-0000-0000-000000000000"
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The pipelinq campaign the submission belonged to, when one was resolved."
+              },
+              "landingPage": {
+                "type": "string",
+                "maxLength": 2048,
+                "title": "Landing page",
+                "description": "The page the form was submitted on."
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was submitted."
+              }
+            },
+            "readOnly": true
+          },
+          "lastTouch": {
+            "type": "object",
+            "title": "Last touch",
+            "description": "The campaign parameters, campaign and landing page of their latest form submission.",
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at last touch.",
+                "example": "webinar-ai-voor-gemeenten"
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at last touch.",
+                "example": "linkedin"
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at last touch.",
+                "example": "social"
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at last touch.",
+                "example": "ai-gemeenten"
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at last touch.",
+                "example": "00000000-0000-0000-0000-000000000000"
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The pipelinq campaign the submission belonged to, when one was resolved."
+              },
+              "landingPage": {
+                "type": "string",
+                "maxLength": 2048,
+                "title": "Landing page",
+                "description": "The page the form was submitted on."
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was submitted."
+              }
+            },
+            "readOnly": true
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "version": "1.8.0",
+        "properties": {
+          "firstTouch": {
+            "type": "object",
+            "title": "First touch",
+            "description": "How this client first found you: the campaign parameters, campaign and landing page of the first form submission by one of its contacts. Written once.",
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at first touch.",
+                "example": "webinar-ai-voor-gemeenten"
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at first touch.",
+                "example": "nieuwsbrief"
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at first touch.",
+                "example": "email"
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at first touch.",
+                "example": "ai-gemeenten"
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at first touch.",
+                "example": "00000000-0000-0000-0000-000000000000"
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The pipelinq campaign the submission belonged to, when one was resolved."
+              },
+              "landingPage": {
+                "type": "string",
+                "maxLength": 2048,
+                "title": "Landing page",
+                "description": "The page the form was submitted on."
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was submitted."
+              }
+            },
+            "readOnly": true
+          },
+          "lastTouch": {
+            "type": "object",
+            "title": "Last touch",
+            "description": "The campaign parameters, campaign and landing page of the latest form submission by one of its contacts.",
+            "properties": {
+              "campaign": {
+                "type": "string",
+                "title": "Campaign",
+                "description": "The utm_campaign value at last touch.",
+                "example": "webinar-ai-voor-gemeenten"
+              },
+              "source": {
+                "type": "string",
+                "title": "Source",
+                "description": "The utm_source value at last touch.",
+                "example": "linkedin"
+              },
+              "medium": {
+                "type": "string",
+                "title": "Medium",
+                "description": "The utm_medium value at last touch.",
+                "example": "social"
+              },
+              "term": {
+                "type": "string",
+                "title": "Term",
+                "description": "The utm_term value at last touch.",
+                "example": "ai-gemeenten"
+              },
+              "content": {
+                "type": "string",
+                "title": "Content",
+                "description": "The utm_content value at last touch.",
+                "example": "00000000-0000-0000-0000-000000000000"
+              },
+              "campaignId": {
+                "type": "string",
+                "title": "Campaign record",
+                "description": "The pipelinq campaign the submission belonged to, when one was resolved."
+              },
+              "landingPage": {
+                "type": "string",
+                "maxLength": 2048,
+                "title": "Landing page",
+                "description": "The page the form was submitted on."
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Submitted at",
+                "description": "When the form was submitted."
+              }
+            },
+            "readOnly": true
+          }
+        }
+      }
+    }
+  }
+}

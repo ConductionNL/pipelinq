@@ -7,7 +7,7 @@
  * 2.2): the four states the stock endpoint answers, the location line and
  * the tooltip.
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

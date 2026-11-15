@@ -1,8 +1,9 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <!--
-  - The segment rule editor: an AND/OR tree of conditions (SegmentRuleNode),
-  - validated and sized by a debounced POST /api/segments/preview.
+  - The segment rule editor: an AND/OR tree of conditions in nc-vue's
+  - CnConditionGroupEditor, validated and sized by a debounced
+  - POST /api/segments/preview.
   -
   - Unfinished conditions are caught here before anything is sent, so a row
   - the user has only just added is not reported as an error. Once every
@@ -15,32 +16,39 @@
 			<h3 class="segment-builder__title">
 				{{ t('pipelinq', 'Rules') }}
 			</h3>
-			<div class="segment-builder__estimate" role="status" aria-live="polite">
-				<template v-if="status === 'checking'">
-					<NcLoadingIcon :size="16" />
-					{{ t('pipelinq', 'Checking rules…') }}
-				</template>
-				<span v-else-if="status === 'valid'" class="segment-builder__count">
+		</div>
+
+		<CnConditionGroupEditor
+			:modelValue="tree"
+			:fields="translatedFields"
+			:operators="operatorsFor"
+			:maxDepth="1"
+			:errors="errors"
+			:emptyText="t('pipelinq', 'No conditions yet. Add a condition to decide who belongs to this segment.')"
+			@update:modelValue="onTreeUpdate" />
+
+		<div class="segment-builder__estimate" role="status" aria-live="polite">
+			<template v-if="status === 'checking'">
+				<NcLoadingIcon :size="16" />
+				{{ t('pipelinq', 'Checking rules…') }}
+			</template>
+			<template v-else-if="status === 'valid'">
+				<span class="segment-builder__count">
+					<AccountGroup :size="18" />
 					{{ t('pipelinq', 'Estimated members:') }}
 					<strong>{{ estimatedSize }}</strong>
 				</span>
-				<span v-else-if="status === 'incomplete'">
-					{{
-						t(
-							'pipelinq',
-							'Complete every condition to see the estimate.',
-						)
-					}}
-				</span>
-			</div>
+				<span>{{ t('pipelinq', 'Updates as the data changes. A segment is a living rule, not a fixed list.') }}</span>
+			</template>
+			<span v-else-if="status === 'incomplete'">
+				{{
+					t(
+						'pipelinq',
+						'Complete every condition to see the estimate.',
+					)
+				}}
+			</span>
 		</div>
-
-		<SegmentRuleNode
-			:node="tree"
-			:depth="0"
-			:fieldOptions="fieldOptions"
-			:errors="errors"
-			@update:node="onTreeUpdate" />
 
 		<NcNoteCard v-if="generalError" type="error" class="segment-builder__error">
 			{{ generalError }}
@@ -49,10 +57,13 @@
 </template>
 
 <script>
+import { CnConditionGroupEditor } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import SegmentRuleNode from './SegmentRuleNode.vue'
+import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import { segmentOperatorsFor } from '../services/segmentOperators.js'
+import { cloneTree, emptyTree, tally } from '../services/segmentRules.js'
 
 const PREVIEW_DEBOUNCE_MS = 400
 
@@ -60,61 +71,13 @@ const PREVIEW_DEBOUNCE_MS = 400
 // `$.children[1].children[0]: field "x" is not declared on the entity schema.`
 const ERROR_PATH = /^(\$(?:\.children\[\d+\])*):\s*(.*)$/s
 
-/**
- * @return {object} An empty AND group.
- */
-function emptyTree() {
-	return { type: 'AND', children: [] }
-}
-
-/**
- * @param {object} node A rule tree node.
- * @return {object} A deep copy, or an empty tree for anything unusable.
- */
-function cloneTree(node) {
-	if (!node || typeof node !== 'object') {
-		return emptyTree()
-	}
-	try {
-		return JSON.parse(JSON.stringify(node))
-	} catch {
-		return emptyTree()
-	}
-}
-
-/**
- * @param {object} node A rule tree node.
- * @return {{leaves: number, unfinished: number}} Its condition count, and how
- *   many conditions or groups are not filled in yet.
- */
-function tally(node) {
-	if (Array.isArray(node?.children)) {
-		if (node.children.length === 0) {
-			return { leaves: 0, unfinished: 1 }
-		}
-		return node.children.reduce(
-			(sum, child) => {
-				const sub = tally(child)
-				return {
-					leaves: sum.leaves + sub.leaves,
-					unfinished: sum.unfinished + sub.unfinished,
-				}
-			},
-			{ leaves: 0, unfinished: 0 },
-		)
-	}
-	const noValue =
-		node?.value === '' || node?.value === null || node?.value === undefined
-	const unfinished = !node?.field || !node?.operator || noValue
-	return { leaves: 1, unfinished: unfinished ? 1 : 0 }
-}
-
 export default {
 	name: 'SegmentBuilder',
 	components: {
+		AccountGroup,
+		CnConditionGroupEditor,
 		NcLoadingIcon,
 		NcNoteCard,
-		SegmentRuleNode,
 	},
 
 	props: {
@@ -152,6 +115,22 @@ export default {
 		}
 	},
 
+	computed: {
+		/**
+		 * The field options with translated labels.
+		 *
+		 * @return {Array<object>} The options.
+		 *
+		 * @spec openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#requirement-a-segment-groups-its-rules
+		 */
+		translatedFields() {
+			return this.fieldOptions.map((o) => ({
+				...o,
+				label: this.t('pipelinq', o.label),
+			}))
+		},
+	},
+
 	watch: {
 		/**
 		 * Take a tree the parent replaced, and re-check it.
@@ -161,11 +140,9 @@ export default {
 		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		modelValue(next) {
-			if (
-				next !== this.tree
-				&& JSON.stringify(next) !== JSON.stringify(this.tree)
-			) {
-				this.tree = cloneTree(next)
+			const tree = cloneTree(next)
+			if (JSON.stringify(tree) !== JSON.stringify(this.tree)) {
+				this.tree = tree
 				this.evaluate()
 			}
 		},
@@ -199,14 +176,29 @@ export default {
 
 	methods: {
 		/**
-		 * Take an edited tree from the rule nodes, pass it up and re-check it.
+		 * The operators of a field, labels translated.
+		 *
+		 * @param {object|undefined} field The field option.
+		 * @return {Array<{value: string, label: string}>} The operators.
+		 *
+		 * @spec openspec/changes/segment-groups-its-rules/specs/marketing-ui/spec.md#requirement-a-segment-groups-its-rules
+		 */
+		operatorsFor(field) {
+			return segmentOperatorsFor(field).map((o) => ({
+				value: o.value,
+				label: this.t('pipelinq', o.label),
+			}))
+		},
+
+		/**
+		 * Take an edited tree from the group editor, pass it up and re-check it.
 		 *
 		 * @param {object} updated The edited rule tree.
 		 *
 		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onTreeUpdate(updated) {
-			this.tree = updated
+			this.tree = cloneTree(updated)
 			this.$emit('update:modelValue', cloneTree(updated))
 			this.evaluate()
 		},
@@ -248,7 +240,19 @@ export default {
 		 */
 		async runPreview() {
 			const seq = this.requestSeq
-			let data
+			const data = await this.requestPreview()
+			if (seq !== this.requestSeq) {
+				return
+			}
+			this.showPreview(data)
+		},
+
+		/**
+		 * Ask the server to validate the rules and estimate the segment.
+		 *
+		 * @return {Promise<object|null>} The answer, or null when it failed.
+		 */
+		async requestPreview() {
 			try {
 				const response = await axios.post(
 					generateUrl('/apps/pipelinq/api/segments/preview'),
@@ -257,13 +261,19 @@ export default {
 						rules: this.tree,
 					},
 				)
-				data = response.data
+				return response.data
 			} catch {
-				data = null
+				return null
 			}
-			if (seq !== this.requestSeq) {
-				return
-			}
+		},
+
+		/**
+		 * Show the preview: could not validate, the validator's message, or
+		 * the estimated size.
+		 *
+		 * @param {object|null} data The answer.
+		 */
+		showPreview(data) {
 			if (!data) {
 				this.status = 'failed'
 				this.generalError = this.t('pipelinq', 'Could not validate rules.')
@@ -319,14 +329,22 @@ export default {
 }
 
 .segment-builder__estimate {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	color: var(--color-text-maxcontrast);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px 14px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-primary-element-light, var(--color-background-hover));
+	color: var(--color-primary-element-light-text, var(--color-main-text));
 }
 
-.segment-builder__count strong {
-	color: var(--color-main-text);
+.segment-builder__count {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.5;
 }
 
 .segment-builder__error {

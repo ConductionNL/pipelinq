@@ -11,16 +11,17 @@ returned. From pipelinq matrix row `clients-unmerge`.
 ### Requirement: Clients and contacts merge through OpenRegister's reversible merge (REQ-CRM-001)
 
 The `client` and `contact` schemas SHALL declare `x-openregister-merge` with a
-reversal window of thirty days. ClientDetail and ContactDetail SHALL offer
-Merge into another record, SHALL show OpenRegister's preview of which values
-win, and SHALL merge only on confirmation.
+reversal window of thirty days. OpenRegister's steward surface SHALL offer
+the merge and its preview. ClientDetail and ContactDetail SHALL show one line on a
+merged-away record: "Samengevoegd met <name> (<number>) op <date>", with a link to
+the surviving record. A merged-away record SHALL be read-only in pipelinq.
 
 #### Scenario: An account manager merges a duplicate client
 
 - GIVEN two clients, Gemeente Utrecht and Gem. Utrecht, the second with one open lead
-- WHEN the account manager opens Gem. Utrecht, chooses Merge into another record, picks Gemeente Utrecht and confirms the preview
+- WHEN the account manager merges Gem. Utrecht into Gemeente Utrecht in OpenRegister and confirms the preview
 - THEN Gemeente Utrecht lists the open lead
-- AND opening Gem. Utrecht shows that it was merged into Gemeente Utrecht
+- AND opening Gem. Utrecht in pipelinq shows the line "Samengevoegd met Gemeente Utrecht" and "Open het samengevoegde record"
 
 ### Requirement: Moved references return when a merge is undone (REQ-CRM-002)
 

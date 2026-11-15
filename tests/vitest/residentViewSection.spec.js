@@ -31,6 +31,8 @@ vi.mock('@nextcloud/router', async (importOriginal) => ({
 		'/index.php' + p.replace(/\{(\w+)\}/g, (_m, k) => params[k]),
 }))
 
+globalThis.t = (_app, text) => text
+
 const { default: ResidentViewSection } =
 	await import('../../src/components/ResidentViewSection.vue')
 
@@ -73,6 +75,22 @@ describe('ResidentViewSection', () => {
 		expect(wrapper.text()).toContain(
 			'Everything else on this ticket stays internal.',
 		)
+	})
+
+	it('writes the status as its label and the date in words, not as stored', async () => {
+		get.mockResolvedValue({
+			data: {
+				...VIEW,
+				bespoke: { ...VIEW.bespoke, date: '2026-10-04T08:24:00+00:00' },
+			},
+		})
+		const wrapper = mountSection()
+		await flushPromises()
+		const text = wrapper.text()
+		expect(text).toContain('In progress')
+		expect(text).not.toContain('in_progress')
+		expect(text).not.toContain('2026-10-04T08:24')
+		expect(text).toMatch(/4 October 2026|October 4, 2026/)
 	})
 
 	it('lists the internal fields on demand', async () => {

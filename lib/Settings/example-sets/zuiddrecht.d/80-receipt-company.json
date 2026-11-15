@@ -1,0 +1,29 @@
+{
+	"$comment": "The till's receipt names the seller as the boards draw it (PqKassabon, PqKassabonnen, PqKassaAfrekenen): Gemeente Zuiddrecht, Stadhuisplein 1, 2999 AA Zuiddrecht, with its KvK and VAT number. The postcode is in the set's made-up 2999 range and the numbers are fictitious. ReceiptService::companyAddress() joins street, postcode and city into one line.",
+	"appConfig": [
+		{
+			"key": "receipt_company_name",
+			"value": "Gemeente Zuiddrecht"
+		},
+		{
+			"key": "receipt_company_street",
+			"value": "Stadhuisplein 1"
+		},
+		{
+			"key": "receipt_company_postcode",
+			"value": "2999 AA"
+		},
+		{
+			"key": "receipt_company_city",
+			"value": "Zuiddrecht"
+		},
+		{
+			"key": "receipt_company_kvk",
+			"value": "27365412"
+		},
+		{
+			"key": "receipt_company_vat",
+			"value": "NL001234567B01"
+		}
+	]
+}

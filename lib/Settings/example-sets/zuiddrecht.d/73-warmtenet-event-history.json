@@ -1,0 +1,29 @@
+{
+	"$comment": "The history PqEvenement draws for Informatieavond warmtenet Oost: Pieter made the event in its campaign, and Lotte raised the places from 60 to 80 the day before the board's day. Real audit actions (create, update with the change), as the other pipelinq history seeds; the board's own sentences need change labels on the event page.",
+	"auditEntries": [
+		{
+			"key": "evenement-warmtenet-oost-aangemaakt",
+			"data": {
+				"object": "{{object:evenement-warmtenet-oost.id}}",
+				"action": "create",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-13 10:00}}"
+			}
+		},
+		{
+			"key": "evenement-warmtenet-oost-plaatsen",
+			"data": {
+				"object": "{{object:evenement-warmtenet-oost.id}}",
+				"action": "update",
+				"user": "{{cast:lotte.uid}}",
+				"at": "{{datetime:-1 14:30}}",
+				"changed": {
+					"capacity": {
+						"old": 60,
+						"new": 80
+					}
+				}
+			}
+		}
+	]
+}

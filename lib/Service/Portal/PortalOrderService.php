@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
@@ -35,36 +35,7 @@ namespace OCA\Pipelinq\Service\Portal;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalOrderService extends AbstractPortalReadFacade {
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return string The schema key.
-	 */
-	protected function schemaKey(): string {
-		return 'posTransaction';
-	}//end schemaKey()
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return string The scope.
-	 */
-	protected function delegationScope(): string {
-		return 'view-invoices';
-	}//end delegationScope()
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw posTransaction.
-	 *
-	 * @return array{0: string|null, 1: string|null} The [contactId, clientId].
-	 */
-	protected function ownerIds(array $object): array {
-		return [null, $this->readId(value: ($object['client'] ?? null))];
-	}//end ownerIds()
-
+class PortalOrderService extends AbstractPosTransactionFacade {
 	/**
 	 * {@inheritDoc}
 	 *

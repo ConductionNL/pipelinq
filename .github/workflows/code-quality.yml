@@ -146,17 +146,9 @@ concurrency:
   # superseding really is correct.
   cancel-in-progress: ${{ github.event_name != 'push' }}
 
-# Permission CEILING for the called quality pipeline. GitHub statically
-# validates the called workflow's declared job permissions against this
-# grant — even for jobs that are disabled — so it must cover the maximum
-# any nested job declares: journeydoc-capture (contents+actions write),
-# update-baseline / features-extract (contents write), and the Quality
-# Report PR comment (issues / pull-requests write).
+# Read-only by default; the write grants sit on the job that needs them.
 permissions:
-  contents: write
-  actions: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   quality:
@@ -166,6 +158,17 @@ jobs:
     if: >-
       (github.event_name != 'push' || github.event.created != true)
       && (github.event_name != 'pull_request' || github.head_ref != 'development')
+    # Permission CEILING for the called quality pipeline. GitHub statically
+    # validates the called workflow's declared job permissions against this
+    # grant, even for jobs that are disabled, so it must cover the maximum
+    # any nested job declares: journeydoc-capture (contents+actions write),
+    # update-baseline / features-extract (contents write), and the Quality
+    # Report PR comment (issues / pull-requests write).
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+      pull-requests: write
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
@@ -204,6 +207,15 @@ jobs:
       # diff and toolchain. The package prints both (`COVERAGE: N of M`) in the
       # job log. See https://github.com/ConductionNL/.github/tree/main/hydra-gates
       enable-hydra-gates: true
+      # Gate 122 (SIG unit ratchet) blocks: a unit this change adds or makes
+      # worse must stay at NLOC 60, McCabe 10 and at most 4 parameters, and a
+      # new duplicated fragment of 6+ lines fails. Units the change does not
+      # touch, or touches without making worse, are inherited and do not count.
+      hydra-gates-sig-blocking: true
+      # Maintainability floor: no rating in .maintainability-floor.json may drop
+      # more than 0.01 against the merge base (pull request) or below the
+      # committed floor (push). The floor is raised after improving merges.
+      enable-maintainability-floor: true
       # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
       # to @main, and this workflow is itself consumed at @main, so the two
       # sides move together and a gate fix reaches this repo without a commit
@@ -369,9 +381,9 @@ jobs:
       # with no code change. Raise this as scenarios get annotated; it must only
       # ever go up.
       playwright-coverage-threshold: 20
-      # Pin openregister to development: main lacks the react/async composer dep
-      # that lib/Service/ObjectService.php (Async\await call) requires, so app:enable
-      # fails with "Call to undefined function React\Async\await()" during seed.
+      # openregister on main: this app calls main's option-object API (find,
+      # saveObject, ...), which the frozen development line does not have. main
+      # now requires react/async, the dependency that once kept this pin on development.
       # ⚠️ The org here is `ConductionNL`, not `Conduction` — the latter does not
       # exist. With the wrong org the checkout prompts for credentials and exits
       # 128, which took out all four PHPUnit legs AND the Playwright job: they
@@ -399,7 +411,7 @@ jobs:
       # objects endpoint answers 404, and all six tests in
       # `tests/e2e/integrations-page.spec.ts` fail. `app` is `integriq`, the id
       # in its appinfo/info.xml on `development`.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
       # The old seed was `php occ app:disable pipelinq && php occ app:enable
       # pipelinq`. It reported success on every run and provisioned nothing
       # reliable: the repair step it triggers runs with NO user session (OR RBAC
