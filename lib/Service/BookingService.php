@@ -36,6 +36,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\AppointmentServiceLookup;
 use OCA\Pipelinq\Service\Support\ByteTruncate;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
@@ -81,6 +82,7 @@ class BookingService implements BookingServiceInterface {
 	use InjectedObjectService;
 	use ByteTruncate;
 	use WithoutSelf;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
@@ -1445,13 +1447,7 @@ class BookingService implements BookingServiceInterface {
 			throw new RuntimeException('Booking register/schema not configured');
 		}
 
-		return $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
+		return $this->saveIn(target: [$register, $schema, $uuid], object: $payload);
 	}//end saveBooking()
 
 	/**

@@ -31,6 +31,7 @@ use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\PosObjectFetch;
 use OCA\Pipelinq\Service\Support\RandomUuid;
@@ -89,6 +90,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	use CastingPayloadToArray;
 	use RandomUuid;
 	use PosObjectFetch;
+	use RegisterSchemaObjects;
 
 	/**
 	 * CloudEvent type emitted on confirmation.
@@ -1600,13 +1602,7 @@ class PosTransactionService implements PosTransactionServiceInterface {
 			static fn ($value): bool => $value !== null
 		);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $transaction,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $transaction);
 
 		return $this->toArray(object: $saved);
 	}//end saveTransaction()

@@ -44,7 +44,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
-use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -80,7 +80,7 @@ use Psr\Log\LoggerInterface;
 class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
-	use RegisterSchemaFindAll;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Schemas in scope for the audit log.
@@ -729,13 +729,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 
 		unset($object['@self']);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $object);
 
 		return $this->toArray(object: $saved);
 	}//end saveEntry()

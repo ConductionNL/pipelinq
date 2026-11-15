@@ -35,7 +35,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
-use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -66,7 +66,7 @@ use RuntimeException;
 class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
-	use RegisterSchemaFindAll;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
@@ -549,13 +549,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			// Never persist the embedded lines or @self envelope.
 			$persist = $transaction;
 			unset($persist['lines'], $persist['@self']);
-			$this->getObjectService()->saveObject(
-				object: $persist,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$this->saveIn(target: [$register, $schema, $id], object: $persist);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to persist invoice number', ['exception' => $e->getMessage()]);
 		}//end try

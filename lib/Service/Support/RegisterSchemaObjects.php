@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Pipelinq RegisterSchemaFindAll.
+ * Pipelinq RegisterSchemaObjects.
  *
- * Lists the objects of one register and schema.
+ * Lists and saves the objects of one register and schema.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Support
@@ -26,11 +26,12 @@ namespace OCA\Pipelinq\Service\Support;
 
 /**
  * Runs the host's ObjectService findAll() over a register and schema plus
- * extra equality filters. The host class provides getObjectService().
+ * extra equality filters, and its saveObject() into a register and schema.
+ * The host class provides getObjectService().
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
-trait RegisterSchemaFindAll {
+trait RegisterSchemaObjects {
 
 	/**
 	 * Find the objects of a register and schema; what the ObjectService throws is not caught.
@@ -50,4 +51,25 @@ trait RegisterSchemaFindAll {
 			]
 		);
 	}//end findAllIn()
+
+	/**
+	 * Save an object into a register and schema; what the ObjectService throws is not caught.
+	 *
+	 * @param array{0: string, 1: string, 2: string|null} $target The register, schema and object uuid (null or '' to create).
+	 * @param array<string, mixed>                        $object The object data.
+	 *
+	 * @return mixed The saved object.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function saveIn(array $target, array $object): mixed {
+		[$register, $schema, $uuid] = $target;
+		return $this->getObjectService()->saveObject(
+			object: $object,
+			extend: [],
+			register: $register,
+			schema: $schema,
+			uuid: $uuid
+		);
+	}//end saveIn()
 }//end trait

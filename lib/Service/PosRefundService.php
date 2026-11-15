@@ -32,7 +32,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
-use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosObjectFetch;
@@ -84,7 +84,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectFetch;
-	use RegisterSchemaFindAll;
+	use RegisterSchemaObjects;
 
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
@@ -719,13 +719,7 @@ class PosRefundService implements PosRefundServiceInterface {
 
 		unset($refund['@self']);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $refund,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $refund);
 
 		return $this->toArray(object: $saved);
 	}//end saveRefund()
@@ -750,13 +744,7 @@ class PosRefundService implements PosRefundServiceInterface {
 		unset($line['@self']);
 
 		try {
-			$this->getObjectService()->saveObject(
-				object: $line,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$this->saveIn(target: [$register, $schema, $id], object: $line);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to persist refund line', ['exception' => $e->getMessage()]);
 		}

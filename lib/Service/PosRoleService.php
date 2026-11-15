@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
-use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosObjectUpsert;
@@ -55,7 +55,7 @@ class PosRoleService implements PosRoleServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectUpsert;
-	use RegisterSchemaFindAll;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Constructor.

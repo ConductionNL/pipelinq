@@ -30,7 +30,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
-use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -62,7 +62,7 @@ use Psr\Log\LoggerInterface;
 class ProductCatalogService implements ProductCatalogServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
-	use RegisterSchemaFindAll;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Canonical Dutch BTW class to tax-rate mapping.

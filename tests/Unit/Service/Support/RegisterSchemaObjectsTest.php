@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Behavioural tests for the RegisterSchemaFindAll trait.
+ * Behavioural tests for the RegisterSchemaObjects trait.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Support
@@ -22,15 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 
-use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The findAll config built from the ids and extra filters.
+ * The findAll config built from the ids and extra filters, and the save target.
  *
- * @covers \OCA\Pipelinq\Service\Support\RegisterSchemaFindAll
+ * @covers \OCA\Pipelinq\Service\Support\RegisterSchemaObjects
  */
-class RegisterSchemaFindAllTest extends TestCase {
+class RegisterSchemaObjectsTest extends TestCase {
 
 	/**
 	 * @return void
@@ -48,9 +48,21 @@ class RegisterSchemaFindAllTest extends TestCase {
 				$this->configs[] = $config;
 				return ['row'];
 			}
+
+			/**
+			 * @param array<string, mixed> $object   Object.
+			 * @param array<int, mixed>    $extend   Extend.
+			 * @param string               $register Register.
+			 * @param string               $schema   Schema.
+			 * @param string|null          $uuid     Uuid.
+			 * @return array<int, mixed>
+			 */
+			public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): array {
+				return [$object, $extend, $register, $schema, $uuid];
+			}
 		};
 		$host = new class($store) {
-			use RegisterSchemaFindAll;
+			use RegisterSchemaObjects;
 
 			/**
 			 * @param object $store The object service.
@@ -73,6 +85,15 @@ class RegisterSchemaFindAllTest extends TestCase {
 			public function run(array $ids, array $filters = []): mixed {
 				return $this->findAllIn(ids: $ids, filters: $filters);
 			}
+
+			/**
+			 * @param array<int, string|null> $target The target.
+			 * @param array<string, mixed>    $object The object.
+			 * @return mixed
+			 */
+			public function save(array $target, array $object): mixed {
+				return $this->saveIn(target: $target, object: $object);
+			}
 		};
 
 		$this->assertSame(['row'], $host->run(['r', 's']));
@@ -84,5 +105,8 @@ class RegisterSchemaFindAllTest extends TestCase {
 			],
 			$store->configs
 		);
+
+		$this->assertSame([['a' => 1], [], 'r', 's', null], $host->save(['r', 's', null], ['a' => 1]));
+		$this->assertSame([['a' => 1], [], 'r', 's', 'u1'], $host->save(['r', 's', 'u1'], ['a' => 1]));
 	}//end testFindAllIn()
 }//end class

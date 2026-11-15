@@ -43,6 +43,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
 use OCA\Pipelinq\Service\Support\ObjectArrayReads;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -78,6 +79,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
 	use ObjectArrayReads;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Hard upper bounds defensively applied to caller-supplied limits.
@@ -769,13 +771,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 
 		unset($transaction['@self']);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $transaction,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $transaction);
 
 		return $this->toArray(object: $saved);
 	}//end saveTransaction()

@@ -33,6 +33,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\AppointmentServiceLookup;
 use OCA\Pipelinq\Service\Support\ByteTruncate;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
@@ -72,6 +73,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	use InjectedObjectService;
 	use ByteTruncate;
 	use WithoutSelf;
+	use RegisterSchemaObjects;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -832,13 +834,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			throw new RuntimeException('WalkInTicket register/schema not configured');
 		}
 
-		return $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
+		return $this->saveIn(target: [$register, $schema, $uuid], object: $payload);
 	}//end saveTicket()
 
 	/**
