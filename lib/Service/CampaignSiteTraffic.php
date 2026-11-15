@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -47,6 +48,7 @@ use Psr\Log\LoggerInterface;
  */
 class CampaignSiteTraffic {
 	use PayloadToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Portaliq's register slug (contract section 3).
@@ -349,14 +351,6 @@ class CampaignSiteTraffic {
 	 * @return object|null ObjectService or null when OR is unavailable.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CampaignPerformanceService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'CampaignPerformanceService: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
 }//end class

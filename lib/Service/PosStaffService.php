@@ -28,9 +28,13 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\PosObjectFetch;
+use OCA\Pipelinq\Util\PosObjectUpsert;
+use OCA\Pipelinq\Util\PosRegisterSchemaIds;
+use OCA\Pipelinq\Util\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -57,6 +61,11 @@ use Psr\Log\LoggerInterface;
  */
 class PosStaffService implements PosStaffServiceInterface {
 	use CastingPayloadToArray;
+	use RandomUuid;
+	use PosRegisterSchemaIds;
+	use InjectedObjectService;
+	use PosObjectFetch;
+	use PosObjectUpsert;
 
 	/**
 	 * Maximum consecutive failed PIN attempts before a 15-minute lockout.
@@ -183,22 +192,7 @@ class PosStaffService implements PosStaffServiceInterface {
 			existing: $existing
 		);
 
-		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
-
-		$uuid = $id;
-		if ($uuid === '') {
-			$uuid = $this->uuid();
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->stripSensitive(staff: $this->toArray(object: $saved));
+		return $this->stripSensitive(staff: $this->upsertObject(schemaKey: 'posStaff_schema', id: $id, payload: $payload));
 	}//end saveStaff()
 
 	/**
@@ -470,19 +464,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	 * @throws OCSNotFoundException If not found.
 	 */
 	private function fetchStaff(string $id): array {
-		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('Medewerker niet gevonden.');
-		}
-
-		$staff = $this->toArray(object: $object);
+		$staff = $this->fetchOne(schemaKey: 'posStaff_schema', id: $id, label: 'Medewerker niet gevonden.');
 		$staff['id'] = (string)($staff['id'] ?? $id);
 
 		return $staff;
@@ -659,48 +641,4 @@ class PosStaffService implements PosStaffServiceInterface {
 			$this->logger->warning('Pipelinq: failed to update posStaff', ['exception' => $e->getMessage()]);
 		}
 	}//end updateStaffFields()
-
-	/**
-	 * Resolve the register + schema config key into stored IDs.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] IDs.
-	 *
-	 * @throws OCSNotFoundException If the register or schema is not configured.
-	 */
-	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
-
-		if ($register === '' || $schema === '') {
-			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
-		}
-
-		return [$register, $schema];
-	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
-
-	/**
-	 * Generate a v4 UUID.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$data = random_bytes(16);
-		$data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
-		$data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
-
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end uuid()
 }//end class

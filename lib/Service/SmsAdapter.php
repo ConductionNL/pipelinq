@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
@@ -38,7 +37,11 @@ use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Util\ChannelAdapterLookups;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -65,6 +68,10 @@ use Throwable;
 class SmsAdapter implements SmsAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use ChannelAdapterLookups;
+	use SavedPayloadId;
 
 	/**
 	 * Scope for the webhook's LOOKUPS only: reads without RBAC. Writes run as the messaging account.
@@ -360,25 +367,6 @@ class SmsAdapter implements SmsAdapterInterface {
 
 		return $messageId;
 	}//end auditOutbound()
-
-	/**
-	 * The contact moment service, resolved lazily; null when it is absent.
-	 *
-	 * @return ContactmomentService|null The service or null.
-	 */
-	private function contactmoments(): ?ContactmomentService {
-		try {
-			$service = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (($service instanceof ContactmomentService) === false) {
-			return null;
-		}
-
-		return $service;
-	}//end contactmoments()
 
 	/**
 	 * Handle an inbound SMS webhook.
@@ -799,37 +787,6 @@ class SmsAdapter implements SmsAdapterInterface {
 	}//end verifiedInbound()
 
 	/**
-	 * Persist a message payload via OpenRegister.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return array<string, mixed>|null Saved row.
-	 */
-	private function persistMessage(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.persistMessage: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistMessage()
-
-	/**
 	 * Look up the open conversation for (contact, provider, channel)
 	 * or open a new one.
 	 *
@@ -932,125 +889,6 @@ class SmsAdapter implements SmsAdapterInterface {
 		parse_str($trimmed, $parsed);
 		return $parsed;
 	}//end decodeBody()
-
-	/**
-	 * Extract the most relevant phone number from a contact row.
-	 *
-	 * @param array<string, mixed> $contact Contact row.
-	 *
-	 * @return string Phone number (E.164) or empty.
-	 */
-	private function extractPhone(array $contact): string {
-		foreach (['phoneNumber', 'mobile', 'telephone', 'phone'] as $key) {
-			$value = ($contact[$key] ?? null);
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return '';
-	}//end extractPhone()
-
-	/**
-	 * Tenant id — defaults to the NC instance id when none is set.
-	 *
-	 * @return string Tenant id.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Return the first non-empty scalar value found under any of the given keys.
-	 *
-	 * @param array<string, mixed> $source Source array.
-	 * @param array<int, string> $keys Keys to try, in order.
-	 *
-	 * @return string The first matching value cast to string, or empty.
-	 */
-	private function firstScalarValue(array $source, array $keys): string {
-		foreach ($keys as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalarValue()
 
 	/**
 	 * Current ISO 8601 UTC timestamp.

@@ -41,6 +41,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\Base64UrlDecode;
+use OCA\Pipelinq\Util\ConfiguredSigningKey;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -52,6 +54,9 @@ use OCP\Security\ISecureRandom;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-confirmation-token-is-verified-before-a-subscription-is-confirmed
  */
 class ListTokenService {
+	use Base64UrlDecode;
+	use ConfiguredSigningKey;
+
 	/**
 	 * Purpose of a confirmation link.
 	 *
@@ -391,21 +396,6 @@ class ListTokenService {
 	}//end sign()
 
 	/**
-	 * Resolve, or lazily mint, the per-instance HMAC signing key.
-	 *
-	 * @return string The signing key.
-	 */
-	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, '');
-		if ($key === '') {
-			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
-		}
-
-		return $key;
-	}//end signingKey()
-
-	/**
 	 * Resolve a TTL in seconds from app config, falling back to a default.
 	 *
 	 * @param string $key App-config key holding the lifetime in days.
@@ -437,20 +427,4 @@ class ListTokenService {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data, empty on failure.
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
 }//end class

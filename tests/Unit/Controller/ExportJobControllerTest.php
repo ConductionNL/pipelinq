@@ -1130,4 +1130,81 @@ class ExportJobControllerTest extends TestCase {
 		}
 	}//end testGateAndErrorMappingAnswerExactly()
 
+	/**
+	 * The schedule in words for the dialog, in the user's Dutch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function testDescribeScheduleAnswersInDutchForADutchUser(): void {
+		$this->authenticate(uid: 'analyst');
+		$this->request->method('getParam')->with('expression', '')->willReturn(value: ' 0 2 * * * ');
+		$this->jobs->expects($this->once())->method('describeSchedule')
+			->with('0 2 * * *', 'nl')
+			->willReturn(value: 'Dagelijks om 02:00');
+
+		$response = $this->controllerSpeaking(language: 'nl_NL')->describeSchedule();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['expression' => '0 2 * * *', 'description' => 'Dagelijks om 02:00', 'valid' => true], actual: $response->getData());
+	}//end testDescribeScheduleAnswersInDutchForADutchUser()
+
+	/**
+	 * Any other language gets English, and an expression without words is not valid.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function testDescribeScheduleFallsBackToEnglishAndFlagsAnInvalidExpression(): void {
+		$this->authenticate(uid: 'analyst');
+		$this->request->method('getParam')->willReturn(value: 'not cron');
+		$this->jobs->expects($this->once())->method('describeSchedule')
+			->with('not cron', 'en')
+			->willReturn(value: '');
+
+		$response = $this->controllerSpeaking(language: 'de')->describeSchedule();
+
+		$this->assertSame(expected: ['expression' => 'not cron', 'description' => '', 'valid' => false], actual: $response->getData());
+	}//end testDescribeScheduleFallsBackToEnglishAndFlagsAnInvalidExpression()
+
+	/**
+	 * The schedule preview sits behind the same export gate as the jobs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function testDescribeScheduleIsRefusedWithoutTheExportRole(): void {
+		$this->authenticate(uid: 'regular-user', isAdmin: false);
+		$this->jobs->expects($this->never())->method('describeSchedule');
+
+		$response = $this->controllerSpeaking(language: 'en')->describeSchedule();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}//end testDescribeScheduleIsRefusedWithoutTheExportRole()
+
+	/**
+	 * The controller over the current mocks with a translator in the given language.
+	 *
+	 * @param string $language The language code the translator reports.
+	 *
+	 * @return ExportJobController The controller.
+	 */
+	private function controllerSpeaking(string $language): ExportJobController {
+		$l10n = $this->translator();
+		$l10n->method('getLanguageCode')->willReturn(value: $language);
+
+		return new ExportJobController(
+			request: $this->request,
+			jobs: $this->jobs,
+			destinations: $this->destinations,
+			policy: $this->policy,
+			userSession: $this->userSession,
+			l10n: $l10n,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+	}//end controllerSpeaking()
+
 }//end class

@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Upl;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -45,6 +46,7 @@ use Throwable;
  * @spec openspec/changes/product-service-catalogue-public/tasks.md
  */
 class UplListImporter {
+	use SerialisedToArray;
 
 	/**
 	 * The lookup schema's slug.
@@ -268,7 +270,7 @@ class UplListImporter {
 
 		$stored = [];
 		foreach ((array)$found as $entry) {
-			$data = $this->dataOf(entry: $entry);
+			$data = $this->toArray(value: $entry);
 			$uri = trim((string)($data['uri'] ?? ''));
 			if ($uri === '') {
 				continue;
@@ -283,25 +285,6 @@ class UplListImporter {
 
 		return $stored;
 	}//end storedByUri()
-
-	/**
-	 * A stored entry as an array.
-	 *
-	 * @param mixed $entry An entity or an array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function dataOf(mixed $entry): array {
-		if (is_object($entry) === true && method_exists($entry, 'jsonSerialize') === true) {
-			$entry = $entry->jsonSerialize();
-		}
-
-		if (is_array($entry) === false) {
-			return [];
-		}
-
-		return $entry;
-	}//end dataOf()
 
 	/**
 	 * The stored entry's id.

@@ -43,6 +43,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -74,6 +75,7 @@ use Throwable;
  */
 class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	use CastingPayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Hard upper bounds defensively applied to caller-supplied limits.
@@ -825,15 +827,4 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 
 		return [$register, $schema];
 	}//end configTransaction()
-
-	/**
-	 * Resolve the OR ObjectService from the container.
-	 *
-	 * @return object The OR ObjectService.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

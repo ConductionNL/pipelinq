@@ -33,10 +33,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\ContactMomentRows;
+use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Util\SystemRowSaver;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -48,6 +50,11 @@ use Throwable;
  * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
  */
 class WidenContactMomentCaseReference implements IRepairStep {
+	use JsonSerializableToArray;
+	use FirstAdminUser;
+	use SystemRowSaver;
+	use ContactMomentRows;
+
 	/**
 	 * Upper bound on rows fetched in one pass.
 	 *
@@ -131,62 +138,11 @@ class WidenContactMomentCaseReference implements IRepairStep {
 		$actingAdmin = $this->actingAdmin();
 
 		$rows = $this->contactMomentRows(objectService: $objectService, register: $register, schema: $schema);
-		$save = $this->momentSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+		$save = $this->rowSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
 		$counts = $this->widenRows(rows: $rows, save: $save);
 
 		$output->info(sprintf('Contact moment case sets: %d widened, %d already a set.', $counts['widened'], $counts['untouched']));
 	}//end run()
-
-	/**
-	 * Fetch every stored contact moment, with RBAC off.
-	 *
-	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param string $register The register id.
-	 * @param string $schema The ticket schema id.
-	 *
-	 * @return array<mixed>
-	 *
-	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
-	 */
-	private function contactMomentRows(ObjectServiceInterface $objectService, string $register, string $schema): array {
-		return $objectService->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-					'ticketType' => TicketServiceInterface::TYPE_CONTACTMOMENT,
-				],
-				'limit' => self::BATCH_LIMIT,
-			],
-			_rbac: false,
-			_multitenancy: false,
-		);
-	}//end contactMomentRows()
-
-	/**
-	 * Build the writer that saves one widened contact moment as the acting admin.
-	 *
-	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param string $register The register id.
-	 * @param string $schema The ticket schema id.
-	 * @param IUser|null $actingAdmin The admin to act as, or null when none exists.
-	 *
-	 * @return callable(array<string, mixed>): mixed
-	 *
-	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
-	 */
-	private function momentSaver(ObjectServiceInterface $objectService, string $register, string $schema, IUser|null $actingAdmin): callable {
-		return static fn (array $data): mixed => $objectService->saveObject(
-			object: $data,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: (string)($data['id'] ?? ''),
-			_rbac: false,
-			_multitenancy: false,
-			currentUser: $actingAdmin,
-		);
-	}//end momentSaver()
 
 	/**
 	 * Widen every row and count the outcomes.
@@ -258,37 +214,4 @@ class WidenContactMomentCaseReference implements IRepairStep {
 			return null;
 		}//end try
 	}//end saveMoment()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by the object service.
-	 *
-	 * @return array<string, mixed>|null The row data, or null when unusable.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

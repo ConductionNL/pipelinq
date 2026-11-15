@@ -28,8 +28,12 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredObjectFind;
+use OCA\Pipelinq\Util\ConfiguredObjectSave;
+use OCA\Pipelinq\Util\ConfiguredSchemaCount;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -46,6 +50,11 @@ use RuntimeException;
  */
 class RedemptionService implements RedemptionServiceInterface {
 	use PayloadToArray;
+	use LoggedRegisterSchemaIds;
+	use ConfiguredSchemaCount;
+	use InjectedObjectService;
+	use ConfiguredObjectSave;
+	use ConfiguredObjectFind;
 
 	/**
 	 * Constructor.
@@ -347,22 +356,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	 *   and nothing inherited it
 	 */
 	public function getRedemption(string $redemptionId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '' || $redemptionId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $redemptionId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'redemption_schema'), id: $redemptionId);
 	}//end getRedemption()
 
 	/**
@@ -432,33 +426,10 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return int
 	 */
 	private function countUsedRedemptions(string $accountId, string $optionId): int {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '') {
-			return 0;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'accountId' => $accountId,
-						'optionId' => $optionId,
-						'status' => 'used',
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1000,
-				]
-			);
-		} catch (\Throwable $e) {
-			return 0;
-		}
-
-		if (is_array($rows) === true) {
-			return count($rows);
-		}
-
-		return 0;
+		return $this->countMatching(
+			schemaKey: 'redemption_schema',
+			filters: ['accountId' => $accountId, 'optionId' => $optionId, 'status' => 'used']
+		);
 	}//end countUsedRedemptions()
 
 	/**
@@ -491,22 +462,7 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return array<string, mixed>|null
 	 */
 	private function getOption(string $optionId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'redemptionOption_schema');
-		if ($register === '' || $schema === '' || $optionId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $optionId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'redemptionOption_schema'), id: $optionId);
 	}//end getOption()
 
 	/**
@@ -559,49 +515,8 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function persist(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('Redemption schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(schemaKey: 'redemption_schema'), payload: $payload, uuid: $uuid, label: 'Redemption');
 	}//end persist()
-
-	/**
-	 * Resolve register + schema id.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @param string $schemaKey The schema config key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] ids, each ''
-	 *                                     when unconfigured.
-	 */
-	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
-				['schemaKey' => $schemaKey]
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end config()
 
 	/**
 	 * Extract UUID from an OR entity array.
@@ -618,15 +533,4 @@ class RedemptionService implements RedemptionServiceInterface {
 
 		return $object['redemptionId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

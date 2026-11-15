@@ -28,8 +28,9 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -44,6 +45,8 @@ use Throwable;
  * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.3
  */
 class BackfillTicketPhoneE164 implements IRepairStep {
+	use FirstAdminUser;
+	use JsonSerializableToArray;
 
 	/**
 	 * Tickets read per batch.
@@ -183,37 +186,4 @@ class BackfillTicketPhoneE164 implements IRepairStep {
 
 		return 'updated';
 	}//end backfill()
-
-	/**
-	 * An admin to act as while saving, so OpenRegister's folder check has a user.
-	 *
-	 * @return IUser|null
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by the object service.
-	 *
-	 * @return array<string,mixed>|null
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if ($row instanceof \JsonSerializable) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

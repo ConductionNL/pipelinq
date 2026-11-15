@@ -737,6 +737,7 @@
 							"valueField": "revenue",
 							"previousField": "previousPeriod.revenue",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "till and won deals"
 						}
 					},
@@ -764,6 +765,7 @@
 							"valueField": "wonValue",
 							"previousField": "previousPeriod.wonValue",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "{wonCount} won"
 						}
 					},
@@ -790,6 +792,7 @@
 							"valueField": "winRate",
 							"previousField": "previousPeriod.winRate",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "{wonCount} won, {lostCount} lost"
 						}
 					},
@@ -816,6 +819,7 @@
 							"valueField": "avgDealSize",
 							"previousField": "previousPeriod.avgDealSize",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "{wonCount} won"
 						}
 					},

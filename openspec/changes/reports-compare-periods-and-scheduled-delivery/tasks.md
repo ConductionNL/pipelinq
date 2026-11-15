@@ -3,7 +3,8 @@
 ## 1. Period comparison (built; tag and test)
 - [x] 1.1 Add `@spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001` to `AnalyticsService::getOverview()` and `aggregateOverviewWindow()` (V1)
 - [x] 1.2 `tests/Unit/Service/AnalyticsServiceTest.php`: the previous window has the same length as the current one and ends where it starts, for week, month, quarter and year (V1)
-- [ ] 1.3 Stat tiles with `previousField` in `src/manifest.json`: declare `goodDirection` on every KPI tile that has a previous value (resolution time `down`), and show "No earlier period to compare with" when the previous value is null or 0 (nextcloud-vue stat widget prop if it lacks one; build it there, not here) (V1)
+- [x] 1.3 Stat tiles with `previousField` in `src/manifest.json`: declare `goodDirection` on every KPI tile that has a previous value (resolution time `down`), and show "No earlier period to compare with" when the previous value is null or 0 (nextcloud-vue stat widget prop if it lacks one; build it there, not here) (V1)
+  - Status: the four commercial tiles already declare `goodDirection: up`. The overview's three compared tiles (lead conversion, request turnaround, contacts) deliberately show the previous value as a "was ..." caption and no trend chip (`tests/vitest/operationalCardsBoard.spec.js` guards that), so they get no `previousField`. Left open: CnStatWidget has no text for a missing previous value; that prop belongs in nextcloud-vue, which this build could not reach.
 
 ## 2. Mail delivery for export jobs
 - [x] 2.1 `lib/Service/Export/ReportMailDelivery.php`: given a job and its formatted rows per recipient, send through `OCP\Mail\IMailer` with the file attached; subject and body from l10n; generic for any export job (V1)
@@ -14,6 +15,7 @@
 - [x] 2.5 Unit tests for 2.1-2.4 with a fake mailer: one mail per recipient, RBAC-filtered rows, failure recorded and notified (V1)
 
 ## 3. Schedule dialog
-- [ ] 3.1 The schedule dialog on the BI export page (PqBiExport): delivery choice Mail, a recipients picker (NcSelect over users and groups, with `inputLabel`), and the schedule in words from `ExportJobService::describeSchedule()` (V1)
-- [ ] 3.2 l10n nl and en for the dialog and the mail (V1)
+- [x] 3.1 The schedule dialog on the BI export page (PqBiExport): delivery choice Mail, a recipients picker (NcSelect over users and groups, with `inputLabel`), and the schedule in words from `ExportJobService::describeSchedule()` (V1)
+  - Built on the export job form: Delivery (Destination or Mail), a recipients NcSelect over users and groups (sharee search, `inputLabel`), and the cron field's helper text reads the schedule in words with its recipients ("Every Monday at 07:00 to Team leads") from the new `GET /api/export/schedule/describe`. Saving a mailed job saves a `mail` exportDestination holding the recipients and, for a new job, enables it. The destination form offers type `mail` without the warehouse fields.
+- [x] 3.2 l10n nl and en for the dialog and the mail (V1)
 - [ ] 3.3 (live pass) Create a job mailed every minute to yourself on :8080, see the mail arrive in the dev mail catcher, then disable the job (V1)

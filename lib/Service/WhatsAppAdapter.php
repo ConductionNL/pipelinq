@@ -39,7 +39,11 @@ use OCA\Pipelinq\Service\Provider\WhatsAppSendFailure;
 use OCA\Pipelinq\Service\Provider\WhatsAppSendRun;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateRequest;
 use OCA\Pipelinq\Service\Provider\WhatsAppTemplateSend;
+use OCA\Pipelinq\Util\ChannelAdapterLookups;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -71,7 +75,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           The 2026-07 phpmd
  *  cleanup extracted several private single-purpose helpers
  *  (resolveSendContext, resolveTemplateForSend, attemptProviderSend,
- *  templateIdForSend, latestInboundTimestamp, firstScalarId)
+ *  templateIdForSend, latestInboundTimestamp)
  *  specifically to bring per-method complexity under threshold; further
  *  splitting the class would scatter one channel-adapter concern without
  *  reducing real coupling.
@@ -81,6 +85,10 @@ use Throwable;
 class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use ChannelAdapterLookups;
+	use SavedPayloadId;
 
 	/**
 	 * OpenRegister access scope for the webhook's LOOKUPS (contact,
@@ -805,25 +813,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 			agent: (string)($run->message->context['agent'] ?? ''),
 		);
 	}//end auditOutbound()
-
-	/**
-	 * The contact moment service, resolved lazily; null when it is absent.
-	 *
-	 * @return ContactmomentService|null The service or null.
-	 */
-	private function contactmoments(): ?ContactmomentService {
-		try {
-			$service = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (($service instanceof ContactmomentService) === false) {
-			return null;
-		}
-
-		return $service;
-	}//end contactmoments()
 
 	/**
 	 * Outbound templateId: the resolved template's id, or empty for free-form.
@@ -1587,37 +1576,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	}//end saveConversationWindow()
 
 	/**
-	 * Persist a message payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return array<string, mixed>|null Saved row.
-	 */
-	private function persistMessage(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.persistMessage: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistMessage()
-
-	/**
 	 * Load a messageTemplate by id.
 	 *
 	 * @param string $id Template UUID / slug.
@@ -1646,127 +1604,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 
 		return $this->toArray(value: $entity);
 	}//end loadTemplate()
-
-	/**
-	 * Extract a phone number from a contact row.
-	 *
-	 * @param array<string, mixed> $contact Contact row.
-	 *
-	 * @return string Phone number or empty.
-	 */
-	private function extractPhone(array $contact): string {
-		foreach (['phoneNumber', 'mobile', 'telephone', 'phone'] as $key) {
-			$value = ($contact[$key] ?? null);
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return '';
-	}//end extractPhone()
-
-	/**
-	 * Tenant id (app-config; defaults to `default`).
-	 *
-	 * @return string Tenant id.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
-
-	/**
-	 * App-config schema slug override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$id = $this->firstScalarId(source: $payload);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarId(source: $payload['@self']);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * First non-empty scalar value among `uuid` / `id` / `slug` keys.
-	 *
-	 * Extracted from {@see extractId()} so both the top-level and `@self`
-	 * lookups share one implementation; behaviour is unchanged.
-	 *
-	 * @param array<string, mixed> $source Source array to probe.
-	 *
-	 * @return string The first matching value, or empty when none match.
-	 */
-	private function firstScalarId(array $source): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalarId()
 
 	/**
 	 * Current ISO 8601 UTC timestamp.

@@ -42,10 +42,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
+use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCA\Pipelinq\Service\LeadStagePlacer;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -58,6 +60,8 @@ use Throwable;
  * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
  */
 class BackfillLeadRelations implements IRepairStep {
+	use ReadsSchemaRows;
+	use FirstAdminUser;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -94,93 +98,6 @@ class BackfillLeadRelations implements IRepairStep {
 	public function getName(): string {
 		return 'Backfill the pipeline and stage every lead requires';
 	}//end getName()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any object that owns a file folder.
-	 * Saving as an admin gives that check someone to authorise, without
-	 * loosening the check itself.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = ($this->groupManager->get('admin')?->getUsers() ?? []);
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
-	 * Normalise an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by findAll().
-	 *
-	 * @return array<string,mixed>|null The array form, or null when unusable.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return null;
-		}
-
-		return null;
-	}//end toArray()
-
-	/**
-	 * Read every row of one schema.
-	 *
-	 * RBAC is off for the same reason the writes turn it off: on the CLI there
-	 * is no session, so an RBAC-filtered read returns only what 'Anonymous' may
-	 * see and the backfill would quietly cover a fraction of the rows.
-	 *
-	 * @param object $objectService OpenRegister ObjectService.
-	 * @param string $register      Register id.
-	 * @param string $schema        Schema id.
-	 *
-	 * @return array<int,array<string,mixed>> The rows.
-	 */
-	private function readAll(object $objectService, string $register, string $schema): array {
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => self::BATCH_LIMIT,
-				],
-				_rbac: false,
-				_multitenancy: false,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BackfillLeadRelations: findAll failed',
-				['schema' => $schema, 'error' => $e->getMessage()]
-			);
-
-			return [];
-		}//end try
-
-		$out = [];
-		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
-			if ($data !== null) {
-				$out[] = $data;
-			}
-		}
-
-		return $out;
-	}//end readAll()
 
 
 
@@ -302,7 +219,9 @@ class BackfillLeadRelations implements IRepairStep {
 	 * @return void
 	 */
 	private function backfillAll(object $objectService, IOutput $output, array $context, string $pipelineSchema): void {
-		$leads = $this->readAll(objectService: $objectService, register: $context['register'], schema: $context['schema']);
+		$leads = $this->readAll(
+			target: new SchemaWriteTarget(objectService: $objectService, register: $context['register'], schema: $context['schema'], actingAdmin: null)
+		);
 		if ($leads === []) {
 			$output->info('BackfillLeadRelations: no leads to inspect');
 			return;
@@ -343,9 +262,7 @@ class BackfillLeadRelations implements IRepairStep {
 		$pipelines = [];
 		if ($pipelineSchema !== '') {
 			$pipelines = $this->readAll(
-				objectService: $objectService,
-				register: $register,
-				schema: $pipelineSchema
+				target: new SchemaWriteTarget(objectService: $objectService, register: $register, schema: $pipelineSchema, actingAdmin: null)
 			);
 		}
 

@@ -28,7 +28,10 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,6 +51,9 @@ use Throwable;
  */
 class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SchemaRowQuery;
 
 	/**
 	 * Default channelProvider schema slug.
@@ -90,27 +96,18 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 			return [];
 		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'kind' => $kind,
-						'active' => true,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.listActive: findAll failed',
-				['kind' => $kind, 'exception' => $e->getMessage()]
-			);
+		$rows = $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['kind' => $kind, 'active' => true],
+			failure: 'ChannelProviderRepository.listActive: findAll failed',
+			context: ['kind' => $kind]
+		);
+		if ($rows === null) {
 			return [];
 		}
 
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(value: $row);
 			// Defence in depth — schema filter "active=true" should already
 			// remove inactive rows, but some OR backends don't honour
@@ -232,37 +229,6 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 
 		return null;
 	}//end findByVendor()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug (app-config overridable).

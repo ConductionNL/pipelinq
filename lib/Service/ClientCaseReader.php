@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
+use OCA\Pipelinq\Util\SerialisedCast;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -47,6 +48,8 @@ use Throwable;
  * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-client-page-lists-the-clients-cases
  */
 class ClientCaseReader implements ClientCaseReaderInterface {
+	use SerialisedCast;
+
 	/**
 	 * Dossiq's case leaf, resolved by name: it exists exactly when dossiq is installed.
 	 *
@@ -176,21 +179,6 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		$this->logger->warning('ClientCaseReader: reading the client failed', ['clientId' => $clientId, 'exception' => $error->getMessage()]);
 		return ['status' => 500, 'message' => 'Operation failed'];
 	}//end refusal()
-
-	/**
-	 * A stored object as an array.
-	 *
-	 * @param mixed $object An array, or an entity that serialises to one.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function asArray(mixed $object): array {
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return (array)$object->jsonSerialize();
-		}
-
-		return (array)$object;
-	}//end asArray()
 
 	/**
 	 * Dossiq's case leaf, or null when dossiq is not installed.

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Service\Sla\MergesBreachEvents;
+use OCA\Pipelinq\Util\SlaTrackedObjectStore;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -76,6 +77,7 @@ use Throwable;
  */
 class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 	use MergesBreachEvents;
+	use SlaTrackedObjectStore;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -442,83 +444,4 @@ class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 
 		return null;
 	}//end loadPolicy()
-
-	/**
-	 * Resolve the SLA type of an object, or null when it is not SLA-tracked.
-	 *
-	 * @param string $entityType Entity type the object's schema maps to.
-	 * @param array<string, mixed> $data Object data (for the ticket discriminator).
-	 *
-	 * @return string|null The SLA type (`request` / `complaint`), or null.
-	 */
-	private function resolveSlaType(string $entityType, array $data): ?string {
-		if ($entityType !== 'ticket') {
-			return null;
-		}
-
-		return (self::TICKET_TYPE_LABELS[(string)($data['ticketType'] ?? '')] ?? null);
-	}//end resolveSlaType()
-
-	/**
-	 * Read the tracked object's current data.
-	 *
-	 * @param string $uuid Object UUID.
-	 * @param string $schemaId Schema identity the object lives in.
-	 *
-	 * @return array<string, mixed>|null Object data, or null when it is gone.
-	 */
-	private function fetch(string $uuid, string $schemaId): ?array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($register === '') {
-			return null;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schemaId);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaObjectUpdatedListener: re-read failed (non-blocking)',
-				['error' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetch()
-
-	/**
-	 * Persist the mutated object data back to OpenRegister.
-	 *
-	 * @param string $uuid Object UUID.
-	 * @param string $schemaId Schema identity the object lives in.
-	 * @param array<string, mixed> $data Mutated data including slaStatus.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, string $schemaId, array $data): void {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($register === '' || $schemaId === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schemaId,
-				uuid: $uuid,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaObjectUpdatedListener: persist failed (non-blocking)',
-				['error' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

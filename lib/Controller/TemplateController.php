@@ -220,23 +220,13 @@ class TemplateController extends Controller {
 
 		return new JSONResponse([
 			'subject' => (string)($template['subject'] ?? ''),
-			'bodyHtml' => $this->addressRenderer->render(
-				body: $this->articleService->expandArticlesMarker(
-					body: (string)($template['bodyHtml'] ?? ''),
-					articles: $articles,
-					format: ArticleServiceInterface::FORMAT_HTML,
-				),
-				footerOverride: $footer,
-				format: ArticleServiceInterface::FORMAT_HTML,
-			),
-			'bodyText' => $this->addressRenderer->render(
-				body: $this->articleService->expandArticlesMarker(
-					body: (string)($template['bodyText'] ?? ''),
-					articles: $articles,
-					format: ArticleServiceInterface::FORMAT_TEXT,
-				),
-				footerOverride: $footer,
-				format: ArticleServiceInterface::FORMAT_TEXT,
+			...$this->sendableBodies(
+				bodies: [
+					ArticleServiceInterface::FORMAT_HTML => (string)($template['bodyHtml'] ?? ''),
+					ArticleServiceInterface::FORMAT_TEXT => (string)($template['bodyText'] ?? ''),
+				],
+				articles: $articles,
+				footer: $footer
 			),
 			'articles' => array_map(
 				static fn (array $article): array => [
@@ -286,27 +276,44 @@ class TemplateController extends Controller {
 				// switches from Blocks to HTML.
 				'renderedHtml' => $rendered['html'],
 				'renderedText' => $rendered['text'],
-				'bodyHtml' => $this->addressRenderer->render(
-					body: $this->articleService->expandArticlesMarker(
-						body: $rendered['html'],
-						articles: $articles,
-						format: ArticleServiceInterface::FORMAT_HTML,
-					),
-					footerOverride: $footer,
-					format: ArticleServiceInterface::FORMAT_HTML,
-				),
-				'bodyText' => $this->addressRenderer->render(
-					body: $this->articleService->expandArticlesMarker(
-						body: $rendered['text'],
-						articles: $articles,
-						format: ArticleServiceInterface::FORMAT_TEXT,
-					),
-					footerOverride: $footer,
-					format: ArticleServiceInterface::FORMAT_TEXT,
+				...$this->sendableBodies(
+					bodies: [
+						ArticleServiceInterface::FORMAT_HTML => $rendered['html'],
+						ArticleServiceInterface::FORMAT_TEXT => $rendered['text'],
+					],
+					articles: $articles,
+					footer: $footer
 				),
 			]
 		);
 	}//end render()
+
+	/**
+	 * The HTML and text bodies as they will be sent: articles expanded, then
+	 * the physical address placed.
+	 *
+	 * @param array<string, string>            $bodies   The bodies keyed by article format.
+	 * @param array<int, array<string, mixed>> $articles The embedded articles.
+	 * @param string                           $footer   The footer override.
+	 *
+	 * @return array{bodyHtml: string, bodyText: string}
+	 */
+	private function sendableBodies(array $bodies, array $articles, string $footer): array {
+		$out = [];
+		foreach (['bodyHtml' => ArticleServiceInterface::FORMAT_HTML, 'bodyText' => ArticleServiceInterface::FORMAT_TEXT] as $key => $format) {
+			$out[$key] = $this->addressRenderer->render(
+				body: $this->articleService->expandArticlesMarker(
+					body: $bodies[$format],
+					articles: $articles,
+					format: $format,
+				),
+				footerOverride: $footer,
+				format: $format,
+			);
+		}
+
+		return $out;
+	}//end sendableBodies()
 
 	/**
 	 * POST /api/templates/:id/validate — run the compliance check on a stored

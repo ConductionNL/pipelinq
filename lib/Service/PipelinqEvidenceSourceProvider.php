@@ -40,6 +40,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Service\Gdpr\Evidence\EvidenceItem;
 use OCA\OpenRegister\Service\Gdpr\Evidence\EvidenceSourceProvider;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,6 +51,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
  */
 class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
+	use JsonSerializableToArray;
+
 	/**
 	 * Stable source id recorded on every harvested item.
 	 *
@@ -221,7 +224,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 	 * @return void
 	 */
 	private function collectWhenMatching(EvidenceHarvest $run, $row): void {
-		$data = $this->rowToArray(row: $row);
+		$data = $this->toArray(row: $row);
 		if ($data === null) {
 			return;
 		}
@@ -374,26 +377,4 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider {
 
 		return [];
 	}//end safeFindAll()
-
-	/**
-	 * Normalise a findAll row (ObjectEntity or rendered array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The data, or null when unreadable.
-	 */
-	private function rowToArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if ($row instanceof \JsonSerializable === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end rowToArray()
 }//end class

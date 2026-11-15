@@ -36,6 +36,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\ContactMomentRows;
+use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Util\SystemRowSaver;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -49,6 +53,11 @@ use Throwable;
  * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
  */
 class MigrateContactMomentDirection implements IRepairStep {
+	use JsonSerializableToArray;
+	use FirstAdminUser;
+	use ContactMomentRows;
+	use SystemRowSaver;
+
 	/**
 	 * Upper bound on rows fetched in one pass.
 	 *
@@ -186,41 +195,13 @@ class MigrateContactMomentDirection implements IRepairStep {
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
-		$rows = $this->readContactMoments(objectService: $objectService, register: $register, schema: $schema);
+		$rows = $this->contactMomentRows(objectService: $objectService, register: $register, schema: $schema);
 		[$filled, $untouched] = $this->migrateRows(rows: $rows, target: [$objectService, $register, $schema, $actingAdmin]);
 
 		$output->info(
 			sprintf('Contact moment directions: %d filled, %d already set.', $filled, $untouched)
 		);
 	}//end run()
-
-	/**
-	 * Read one batch of contact moments with RBAC and multitenancy off.
-	 *
-	 * Read with RBAC off for the same reason NormaliseTicketTitle does: a
-	 * repair step has no session, so an RBAC-filtered read would migrate
-	 * only the rows 'Anonymous' may see and call that a complete run.
-	 *
-	 * @param mixed $objectService The OpenRegister ObjectService.
-	 * @param mixed $register The ticket register id.
-	 * @param mixed $schema The ticket schema id.
-	 *
-	 * @return iterable<mixed> The rows.
-	 */
-	private function readContactMoments($objectService, $register, $schema): iterable {
-		return $objectService->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-					'ticketType' => TicketServiceInterface::TYPE_CONTACTMOMENT,
-				],
-				'limit' => self::BATCH_LIMIT,
-			],
-			_rbac: false,
-			_multitenancy: false,
-		);
-	}//end readContactMoments()
 
 	/**
 	 * Fill the direction on every row that lacks one.
@@ -264,16 +245,8 @@ class MigrateContactMomentDirection implements IRepairStep {
 	private function saveMigrated(array $target, array $data): int {
 		[$objectService, $register, $schema, $actingAdmin] = $target;
 		try {
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: (string)($data['id'] ?? ''),
-				_rbac: false,
-				_multitenancy: false,
-				currentUser: $actingAdmin,
-			);
+			$save = $this->rowSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+			$save($data);
 			return 1;
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -283,40 +256,4 @@ class MigrateContactMomentDirection implements IRepairStep {
 			return 0;
 		}//end try
 	}//end saveMigrated()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any ticket that owns a file folder.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by the object service.
-	 *
-	 * @return array<string, mixed>|null The row data, or null when unusable.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

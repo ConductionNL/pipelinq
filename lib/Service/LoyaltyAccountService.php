@@ -32,6 +32,8 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredObjectSave;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -44,6 +46,8 @@ use RuntimeException;
  */
 class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use ConfiguredObjectSave;
 
 	/**
 	 * Constructor.
@@ -384,20 +388,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 	 * @return array<string, mixed> The saved account.
 	 */
 	private function persist(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('CustomerLoyaltyAccount schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(), payload: $payload, uuid: $uuid, label: 'CustomerLoyaltyAccount');
 	}//end persist()
 
 	/**
@@ -427,15 +418,4 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

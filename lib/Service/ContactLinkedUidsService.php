@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -34,6 +35,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactLinkedUidsService {
 	use ResultToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -128,13 +130,4 @@ class ContactLinkedUidsService {
 
 		return [];
 	}//end contactsUidOf()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

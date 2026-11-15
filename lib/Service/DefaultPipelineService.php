@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -34,6 +35,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/pipeline/spec.md#requirement-default-pipelines-mvp
  */
 class DefaultPipelineService {
+	use InjectedObjectService;
+
 	/**
 	 * Constructor.
 	 *
@@ -189,13 +192,4 @@ class DefaultPipelineService {
 		$title = $data['title'] ?? 'Unknown';
 		$this->logger->info("Pipelinq: Created default {$title}");
 	}//end savePipeline()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -68,11 +68,12 @@ describe('ServiceDetail declarations', () => {
 		expect(Object.isFrozen(header)).toBe(true)
 	})
 
-	it('declares the bookings stat and the resources list in the side column', () => {
+	it('declares the bookings figure, the upcoming appointments and the matching resources in the side column', () => {
 		const side = ServiceDetail.computed.sideColumn.call({})
-		expect(side.map((card) => [card.id, card.type])).toEqual([['service-bookings', 'stat'], ['service-resources', 'record-list']])
-		expect(side[0].content.source.filter).toEqual({ serviceId: '@objectId', 'startAt[gte]': '@today-7d' })
-		expect(side[1].content).toMatchObject({ schema: 'appointmentResource', limit: 3, rowRoute: 'ResourceDetail' })
+		expect(side.map((card) => [card.id, card.type])).toEqual([['service-bookings', 'stat'], ['service-appointments', 'record-list'], ['service-resources', 'record-list']])
+		expect(side[0].content).toMatchObject({ endpointSource: { url: '/apps/pipelinq/api/appointment-services/@objectId/figures' }, valueField: 'bookingsThisWeek' })
+		expect(side[1].content).toMatchObject({ schema: 'appointmentBooking', filter: { serviceId: '@objectId', 'startAt[gte]': '@now' }, sort: { startAt: 'asc' }, rowRoute: 'BookingDetail' })
+		expect(side[2].content).toMatchObject({ endpointSource: { url: '/apps/pipelinq/api/appointment-services/@objectId/eligible-resources', responsePath: 'resources' }, rowRoute: 'ResourceDetail', emptyText: 'No resource matches' })
 	})
 
 	it('reads the object store from the store module', () => {

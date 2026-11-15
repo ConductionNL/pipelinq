@@ -54,6 +54,7 @@ use OCA\Pipelinq\Service\Demo\DemoSeedContext;
 use OCA\Pipelinq\Service\Demo\DemoSeedTarget;
 use OCA\Pipelinq\Service\Demo\DemoSeedValues;
 use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 
 /**
  * Idempotent demo-data seeding + removal against OpenRegister.
@@ -62,6 +63,8 @@ use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class DemoSeedService implements DemoSeedServiceInterface {
+	use JsonSerializableToArray;
+
 	/**
 	 * Marker prefix carried by every seeded object's lookup field.
 	 *
@@ -110,6 +113,11 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * they exist so the seeded set is coherent (a client has contact persons, a
 	 * complaint is a first-class ticket subtype alongside requests).
 	 *
+	 * The appointment sections are seeded here, not in the example register,
+	 * because their bookings must fall in the current week: the register is
+	 * imported as written, while this seeder resolves `@week:` placeholders
+	 * and links each booking to the services, resources and clients it saved.
+	 *
 	 * @var array<string, array{0: string, 1: string, 2: string|null}>
 	 */
 	private const SECTIONS = [
@@ -123,6 +131,9 @@ class DemoSeedService implements DemoSeedServiceInterface {
 		'contactmomenten' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_CONTACTMOMENT],
 		'tasks' => ['task_schema', 'subject', null],
 		'contracts' => ['contract_schema', 'title', null],
+		'appointmentServices' => ['service_schema', 'name', null],
+		'appointmentResources' => ['resource_schema', 'name', null],
+		'appointmentBookings' => ['booking_schema', 'subject', null],
 	];
 
 	/**
@@ -226,8 +237,8 @@ class DemoSeedService implements DemoSeedServiceInterface {
 				// drift apart without this list changing too.
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
-					. 'complaints and contact moments, tasks and contracts, point of sale and '
-					. 'bookings, marketing journeys that are not switched on, published social '
+					. 'complaints and contact moments, tasks and contracts, point of sale, '
+					. 'bookable services and resources with this week\'s bookings, marketing journeys that are not switched on, published social '
 					. 'posts with their numbers, and search queries for the keyword pages. '
 					. 'It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
@@ -594,7 +605,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * @return array{value: string, uuid: string, data: array<string, mixed>}|null
 	 */
 	private function lookupEntry(mixed $row, array $lookup): ?array {
-		$data = $this->rowToArray(row: $row);
+		$data = $this->toArray(row: $row);
 		if ($data === null) {
 			return null;
 		}
@@ -669,28 +680,6 @@ class DemoSeedService implements DemoSeedServiceInterface {
 
 		return $data;
 	}//end toTicketData()
-
-	/**
-	 * Normalise a findAll row (ObjectEntity or rendered array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The rendered data, or null when unreadable.
-	 */
-	private function rowToArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if ($row instanceof \JsonSerializable === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end rowToArray()
 
 	/**
 	 * Resolve the contact-first identity for a client/contact payload.
@@ -789,6 +778,45 @@ class DemoSeedService implements DemoSeedServiceInterface {
 			field: $requestField,
 		);
 
-		return $data;
+		return $this->linkBookingReferences(data: $data, definition: $definition, uuids: $uuids);
 	}//end linkReferences()
+
+	/**
+	 * Link a demo booking to its customer, its service and the resource of
+	 * each assignment, all seeded earlier in the same run.
+	 *
+	 * @param array<string, mixed>  $data       Definition data.
+	 * @param array<string, mixed>  $definition Full definition (may carry customerKey/serviceKey).
+	 * @param array<string, string> $uuids      Already-seeded uuid map (section:key => uuid).
+	 *
+	 * @return array<string, mixed> Data with the booking's relation fields set.
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/tasks.md#4-example-data
+	 */
+	private function linkBookingReferences(array $data, array $definition, array $uuids): array {
+		$data = $this->values->linkReference(
+			data: $data,
+			definition: $definition,
+			uuids: $uuids,
+			keyName: 'customerKey',
+			section: 'clients',
+			field: 'customerId',
+		);
+
+		$data = $this->values->linkReference(
+			data: $data,
+			definition: $definition,
+			uuids: $uuids,
+			keyName: 'serviceKey',
+			section: 'appointmentServices',
+			field: 'serviceId',
+		);
+
+		return $this->values->linkListReferences(
+			data: $data,
+			listField: 'resourceAssignments',
+			uuids: $uuids,
+			link: ['resourceKey', 'appointmentResources', 'resourceId'],
+		);
+	}//end linkBookingReferences()
 }//end class

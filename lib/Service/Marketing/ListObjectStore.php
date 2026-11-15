@@ -37,6 +37,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,6 +50,7 @@ use Throwable;
  */
 class ListObjectStore implements ListObjectStoreInterface {
 	use PayloadToArray;
+	use SavedPayloadId;
 
 	/**
 	 * Default register slug, matching the sibling marketing services.
@@ -331,31 +333,13 @@ class ListObjectStore implements ListObjectStoreInterface {
 	 * @return string Identifier, or an empty string.
 	 *
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback lookup over id keys; extraction adds no clarity.
 	 */
 	public function idOf(?array $payload): string {
 		if ($payload === null) {
 			return '';
 		}
 
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($payload[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
+		return $this->extractId(payload: $payload);
 	}//end idOf()
 
 	/**

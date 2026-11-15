@@ -498,6 +498,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
         ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
 
+        ['name' => 'exportJob#describeSchedule', 'url' => '/api/export/schedule/describe', 'verb' => 'GET'],
         ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
         ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
         ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],
@@ -525,6 +526,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // service, and the count per service for the services list.
         ['name' => 'appointmentEligibility#eligibleResourceCounts', 'url' => '/api/appointment-services/eligible-resources', 'verb' => 'GET'],
         ['name' => 'appointmentEligibility#eligibleResources',      'url' => '/api/appointment-services/{id}/eligible-resources', 'verb' => 'GET'],
+        // How busy a service or resource is (REQ-SRG-003, REQ-SRG-004): one call per page.
+        ['name' => 'appointmentFigures#serviceFigures',  'url' => '/api/appointment-services/{id}/figures',  'verb' => 'GET'],
+        ['name' => 'appointmentFigures#resourceFigures', 'url' => '/api/appointment-resources/{id}/figures', 'verb' => 'GET'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
