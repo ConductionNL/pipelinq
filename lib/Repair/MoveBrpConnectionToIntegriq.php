@@ -301,7 +301,7 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 				continue;
 			}
 
-			$outcome = $this->partOutcome(event: $handover->event, key: $key, part: $part, problems: $handover->problems);
+			$outcome = $this->partOutcome(handover: $handover, setting: [$key, $part]);
 			if ($outcome['warning'] === true) {
 				$output->warning($outcome['line']);
 				continue;
@@ -314,19 +314,18 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 	/**
 	 * The report line of one part, and whether it is a warning.
 	 *
-	 * @param BrpConnectionHandoverEvent $event    The answered handover.
-	 * @param string                     $key      The app-config key.
-	 * @param string                     $part     The handover part the key maps to.
-	 * @param array<string, string>      $problems Why a key could not be handed over, by key.
+	 * @param BrpHandover                 $handover The answered handover and why a key could not be handed over.
+	 * @param array{0: string, 1: string} $setting  The app-config key and the handover part it maps to.
 	 *
 	 * @return array{warning: bool, line: string}
 	 */
-	private function partOutcome(BrpConnectionHandoverEvent $event, string $key, string $part, array $problems): array {
-		if (isset($problems[$key]) === true) {
-			return ['warning' => true, 'line' => $key.': not handed over, '.$problems[$key]];
+	private function partOutcome(BrpHandover $handover, array $setting): array {
+		[$key, $part] = $setting;
+		if (isset($handover->problems[$key]) === true) {
+			return ['warning' => true, 'line' => $key.': not handed over, '.$handover->problems[$key]];
 		}
 
-		$answer = $event->getAnswer($part);
+		$answer = $handover->event->getAnswer($part);
 		if ($answer === null) {
 			return ['warning' => true, 'line' => $key.': integriq did not answer'];
 		}
