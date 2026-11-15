@@ -907,16 +907,11 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	private function deliveryWriteTarget(string $id): array|null {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '' || $id === '') {
+		if ($id === '') {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		return [$register, $schema, $objectService];
+		return $this->objectTarget(register: $register, schema: $schema);
 	}//end deliveryWriteTarget()
 
 	/**

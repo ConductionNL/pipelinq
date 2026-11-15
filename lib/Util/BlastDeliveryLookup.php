@@ -36,6 +36,7 @@ use Throwable;
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait BlastDeliveryLookup {
+	use ObjectServiceTarget;
 
 	/**
 	 * Load one BlastDelivery row by id.
@@ -48,16 +49,12 @@ trait BlastDeliveryLookup {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function findBlastDelivery(string $id, string $notFound): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $this->getRegisterSlug(), schema: $this->getBlastDeliverySchemaSlug());
+		if ($target === null) {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
+		[$register, $schema, $objectService] = $target;
 
 		try {
 			$entity = $objectService->find(id: $id, register: $register, schema: $schema);

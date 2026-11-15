@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -79,6 +80,7 @@ class SegmentService implements SegmentServiceInterface {
 	use ContainerObjectService;
 	use SavedPayloadId;
 	use PageCount;
+	use ObjectServiceTarget;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -783,27 +785,6 @@ class SegmentService implements SegmentServiceInterface {
 
 		return $this->persistSegmentObject(target: $target, payload: $payload, id: $id);
 	}//end saveSegmentObject()
-
-	/**
-	 * The register, schema and ObjectService to read or write through, or null when one is missing.
-	 *
-	 * @param string $register The register slug.
-	 * @param string $schema   The schema slug.
-	 *
-	 * @return array{0: string, 1: string, 2: object}|null
-	 */
-	private function objectTarget(string $register, string $schema): array|null {
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		return [$register, $schema, $objectService];
-	}//end objectTarget()
 
 	/**
 	 * Save a Segment payload, logging a failed save.
