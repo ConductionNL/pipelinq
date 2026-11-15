@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -47,6 +48,7 @@ use RuntimeException;
 class GiftCardService implements GiftCardServiceInterface {
 	use PayloadToArray;
 	use LoggedRegisterSchemaIds;
+	use SerialisedPayload;
 
 	/**
 	 * Constructor.
@@ -444,7 +446,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	 *                                   row is not a redemption.
 	 */
 	private function replayFromTransactionRow(mixed $row): ?array {
-		$array = $this->transactionRowToArray(row: $row);
+		$array = $this->serialisedPayload(value: $row);
 		if ($array === null || in_array((string)($array['type'] ?? ''), ['redeem', 'partial_redeem'], true) === false) {
 			return null;
 		}
@@ -473,27 +475,6 @@ class GiftCardService implements GiftCardServiceInterface {
 
 		return 'active';
 	}//end balanceStatus()
-
-	/**
-	 * A stored transaction row as an array, or null when it is neither an
-	 * array nor a serialisable entity.
-	 *
-	 * @param mixed $row A stored giftCardTransaction row.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function transactionRowToArray(mixed $row): ?array {
-		$array = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$array = $row->jsonSerialize();
-		}
-
-		if (is_array($array) === false) {
-			return null;
-		}
-
-		return $array;
-	}//end transactionRowToArray()
 
 	/**
 	 * Refund an amount onto a card.
