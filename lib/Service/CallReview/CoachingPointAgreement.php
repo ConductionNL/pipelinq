@@ -123,11 +123,24 @@ final class CoachingPointAgreement {
 			return $points;
 		}
 
-		$agreedAt = (string)($points[$index]['agreedAt'] ?? '');
-		if ($agreedAt === '') {
-			$points[$index]['agreedAt'] = $now;
-		}
+		$points[$index] = self::agreedOnce(point: $points[$index], now: $now);
 
 		return $points;
 	}//end agree()
+
+	/**
+	 * A coaching point agreed at a moment, unless it was agreed before.
+	 *
+	 * @param array<string, mixed> $point The coaching point.
+	 * @param string               $now   The moment of agreement, ISO 8601.
+	 *
+	 * @return array<string, mixed> The point.
+	 */
+	private static function agreedOnce(array $point, string $now): array {
+		if ((string)($point['agreedAt'] ?? '') === '') {
+			$point['agreedAt'] = $now;
+		}
+
+		return $point;
+	}//end agreedOnce()
 }//end class
