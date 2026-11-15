@@ -32,6 +32,9 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\ClientRiskService
  * @uses \OCA\Pipelinq\Util\LockedRecord
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.2
  */

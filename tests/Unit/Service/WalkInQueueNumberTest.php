@@ -33,6 +33,12 @@ use RuntimeException;
 
 /**
  * @covers \OCA\Pipelinq\Service\WalkInQueueService
+ * @uses \OCA\Pipelinq\Service\EmailRowMatcher
+ * @uses \OCA\Pipelinq\Service\ShillinqFxRateReader
+ * @uses \OCA\Pipelinq\Util\PayloadToArray
+ * @uses \OCA\Pipelinq\Util\EntityPayload
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\RowIdentity
  */
 class WalkInQueueNumberTest extends TestCase {
 
