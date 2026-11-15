@@ -19,6 +19,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
+use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -47,6 +49,9 @@ class LifecycleRegistrar {
 	 * NC server container as FQCN fallback). The registry is fail-closed: a
 	 * transition that references an unregistered guard tag cannot proceed, so
 	 * these registrations are load-bearing for the POS lifecycle.
+	 *
+	 * It also aliases the Kernel contracts of the lifecycle classes other
+	 * components call to their implementations.
 	 *
 	 * @param IRegistrationContext $context The registration context.
 	 *
@@ -102,5 +107,8 @@ class LifecycleRegistrar {
 				);
 			}
 		);
+
+		$context->registerServiceAlias(ForecastAccessInterface::class, ForecastAccess::class);
+		$context->registerServiceAlias(SessionUserInterface::class, SessionUser::class);
 	}//end register()
 }//end class

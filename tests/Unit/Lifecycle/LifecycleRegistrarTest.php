@@ -20,12 +20,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
+use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
+use OCA\Pipelinq\Lifecycle\ForecastAccess;
 use OCA\Pipelinq\Lifecycle\LifecycleRegistrar;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
+use OCA\Pipelinq\Lifecycle\SessionUser;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -57,6 +61,13 @@ class LifecycleRegistrarTest extends TestCase {
 	private array $factories = [];
 
 	/**
+	 * The aliases register() handed to the context, contract => implementation.
+	 *
+	 * @var array<string, string>
+	 */
+	private array $aliases = [];
+
+	/**
 	 * Run register() against a context that records every factory.
 	 *
 	 * @return void
@@ -71,7 +82,12 @@ class LifecycleRegistrarTest extends TestCase {
 				$this->factories[$name] = $factory;
 			}
 		);
-		$context->expects($this->never())->method('registerServiceAlias');
+		$this->aliases   = [];
+		$context->expects($this->exactly(2))->method('registerServiceAlias')->willReturnCallback(
+			function (string $alias, string $target): void {
+				$this->aliases[$alias] = $target;
+			}
+		);
 
 		(new LifecycleRegistrar())->register($context);
 	}//end setUp()
@@ -145,6 +161,25 @@ class LifecycleRegistrarTest extends TestCase {
 			array_keys($this->factories)
 		);
 	}//end testRegisterBindsThePolicyAndEveryPosGuard()
+
+	/**
+	 * The Kernel contracts other components call resolve to their lifecycle
+	 * implementations.
+	 *
+	 * @return void
+	 */
+	public function testRegisterAliasesTheLifecycleContracts(): void {
+		$this->assertSame(
+			[
+				ForecastAccessInterface::class => ForecastAccess::class,
+				SessionUserInterface::class    => SessionUser::class,
+			],
+			$this->aliases
+		);
+		foreach ($this->aliases as $contract => $implementation) {
+			$this->assertTrue(is_subclass_of($implementation, $contract));
+		}
+	}//end testRegisterAliasesTheLifecycleContracts()
 
 	/**
 	 * Each factory builds an instance of the class its tag names.
