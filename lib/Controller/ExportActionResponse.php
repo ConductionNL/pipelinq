@@ -26,9 +26,6 @@ namespace OCA\Pipelinq\Controller;
 
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -65,14 +62,8 @@ final class ExportActionResponse {
 	public function respond(callable $action, string $label): JSONResponse {
 		try {
 			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (Throwable $e) {
-			return $this->unexpectedFailure(failure: $e, label: $label);
+			return (OcsErrorResponse::of(failure: $e) ?? $this->unexpectedFailure(failure: $e, label: $label));
 		}
 	}//end respond()
 

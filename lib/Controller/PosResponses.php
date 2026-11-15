@@ -28,9 +28,6 @@ namespace OCA\Pipelinq\Controller;
 
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
@@ -93,13 +90,12 @@ final class PosResponses {
 	public function run(callable $respond, string $logLabel): JSONResponse {
 		try {
 			return $respond();
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (\Throwable $e) {
+			$mapped = OcsErrorResponse::of(failure: $e);
+			if ($mapped !== null) {
+				return $mapped;
+			}
+
 			$this->logger->error($logLabel . ' failed', ['exception' => $e->getMessage()]);
 			return new JSONResponse(
 				['error' => $this->l10n->t('An unexpected error occurred')],
