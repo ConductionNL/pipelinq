@@ -258,7 +258,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .contract-invoicing-section {
 	display: flex;
 	flex-direction: column;
@@ -278,9 +280,6 @@ export default {
 }
 
 .contract-invoicing-section__reference-value {
-	padding: 2px 8px;
-	border-radius: var(--border-radius, 4px);
-	background-color: var(--color-background-hover);
-	font-size: 13px;
+	@include reference-value;
 }
 </style>

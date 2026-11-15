@@ -1412,7 +1412,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .blast-wizard {
 	display: flex;
 	flex-direction: column;
@@ -1550,12 +1552,7 @@ export default {
 }
 
 .blast-wizard__preview-articles {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
+	@include plain-stacked-list;
 }
 
 .blast-wizard__preview-articles p {
