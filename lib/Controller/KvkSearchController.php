@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\KvkApiClientInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\KvkApiClient;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,14 +43,14 @@ class KvkSearchController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest          $request   The request.
-	 * @param KvkApiClient      $kvk       The Handelsregister lookup.
-	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
-	 * @param IL10N             $l10n      Translations.
+	 * @param IRequest              $request   The request.
+	 * @param KvkApiClientInterface $kvk       The Handelsregister lookup.
+	 * @param CrmPrivilegeCheck     $privilege The session user and the CRM privilege check.
+	 * @param IL10N                 $l10n      Translations.
 	 */
 	public function __construct(
 		IRequest $request,
-		private KvkApiClient $kvk,
+		private KvkApiClientInterface $kvk,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {

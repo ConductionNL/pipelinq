@@ -11,8 +11,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Controller\Support\PrivilegedAppointmentCaller;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\BookingFiguresServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\BookingFiguresService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -38,15 +38,15 @@ class AppointmentFiguresController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                $request      The HTTP request.
-	 * @param BookingFiguresService   $figures      The week and month figures.
-	 * @param IUserSession            $userSession  The current user session.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy The CRM access policy.
-	 * @param IL10N                   $l10n         Localization service.
+	 * @param IRequest                       $request      The HTTP request.
+	 * @param BookingFiguresServiceInterface $figures      The week and month figures.
+	 * @param IUserSession                   $userSession  The current user session.
+	 * @param ObjectOwnerAccessPolicy        $accessPolicy The CRM access policy.
+	 * @param IL10N                          $l10n         Localization service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private BookingFiguresService $figures,
+		private BookingFiguresServiceInterface $figures,
 		private IUserSession $userSession,
 		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IL10N $l10n,

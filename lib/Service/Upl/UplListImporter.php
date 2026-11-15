@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service\Upl;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\UplListImporterInterface;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
@@ -47,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/product-service-catalogue-public/tasks.md
  */
-class UplListImporter {
+class UplListImporter implements UplListImporterInterface {
 	use SerialisedToArray;
 
 	/**

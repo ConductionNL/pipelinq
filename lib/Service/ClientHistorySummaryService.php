@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\NotesServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-2.1
  */
-class ClientHistorySummaryService {
+class ClientHistorySummaryService implements ClientHistorySummaryServiceInterface {
 	use PayloadToArray;
 
 	/**
