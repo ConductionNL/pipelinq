@@ -147,8 +147,19 @@ class ClientRiskService {
 	 * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-1.2
 	 */
 	public function assess(string $clientId, array $client = [], ?DateTimeImmutable $now = null): array {
-		$now     = ($now ?? new DateTimeImmutable('now'));
-		$reasons = $this->reasonsAt(subject: ['clientId' => $clientId, 'client' => $client], now: $now);
+		return $this->assessmentAt(subject: ['clientId' => $clientId, 'client' => $client], now: ($now ?? new DateTimeImmutable('now')));
+	}//end assess()
+
+	/**
+	 * The churn risk of a client at a moment, with the reasons behind it.
+	 *
+	 * @param array{clientId: string, client: array<string,mixed>} $subject The client's id and the client.
+	 * @param DateTimeImmutable                                    $now     The moment to judge at.
+	 *
+	 * @return array{level:string, score:int, reasons:array<int,array<string,mixed>>, computedAt:string}
+	 */
+	private function assessmentAt(array $subject, DateTimeImmutable $now): array {
+		$reasons = $this->reasonsAt(subject: $subject, now: $now);
 		$score   = array_sum(array_column($reasons, 'points'));
 
 		return [
@@ -157,7 +168,7 @@ class ClientRiskService {
 			'reasons' => $reasons,
 			'computedAt' => $now->format(DATE_ATOM),
 		];
-	}//end assess()
+	}//end assessmentAt()
 
 	/**
 	 * Every reason a client is at risk at a moment, signal by signal.
@@ -169,7 +180,7 @@ class ClientRiskService {
 	 */
 	private function reasonsAt(array $subject, DateTimeImmutable $now): array {
 		$clientId = $subject['clientId'];
-		$tickets  = $this->rows(schemaKey: 'ticket_schema', filters: ['client' => $clientId]);
+		$tickets  = $this->rows(read: ['schemaKey' => 'ticket_schema', 'filters' => ['client' => $clientId]]);
 		$open     = array_values(array_filter($tickets, static fn (array $t): bool => in_array(($t['status'] ?? ''), self::OPEN_TICKET_STATUSES, true)));
 
 		return array_merge(
@@ -230,7 +241,7 @@ class ClientRiskService {
 		$now    = ($now ?? new DateTimeImmutable('now'));
 		$offset = 0;
 		do {
-			$clients = $this->rows(schemaKey: 'client_schema', filters: [], offset: $offset);
+			$clients = $this->rows(read: ['schemaKey' => 'client_schema', 'filters' => []], offset: $offset);
 			foreach ($clients as $client) {
 				$risk    = $this->assess(clientId: $this->id(row: $client), client: $client, now: $now);
 				$written = $this->store(client: $client, risk: $risk, register: $register, schema: $schema);
@@ -290,7 +301,7 @@ class ClientRiskService {
 
 		// A locked client refuses every write: skip it rather than log a
 		// refusal for it on every daily run (platform-record-lock 1.3).
-		return $this->clientUuid(client: $client) !== '' && LockedRecord::isLocked(record: $client) === false;
+		return $this->id(row: $client) !== '' && LockedRecord::isLocked(record: $client) === false;
 	}//end mayStore()
 
 	/**
@@ -311,17 +322,6 @@ class ClientRiskService {
 	}//end riskUnchanged()
 
 	/**
-	 * The client's id, else its uuid ('' when it has neither).
-	 *
-	 * @param array<string,mixed> $client The client.
-	 *
-	 * @return string
-	 */
-	private function clientUuid(array $client): string {
-		return (string) ($client['id'] ?? ($client['uuid'] ?? ''));
-	}//end clientUuid()
-
-	/**
 	 * Save the client with its risk as the system; a failure is logged.
 	 *
 	 * @param array<string,mixed> $client   The client with its new risk, carrying its id.
@@ -330,7 +330,7 @@ class ClientRiskService {
 	 * @return bool Whether the client was written.
 	 */
 	private function saveRisk(array $client, RegisterSchema $location): bool {
-		$uuid = $this->clientUuid(client: $client);
+		$uuid = $this->id(row: $client);
 		try {
 			$this->objectService->saveObject(
 				object: $client,
@@ -399,7 +399,8 @@ class ClientRiskService {
 		$since    = $now->modify('-'.self::CHURN_WINDOW_DAYS.' days');
 		$expiring = [];
 		$churned  = [];
-		foreach ($this->rows(schemaKey: 'contract_schema', filters: ['clientRef' => $clientId], default: 'salesContract') as $contract) {
+		$read = ['schemaKey' => 'contract_schema', 'filters' => ['clientRef' => $clientId], 'default' => 'salesContract'];
+		foreach ($this->rows(read: $read) as $contract) {
 			$status = ($contract['status'] ?? '');
 			if ($status === 'expiring') {
 				$expiring[] = $this->id(row: $contract);
@@ -428,14 +429,15 @@ class ClientRiskService {
 	private function detractorReasons(string $clientId, DateTimeImmutable $now): array {
 		$since   = $now->modify('-'.self::DETRACTOR_WINDOW_DAYS.' days');
 		$records = [];
-		foreach ($this->rows(schemaKey: 'surveyResponse_schema', filters: ['clientRef' => $clientId, 'classification' => 'detractor']) as $response) {
+		$read    = ['schemaKey' => 'surveyResponse_schema', 'filters' => ['clientRef' => $clientId, 'classification' => 'detractor']];
+		foreach ($this->rows(read: $read) as $response) {
 			$submitted = $this->date(value: ($response['submittedAt'] ?? null));
 			if (($response['classification'] ?? '') === 'detractor' && $submitted !== null && $submitted >= $since && $submitted <= $now) {
 				$records[] = $this->id(row: $response);
 			}
 		}
 
-		return $this->each(signal: 'detractor', schema: 'surveyResponse', records: $records);
+		return $this->each(reason: ['signal' => 'detractor', 'schema' => 'surveyResponse'], records: $records);
 	}//end detractorReasons()
 
 	/**
@@ -450,7 +452,7 @@ class ClientRiskService {
 
 		$records    = array_map(fn (array $t): string => $this->id(row: $t), array_values($complaints));
 
-		return $this->each(signal: 'open-complaints', schema: 'ticket', records: $records);
+		return $this->each(reason: ['signal' => 'open-complaints', 'schema' => 'ticket'], records: $records);
 	}//end complaintReasons()
 
 	/**
@@ -534,41 +536,46 @@ class ClientRiskService {
 	/**
 	 * One reason worth the signal's weight per record, up to its cap.
 	 *
-	 * @param string            $signal  The signal.
-	 * @param string            $schema  The schema of the records.
-	 * @param array<int,string> $records The records behind it.
+	 * @param array{signal: string, schema: string} $reason  The signal and the schema of the records.
+	 * @param array<int,string>                     $records The records behind it.
 	 *
 	 * @return array<int,array{signal:string, points:int, schema:string, records:array<int,string>}>
 	 */
-	private function each(string $signal, string $schema, array $records): array {
+	private function each(array $reason, array $records): array {
 		if ($records === []) {
 			return [];
 		}
 
+		$signal = $reason['signal'];
 		$points = min(($this->weight(signal: $signal) * count($records)), self::CAPS[$signal]);
 
-		return [['signal' => $signal, 'points' => $points, 'schema' => $schema, 'records' => array_values($records)]];
+		return [['signal' => $signal, 'points' => $points, 'schema' => $reason['schema'], 'records' => array_values($records)]];
 	}//end each()
 
 	/**
 	 * Rows of a configured schema, read as the system; [] when unconfigured or unreadable.
 	 *
-	 * @param string              $schemaKey The app-config key of the schema.
-	 * @param array<string,mixed> $filters   Equality filters.
-	 * @param string              $default   The schema when the key is unset.
-	 * @param int                 $offset    Rows to skip.
+	 * @param array{schemaKey: string, filters: array<string,mixed>, default?: string} $read   The app-config key of the schema,
+	 *                                                                                   equality filters and the schema
+	 *                                                                                   when the key is unset.
+	 * @param int                                                                       $offset Rows to skip.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	private function rows(string $schemaKey, array $filters, string $default = '', int $offset = 0): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, $default);
+	private function rows(array $read, int $offset = 0): array {
+		$schemaKey = $read['schemaKey'];
+		$register  = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema    = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, ($read['default'] ?? ''));
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
 		return $this->found(
-			config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters), 'limit' => self::BATCH_SIZE, 'offset' => $offset],
+			config: [
+				'filters' => array_merge(['register' => $register, 'schema' => $schema], $read['filters']),
+				'limit' => self::BATCH_SIZE,
+				'offset' => $offset,
+			],
 			schemaKey: $schemaKey
 		);
 	}//end rows()
