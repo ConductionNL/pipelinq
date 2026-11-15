@@ -149,49 +149,45 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			}
 
 			$code = (string)($value['indicator'] ?? '');
-			$declared = $this->declaredFor(code: $code, vocabulary: $vocabulary, partyId: $partyId);
+			$declared = ($vocabulary[$code] ?? $this->undeclared(code: $code, partyId: $partyId));
 
-			$resolved[] = $this->indicatorRow(value: $value, code: $code, declared: $declared);
+			$resolved[] = self::indicatorRow(value: $value, declared: $declared);
 		}
 
 		return $resolved;
 	}//end resolve()
 
 	/**
-	 * The declared indicator for a code; an undeclared code is logged and gets a warning stand-in.
+	 * The warning stand-in for a code nobody declares, logged.
 	 *
-	 * @param string                              $code       The indicator code.
-	 * @param array<string, array<string, mixed>> $vocabulary The declared indicators by code.
-	 * @param string                              $partyId    The party record's uuid (logged).
+	 * A value against a code nobody declares is reported rather than
+	 * dropped: a dropped safety flag is silent, and silence is the failure
+	 * this whole capability exists to prevent.
+	 *
+	 * @param string $code    The indicator code.
+	 * @param string $partyId The party record's uuid (logged).
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function declaredFor(string $code, array $vocabulary, string $partyId): array {
-		$declared = ($vocabulary[$code] ?? null);
-		if ($declared === null) {
-			// A value against a code nobody declares is reported rather
-			// than dropped: a dropped safety flag is silent, and silence
-			// is the failure this whole capability exists to prevent.
-			$this->logger->warning(
-				'PartyIndicatorService: an indicator value names an undeclared indicator',
-				['party' => $partyId, 'indicator' => $code]
-			);
-			$declared = ['code' => $code, 'label' => $code, 'severity' => 'warning'];
-		}
+	private function undeclared(string $code, string $partyId): array {
+		$this->logger->warning(
+			'PartyIndicatorService: an indicator value names an undeclared indicator',
+			['party' => $partyId, 'indicator' => $code]
+		);
 
-		return $declared;
-	}//end declaredFor()
+		return ['code' => $code, 'label' => $code, 'severity' => 'warning'];
+	}//end undeclared()
 
 	/**
 	 * One resolved indicator: its declaration's label, severity and effects plus the value's period and acknowledgement.
 	 *
-	 * @param array<string, mixed> $value    The stored indicator value.
-	 * @param string               $code     The indicator code.
+	 * @param array<string, mixed> $value    The stored indicator value; its `indicator` is the code.
 	 * @param array<string, mixed> $declared The declared indicator.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function indicatorRow(array $value, string $code, array $declared): array {
+	private static function indicatorRow(array $value, array $declared): array {
+		$code = (string)($value['indicator'] ?? '');
 		$row = [
 			'id' => (string)($value['id'] ?? $value['uuid'] ?? ''),
 			'code' => $code,
@@ -274,7 +270,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 
 		$data = $this->withAcknowledgement(data: $data);
 
-		return $this->saveAcknowledgement(data: $data, schema: $schema, valueId: $valueId);
+		return $this->saveAcknowledgement(data: $data, target: ['schema' => $schema, 'uuid' => $valueId]);
 	}//end acknowledge()
 
 	/**
@@ -324,24 +320,23 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 	/**
 	 * Save the acknowledged value and answer 200, or 500 when the save fails.
 	 *
-	 * @param array<string, mixed> $data    The acknowledged value.
-	 * @param string               $schema  The indicator-value schema id.
-	 * @param string               $valueId The indicator value's uuid.
+	 * @param array<string, mixed>  $data   The acknowledged value.
+	 * @param array<string, string> $target The indicator-value schema id (`schema`) and the value's `uuid`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function saveAcknowledgement(array $data, string $schema, string $valueId): array {
+	private function saveAcknowledgement(array $data, array $target): array {
 		try {
 			$this->objectService->saveObject(
 				object: $data,
 				register: $this->registerId(),
-				schema: $schema,
-				uuid: $valueId,
+				schema: $target['schema'],
+				uuid: $target['uuid'],
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'PartyIndicatorService: the acknowledgement could not be saved',
-				['uuid' => $valueId, 'exception' => $e->getMessage()]
+				['uuid' => $target['uuid'], 'exception' => $e->getMessage()]
 			);
 
 			return ['status' => 500, 'error' => 'The acknowledgement could not be saved.'];
