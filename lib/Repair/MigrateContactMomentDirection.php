@@ -39,6 +39,7 @@ use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\ContactMomentRows;
 use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Util\SystemRowSaver;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -55,6 +56,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	use JsonSerializableToArray;
 	use FirstAdminUser;
 	use ContactMomentRows;
+	use SystemRowSaver;
 
 	/**
 	 * Upper bound on rows fetched in one pass.
@@ -243,16 +245,8 @@ class MigrateContactMomentDirection implements IRepairStep {
 	private function saveMigrated(array $target, array $data): int {
 		[$objectService, $register, $schema, $actingAdmin] = $target;
 		try {
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: (string)($data['id'] ?? ''),
-				_rbac: false,
-				_multitenancy: false,
-				currentUser: $actingAdmin,
-			);
+			$save = $this->rowSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+			$save($data);
 			return 1;
 		} catch (Throwable $e) {
 			$this->logger->error(
