@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
+use OCA\Pipelinq\Repair\Support\PosBookkeepingStore;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\App\IAppManager;
@@ -144,7 +145,7 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 		$this->withSystemIdentity(
 			objectService: $objectService,
 			work: function () use ($objectService, $register, $output): void {
-				$this->runInner(objectService: $objectService, register: $register, output: $output);
+				$this->runInner(store: new PosBookkeepingStore(objectService: $objectService, register: $register), output: $output);
 			}
 		);
 	}//end run()
@@ -152,44 +153,36 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	/**
 	 * The migration itself.
 	 *
-	 * @param object $objectService OpenRegister's ObjectService.
-	 * @param string $register The register slug.
-	 * @param IOutput $output Progress reporting.
+	 * @param PosBookkeepingStore $store  Where the migration reads and writes.
+	 * @param IOutput             $output Progress reporting.
 	 *
 	 * @return void
 	 */
-	private function runInner(object $objectService, string $register, IOutput $output): void {
-		$outbounds = $this->readAll(objectService: $objectService, register: $register, schema: self::OUTBOUND_SCHEMA);
+	private function runInner(PosBookkeepingStore $store, IOutput $output): void {
+		$outbounds = $this->readAll(store: $store, schema: self::OUTBOUND_SCHEMA);
 		if ($outbounds === []) {
 			$output->info('POS bookkeeping migration: no outbound journal records to migrate.');
 			return;
 		}
 
-		$zReportsById = $this->indexZReports(objectService: $objectService, register: $register);
+		$store = $store->withZReports(zReportsById: $this->indexZReports(store: $store));
 
-		$counts = $this->migrateAll(objectService: $objectService, register: $register, outbounds: $outbounds, zReportsById: $zReportsById);
+		$counts = $this->migrateAll(store: $store, outbounds: $outbounds);
 		$this->reportMigration(output: $output, counts: $counts);
 	}//end runInner()
 
 	/**
 	 * Migrate every outbound record, counting the outcomes.
 	 *
-	 * @param object                           $objectService OpenRegister's ObjectService.
-	 * @param string                           $register      The register slug.
-	 * @param array<int, array<string, mixed>> $outbounds     The outbound journal records.
-	 * @param array<string, mixed>             $zReportsById  The Z-reports, keyed by id.
+	 * @param PosBookkeepingStore              $store     Where the migration reads and writes.
+	 * @param array<int, array<string, mixed>> $outbounds The outbound journal records.
 	 *
 	 * @return array{raised: int, projected: int, pending: int}
 	 */
-	private function migrateAll(object $objectService, string $register, array $outbounds, array $zReportsById): array {
+	private function migrateAll(PosBookkeepingStore $store, array $outbounds): array {
 		$counts = ['raised' => 0, 'projected' => 0, 'pending' => 0];
 		foreach ($outbounds as $outbound) {
-			$result = $this->migrateOne(
-				objectService: $objectService,
-				register: $register,
-				outbound: $outbound,
-				zReportsById: $zReportsById
-			);
+			$result = $this->migrateOne(store: $store, outbound: $outbound);
 			if (array_key_exists($result, $counts) === true) {
 				$counts[$result]++;
 			}
@@ -226,16 +219,14 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	/**
 	 * Migrate a single outbound record onto the Z-report projection / registry.
 	 *
-	 * @param object $objectService The OR object service.
-	 * @param string $register The register id/slug.
+	 * @param PosBookkeepingStore  $store    Where the migration reads and writes.
 	 * @param array<string, mixed> $outbound The outbound record.
-	 * @param array<string, array> $zReportsById The Z-reports indexed by id + slug.
 	 *
 	 * @return string One of 'raised', 'projected', 'pending', 'skipped'.
 	 */
-	private function migrateOne(object $objectService, string $register, array $outbound, array $zReportsById): string {
+	private function migrateOne(PosBookkeepingStore $store, array $outbound): string {
 		$zReportRef = (string)($outbound['zReport'] ?? '');
-		$zReport = $zReportsById[$zReportRef] ?? null;
+		$zReport = $store->zReportsById[$zReportRef] ?? null;
 		if ($zReport === null) {
 			$this->logger->warning(
 				'POS bookkeeping migration: parent Z-report not found for outbound',
@@ -255,13 +246,10 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 		if ($status === 'posted') {
 			// Project the already-posted outcome onto the Z-report; leave the
 			// outbound record read-only (never dropped).
-			$journalId = (string)($outbound['shillinqJournalEntryId'] ?? $idempotencyKey);
-			$this->projectPosted(
-				objectService: $objectService,
-				register: $register,
-				zReport: $zReport,
-				journalEntryId: $journalId
-			);
+			$zReport['bookkeepingStatus'] = 'raised';
+			$zReport['shillinqJournalEntryId'] = (string)($outbound['shillinqJournalEntryId'] ?? $idempotencyKey);
+			unset($zReport['@self']);
+			$this->projectPosted(store: $store, zReport: $zReport);
 			return 'projected';
 		}
 
@@ -276,28 +264,22 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	}//end migrateOne()
 
 	/**
-	 * Project an already-posted outcome onto the parent Z-report.
+	 * Save a Z-report that carries an already-posted outcome.
 	 *
-	 * @param object $objectService The OR object service.
-	 * @param string $register The register id/slug.
-	 * @param array<string, mixed> $zReport The Z-report.
-	 * @param string $journalEntryId The shillinq journal id.
+	 * @param PosBookkeepingStore  $store   Where the migration reads and writes.
+	 * @param array<string, mixed> $zReport The Z-report, marked raised with its shillinq journal id.
 	 *
 	 * @return void
 	 */
-	private function projectPosted(object $objectService, string $register, array $zReport, string $journalEntryId): void {
-		$zReport['bookkeepingStatus'] = 'raised';
-		$zReport['shillinqJournalEntryId'] = $journalEntryId;
-		unset($zReport['@self']);
-
+	private function projectPosted(PosBookkeepingStore $store, array $zReport): void {
 		try {
-			$objectService
-				->setRegister($register)
+			$store->objectService
+				->setRegister($store->register)
 				->setSchema(self::ZREPORT_SCHEMA)
 				->saveObject(
 					object: $zReport,
 					extend: [],
-					register: $register,
+					register: $store->register,
 					schema: self::ZREPORT_SCHEMA,
 					uuid: (string)($zReport['id'] ?? $zReport['uuid'] ?? '')
 				);
@@ -312,13 +294,12 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	/**
 	 * Index every posZReport by both its id and its slug for FK resolution.
 	 *
-	 * @param object $objectService The OR object service.
-	 * @param string $register The register id/slug.
+	 * @param PosBookkeepingStore $store Where the migration reads.
 	 *
 	 * @return array<string, array<string, mixed>> Z-reports keyed by id and slug.
 	 */
-	private function indexZReports(object $objectService, string $register): array {
-		$rows = $this->readAll(objectService: $objectService, register: $register, schema: self::ZREPORT_SCHEMA);
+	private function indexZReports(PosBookkeepingStore $store): array {
+		$rows = $this->readAll(store: $store, schema: self::ZREPORT_SCHEMA);
 		$index = [];
 		foreach ($rows as $row) {
 			$id = (string)($row['id'] ?? $row['uuid'] ?? '');
@@ -339,16 +320,15 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	/**
 	 * Read every object of a schema in the register (setRegister->setSchema->findAll).
 	 *
-	 * @param object $objectService The OR object service.
-	 * @param string $register The register id/slug.
-	 * @param string $schema The schema slug.
+	 * @param PosBookkeepingStore $store  Where the migration reads.
+	 * @param string              $schema The schema slug.
 	 *
 	 * @return array<int, array<string, mixed>> The objects as plain arrays.
 	 */
-	private function readAll(object $objectService, string $register, string $schema): array {
+	private function readAll(PosBookkeepingStore $store, string $schema): array {
 		try {
-			$rows = $objectService
-				->setRegister($register)
+			$rows = $store->objectService
+				->setRegister($store->register)
 				->setSchema($schema)
 				->findAll([]);
 		} catch (\Throwable $e) {
