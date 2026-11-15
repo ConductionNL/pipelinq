@@ -1258,19 +1258,13 @@ class ComplianceService implements ComplianceServiceInterface {
 		?string $sourceBlastId = null,
 		?string $listId = null,
 	): void {
-		$channel = strtolower(trim($channel));
-		if ($contactId === '' || $channel === '' || $reason === '') {
+		$key = new ConsentRecordKey(contactId: $contactId, channel: strtolower(trim($channel)), listId: $listId);
+		if ($key->contactId === '' || $key->channel === '' || $reason === '') {
 			return;
 		}
 
-		$this->withdrawConsent(
-			withdrawal: new ConsentWithdrawal(
-				key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId),
-				reason: $reason,
-				sourceBlastId: $sourceBlastId,
-				withdrawnAt: gmdate('Y-m-d\TH:i:s\Z'),
-			)
-		);
+		$withdrawal = new ConsentWithdrawal(key: $key, reason: $reason, sourceBlastId: $sourceBlastId, withdrawnAt: gmdate('Y-m-d\TH:i:s\Z'));
+		$this->withdrawConsent(withdrawal: $withdrawal);
 	}//end recordConsentWithdrawal()
 
 	/**

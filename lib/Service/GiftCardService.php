@@ -92,21 +92,29 @@ class GiftCardService implements GiftCardServiceInterface {
 		string $channel = 'purchased',
 		?string $issuedIn = null,
 	): array {
-		if ($initialBalance <= 0) {
-			throw new RuntimeException('Initial balance must be positive.');
-		}
-
 		$issue = new GiftCardIssue(
 			programmeId: $programmeId, initialBalance: $initialBalance, expiryDays: $expiryDays, channel: $channel, issuedIn: $issuedIn
 		);
 		[$card, $pin] = $this->newCard(issue: $issue);
 		$saved = $this->persistCard(payload: $card, uuid: null);
-		$giftCardId = (string)$this->extractUuid(object: $saved);
-		$entry = new GiftCardLedgerEntry(giftCardId: $giftCardId, type: 'issue', amount: $initialBalance, balanceAfter: $initialBalance);
-		$this->logTransaction(entry: $entry, posTransactionId: null);
+		$this->logIssue(saved: $saved, initialBalance: $initialBalance);
 
 		return ['card' => $saved, 'pin' => $pin];
 	}//end issueGiftCard()
+
+	/**
+	 * Write the ledger entry of an issued card.
+	 *
+	 * @param array<string, mixed> $saved          The saved card.
+	 * @param float                $initialBalance The opening balance.
+	 *
+	 * @return void
+	 */
+	private function logIssue(array $saved, float $initialBalance): void {
+		$giftCardId = (string)$this->extractUuid(object: $saved);
+		$entry = new GiftCardLedgerEntry(giftCardId: $giftCardId, type: 'issue', amount: $initialBalance, balanceAfter: $initialBalance);
+		$this->logTransaction(entry: $entry, posTransactionId: null);
+	}//end logIssue()
 
 	/**
 	 * Build the payload of a new card with a unique serial and a hashed PIN.
@@ -114,8 +122,14 @@ class GiftCardService implements GiftCardServiceInterface {
 	 * @param GiftCardIssue $issue The issuance request.
 	 *
 	 * @return array{0: array<string, mixed>, 1: string} The card payload and its plaintext PIN.
+	 *
+	 * @throws RuntimeException When the initial balance is not positive.
 	 */
 	private function newCard(GiftCardIssue $issue): array {
+		if ($issue->initialBalance <= 0) {
+			throw new RuntimeException('Initial balance must be positive.');
+		}
+
 		$serial = $this->generateUniqueSerial();
 		$pin = $this->generatePin();
 		$hash = password_hash($pin, PASSWORD_BCRYPT, ['cost' => 10]);

@@ -557,25 +557,20 @@ class TicketService implements TicketServiceInterface {
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
-		$fields = [
-			'client' => trim($client),
-			'channel' => trim($channel),
-			'title' => trim($title),
-			'direction' => trim($direction),
-		];
-
+		$fields = ['client' => $client, 'channel' => $channel, 'title' => $title, 'direction' => $direction];
 		return $this->loggedContactmoment(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
 	}//end logContactmoment()
 
 	/**
 	 * Refuse missing or invalid required fields, else save the contactmoment.
 	 *
-	 * @param array{client: string, channel: string, title: string, direction: string} $fields   The trimmed required fields.
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields   The required fields, trimmed here.
 	 * @param array{outcome: string|null, description: string|null}                    $optional The optional outcome and notes.
 	 *
 	 * @return array<string, mixed> The ticket id, or the MCP error.
 	 */
 	private function loggedContactmoment(array $fields, array $optional): array {
+		$fields = array_map('trim', $fields);
 		$refusal = $this->contactmomentRefusal(fields: $fields);
 		if ($refusal !== null) {
 			return $refusal;

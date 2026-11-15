@@ -273,12 +273,7 @@ class SocialBrokerGateway {
 		?string $body = null,
 		?string $actingUserId = null,
 	): SocialGatewayResult {
-		$refusal = $this->requestRefusal(credentialRef: $credentialRef);
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		return $this->callBroker(
+		return $this->requestRefusal(credentialRef: $credentialRef) ?? $this->callBroker(
 			call: new BrokeredCall(method: $method, path: $path),
 			request: ['credentialRef' => $credentialRef, 'headers' => $headers, 'body' => $body, 'actingUserId' => $actingUserId]
 		);
