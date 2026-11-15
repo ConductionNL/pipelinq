@@ -355,13 +355,25 @@ class TierService implements TierServiceInterface {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function emitTierChangedEvent(string $accountId, ?string $fromTierId, array $toTier): void {
+		$this->dispatchTierChanged(from: ['accountId' => $accountId, 'fromTierId' => $fromTierId], toTier: $toTier);
+	}//end emitTierChangedEvent()
+
+	/**
+	 * Dispatch the tier-changed event, logging a failure.
+	 *
+	 * @param array{accountId: string, fromTierId: string|null} $from   The account UUID and the previous tier.
+	 * @param array<string, mixed>                              $toTier The new tier.
+	 *
+	 * @return void
+	 */
+	private function dispatchTierChanged(array $from, array $toTier): void {
 		try {
 			$event = new GenericEvent(
 				null,
 				[
 					'type' => 'loyalty.tier.changed',
-					'accountId' => $accountId,
-					'fromTierId' => $fromTierId,
+					'accountId' => $from['accountId'],
+					'fromTierId' => $from['fromTierId'],
 					'toTierId' => $this->extractUuid(object: $toTier),
 					'toTierNaam' => (string)($toTier['name'] ?? ''),
 					'benefits' => $toTier['benefits'] ?? [],
@@ -371,7 +383,7 @@ class TierService implements TierServiceInterface {
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: tier-changed event dispatch failed', ['exception' => $e->getMessage()]);
 		}
-	}//end emitTierChangedEvent()
+	}//end dispatchTierChanged()
 
 	/**
 	 * Whether $newTierId is higher than the account's current tier (by sequence).

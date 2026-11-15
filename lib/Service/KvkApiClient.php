@@ -97,7 +97,7 @@ class KvkApiClient {
 		$sbiCodes = $criteria['sbiCodes'] ?? [];
 
 		foreach ($sbiCodes as $sbiCode) {
-			$this->searchBySbiCode(apiKey: $apiKey, sbiCode: $sbiCode, results: $results);
+			$results = array_replace($results, $this->searchBySbiCode(apiKey: $apiKey, sbiCode: $sbiCode));
 		}
 
 		return array_values(array: $results);
@@ -130,20 +130,20 @@ class KvkApiClient {
 	}//end searchByName()
 
 	/**
-	 * Search for a single SBI code and merge results.
+	 * Search for a single SBI code; a failed search keeps the rows mapped before it failed.
 	 *
 	 * @param string $apiKey The KVK API key.
 	 * @param string $sbiCode The SBI code to search.
-	 * @param array $results The results array to populate (by reference).
 	 *
-	 * @return void
+	 * @return array<string, array<string, mixed>> The mapped rows, keyed by KvK number.
 	 */
-	private function searchBySbiCode(string $apiKey, string $sbiCode, array &$results): void {
+	private function searchBySbiCode(string $apiKey, string $sbiCode): array {
+		$results = [];
 		try {
 			$body = $this->fetchResults(apiKey: $apiKey, sbiCode: $sbiCode);
 
 			if (isset($body['resultaten']) === false) {
-				return;
+				return $results;
 			}
 
 			foreach ($body['resultaten'] as $item) {
@@ -158,6 +158,8 @@ class KvkApiClient {
 				context: ['sbi' => $sbiCode, 'error' => $e->getMessage()]
 			);
 		}//end try
+
+		return $results;
 	}//end searchBySbiCode()
 
 	/**

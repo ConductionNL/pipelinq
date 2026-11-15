@@ -260,7 +260,13 @@ class PortalController extends Controller {
 		}
 
 		$returnUrl = $this->urlGenerator->getAbsoluteURL('/index.php/apps/pipelinq/portal/api/booking/' . rawurlencode($bookingId));
-		$sessionUrl = $this->depositSessionUrl(bookingId: $bookingId, created: $created, amountCents: $amountCents, returnUrl: $returnUrl);
+		$deposit = [
+			'amountCents' => $amountCents,
+			'currency' => (string)($created['currency'] ?? 'EUR'),
+			'description' => 'Deposit for ' . (string)($created['serviceName'] ?? 'appointment'),
+			'returnUrl' => $returnUrl,
+		];
+		$sessionUrl = $this->depositSessionUrl(bookingId: $bookingId, deposit: $deposit);
 		if ($sessionUrl === '') {
 			return null;
 		}
@@ -288,21 +294,21 @@ class PortalController extends Controller {
 	/**
 	 * Open a deposit session and return its hosted checkout URL, or '' when it could not be opened.
 	 *
-	 * @param string               $bookingId   The freshly created booking UUID.
-	 * @param array<string, mixed> $created     The createBookingFromPortal result.
-	 * @param int                  $amountCents The deposit in cents.
-	 * @param string               $returnUrl   The portal URL the customer returns to.
+	 * @param string                                                                         $bookingId The freshly created booking UUID.
+	 * @param array{amountCents: int, currency: string, description: string, returnUrl: string} $deposit   The deposit in cents, its currency
+	 *                                                                                                     and description, and the portal URL
+	 *                                                                                                     the customer returns to.
 	 *
 	 * @return string
 	 */
-	private function depositSessionUrl(string $bookingId, array $created, int $amountCents, string $returnUrl): string {
+	private function depositSessionUrl(string $bookingId, array $deposit): string {
 		try {
 			$session = $this->depositService->createDepositSession(
 				bookingId: $bookingId,
-				amountCents: $amountCents,
-				currency: (string)($created['currency'] ?? 'EUR'),
-				description: 'Deposit for ' . (string)($created['serviceName'] ?? 'appointment'),
-				returnUrl: $returnUrl
+				amountCents: $deposit['amountCents'],
+				currency: $deposit['currency'],
+				description: $deposit['description'],
+				returnUrl: $deposit['returnUrl']
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: deposit session could not be opened', ['booking' => $bookingId]);
@@ -573,9 +579,7 @@ class PortalController extends Controller {
 		$endAt = $this->computeEndAt(startAt: $params['startAt'], durationMinutes: $duration);
 
 		$customerId = $this->upsertCustomer(
-			name: $params['customerName'],
-			email: $params['email'],
-			phone: $params['phone']
+			customer: ['name' => $params['customerName'], 'email' => $params['email'], 'phone' => $params['phone']]
 		);
 
 		$bookingId = $this->bookingService->createBooking(
@@ -782,15 +786,14 @@ class PortalController extends Controller {
 	 * Looks up an existing contact by email; mints one when missing. Returns
 	 * the contact UUID, which the BookingService stores on the Booking.
 	 *
-	 * @param string $name Display name.
-	 * @param string $email Lookup key.
-	 * @param string $phone Optional phone.
+	 * @param array{name: string, email: string, phone: string} $customer Display name, email (the lookup key) and optional phone.
 	 *
 	 * @return string The contact UUID (empty when the schema is unconfigured).
 	 *
 	 * @throws RuntimeException If OpenRegister is unavailable.
 	 */
-	private function upsertCustomer(string $name, string $email, string $phone): string {
+	private function upsertCustomer(array $customer): string {
+		$email = $customer['email'];
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: 'contact_schema');
 		if ($register === '' || $schema === '') {
@@ -800,13 +803,14 @@ class PortalController extends Controller {
 			return $this->emailToken(email: $email);
 		}
 
-		$id = $this->findCustomerId(register: $register, schema: $schema, email: $email);
+		$where = ['register' => $register, 'schema' => $schema];
+		$id = $this->findCustomerId(where: $where, email: $email);
 		if ($id !== '') {
 			return $id;
 		}
 
-		$object = $this->customerObject(name: $name, email: $email, phone: $phone);
-		return $this->createCustomer(object: $object, register: $register, schema: $schema);
+		$object = $this->customerObject(customer: $customer);
+		return $this->createCustomer(object: $object, where: $where);
 	}//end upsertCustomer()
 
 	/**
@@ -823,17 +827,16 @@ class PortalController extends Controller {
 	/**
 	 * The id of the contact with this email, or '' when none is found or the lookup fails.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema   The contact schema id.
-	 * @param string $email    Lookup key.
+	 * @param array{register: string, schema: string} $where The register id and contact schema id.
+	 * @param string                                  $email Lookup key.
 	 *
 	 * @return string
 	 */
-	private function findCustomerId(string $register, string $schema, string $email): string {
+	private function findCustomerId(array $where, string $email): string {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => ['register' => $register, 'schema' => $schema, 'email' => $email],
+					'filters' => $where + ['email' => $email],
 					'limit' => 1,
 				]
 			);
@@ -869,17 +872,15 @@ class PortalController extends Controller {
 	/**
 	 * The contact object minted for a new portal customer.
 	 *
-	 * @param string $name  Display name.
-	 * @param string $email The customer's email.
-	 * @param string $phone Optional phone.
+	 * @param array{name: string, email: string, phone: string} $customer Display name, email and optional phone.
 	 *
 	 * @return array<string, string>
 	 */
-	private function customerObject(string $name, string $email, string $phone): array {
+	private function customerObject(array $customer): array {
 		return [
-			'name' => substr($name, 0, 255),
-			'email' => $email,
-			'phone' => substr($phone, 0, 64),
+			'name' => substr($customer['name'], 0, 255),
+			'email' => $customer['email'],
+			'phone' => substr($customer['phone'], 0, 64),
 			'source' => 'portal',
 		];
 	}//end customerObject()
@@ -887,17 +888,16 @@ class PortalController extends Controller {
 	/**
 	 * Save a new contact and return its id, or the email token when that fails.
 	 *
-	 * @param array<string, string> $object   The contact object.
-	 * @param string                $register The register id.
-	 * @param string                $schema   The contact schema id.
+	 * @param array<string, string>                   $object The contact object.
+	 * @param array{register: string, schema: string} $where  The register id and contact schema id.
 	 *
 	 * @return string
 	 *
 	 * @throws RuntimeException If OpenRegister is unavailable.
 	 */
-	private function createCustomer(array $object, string $register, string $schema): string {
+	private function createCustomer(array $object, array $where): string {
 		try {
-			$saved = $this->getObjectService()->saveObject(object: $object, extend: [], register: $register, schema: $schema, uuid: null);
+			$saved = $this->getObjectService()->saveObject(object: $object, extend: [], register: $where['register'], schema: $where['schema'], uuid: null);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: customer save failed');
 			return $this->emailToken(email: $object['email']);

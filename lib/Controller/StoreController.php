@@ -522,7 +522,7 @@ class StoreController extends Controller {
 			return ['schema' => $slug, 'status' => 'error', 'message' => $message];
 		}
 
-		return $this->writeComponent(slug: $slug, object: $object, registerId: $registerId, schemaId: $schemaId);
+		return $this->writeComponent(object: $object, target: ['slug' => $slug, 'register' => $registerId, 'schema' => $schemaId]);
 	}//end installComponent()
 
 	/**
@@ -555,22 +555,20 @@ class StoreController extends Controller {
 	/**
 	 * Write one component's object and return its report row.
 	 *
-	 * @param string $slug The component's schema slug.
-	 * @param array<string, mixed> $object The component's object.
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
+	 * @param array<string, mixed>  $object The component's object.
+	 * @param array<string, string> $target The component's schema `slug`, the register id and the schema id.
 	 *
 	 * @return array<string, string>
 	 *
 	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
-	private function writeComponent(string $slug, array $object, string $registerId, string $schemaId): array {
+	private function writeComponent(array $object, array $target): array {
 		try {
-			$this->objectService->saveObject($this->asNewObject(object: $object), [], $registerId, $schemaId, null);
-			return ['schema' => $slug, 'status' => 'installed', 'message' => ''];
+			$this->objectService->saveObject($this->asNewObject(object: $object), [], $target['register'], $target['schema'], null);
+			return ['schema' => $target['slug'], 'status' => 'installed', 'message' => ''];
 		} catch (Throwable $e) {
-			$this->logger->error('Pipelinq store: installing {schema} failed: {error}', ['schema' => $slug, 'error' => $e->getMessage()]);
-			return ['schema' => $slug, 'status' => 'error', 'message' => 'The component could not be written.'];
+			$this->logger->error('Pipelinq store: installing {schema} failed: {error}', ['schema' => $target['slug'], 'error' => $e->getMessage()]);
+			return ['schema' => $target['slug'], 'status' => 'error', 'message' => 'The component could not be written.'];
 		}//end try
 	}//end writeComponent()
 

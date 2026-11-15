@@ -184,22 +184,37 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 		$journeyId = trim((string)($config['journey'] ?? ''));
 		$flowRunUuid = (string)($context['runUuid'] ?? ($context['uuid'] ?? ''));
 
+		foreach ($this->subjectsOf(items: $items) as $subject) {
+			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
+		}
+
+		return $items;
+	}//end execute()
+
+	/**
+	 * The subject the journey runs for, per item; one empty subject when there are no items.
+	 *
+	 * @param array<int, array<string, mixed>> $items The input items.
+	 *
+	 * @return list<array<string, mixed>> The subjects.
+	 */
+	private function subjectsOf(array $items): array {
 		if ($items === []) {
 			// A scheduled journey fires with nothing attached. Its audience
 			// segment is the audience, and the runner resolves it.
-			$this->runner->run(journeyId: $journeyId, subject: [], flowRunUuid: $flowRunUuid);
-			return $items;
+			return [[]];
 		}
 
+		$subjects = [];
 		foreach ($items as $item) {
 			$subject = ($item['json'] ?? []);
 			if (is_array($subject) === false) {
 				$subject = [];
 			}
 
-			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
+			$subjects[] = $subject;
 		}
 
-		return $items;
-	}//end execute()
+		return $subjects;
+	}//end subjectsOf()
 }//end class

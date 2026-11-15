@@ -212,21 +212,22 @@ class SegmentQueryCompiler {
 
 		$operator = (string)($leaf['operator'] ?? 'equals');
 		$value = ($leaf['value'] ?? null);
-		$numeric = in_array($types[$field], self::NUMERIC_TYPES, true);
+		$property = new SegmentProperty(field: $field, numeric: in_array($types[$field], self::NUMERIC_TYPES, true));
 
 		if (isset(self::COMPARISONS[$operator]) === true) {
-			return $this->orNull(
-				field: $field,
-				node: $this->comparison(field: $field, operator: self::COMPARISONS[$operator], value: $value, numeric: $numeric),
-				inclusive: in_array(self::COMPARISONS[$operator], ['gte', 'lte'], true)
-			);
+			$node = $this->comparison(property: $property, condition: ['operator' => self::COMPARISONS[$operator], 'value' => $value]);
+			if (in_array(self::COMPARISONS[$operator], ['gte', 'lte'], true) === false) {
+				return $node;
+			}
+
+			return $this->orNull(field: $field, node: $node);
 		}
 
 		return match ($operator) {
-			'equals' => $this->equals(field: $field, value: $value, numeric: $numeric),
-			'contains' => $this->textLike(field: $field, value: $value, numeric: $numeric),
+			'equals' => $this->equals(property: $property, value: $value),
+			'contains' => $this->textLike(property: $property, value: $value),
 			'notEquals' => $this->notEquals(field: $field, value: $value),
-			'between' => $this->orNull(field: $field, node: $this->between(field: $field, value: $value, numeric: $numeric), inclusive: true),
+			'between' => $this->orNull(field: $field, node: $this->between(property: $property, value: $value)),
 			'isNull' => ['field' => $field, 'operator' => 'isnull', 'value' => true],
 			'isNotNull' => ['field' => $field, 'operator' => 'isnull', 'value' => false],
 			default => null,
@@ -236,19 +237,18 @@ class SegmentQueryCompiler {
 	/**
 	 * A numeric comparison on a numeric property; other comparisons stay in PHP.
 	 *
-	 * @param string $field    The property.
-	 * @param string $operator OpenRegister's operator.
-	 * @param mixed  $value    The rule value.
-	 * @param bool   $numeric  Whether the property is numeric.
+	 * @param SegmentProperty                       $property  The property and whether it is numeric.
+	 * @param array{operator: string, value: mixed} $condition OpenRegister's operator and the rule value.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function comparison(string $field, string $operator, mixed $value, bool $numeric): ?array {
-		if ($numeric === false || is_numeric($value) === false || is_string($value) === true && trim($value) !== $value) {
+	private function comparison(SegmentProperty $property, array $condition): ?array {
+		$value = $condition['value'];
+		if ($property->numeric === false || is_numeric($value) === false || is_string($value) === true && trim($value) !== $value) {
 			return null;
 		}
 
-		return ['field' => $field, 'operator' => $operator, 'value' => ($value + 0)];
+		return ['field' => $property->field, 'operator' => $condition['operator'], 'value' => ($value + 0)];
 	}//end comparison()
 
 	/**
@@ -257,14 +257,13 @@ class SegmentQueryCompiler {
 	 * The engine compares a missing value as equal to any number, so `gte`,
 	 * `lte` and `between` match it; OpenRegister's comparison does not.
 	 *
-	 * @param string                    $field     The property.
-	 * @param array<string, mixed>|null $node      The compiled comparison.
-	 * @param bool                      $inclusive Whether the comparison includes equality.
+	 * @param string                    $field The property.
+	 * @param array<string, mixed>|null $node  The compiled inclusive comparison.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function orNull(string $field, ?array $node, bool $inclusive): ?array {
-		if ($node === null || $inclusive === false) {
+	private function orNull(string $field, ?array $node): ?array {
+		if ($node === null) {
 			return $node;
 		}
 
@@ -274,35 +273,33 @@ class SegmentQueryCompiler {
 	/**
 	 * `equals`: a closed range on a number (the engine compares numbers as numbers), a substring on text.
 	 *
-	 * @param string $field   The property.
-	 * @param mixed  $value   The rule value.
-	 * @param bool   $numeric Whether the property is numeric.
+	 * @param SegmentProperty $property The property and whether it is numeric.
+	 * @param mixed           $value    The rule value.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function equals(string $field, mixed $value, bool $numeric): ?array {
-		if ($numeric === false) {
-			return $this->like(field: $field, value: $value);
+	private function equals(SegmentProperty $property, mixed $value): ?array {
+		if ($property->numeric === false) {
+			return $this->like(field: $property->field, value: $value);
 		}
 
-		return $this->between(field: $field, value: [$value, $value], numeric: true);
+		return $this->between(property: $property, value: [$value, $value]);
 	}//end equals()
 
 	/**
 	 * `contains` on a text property.
 	 *
-	 * @param string $field   The property.
-	 * @param mixed  $value   The rule value.
-	 * @param bool   $numeric Whether the property is numeric.
+	 * @param SegmentProperty $property The property and whether it is numeric.
+	 * @param mixed           $value    The rule value.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function textLike(string $field, mixed $value, bool $numeric): ?array {
-		if ($numeric === true) {
+	private function textLike(SegmentProperty $property, mixed $value): ?array {
+		if ($property->numeric === true) {
 			return null;
 		}
 
-		return $this->like(field: $field, value: $value);
+		return $this->like(field: $property->field, value: $value);
 	}//end textLike()
 
 	/**
@@ -349,19 +346,18 @@ class SegmentQueryCompiler {
 	/**
 	 * `between` on a numeric property: both bounds, inclusive.
 	 *
-	 * @param string $field   The property.
-	 * @param mixed  $value   The rule value: a list of two numbers.
-	 * @param bool   $numeric Whether the property is numeric.
+	 * @param SegmentProperty $property The property and whether it is numeric.
+	 * @param mixed           $value    The rule value: a list of two numbers.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function between(string $field, mixed $value, bool $numeric): ?array {
+	private function between(SegmentProperty $property, mixed $value): ?array {
 		if (is_array($value) === false || array_is_list($value) === false || count($value) !== 2) {
 			return null;
 		}
 
-		$low = $this->comparison(field: $field, operator: 'gte', value: $value[0], numeric: $numeric);
-		$high = $this->comparison(field: $field, operator: 'lte', value: $value[1], numeric: $numeric);
+		$low = $this->comparison(property: $property, condition: ['operator' => 'gte', 'value' => $value[0]]);
+		$high = $this->comparison(property: $property, condition: ['operator' => 'lte', 'value' => $value[1]]);
 		if ($low === null || $high === null) {
 			return null;
 		}

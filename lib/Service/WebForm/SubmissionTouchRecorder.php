@@ -165,15 +165,50 @@ class SubmissionTouchRecorder {
 	 */
 	private function recordOrThrow(array $form, array $payload, ?string $idempotencyKey): ?array {
 		$formId = trim((string)($form['id'] ?? ''));
-		$nonce = '';
-		$key = trim((string)$idempotencyKey);
-		if ($key !== '') {
-			$nonce = 'web-form:' . $formId . ':' . $key;
-			if ($this->touchpoints->existsForNonce(nonce: $nonce) === true) {
-				return null;
-			}
+		$nonce = self::nonceFor(formId: $formId, idempotencyKey: $idempotencyKey);
+		if ($nonce !== '' && $this->touchpoints->existsForNonce(nonce: $nonce) === true) {
+			return null;
 		}
 
+		$row = $this->submitRow(payload: $payload, formId: $formId);
+		if ($nonce !== '') {
+			$row['nonce'] = $nonce;
+		}
+
+		return $this->touchpoints->recordSubmission(
+			touchpoint: $row,
+			landingPage: $this->text(raw: ($payload['pageUrl'] ?? null), max: self::MAX_PAGE_LENGTH)
+		);
+
+	}//end recordOrThrow()
+
+	/**
+	 * The nonce a repeat of this submit carries, or '' when the submit has no Idempotency-Key.
+	 *
+	 * @param string      $formId         The published form's id.
+	 * @param string|null $idempotencyKey The submit's Idempotency-Key.
+	 *
+	 * @return string
+	 */
+	private static function nonceFor(string $formId, ?string $idempotencyKey): string {
+		$key = trim((string)$idempotencyKey);
+		if ($key === '') {
+			return '';
+		}
+
+		return 'web-form:' . $formId . ':' . $key;
+
+	}//end nonceFor()
+
+	/**
+	 * The touchpoint of a submit: its campaign values and channel, the form, and the matched campaign and contact.
+	 *
+	 * @param array<string, mixed> $payload The raw submitted fields.
+	 * @param string               $formId  The published form's id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function submitRow(array $payload, string $formId): array {
 		$utm = $this->utmOf(payload: $payload);
 		$row = [
 			'kind' => 'submit',
@@ -193,16 +228,9 @@ class SubmissionTouchRecorder {
 			$row['contactId'] = $contactId;
 		}
 
-		if ($nonce !== '') {
-			$row['nonce'] = $nonce;
-		}
+		return $row;
 
-		return $this->touchpoints->recordSubmission(
-			touchpoint: $row,
-			landingPage: $this->text(raw: ($payload['pageUrl'] ?? null), max: self::MAX_PAGE_LENGTH)
-		);
-
-	}//end recordOrThrow()
+	}//end submitRow()
 
 	/**
 	 * The campaign whose campaign value is this one, or '' when none is.

@@ -183,13 +183,7 @@ class ConnectionAuditService implements ConnectionAuditServiceInterface {
 			'accountId' => $this->store->idOf(payload: $account),
 			'network' => $network,
 			'clientId' => $this->store->idOf(payload: $client),
-			'counterpartHandle' => $profile['handle'],
-			'counterpartUrl' => $profile['url'],
-			'weFollowThem' => 'unknown',
-			'theyFollowUs' => 'unknown',
-			'reason' => (self::UNANSWERABLE[$network] ?? 'This network does not publish a follower list.'),
-			'seenAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
-		];
+		] + $this->unknownVerdicts(profile: $profile);
 
 		if (in_array($network, self::ANSWERABLE, true) === false) {
 			return $row;
@@ -197,6 +191,24 @@ class ConnectionAuditService implements ConnectionAuditServiceInterface {
 
 		return $this->withFollowVerdicts(row: $row, account: $account);
 	}//end audit()
+
+	/**
+	 * The counterpart of a pair with both follow verdicts unknown, and why, seen now.
+	 *
+	 * @param array{network: string, handle: string, url: string} $profile Their profile.
+	 *
+	 * @return array<string, string> The row's counterpart and verdict fields.
+	 */
+	private function unknownVerdicts(array $profile): array {
+		return [
+			'counterpartHandle' => $profile['handle'],
+			'counterpartUrl' => $profile['url'],
+			'weFollowThem' => 'unknown',
+			'theyFollowUs' => 'unknown',
+			'reason' => (self::UNANSWERABLE[$profile['network']] ?? 'This network does not publish a follower list.'),
+			'seenAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
+		];
+	}//end unknownVerdicts()
 
 	/**
 	 * The row with both follow verdicts from our account's graph, and the

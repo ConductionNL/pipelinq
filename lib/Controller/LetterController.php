@@ -433,13 +433,14 @@ class LetterController extends Controller
         }
 
         $ticketId  = $this->optionalId(name: 'ticketId');
-        $ticketRef = $this->ticketRef(ticketId: $ticketId, clientId: $clientId, register: $register);
+        $owner     = new LetterRecordOwner(clientId: $clientId, register: $register, ticketId: $ticketId);
+        $ticketRef = $this->ticketRef(owner: $owner);
         if (is_string($ticketRef) === true) {
             return $ticketRef;
         }
 
         $appointmentId  = $this->optionalId(name: 'appointmentId');
-        $appointmentRef = $this->appointmentRef(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId, register: $register);
+        $appointmentRef = $this->appointmentRef(appointmentId: $appointmentId, owner: $owner);
         if (is_string($appointmentRef) === true) {
             return $appointmentRef;
         }
@@ -475,24 +476,22 @@ class LetterController extends Controller
     /**
      * The filinq reference of the named ticket, null when none is named, or the not-found message.
      *
-     * @param string|null $ticketId The ticket id.
-     * @param string      $clientId The client id.
-     * @param string      $register The register.
+     * @param LetterRecordOwner $owner The client, register and named ticket.
      *
      * @return array<string, string>|string|null
      */
-    private function ticketRef(string|null $ticketId, string $clientId, string $register): array|string|null
+    private function ticketRef(LetterRecordOwner $owner): array|string|null
     {
-        if ($ticketId === null) {
+        if ($owner->ticketId === null) {
             return null;
         }
 
         // A ticket of another client would log the letter on the wrong timeline.
-        if ($this->ticketOfClient(ticketId: $ticketId, clientId: $clientId) === false) {
+        if ($this->ticketOfClient(ticketId: $owner->ticketId, clientId: $owner->clientId) === false) {
             return 'Ticket not found';
         }
 
-        return ['register' => $register, 'schema' => 'ticket', 'id' => $ticketId];
+        return ['register' => $owner->register, 'schema' => 'ticket', 'id' => $owner->ticketId];
 
     }//end ticketRef()
 
@@ -500,24 +499,22 @@ class LetterController extends Controller
     /**
      * The filinq reference of the named appointment, null when none is named, or the not-found message.
      *
-     * @param string|null $appointmentId The appointment id.
-     * @param string      $clientId      The client id.
-     * @param string|null $ticketId      The ticket id.
-     * @param string      $register      The register.
+     * @param string|null       $appointmentId The appointment id.
+     * @param LetterRecordOwner $owner         The client, register and ticket.
      *
      * @return array<string, string>|string|null
      */
-    private function appointmentRef(string|null $appointmentId, string $clientId, string|null $ticketId, string $register): array|string|null
+    private function appointmentRef(string|null $appointmentId, LetterRecordOwner $owner): array|string|null
     {
         if ($appointmentId === null) {
             return null;
         }
 
-        if ($this->appointmentOf(appointmentId: $appointmentId, clientId: $clientId, ticketId: $ticketId) === false) {
+        if ($this->appointmentOf(appointmentId: $appointmentId, owner: $owner) === false) {
             return 'Appointment not found';
         }
 
-        return ['register' => $register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
+        return ['register' => $owner->register, 'schema' => 'appointmentBooking', 'id' => $appointmentId];
 
     }//end appointmentRef()
 
@@ -561,26 +558,25 @@ class LetterController extends Controller
     /**
      * Whether the appointment exists, is readable and belongs to the client or to the letter's ticket.
      *
-     * @param string      $appointmentId The appointment id.
-     * @param string      $clientId      The client id.
-     * @param string|null $ticketId      The letter's ticket, if any.
+     * @param string            $appointmentId The appointment id.
+     * @param LetterRecordOwner $owner         The client and the letter's ticket, if any.
      *
      * @return bool True when the letter may read it.
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-reads-the-clients-appointment
      */
-    private function appointmentOf(string $appointmentId, string $clientId, ?string $ticketId): bool
+    private function appointmentOf(string $appointmentId, LetterRecordOwner $owner): bool
     {
         $appointment = $this->reader->read(id: $appointmentId, schemaKey: 'booking_schema');
         if ($appointment === null) {
             return false;
         }
 
-        if ((string) ($appointment['customerId'] ?? '') === $clientId) {
+        if ((string) ($appointment['customerId'] ?? '') === $owner->clientId) {
             return true;
         }
 
-        return $ticketId !== null && (string) ($appointment['ticket'] ?? '') === $ticketId;
+        return $owner->ticketId !== null && (string) ($appointment['ticket'] ?? '') === $owner->ticketId;
 
     }//end appointmentOf()
 

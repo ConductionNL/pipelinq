@@ -102,7 +102,18 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 			return ['status' => 200, 'results' => [], 'total' => 0, 'available' => ($leaf !== null)];
 		}
 
-		$answer = $leaf->byMasterEntity($ref, $status);
+		return $this->limitedCases(answer: $leaf->byMasterEntity($ref, $status), limit: $limit);
+	}//end casesOf()
+
+	/**
+	 * The leaf's answer as the client's first cases, or its failure.
+	 *
+	 * @param mixed $answer The case leaf's answer.
+	 * @param int   $limit  The most rows to return.
+	 *
+	 * @return array<string, mixed> The answer.
+	 */
+	private function limitedCases(mixed $answer, int $limit): array {
 		if ((int)($answer['status'] ?? 500) !== 200) {
 			return ['status' => (int)($answer['status'] ?? 500), 'message' => (string)($answer['error'] ?? 'Operation failed')];
 		}
@@ -111,7 +122,7 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		$limit = max(1, min($limit, self::MAX_LIMIT));
 
 		return ['status' => 200, 'results' => array_slice($cases, 0, $limit), 'total' => count($cases), 'available' => true];
-	}//end casesOf()
+	}//end limitedCases()
 
 	/**
 	 * The client, read as the caller, under `client`; or an answer with the
@@ -128,24 +139,23 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
-		return $this->findClient(clientId: $clientId, register: $register, schema: $schema);
+		return $this->findClient(clientId: $clientId, location: new RegisterSchema(register: $register, schema: $schema));
 	}//end client()
 
 	/**
 	 * Read the client with RBAC on: the client, or a 403/404/refusal status.
 	 *
-	 * @param string $clientId The client id.
-	 * @param string $register The register.
-	 * @param string $schema The client schema.
+	 * @param string         $clientId The client id.
+	 * @param RegisterSchema $location The register and client schema.
 	 *
 	 * @return array<string, mixed> `client`, or `status` and `message`.
 	 */
-	private function findClient(string $clientId, string $register, string $schema): array {
+	private function findClient(string $clientId, RegisterSchema $location): array {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
+				register: $location->register,
+				schema: $location->schema,
 				_rbac: true,
 				_multitenancy: true,
 			);

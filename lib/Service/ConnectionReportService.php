@@ -156,12 +156,24 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 			return false;
 		}
 
+		return $this->dispatchReport(eventClass: $eventClass, report: ['key' => $key, 'status' => $status, 'message' => $message]);
+	}//end report()
+
+	/**
+	 * Dispatch a connection report as integriq's status event; a failure is logged.
+	 *
+	 * @param string                                              $eventClass The event class integriq ships.
+	 * @param array{key: string, status: string, message: string} $report     The connection key, status and message.
+	 *
+	 * @return bool True when the report was dispatched.
+	 */
+	private function dispatchReport(string $eventClass, array $report): bool {
 		try {
 			$event = new $eventClass(
 				app: AppIdentity::APP_ID,
-				key: $key,
-				status: $status,
-				message: $message,
+				key: $report['key'],
+				status: $report['status'],
+				message: $report['message'],
 			);
 			if ($event instanceof Event === false) {
 				return false;
@@ -172,11 +184,11 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: could not send a connection report to integriq',
-				['key' => $key, 'exception' => $e->getMessage()]
+				['key' => $report['key'], 'exception' => $e->getMessage()]
 			);
 			return false;
 		}//end try
-	}//end report()
+	}//end dispatchReport()
 
 	/**
 	 * Whether the key or the status is outside the contract; the refusal is logged.

@@ -88,40 +88,38 @@ class LoyaltyReportingController extends Controller {
 			return $refusal;
 		}
 
-		[$from, $to] = $this->reportingWindow(from: $from, to: $to, days: $days);
+		$window = $this->reportingWindow(window: ['from' => $from, 'to' => $to], days: $days);
 
-		return $this->kpisResponse(programmeId: $programmeId, from: $from, to: $to, format: $format);
+		return $this->kpisResponse(query: ['programmeId' => $programmeId] + $window, format: $format);
 	}//end kpis()
 
 	/**
 	 * The requested window, or the last `days` days when no start is given.
 	 *
-	 * @param string|null $from The window start.
-	 * @param string|null $to The window end.
+	 * @param array{from: string|null, to: string|null} $window The requested window start and end.
 	 * @param int|null $days The number of trailing days.
 	 *
-	 * @return array{0: string|null, 1: string|null} The window start and end.
+	 * @return array{from: string|null, to: string|null} The window start and end.
 	 */
-	private function reportingWindow(string|null $from, string|null $to, int|null $days): array {
-		if (($from === null || $from === '') && $days !== null && $days > 0) {
+	private function reportingWindow(array $window, int|null $days): array {
+		if (($window['from'] === null || $window['from'] === '') && $days !== null && $days > 0) {
 			['from' => $from, 'to' => $to] = $this->reportingService->lastDaysWindow(days: $days);
+			return ['from' => $from, 'to' => $to];
 		}
 
-		return [$from, $to];
+		return $window;
 	}//end reportingWindow()
 
 	/**
 	 * The KPIs as JSON, or as a CSV download.
 	 *
-	 * @param string $programmeId The loyalty programme id.
-	 * @param string|null $from The window start.
-	 * @param string|null $to The window end.
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The loyalty programme id and window.
 	 * @param string $format `json` or `csv`.
 	 *
 	 * @return JSONResponse|DataDownloadResponse The KPIs.
 	 */
-	private function kpisResponse(string $programmeId, string|null $from, string|null $to, string $format): JSONResponse|DataDownloadResponse {
-		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
+	private function kpisResponse(array $query, string $format): JSONResponse|DataDownloadResponse {
+		$kpis = $this->reportingService->getKpis(programmeId: $query['programmeId'], from: $query['from'], to: $query['to']);
 		if (strtolower($format) === 'csv') {
 			return new DataDownloadResponse(
 				data: $this->reportingService->kpisToCsv(kpis: $kpis),

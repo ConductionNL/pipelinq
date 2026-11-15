@@ -193,12 +193,35 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 */
 	public function execute(array $items, array $config, array $context): array {
 		$this->validateConfig(config: $config);
-		$limit = CompetitorWatchServiceInterface::DEFAULT_LIMIT;
+		$summary = $this->watches->runDue(limit: self::limitOf(config: $config), actingUserId: $this->actingUser(context: $context));
+
+		return self::withSummary(items: $items, summary: $summary);
+	}//end execute()
+
+	/**
+	 * How many watches one firing may run: the configured limit, or the default.
+	 *
+	 * @param array $config The validated step configuration.
+	 *
+	 * @return int The limit.
+	 */
+	private static function limitOf(array $config): int {
 		if (array_key_exists('limit', $config) === true) {
-			$limit = (int)$config['limit'];
+			return (int)$config['limit'];
 		}
 
-		$summary = $this->watches->runDue(limit: $limit, actingUserId: $this->actingUser(context: $context));
+		return CompetitorWatchServiceInterface::DEFAULT_LIMIT;
+	}//end limitOf()
+
+	/**
+	 * The items with the run summary added; one summary item when there are none.
+	 *
+	 * @param array $items   The input items.
+	 * @param array $summary The run summary.
+	 *
+	 * @return array The output items.
+	 */
+	private static function withSummary(array $items, array $summary): array {
 		if ($items === []) {
 			return [['json' => [self::OUTCOME_KEY => $summary]]];
 		}
@@ -213,7 +236,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 		}
 
 		return $out;
-	}//end execute()
+	}//end withSummary()
 
 	/**
 	 * The identity the run acts as, only so hermiq's own egress guard can be

@@ -220,13 +220,13 @@ class TouchpointService implements TouchpointServiceInterface {
 
 		$touch = $this->touchOf(touchpoint: $saved);
 		if ($contact !== null) {
-			$this->updateTouches(schemaSlug: self::CONTACT_SLUG, id: $contactId, record: $contact, touch: $touch);
+			$this->updateTouches(stored: ['schemaSlug' => self::CONTACT_SLUG, 'id' => $contactId, 'record' => $contact], touch: $touch);
 		}
 
 		if ($clientId !== '') {
 			$client = $this->store->find(schemaSlug: self::CLIENT_SLUG, id: $clientId);
 			if ($client !== null) {
-				$this->updateTouches(schemaSlug: self::CLIENT_SLUG, id: $clientId, record: $client, touch: $touch);
+				$this->updateTouches(stored: ['schemaSlug' => self::CLIENT_SLUG, 'id' => $clientId, 'record' => $client], touch: $touch);
 			}
 		}
 
@@ -280,14 +280,13 @@ class TouchpointService implements TouchpointServiceInterface {
 	/**
 	 * Set the last touch, and the first touch when there is none yet, on a record.
 	 *
-	 * @param string               $schemaSlug The record's schema.
-	 * @param string               $id         The record.
-	 * @param array<string, mixed> $record     The record as read.
-	 * @param array<string, string> $touch      The touch.
+	 * @param array{schemaSlug: string, id: string, record: array<string, mixed>} $stored The record's schema, its id and the record as read.
+	 * @param array<string, string>                                              $touch  The touch.
 	 *
 	 * @return void
 	 */
-	private function updateTouches(string $schemaSlug, string $id, array $record, array $touch): void {
+	private function updateTouches(array $stored, array $touch): void {
+		$record = $stored['record'];
 		$first = $record['firstTouch'] ?? null;
 		if (is_array($first) === false || $first === []) {
 			$record['firstTouch'] = $touch;
@@ -295,7 +294,7 @@ class TouchpointService implements TouchpointServiceInterface {
 
 		$record['lastTouch'] = $touch;
 		unset($record['@self']);
-		$this->store->save(schemaSlug: $schemaSlug, payload: $record, id: $id);
+		$this->store->save(schemaSlug: $stored['schemaSlug'], payload: $record, id: $stored['id']);
 	}//end updateTouches()
 
 	/**

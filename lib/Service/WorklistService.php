@@ -268,11 +268,7 @@ class WorklistService implements WorklistServiceInterface {
 		foreach (self::WORK_TICKET_TYPES as $ticketType) {
 			$requests = array_merge(
 				$requests,
-				$this->findTickets(
-					ticketType: $ticketType,
-					filters: ['assignee' => $userId],
-					limit: self::REQUEST_FETCH_LIMIT
-				)
+				$this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId])
 			);
 		}
 
@@ -503,7 +499,7 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
-			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId], limit: self::REQUEST_FETCH_LIMIT);
+			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
 			foreach ($tickets as $ticket) {
 				if ($done === true || in_array((string)($ticket['status'] ?? ''), self::TERMINAL_TICKET_STATUSES, true) === false) {
 					$rows[] = $this->itemRow(kind: (string)($ticket['ticketType'] ?? $ticketType), record: $ticket, routeName: 'TicketDetail');
@@ -566,7 +562,7 @@ class WorklistService implements WorklistServiceInterface {
 
 		$tickets = [];
 		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
-			$found   = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId], limit: self::REQUEST_FETCH_LIMIT);
+			$found   = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
 			$tickets = array_merge($tickets, $found);
 		}
 
@@ -641,7 +637,18 @@ class WorklistService implements WorklistServiceInterface {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	private function counted(string $singular, string $plural, int $count): string {
-		$phrase = $this->l10n->n($singular, $plural, $count);
+		return $this->withNumberWord(phrase: $this->l10n->n($singular, $plural, $count), count: $count);
+	}//end counted()
+
+	/**
+	 * The phrase with its count written as a word from one to twenty, as digits above.
+	 *
+	 * @param string $phrase The counted phrase, with the count as digits.
+	 * @param int    $count  The count.
+	 *
+	 * @return string The phrase.
+	 */
+	private function withNumberWord(string $phrase, int $count): string {
 		$word   = (self::NUMBER_WORDS[$count] ?? '');
 		if ($word === '') {
 			return $phrase;
@@ -654,7 +661,7 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		return substr($phrase, 0, $offset) . $this->l10n->t($word) . substr($phrase, ($offset + strlen($digits)));
-	}//end counted()
+	}//end withNumberWord()
 
 	/**
 	 * Each item with the name of its client (`clientName`), read once per
@@ -901,17 +908,16 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @param string $ticketType One of the TicketService::TYPE_* constants.
 	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param int $limit Row limit pushed to OpenRegister.
 	 *
-	 * @return array<int, array<string, mixed>>
+	 * @return array<int, array<string, mixed>> At most REQUEST_FETCH_LIMIT tickets.
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
-	private function findTickets(string $ticketType, array $filters, int $limit): array {
+	private function findTickets(string $ticketType, array $filters): array {
 		$results = $this->ticketService->findByType(
 			ticketType: $ticketType,
 			extraFilters: $filters,
-			limit: $limit
+			limit: self::REQUEST_FETCH_LIMIT
 		);
 
 		$objects = [];

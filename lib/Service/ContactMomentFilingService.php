@@ -297,6 +297,24 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 			)
 		);
 
+		[$visible, $hidden] = self::visibleAndHidden(others: $others, mayRead: $mayRead);
+
+		return [
+			'shared' => ($others !== []),
+			'alsoOnCases' => $visible,
+			'hiddenCount' => $hidden,
+		];
+	}//end sharedMarker()
+
+	/**
+	 * The other cases the reader may see, and how many they may not.
+	 *
+	 * @param array<int, string>     $others  The other cases the moment is on.
+	 * @param callable(string): bool $mayRead Answers whether the reader may see a case.
+	 *
+	 * @return array{0: array<int, string>, 1: int} The visible cases and the hidden count.
+	 */
+	private static function visibleAndHidden(array $others, callable $mayRead): array {
 		$visible = [];
 		$hidden = 0;
 		foreach ($others as $reference) {
@@ -310,12 +328,8 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 			$hidden++;
 		}
 
-		return [
-			'shared' => ($others !== []),
-			'alsoOnCases' => $visible,
-			'hiddenCount' => $hidden,
-		];
-	}//end sharedMarker()
+		return [$visible, $hidden];
+	}//end visibleAndHidden()
 
 	/**
 	 * Read one contact moment as a plain array.

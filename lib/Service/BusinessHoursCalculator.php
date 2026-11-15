@@ -173,19 +173,32 @@ class BusinessHoursCalculator {
 			return 0;
 		}
 
-		$calendar = new BusinessCalendar(type: $calendarType, holidayCalendar: $holidayCalendar);
-		$cursor = DateTimeImmutable::createFromInterface($start);
-		$endStamp = $end->getTimestamp();
+		return $this->openMinutesIn(
+			calendar: new BusinessCalendar(type: $calendarType, holidayCalendar: $holidayCalendar),
+			span: new DaySpan(from: DateTimeImmutable::createFromInterface($start), untilStamp: $end->getTimestamp())
+		);
+	}//end elapsedBusinessMinutes()
+
+	/**
+	 * The open minutes from the span's start up to its end, day by day.
+	 *
+	 * @param BusinessCalendar $calendar The calendar.
+	 * @param DaySpan          $span     The start instant and the end of the count.
+	 *
+	 * @return int The open minutes.
+	 */
+	private function openMinutesIn(BusinessCalendar $calendar, DaySpan $span): int {
+		$cursor = $span->from;
 		$total = 0;
 
 		// Step forward day-by-day, capping each window contribution.
-		while ($cursor->getTimestamp() < $endStamp) {
-			$total += $this->minutesOpenOn(calendar: $calendar, span: new DaySpan(from: $cursor, untilStamp: $endStamp));
+		while ($cursor->getTimestamp() < $span->untilStamp) {
+			$total += $this->minutesOpenOn(calendar: $calendar, span: new DaySpan(from: $cursor, untilStamp: $span->untilStamp));
 			$cursor = $this->nextDayStart(day: $cursor);
 		}
 
 		return $total;
-	}//end elapsedBusinessMinutes()
+	}//end openMinutesIn()
 
 	/**
 	 * The open minutes of one day within the span counted.

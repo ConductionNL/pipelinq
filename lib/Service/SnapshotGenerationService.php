@@ -261,18 +261,29 @@ class SnapshotGenerationService implements SnapshotGenerationServiceInterface {
 		$team = $this->rollUpLevel(run: $run, level: new SnapshotLevel(level: 'team', groups: $teams, childTotals: $repTotals));
 		$division = $this->rollUpLevel(run: $run, level: new SnapshotLevel(level: 'division', groups: $divisions, childTotals: $team['totals']));
 
-		// Company level. When no divisions are configured, roll teams directly.
-		$companyChildren = array_values($team['totals']);
-		if ($division['totals'] !== []) {
-			$companyChildren = array_values($division['totals']);
-		}
-
 		$snapshots = [...$snapshots, ...$team['snapshots'], ...$division['snapshots']];
-		$company = new SnapshotNode(ownerId: self::COMPANY_OWNER, level: 'company', totals: $this->rollup->sumChildTotals($companyChildren));
-		$snapshots[] = $this->snapshotRecord(run: $run, node: $company);
+		$snapshots[] = $this->companyRecord(run: $run, levelTotals: ['team' => $team['totals'], 'division' => $division['totals']]);
 
 		return $this->withRates(snapshots: $snapshots, rates: $rates);
 	}//end buildSnapshots()
+
+	/**
+	 * The company snapshot, rolled up from the divisions, or from the teams when no divisions are configured.
+	 *
+	 * @param SnapshotRun                                       $run         The run.
+	 * @param array{team: array<mixed>, division: array<mixed>} $levelTotals The team and division totals.
+	 *
+	 * @return array<string, mixed> The snapshot record.
+	 */
+	private function companyRecord(SnapshotRun $run, array $levelTotals): array {
+		$companyChildren = array_values($levelTotals['team']);
+		if ($levelTotals['division'] !== []) {
+			$companyChildren = array_values($levelTotals['division']);
+		}
+
+		$company = new SnapshotNode(ownerId: self::COMPANY_OWNER, level: 'company', totals: $this->rollup->sumChildTotals($companyChildren));
+		return $this->snapshotRecord(run: $run, node: $company);
+	}//end companyRecord()
 
 	/**
 	 * Snapshot every group of one level from the totals of the level below.

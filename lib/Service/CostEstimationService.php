@@ -118,9 +118,8 @@ class CostEstimationService {
 		string $category = 'utility',
 		string $country = 'NL',
 	): float {
-		$table = $this->loadTable();
-
-		$catRow = $this->categoryRow(table: $table, vendor: $vendor, channel: $channel, category: $category);
+		$channelRow = $this->rowAt(table: $this->loadTable(), keys: [$vendor, $channel]);
+		$catRow = $this->categoryRow(channelRow: $channelRow, category: $category);
 		if (is_array($catRow) === false) {
 			if (is_numeric($catRow) === true) {
 				return (float)$catRow;
@@ -135,15 +134,12 @@ class CostEstimationService {
 	/**
 	 * The table entry for a category (falling back to the channel default), or null when the vendor or channel is missing.
 	 *
-	 * @param array<string, mixed> $table    The price table.
-	 * @param string               $vendor   Vendor.
-	 * @param string               $channel  Channel.
-	 * @param string               $category Template category.
+	 * @param array<string, mixed>|null $channelRow The channel's entry, or null.
+	 * @param string                    $category   Template category.
 	 *
 	 * @return mixed
 	 */
-	private function categoryRow(array $table, string $vendor, string $channel, string $category): mixed {
-		$channelRow = $this->channelRow(table: $table, vendor: $vendor, channel: $channel);
+	private function categoryRow(array|null $channelRow, string $category): mixed {
 		if ($channelRow === null) {
 			return null;
 		}
@@ -152,27 +148,24 @@ class CostEstimationService {
 	}//end categoryRow()
 
 	/**
-	 * The table entry for a vendor's channel, or null when either is missing.
+	 * The table entry under a vendor, then a channel; null when any of them is missing.
 	 *
-	 * @param array<string, mixed> $table   The price table.
-	 * @param string               $vendor  Vendor.
-	 * @param string               $channel Channel.
+	 * @param array<string, mixed> $table The price table.
+	 * @param array<int, string>   $keys  The vendor and the channel.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function channelRow(array $table, string $vendor, string $channel): array|null {
-		$vendorRow = ($table[$vendor] ?? null);
-		if (is_array($vendorRow) === false) {
-			return null;
+	private function rowAt(array $table, array $keys): array|null {
+		$row = $table;
+		foreach ($keys as $key) {
+			$row = ($row[$key] ?? null);
+			if (is_array($row) === false) {
+				return null;
+			}
 		}
 
-		$channelRow = ($vendorRow[$channel] ?? null);
-		if (is_array($channelRow) === false) {
-			return null;
-		}
-
-		return $channelRow;
-	}//end channelRow()
+		return $row;
+	}//end rowAt()
 
 	/**
 	 * A category's price for a country, else its default, else 0.0.

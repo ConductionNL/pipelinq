@@ -156,7 +156,8 @@ class RecordDocumentController extends Controller
             return new JSONResponse(['message' => 'This record has no document'], Http::STATUS_NOT_FOUND);
         }
 
-        $record = $this->readAuthorisedRecord(uid: $user->getUID(), schema: $schema, id: $id, ownerField: $config['ownerField']);
+        $target = ['schema' => $schema, 'id' => $id, 'ownerField' => $config['ownerField']];
+        $record = $this->readAuthorisedRecord(uid: $user->getUID(), target: $target);
         if ($record === null) {
             return new JSONResponse(['message' => 'Record not found'], Http::STATUS_NOT_FOUND);
         }
@@ -168,7 +169,10 @@ class RecordDocumentController extends Controller
 
         $filename = $this->filename(templateName: $template['name'], record: $record);
 
-        return $this->renderPdf(template: $template, filename: $filename, lists: $config['lists'], target: ['schema' => $schema, 'id' => $id]);
+        return $this->renderPdf(
+            template: $template,
+            pdf: ['filename' => $filename, 'lists' => $config['lists'], 'schema' => $schema, 'id' => $id]
+        );
 
     }//end document()
 
@@ -176,20 +180,18 @@ class RecordDocumentController extends Controller
     /**
      * Read a record the caller may act on, or null when it is absent or not theirs.
      *
-     * @param string $uid        The caller's uid.
-     * @param string $schema     The schema slug.
-     * @param string $id         The record id.
-     * @param mixed  $ownerField The configured owner field.
+     * @param string               $uid    The caller's uid.
+     * @param array<string, mixed> $target Keys: schema (slug), id (record id), ownerField (the configured owner field).
      *
      * @return array<string, mixed>|null
      */
-    private function readAuthorisedRecord(string $uid, string $schema, string $id, mixed $ownerField): array|null
+    private function readAuthorisedRecord(string $uid, array $target): array|null
     {
         // Existence is not authorization: OpenRegister answers a read whatever
         // `_rbac` says, so this app decides who may act on the record.
-        $record = $this->reader->readFromSchema(id: $id, schema: $schema);
+        $record = $this->reader->readFromSchema(id: $target['id'], schema: $target['schema']);
         if ($record === null
-            || $this->accessPolicy->mayAccess(uid: $uid, object: $record, ownerField: $ownerField) === false
+            || $this->accessPolicy->mayAccess(uid: $uid, object: $record, ownerField: $target['ownerField']) === false
         ) {
             return null;
         }
@@ -202,23 +204,22 @@ class RecordDocumentController extends Controller
     /**
      * Make the PDF through filinq, or the 502 when filinq cannot.
      *
-     * @param array<string, mixed>  $template The template.
-     * @param string                $filename The document filename, without extension.
-     * @param mixed                 $lists    The configured lists.
-     * @param array<string, string> $target   Keys: schema, id.
+     * @param array<string, mixed> $template The template.
+     * @param array<string, mixed> $pdf      Keys: filename (without extension), lists (the configured lists), schema, id.
      *
      * @return DataDownloadResponse|JSONResponse
      */
-    private function renderPdf(array $template, string $filename, mixed $lists, array $target): DataDownloadResponse|JSONResponse
+    private function renderPdf(array $template, array $pdf): DataDownloadResponse|JSONResponse
     {
+        $filename = $pdf['filename'];
         try {
-            $register = $this->reader->register();
+            $dataRef  = ['register' => $this->reader->register(), 'schema' => $pdf['schema'], 'id' => $pdf['id']];
             $document = $this->documents->render(
                 templateId: $template['id'],
-                dataRefs: [['register' => $register, 'schema' => $target['schema'], 'id' => $target['id']]],
+                dataRefs: [$dataRef],
                 filename: $filename,
                 outputMode: 'return',
-                listRefs: $this->listRefs(lists: $lists, register: $register, id: $target['id'])
+                listRefs: $this->listRefs(lists: $pdf['lists'], dataRef: $dataRef)
             );
         } catch (RuntimeException $e) {
             return new JSONResponse(['message' => 'filinq could not make the document.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
@@ -296,17 +297,18 @@ class RecordDocumentController extends Controller
      * key (a quote's lines as `lines`). An entry without schema, field or as
      * is left out.
      *
-     * @param list<array<string, mixed>> $lists    The configured lists (`schema`, `field`, `as`, `order?`).
-     * @param string                     $register The register.
-     * @param string                     $id       The record id.
+     * @param list<array<string, mixed>> $lists   The configured lists (`schema`, `field`, `as`, `order?`).
+     * @param array<string, string>      $dataRef The record's reference: register, schema, id.
      *
      * @return list<array<string, mixed>> The list references.
      *
      * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
      */
-    private function listRefs(array $lists, string $register, string $id): array
+    private function listRefs(array $lists, array $dataRef): array
     {
-        $refs = [];
+        $register = $dataRef['register'];
+        $id       = $dataRef['id'];
+        $refs     = [];
         foreach ($lists as $list) {
             $schema = trim((string) ($list['schema'] ?? ''));
             $field  = trim((string) ($list['field'] ?? ''));

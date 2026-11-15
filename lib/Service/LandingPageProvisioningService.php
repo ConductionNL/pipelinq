@@ -124,11 +124,7 @@ class LandingPageProvisioningService implements LandingPageProvisioningServiceIn
 			return $this->failure(error: 'not_found');
 		}
 
-		$targetPortal = trim($portal);
-		if ($targetPortal === '') {
-			$targetPortal = $this->configuredPortal();
-		}
-
+		$targetPortal = $this->portalFor(requested: $portal);
 		if ($targetPortal === '') {
 			return $this->failure(error: 'unknown_portal');
 		}
@@ -144,6 +140,22 @@ class LandingPageProvisioningService implements LandingPageProvisioningServiceIn
 			placement: new LandingPlacement(portal: $targetPortal, route: $targetRoute)
 		);
 	}//end createFor()
+
+	/**
+	 * The requested portal, trimmed, else the configured one; '' when neither is set.
+	 *
+	 * @param string $requested The portal the caller asked for, or ''.
+	 *
+	 * @return string The portal.
+	 */
+	private function portalFor(string $requested): string {
+		$portal = trim($requested);
+		if ($portal === '') {
+			return $this->configuredPortal();
+		}
+
+		return $portal;
+	}//end portalFor()
 
 	/**
 	 * Whether Portaliq's request event exists. Protected so a test can
@@ -262,7 +274,7 @@ class LandingPageProvisioningService implements LandingPageProvisioningServiceIn
 
 		$error = self::refusalOf(event: $event);
 		if ($error !== '') {
-			return $this->failure(error: $error, portal: $placement->portal, route: $placement->route);
+			return $this->failure(error: $error, placement: $placement);
 		}
 
 		$landingPage = $this->landingPageOf(placement: $placement, event: $event);
@@ -424,17 +436,16 @@ class LandingPageProvisioningService implements LandingPageProvisioningServiceIn
 	/**
 	 * A refusal, shaped like a success so the caller reads one envelope.
 	 *
-	 * @param string $error The machine-readable code.
-	 * @param string $portal The portal that was tried.
-	 * @param string $route The route that was tried.
+	 * @param string                $error     The machine-readable code.
+	 * @param LandingPlacement|null $placement The portal and route that were tried, or null before either is known.
 	 *
 	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
 	 */
-	private function failure(string $error, string $portal = '', string $route = ''): array {
+	private function failure(string $error, ?LandingPlacement $placement = null): array {
 		return [
 			'error' => $error,
-			'portal' => $portal,
-			'route' => $route,
+			'portal' => ($placement->portal ?? ''),
+			'route' => ($placement->route ?? ''),
 			'pageId' => '',
 			'publicUrl' => '',
 			'formId' => '',

@@ -134,8 +134,20 @@ class ClientHistorySummaryService {
 			return $result;
 		}
 
+		return $this->withSummary(result: $result, request: ['factory' => $factory, 'records' => $records, 'viewer' => $viewer]);
+	}//end summarise()
+
+	/**
+	 * The result with hermiq's summary of the records, unchanged when hermiq gives no answer.
+	 *
+	 * @param array{available:bool, summary:string|null, recordsRead:int, generatedAt:string|null} $result  The result so far.
+	 * @param array{factory: object, records: array<int, array<string, mixed>>, viewer: string}  $request The text provider, the records and the viewer.
+	 *
+	 * @return array{available:bool, summary:string|null, recordsRead:int, generatedAt:string|null}
+	 */
+	private function withSummary(array $result, array $request): array {
 		try {
-			$answer = trim((string) $factory->generateText($this->prompt(records: $records), $viewer, true, null));
+			$answer = trim((string) $request['factory']->generateText($this->prompt(records: $request['records']), $request['viewer'], true, null));
 		} catch (Throwable $e) {
 			$this->logger->info('ClientHistorySummaryService: hermiq did not answer', ['exception' => $e->getMessage()]);
 			return $result;
@@ -146,7 +158,7 @@ class ClientHistorySummaryService {
 		}
 
 		return $result;
-	}//end summarise()
+	}//end withSummary()
 
 	/**
 	 * The client's records of the window, newest first, at most MAX_RECORDS.

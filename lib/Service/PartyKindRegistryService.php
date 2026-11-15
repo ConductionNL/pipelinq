@@ -320,64 +320,54 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 		$verdict = ['accepted' => [], 'refused' => [], 'taken' => []];
 
 		foreach ($rows as $row) {
-			$verdict = $this->judgeRow(recordType: $recordType, recordId: $recordId, row: $row, verdict: $verdict);
+			$slot = ['kind' => trim((string)($row['kind'] ?? '')), 'party' => trim((string)($row['party'] ?? ''))];
+			$answer = $this->mayLink(recordType: $recordType, recordId: $recordId, kind: $slot['kind'], party: $slot['party']);
+			$verdict = $this->judgeRow(judged: $answer + $slot, verdict: $verdict);
 		}
 
 		return ['accepted' => $verdict['accepted'], 'refused' => $verdict['refused']];
 	}//end judgeBatch()
 
 	/**
-	 * Judge one row against the store and against the rows of the batch accepted so far.
+	 * Judge one row, already judged against the store, against the rows of the batch accepted so far.
 	 *
-	 * @param string $recordType The `<app>:<schema>:<type>` literal.
-	 * @param string $recordId The record.
-	 * @param array<string, string> $row The row, with `party` and `kind`.
+	 * @param array<string, mixed>                   $judged  The store's answer (`allowed`, `reason`) with the row's trimmed `kind` and `party`.
 	 * @param array<string, array<array-key, mixed>> $verdict The accepted and refused rows so far, and the party taking each kind.
 	 *
 	 * @return array<string, array<array-key, mixed>>
 	 *
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
-	private function judgeRow(string $recordType, string $recordId, array $row, array $verdict): array {
-		$kind = trim((string)($row['kind'] ?? ''));
-		$party = trim((string)($row['party'] ?? ''));
-
-		$answer = $this->mayLink(
-			recordType: $recordType,
-			recordId: $recordId,
-			kind: $kind,
-			party: $party,
-		);
+	private function judgeRow(array $judged, array $verdict): array {
+		$kind = $judged['kind'];
 
 		// A batch judges itself as well as the store: two aanvragers in
 		// one import must not both land because neither was written yet.
-		if ($answer['allowed'] === true && isset($verdict['taken'][$kind]) === true && $this->holdsOne(kind: $kind) === true) {
-			$answer = self::slotTaken(kind: $kind, holder: $verdict['taken'][$kind]);
+		if ($judged['allowed'] === true && isset($verdict['taken'][$kind]) === true && $this->holdsOne(kind: $kind) === true) {
+			$judged = self::slotTaken(kind: $kind, holder: $verdict['taken'][$kind]) + $judged;
 		}
 
-		return $this->recordVerdict(verdict: $verdict, answer: $answer, kind: $kind, party: $party);
+		return self::recordVerdict(verdict: $verdict, judged: $judged);
 	}//end judgeRow()
 
 	/**
 	 * Record a row as accepted (taking its kind's slot) or refused with the answer's reason.
 	 *
 	 * @param array<string, array<array-key, mixed>> $verdict The accepted and refused rows so far, and the party taking each kind.
-	 * @param array<string, mixed> $answer The answer for the row.
-	 * @param string $kind The row's kind.
-	 * @param string $party The row's party.
+	 * @param array<string, mixed>                   $judged  The answer for the row (`allowed`, `reason`) with its `kind` and `party`.
 	 *
 	 * @return array<string, array<array-key, mixed>>
 	 *
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
-	private function recordVerdict(array $verdict, array $answer, string $kind, string $party): array {
-		if ($answer['allowed'] === true) {
-			$verdict['accepted'][] = ['party' => $party, 'kind' => $kind];
-			$verdict['taken'][$kind] = $party;
+	private static function recordVerdict(array $verdict, array $judged): array {
+		if ($judged['allowed'] === true) {
+			$verdict['accepted'][] = ['party' => $judged['party'], 'kind' => $judged['kind']];
+			$verdict['taken'][$judged['kind']] = $judged['party'];
 			return $verdict;
 		}
 
-		$verdict['refused'][] = ['party' => $party, 'kind' => $kind, 'reason' => $answer['reason']];
+		$verdict['refused'][] = ['party' => $judged['party'], 'kind' => $judged['kind'], 'reason' => $judged['reason']];
 		return $verdict;
 	}//end recordVerdict()
 

@@ -72,7 +72,8 @@ class ContactVcardWriterService {
 	 */
 	public function writeToAddressBook(array $properties, array $objData, string $objectType): ?string {
 		$existingUid = $objData['contactsUid'] ?? null;
-		$target = $this->writableTarget(properties: $properties, existingUid: $existingUid, noBooksMessage: 'Pipelinq: No addressbooks available for sync');
+		$write = new VcardWrite(properties: $properties, existingUid: $existingUid);
+		$target = $this->writableTarget(write: $write, noBooksMessage: 'Pipelinq: No addressbooks available for sync');
 		if ($target === null) {
 			return null;
 		}
@@ -84,52 +85,29 @@ class ContactVcardWriterService {
 
 		$contactsUid = $this->extractContactsUid(result: $created['result'], existingUid: $existingUid);
 
-		$this->storeNewlyLinkedUid(objData: $objData, contactsUid: $contactsUid, existingUid: $existingUid, objectType: $objectType);
+		if ($contactsUid !== null && $write->isLinked() === false) {
+			$this->storeContactsUidOnObject(updateData: array_replace($objData, ['contactsUid' => $contactsUid]), objectType: $objectType);
+		}
 
 		return $contactsUid;
 	}//end writeToAddressBook()
 
 	/**
-	 * Store the Contacts UID on the object when the card was newly linked.
-	 *
-	 * @param array<string, mixed> $objData The object data.
-	 * @param string|null $contactsUid The UID of the written card.
-	 * @param string|null $existingUid The UID the object already carried.
-	 * @param string $objectType The object type.
-	 *
-	 * @return void
-	 */
-	private function storeNewlyLinkedUid(array $objData, string|null $contactsUid, string|null $existingUid, string $objectType): void {
-		if ($contactsUid !== null && ($existingUid === null || $existingUid === '')) {
-			$this->storeContactsUidOnObject(
-				objData: $objData,
-				contactsUid: $contactsUid,
-				objectType: $objectType
-			);
-		}
-	}//end storeNewlyLinkedUid()
-
-	/**
 	 * Resolve the addressbook to write to; null (logged at debug) when the user has none.
 	 *
-	 * @param array<string, mixed> $properties The vCard properties.
-	 * @param string|null $existingUid The linked card UID, if any.
-	 * @param string $noBooksMessage The debug message when there are no addressbooks.
+	 * @param VcardWrite $write          The properties and the linked card UID.
+	 * @param string     $noBooksMessage The debug message when there are no addressbooks.
 	 *
 	 * @return array{0: mixed, 1: array<string, mixed>}|null The addressbook and properties.
 	 */
-	private function writableTarget(array $properties, string|null $existingUid, string $noBooksMessage): array|null {
+	private function writableTarget(VcardWrite $write, string $noBooksMessage): array|null {
 		$addressBooks = $this->contactsManager->getUserAddressBooks();
 		if (empty($addressBooks) === true) {
 			$this->logger->debug($noBooksMessage);
 			return null;
 		}
 
-		return $this->resolveTarget(
-			addressBooks: $addressBooks,
-			properties: $properties,
-			existingUid: $existingUid
-		);
+		return $this->resolveTarget(addressBooks: $addressBooks, write: $write);
 	}//end writableTarget()
 
 	/**
@@ -173,7 +151,7 @@ class ContactVcardWriterService {
 	 */
 	public function writeVcard(array $properties, ?string $existingUid = null): ?string {
 		$noBooksMessage = 'Pipelinq: No addressbooks available for contact provisioning';
-		$target = $this->writableTarget(properties: $properties, existingUid: $existingUid, noBooksMessage: $noBooksMessage);
+		$target = $this->writableTarget(write: new VcardWrite(properties: $properties, existingUid: $existingUid), noBooksMessage: $noBooksMessage);
 		if ($target === null) {
 			return null;
 		}
@@ -205,9 +183,8 @@ class ContactVcardWriterService {
 	 * (the card was deleted) is a new card made under that UID, in the first
 	 * writable addressbook that is not the system addressbook.
 	 *
-	 * @param array   $addressBooks The user's addressbooks (IAddressBook[]).
-	 * @param array   $properties   The vCard properties.
-	 * @param ?string $existingUid  The linked contact UID, if any.
+	 * @param array      $addressBooks The user's addressbooks (IAddressBook[]).
+	 * @param VcardWrite $write        The vCard properties and the linked contact UID, if any.
 	 *
 	 * @return ?array{0: IAddressBook, 1: array} The addressbook and the properties
 	 *                                     to write, or null when the card is
@@ -215,25 +192,26 @@ class ContactVcardWriterService {
 	 *
 	 * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-updates-the-existing-card
 	 */
-	private function resolveTarget(array $addressBooks, array $properties, ?string $existingUid): ?array {
-		if ($existingUid !== null && $existingUid !== '') {
-			$properties['UID'] = $existingUid;
-			return $this->linkedOrWritableTarget(addressBooks: $addressBooks, properties: $properties, existingUid: $existingUid);
+	private function resolveTarget(array $addressBooks, VcardWrite $write): ?array {
+		if ($write->isLinked() === true) {
+			return $this->linkedOrWritableTarget(addressBooks: $addressBooks, write: $write);
 		}
 
-		return $this->firstWritableTarget(addressBooks: $addressBooks, properties: $properties);
+		return $this->firstWritableTarget(addressBooks: $addressBooks, properties: $write->properties);
 	}//end resolveTarget()
 
 	/**
 	 * The addressbook holding the linked card (null when it is read-only), else the first writable one.
 	 *
 	 * @param array<int, mixed> $addressBooks The user's addressbooks.
-	 * @param array<string, mixed> $properties The vCard properties, carrying the UID.
-	 * @param string $existingUid The linked card UID.
+	 * @param VcardWrite        $write        The vCard properties and the linked card UID.
 	 *
-	 * @return array{0: mixed, 1: array<string, mixed>}|null The addressbook and properties.
+	 * @return array{0: mixed, 1: array<string, mixed>}|null The addressbook and properties, carrying the UID.
 	 */
-	private function linkedOrWritableTarget(array $addressBooks, array $properties, string $existingUid): array|null {
+	private function linkedOrWritableTarget(array $addressBooks, VcardWrite $write): array|null {
+		$existingUid = (string)$write->existingUid;
+		$properties = $write->properties;
+		$properties['UID'] = $existingUid;
 		foreach ($addressBooks as $book) {
 			$uri = $this->findCardUri(addressBook: $book, uid: $existingUid);
 			if ($uri === null) {
@@ -351,13 +329,12 @@ class ContactVcardWriterService {
 	/**
 	 * Store the contactsUid back on the Pipelinq object.
 	 *
-	 * @param array $objData The object data.
-	 * @param string $contactsUid The contacts UID to store.
+	 * @param array  $updateData The object data, carrying the contacts UID to store.
 	 * @param string $objectType The object type (client or contact).
 	 *
 	 * @return void
 	 */
-	private function storeContactsUidOnObject(array $objData, string $contactsUid, string $objectType): void {
+	private function storeContactsUidOnObject(array $updateData, string $objectType): void {
 		try {
 			$objectService = $this->getObjectService();
 			$registerId = $this->registerResolver->resolve('contact');
@@ -379,8 +356,6 @@ class ContactVcardWriterService {
 				return;
 			}
 
-			$updateData = $objData;
-			$updateData['contactsUid'] = $contactsUid;
 			$objectService->saveObject(
 				$updateData,
 				[],

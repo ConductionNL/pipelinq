@@ -70,8 +70,9 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	 */
 	public function move(string $partyType, string $fromUuid, string $intoUuid): array {
 		$moved = [];
-		foreach ($this->referencesOf(partyType: $partyType) as [$schema, $property]) {
-			foreach ($this->rowsReferring(schema: $schema, property: $property, uuid: $fromUuid) as $rowUuid) {
+		foreach ($this->referencesOf(partyType: $partyType) as $reference) {
+			[$schema, $property] = $reference;
+			foreach ($this->rowsReferring(reference: $reference, uuid: $fromUuid) as $rowUuid) {
 				$this->objects->patchObject(objectId: $rowUuid, data: [$property => $intoUuid], _rbac: false, _multitenancy: false);
 				$moved[] = ['schema' => $schema, 'uuid' => $rowUuid, 'property' => $property];
 			}
@@ -100,11 +101,7 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 				continue;
 			}
 
-			$entry = [
-				'schema' => (string)($row['schema'] ?? ''),
-				'uuid' => (string)($row['uuid'] ?? ''),
-				'property' => (string)($row['property'] ?? ''),
-			];
+			$entry = $this->ledgerEntry(row: $row);
 			if ($entry['uuid'] === '' || $entry['property'] === '' || $this->stillPointsAt(entry: $entry, uuid: $intoUuid) === false) {
 				$result['skipped'][] = $entry;
 				continue;
@@ -116,6 +113,21 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 
 		return $result;
 	}//end restore()
+
+	/**
+	 * A ledger row as its schema, uuid and property, each '' when missing.
+	 *
+	 * @param array<mixed> $row The ledger row.
+	 *
+	 * @return array{schema: string, uuid: string, property: string}
+	 */
+	private function ledgerEntry(array $row): array {
+		return [
+			'schema' => (string)($row['schema'] ?? ''),
+			'uuid' => (string)($row['uuid'] ?? ''),
+			'property' => (string)($row['property'] ?? ''),
+		];
+	}//end ledgerEntry()
 
 	/**
 	 * The reference properties of a party type.
@@ -152,13 +164,13 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	/**
 	 * The uuids of the rows of a schema whose property holds the given uuid.
 	 *
-	 * @param string $schema   The schema slug.
-	 * @param string $property The reference property.
-	 * @param string $uuid     The referenced record.
+	 * @param array{0: string, 1: string} $reference The schema slug and its reference property.
+	 * @param string                      $uuid      The referenced record.
 	 *
 	 * @return list<string>
 	 */
-	private function rowsReferring(string $schema, string $property, string $uuid): array {
+	private function rowsReferring(array $reference, string $uuid): array {
+		[$schema, $property] = $reference;
 		$rows = $this->objects->searchObjectsBySlug(
 			registerSlug: self::REGISTER,
 			schemaSlug: $schema,

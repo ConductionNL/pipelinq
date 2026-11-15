@@ -250,7 +250,7 @@ class ZgwApiClient implements ZgwApiClientInterface {
 				default => throw new ZgwException('ZGW: unsupported HTTP method "' . $method . '"'),
 			};
 		} catch (Throwable $e) {
-			$this->translateTransportError(error: $e, url: $url, method: $method);
+			$this->translateTransportError(error: $e, call: ['method' => $method, 'url' => $url]);
 			// TranslateTransportError always throws; this is unreachable but keeps static analysis happy.
 			throw new ZgwException('ZGW: transport error', 0, $e);
 		}
@@ -302,9 +302,8 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	/**
 	 * Translate a transport-level exception into a domain error.
 	 *
-	 * @param Throwable $error The underlying exception.
-	 * @param string $url Target URL (for the error message).
-	 * @param string $method HTTP method (for the error message).
+	 * @param Throwable                          $error The underlying exception.
+	 * @param array{method: string, url: string} $call  HTTP method and target URL (for the error message).
 	 *
 	 * @return void
 	 *
@@ -313,7 +312,8 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	 * @throws OptimisticLockException
 	 * @throws ZgwException
 	 */
-	private function translateTransportError(Throwable $error, string $url, string $method): void {
+	private function translateTransportError(Throwable $error, array $call): void {
+		['method' => $method, 'url' => $url] = $call;
 		[$status, $body] = $this->extractErrorContext(error: $error);
 		$message = $error->getMessage();
 
