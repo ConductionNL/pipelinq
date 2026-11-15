@@ -536,18 +536,7 @@ class ComplianceService implements ComplianceServiceInterface {
 			return false;
 		}
 
-		if ($this->integriq->isActive() === true) {
-			$decision = $this->integriq->decide(
-				contactId: $contactId,
-				channel: $channel,
-				category: IntegriqConsentClient::CATEGORY_MARKETING,
-				requiresConsent: true
-			);
-			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: null) === false);
-		}
-
-		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: null));
-		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
+		return $this->consentPermits(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: null));
 	}//end hasConsentForChannel()
 
 	/**
@@ -573,20 +562,31 @@ class ComplianceService implements ComplianceServiceInterface {
 			return false;
 		}
 
+		return $this->consentPermits(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
+	}//end hasConsentForList()
+
+	/**
+	 * Whether the consent ledger (integriq after the cutover) opens the channel or list of the key.
+	 *
+	 * @param ConsentRecordKey $key The contact, channel and list (null for the channel-wide gate).
+	 *
+	 * @return bool True when gated open.
+	 */
+	private function consentPermits(ConsentRecordKey $key): bool {
 		if ($this->integriq->isActive() === true) {
 			$decision = $this->integriq->decide(
-				contactId: $contactId,
-				channel: $channel,
+				contactId: $key->contactId,
+				channel: $key->channel,
 				category: IntegriqConsentClient::CATEGORY_MARKETING,
 				requiresConsent: true,
-				listId: $listId
+				listId: $key->listId
 			);
-			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === false);
+			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $key->contactId, channel: $key->channel, listId: $key->listId) === false);
 		}
 
-		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
-		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
-	}//end hasConsentForList()
+		$record = $this->findConsentRecord(key: $key);
+		return $this->recordPermitsSend(record: $record, contactId: $key->contactId, channel: $key->channel);
+	}//end consentPermits()
 
 	/**
 	 * Whether pipelinq withdrew the contact for a bounce. A bounce stays pipelinq's own.
@@ -1180,13 +1180,12 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 */
 	private function saveTemplateObject(array $payload, ?string $id = null): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getCampaignTemplateSchemaSlug();
-		$objectService = $this->getObjectService();
-		if ($register === '' || $schema === '' || $objectService === null) {
+		$store = $this->templateStore();
+		if ($store === null) {
 			return null;
 		}
 
+		[$objectService, $register, $schema] = $store;
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
