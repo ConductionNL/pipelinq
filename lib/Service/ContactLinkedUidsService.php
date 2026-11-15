@@ -59,7 +59,6 @@ class ContactLinkedUidsService {
 	 */
 	public function getLinkedContactsUids(): array {
 		$uids = [];
-		$objectService = $this->getObjectService();
 		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
 		// Fail closed on an unconfigured register. getLinkedUidsForType() below
@@ -75,7 +74,6 @@ class ContactLinkedUidsService {
 
 		foreach (['client', 'contact'] as $type) {
 			$typeUids = $this->getLinkedUidsForType(
-				objectService: $objectService,
 				registerId: $registerId,
 				type: $type
 			);
@@ -88,13 +86,12 @@ class ContactLinkedUidsService {
 	/**
 	 * Get linked contactsUid values for a specific object type.
 	 *
-	 * @param object $objectService The object service.
 	 * @param string $registerId The register ID.
 	 * @param string $type The object type (client or contact).
 	 *
 	 * @return array The linked UIDs for this type.
 	 */
-	private function getLinkedUidsForType(object $objectService, string $registerId, string $type): array {
+	private function getLinkedUidsForType(string $registerId, string $type): array {
 		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$type}_schema", '');
 		if ($registerId === '' || $schemaId === '') {
 			return [];
@@ -103,7 +100,7 @@ class ContactLinkedUidsService {
 		$uids = [];
 
 		try {
-			$objects = $objectService->findAll(['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]);
+			$objects = $this->getObjectService()->findAll(['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]);
 
 			foreach ($objects as $obj) {
 				$uids = array_merge($uids, $this->contactsUidOf(obj: $obj));
