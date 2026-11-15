@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\CallReview;
 
+use OCA\Pipelinq\Kernel\Contracts\CoachingPointAgreementInterface;
+
 /**
  * Pure rule (design D3, task 2.4): only the agent whose call was reviewed agrees
  * a coaching point, only on a review shared with them, and an agreed point keeps
@@ -33,22 +35,7 @@ namespace OCA\Pipelinq\Service\CallReview;
  *
  * @spec openspec/changes/contact-moments-call-review/specs/call-review/spec.md#requirement-the-agent-agrees-the-coaching-points-req-crv-003
  */
-final class CoachingPointAgreement {
-
-	/**
-	 * The caller is not the agent whose call the review is about.
-	 */
-	public const REFUSED_NOT_THE_AGENT = 'not-the-agent';
-
-	/**
-	 * The review has not been shared with the agent.
-	 */
-	public const REFUSED_NOT_SHARED = 'not-shared';
-
-	/**
-	 * The review has no coaching point at that position.
-	 */
-	public const REFUSED_NO_SUCH_POINT = 'no-such-point';
+final class CoachingPointAgreement implements CoachingPointAgreementInterface {
 
 	/**
 	 * Why the user may not agree this point, or null when they may.
