@@ -31,8 +31,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Sla\SlaPolicyChange;
@@ -243,17 +241,7 @@ class SlaPolicyController extends Controller {
 			}
 		}
 
-		$this->logger->info(
-			'SlaPolicyController: policy audited',
-			[
-				'action' => $change->action(),
-				'actor' => $actorId,
-				'justification' => $change->justification(),
-				'before' => $before,
-				'after' => $change->payload,
-				'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
-			]
-		);
+		$this->logger->info('SlaPolicyController: policy audited', $change->auditContext(actorId: $actorId, before: $before));
 	}//end auditLog()
 
 	/**

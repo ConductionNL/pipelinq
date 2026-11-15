@@ -52,4 +52,29 @@ class SlaPolicyChangeTest extends TestCase {
 		$this->assertSame(expected: 'audit', actual: $change->justification());
 		$this->assertSame(expected: '', actual: (new SlaPolicyChange(payload: [], register: 'r', schema: 's'))->justification());
 	}//end testTheJustificationComesFromThePayload()
+
+	/**
+	 * The audit context carries the action, actor, justification, both sides and a timestamp.
+	 *
+	 * @return void
+	 */
+	public function testTheAuditContext(): void {
+		$change = new SlaPolicyChange(payload: ['justification' => 'audit', 'name' => 'new'], register: 'r', schema: 's', id: 'p1');
+
+		$context = $change->auditContext(actorId: 'anouk', before: ['name' => 'old']);
+		$timestamp = $context['timestamp'];
+		unset($context['timestamp']);
+
+		$this->assertSame(
+			expected: [
+				'action' => 'update',
+				'actor' => 'anouk',
+				'justification' => 'audit',
+				'before' => ['name' => 'old'],
+				'after' => ['justification' => 'audit', 'name' => 'new'],
+			],
+			actual: $context
+		);
+		$this->assertNotFalse(condition: \DateTimeImmutable::createFromFormat(format: \DateTimeInterface::ATOM, datetime: $timestamp));
+	}//end testTheAuditContext()
 }//end class

@@ -27,6 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Sla;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+
 /**
  * The payload, register, policy schema and (for an update) id of a policy write.
  *
@@ -74,4 +77,25 @@ final class SlaPolicyChange {
 
 		return 'update';
 	}//end action()
+
+	/**
+	 * The audit log context of the change: action, actor, justification, before/after and timestamp.
+	 *
+	 * @param string $actorId The acting user id, or `system`.
+	 * @param mixed  $before  The previous policy data, or null.
+	 *
+	 * @return array<string, mixed> The context.
+	 *
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
+	 */
+	public function auditContext(string $actorId, mixed $before): array {
+		return [
+			'action' => $this->action(),
+			'actor' => $actorId,
+			'justification' => $this->justification(),
+			'before' => $before,
+			'after' => $this->payload,
+			'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+		];
+	}//end auditContext()
 }//end class
