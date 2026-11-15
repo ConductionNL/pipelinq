@@ -167,26 +167,40 @@ class CashShiftService implements CashShiftServiceInterface {
 		string $reference = '',
 		string $notes = '',
 	): array {
-		$this->requirePosUser(userId: $userId);
+		$opening = $this->openingFigures(operator: $userId, floatAmount: $floatAmount);
+		$shift = ['reference' => trim($reference), 'drawer' => trim($drawer)] + $opening + ['notes' => trim($notes)];
+
+		return $this->saveShift(id: '', shift: $shift);
+	}//end openShift()
+
+	/**
+	 * The operator, float and status fields of a new shift, once the operator
+	 * is a POS user and the float is not negative.
+	 *
+	 * @param string $operator    The acting operator UID (from the session).
+	 * @param float  $floatAmount The declared opening float.
+	 *
+	 * @return array<string, mixed> The opening fields.
+	 *
+	 * @throws OCSForbiddenException If the user is not a POS operator.
+	 * @throws OCSBadRequestException If the float is negative.
+	 */
+	private function openingFigures(string $operator, float $floatAmount): array {
+		$this->requirePosUser(userId: $operator);
 
 		if ($floatAmount < 0) {
 			throw new OCSBadRequestException('Openingsbedrag mag niet negatief zijn.');
 		}
 
-		$shift = [
-			'reference' => trim($reference),
-			'drawer' => trim($drawer),
-			'operator' => $userId,
+		return [
+			'operator' => $operator,
 			'currency' => 'EUR',
 			'floatAmount' => $this->money(value: $floatAmount),
 			'floatAt' => $this->now(),
 			'status' => 'open',
 			'reconciliationStatus' => 'pending',
-			'notes' => trim($notes),
 		];
-
-		return $this->saveShift(id: '', shift: $shift);
-	}//end openShift()
+	}//end openingFigures()
 
 	/**
 	 * Record a mid-shift cash drop (POS operator).
