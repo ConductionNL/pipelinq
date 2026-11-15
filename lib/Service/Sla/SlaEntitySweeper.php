@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Sla;
 
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\SlaEntitySweeperInterface;
 use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCA\Pipelinq\Service\SlaEngineService;
@@ -365,10 +367,10 @@ class SlaEntitySweeper implements SlaEntitySweeperInterface {
 
 		$surface->run->objectService->saveObject(
 			object: $object->data,
-			extend: [],
-			register: $surface->run->register,
-			schema: $surface->schemaId,
-			uuid: $object->uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $surface->run->register, schema: $surface->schemaId),
+				uuid: $object->uuid
+			)
 		);
 	}//end save()
 

@@ -41,6 +41,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
@@ -342,13 +345,13 @@ class BackfillLeadRelations implements IRepairStep {
 		try {
 			$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')->saveObject(
 				object: $lead,
-				extend: [],
-				register: $context['register'],
-				schema: $context['schema'],
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $context['register'], schema: $context['schema']),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $actingAdmin)
+				),
 				_rbac: false,
-				_multitenancy: false,
-				currentUser: $actingAdmin,
+				_multitenancy: false
 			);
 
 			return 'fixed';

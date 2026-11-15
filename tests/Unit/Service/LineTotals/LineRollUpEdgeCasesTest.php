@@ -14,6 +14,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\LineTotals\LineRollUp;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * The roll-up's fallbacks: VAT rate, missing parents, unconfigured schemas,
@@ -60,7 +61,11 @@ class LineRollUpEdgeCasesTest extends TestCase {
 			}
 		);
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+			function (ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$register = $patch->target->register;
+				$schema = $patch->target->schema;
 				$this->patched[$objectId] = $data;
 				$this->patchFlags[]       = ['rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 				return new ObjectEntity();

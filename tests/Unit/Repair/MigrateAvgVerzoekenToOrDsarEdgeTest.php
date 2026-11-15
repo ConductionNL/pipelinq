@@ -49,6 +49,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A logger that keeps every line.
@@ -172,6 +173,7 @@ final class MigrateAvgVerzoekenToOrDsarEdgeTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$args): ObjectEntity {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$this->saves[] = $args;
 				$outcome = array_shift($this->saveOutcomes) ?? 'ok';
 				if ($outcome instanceof \Throwable) {

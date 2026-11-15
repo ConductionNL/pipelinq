@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
@@ -213,7 +214,10 @@ class ContactAddressLookup {
 	 */
 	private function rowInSchema($objectService, array $lookup): array {
 		try {
-			$entity = $objectService->find(id: $lookup['contactId'], register: $lookup['register'], schema: $lookup['schema']);
+			$entity = $objectService->find(
+				id: $lookup['contactId'],
+				options: new ObjectFindOptions(register: $lookup['register'], schema: $lookup['schema'])
+			);
 		} catch (Throwable $e) {
 			$this->logger->debug('ContactAddressLookup: not found in '.$lookup['schema'], ['contactId' => $lookup['contactId']]);
 			$entity = null;

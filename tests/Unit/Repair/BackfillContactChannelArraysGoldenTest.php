@@ -34,6 +34,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every backfill path: what is read, what is saved (by parameter name, as
@@ -217,7 +218,7 @@ class BackfillContactChannelArraysGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($scenario): ObjectEntityInterface {
-				$named = $this->named(method: 'saveObject', args: $args);
+				$named = LegacyObjectArgs::flatten(args: $this->named(method: 'saveObject', args: $args));
 				if (($named['currentUser'] ?? null) instanceof IUser) {
 					$named['currentUser'] = 'user:' . $named['currentUser']->getUID();
 				}

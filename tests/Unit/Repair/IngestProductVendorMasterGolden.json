@@ -38,8 +38,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -87,8 +86,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -132,8 +130,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -161,8 +158,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -206,8 +202,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -235,8 +230,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -285,8 +279,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -346,8 +339,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -407,8 +399,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -457,8 +448,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -507,8 +497,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -557,8 +546,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -589,8 +577,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -632,8 +619,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -664,8 +650,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -708,8 +693,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -768,8 +752,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -833,8 +816,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -882,8 +864,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             },
             {
@@ -933,8 +914,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -1003,8 +983,7 @@
                         "contactsUid": "uid-acme"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1033,8 +1012,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1094,8 +1072,7 @@
                         "contactsUid": "uid-mail"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1124,8 +1101,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1191,8 +1167,7 @@
                         "contactsUid": "uid-new"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1221,8 +1196,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1296,8 +1270,7 @@
                         "contactsUid": "pvm-02c88e70e627130ca0eddb2b5d91df85"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1326,8 +1299,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1389,8 +1361,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1435,8 +1406,7 @@
                         "contactsUid": "u7"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1461,8 +1431,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1510,8 +1479,7 @@
                         "contactsUid": "uid-acme"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             }
         ]
@@ -1559,8 +1527,7 @@
                         "contactsUid": "uid-acme"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1589,8 +1556,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             },
             {
@@ -1697,8 +1663,7 @@
                         "contactsUid": "uid-after-miss"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1727,8 +1692,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]
@@ -1789,8 +1753,7 @@
                         "contactsUid": "uid-acme"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -1845,8 +1808,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -1894,8 +1856,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             },
             {
@@ -1916,8 +1877,7 @@
                         "productId": ""
                     },
                     "register": "reg-1",
-                    "schema": "schema-product",
-                    "uuid": null
+                    "schema": "schema-product"
                 }
             },
             {
@@ -1959,8 +1919,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             },
             {
@@ -1998,8 +1957,7 @@
                         "contactsUid": "uid-acme"
                     },
                     "register": "reg-1",
-                    "schema": "schema-supplier",
-                    "uuid": null
+                    "schema": "schema-supplier"
                 }
             },
             {
@@ -2028,8 +1986,7 @@
                         "confidence": 1.0
                     },
                     "register": "reg-1",
-                    "schema": "schema-src",
-                    "uuid": null
+                    "schema": "schema-src"
                 }
             }
         ]

@@ -28,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\AppFramework\Controller;
@@ -104,7 +107,7 @@ class TicketAssignController extends Controller {
 		$objectService = $this->tickets->getObjectService();
 
 		try {
-			$ticket = $objectService->find(id: $id, register: $register, schema: $schema);
+			$ticket = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable) {
 			$ticket = null;
 		}
@@ -224,9 +227,13 @@ class TicketAssignController extends Controller {
 		try {
 			$this->tickets->getObjectService()->saveObject(
 				object: $ticket,
-				register: $this->tickets->getRegisterId(),
-				schema: $this->tickets->getSchemaId(),
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->tickets->getRegisterId(),
+							schema: $this->tickets->getSchemaId()
+						),
+					uuid: $id
+				)
 			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => 'You cannot change this ticket'], Http::STATUS_FORBIDDEN);

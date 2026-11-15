@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
@@ -181,10 +183,7 @@ class DefaultPipelineService {
 	private function savePipeline(array $target, array $data): void {
 		$this->getObjectService()->saveObject(
 			$data,
-			[],
-			$target[0],
-			$target[1],
-			null
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: $target[0], schema: $target[1]))
 		);
 
 		$title = $data['title'] ?? 'Unknown';

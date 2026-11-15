@@ -19,6 +19,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Sales and lines are read and written in the configured register and
@@ -111,7 +112,15 @@ final class PosCartObjectsTest extends TestCase {
 	 */
 	public function testTransactionIsReadFromTheSaleSchema(): void {
 		$this->objects->expects($this->once())->method('find')
-			->with('tx-1', [], false, 'reg-1', 'sch-tx', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'tx-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'reg-1',
+				'schema' => 'sch-tx',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($this->entity(['id' => 'tx-1', 'priceMode' => 'inclusive']));
 
 		$this->assertSame(['id' => 'tx-1', 'priceMode' => 'inclusive'], $this->subject->transaction('tx-1'));
@@ -125,7 +134,9 @@ final class PosCartObjectsTest extends TestCase {
 	 * @return void
 	 */
 	public function testBlankOrUnknownTransactionIsNotFound(): void {
-		$this->objects->expects($this->once())->method('find')->with('tx-gone')->willReturn(null);
+		$this->objects->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'tx-gone',
+			]))->willReturn(null);
 
 		foreach (['  ', 'tx-gone'] as $id) {
 			try {
@@ -191,15 +202,15 @@ final class PosCartObjectsTest extends TestCase {
 	 */
 	public function testSaveLineStripsSelfAndKeepsTheId(): void {
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(
-				['id' => 'l-1', 'quantity' => 2],
-				[],
-				'reg-1',
-				'sch-line',
-				'l-1',
-				false,
-				false
-			);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['id' => 'l-1', 'quantity' => 2],
+				'extend' => [],
+				'register' => 'reg-1',
+				'schema' => 'sch-line',
+				'uuid' => 'l-1',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]));
 
 		$this->subject->saveLine(['id' => 'l-1', 'quantity' => 2, '@self' => ['id' => 'l-1']]);
 

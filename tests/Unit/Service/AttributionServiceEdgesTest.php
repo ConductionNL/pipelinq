@@ -27,6 +27,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A click and a won deal are recorded once, with the values a report can add up.
@@ -103,7 +105,9 @@ class AttributionServiceEdgesTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, $register = null, $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($this->failFind === true) {
 					throw new RuntimeException('gone');
 				}
@@ -142,7 +146,10 @@ class AttributionServiceEdgesTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->failSave === true) {
 					throw new RuntimeException('refused');

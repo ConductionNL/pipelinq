@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Listing, lookup and vendor selection of channel providers, including every
@@ -209,7 +210,15 @@ class ChannelProviderRepositoryCoverageTest extends TestCase {
 	 */
 	public function testFindByIdReadsUnderRbacAndReturnsThePayload(): void {
 		$this->objectService->expects($this->once())->method('find')
-			->with('prov-1', [], false, 'pipelinq', 'channelProvider', true, true)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'prov-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'pipelinq',
+				'schema' => 'channelProvider',
+				'_rbac' => true,
+				'_multitenancy' => true,
+			]))
 			->willReturn($this->entity(['uuid' => 'prov-1', 'vendor' => 'twilio']));
 
 		$this->assertSame(['uuid' => 'prov-1', 'vendor' => 'twilio'], $this->repository()->findById(id: 'prov-1'));

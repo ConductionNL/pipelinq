@@ -36,6 +36,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for the existing-policy read in SlaPolicyController::update().
@@ -69,7 +70,13 @@ class SlaPolicyControllerUpdateTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->expects($this->once())
 			->method('find')
-			->with('pol-1', [], false, 'sla', 'policy')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'pol-1',
+					'_extend' => [],
+					'files' => false,
+					'register' => 'sla',
+					'schema' => 'policy',
+				]))
 			->willReturn($existing);
 		$objectService->method('saveObject')->willReturn($saved);
 

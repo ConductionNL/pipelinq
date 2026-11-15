@@ -25,6 +25,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair\Support;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCP\IUser;
 
 /**
@@ -53,13 +56,13 @@ trait SystemRowSaver {
 		// RBAC on, because controllers call it.
 		return static fn (array $data): mixed => $objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: (string)($data['id'] ?? ''),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: (string)($data['id'] ?? ''),
+				actor: new SaveActor(currentUser: $actingAdmin)
+			),
 			_rbac: false,
-			_multitenancy: false,
-			currentUser: $actingAdmin,
+			_multitenancy: false
 		);
 	}//end rowSaver()
 }//end trait

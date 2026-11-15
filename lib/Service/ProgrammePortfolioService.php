@@ -47,6 +47,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
 use OCA\Pipelinq\Service\Support\JsonSerializableRows;
@@ -533,9 +535,10 @@ class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
 		return $this->landed(
 			save: fn (): mixed => $this->objectService->saveObject(
 				object: $object,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
 			),
 			schemaKey: $schemaKey
 		);

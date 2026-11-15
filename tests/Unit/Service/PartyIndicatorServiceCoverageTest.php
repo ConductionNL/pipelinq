@@ -31,6 +31,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Error paths and edge cases of the party indicator service.
@@ -154,7 +155,9 @@ class PartyIndicatorServiceCoverageTest extends TestCase {
 	 * @return void
 	 */
 	public function testAcknowledgeUnreadableValueIs404(): void {
-		$this->objectService->expects($this->once())->method('find')->with('v-1')
+		$this->objectService->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'v-1',
+			]))
 			->willThrowException(new RuntimeException('gone'));
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->logger->expects($this->once())->method('debug')->with(
@@ -203,13 +206,13 @@ class PartyIndicatorServiceCoverageTest extends TestCase {
 		$this->session->method('getUser')->willReturn($user);
 		$this->objectService->method('find')->willReturn($this->entity(['id' => 'v-1', 'indicator' => 'x']));
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(
-				$this->callback(static fn (array $o): bool => $o['acknowledgedBy'] === 'maria' && $o['indicator'] === 'x'),
-				$this->anything(),
-				'reg-1',
-				'sch-val',
-				'v-1'
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $o): bool => $o['acknowledgedBy'] === 'maria' && $o['indicator'] === 'x'),
+				'extend' => $this->anything(),
+				'register' => 'reg-1',
+				'schema' => 'sch-val',
+				'uuid' => 'v-1',
+			]))
 			->willReturn($this->entity([]));
 
 		$result = $this->service()->acknowledge(' v-1 ');

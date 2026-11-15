@@ -42,6 +42,9 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory fake of the OR ObjectService for the tender tests.
@@ -143,11 +146,14 @@ class TenderFakeObjectService {
 	 */
 	public function find(
 		int|string $id,
-		?array $_extend = [],
-		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		?ObjectFindOptions $options = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): ?array {
+		$_extend = $options?->extend ?? [];
+		$files = $options?->files ?? false;
+		$register = $options?->register;
+		$schema = $options?->schema;
 		$snapshotRegister = $this->currentRegister;
 		$snapshotSchema = $this->currentSchema;
 
@@ -233,11 +239,14 @@ class TenderFakeObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		if ($this->throwOnSave === true) {
 			throw new \RuntimeException('fake save error');
 		}
@@ -269,7 +278,10 @@ class TenderFakeObjectService {
 	 *
 	 * @return void
 	 */
-	public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null): void {
+	public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): void {
+		$uuid = $deletion->uuid;
+		$register = $deletion->target->register;
+		$schema = $deletion->target->schema;
 		$this->currentRegister = (string)$register;
 		$this->currentSchema = (string)$schema;
 

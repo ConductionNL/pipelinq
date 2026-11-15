@@ -32,6 +32,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
@@ -249,10 +253,7 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		try {
 			$object = $this->store->objects()->find(
 				$id,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -300,10 +301,7 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 
 		$saved = $this->store->objects()->saveObject(
 			$data,
-			[],
-			$registerId,
-			$schemaId,
-			null
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId))
 		);
 
 		return $this->normalizeToArray(object: $saved);
@@ -382,10 +380,10 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 
 		$saved = $this->store->objects()->saveObject(
 			$merged,
-			[],
-			$registerId,
-			$schemaId,
-			$id
+			new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+				uuid: $id
+			)
 		);
 
 		return $this->normalizeToArray(object: $saved);
@@ -411,7 +409,9 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		}
 
 		[$registerId, $schemaId] = $this->store->location();
-		if ($this->store->objects()->deleteObject($uuid, $registerId, $schemaId) === false) {
+		if ($this->store->objects()->deleteObject(
+			new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $registerId, schema: $schemaId))
+		) === false) {
 			throw new RuntimeException('Task could not be deleted');
 		}
 	}//end deleteScheduledTask()
@@ -712,10 +712,10 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		try {
 			$this->store->objects()->saveObject(
 				$task,
-				[],
-				$tick['registerId'],
-				$tick['schemaId'],
-				(string)($task['id'] ?? '')
+				new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $tick['registerId'], schema: $tick['schemaId']),
+					uuid: (string)($task['id'] ?? '')
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

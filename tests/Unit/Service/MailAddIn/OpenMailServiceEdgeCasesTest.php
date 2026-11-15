@@ -24,6 +24,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The refusals of the mail add-in (which one wins, and what it says), and the
@@ -85,7 +86,9 @@ class OpenMailServiceEdgeCasesTest extends TestCase {
 			public function __construct(private array &$rows, private array &$reads) {
 			}
 
-			public function find(string $id, $register = null, $schema = null, bool $_rbac = false): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->reads[] = $schema.'/'.$id;
 				return ($this->rows[$schema.'/'.$id] ?? null);
 			}

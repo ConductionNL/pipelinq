@@ -24,6 +24,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\Merge\PartyReferenceMover;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * The mover's edges: array-shaped search rows, a search that returns a count,
@@ -67,7 +68,9 @@ class PartyReferenceMoverTest extends TestCase {
 			}
 		);
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data): ObjectEntity {
+			function (ObjectPatch $patch): ObjectEntity {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
 				$this->patched[] = [$objectId, $data];
 				return new ObjectEntity();
 			}

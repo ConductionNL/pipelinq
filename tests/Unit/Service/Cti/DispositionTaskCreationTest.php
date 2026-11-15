@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Follow-up task creation on disposition.
@@ -103,6 +104,7 @@ final class DispositionTaskCreationTest extends TestCase {
 			 * @return mixed
 			 */
 			public function saveObject(mixed ...$args): mixed {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args, trim: true);
 				return $this->test->recordSave(args: $args);
 			}
 		};
@@ -157,7 +159,6 @@ final class DispositionTaskCreationTest extends TestCase {
 					[],
 					'pipelinq',
 					'task',
-					null,
 				],
 			],
 			$this->saves

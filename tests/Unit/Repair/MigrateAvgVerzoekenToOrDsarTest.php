@@ -37,6 +37,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for MigrateAvgVerzoekenToOrDsar.
@@ -137,7 +138,11 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 		$store2 = &$this->store;
 		$seq = 0;
 		$this->objectService->method('saveObject')->willReturnCallback(
-			static function (array $data, array $extend, $register, $schema, $uuid) use (&$savedCases, &$markedSources, &$store2, &$seq): object {
+			static function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$savedCases, &$markedSources, &$store2, &$seq): object {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ((string)$schema === 'dataSubjectRequest') {
 					$seq++;
 					$data['id'] = 'dsar-' . $seq;

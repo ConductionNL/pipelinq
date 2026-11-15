@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
@@ -150,8 +151,10 @@ class ResidentViewController extends Controller {
 			try {
 				$ticket = $objectService->find(
 					id: $id,
-					register: $this->tickets->getRegisterId(),
-					schema: $this->tickets->getSchemaId()
+					options: new ObjectFindOptions(
+						register: $this->tickets->getRegisterId(),
+						schema: $this->tickets->getSchemaId()
+					)
 				);
 			} catch (Throwable) {
 				$ticket = null;

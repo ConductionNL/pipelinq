@@ -28,6 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
@@ -446,7 +449,7 @@ class ConsentService implements ConsentServiceInterface {
 	private function deleteRecord(object $objectService, string $id, array $target, string $contactId): int {
 		try {
 			if (method_exists($objectService, 'deleteObject') === true) {
-				$objectService->deleteObject($id, $target[0], $target[1]);
+				$objectService->deleteObject(new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $target[0], schema: $target[1])));
 				return 1;
 			}
 		} catch (Throwable $e) {
@@ -823,9 +826,7 @@ class ConsentService implements ConsentServiceInterface {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()))
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

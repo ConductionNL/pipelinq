@@ -29,6 +29,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\LockedRecord;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -186,7 +189,12 @@ class ClientRiskService {
 		}
 
 		try {
-			$found  = $this->objectService->find(id: $clientId, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+			$found  = $this->objectService->find(
+				id: $clientId,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 			$client = $this->toArray(value: $found);
 		} catch (Throwable $e) {
 			$this->logger->warning('ClientRiskService: the client could not be read', ['clientId' => $clientId, 'exception' => $e->getMessage()]);
@@ -308,11 +316,12 @@ class ClientRiskService {
 		try {
 			$this->objectService->saveObject(
 				object: $client,
-				register: $location->register,
-				schema: $location->schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $location->register, schema: $location->schema),
+					uuid: $uuid
+				),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error('ClientRiskService: the risk could not be stored', ['clientId' => $uuid, 'exception' => $e->getMessage()]);

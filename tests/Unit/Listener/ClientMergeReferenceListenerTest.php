@@ -35,6 +35,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * @covers \OCA\Pipelinq\Listener\ClientMergeReferenceListener
@@ -112,7 +113,9 @@ class ClientMergeReferenceListenerTest extends TestCase {
 			}
 		);
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data): ObjectEntityInterface {
+			function (ObjectPatch $patch): ObjectEntityInterface {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
 				$this->patches[] = [$objectId, $data];
 				$this->rows[$objectId][1] = array_merge($this->rows[$objectId][1], $data);
 				return $this->entity(uuid: $objectId);

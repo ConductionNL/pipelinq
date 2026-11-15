@@ -34,6 +34,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -133,10 +137,9 @@ class ListObjectStore implements ListObjectStoreInterface {
 		try {
 			return $context['service']->find(
 				id: $id,
-				register: $context['register'],
-				schema: $context['schema'],
+				options: new ObjectFindOptions(register: $context['register'], schema: $context['schema']),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->info('ListObjectStore.find: not found', ['schema' => $context['schema'], 'id' => $id, 'exception' => $e->getMessage()]);
@@ -258,8 +261,13 @@ class ListObjectStore implements ListObjectStoreInterface {
 	private function writeEntity(array $target, array $payload): array {
 		try {
 			return [$target['service']->saveObject(
-				object: $payload, register: $target['register'], schema: $target['schema'],
-				uuid: $this->uuidOrNull(id: $target['id']), _rbac: false, _multitenancy: false,
+				object: $payload,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $this->uuidOrNull(id: $target['id'])
+				),
+				_rbac: false,
+				_multitenancy: false
 			)];
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -306,11 +314,12 @@ class ListObjectStore implements ListObjectStoreInterface {
 
 		try {
 			return (bool)$context['service']->deleteObject(
-				uuid: $id,
-				register: $context['register'],
-				schema: $context['schema'],
+				new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $context['register'], schema: $context['schema'])
+				),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

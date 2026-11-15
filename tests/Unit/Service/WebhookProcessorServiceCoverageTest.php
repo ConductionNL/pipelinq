@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Error paths and branches of the provider webhook processor: missing or
@@ -225,7 +226,13 @@ class WebhookProcessorServiceCoverageTest extends TestCase {
 	 */
 	public function testOpenMarksDeliveredRowOpened(): void {
 		$this->objects->expects($this->once())->method('find')
-			->with('d-1', $this->anything(), $this->anything(), 'pipelinq', 'blastDelivery')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'd-1',
+				'_extend' => $this->anything(),
+				'files' => $this->anything(),
+				'register' => 'pipelinq',
+				'schema' => 'blastDelivery',
+			]))
 			->willReturnCallback(static function (): ObjectEntity {
 				$entity = new ObjectEntity();
 				$entity->setObject(['uuid' => 'd-1', 'status' => 'delivered']);
@@ -253,7 +260,13 @@ class WebhookProcessorServiceCoverageTest extends TestCase {
 		$this->storedDelivery(['uuid' => 'd-1', 'status' => 'clicked', 'openedAt' => '2026-01-01T00:00:00Z']);
 		$saved = $this->captureSaves();
 		$this->objects->expects($this->once())->method('saveObject')
-			->with($this->anything(), $this->anything(), 'reg-x', 'sch-x', 'd-1');
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->anything(),
+				'extend' => $this->anything(),
+				'register' => 'reg-x',
+				'schema' => 'sch-x',
+				'uuid' => 'd-1',
+			]));
 
 		$this->service()->processOpen(['blastDeliveryId' => 'd-1', 'timestamp' => '1700000000']);
 
@@ -356,9 +369,9 @@ class WebhookProcessorServiceCoverageTest extends TestCase {
 	public function testSaveAndTotalsFailuresAreLogged(): void {
 		$this->storedDelivery(['uuid' => 'd-1', 'status' => 'queued', 'blastId' => 'b-1', 'deliveredAt' => '2026-01-01T00:00:00Z']);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(
-				$this->callback(static fn (array $p): bool => $p['status'] === 'delivered' && $p['deliveredAt'] === '2026-01-01T00:00:00Z'),
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $p): bool => $p['status'] === 'delivered' && $p['deliveredAt'] === '2026-01-01T00:00:00Z'),
+			]))
 			->willThrowException(new RuntimeException('locked'));
 		$this->blasts->expects($this->once())->method('updateBlastTotals')->with('b-1')
 			->willThrowException(new RuntimeException('totals broke'));

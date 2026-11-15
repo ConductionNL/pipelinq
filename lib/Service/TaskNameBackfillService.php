@@ -29,6 +29,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
 use OCA\Pipelinq\Util\FirstAdminUser;
@@ -238,14 +242,14 @@ class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
 		try {
 			$this->objectService->saveObject(
 				object: $payload,
-				extend: [],
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $uuid,
+					policy: new SavePolicy(silent: true),
+					actor: new SaveActor(currentUser: $target['actingAdmin'])
+				),
 				_rbac: false,
-				_multitenancy: false,
-				silent: true,
-				currentUser: $target['actingAdmin'],
+				_multitenancy: false
 			);
 			return 'named';
 		} catch (Throwable $e) {

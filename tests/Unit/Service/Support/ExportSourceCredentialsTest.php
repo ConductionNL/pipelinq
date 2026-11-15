@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Credentials come from the destination's connector source: non-empty legacy
@@ -135,7 +136,10 @@ final class ExportSourceCredentialsHost {
 			 * @param bool   $_render       Render.
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, string $register, string $schema, bool $_rbac, bool $_multitenancy, bool $_render): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render;
 				if ($id === 'broken') {
 					throw new \RuntimeException('down');
 				}

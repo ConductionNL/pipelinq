@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 /**
  * Reads one object through the host's ObjectService from the given
  * [register, schema] ids and answers it through the host's toArray(); an
@@ -51,7 +53,7 @@ trait ConfiguredObjectFind {
 		}
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}

@@ -45,6 +45,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
 use OCA\Pipelinq\Service\Support\JsonSerializableRows;
@@ -570,9 +572,10 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		try {
 			$this->objectService->saveObject(
 				object: $invitation,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
 			);
 
 			return true;

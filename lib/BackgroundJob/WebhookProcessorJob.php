@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
@@ -196,9 +198,10 @@ class WebhookProcessorJob extends TimedJob {
 		try {
 			$objectService->saveObject(
 				object: $arr,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: $saveUuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
+					uuid: $saveUuid
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

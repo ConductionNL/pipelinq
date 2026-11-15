@@ -30,6 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use Psr\Container\ContainerInterface;
@@ -102,7 +106,7 @@ abstract class AbstractExportService {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -160,10 +164,10 @@ abstract class AbstractExportService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $data,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $id
+			)
 		);
 
 		return $this->toArray(object: $saved);
@@ -180,7 +184,7 @@ abstract class AbstractExportService {
 	protected function deleteObjectById(string $schemaKey, string $id): void {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
-		$this->getObjectService()->deleteObject(register: $register, schema: $schema, uuid: $id);
+		$this->getObjectService()->deleteObject(new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema)));
 	}//end deleteObjectById()
 
 	/**

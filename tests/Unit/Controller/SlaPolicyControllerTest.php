@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A change without a justification is refused before anything is read; a
@@ -124,7 +125,12 @@ class SlaPolicyControllerTest extends TestCase {
 		$saved = $this->createMock(ObjectEntityInterface::class);
 		$saved->method('jsonSerialize')->willReturn(['id' => 'p9', 'name' => 'Gold']);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['name' => 'Gold', 'justification' => 'contract'], [], 'sla', 'policy')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['name' => 'Gold', 'justification' => 'contract'],
+				'extend' => [],
+				'register' => 'sla',
+				'schema' => 'policy',
+			]))
 			->willReturn($saved);
 
 		$response = $this->controller(params: ['name' => 'Gold', 'justification' => 'contract', '_route' => 'x'], uid: 'admin')->create();
@@ -172,7 +178,13 @@ class SlaPolicyControllerTest extends TestCase {
 		$saved = $this->createMock(ObjectEntityInterface::class);
 		$saved->method('jsonSerialize')->willReturn('not an array');
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['name' => 'Gold', 'justification' => 'why'], [], 'sla', 'policy', 'p1')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['name' => 'Gold', 'justification' => 'why'],
+				'extend' => [],
+				'register' => 'sla',
+				'schema' => 'policy',
+				'uuid' => 'p1',
+			]))
 			->willReturn($saved);
 
 		$response = $this->controller(params: ['name' => 'Gold', 'justification' => 'why', 'id' => 'other', '_route' => 'r'])->update(id: 'p1');

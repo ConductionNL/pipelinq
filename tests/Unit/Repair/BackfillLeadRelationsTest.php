@@ -40,6 +40,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory ObjectService double matching OpenRegister's real signatures.
@@ -94,17 +95,18 @@ class FakeBackfillObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		?string $register = null,
-		?string $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $silent = false,
-		bool $_validation = true,
-		?array $uploadedFiles = null,
-		mixed $currentUser = null,
+		bool $_multitenancy = true
 	): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
+		$silent = $options->policy->silent ?? false;
+		$_validation = $options->policy->validation ?? true;
+		$uploadedFiles = $options->uploadedFiles;
+		$currentUser = $options->actor->currentUser;
 		$id = ($uuid ?? ($object['id'] ?? 'new'));
 		$object['id'] = $id;
 		$this->store[(string)$schema][$id] = $object;
@@ -512,22 +514,23 @@ class BackfillLeadRelationsTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				?array $extend = [],
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				bool $_validation = true,
-				?array $uploadedFiles = null,
-				mixed $currentUser = null,
+				bool $_multitenancy = true
 			): array {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$silent = $options->policy->silent ?? false;
+				$_validation = $options->policy->validation ?? true;
+				$uploadedFiles = $options->uploadedFiles;
+				$currentUser = $options->actor->currentUser;
 				if ($uuid === 'l1') {
 					throw new RuntimeException('The required property (title) is missing');
 				}
 
-				return parent::saveObject($object, $extend, $register, $schema, $uuid);
+				return parent::saveObject($object, $options);
 			}//end saveObject()
 		};
 		$objects->store['lead-schema']['l1'] = ['id' => 'l1'];

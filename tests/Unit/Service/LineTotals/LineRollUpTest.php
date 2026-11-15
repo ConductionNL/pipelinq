@@ -16,6 +16,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\LineTotals\LineRollUp;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * The quote totals and lead value follow the lines.
@@ -42,7 +43,9 @@ class LineRollUpTest extends TestCase {
 		);
 		$objects->method('find')->willReturnCallback(static fn (): ObjectEntity => self::entity(schema: '30', data: ['vatRate' => 9]));
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data): ObjectEntity {
+			function (ObjectPatch $patch): ObjectEntity {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
 				$this->patched[$objectId] = $data;
 				return new ObjectEntity();
 			}

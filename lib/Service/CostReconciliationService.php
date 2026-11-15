@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CostReconciliationServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
@@ -253,9 +255,10 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 
 			$objectService->saveObject(
 				object: $row,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()),
+					uuid: $uuid
+				)
 			);
 			return true;
 		} catch (Throwable $e) {

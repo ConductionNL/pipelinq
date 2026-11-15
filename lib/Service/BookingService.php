@@ -33,6 +33,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
@@ -1195,8 +1198,7 @@ class BookingService implements BookingServiceInterface {
 		try {
 			return $this->getObjectService()->find(
 				id: $bookingId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: booking load failed', ['booking' => $bookingId]);
@@ -1393,8 +1395,7 @@ class BookingService implements BookingServiceInterface {
 		try {
 			$customer = $this->getObjectService()->find(
 				id: $customerId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: customer load for no-show failed', ['customer' => $customerId]);
@@ -1420,7 +1421,11 @@ class BookingService implements BookingServiceInterface {
 
 		try {
 			$this->getObjectService()->saveObject(
-				object: $this->stripSelf(payload: $data), extend: [], register: $register, schema: $schema, uuid: $customerId
+				object: $this->stripSelf(payload: $data),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $customerId
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1447,10 +1452,10 @@ class BookingService implements BookingServiceInterface {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $uuid
+			)
 		);
 	}//end saveBooking()
 

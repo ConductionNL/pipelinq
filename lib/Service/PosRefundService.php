@@ -29,6 +29,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
@@ -727,10 +729,10 @@ class PosRefundService implements PosRefundServiceInterface {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $refund,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $id
+			)
 		);
 
 		return $this->toArray(object: $saved);
@@ -758,10 +760,10 @@ class PosRefundService implements PosRefundServiceInterface {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $line,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to persist refund line', ['exception' => $e->getMessage()]);

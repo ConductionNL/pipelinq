@@ -21,6 +21,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Matching inbound numbers against stored contacts and clients, and the
@@ -72,7 +73,11 @@ class CtiContactMatcherTest extends TestCase {
 			 *
 			 * @return null
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): mixed {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'schema' => $schema, 'uuid' => $uuid];
 				return null;
 			}
@@ -331,7 +336,11 @@ class CtiContactMatcherTest extends TestCase {
 			 *
 			 * @return never
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): mixed {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				throw new RuntimeException('read only');
 			}
 		};
@@ -388,7 +397,11 @@ class CtiContactMatcherTest extends TestCase {
 			 *
 			 * @return null
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): mixed {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = $uuid;
 				return null;
 			}

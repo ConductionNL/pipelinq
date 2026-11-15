@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\NoteEventServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\NotesServiceInterface;
@@ -225,7 +226,7 @@ class NotesController extends Controller {
 		}
 
 		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		$object = $objectService->find(id: $objectId, register: $registerId, schema: $schemaId);
+		$object = $objectService->find(id: $objectId, options: new ObjectFindOptions(register: $registerId, schema: $schemaId));
 		if ($object === null) {
 			return false;
 		}

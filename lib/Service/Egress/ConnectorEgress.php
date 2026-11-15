@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Egress;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ConnectorEgressInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
@@ -358,8 +359,7 @@ class ConnectorEgress implements ConnectorEgressInterface {
 			$objectService = $this->container->get(self::OBJECT_SERVICE);
 			$source = $objectService->find(
 				id: $sourceId,
-				register: $registerSlug,
-				schema: self::SOURCE_SCHEMA,
+				options: new ObjectFindOptions(register: $registerSlug, schema: self::SOURCE_SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

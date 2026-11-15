@@ -25,6 +25,7 @@ use OCP\Mail\IMessage;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Locks who gets the reminder and the order of the checks.
@@ -92,7 +93,11 @@ class EventReminderServiceTest extends TestCase
         $order   = [];
         $objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
         $objects->expects($this->once())->method('saveObject')->willReturnCallback(
-            function (array $object, $extend, $register, $schema, $uuid) use (&$order) {
+            function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$order) {
+                $extend = $options->extend;
+                $register = $options->target->register;
+                $schema = $options->target->schema;
+                $uuid = $options->uuid;
                 $order[] = 'stamp';
                 $this->assertSame(expected: '21', actual: $schema);
                 $this->assertSame(expected: 'e1', actual: $uuid);

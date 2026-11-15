@@ -40,6 +40,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\WebForm;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\Pipelinq\Kernel\Contracts\HeldObjectDrainInterface;
 use OCA\Pipelinq\Service\SystemServiceAccount;
 use Throwable;
@@ -200,12 +202,12 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 	private function removeHeld(HeldDrainRun $run, array $entry): array {
 		try {
 			$this->objectService->deleteObject(
-				uuid: $entry['id'],
-				register: $run->register,
-				schema: $run->schema,
-				_rbac: true,
-				_multitenancy: false,
-				currentUser: $this->account->account(),
+				new ObjectDeletion(
+					uuid: $entry['id'],
+					target: new ObjectFindTarget(register: $run->register, schema: $run->schema),
+					currentUser: $this->account->account()
+				),
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			// Delivered, but still held: counted pending so the schema is not

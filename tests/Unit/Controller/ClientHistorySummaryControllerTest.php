@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The history summary route reads the client as the caller first (task 2.2).
@@ -91,6 +92,7 @@ class ClientHistorySummaryControllerTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) use ($found, $throw, $entity): ?ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->finds[] = $args;
 				if ($throw !== null) {
 					throw $throw;

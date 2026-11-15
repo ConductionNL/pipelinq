@@ -28,6 +28,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for the failed-run path of WebhookProcessorJob.
@@ -86,6 +87,7 @@ class WebhookProcessorJobFailureTest extends TestCase {
 			 * @return void
 			 */
 			public function saveObject(mixed ...$args): void {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->saved++;
 			}
 		};
