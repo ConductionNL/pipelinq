@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
 use OCA\Pipelinq\Controller\Support\PosControllerResponses;
+use OCA\Pipelinq\Controller\Support\PosUserAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -52,6 +53,7 @@ use Psr\Log\LoggerInterface;
  */
 class PosRefundController extends Controller {
 	use PosControllerResponses;
+	use PosUserAction;
 
 	/**
 	 * Constructor.

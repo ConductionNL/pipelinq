@@ -69,19 +69,6 @@ class PosControllerResponsesTest extends TestCase {
 		$this->assertInstanceOf(JSONResponse::class, $anonymous);
 		$this->assertSame(401, $anonymous->getStatus());
 	}//end testRequireUserId()
-
-	/**
-	 * @return void
-	 */
-	public function testRunAsUserPassesTheUidOrRefuses(): void {
-		$user = $this->createStub(IUser::class);
-		$user->method('getUID')->willReturn('u1');
-		$logger = $this->createStub(LoggerInterface::class);
-
-		$answer = self::host($user, $logger, $this)->actAsUser(action: fn (string $uid): array => ['uid' => $uid]);
-		$this->assertSame(['uid' => 'u1'], $answer->getData());
-		$this->assertSame(401, self::host(null, $logger, $this)->actAsUser(action: fn (string $uid): array => [])->getStatus());
-	}//end testRunAsUserPassesTheUidOrRefuses()
 }//end class
 
 /**
@@ -116,13 +103,5 @@ final class PosControllerResponsesHost {
 	 */
 	public function act(callable $action): JSONResponse {
 		return $this->run(action: $action, label: 'act');
-	}
-
-	/**
-	 * @param callable $action The action.
-	 * @return JSONResponse
-	 */
-	public function actAsUser(callable $action): JSONResponse {
-		return $this->runAsUser(action: $action, label: 'act');
 	}
 }//end class
