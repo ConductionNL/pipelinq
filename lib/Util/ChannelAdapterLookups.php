@@ -38,6 +38,7 @@ use Throwable;
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait ChannelAdapterLookups {
+	use ConfiguredTenantId;
 
 	/**
 	 * The contact moment service, resolved lazily; null when it is absent.
@@ -79,22 +80,6 @@ trait ChannelAdapterLookups {
 
 		return '';
 	}//end extractPhone()
-
-	/**
-	 * Tenant id (app-config; defaults to `default`).
-	 *
-	 * @return string Tenant id.
-	 *
-	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
 
 	/**
 	 * App-config schema slug override.

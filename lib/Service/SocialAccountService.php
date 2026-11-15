@@ -54,6 +54,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\BrokerCredentialReader;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
+use OCA\Pipelinq\Util\ClientWritableFields;
 use OCP\IGroupManager;
 
 /**
@@ -70,6 +71,8 @@ use OCP\IGroupManager;
  *  the complexity is the sum rather than any one tangle.
  */
 class SocialAccountService implements SocialAccountServiceInterface {
+	use ClientWritableFields;
+
 	/**
 	 * The account schema slug, matching the register fragment.
 	 *
@@ -687,24 +690,6 @@ class SocialAccountService implements SocialAccountServiceInterface {
 
 		return $account;
 	}//end withCredential()
-
-	/**
-	 * Take only the fields a client may set.
-	 *
-	 * @param array<string, mixed> $payload The client's payload.
-	 *
-	 * @return array<string, mixed> The accepted subset.
-	 */
-	private function clientFields(array $payload): array {
-		$out = [];
-		foreach (self::CLIENT_WRITABLE as $field) {
-			if (array_key_exists($field, $payload) === true) {
-				$out[$field] = $payload[$field];
-			}
-		}
-
-		return $out;
-	}//end clientFields()
 
 	/**
 	 * The credential a completed connection produced: the one the client named
