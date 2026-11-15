@@ -48,7 +48,8 @@ class SlaPolicyChangeTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheJustificationComesFromThePayload(): void {
-		$this->assertSame(expected: 'audit', actual: (new SlaPolicyChange(payload: ['justification' => 'audit'], register: 'r', schema: 's'))->justification());
+		$change = new SlaPolicyChange(payload: ['justification' => 'audit'], register: 'r', schema: 's');
+		$this->assertSame(expected: 'audit', actual: $change->justification());
 		$this->assertSame(expected: '', actual: (new SlaPolicyChange(payload: [], register: 'r', schema: 's'))->justification());
 	}//end testTheJustificationComesFromThePayload()
 }//end class
