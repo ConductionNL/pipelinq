@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
 use OCA\Pipelinq\Util\Base64UrlDecode;
+use OCA\Pipelinq\Util\BlastDeliveryLookup;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -72,6 +73,7 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	use ConfiguredBlastDeliverySchemaSlug;
 	use ContainerObjectService;
 	use Base64UrlDecode;
+	use BlastDeliveryLookup;
 
 	/**
 	 * App-config key for the per-instance HMAC signing secret.
@@ -516,32 +518,11 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	 * @return array<string, mixed>|null Row or null.
 	 */
 	private function loadDelivery(string $id): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '' || $id === '') {
+		if ($id === '') {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				'TrackingLinkService.loadDelivery: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->findBlastDelivery(id: $id, notFound: 'TrackingLinkService.loadDelivery: not found');
 	}//end loadDelivery()
 
 	/**

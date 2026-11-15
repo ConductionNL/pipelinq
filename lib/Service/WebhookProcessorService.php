@@ -46,6 +46,7 @@ namespace OCA\Pipelinq\Service;
 use Closure;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Util\BlastDeliveryLookup;
 use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -83,6 +84,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use ConfiguredBlastDeliverySchemaSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
+	use BlastDeliveryLookup;
 
 	/**
 	 * Default register slug — matches the chain root schemas.
@@ -805,32 +807,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return array<string, mixed>|null Delivery row or null.
 	 */
 	private function loadDeliveryById(string $id): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				'WebhookProcessorService.loadDeliveryById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->findBlastDelivery(id: $id, notFound: 'WebhookProcessorService.loadDeliveryById: not found');
 	}//end loadDeliveryById()
 
 	/**
