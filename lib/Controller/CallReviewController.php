@@ -97,7 +97,7 @@ class CallReviewController extends Controller {
 
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'callReview_schema', '');
-		$review = $this->loadReview(id: $id, register: $register, schema: $schema);
+		$review = $this->loadReview(id: $id, where: ['register' => $register, 'schema' => $schema]);
 		if ($review === null) {
 			return new JSONResponse(['message' => $this->l10n->t('This review was not found.')], Http::STATUS_NOT_FOUND);
 		}
@@ -127,19 +127,18 @@ class CallReviewController extends Controller {
 	/**
 	 * The review's data, or null when it cannot be read by the caller.
 	 *
-	 * @param string $id       The review's id.
-	 * @param string $register The register id.
-	 * @param string $schema   The call review schema id.
+	 * @param string                                  $id    The review's id.
+	 * @param array{register: string, schema: string} $where The register id and the call review schema id.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function loadReview(string $id, string $register, string $schema): ?array {
-		if ($register === '' || $schema === '') {
+	private function loadReview(string $id, array $where): ?array {
+		if ($where['register'] === '' || $where['schema'] === '') {
 			return null;
 		}
 
 		try {
-			$found = $this->objectService->find(id: $id, register: $register, schema: $schema);
+			$found = $this->objectService->find(id: $id, register: $where['register'], schema: $where['schema']);
 		} catch (Throwable $e) {
 			$found = null;
 		}
