@@ -196,7 +196,7 @@ class FullExportService implements FullExportServiceInterface {
 			$rows        = $this->rowsOf(slug: $slug);
 			$attachments = 0;
 			if ($fileReader !== null) {
-				$attachments = $this->addAttachedFiles(zip: $zip, reader: $fileReader, slug: $slug, rows: ($rows ?? []));
+				$attachments = $this->addAttachedFiles(zip: $zip, schema: ['reader' => $fileReader, 'slug' => $slug, 'rows' => ($rows ?? [])]);
 			}
 
 			$entries[] = [
@@ -313,10 +313,9 @@ class FullExportService implements FullExportServiceInterface {
 	/**
 	 * Copy every object's attached files into the archive under its identifier.
 	 *
-	 * @param ZipArchive                 $zip    The archive.
-	 * @param object                     $reader OpenRegister's object file reader.
-	 * @param string                     $slug   The schema slug, for the error message.
-	 * @param list<array<string, mixed>> $rows   The schema's objects.
+	 * @param ZipArchive                                                           $zip    The archive.
+	 * @param array{reader: object, slug: string, rows: list<array<string, mixed>>} $schema OpenRegister's object file reader, the
+	 *   schema slug (for the error message) and the schema's objects.
 	 *
 	 * @return int The number of files copied.
 	 *
@@ -324,7 +323,8 @@ class FullExportService implements FullExportServiceInterface {
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
-	private function addAttachedFiles(ZipArchive $zip, object $reader, string $slug, array $rows): int {
+	private function addAttachedFiles(ZipArchive $zip, array $schema): int {
+		['reader' => $reader, 'slug' => $slug, 'rows' => $rows] = $schema;
 		$count = 0;
 		foreach ($rows as $row) {
 			$objectId = $this->objectIdOf(row: $row);

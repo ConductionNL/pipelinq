@@ -278,8 +278,7 @@ class BelastingdienstExportService {
 	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function buildManifest(array $entries, string $fromDate, string $toDate): array {
-		$registers = $this->registerList(entries: $entries);
-		$perRegisterStatus = $this->perRegisterStatus(entries: $entries, registers: $registers);
+		$chain = $this->chainManifest(entries: $entries);
 		return [
 			'exportDate' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
 			'entryCount' => count($entries),
@@ -287,13 +286,27 @@ class BelastingdienstExportService {
 				'from' => $fromDate,
 				'to' => $toDate,
 			],
+		] + $chain;
+	}//end buildManifest()
+
+	/**
+	 * The register list and hash-chain part of the manifest.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The entries.
+	 *
+	 * @return array<string, mixed> Keys: registerList, chainIntegrity, chainStatus, perRegisterStatus, signatureAlgorithm.
+	 */
+	private function chainManifest(array $entries): array {
+		$registers = $this->registerList(entries: $entries);
+		$perRegisterStatus = $this->perRegisterStatus(entries: $entries, registers: $registers);
+		return [
 			'registerList' => $registers,
 			'chainIntegrity' => $this->chainIntegrity(perRegisterStatus: $perRegisterStatus),
 			'chainStatus' => $this->chainStatus(perRegisterStatus: $perRegisterStatus),
 			'perRegisterStatus' => $perRegisterStatus,
 			'signatureAlgorithm' => self::SIGNATURE_ALGORITHM,
 		];
-	}//end buildManifest()
+	}//end chainManifest()
 
 	/**
 	 * The distinct non-empty register numbers of the entries, sorted.

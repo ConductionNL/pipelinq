@@ -218,16 +218,30 @@ class ActivityTimelineReader {
 		}
 
 		$origin = new ActivityOrigin(entityType: $entityType, entityId: $entityId);
-		$messages = [];
-		foreach ($this->contactIdsOf(origin: $origin, registerId: $registerId) as $contactId) {
-			$messages = array_merge(
-				$messages,
-				$this->query(registerId: $registerId, schemaId: $messageSchema, filters: ['contactId' => $contactId])
+		$contactIds = $this->contactIdsOf(origin: $origin, registerId: $registerId);
+
+		return $this->messagesOf(contactIds: $contactIds, messages: new RegisterSchema(register: $registerId, schema: $messageSchema));
+	}//end messages()
+
+	/**
+	 * The messages of contact persons.
+	 *
+	 * @param array<int|string,string> $contactIds The contact ids.
+	 * @param RegisterSchema           $messages   The register and message schema IDs.
+	 *
+	 * @return array<int,array<string,mixed>> The raw message objects.
+	 */
+	private function messagesOf(array $contactIds, RegisterSchema $messages): array {
+		$found = [];
+		foreach ($contactIds as $contactId) {
+			$found = array_merge(
+				$found,
+				$this->query(registerId: $messages->register, schemaId: $messages->schema, filters: ['contactId' => $contactId])
 			);
 		}
 
-		return $messages;
-	}//end messages()
+		return $found;
+	}//end messagesOf()
 
 	/**
 	 * The contact persons whose messages belong to an entity: a contact itself, a client's contacts.

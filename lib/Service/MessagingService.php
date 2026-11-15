@@ -215,29 +215,45 @@ class MessagingService implements MessagingServiceInterface {
 	public function send(MessageRoute $route, MessageContent $content, string $actor): array {
 		$context = $route->adapterContext(agent: $actor);
 
+		$outcome = $this->adapterOutcome(content: $content, call: ['route' => $route, 'context' => $context]);
+		if ($outcome === null) {
+			return ['status' => 'unsupported-channel'];
+		}
+
+		return $this->sanitiseOutcome(outcome: $outcome);
+	}//end send()
+
+	/**
+	 * Hand the message to the adapter of its channel; null for a channel without one.
+	 *
+	 * @param MessageContent                                            $content The channel, text and template.
+	 * @param array{route: MessageRoute, context: array<string, mixed>} $call    The route and the adapter context.
+	 *
+	 * @return array<string, mixed>|null The raw adapter outcome.
+	 */
+	private function adapterOutcome(MessageContent $content, array $call): ?array {
+		$route = $call['route'];
 		if ($content->channel === 'sms') {
-			$outcome = $this->smsAdapter->send(
+			return $this->smsAdapter->send(
 				contact: $route->contact,
 				body: $content->body,
 				providerHint: $route->providerHint,
-				context: $context
+				context: $call['context']
 			);
-			return $this->sanitiseOutcome(outcome: $outcome);
 		}
 
 		if ($content->channel === 'whatsapp') {
-			$outcome = $this->whatsAppAdapter->send(
+			return $this->whatsAppAdapter->send(
 				contact: $route->contact,
 				body: $content->body,
 				templateId: $content->templateId,
 				parameters: $content->parameters,
-				context: $context
+				context: $call['context']
 			);
-			return $this->sanitiseOutcome(outcome: $outcome);
 		}
 
-		return ['status' => 'unsupported-channel'];
-	}//end send()
+		return null;
+	}//end adapterOutcome()
 
 	/**
 	 * Load one channelMessage row through the register RBAC.
@@ -382,35 +398,46 @@ class MessagingService implements MessagingServiceInterface {
 	 */
 	private function linkResend(array $original, string $newId): void {
 		$originalId = (string)($original['id'] ?? ($original['uuid'] ?? ''));
-		$this->mergeMetadata(row: $original, rowId: $originalId, fields: ['resentAs' => $newId]);
+		$this->saveMessageRow(row: $this->withMetadata(row: $original, fields: ['resentAs' => $newId]), rowId: $originalId);
 
 		$new = $this->loadMessage(messageId: $newId);
 		if ($new !== null) {
-			$this->mergeMetadata(row: $new, rowId: $newId, fields: ['resendOf' => $originalId]);
+			$this->saveMessageRow(row: $this->withMetadata(row: $new, fields: ['resendOf' => $originalId]), rowId: $newId);
 		}
 	}//end linkResend()
 
 	/**
-	 * Save a message row with fields added to its metadata.
+	 * A message row with fields added to its metadata.
 	 *
-	 * @param array<string, mixed> $row The row.
-	 * @param string $rowId Its id.
+	 * @param array<string, mixed>  $row    The row.
 	 * @param array<string, string> $fields Metadata fields to add.
 	 *
-	 * @return void
+	 * @return array<string, mixed> The row.
 	 */
-	private function mergeMetadata(array $row, string $rowId, array $fields): void {
-		$objectService = $this->objectService();
-		if ($objectService === null || $rowId === '') {
-			return;
-		}
-
+	private function withMetadata(array $row, array $fields): array {
 		$metadata = $row['metadata'] ?? [];
 		if (is_array($metadata) === false) {
 			$metadata = [];
 		}
 
 		$row['metadata'] = array_merge($metadata, $fields);
+		return $row;
+	}//end withMetadata()
+
+	/**
+	 * Save a message row over its stored version.
+	 *
+	 * @param array<string, mixed> $row   The row.
+	 * @param string               $rowId Its id.
+	 *
+	 * @return void
+	 */
+	private function saveMessageRow(array $row, string $rowId): void {
+		$objectService = $this->objectService();
+		if ($objectService === null || $rowId === '') {
+			return;
+		}
+
 		try {
 			$objectService->saveObject(
 				object: $row,
@@ -424,7 +451,7 @@ class MessagingService implements MessagingServiceInterface {
 				['messageId' => $rowId, 'exception' => $e->getMessage()]
 			);
 		}
-	}//end mergeMetadata()
+	}//end saveMessageRow()
 
 	/**
 	 * The channelMessage schema slug.

@@ -204,20 +204,20 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 			unset($data['@self']);
 		}
 
-		return $this->saveFlat(objectService: $objectService, schema: $schema, data: $data, uuid: $uuid);
+		return $this->saveFlat(objectService: $objectService, write: ['schema' => $schema, 'data' => $data, 'uuid' => $uuid]);
 	}//end save()
 
 	/**
 	 * Save a flat payload; null (logged) when the save fails.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $schema The schema slug.
-	 * @param array<string, mixed> $data The flat payload.
-	 * @param string|null $uuid The object uuid, or null to create.
+	 * @param object                                                         $objectService The OpenRegister ObjectService.
+	 * @param array{schema: string, data: array<string, mixed>, uuid: string|null} $write         The schema slug, the flat
+	 *   payload and the object uuid (null to create).
 	 *
 	 * @return array<string, mixed>|null The saved object.
 	 */
-	private function saveFlat(object $objectService, string $schema, array $data, string|null $uuid): array|null {
+	private function saveFlat(object $objectService, array $write): array|null {
+		['schema' => $schema, 'data' => $data, 'uuid' => $uuid] = $write;
 		try {
 			$saved = $objectService->saveObject(object: $data, extend: [], register: self::REGISTER, schema: $schema, uuid: $uuid);
 		} catch (Throwable $e) {

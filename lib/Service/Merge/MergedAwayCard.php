@@ -141,7 +141,7 @@ class MergedAwayCard implements MergedAwayCardInterface {
 		}
 
 		foreach ($this->contactsManager->getUserAddressBooks() as $book) {
-			$rewritten = $this->rewriteNoteIn(book: $book, contactsUid: $contactsUid, rewrite: $rewrite);
+			$rewritten = $this->rewriteNoteIn(book: $book, edit: ['uid' => $contactsUid, 'rewrite' => $rewrite]);
 			if ($rewritten !== null) {
 				return $rewritten;
 			}
@@ -153,13 +153,13 @@ class MergedAwayCard implements MergedAwayCardInterface {
 	/**
 	 * Rewrite the card's note in one address book.
 	 *
-	 * @param IAddressBook $book        The address book.
-	 * @param string       $contactsUid The card's UID.
-	 * @param \Closure     $rewrite     Maps the current note to the new one.
+	 * @param IAddressBook                           $book The address book.
+	 * @param array{uid: string, rewrite: \Closure} $edit The card's UID, and what maps the current note to the new one.
 	 *
 	 * @return bool|null Null when the card is not in this book, otherwise whether it holds the new note.
 	 */
-	private function rewriteNoteIn(IAddressBook $book, string $contactsUid, \Closure $rewrite): bool|null {
+	private function rewriteNoteIn(IAddressBook $book, array $edit): bool|null {
+		['uid' => $contactsUid, 'rewrite' => $rewrite] = $edit;
 		$card = $this->findCard(addressBook: $book, uid: $contactsUid);
 		if ($card === null) {
 			return null;

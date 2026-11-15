@@ -112,12 +112,8 @@ class AppointmentPaymentProvider {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function chargeNoShowFee(string $bookingId, float $amount): void {
-		$this->chargeBookingFee(
-			bookingId: $bookingId,
-			amount: $amount,
-			kind: self::KIND_NO_SHOW,
-			stampField: 'noShowFeeChargedAt'
-		);
+		$fee = new BookingFee(bookingId: $bookingId, amount: $amount, kind: self::KIND_NO_SHOW, stampField: 'noShowFeeChargedAt');
+		$this->chargeBookingFee(fee: $fee);
 	}//end chargeNoShowFee()
 
 	/**
@@ -134,12 +130,8 @@ class AppointmentPaymentProvider {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function chargeCancellationFee(string $bookingId, float $amount): void {
-		$this->chargeBookingFee(
-			bookingId: $bookingId,
-			amount: $amount,
-			kind: self::KIND_CANCELLATION,
-			stampField: 'cancellationFeeChargedAt'
-		);
+		$fee = new BookingFee(bookingId: $bookingId, amount: $amount, kind: self::KIND_CANCELLATION, stampField: 'cancellationFeeChargedAt');
+		$this->chargeBookingFee(fee: $fee);
 	}//end chargeCancellationFee()
 
 	/**
@@ -165,72 +157,58 @@ class AppointmentPaymentProvider {
 	/**
 	 * Shared body for the two public charge paths.
 	 *
-	 * @param string $bookingId Booking UUID.
-	 * @param float $amount Fee amount (euros, converted to cents).
-	 * @param string $kind Charge kind tag (no-show / late-cancellation).
-	 * @param string $stampField Booking field to stamp on success.
+	 * @param BookingFee $fee The fee to charge.
 	 *
 	 * @return void
 	 */
-	private function chargeBookingFee(string $bookingId, float $amount, string $kind, string $stampField): void {
-		$prepared = $this->prepareCharge(bookingId: $bookingId, amount: $amount, kind: $kind);
+	private function chargeBookingFee(BookingFee $fee): void {
+		$prepared = $this->prepareCharge(fee: $fee);
 		if ($prepared === null) {
 			return;
 		}
 
-		$queued = $this->submitCharge(
-			payment: $prepared['payment'],
-			sourceSlug: $prepared['sourceSlug'],
-			charge: $prepared['charge'],
-			cents: $prepared['cents']
-		);
-		if ($queued === false) {
+		if ($this->submitCharge(prepared: $prepared) === false) {
 			return;
 		}
 
-		$this->stampBooking(bookingId: $bookingId, field: $stampField, value: $this->nowIso());
+		$this->stampBooking(fee: $fee, value: $this->nowIso());
 	}//end chargeBookingFee()
 
 	/**
 	 * Run the pre-charge checks and gather what the charge needs.
 	 *
-	 * @param string $bookingId Booking UUID.
-	 * @param float $amount Fee amount (euros).
-	 * @param string $kind Charge kind tag.
+	 * @param BookingFee $fee The fee to charge.
 	 *
 	 * @return array{payment: object, sourceSlug: string, charge: array<string, mixed>, cents: int}|null Null when the charge is skipped.
 	 */
-	private function prepareCharge(string $bookingId, float $amount, string $kind): array|null {
-		$cents = $this->chargeableCents(bookingId: $bookingId, amount: $amount);
-		if ($cents <= 0) {
+	private function prepareCharge(BookingFee $fee): array|null {
+		if ($fee->cents() <= 0) {
 			return null;
 		}
 
-		$payment = $this->resolvePaymentServiceForCharge(bookingId: $bookingId, kind: $kind);
+		$payment = $this->resolvePaymentServiceForCharge(bookingId: $fee->bookingId, kind: $fee->kind);
 		if ($payment === null) {
 			return null;
 		}
 
-		return $this->prepareCustomerCharge(payment: $payment, cents: $cents, bookingId: $bookingId, kind: $kind);
+		return $this->prepareCustomerCharge(payment: $payment, fee: $fee);
 	}//end prepareCharge()
 
 	/**
 	 * Check the booking's customer and payment source and gather the charge.
 	 *
-	 * @param object $payment The openconnector PaymentService.
-	 * @param int $cents Amount in integer cents.
-	 * @param string $bookingId Booking UUID.
-	 * @param string $kind Charge kind tag.
+	 * @param object     $payment The openconnector PaymentService.
+	 * @param BookingFee $fee     The fee to charge.
 	 *
 	 * @return array{payment: object, sourceSlug: string, charge: array<string, mixed>, cents: int}|null Null when the charge is skipped.
 	 */
-	private function prepareCustomerCharge(object $payment, int $cents, string $bookingId, string $kind): array|null {
-		$customerId = $this->resolveChargeableCustomer(bookingId: $bookingId, kind: $kind);
+	private function prepareCustomerCharge(object $payment, BookingFee $fee): array|null {
+		$customerId = $this->resolveChargeableCustomer(bookingId: $fee->bookingId, kind: $fee->kind);
 		if ($customerId === null) {
 			return null;
 		}
 
-		$sourceSlug = $this->resolvePaymentSource(bookingId: $bookingId, kind: $kind);
+		$sourceSlug = $this->resolvePaymentSource(bookingId: $fee->bookingId, kind: $fee->kind);
 		if ($sourceSlug === '') {
 			return null;
 		}
@@ -238,26 +216,10 @@ class AppointmentPaymentProvider {
 		return [
 			'payment' => $payment,
 			'sourceSlug' => $sourceSlug,
-			'charge' => $this->buildChargePayload(customerId: $customerId, cents: $cents, kind: $kind, bookingId: $bookingId),
-			'cents' => $cents,
+			'charge' => $this->buildChargePayload(customerId: $customerId, fee: $fee),
+			'cents' => $fee->cents(),
 		];
 	}//end prepareCustomerCharge()
-
-	/**
-	 * Convert a fee amount to integer cents, or 0 when nothing is chargeable.
-	 *
-	 * @param string $bookingId Booking UUID.
-	 * @param float $amount Fee amount (euros).
-	 *
-	 * @return int
-	 */
-	private function chargeableCents(string $bookingId, float $amount): int {
-		if ($bookingId === '' || $amount <= 0.0) {
-			return 0;
-		}
-
-		return (int)round(($amount * 100));
-	}//end chargeableCents()
 
 	/**
 	 * Resolve the openconnector PaymentService, logging when it is unavailable.
@@ -328,25 +290,23 @@ class AppointmentPaymentProvider {
 	/**
 	 * Build the chargeCustomer payload for a booking fee.
 	 *
-	 * @param string $customerId Customer UUID.
-	 * @param int $cents Amount in integer cents.
-	 * @param string $kind Charge kind tag.
-	 * @param string $bookingId Booking UUID.
+	 * @param string     $customerId Customer UUID.
+	 * @param BookingFee $fee        The fee to charge.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function buildChargePayload(string $customerId, int $cents, string $kind, string $bookingId): array {
+	private function buildChargePayload(string $customerId, BookingFee $fee): array {
 		return [
 			'customerId' => $customerId,
 			'amount' => [
-				'value' => $this->centsToDecimal(cents: $cents),
+				'value' => $this->centsToDecimal(cents: $fee->cents()),
 				'currency' => 'EUR',
 			],
-			'description' => sprintf('Pipelinq %s fee — booking %s', $kind, $bookingId),
+			'description' => sprintf('Pipelinq %s fee — booking %s', $fee->kind, $fee->bookingId),
 			'metadata' => [
 				'app' => AppIdentity::APP_ID,
-				'kind' => $kind,
-				'bookingId' => $bookingId,
+				'kind' => $fee->kind,
+				'bookingId' => $fee->bookingId,
 			],
 		];
 	}//end buildChargePayload()
@@ -354,21 +314,20 @@ class AppointmentPaymentProvider {
 	/**
 	 * Queue the charge with openconnector.
 	 *
-	 * @param object $payment The openconnector PaymentService.
-	 * @param string $sourceSlug Payment source slug.
-	 * @param array<string, mixed> $charge The chargeCustomer payload.
-	 * @param int $cents Amount in integer cents (logged on failure).
+	 * @param array{payment: object, sourceSlug: string, charge: array<string, mixed>, cents: int} $prepared The
+	 *   PaymentService, the payment source slug, the chargeCustomer payload and the cents (logged on failure).
 	 *
 	 * @return bool True when the charge was queued.
 	 */
-	private function submitCharge(object $payment, string $sourceSlug, array $charge, int $cents): bool {
+	private function submitCharge(array $prepared): bool {
+		$charge = $prepared['charge'];
 		try {
 			// @phpstan-ignore-next-line dynamic openconnector seam
-			$payment->chargeCustomer($sourceSlug, $charge);
+			$prepared['payment']->chargeCustomer($prepared['sourceSlug'], $charge);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: openconnector chargeCustomer failed',
-				['booking' => $charge['metadata']['bookingId'], 'kind' => $charge['metadata']['kind'], 'cents' => $cents]
+				['booking' => $charge['metadata']['bookingId'], 'kind' => $charge['metadata']['kind'], 'cents' => $prepared['cents']]
 			);
 			return false;
 		}//end try
@@ -513,54 +472,53 @@ class AppointmentPaymentProvider {
 	}//end hasPaymentMethodOnFile()
 
 	/**
-	 * Stamp a timestamp field on a Booking record.
+	 * Stamp the fee's timestamp field on its Booking record.
 	 *
-	 * @param string $bookingId Booking UUID.
-	 * @param string $field Field name (e.g. noShowFeeChargedAt).
-	 * @param string $value ISO-8601 timestamp.
+	 * @param BookingFee $fee   The charged fee; its stamp field is set.
+	 * @param string     $value ISO-8601 timestamp.
 	 *
 	 * @return void
 	 */
-	private function stampBooking(string $bookingId, string $field, string $value): void {
+	private function stampBooking(BookingFee $fee, string $value): void {
 		$store = $this->resolveObjectStore(schemaKey: BookingService::BOOKING_SCHEMA_KEY);
 		if ($store === null) {
 			return;
 		}
 
-		$data = $this->findRecord(store: $store, objectId: $bookingId);
+		$data = $this->findRecord(store: $store, objectId: $fee->bookingId);
 		if ($data === null) {
 			return;
 		}
 
-		$data[$field] = $value;
+		$data[$fee->stampField] = $value;
 		if (array_key_exists('@self', $data) === true) {
 			unset($data['@self']);
 		}
 
-		$this->saveStampedBooking(store: $store, data: $data, bookingId: $bookingId, field: $field);
+		$this->saveStampedBooking(fee: $fee, stamped: ['store' => $store, 'data' => $data]);
 	}//end stampBooking()
 
 	/**
 	 * Save a stamped Booking record, logging a failed save.
 	 *
-	 * @param array{service: object, register: string, schema: string} $store The resolved object store.
-	 * @param array<string, mixed> $data The stamped Booking data.
-	 * @param string $bookingId Booking UUID.
-	 * @param string $field The stamped field name.
+	 * @param BookingFee           $fee     The charged fee.
+	 * @param array<string, mixed> $stamped Keys: store (the resolved object store: service, register, schema),
+	 *   data (the stamped Booking data).
 	 *
 	 * @return void
 	 */
-	private function saveStampedBooking(array $store, array $data, string $bookingId, string $field): void {
+	private function saveStampedBooking(BookingFee $fee, array $stamped): void {
+		$store = $stamped['store'];
 		try {
 			$store['service']->saveObject(
-				object: $data,
+				object: $stamped['data'],
 				extend: [],
 				register: $store['register'],
 				schema: $store['schema'],
-				uuid: $bookingId
+				uuid: $fee->bookingId
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: booking stamp save failed', ['booking' => $bookingId, 'field' => $field]);
+			$this->logger->warning('Pipelinq: booking stamp save failed', ['booking' => $fee->bookingId, 'field' => $fee->stampField]);
 		}
 	}//end saveStampedBooking()
 

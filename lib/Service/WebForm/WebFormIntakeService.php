@@ -180,17 +180,7 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 		$answers = $this->withFallbacks(answers: $this->clean(payload: $payload), form: $form);
 		$this->refuseEmpty(answers: $answers, wanted: $this->wantedFields(form: $form, writes: $writes));
 
-		try {
-			$answer = $this->container->get(self::SUBMIT_SERVICE)->submitAll(
-				writes: $writes,
-				payload: $answers,
-				subject: $this->account->account(),
-				idempotencyKey: $idempotencyKey,
-				scope: 'pipelinq-web-form:' . (string)($form['id'] ?? ''),
-			);
-		} catch (Throwable $e) {
-			throw $this->refusalFor(exception: $e, form: $form);
-		}
+		$answer = $this->stored(form: $form, submission: ['writes' => $writes, 'payload' => $answers, 'idempotencyKey' => $idempotencyKey]);
 
 		// The submit is stored; its campaign values become a touchpoint, best effort.
 		$this->touches?->record(form: $form, payload: $payload, idempotencyKey: $idempotencyKey);
@@ -198,6 +188,31 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 		return self::visitorAnswer(answer: $answer);
 
 	}//end submit()
+
+	/**
+	 * Store the answers through the submit service.
+	 *
+	 * @param array<string, mixed> $form       The published form body with its `id`.
+	 * @param array<string, mixed> $submission Keys: writes, payload (the answers), idempotencyKey.
+	 *
+	 * @return mixed The submit service's answer.
+	 *
+	 * @throws WebFormSubmitException 422 payload refused, 503 try again later.
+	 */
+	private function stored(array $form, array $submission): mixed {
+		try {
+			return $this->container->get(self::SUBMIT_SERVICE)->submitAll(
+				writes: $submission['writes'],
+				payload: $submission['payload'],
+				subject: $this->account->account(),
+				idempotencyKey: $submission['idempotencyKey'],
+				scope: 'pipelinq-web-form:' . (string)($form['id'] ?? ''),
+			);
+		} catch (Throwable $e) {
+			throw $this->refusalFor(exception: $e, form: $form);
+		}
+
+	}//end stored()
 
 	/**
 	 * The writes of a form's destination.

@@ -200,14 +200,8 @@ class ContactDataBuilder {
 	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
-		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
-
-		$data = ['name' => $name]
-			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
-			+ [
-				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
-				'contactsUid' => $uid,
-			];
+		$data = $this->contactPersonFields(ncContact: $ncContact, uid: $uid);
+		$name = $data['name'];
 
 		if ($clientId !== null && $clientId !== '') {
 			$data['client'] = $clientId;
@@ -220,6 +214,25 @@ class ContactDataBuilder {
 
 		return $this->withPreferredName(data: $data, ncContact: $ncContact);
 	}//end buildContactImportData()
+
+	/**
+	 * The name, channels (without website), role and contacts UID of a contact person.
+	 *
+	 * @param array  $ncContact The Nextcloud contact data.
+	 * @param string $uid       The contact UID.
+	 *
+	 * @return array The fields, name first.
+	 */
+	private function contactPersonFields(array $ncContact, string $uid): array {
+		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+
+		return ['name' => $name]
+			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
+			+ [
+				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
+				'contactsUid' => $uid,
+			];
+	}//end contactPersonFields()
 
 	/**
 	 * Read the vCard NICKNAME as the preferred name.

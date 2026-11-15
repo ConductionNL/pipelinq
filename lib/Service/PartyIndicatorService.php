@@ -231,13 +231,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 	 * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
 	 */
 	public function isBlocked(string $partyId, string $act, ?DateTimeImmutable $onDay = null): array {
-		$effect = (self::ACTS[$act] ?? null);
-		if ($effect === null) {
-			throw new InvalidArgumentException(
-				"Unknown act {$act}; this service answers about " . implode(', ', array_keys(self::ACTS)) . '.'
-			);
-		}
-
+		$effect = self::effectOf(act: $act);
 		$blocking = self::withEffect(indicators: $this->resolve(partyId: $partyId, onDay: $onDay), effect: $effect);
 
 		return [
@@ -246,6 +240,26 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			'indicators' => $blocking,
 		];
 	}//end isBlocked()
+
+	/**
+	 * The indicator effect flag that blocks an act.
+	 *
+	 * @param string $act One of the ACTS keys.
+	 *
+	 * @return string The effect flag.
+	 *
+	 * @throws InvalidArgumentException When the act is not one this service answers.
+	 */
+	private static function effectOf(string $act): string {
+		$effect = (self::ACTS[$act] ?? null);
+		if ($effect === null) {
+			throw new InvalidArgumentException(
+				"Unknown act {$act}; this service answers about " . implode(', ', array_keys(self::ACTS)) . '.'
+			);
+		}
+
+		return $effect;
+	}//end effectOf()
 
 	/**
 	 * The indicators that carry an effect, in order.

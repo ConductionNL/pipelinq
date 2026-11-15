@@ -210,27 +210,26 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		}
 
-		return $this->saveTransition(id: $id, contract: $contract, newStatus: $newStatus);
+		$contract['status'] = $newStatus;
+		return $this->saveTransition(id: $id, contract: $contract);
 	}//end applyTransition()
 
 	/**
 	 * Save the new status; a won renewal also drafts the successor.
 	 *
-	 * @param string              $id        The contract UUID.
-	 * @param array<string,mixed> $contract  The contract.
-	 * @param string              $newStatus The allowed new status.
+	 * @param string              $id       The contract UUID.
+	 * @param array<string,mixed> $contract The contract, carrying the allowed new status.
 	 *
 	 * @return JSONResponse The updated contract or an error.
 	 */
-	private function saveTransition(string $id, array $contract, string $newStatus): JSONResponse {
-		$contract['status'] = $newStatus;
+	private function saveTransition(string $id, array $contract): JSONResponse {
 		$saved = $this->contractService->save($contract, $id);
 		if ($saved === null) {
 			return new JSONResponse(['message' => 'Failed to save contract'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
 		// A manually-applied `renewed` transition also drafts the successor.
-		if ($newStatus === 'renewed') {
+		if ($contract['status'] === 'renewed') {
 			$successor = $this->contractService->buildSuccessorDraft($saved);
 			$this->contractService->save($successor, null);
 		}

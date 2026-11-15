@@ -223,31 +223,36 @@ class ArticleService implements ArticleServiceInterface {
 	 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
 	 */
 	public function createArticle(array $payload, string $authorUid, string $agent = ''): array {
+		$named = $this->namedDraft(payload: $payload);
+		if (is_string($named) === true) {
+			return ['error' => $named];
+		}
+
+		$stamp = ['status' => 'draft', 'author' => $authorUid, 'agentAuthored' => ($agent !== ''), 'agentAuthoredBy' => $agent];
+		return $this->saveDraft(record: array_merge($named, $stamp));
+	}//end createArticle()
+
+	/**
+	 * The sanitised new article with its title and slug set, or why it is refused.
+	 *
+	 * @param array<string, mixed> $payload Inbound payload.
+	 *
+	 * @return array<string, mixed>|string The named article, or the refusal.
+	 */
+	private function namedDraft(array $payload): array|string {
 		$clean = $this->sanitise(payload: $payload);
 		$title = trim((string)($clean['title'] ?? ''));
 		if ($title === '') {
-			return ['error' => 'A title is required'];
+			return 'A title is required';
 		}
 
 		$slug = $this->resolveSlug(candidate: (string)($clean['slug'] ?? ''), title: $title);
 		if ($this->slugTaken(slug: $slug, exceptId: '') === true) {
-			return ['error' => 'That slug is already in use'];
+			return 'That slug is already in use';
 		}
 
-		return $this->saveDraft(
-			record: array_merge(
-				$clean,
-				[
-					'title' => $title,
-					'slug' => $slug,
-					'status' => 'draft',
-					'author' => $authorUid,
-					'agentAuthored' => ($agent !== ''),
-					'agentAuthoredBy' => $agent,
-				]
-			)
-		);
-	}//end createArticle()
+		return array_merge($clean, ['title' => $title, 'slug' => $slug]);
+	}//end namedDraft()
 
 	/**
 	 * Stamp a new article's creation time and save it.

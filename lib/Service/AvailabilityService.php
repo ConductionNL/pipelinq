@@ -181,28 +181,27 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		$blocked = $this->getBlockedTimes(resourceId: $resourceId, date: $date);
 		$aligned = $this->alignToSlots(startTime: $hours['openTime'], endTime: $hours['closeTime'], intervalMinutes: self::SLOT_INTERVAL_MINUTES);
 
-		return $this->freeSlots(aligned: $aligned, hours: $hours, blocked: $blocked, duration: $serviceDurationMinutes);
+		return $this->freeSlots(aligned: $aligned, day: ['closeTime' => $hours['closeTime'], 'blocked' => $blocked, 'duration' => $serviceDurationMinutes]);
 	}//end computeAvailability()
 
 	/**
 	 * The aligned slot starts that leave room for the duration and overlap no block.
 	 *
-	 * @param array<int, int>                    $aligned  Slot starts in minutes from midnight.
-	 * @param array{openTime: string, closeTime: string} $hours The day's working hours.
-	 * @param array<int, array<string, int>>     $blocked  The blocked intervals.
-	 * @param int                                $duration Service duration in minutes.
+	 * @param array<int, int>                                                                  $aligned Slot starts in minutes from midnight.
+	 * @param array{closeTime: string, blocked: array<int, array<string, int>>, duration: int} $day     The day's closing time, its blocked
+	 *   intervals and the service duration in minutes.
 	 *
 	 * @return array<int, array{startTime: string, endTime: string, durationMinutes: int}>
 	 */
-	private function freeSlots(array $aligned, array $hours, array $blocked, int $duration): array {
+	private function freeSlots(array $aligned, array $day): array {
 		$free = [];
 		foreach ($aligned as $slotStartMin) {
-			$slotEndMin = ($slotStartMin + $duration);
-			if ($slotEndMin > $this->minutesFromHHMM(time: $hours['closeTime'])) {
+			$slotEndMin = ($slotStartMin + $day['duration']);
+			if ($slotEndMin > $this->minutesFromHHMM(time: $day['closeTime'])) {
 				continue;
 			}
 
-			if ($this->overlapsAny(slot: ['startMin' => $slotStartMin, 'endMin' => $slotEndMin], blocks: $blocked) === true) {
+			if ($this->overlapsAny(slot: ['startMin' => $slotStartMin, 'endMin' => $slotEndMin], blocks: $day['blocked']) === true) {
 				continue;
 			}
 
@@ -694,17 +693,29 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return $this->cachedSnapshot(entry: $entry, nowIso: $nowIso);
 		}
 
+		return $this->freshSnapshot(key: ['resourceId' => $resourceId, 'date' => $date, 'duration' => $duration], nowIso: $nowIso);
+	}//end getOrComputeCache()
+
+	/**
+	 * Compute the free blocks of a resource on a date, persist them and answer their snapshot.
+	 *
+	 * @param array{resourceId: string, date: string, duration: int} $key    The resource, the ISO date and the duration in minutes.
+	 * @param string                                                 $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function freshSnapshot(array $key, string $nowIso): array {
 		$free = $this->computeAvailability(
-			resourceId: $resourceId,
-			date: $date,
-			serviceDurationMinutes: $duration
+			resourceId: $key['resourceId'],
+			date: $key['date'],
+			serviceDurationMinutes: $key['duration']
 		);
 
 		return $this->storedSnapshot(
-			entry: ['resourceId' => $resourceId, 'date' => $date, 'freeBlocks' => $free],
+			entry: ['resourceId' => $key['resourceId'], 'date' => $key['date'], 'freeBlocks' => $free],
 			nowIso: $nowIso
 		);
-	}//end getOrComputeCache()
+	}//end freshSnapshot()
 
 	/**
 	 * The snapshot of a cached entry, flagged stale once past its `expiresAt`.

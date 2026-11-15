@@ -241,7 +241,19 @@ class CronExpressionHelper implements CronExpressionHelperInterface {
 			return null;
 		}
 
-		[$when, $limit] = $this->searchWindow(from: $from, horizonDays: $horizonDays);
+		return $this->firstFiring(fields: $fields, window: $this->searchWindow(from: $from, horizonDays: $horizonDays));
+	}//end nextRunAfter()
+
+	/**
+	 * The first minute in a search window at which the cron fields fire.
+	 *
+	 * @param array<int, string>                                $fields The five cron fields.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window Where the search starts and gives up.
+	 *
+	 * @return DateTimeImmutable|null The firing minute, or null when none is in the window.
+	 */
+	private function firstFiring(array $fields, array $window): ?DateTimeImmutable {
+		[$when, $limit] = $window;
 		while ($when <= $limit) {
 			$next = $this->nextCandidate(fields: $fields, when: $when);
 			if ($next === null) {
@@ -252,7 +264,7 @@ class CronExpressionHelper implements CronExpressionHelperInterface {
 		}
 
 		return null;
-	}//end nextRunAfter()
+	}//end firstFiring()
 
 	/**
 	 * Where the search starts (the next whole minute after the start, in its
