@@ -34,7 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
-use OCA\Pipelinq\Util\ExportSourceCredentials;
+use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;

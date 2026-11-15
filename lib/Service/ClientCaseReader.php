@@ -36,7 +36,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
-use OCA\Pipelinq\Util\SerialisedCast;
+use OCA\Pipelinq\Service\Support\SerialisedCast;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

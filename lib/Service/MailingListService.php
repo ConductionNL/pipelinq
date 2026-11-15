@@ -34,7 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Util\PageCount;
+use OCA\Pipelinq\Service\Support\PageCount;
 
 /**
  * MailingListService — CRUD and validation for mailing lists.

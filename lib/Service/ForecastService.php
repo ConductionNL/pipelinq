@@ -28,7 +28,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Service\Forecast\CategoryOverride;
-use OCA\Pipelinq\Util\FindAllAsArrays;
+use OCA\Pipelinq\Service\Support\FindAllAsArrays;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;

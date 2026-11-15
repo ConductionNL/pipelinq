@@ -54,7 +54,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
-use OCA\Pipelinq\Util\RandomUuid;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;

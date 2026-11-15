@@ -39,7 +39,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Util\SubscriptionContactKey;
+use OCA\Pipelinq\Service\Support\SubscriptionContactKey;
 use OCP\IL10N;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;

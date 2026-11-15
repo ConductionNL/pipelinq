@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
-use OCA\Pipelinq\Util\FirstValue;
+use OCA\Pipelinq\Service\Support\FirstValue;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\Contacts\IManager as IContactsManager;

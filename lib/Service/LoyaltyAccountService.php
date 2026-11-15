@@ -32,7 +32,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
-use OCA\Pipelinq\Util\ConfiguredObjectSave;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;

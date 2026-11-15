@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
-use OCA\Pipelinq\Util\NonEmptyString;
+use OCA\Pipelinq\Service\Support\NonEmptyString;
 use OCP\IDateTimeFormatter;
 use OCP\IUserManager;
 use Throwable;

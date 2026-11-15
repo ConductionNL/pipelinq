@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Merge;
 
 use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
-use OCA\Pipelinq\Util\WritableAddressBook;
+use OCA\Pipelinq\Service\Support\WritableAddressBook;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAddressBook;
 use OCP\IL10N;

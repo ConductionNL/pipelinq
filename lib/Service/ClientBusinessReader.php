@@ -32,7 +32,7 @@ use DateTime;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
-use OCA\Pipelinq\Util\SerialisedCast;
+use OCA\Pipelinq\Service\Support\SerialisedCast;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
