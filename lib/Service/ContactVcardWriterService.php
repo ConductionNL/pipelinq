@@ -42,6 +42,16 @@ class ContactVcardWriterService {
 	use WritableAddressBook;
 
 	/**
+	 * The log messages of a sync write: no addressbook (debug), a failed write (error).
+	 *
+	 * @var array<string, string>
+	 */
+	private const SYNC_MESSAGES = [
+		'noBooks' => 'Pipelinq: No addressbooks available for sync',
+		'failure' => 'Pipelinq: Failed to sync contact to addressbook',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IContactsManager $contactsManager The contacts manager.
@@ -72,10 +82,7 @@ class ContactVcardWriterService {
 	 */
 	public function writeToAddressBook(array $properties, array $objData, string $objectType): ?string {
 		$write = new VcardWrite(properties: $properties, existingUid: ($objData['contactsUid'] ?? null));
-		$contactsUid = $this->writtenUid(
-			write: $write,
-			messages: ['noBooks' => 'Pipelinq: No addressbooks available for sync', 'failure' => 'Pipelinq: Failed to sync contact to addressbook']
-		);
+		$contactsUid = $this->writtenUid(write: $write, messages: self::SYNC_MESSAGES);
 
 		if ($contactsUid !== null && $write->isLinked() === false) {
 			$this->storeContactsUidOnObject(updateData: array_replace($objData, ['contactsUid' => $contactsUid]), objectType: $objectType);
