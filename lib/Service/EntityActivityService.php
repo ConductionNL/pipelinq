@@ -155,38 +155,39 @@ class EntityActivityService implements EntityActivityServiceInterface {
 		int $page,
 		int $limit,
 	): array {
-		if ($this->isAllowedEntityType(entityType: $entityType) === false) {
+		return $this->activityOf(
+			entity: ['type' => $entityType, 'id' => $entityId, 'filter' => $this->normaliseTypeFilter(rawType: $type)],
+			window: new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit))
+		);
+	}//end getActivity()
+
+	/**
+	 * The activity feed page of a validated entity.
+	 *
+	 * @param array{type: string, id: string, filter: string} $entity The entity type, its UUID and the normalised type filter.
+	 * @param ActivityPage                                    $window The page and page size.
+	 *
+	 * @return array{total:int,page:int,pages:int,results:array<int,array<string,mixed>>}
+	 *
+	 * @throws InvalidArgumentException When the entity type is unknown.
+	 */
+	private function activityOf(array $entity, ActivityPage $window): array {
+		if ($this->isAllowedEntityType(entityType: $entity['type']) === false) {
 			throw new InvalidArgumentException('Invalid entity type');
 		}
 
-		$filterType = $this->normaliseTypeFilter(rawType: $type);
-		$window = new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit));
-
-		$registerId = $this->registerId();
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			return $this->emptyResult(page: $window->page);
 		}
 
 		$items = $this->collectActivity(
-			query: new EntityActivityQuery(registerId: $registerId, entityType: $entityType, entityId: $entityId),
-			filterType: $filterType
+			query: new EntityActivityQuery(registerId: $registerId, entityType: $entity['type'], entityId: $entity['id']),
+			filterType: $entity['filter']
 		);
 
 		return $this->paginate(items: $this->newestFirst(items: $items), window: $window);
-	}//end getActivity()
-
-	/**
-	 * The configured register id, or '' when none is configured.
-	 *
-	 * @return string
-	 */
-	private function registerId(): string {
-		return $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			'register',
-			''
-		);
-	}//end registerId()
+	}//end activityOf()
 
 	/**
 	 * Collect the activity items the type filter asks for: contactmomenten

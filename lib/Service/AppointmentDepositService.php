@@ -153,7 +153,12 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 		string $description = '',
 		string $returnUrl = '',
 	): array {
-		return $this->depositSession(request: new DepositSessionRequest($bookingId, $amountCents, $currency, $description, $returnUrl));
+		return $this->depositSession(
+			request: new DepositSessionRequest(
+				bookingId: $bookingId, amountCents: $amountCents, currency: $currency,
+				description: $description, returnUrl: $returnUrl
+			)
+		);
 	}//end createDepositSession()
 
 	/**
