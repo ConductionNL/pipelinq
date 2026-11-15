@@ -106,8 +106,25 @@ class ReportMailDelivery {
 			return self::outcome(userId: $userId, status: self::FAILED, reason: $problem);
 		}
 
+		$failure = $this->sendReport(user: $user, report: ['userId' => $userId, 'name' => (string)($job['name'] ?? ''), 'files' => $files]);
+		if ($failure !== null) {
+			return self::outcome(userId: $userId, status: self::FAILED, reason: $failure);
+		}
+
+		return self::outcome(userId: $userId, status: self::DELIVERED, reason: '');
+	}//end deliverFiles()
+
+	/**
+	 * Mail the report to a recipient in their language; why it failed, or null when it went.
+	 *
+	 * @param IUser                                                     $user   The recipient, who has an email address.
+	 * @param array{userId: string, name: string, files: list<array<string, string>>} $report The recipient id, report name and files.
+	 *
+	 * @return string|null The reason it failed, or null.
+	 */
+	private function sendReport(IUser $user, array $report): ?string {
 		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $this->l10nFactory->getUserLanguage($user));
-		$name = (string)($job['name'] ?? '');
+		$name = $report['name'];
 
 		try {
 			$mail = [
@@ -116,24 +133,24 @@ class ReportMailDelivery {
 					'Attached is the report %1$s, as scheduled. You receive it because you are a recipient of this report in Pipelinq.',
 					[$name]
 				),
-				'files' => $files,
+				'files' => $report['files'],
 			];
 			$refused = $this->mailer->send($this->composedMail(user: $user, mail: $mail));
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: a report mail could not be sent',
-				['userId' => $userId, 'job' => $name, 'exception' => $e->getMessage()]
+				['userId' => $report['userId'], 'job' => $name, 'exception' => $e->getMessage()]
 			);
-			return self::outcome(userId: $userId, status: self::FAILED, reason: $e->getMessage());
+			return $e->getMessage();
 		}//end try
 
 		// The mailer answers the addresses it could not deliver to.
 		if ($refused !== []) {
-			return self::outcome(userId: $userId, status: self::FAILED, reason: 'The mail server refused the recipient.');
+			return 'The mail server refused the recipient.';
 		}
 
-		return self::outcome(userId: $userId, status: self::DELIVERED, reason: '');
-	}//end deliverFiles()
+		return null;
+	}//end sendReport()
 
 	/**
 	 * Why a recipient cannot be mailed, or '' when it can.
