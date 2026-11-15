@@ -124,8 +124,8 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 		$needles = PhoneNeedles::for(e164: $e164Number);
 
 		return array_merge(
-			$this->searchSchema(register: $register, schema: $contactSchema, needles: $needles, type: 'contact'),
-			$this->searchSchema(register: $register, schema: $clientSchema, needles: $needles, type: 'client')
+			$this->searchSchema(where: ['register' => $register, 'schema' => $contactSchema], search: ['needles' => $needles, 'type' => 'contact']),
+			$this->searchSchema(where: ['register' => $register, 'schema' => $clientSchema], search: ['needles' => $needles, 'type' => 'client'])
 		);
 	}//end collectMatches()
 
@@ -136,43 +136,40 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 	 * against any common phone-number property (`phone`, `phoneNumber`,
 	 * `mobile`, `telephone`).
 	 *
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID; an empty value searches nothing.
-	 * @param array<int,string> $needles Digit fragments to test against.
-	 * @param string $type Tag (contact|client) added to each result.
+	 * @param array{register: string, schema: string} $where The register ID and the schema ID; an empty schema searches nothing.
+	 * @param array{needles: array<int,string>, type: string} $search Digit fragments to test against, and the tag (contact|client)
+	 *                                                                added to each result.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	private function searchSchema(string $register, string $schema, array $needles, string $type): array {
-		if ($schema === '' || empty($needles) === true) {
+	private function searchSchema(array $where, array $search): array {
+		if ($where['schema'] === '' || empty($search['needles']) === true) {
 			return [];
 		}
 
 		return $this->filterMatches(
-			objects: $this->searchableObjects(register: $register, schema: $schema),
-			needles: $needles,
-			type: $type
+			objects: $this->searchableObjects(where: $where),
+			search: $search
 		);
 	}//end searchSchema()
 
 	/**
 	 * Fetch the objects of one schema for a phone search.
 	 *
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID.
+	 * @param array{register: string, schema: string} $where The register ID and the schema ID.
 	 *
 	 * @return array<mixed> The objects, or an empty list when the fetch fails or returns no list.
 	 */
-	private function searchableObjects(string $register, string $schema): array {
+	private function searchableObjects(array $where): array {
 		try {
 			/*
 			 * @var \OCA\OpenRegister\Service\ObjectService $objectService
 			 */
 
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$objects = $this->objectsOf(objectService: $objectService, register: $register, schema: $schema, limit: 500);
+			$objects = $objectService->findAll(['filters' => $where, 'limit' => 500]);
 		} catch (\Throwable $e) {
-			$this->logger->warning('CTI contact matcher: OR findAll failed', ['exception' => $e->getMessage(), 'schema' => $schema]);
+			$this->logger->warning('CTI contact matcher: OR findAll failed', ['exception' => $e->getMessage(), 'schema' => $where['schema']]);
 			return [];
 		}//end try
 
@@ -184,42 +181,20 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 	}//end searchableObjects()
 
 	/**
-	 * Fetch up to $limit objects of one schema through ObjectService::findAll.
-	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID.
-	 * @param int $limit Maximum number of objects to fetch.
-	 *
-	 * @return mixed The findAll result.
-	 */
-	private function objectsOf(object $objectService, string $register, string $schema, int $limit): mixed {
-		return $objectService->findAll(
-			[
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-				],
-				'limit' => $limit,
-			]
-		);
-	}//end objectsOf()
-
-	/**
 	 * Keep the objects whose phone fields contain a needle, tagged with the match type.
 	 *
 	 * @param array<mixed> $objects The fetched objects.
-	 * @param array<int,string> $needles Digit fragments to test against.
-	 * @param string $type Tag (contact|client) added to each result.
+	 * @param array{needles: array<int,string>, type: string} $search Digit fragments to test against, and the tag (contact|client)
+	 *                                                                added to each result.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
-	private function filterMatches(array $objects, array $needles, string $type): array {
+	private function filterMatches(array $objects, array $search): array {
 		$matches = [];
 		foreach ($objects as $object) {
 			$data = $this->toArray(value: $object);
-			if ($this->matchesAnyNeedle(record: $data, needles: $needles) === true) {
-				$data['_matchType'] = $type;
+			if ($this->matchesAnyNeedle(record: $data, needles: $search['needles']) === true) {
+				$data['_matchType'] = $search['type'];
 				$matches[] = $data;
 			}
 		}
@@ -314,7 +289,7 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 		}
 
 		foreach (array_filter([$contactSchema, $clientSchema]) as $schema) {
-			$totals = $this->normaliseSchema(register: $register, schema: $schema, totals: $totals);
+			$totals = $this->normaliseSchema(where: ['register' => $register, 'schema' => $schema], totals: $totals);
 		}
 
 		return $totals;
@@ -323,24 +298,24 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 	/**
 	 * Normalise the stored phone numbers of one schema and add the outcomes to the totals.
 	 *
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID.
+	 * @param array{register: string, schema: string} $where The register ID and the schema ID.
 	 * @param array{updated:int, skipped:int} $totals The running totals.
 	 *
 	 * @return array{updated:int, skipped:int}
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
-	private function normaliseSchema(string $register, string $schema, array $totals): array {
-		$fetched = $this->fetchForNormalise(register: $register, schema: $schema);
+	private function normaliseSchema(array $where, array $totals): array {
+		$fetched = $this->fetchForNormalise(where: $where);
 		if ($fetched === null) {
 			return $totals;
 		}
 
 		[$objectService, $objects] = $fetched;
+		$store = $where + ['objectService' => $objectService];
 		foreach ($objects as $object) {
 			$data = $this->toArray(value: $object);
-			$outcome = $this->normaliseRecord(objectService: $objectService, data: $data, register: $register, schema: $schema);
+			$outcome = $this->normaliseRecord(store: $store, data: $data);
 			$totals[$outcome]++;
 		}
 
@@ -350,23 +325,22 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 	/**
 	 * Fetch the ObjectService and the objects of one schema for the normalisation walk.
 	 *
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID.
+	 * @param array{register: string, schema: string} $where The register ID and the schema ID.
 	 *
 	 * @return array{0: object, 1: array<mixed>}|null The service and objects, or null when the fetch fails or returns no list.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
-	private function fetchForNormalise(string $register, string $schema): array|null {
+	private function fetchForNormalise(array $where): array|null {
 		try {
 			/*
 			 * @var \OCA\OpenRegister\Service\ObjectService $objectService
 			 */
 
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$objects = $this->objectsOf(objectService: $objectService, register: $register, schema: $schema, limit: 5000);
+			$objects = $objectService->findAll(['filters' => $where, 'limit' => 5000]);
 		} catch (\Throwable $e) {
-			$this->logger->warning('CTI contact matcher migration: OR findAll failed', ['exception' => $e->getMessage(), 'schema' => $schema]);
+			$this->logger->warning('CTI contact matcher migration: OR findAll failed', ['exception' => $e->getMessage(), 'schema' => $where['schema']]);
 			return null;
 		}//end try
 
@@ -380,16 +354,17 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 	/**
 	 * Write the normalised number of one record back, when it needs one.
 	 *
-	 * @param object $objectService The OR ObjectService.
+	 * @param array{register: string, schema: string, objectService: object} $store The register ID, schema ID and OR ObjectService.
 	 * @param array<string,mixed> $data The record.
-	 * @param string $register The register ID.
-	 * @param string $schema The schema ID.
 	 *
 	 * @return 'updated'|'skipped'
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.3
 	 */
-	private function normaliseRecord(object $objectService, array $data, string $register, string $schema): string {
+	private function normaliseRecord(array $store, array $data): string {
+		$objectService = $store['objectService'];
+		$register = $store['register'];
+		$schema = $store['schema'];
 		$e164 = $this->targetE164(data: $data);
 		$id = (string)($data['id'] ?? ($data['uuid'] ?? ''));
 		if ($e164 === null || $id === '') {
