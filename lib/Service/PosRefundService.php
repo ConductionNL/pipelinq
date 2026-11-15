@@ -106,7 +106,13 @@ class PosRefundService implements PosRefundServiceInterface {
 	 *
 	 * @var array<int, string>
 	 */
-	private const TRANSITION_PRECONDITION_MARKERS = ['overschrijdt', 'not allowed from', 'not declared', 'ontbreekt', 'Originele kassabon niet gevonden'];
+	private const TRANSITION_PRECONDITION_MARKERS = [
+		'overschrijdt',
+		'not allowed from',
+		'not declared',
+		'ontbreekt',
+		'Originele kassabon niet gevonden',
+	];
 
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
