@@ -140,7 +140,7 @@ class OpenDealsController extends Controller {
 		[$field, $partyId] = $party;
 		[$register, $leadSchema] = $target;
 		$partySchema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PARTIES[$field], '');
-		if ($this->canRead(id: $partyId, register: $register, schema: $partySchema) === false) {
+		if ($this->canRead(id: $partyId, where: ['register' => $register, 'schema' => $partySchema]) === false) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}
 
@@ -206,19 +206,18 @@ class OpenDealsController extends Controller {
 	/**
 	 * Whether the user may read the party, under their RBAC.
 	 *
-	 * @param string $id       The party id.
-	 * @param string $register The register id.
-	 * @param string $schema   The party schema id.
+	 * @param string                                  $id    The party id.
+	 * @param array{register: string, schema: string} $where The register id and the party schema id.
 	 *
 	 * @return bool True when it exists and is readable.
 	 */
-	private function canRead(string $id, string $register, string $schema): bool {
-		if ($schema === '') {
+	private function canRead(string $id, array $where): bool {
+		if ($where['schema'] === '') {
 			return false;
 		}
 
 		try {
-			return $this->objectService->find(id: $id, register: $register, schema: $schema, _audit: false) !== null;
+			return $this->objectService->find(id: $id, register: $where['register'], schema: $where['schema'], _audit: false) !== null;
 		} catch (Throwable) {
 			return false;
 		}
