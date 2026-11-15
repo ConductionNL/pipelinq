@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
  * relation as an optional ticket reference, and its version moves with it.
  *
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class BookingTicketLinkSchemaTest extends TestCase {
 

@@ -13,7 +13,7 @@
  * draft back). It calls `loadDraft()` once its form is prefilled, and
  * `saveContactMoment(data)` to save.
  *
- * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-1
  */
 
 import { generateUrl } from '@nextcloud/router'
@@ -92,7 +92,7 @@ export default {
 		 * Which drafts to offer: by default the place the form was opened.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
 		 */
 		draftPickContext() {
 			return this.draftContext
@@ -102,7 +102,7 @@ export default {
 		 * Preset values that are not a draft on their own.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contact-log-dialog-keeps-draft/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
 		 */
 		draftDefaults() {
 			return {}
@@ -365,7 +365,7 @@ export default {
 		 */
 		async writeDraft(payload, { keepalive }) {
 			if (keepalive) {
-				await this.sendDraftKeepalive(this.draftId ? 'PUT' : 'POST', this.draftId, payload)
+				await this.sendDraftKeepalive({ method: this.draftId ? 'PUT' : 'POST', id: this.draftId, payload })
 				return
 			}
 			const store = useObjectStore()
@@ -390,7 +390,7 @@ export default {
 			const id = this.draftId
 			this.draftId = null
 			if (keepalive) {
-				await this.sendDraftKeepalive('DELETE', id, null)
+				await this.sendDraftKeepalive({ method: 'DELETE', id, payload: null })
 				return
 			}
 			await useObjectStore().deleteObject(DRAFT_TYPE, id)
@@ -399,12 +399,11 @@ export default {
 		/**
 		 * The write a closing tab still delivers.
 		 *
-		 * @param {string} method POST, PUT or DELETE.
-		 * @param {string|null} id The draft's id, when it exists.
-		 * @param {object|null} payload The draft.
+		 * @param {{method: string, id: (string|null), payload: (object|null)}} write POST, PUT or DELETE; the draft's id, when it exists; and the draft.
 		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
 		 */
-		async sendDraftKeepalive(method, id, payload) {
+		async sendDraftKeepalive(write) {
+			const { method, id, payload } = write
 			const url = generateUrl('/apps/openregister/api/objects/pipelinq/' + DRAFT_TYPE + (id ? '/' + id : ''))
 			const response = await fetch(url, {
 				method,

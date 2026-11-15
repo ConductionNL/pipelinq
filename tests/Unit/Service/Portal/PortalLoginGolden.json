@@ -1,0 +1,1073 @@
+{
+    "portal not writable": {
+        "calls": [
+            [
+                "requireWritable"
+            ]
+        ],
+        "refused": [
+            503,
+            "portalUnavailable",
+            "Portal unavailable."
+        ]
+    },
+    "unknown account": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "audit",
+                null,
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "unknown-account",
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "invalidCredentials",
+            "E-mailadres of wachtwoord is onjuist."
+        ]
+    },
+    "closed account": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "status": "closed",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "account-closed"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "accountClosed",
+            "Dit account is gesloten."
+        ]
+    },
+    "locked out": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "lockedUntil": "2026-03-01T12:10:00+00:00",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "locked-out"
+                }
+            ]
+        ],
+        "refused": [
+            429,
+            "rateLimited",
+            "Te veel mislukte pogingen. Wacht 5 minuten alstublieft."
+        ]
+    },
+    "lockout expired": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "lockedUntil": "2026-03-01T11:59:59+00:00",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "mfaEnforced",
+                "tenant-a"
+            ],
+            [
+                "sessionTtlHours",
+                "tenant-a"
+            ],
+            [
+                "createSession",
+                "acc-1",
+                "tenant-a",
+                "ip-hash",
+                "ua-hash",
+                8,
+                false
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "lockedUntil": null,
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 0,
+                    "mfaEnabled": false,
+                    "lastLoginAt": "2026-03-01T12:00:00+00:00"
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-success",
+                "success",
+                {
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "id": "ses-1"
+                }
+            ]
+        ],
+        "result": {
+            "status": "authenticated",
+            "mfaRequired": false,
+            "accountId": "acc-1",
+            "token": "tok-1",
+            "sessionId": "ses-1"
+        }
+    },
+    "unparsable lockout": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "lockedUntil": "not a date",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "mfaEnforced",
+                "tenant-a"
+            ],
+            [
+                "sessionTtlHours",
+                "tenant-a"
+            ],
+            [
+                "createSession",
+                "acc-1",
+                "tenant-a",
+                "ip-hash",
+                "ua-hash",
+                8,
+                false
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "lockedUntil": null,
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 0,
+                    "mfaEnabled": false,
+                    "lastLoginAt": "2026-03-01T12:00:00+00:00"
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-success",
+                "success",
+                {
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "id": "ses-1"
+                }
+            ]
+        ],
+        "result": {
+            "status": "authenticated",
+            "mfaRequired": false,
+            "accountId": "acc-1",
+            "token": "tok-1",
+            "sessionId": "ses-1"
+        }
+    },
+    "wrong password": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "nope",
+                "h:secret-pw"
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 3,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "invalid-password",
+                    "failedAttemptCount": 3,
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "invalidCredentials",
+            "E-mailadres of wachtwoord is onjuist."
+        ]
+    },
+    "wrong password arms the lockout": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "failedLoginAttempts": 4,
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "nope",
+                "h:secret-pw"
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "failedLoginAttempts": 5,
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "lockedUntil": "2026-03-01T12:15:00+00:00",
+                    "mfaEnabled": false
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "invalid-password",
+                    "failedAttemptCount": 5,
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "invalidCredentials",
+            "E-mailadres of wachtwoord is onjuist."
+        ]
+    },
+    "wrong password without a counter": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "nope",
+                "h:secret-pw"
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "lockedUntil": "",
+                    "mfaEnabled": false,
+                    "failedLoginAttempts": 1
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "invalid-password",
+                    "failedAttemptCount": 1,
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "invalidCredentials",
+            "E-mailadres of wachtwoord is onjuist."
+        ]
+    },
+    "no password hash": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                ""
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "status": "active",
+                    "failedLoginAttempts": 3,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "invalid-password",
+                    "failedAttemptCount": 3,
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "invalidCredentials",
+            "E-mailadres of wachtwoord is onjuist."
+        ]
+    },
+    "success": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "mfaEnforced",
+                "tenant-a"
+            ],
+            [
+                "sessionTtlHours",
+                "tenant-a"
+            ],
+            [
+                "createSession",
+                "acc-1",
+                "tenant-a",
+                "ip-hash",
+                "ua-hash",
+                8,
+                false
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 0,
+                    "lockedUntil": null,
+                    "mfaEnabled": false,
+                    "lastLoginAt": "2026-03-01T12:00:00+00:00"
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-success",
+                "success",
+                {
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "id": "ses-1"
+                }
+            ]
+        ],
+        "result": {
+            "status": "authenticated",
+            "mfaRequired": false,
+            "accountId": "acc-1",
+            "token": "tok-1",
+            "sessionId": "ses-1"
+        }
+    },
+    "success without status": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "mfaEnforced",
+                "tenant-a"
+            ],
+            [
+                "sessionTtlHours",
+                "tenant-a"
+            ],
+            [
+                "createSession",
+                "acc-1",
+                "tenant-a",
+                "ip-hash",
+                "ua-hash",
+                8,
+                false
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "failedLoginAttempts": 0,
+                    "lockedUntil": null,
+                    "mfaEnabled": false,
+                    "lastLoginAt": "2026-03-01T12:00:00+00:00"
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-success",
+                "success",
+                {
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "id": "ses-1"
+                }
+            ]
+        ],
+        "result": {
+            "status": "authenticated",
+            "mfaRequired": false,
+            "accountId": "acc-1",
+            "token": "tok-1",
+            "sessionId": "ses-1"
+        }
+    },
+    "tenant enforces mfa, not enrolled": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "mfaEnforced",
+                "tenant-a"
+            ]
+        ],
+        "result": {
+            "status": "mfa-enrollment-required",
+            "mfaRequired": true,
+            "accountId": "acc-1"
+        }
+    },
+    "mfa enabled without a secret": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "mfaEnabled": true,
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": ""
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ]
+        ],
+        "result": {
+            "status": "mfa-enrollment-required",
+            "mfaRequired": true,
+            "accountId": "acc-1"
+        }
+    },
+    "mfa, no code": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "mfaEnabled": true,
+                    "mfaSecret": "enc-secret",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": ""
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ]
+        ],
+        "result": {
+            "status": "mfa-required",
+            "mfaRequired": true,
+            "accountId": "acc-1"
+        }
+    },
+    "mfa, empty code": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "mfaEnabled": true,
+                    "mfaSecret": "enc-secret",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": ""
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ]
+        ],
+        "result": {
+            "status": "mfa-required",
+            "mfaRequired": true,
+            "accountId": "acc-1"
+        }
+    },
+    "mfa, wrong code": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "mfaEnabled": true,
+                    "mfaSecret": "enc-secret",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": ""
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "verifyCode",
+                "enc-secret",
+                "000000"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-failure",
+                "denied",
+                {
+                    "reason": "invalid-mfa"
+                }
+            ]
+        ],
+        "refused": [
+            401,
+            "invalidMfaCode",
+            "Ongeldige verificatiecode."
+        ]
+    },
+    "mfa, right code": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "mfaEnabled": true,
+                    "mfaSecret": "enc-secret",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": ""
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "verifyCode",
+                "enc-secret",
+                "123456"
+            ],
+            [
+                "sessionTtlHours",
+                "tenant-a"
+            ],
+            [
+                "createSession",
+                "acc-1",
+                "tenant-a",
+                "ip-hash",
+                "ua-hash",
+                8,
+                false
+            ],
+            [
+                "save",
+                "crmPortalAccount",
+                {
+                    "mfaEnabled": true,
+                    "mfaSecret": "enc-secret",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 0,
+                    "lockedUntil": null,
+                    "lastLoginAt": "2026-03-01T12:00:00+00:00"
+                },
+                "acc-1"
+            ],
+            [
+                "audit",
+                "acc-1",
+                "tenant-a",
+                "login-success",
+                "success",
+                {
+                    "ipHash": "ip-hash",
+                    "userAgentHash": "ua-hash"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "id": "ses-1"
+                }
+            ]
+        ],
+        "result": {
+            "status": "authenticated",
+            "mfaRequired": false,
+            "accountId": "acc-1",
+            "token": "tok-1",
+            "sessionId": "ses-1"
+        }
+    },
+    "mfa enforced and enrolled, right code": {
+        "calls": [
+            [
+                "requireWritable"
+            ],
+            [
+                "findOneBy",
+                "crmPortalAccount",
+                {
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a"
+                }
+            ],
+            [
+                "idOf",
+                {
+                    "mfaSecret": "enc-secret",
+                    "email": "jan@pietersen.nl",
+                    "tenantId": "tenant-a",
+                    "passwordHash": "h:secret-pw",
+                    "status": "active",
+                    "failedLoginAttempts": 2,
+                    "lockedUntil": "",
+                    "mfaEnabled": false
+                }
+            ],
+            [
+                "verify",
+                "secret-pw",
+                "h:secret-pw"
+            ],
+            [
+                "mfaEnforced",
+                "tenant-a"
+            ]
+        ],
+        "result": {
+            "status": "mfa-enrollment-required",
+            "mfaRequired": true,
+            "accountId": "acc-1"
+        }
+    }
+}

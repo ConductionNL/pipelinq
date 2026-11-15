@@ -7,7 +7,7 @@
   - It lives in its own file because a modal must never be written inline
   - inside its parent (ADR-004); it was extracted out of CtiEventLog.vue.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.6
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.6
   -->
 <template>
 	<CnDialog

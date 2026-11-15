@@ -32,7 +32,7 @@ function money(value) {
  *
  * @param {number} rate The VAT rate percentage.
  * @return {string} The translated rate name.
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+ * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
  */
 export function rateLabel(rate) {
 	const intRate = Math.round(Number(rate) || 0)
@@ -109,7 +109,7 @@ export function computeRefundTotals(lines) {
  * @param {string} [currency] Currency code (defaults to the setup currency).
  * @param {string} [locale] BCP 47 locale (defaults to the user's locale).
  * @return {string} The formatted amount.
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+ * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
  */
 export function formatEur(
 	value,

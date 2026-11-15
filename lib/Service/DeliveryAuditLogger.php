@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -280,7 +280,7 @@ class DeliveryAuditLogger {
 	 */
 	public function calculateRetentionUntil(string $caseType, ?DateTimeInterface $from = null): DateTimeImmutable {
 		$years = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'selectielijst.' . $caseType,
 			(string)self::DEFAULT_RETENTION_YEARS
 		);
@@ -381,9 +381,9 @@ class DeliveryAuditLogger {
 	 * @return array{0: string, 1: string}
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'deliveryAuditLog_schema',
 			''
 		);

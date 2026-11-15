@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "SlaAttainmentService::compute": [
+                "SlaAttainmentServiceInterface::compute": [
                     {
                         "bucket": "month",
                         "date": "",

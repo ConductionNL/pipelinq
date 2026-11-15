@@ -15,7 +15,7 @@
   - and the section leads with per-kind counts the same way Subscriptions
   - does for per-state counts.
   -
-  - @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+  - @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
   -->
 <template>
 	<div class="article-usage">
@@ -65,6 +65,7 @@
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { fetchArticleUsages } from '../../services/articlesApi.js'
 import { groupUsages } from '../../services/articleStatus.js'
+import { sectionValues } from '../../utils/sectionContext.js'
 
 export default {
 	name: 'ArticleUsageSection',
@@ -97,7 +98,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 		 * @return {Array<object>} Groups that carry at least one usage.
 		 */
 		visibleGroups() {
@@ -114,23 +115,21 @@ export default {
 		 * The id this section is bound to, either the prop or the section
 		 * context the page host provides.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 		 * @return {string} The article id, or an empty string.
 		 */
 		effectiveId() {
 			if (this.articleId) {
 				return this.articleId
 			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = sectionValues(this.cnSectionContext)
 			return (bag && (bag.objectId || bag.articleId)) || ''
 		},
 
 		/**
 		 * Load the usages for this article.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 		 * @return {Promise<void>} Resolves when the rows are in place.
 		 */
 		async load() {
@@ -156,7 +155,7 @@ export default {
 		 * vocabulary's English label) keeps this `t()` call a literal.
 		 *
 		 * @param {string} kind Either `template` or `blast`.
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+		 * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 		 * @return {string} The translated group heading.
 		 */
 		groupLabel(kind) {

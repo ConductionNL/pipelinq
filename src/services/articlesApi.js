@@ -18,7 +18,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {number} limit Page size.
  * @return {Promise<Array<object>>} The articles.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export async function fetchArticles(limit = 100) {
 	const { data } = await axios.get(
@@ -34,7 +34,7 @@ export async function fetchArticles(limit = 100) {
  *
  * @param {string} articleId The article id.
  * @return {Promise<{data: Array<object>, counts: object}>} The envelope.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
  */
 export async function fetchArticleUsages(articleId) {
 	const { data } = await axios.get(
@@ -48,7 +48,7 @@ export async function fetchArticleUsages(articleId) {
  *
  * @param {object} payload The article fields.
  * @return {Promise<object>} The created article.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 export async function createArticle(payload) {
 	const { data } = await axios.post(
@@ -64,7 +64,7 @@ export async function createArticle(payload) {
  * @param {string} articleId The article id.
  * @param {object} payload The changed fields.
  * @return {Promise<object>} The updated article.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-holds-its-body-as-markdown-and-its-own-identity
  */
 export async function updateArticle(articleId, payload) {
 	const { data } = await axios.patch(
@@ -79,7 +79,7 @@ export async function updateArticle(articleId, payload) {
  *
  * @param {string} articleId The article id.
  * @return {Promise<object>} The published article.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
  */
 export async function publishArticle(articleId) {
 	const { data } = await axios.post(
@@ -93,7 +93,7 @@ export async function publishArticle(articleId) {
  *
  * @param {string} articleId The article id.
  * @return {Promise<object>} The archived article.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
  */
 export async function archiveArticle(articleId) {
 	const { data } = await axios.post(
@@ -109,7 +109,7 @@ export async function archiveArticle(articleId) {
  * @param {string} articleId The article id.
  * @param {string} transition The declared transition name.
  * @return {Promise<object>} The transitioned article.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
+ * @spec openspec/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
  */
 export async function transitionArticle(articleId, transition) {
 	const { data } = await axios.post(
@@ -125,7 +125,7 @@ export async function transitionArticle(articleId, transition) {
  *
  * @param {string} templateId The template id.
  * @return {Promise<{subject: string, bodyHtml: string, bodyText: string, articles: Array<object>}>} The preview.
- * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+ * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  */
 export async function previewTemplate(templateId) {
 	const { data } = await axios.get(

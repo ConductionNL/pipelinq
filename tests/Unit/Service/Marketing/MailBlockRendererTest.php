@@ -176,4 +176,33 @@ class MailBlockRendererTest extends TestCase {
 		$this->assertSame(['heading', 'footer'], array_column($blocks, 'type'));
 		$this->assertSame('h', $blocks[0]['id']);
 	}//end testNormaliseKeepsKnownBlocksAndOneFooterLast()
+	/**
+	 * Every text block shape, exactly: paragraphs and line breaks, a bulleted
+	 * and a numbered list (each item its own plain paragraph), Windows line
+	 * ends, and an empty block that renders nothing. Every normalise rule
+	 * too: non-list and unknown blocks are dropped, missing ids take the
+	 * type and position, non-list props become none, the first footer wins
+	 * and goes last, a missing footer is added.
+	 *
+	 * @return void
+	 */
+	public function testEveryTextAndNormaliseShape(): void {
+		$renderer = new MailBlockRenderer();
+		$rendered = $renderer->render(blocks: [
+			['type' => 'text', 'props' => ['markdown' => "Hallo\r\nwereld\r\n\r\n- een\n* twee\n\n1. drie\n2. vier"]],
+			['type' => 'text', 'props' => ['markdown' => '  ']],
+		]);
+		$this->assertStringContainsString('<p style="margin:0 0 12px;">Hallo<br>wereld</p><ul style="margin:0 0 12px;padding-left:24px;"><li style="margin:0 0 4px;">een</li><li style="margin:0 0 4px;">twee</li></ul><ol style="margin:0 0 12px;padding-left:24px;"><li style="margin:0 0 4px;">drie</li><li style="margin:0 0 4px;">vier</li></ol>', $rendered['html']);
+		$this->assertStringStartsWith("Hallo\nwereld\n\n- een\n\n- twee\n\n- drie\n\n- vier\n\n", $rendered['text']);
+
+		$this->assertSame(
+			[
+				['id' => 'heading-1', 'type' => 'heading', 'props' => []],
+				['id' => 'b-3', 'type' => 'text', 'props' => ['markdown' => 'x']],
+				['id' => 'f-1', 'type' => 'footer', 'props' => ['a' => 1]],
+			],
+			$renderer->normalise(blocks: ['junk', ['type' => 'heading', 'props' => 'bad'], ['type' => 'mystery'], ['id' => 'b-3', 'type' => 'text', 'props' => ['markdown' => 'x']], ['id' => 'f-1', 'type' => 'footer', 'props' => ['a' => 1]], ['id' => 'f-2', 'type' => 'footer']])
+		);
+		$this->assertSame([['id' => 'footer', 'type' => 'footer', 'props' => []]], $renderer->normalise(blocks: []));
+	}//end testEveryTextAndNormaliseShape()
 }//end class

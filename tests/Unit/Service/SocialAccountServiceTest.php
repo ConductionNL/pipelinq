@@ -383,4 +383,91 @@ class SocialAccountServiceTest extends TestCase {
 		$this->assertSame(SocialAccountService::STATUS_RELINK_NEEDED, $stored['status']);
 		$this->assertSame('The connection has ended.', $stored['statusReason']);
 	}
+	/**
+	 * Every connect request shape: a missing account and a person account of
+	 * somebody else are refused with their own message; an unfiled network is
+	 * refused with its reason and stamped not-configured; an organisation
+	 * connects with the organisation scope and its display name; a person
+	 * with the personal scope and the handle as name; the account's scopes,
+	 * server, client id and credential come along only when present.
+	 *
+	 * @return void
+	 */
+	public function testEveryConnectRequestShape(): void {
+		$this->groups->method('isAdmin')->willReturn(false);
+		$this->assertSame(['error' => 'That account does not exist.'], $this->service->connectRequest(accountId: 'nope', uid: 'ruben', returnUrl: '/back'));
+
+		$this->seedAccount(['kind' => 'person', 'ownerUserId' => 'jan'], 'acc-person');
+		$this->assertSame(['error' => 'You may not connect this account.'], $this->service->connectRequest(accountId: 'acc-person', uid: 'piet', returnUrl: '/back'));
+		$this->assertSame(['error' => 'That account does not exist.'], $this->service->attachCredential(accountId: 'nope', uid: 'ruben', payload: []));
+		$this->assertSame(['error' => 'You may not connect this account.'], $this->service->attachCredential(accountId: 'acc-person', uid: 'piet', payload: []));
+
+		$this->seedAccount(['network' => 'threads'], 'acc-threads');
+		$this->assertSame(['error' => 'No developer application is filed for Threads yet.'], $this->service->connectRequest(accountId: 'acc-threads', uid: 'ruben', returnUrl: '/back'));
+		$stored = $this->store->find(SocialAccountService::SCHEMA, 'acc-threads');
+		$this->assertSame([SocialAccountService::STATUS_NOT_CONFIGURED, 'No developer application is filed for Threads yet.'], [$stored['status'], $stored['statusReason']]);
+
+		$this->seedAccount(['scopes' => ['read', 7], 'instanceBaseUrl' => ' https://mastodon.nl ', 'clientId' => ' ', 'credentialRef' => 'cred-9']);
+		$this->assertSame(
+			['connect' => [
+				'provider' => 'mastodon',
+				'scope' => 'organisation',
+				'allowedApps' => [SocialBrokerGateway::APP_ID],
+				'name' => 'Conduction',
+				'returnUrl' => '/back',
+				'readiness' => ['state' => SocialBrokerGateway::READY, 'reason' => ''],
+				'scopes' => ['read', '7'],
+				'instanceBaseUrl' => 'https://mastodon.nl',
+				'credentialId' => 'cred-9',
+			]],
+			$this->service->connectRequest(accountId: 'acc-1', uid: 'ruben', returnUrl: '/back')
+		);
+
+		$this->seedAccount(['kind' => 'person', 'ownerUserId' => 'jan', 'displayName' => null, 'scopes' => []], 'acc-jan');
+		$this->assertSame(
+			['connect' => [
+				'provider' => 'mastodon',
+				'scope' => 'personal',
+				'allowedApps' => [SocialBrokerGateway::APP_ID],
+				'name' => '@conduction@mastodon.nl',
+				'returnUrl' => '/me',
+				'readiness' => ['state' => SocialBrokerGateway::READY, 'reason' => ''],
+			]],
+			$this->service->connectRequest(accountId: 'acc-jan', uid: 'jan', returnUrl: '/me')
+		);
+	}//end testEveryConnectRequestShape()
+
+	/**
+	 * Every relink rule: a missing account and one already waiting for a
+	 * relink do nothing; otherwise the status is stamped and the owner is
+	 * notified with the account's handle, network and title; an account
+	 * without an owner is stamped but nobody is notified.
+	 *
+	 * @return void
+	 */
+	public function testEveryRelinkRule(): void {
+		$sent = [];
+		$notifications = $this->createMock(NotificationService::class);
+		$notifications->method('sendNotification')->willReturnCallback(
+			static function (...$args) use (&$sent): void {
+				$sent[] = $args;
+			}
+		);
+		$service = new SocialAccountService($this->store, $this->createMock(SocialAdapterRegistry::class), $this->credentials, $this->createMock(ObjectOwnerAccessPolicy::class), $this->groups, $notifications);
+
+		$service->markRelinkNeeded(accountId: 'nope', reason: 'r');
+		$this->seedAccount(['status' => SocialAccountService::STATUS_RELINK_NEEDED, 'statusReason' => 'old'], 'acc-known');
+		$service->markRelinkNeeded(accountId: 'acc-known', reason: 'new');
+		$this->assertSame('old', $this->store->find(SocialAccountService::SCHEMA, 'acc-known')['statusReason']);
+
+		$this->seedAccount(['ownerUserId' => ' '], 'acc-orphan');
+		$service->markRelinkNeeded(accountId: 'acc-orphan', reason: 'gone');
+		$this->assertSame([SocialAccountService::STATUS_RELINK_NEEDED, 'gone'], [$this->store->find(SocialAccountService::SCHEMA, 'acc-orphan')['status'], $this->store->find(SocialAccountService::SCHEMA, 'acc-orphan')['statusReason']]);
+		$this->assertSame([], $sent);
+
+		$this->seedAccount(['displayName' => null], 'acc-1');
+		$service->markRelinkNeeded(accountId: 'acc-1', reason: 'gone');
+		$this->assertCount(1, $sent);
+		$this->assertSame(['ruben', SocialAccountService::SUBJECT_RELINK_NEEDED, ['handle' => '@conduction@mastodon.nl', 'network' => 'mastodon', 'title' => '@conduction@mastodon.nl'], 'socialAccount', 'acc-1'], array_slice($sent[0], 0, 5));
+	}//end testEveryRelinkRule()
 }//end class

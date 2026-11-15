@@ -198,7 +198,7 @@ export default {
 		 * The line total the server stored for the line.
 		 *
 		 * @return {number} The total.
-		 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-3
 		 */
 		readTotal() {
 			return Number(this.line.lineTotal) || 0

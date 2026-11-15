@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\QuoteNumberSequence;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -83,7 +83,7 @@ class QuoteNumberCreatingListener implements IEventListener {
 	 * @return bool True when the quote needs a number.
 	 */
 	private function needsNumber(ObjectCreatingEvent $event): bool {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'salesQuote_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'salesQuote_schema', '');
 		$entity = $event->getObject();
 		if ($schema === '' || (string)$entity->getSchema() !== $schema) {
 			return false;

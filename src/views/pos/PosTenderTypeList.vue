@@ -4,7 +4,7 @@
   -
   - POS tender type admin list (pos-split-tender REQ-PST-001).
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#8.1
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
   -->
 <template>
 	<div class="pos-tender-type-list">
@@ -76,6 +76,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
+import { posRecordId } from '../../services/posRecordId.js'
 
 export default {
 	name: 'PosTenderTypeList',
@@ -103,7 +104,7 @@ export default {
 		 * The table's columns, every one sortable and filterable from its head.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		columns() {
 			return [
@@ -120,7 +121,7 @@ export default {
 		 *
 		 * @return {object}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		tableSchema() {
 			return {
@@ -139,7 +140,7 @@ export default {
 		 * the row actions.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		tableRows() {
 			return this.tenderTypes.map((type) => ({
@@ -161,7 +162,7 @@ export default {
 		 *
 		 * @return {string} The confirmation message.
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		deleteTypeMessage() {
 			if (!this.pendingDeleteType) {
@@ -185,7 +186,7 @@ export default {
 		 *
 		 * @param {object} type The tender type.
 		 * @return {string} The flags, or '' when none is set.
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.1
 		 */
 		flagsOf(type) {
 			return [
@@ -226,7 +227,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		editType(type) {
 			this.editingType = { ...type }
@@ -240,7 +241,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		deleteType(type) {
 			this.pendingDeleteType = type
@@ -251,7 +252,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#8.1
 		 */
 		async performDeleteType() {
 			const type = this.pendingDeleteType
@@ -286,12 +287,7 @@ export default {
 			await this.refresh()
 		},
 
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 	},
 }
 </script>

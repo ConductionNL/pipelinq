@@ -15,11 +15,23 @@
  * @spec openspec/specs/pipeline/spec.md
  */
 export function toCsv(rows, keys) {
-	const cell = (value) => {
-		const text = value === null || value === undefined ? '' : String(value)
-		return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+	return [keys.join(';'), ...rows.map((row) => keys.map((key) => csvCell(row?.[key])).join(';'))].join('\n')
+}
+
+/**
+ * One value as a CSV cell: empty for null or undefined, quoted (with its
+ * quotes doubled) when it holds a quote, a semicolon or a newline.
+ *
+ * @param {string|number|boolean|null|undefined} value The value.
+ * @return {string} The cell text.
+ * @spec openspec/specs/pipeline/spec.md
+ */
+function csvCell(value) {
+	const text = value === null || value === undefined ? '' : String(value)
+	if (!/[";\n]/.test(text)) {
+		return text
 	}
-	return [keys.join(';'), ...rows.map((row) => keys.map((key) => cell(row?.[key])).join(';'))].join('\n')
+	return '"' + text.replace(/"/g, '""') + '"'
 }
 
 /**

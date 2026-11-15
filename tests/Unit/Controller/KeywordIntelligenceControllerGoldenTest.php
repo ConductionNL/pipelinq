@@ -53,6 +53,7 @@ use UnexpectedValueException;
  * @covers \OCA\Pipelinq\Util\ReadsTypedRequestParameters
  * @uses   \OCA\Pipelinq\Service\Search\KeywordAnalysisService
  * @uses   \OCA\Pipelinq\Service\Search\ExpectedCtrCurve
+ * @uses \OCA\Pipelinq\Service\Search\QueryContest
  */
 class KeywordIntelligenceControllerGoldenTest extends TestCase {
 	use ComparesGolden;

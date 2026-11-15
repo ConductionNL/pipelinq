@@ -22,15 +22,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\JourneyServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -41,7 +41,7 @@ use Throwable;
 /**
  * JourneyController: journeys, their compilation and their run log.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 class JourneyController extends Controller {
 
@@ -50,15 +50,15 @@ class JourneyController extends Controller {
 	 *
 	 * @param string $appName App id.
 	 * @param IRequest $request The request.
-	 * @param JourneyService $journeys Journeys and their flows.
+	 * @param JourneyServiceInterface $journeys Journeys and their flows.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly JourneyService $journeys,
+		private readonly JourneyServiceInterface $journeys,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -69,7 +69,7 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The journeys.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -92,7 +92,7 @@ class JourneyController extends Controller {
 	 *         stack trace on a detail page tells the marketer nothing and the
 	 *         browser renders it as a blank record.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -119,7 +119,7 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The stored journey.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -133,7 +133,7 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The stored journey.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -147,7 +147,7 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The journey with its flow status.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
 	public function compile(string $id): JSONResponse {
@@ -172,7 +172,7 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The journey with its flow status, 400 for another status, 404 when unknown.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
 	public function setStatus(string $id, string $status = ''): JSONResponse {
@@ -200,7 +200,7 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The runs.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
 	#[NoAdminRequired]
 	public function runs(string $id): JSONResponse {

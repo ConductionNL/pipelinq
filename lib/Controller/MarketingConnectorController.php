@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 
 declare(strict_types=1);
@@ -33,9 +33,9 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\MatomoReportServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Matomo\MatomoReportService;
-use OCA\Pipelinq\Service\Social\ConnectionAuditService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,7 +45,7 @@ use OCP\IRequest;
 /**
  * The Matomo report and the connection audit.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+ * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
 class MarketingConnectorController extends Controller {
 
@@ -61,18 +61,18 @@ class MarketingConnectorController extends Controller {
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request.
-	 * @param MatomoReportService $matomo The Matomo reader.
-	 * @param ConnectionAuditService $audit The connection audit.
+	 * @param MatomoReportServiceInterface $matomo The Matomo reader.
+	 * @param ConnectionAuditServiceInterface $audit The connection audit.
 	 * @param ITimeFactory $time Time factory for the default window.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly MatomoReportService $matomo,
-		private readonly ConnectionAuditService $audit,
+		private readonly MatomoReportServiceInterface $matomo,
+		private readonly ConnectionAuditServiceInterface $audit,
 		private readonly ITimeFactory $time,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
@@ -87,7 +87,7 @@ class MarketingConnectorController extends Controller {
 	 *
 	 * @return JSONResponse `{connected, reason, from, to, campaigns[], referrerTypes[], goals}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-three-matomo-reports-matched-to-the-campaigns-we-already-mint
 	 */
 	#[NoAdminRequired]
 	public function matomo(?string $from = null, ?string $to = null): JSONResponse {
@@ -108,7 +108,7 @@ class MarketingConnectorController extends Controller {
 	 *
 	 * @return JSONResponse `{rows[], summary}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
+	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-page-reads-one-collection-and-renders-the-reasons
 	 */
 	#[NoAdminRequired]
 	public function connectionAudit(string $refresh = 'false'): JSONResponse {

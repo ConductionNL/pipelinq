@@ -112,39 +112,11 @@ class WhatsAppProviderClient {
 		string $language,
 		array $parameters,
 	): array {
-		$payload = [
-			'messaging_product' => 'whatsapp',
-			'to' => $phoneNumber,
-			'type' => 'template',
-			'template' => [
-				'name' => $templateName,
-				'language' => ['code' => $language],
-				'components' => [
-					[
-						'type' => 'body',
-						'parameters' => array_values(
-							array_map(
-								static function (string $value): array {
-									return ['type' => 'text', 'text' => $value];
-								},
-								$parameters
-							)
-						),
-					],
-				],
-			],
-		];
-
-		$result = $this->dispatch(
+		$template = ['name' => $templateName, 'language' => $language, 'parameters' => $parameters];
+		return $this->sent(
 			channelProvider: $channelProvider,
-			action: 'send-template',
-			payload: $payload,
+			request: ['action' => 'send-template', 'payload' => $this->templatePayload(phoneNumber: $phoneNumber, template: $template)]
 		);
-
-		return [
-			'externalMessageId' => $this->extractWamid(result: $result),
-			'vendor' => (string)($channelProvider['vendor'] ?? ''),
-		];
 	}//end sendTemplate()
 
 	/**
@@ -167,29 +139,60 @@ class WhatsAppProviderClient {
 		string $body,
 		array $mediaIds = [],
 	): array {
-		$payload = [
-			'messaging_product' => 'whatsapp',
-			'to' => $phoneNumber,
-			'type' => 'text',
-			'text' => ['body' => $body],
-		];
-
+		$payload = ['messaging_product' => 'whatsapp', 'to' => $phoneNumber, 'type' => 'text', 'text' => ['body' => $body]];
 		if ($mediaIds !== []) {
 			$payload['type'] = 'image';
 			$payload['image'] = ['id' => $mediaIds[0]];
 		}
 
-		$result = $this->dispatch(
-			channelProvider: $channelProvider,
-			action: 'send-text',
-			payload: $payload,
+		return $this->sent(channelProvider: $channelProvider, request: ['action' => 'send-text', 'payload' => $payload]);
+	}//end sendFreeForm()
+
+	/**
+	 * The template message body: its name, language and one text parameter
+	 * per value, in order.
+	 *
+	 * @param string                                                          $phoneNumber Recipient E.164.
+	 * @param array{name: string, language: string, parameters: array<string>} $template    The template.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function templatePayload(string $phoneNumber, array $template): array {
+		$parameters = array_values(
+			array_map(static fn (string $value): array => ['type' => 'text', 'text' => $value], $template['parameters'])
 		);
+
+		return [
+			'messaging_product' => 'whatsapp',
+			'to' => $phoneNumber,
+			'type' => 'template',
+			'template' => [
+				'name' => $template['name'],
+				'language' => ['code' => $template['language']],
+				'components' => [['type' => 'body', 'parameters' => $parameters]],
+			],
+		];
+	}//end templatePayload()
+
+	/**
+	 * Dispatch one send and answer the provider's message id and vendor.
+	 *
+	 * @param array<string, mixed>                                 $channelProvider Provider row.
+	 * @param array{action: string, payload: array<string, mixed>} $request         The action and its body.
+	 *
+	 * @return array{externalMessageId: string, vendor: string}
+	 *
+	 * @throws TransientSmsProviderException On transient.
+	 * @throws PermanentSmsProviderException On permanent.
+	 */
+	private function sent(array $channelProvider, array $request): array {
+		$result = $this->dispatch(channelProvider: $channelProvider, request: $request);
 
 		return [
 			'externalMessageId' => $this->extractWamid(result: $result),
 			'vendor' => (string)($channelProvider['vendor'] ?? ''),
 		];
-	}//end sendFreeForm()
+	}//end sent()
 
 	/*
 	 * NO MEDIA TRANSFER HERE.
@@ -217,8 +220,7 @@ class WhatsAppProviderClient {
 	public function listTemplates(array $channelProvider): array {
 		$result = $this->dispatch(
 			channelProvider: $channelProvider,
-			action: 'list-templates',
-			payload: [],
+			request: ['action' => 'list-templates', 'payload' => []],
 		);
 
 		if (isset($result['data']) === true && is_array($result['data']) === true) {
@@ -261,26 +263,25 @@ class WhatsAppProviderClient {
 	 * leaf routes through. The logical `$action` is mapped to the vendor send
 	 * path; the connection + credentials live in OpenConnector (ADR-022).
 	 *
-	 * @param array<string, mixed> $channelProvider Provider row.
-	 * @param string $action Action name.
-	 * @param array<string, mixed> $payload Payload.
+	 * @param array<string, mixed>                                 $channelProvider Provider row.
+	 * @param array{action: string, payload: array<string, mixed>} $request         The action name and its payload.
 	 *
 	 * @return array<string, mixed> Result (raw provider response).
 	 *
 	 * @throws TransientSmsProviderException On transient.
 	 * @throws PermanentSmsProviderException On permanent.
 	 */
-	private function dispatch(array $channelProvider, string $action, array $payload): array {
+	private function dispatch(array $channelProvider, array $request): array {
 		$sourceId = (string)($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
 		if ($sourceId === '') {
 			throw new PermanentSmsProviderException(message: 'WhatsApp provider source not configured');
 		}
 
-		$path = self::ACTION_PATHS[$action] ?? 'messages';
+		$path = self::ACTION_PATHS[$request['action']] ?? 'messages';
 
 		return $this->dispatchViaLeaf(
 			source: $sourceId,
-			body: $payload,
+			body: $request['payload'],
 			path: $path,
 		);
 	}//end dispatch()

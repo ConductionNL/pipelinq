@@ -42,7 +42,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} Dialog heading, reflecting create vs edit.
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 * @spec openspec/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
 		 */
 		dialogTitle() {
 			return this.staffId

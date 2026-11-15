@@ -27,15 +27,16 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SurveyResponseService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -46,20 +47,23 @@ use OCP\IRequest;
 /**
  * Open and answer a survey by its per-invitation token.
  *
- * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PublicSurveyController extends Controller {
+	use ServiceResultResponse;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SurveyResponseService $responses Opens and accepts responses.
+	 * @param SurveyResponseServiceInterface $responses Opens and accepts responses.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SurveyResponseService $responses,
+		private readonly SurveyResponseServiceInterface $responses,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -69,7 +73,7 @@ class PublicSurveyController extends Controller {
 	 *
 	 * @return JSONResponse The survey, or the state that stopped it.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -90,7 +94,7 @@ class PublicSurveyController extends Controller {
 	 *
 	 * @return JSONResponse The response, or the state that stopped it.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -100,18 +104,4 @@ class PublicSurveyController extends Controller {
 			result: $this->responses->submit(token: $token, answers: $answers, optOut: $optOut)
 		);
 	}//end submitInvitation()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

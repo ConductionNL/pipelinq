@@ -78,16 +78,7 @@ class BsnValidationService {
 			];
 		}
 
-		// 2. 11-proef: sum(digit[i] * (9-i)) for i=0..7, plus digit[8] * -1; sum mod 11 == 0.
-		$sum = 0;
-		for ($i = 0; $i < 8; $i++) {
-			$sum += ((int)$bsnInput[$i]) * (9 - $i);
-		}
-
-		// Last digit uses weight -1.
-		$sum -= (int)$bsnInput[8];
-
-		$modulo = $sum % 11;
+		$modulo = self::elevenTestModulo(bsnInput: $bsnInput);
 		$isValid = ($modulo === 0);
 
 		$errorCode = null;
@@ -105,6 +96,31 @@ class BsnValidationService {
 			'maskedBsn' => self::mask(bsnInput: $bsnInput),
 		];
 	}//end validate()
+
+	/**
+	 * The 11-proef remainder of a 9-digit BSN: 0 means the checksum holds.
+	 *
+	 * @param string $bsnInput A 9-digit BSN candidate (already length- and digit-checked).
+	 *
+	 * @return int The weighted sum modulo 11.
+	 *
+	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-02
+	 */
+	private static function elevenTestModulo(
+		#[\SensitiveParameter]
+		string $bsnInput,
+	): int {
+		// 2. 11-proef: sum(digit[i] * (9-i)) for i=0..7, plus digit[8] * -1; sum mod 11 == 0.
+		$sum = 0;
+		for ($i = 0; $i < 8; $i++) {
+			$sum += ((int)$bsnInput[$i]) * (9 - $i);
+		}
+
+		// Last digit uses weight -1.
+		$sum -= (int)$bsnInput[8];
+
+		return $sum % 11;
+	}//end elevenTestModulo()
 
 	/**
 	 * Mask a BSN for safe display / logging (ADR-005, REQ-BSN-009-01).

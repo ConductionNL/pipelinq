@@ -30,17 +30,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KeywordProposalsInterface;
+use OCA\Pipelinq\Kernel\Contracts\KeywordTargetServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Search\KeywordProposals;
-use OCA\Pipelinq\Service\Search\KeywordTargetService;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,7 +53,7 @@ use UnexpectedValueException;
 /**
  * Keyword proposals, and the confirmation that turns one into a target.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 class KeywordIntelligenceController extends Controller {
 	use ReadsTypedRequestParameters;
@@ -63,7 +63,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @var string
 	 */
-	public const FLOOR_KEY = KeywordProposals::FLOOR_KEY;
+	public const FLOOR_KEY = KeywordProposalsInterface::FLOOR_KEY;
 
 	/**
 	 * The request parameters of a proposals read.
@@ -95,19 +95,19 @@ class KeywordIntelligenceController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param KeywordProposals $proposals The derivations for a window.
-	 * @param KeywordTargetService $targets The single write path.
+	 * @param KeywordProposalsInterface $proposals The derivations for a window.
+	 * @param KeywordTargetServiceInterface $targets The single write path.
 	 * @param CrmPrivilegeCheck $privilege The session user and their CRM privilege.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly KeywordProposals $proposals,
-		private readonly KeywordTargetService $targets,
+		private readonly KeywordProposalsInterface $proposals,
+		private readonly KeywordTargetServiceInterface $targets,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -118,7 +118,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @return Response `{from, to, buckets[], strikingDistance[], cannibalisation[], gaps[], crawl, confirmedTerms[]}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
 	 */
 	#[NoAdminRequired]
 	public function proposals(): Response {
@@ -142,7 +142,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @return JSONResponse `{targets[]}`.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	#[NoAdminRequired]
 	public function targets(): JSONResponse {
@@ -163,7 +163,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @return Response The stored target, or the refusal.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	#[NoAdminRequired]
 	public function confirm(): Response {

@@ -39,3 +39,20 @@ The admin tab MUST show the latest portal audit events of all tenants, newest fi
 - AND the Auditlog tab shows the total count
 - AND Downloaden saves the shown events as CSV
 - @e2e exclude covered by vitest `portalTenantManager.spec.js` and PHPUnit `PortalAdminControllerTest`
+
+### Requirement: A request reaches the portal tenant of its host
+
+The portal MUST resolve the tenant of every request from server-trusted signals only: first a tenant whose custom domain equals the request host, then a tenant whose subdomain equals the host's first label, then the widget header, and otherwise the default tenant. It MUST NOT read a tenant id from the request body or query string, so each tenant's residents see only that tenant's branding, tabs and records.
+
+#### Scenario: Two portals on their own domains
+- GIVEN tenant `noord` with custom domain `klant.noord.example` and tenant `zuid` with subdomain `zuid`
+- WHEN a resident opens `https://klant.noord.example`
+- THEN the portal serves tenant `noord` with its colour and tabs
+- AND a request to `https://zuid.portal.example` serves tenant `zuid`
+- @e2e exclude host resolution needs DNS; unit test planned in T7
+
+#### Scenario: A tenant id in the query string is ignored
+- GIVEN a request to the host of tenant `noord` with `?tenantId=zuid`
+- WHEN the portal resolves the tenant
+- THEN it serves tenant `noord`
+- @e2e exclude unit test planned in T7

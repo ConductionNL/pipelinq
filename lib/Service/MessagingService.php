@@ -32,9 +32,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -51,8 +52,9 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive send-surface
  *  orchestration kept in small single-purpose methods.
  */
-class MessagingService {
+class MessagingService implements MessagingServiceInterface {
 	use PayloadToArray;
+	use ConfiguredSchemaSlug;
 
 	/**
 	 * FQCN of the OpenRegister dispatch leaf used for connectivity tests.
@@ -125,13 +127,26 @@ class MessagingService {
 		}
 
 		$schemas = [
-			$this->schemaSlug(key: 'contact_schema', default: 'contact'),
-			$this->schemaSlug(key: 'client_schema', default: 'client'),
+			$this->resolveSchemaSlug(key: 'contact_schema', default: 'contact'),
+			$this->resolveSchemaSlug(key: 'client_schema', default: 'client'),
 		];
 
-		foreach ($schemas as $schema) {
+		return $this->findInSchemas(objectService: $objectService, contactId: $contactId, target: ['register' => $register, 'schemas' => $schemas]);
+	}//end loadContact()
+
+	/**
+	 * The first object with the id across the schemas, as an array, or null.
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param string               $contactId     Contact or client UUID.
+	 * @param array<string, mixed> $target        Keys: register, schemas (in lookup order).
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findInSchemas(object $objectService, string $contactId, array $target): array|null {
+		foreach ($target['schemas'] as $schema) {
 			try {
-				$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
+				$entity = $objectService->find(id: $contactId, register: $target['register'], schema: $schema);
 			} catch (Throwable $e) {
 				$entity = null;
 			}
@@ -142,7 +157,7 @@ class MessagingService {
 		}
 
 		return null;
-	}//end loadContact()
+	}//end findInSchemas()
 
 	/**
 	 * The channels that currently have at least one active provider.
@@ -300,26 +315,10 @@ class MessagingService {
 	 */
 	public function resend(array $message, array $contact, string $actor): array {
 		$channel = (string)($message['channel'] ?? '');
-		$templateId = (string)($message['templateId'] ?? '');
-		$body = '';
-		$parameters = [];
-		if ($channel !== 'whatsapp' || $templateId === '') {
-			$templateId = '';
-			$body = (string)($message['body'] ?? '');
-		}
-
-		if ($templateId !== '') {
-			$parameters = array_values(array_map('strval', (array)($message['templateParameters'] ?? [])));
-		}
-
-		$template = null;
-		if ($templateId !== '') {
-			$template = $templateId;
-		}
 
 		$outcome = $this->send(
 			route: new MessageRoute(contact: $contact),
-			content: new MessageContent(channel: $channel, body: $body, templateId: $template, parameters: $parameters),
+			content: $this->resendContent(message: $message, channel: $channel),
 			actor: $actor
 		);
 
@@ -330,6 +329,48 @@ class MessagingService {
 
 		return $outcome;
 	}//end resend()
+
+	/**
+	 * The content to send a failed row again: its WhatsApp template, else its text.
+	 *
+	 * @param array<string, mixed> $message The failed row.
+	 * @param string               $channel Its channel.
+	 *
+	 * @return MessageContent
+	 */
+	private function resendContent(array $message, string $channel): MessageContent {
+		$templateId = $this->resendTemplateId(message: $message, channel: $channel);
+		$body = '';
+		$parameters = [];
+		$template = null;
+		if ($templateId === '') {
+			$body = (string)($message['body'] ?? '');
+		}
+
+		if ($templateId !== '') {
+			$parameters = array_values(array_map('strval', (array)($message['templateParameters'] ?? [])));
+			$template = $templateId;
+		}
+
+		return new MessageContent(channel: $channel, body: $body, templateId: $template, parameters: $parameters);
+	}//end resendContent()
+
+	/**
+	 * The template a failed row is sent again with: its own on WhatsApp, '' otherwise.
+	 *
+	 * @param array<string, mixed> $message The failed row.
+	 * @param string               $channel Its channel.
+	 *
+	 * @return string
+	 */
+	private function resendTemplateId(array $message, string $channel): string {
+		$templateId = (string)($message['templateId'] ?? '');
+		if ($channel !== 'whatsapp' || $templateId === '') {
+			$templateId = '';
+		}
+
+		return $templateId;
+	}//end resendTemplateId()
 
 	/**
 	 * Link a failed row and the row that sent it again, both ways.
@@ -391,7 +432,7 @@ class MessagingService {
 	 * @return string Slug.
 	 */
 	private function messageSchema(): string {
-		return $this->schemaSlug(key: 'message_schema', default: 'channelMessage');
+		return $this->resolveSchemaSlug(key: 'message_schema', default: 'channelMessage');
 	}//end messageSchema()
 
 	/**
@@ -413,14 +454,28 @@ class MessagingService {
 			return ['reachable' => false, 'cause' => 'no-source-configured'];
 		}
 
-		if (class_exists(self::DISPATCH_LEAF_CLASS) === false) {
+		$leaf = $this->dispatchLeaf();
+		if ($leaf === null) {
 			return ['reachable' => false, 'cause' => 'leaf-unavailable'];
+		}
+
+		return $this->testDispatch(leaf: $leaf, source: $source);
+	}//end runProviderTest()
+
+	/**
+	 * The OR dispatch leaf, or null when OpenRegister does not provide it.
+	 *
+	 * @return MessageDispatchProvider|null
+	 */
+	private function dispatchLeaf(): MessageDispatchProvider|null {
+		if (class_exists(self::DISPATCH_LEAF_CLASS) === false) {
+			return null;
 		}
 
 		try {
 			$leaf = $this->container->get(self::DISPATCH_LEAF_CLASS);
 		} catch (Throwable $e) {
-			return ['reachable' => false, 'cause' => 'leaf-unavailable'];
+			return null;
 		}
 
 		// Narrow with instanceof against the stubbed contract rather than method_exists:
@@ -428,9 +483,21 @@ class MessagingService {
 		// OpenRegister is absent) but one phpstan can narrow from, so the dispatch
 		// call below is genuinely type-checked instead of resolving to stdClass.
 		if (($leaf instanceof MessageDispatchProvider) === false) {
-			return ['reachable' => false, 'cause' => 'leaf-unavailable'];
+			return null;
 		}
 
+		return $leaf;
+	}//end dispatchLeaf()
+
+	/**
+	 * Send the zero-cost test request through the leaf and read the answer.
+	 *
+	 * @param MessageDispatchProvider $leaf   The OR dispatch leaf.
+	 * @param string                  $source The provider's source id.
+	 *
+	 * @return array{reachable: bool, mock?: bool, cause?: string} Test result.
+	 */
+	private function testDispatch(MessageDispatchProvider $leaf, string $source): array {
 		$path = (self::SOURCE_TEST_PATHS[$source] ?? '/messages');
 		$body = ['validate' => true, 'recipients' => ['+31600000000'], 'body' => 'pipelinq connectivity test'];
 
@@ -441,13 +508,24 @@ class MessagingService {
 			return ['reachable' => false, 'cause' => 'dispatch-error'];
 		}
 
+		return $this->providerTestResult(result: $result);
+	}//end testDispatch()
+
+	/**
+	 * Read a test dispatch's answer: unreachable with its cause, or reachable (and whether it is a mock).
+	 *
+	 * @param array<string, mixed> $result The leaf's dispatch result.
+	 *
+	 * @return array{reachable: bool, mock?: bool, cause?: string} Test result.
+	 */
+	private function providerTestResult(array $result): array {
 		if (($result['unavailable'] ?? false) === true) {
 			return ['reachable' => false, 'cause' => (string)($result['cause'] ?? 'unknown')];
 		}
 
 		$response = $result['response'] ?? [];
 		return ['reachable' => true, 'mock' => $this->looksLikeMock(response: $response)];
-	}//end runProviderTest()
+	}//end providerTestResult()
 
 	/**
 	 * The inbound webhook URLs to paste into the provider console.
@@ -508,7 +586,7 @@ class MessagingService {
 					'filters' => [
 						'status' => 'approved',
 						'register' => $register,
-						'schema' => $this->schemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
+						'schema' => $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
 					],
 				]
 			);
@@ -591,33 +669,11 @@ class MessagingService {
 	 * empty value, so the query silently inherits whatever register context an
 	 * earlier call in the same request left on the shared service instance.
 	 * Normalising '' back to the built-in slug, exactly as the sibling
-	 * schemaSlug() already does, keeps every call scoped.
+	 * resolveSchemaSlug() already does, keeps every call scoped.
 	 *
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'pipelinq';
+		return $this->resolveSchemaSlug(key: 'register', default: 'pipelinq');
 	}//end registerSlug()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end schemaSlug()
 }//end class

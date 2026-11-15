@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 
 declare(strict_types=1);
@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Service\Marketing\ShillinqInvoiceProjection;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\PayloadToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,10 +49,11 @@ use Throwable;
 /**
  * ShillinqInvoiceReader: paid AR invoices for one customer in one window.
  *
- * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+ * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
  */
 class ShillinqInvoiceReader {
 	use PayloadToArray;
+	use ContainerObjectServiceLookup;
 
 
 	/**
@@ -110,7 +112,7 @@ class ShillinqInvoiceReader {
 	 * @param LoggerInterface $logger Logger.
 	 * @param ShillinqInvoiceProjection $projection Reduces one shillinq row to what pipelinq reads.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -177,7 +179,7 @@ class ShillinqInvoiceReader {
 	 *
 	 * @return bool True when shillinq is present.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function isAvailable(): bool {
 		return $this->probe();
@@ -194,34 +196,27 @@ class ShillinqInvoiceReader {
 	 * @return array<int, array{id: string, amount: float, currency: string, invoiceDate: string, invoiceNumber: string}>
 	 *         The invoices, keyed by nothing: the caller dedupes by id.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function paidInvoicesFor(string $customerRef, string $from, string $to): array {
-		$customer = trim($customerRef);
-		if ($customer === '' || $this->probe() === false) {
-			return [];
-		}
+		$rows = $this->customerRows(customerRef: $customerRef, filters: ['lifecycleState' => self::PAID_STATE]);
 
-		$objectService = $this->objectService();
-		if ($objectService === null) {
-			return [];
-		}
+		return $this->invoicesInWindow(rows: $rows, window: ['from' => $from, 'to' => $to]);
+	}//end paidInvoicesFor()
 
-		$rows = $this->pages(
-			objectService: $objectService,
-			filters: [
-				'register' => self::SHILLINQ_REGISTER,
-				'schema' => self::AR_INVOICE_SCHEMA,
-				'customerId' => $customer,
-				'lifecycleState' => self::PAID_STATE,
-			],
-			maxRows: self::MAX_ROWS
-		);
-
+	/**
+	 * The normalised invoices among the rows that fall inside the window.
+	 *
+	 * @param array<mixed>                     $rows   The customer's invoice rows.
+	 * @param array{from: string, to: string} $window Window start and end `YYYY-MM-DD`, inclusive.
+	 *
+	 * @return array<int, array{id: string, amount: float, currency: string, invoiceDate: string, invoiceNumber: string}>
+	 */
+	private function invoicesInWindow(array $rows, array $window): array {
 		$invoices = [];
 		foreach ($rows as $row) {
 			$invoice = $this->normalise(row: $row);
-			if ($invoice === null || $this->inWindow(date: $invoice['invoiceDate'], from: $from, to: $to) === false) {
+			if ($invoice === null || $this->inWindow(date: $invoice['invoiceDate'], window: $window) === false) {
 				continue;
 			}
 
@@ -229,7 +224,7 @@ class ShillinqInvoiceReader {
 		}
 
 		return $invoices;
-	}//end paidInvoicesFor()
+	}//end invoicesInWindow()
 
 	/**
 	 * Every invoice of one shillinq customer that is past the draft stage.
@@ -252,28 +247,10 @@ class ShillinqInvoiceReader {
 	 *         `amount`, `currency`, `invoiceDate`, `dueDate`, `lifecycleState`
 	 *         and `lines`. Newest first is NOT guaranteed: the caller sorts.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
 	 */
 	public function invoicesFor(string $customerRef): array {
-		$customer = trim($customerRef);
-		if ($customer === '' || $this->probe() === false) {
-			return [];
-		}
-
-		$objectService = $this->objectService();
-		if ($objectService === null) {
-			return [];
-		}
-
-		$rows = $this->pages(
-			objectService: $objectService,
-			filters: [
-				'register' => self::SHILLINQ_REGISTER,
-				'schema' => self::AR_INVOICE_SCHEMA,
-				'customerId' => $customer,
-			],
-			maxRows: self::MAX_ROWS
-		);
+		$rows = $this->customerRows(customerRef: $customerRef, filters: []);
 
 		$invoices = [];
 		foreach ($rows as $row) {
@@ -292,7 +269,7 @@ class ShillinqInvoiceReader {
 	 *
 	 * @return bool True when shillinq is installed.
 	 *
-	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
+	 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	protected function probe(): bool {
 		return class_exists(self::SHILLINQ_PROBE_CLASS);
@@ -304,62 +281,60 @@ class ShillinqInvoiceReader {
 	 * @return object|null The service.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ShillinqInvoiceReader: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ShillinqInvoiceReader: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
 
 	/**
-	 * Read matching rows page by page until a short page or the cap.
+	 * The AR invoice rows of one customer, with any further filters; none
+	 * without a customer, without shillinq or without OpenRegister.
 	 *
-	 * @param object $objectService The OpenRegister object service.
-	 * @param array<string, mixed> $filters The filters, register and schema included.
-	 * @param int $maxRows Never read more than this many rows.
+	 * @param string               $customerRef The shillinq customer reference.
+	 * @param array<string, mixed> $filters     Filters on top of register, schema and customer.
 	 *
 	 * @return array<int, array<string, mixed>> Plain rows.
 	 */
-	private function pages(object $objectService, array $filters, int $maxRows): array {
-		$rows = [];
-		$offset = 0;
-		while ($offset < $maxRows) {
-			try {
-				$page = $objectService->findAll(
-					config: ['filters' => $filters, 'limit' => self::PAGE, 'offset' => $offset],
-					_rbac: $this->callerRights,
-					_multitenancy: $this->callerRights
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'ShillinqInvoiceReader: reading AR invoices failed',
-					['customer' => (string)($filters['customerId'] ?? ''), 'exception' => $e->getMessage()]
-				);
-				break;
-			}
-
-			if (is_iterable($page) === false) {
-				break;
-			}
-
-			$count = 0;
-			foreach ($page as $row) {
-				$rows[] = $this->toArray(value: $row);
-				$count++;
-			}
-
-			if ($count < self::PAGE) {
-				break;
-			}
-
-			$offset += self::PAGE;
+	private function customerRows(string $customerRef, array $filters): array {
+		$customer = trim($customerRef);
+		if ($customer === '' || $this->probe() === false) {
+			return [];
 		}
 
-		return $rows;
+		$objectService = $this->objectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		return $this->pages(
+			objectService: $objectService,
+			filters: array_merge(
+				['register' => self::SHILLINQ_REGISTER, 'schema' => self::AR_INVOICE_SCHEMA, 'customerId' => $customer],
+				$filters
+			)
+		);
+	}//end customerRows()
+
+	/**
+	 * Read matching rows page by page until a short page or the cap, with
+	 * this reader's access flags; a failed read is logged and ends the read.
+	 *
+	 * @param object               $objectService The OpenRegister object service.
+	 * @param array<string, mixed> $filters       The filters, register and schema included.
+	 *
+	 * @return array<int, array<string, mixed>> Plain rows.
+	 */
+	private function pages(object $objectService, array $filters): array {
+		$reader = new ObjectPageReader(objectService: $objectService, withRights: $this->callerRights);
+		$reader->pageSize = self::PAGE;
+		$reader->maxRows = self::MAX_ROWS;
+		$rows = $reader->readAll(filters: $filters);
+		if ($reader->failure !== null) {
+			$this->logger->warning(
+				'ShillinqInvoiceReader: reading AR invoices failed',
+				['customer' => (string)($filters['customerId'] ?? ''), 'exception' => $reader->failure->getMessage()]
+			);
+		}
+
+		return array_map(fn (mixed $row): array => $this->toArray(value: $row), $rows);
 	}//end pages()
 
 	/**
@@ -401,17 +376,18 @@ class ShillinqInvoiceReader {
 	 * rows, and dropping a paid invoice because a field is blank would
 	 * under-report money that was actually collected.
 	 *
-	 * @param string $date The invoice date `YYYY-MM-DD`, may be empty.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param string                          $date   The invoice date `YYYY-MM-DD`, may be empty.
+	 * @param array{from: string, to: string} $window Window start and end.
 	 *
 	 * @return bool True when it counts.
 	 */
-	private function inWindow(string $date, string $from, string $to): bool {
+	private function inWindow(string $date, array $window): bool {
 		if ($date === '') {
 			return true;
 		}
 
+		$from = $window['from'];
+		$to = $window['to'];
 		if ($from !== '' && $date < $from) {
 			return false;
 		}

@@ -17,15 +17,15 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosCart\PosCartRepricer;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosCartRepricerInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -38,7 +38,7 @@ use OCP\IRequest;
 /**
  * Prices an open sale: its lines, VAT per rate and total.
  *
- * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
  */
 class PosCartController extends Controller {
 	/**
@@ -54,15 +54,15 @@ class PosCartController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest        $request  The request.
-	 * @param PosCartRepricer $repricer Prices the sale.
+	 * @param PosCartRepricerInterface $repricer Prices the sale.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PosCartRepricer $repricer,
+		private readonly PosCartRepricerInterface $repricer,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -75,7 +75,7 @@ class PosCartController extends Controller {
 	 *
 	 * @return JSONResponse The sale and its lines, or the refusal.
 	 *
-	 * @spec openspec/changes/till-server-priced-lines/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function recalculate(string $id): JSONResponse {

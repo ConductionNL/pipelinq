@@ -50,6 +50,9 @@ namespace OCA\OpenRegister\Service;
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Service\Object\LockRequest;
 use OCA\OpenRegister\Service\Object\UnlockRequest;
 use OCP\IUser;
@@ -101,14 +104,17 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>|null  $uploadedFiles  Files to attach.
 		 * @param IUser|null                 $currentUser    Acting user for folder access.
 		 * @param boolean                    $failIfExists   Whether a duplicate is an error.
+		 * @param boolean                    $_unowned       Whether to store the object without an owner.
+		 * @param boolean                    $_dedupOverride Whether to bypass duplicate detection.
+		 * @param string|null                $_owner         Explicit owner user id.
 		 *
 		 * @return ObjectEntityInterface
 		 */
 		public function saveObject(
-			array $object,
+			array|ObjectEntity $object,
 			?array $extend = [],
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			Register|string|int|null $register = null,
+			Schema|string|int|null $schema = null,
 			?string $uuid = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
@@ -117,6 +123,9 @@ if (class_exists(ObjectService::class) === false) {
 			?array $uploadedFiles = null,
 			?IUser $currentUser = null,
 			bool $failIfExists = false,
+			bool $_unowned = false,
+			bool $_dedupOverride = false,
+			?string $_owner = null,
 		): ObjectEntityInterface {
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end saveObject()
@@ -151,8 +160,8 @@ if (class_exists(ObjectService::class) === false) {
 			int|string $id,
 			?array $_extend = [],
 			bool $files = false,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			Register|string|int|null $register = null,
+			Schema|string|int|null $schema = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 			bool $_render = true,
@@ -198,6 +207,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<int, mixed>|null  $ids           Restrict to these ids.
 		 * @param string|null             $uses          Restrict to objects using this one.
 		 * @param array<int, mixed>|null  $views         Views to apply.
+		 * @param boolean                 $_viewScopeRequired Whether a view scope is required.
 		 *
 		 * @return array<int, mixed>|int
 		 */
@@ -208,6 +218,7 @@ if (class_exists(ObjectService::class) === false) {
 			?array $ids = null,
 			?string $uses = null,
 			?array $views = null,
+			bool $_viewScopeRequired = false,
 		): array|int {
 			return [];
 		}//end searchObjects()
@@ -228,8 +239,8 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function deleteObject(
 			string $uuid,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			Register|string|int|null $register = null,
+			Schema|string|int|null $schema = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 			bool $_retentionSweep = false,
@@ -639,8 +650,8 @@ if (class_exists(ObjectService::class) === false) {
 			string $id,
 			?array $_extend = [],
 			bool $files = false,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			Register|string|int|null $register = null,
+			Schema|string|int|null $schema = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 		): ObjectEntityInterface {
