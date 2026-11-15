@@ -100,14 +100,12 @@ class PosRefundController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reject(string $id): JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$reason = (string)$this->request->getParam('reason', '');
-		return $this->run(
-			action: fn (): array => $this->service->rejectRefund(id: $id, reason: $reason, userId: $uid),
+		return $this->runAsUser(
+			action: fn (string $uid): array => $this->service->rejectRefund(
+				id: $id,
+				reason: (string)$this->request->getParam('reason', ''),
+				userId: $uid
+			),
 			label: 'reject'
 		);
 	}//end reject()
