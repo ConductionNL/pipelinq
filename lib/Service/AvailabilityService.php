@@ -427,8 +427,20 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return [];
 		}
 
-		$start = $this->minutesFromHHMM(time: $startTime);
-		$end = $this->minutesFromHHMM(time: $endTime);
+		$range = [$this->minutesFromHHMM(time: $startTime), $this->minutesFromHHMM(time: $endTime)];
+		return self::alignedStarts(range: $range, intervalMinutes: $intervalMinutes);
+	}//end alignToSlots()
+
+	/**
+	 * The slot starts inside a range, aligned to the interval.
+	 *
+	 * @param array{0: int, 1: int} $range           Start and end in minutes from midnight.
+	 * @param int                   $intervalMinutes Slot interval, above 0.
+	 *
+	 * @return array<int, int> Slot starts in minutes from midnight.
+	 */
+	private static function alignedStarts(array $range, int $intervalMinutes): array {
+		[$start, $end] = $range;
 		if ($end <= $start) {
 			return [];
 		}
@@ -441,7 +453,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		return $slots;
-	}//end alignToSlots()
+	}//end alignedStarts()
 
 	/**
 	 * Delete the availability-cache entry for a resource on a date.
