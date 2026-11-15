@@ -41,6 +41,7 @@ use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,6 +58,8 @@ use OCP\IUserSession;
  *  composer and the approval gate need; each is three lines over the service.
  */
 class SocialPostController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
@@ -269,21 +272,6 @@ class SocialPostController extends Controller {
 			action: fn (): JSONResponse => new JSONResponse(['data' => $this->metrics->networkTotals(days: max(1, min(365, $days)))])
 		);
 	}//end networkPerformance()
-
-	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
 
 	/**
 	 * The CRM-user gate over this request's session.

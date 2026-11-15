@@ -313,84 +313,130 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return string|null The pipelinq productId, or null on failure.
 	 *
 	 * @spec openspec/specs/product-vendor-master/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Idempotent match-fill-or-create with defensive
-	 *   OR-shape guards and productId==UUID reconciliation; each branch is one migration step.
 	 */
 	private function ingestProduct(array $shillinqProduct): ?string {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'product_schema', '');
-
-			if ($registerId === '' || $schemaId === '') {
-				$this->logger->warning('PVM ingest: product register/schema not configured');
-				return null;
-			}
-
-			// Match on sku first, then barcode.
-			$existing = $this->findProductBySku(
-				objectService: $objectService,
-				lookup: ['register' => $registerId, 'schema' => $schemaId, 'product' => $shillinqProduct]
-			);
-
-			if ($existing !== null) {
-				$productId = $existing['productId'] ?? $existing['id'] ?? null;
-				// Fill-only: only write supply-master fields that are currently empty.
-				$updates = $this->buildProductFillPayload(existing: $existing, shillinqSource: $shillinqProduct);
-				if (empty($updates) === false) {
-					$objectService->saveObject(
-						object: array_merge($existing, $updates),
-						register: $registerId,
-						schema: $schemaId,
-						uuid: $existing['id'] ?? null
-					);
-				}
-
-				$this->writeSourceRecord(
-					objectService: $objectService,
-					registerId: $registerId,
-					link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $shillinqProduct),
-				);
-
-				return (string)$productId;
-			}//end if
-
-			// Create: map shillinq fields onto the extended product schema.
-			$newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $shillinqProduct);
-			$created = $objectService->saveObject(object: $newProduct, register: $registerId, schema: $schemaId, uuid: null);
-			$createdArr = (array)$created;
-			if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
-				$createdArr = $created->jsonSerialize();
-			}
-
-			$productId = $createdArr['productId'] ?? $createdArr['id'] ?? null;
-
-			// Ensure productId == object UUID (REQ-PVM-002).
-			if (isset($createdArr['id']) === true && ($createdArr['productId'] ?? null) !== $createdArr['id']) {
-				$createdArr['productId'] = $createdArr['id'];
-				$objectService->saveObject(object: $createdArr, register: $registerId, schema: $schemaId, uuid: $createdArr['id']);
-				$productId = $createdArr['id'];
-			}
-
-			$this->writeSourceRecord(
-				objectService: $objectService,
-				registerId: $registerId,
-				link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $shillinqProduct),
-			);
-
-			return (string)$productId;
+			return $this->matchFillOrCreateProduct(shillinqProduct: $shillinqProduct);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'PVM ingest: product ingest failed',
-				[
-					'sku' => $shillinqProduct['sku'] ?? '',
-					'exception' => $e->getMessage(),
-				]
-			);
+			$this->logger->error('PVM ingest: product ingest failed', ['sku' => $shillinqProduct['sku'] ?? '', 'exception' => $e->getMessage()]);
 			return null;
 		}//end try
 	}//end ingestProduct()
+
+	/**
+	 * Match one product on sku/barcode, fill the match or create a new product.
+	 *
+	 * @param array<string,mixed> $shillinqProduct The exported product record.
+	 *
+	 * @return string|null The pipelinq productId, or null when not configured.
+	 *
+	 * @throws \Throwable When a lookup or write fails.
+	 */
+	private function matchFillOrCreateProduct(array $shillinqProduct): string|null {
+		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'product_schema', '');
+
+		if ($registerId === '' || $schemaId === '') {
+			$this->logger->warning('PVM ingest: product register/schema not configured');
+			return null;
+		}
+
+		// Match on sku first, then barcode.
+		$lookup = ['register' => $registerId, 'schema' => $schemaId, 'product' => $shillinqProduct];
+		$existing = $this->findProductBySku(objectService: $objectService, lookup: $lookup);
+
+		$lookup['objectService'] = $objectService;
+		if ($existing !== null) {
+			return $this->fillExistingProduct(lookup: $lookup, existing: $existing);
+		}
+
+		return $this->createProduct(lookup: $lookup);
+	}//end matchFillOrCreateProduct()
+
+	/**
+	 * Fill the empty supply-master fields of a matched product and link its source record.
+	 *
+	 * @param array<string,mixed> $lookup   Keys: register, schema, product (the shillinq record), objectService.
+	 * @param array<string,mixed> $existing The matched pipelinq product.
+	 *
+	 * @return string The pipelinq productId.
+	 *
+	 * @throws \Throwable When a write fails.
+	 */
+	private function fillExistingProduct(array $lookup, array $existing): string {
+		$objectService = $lookup['objectService'];
+		$productId = $existing['productId'] ?? $existing['id'] ?? null;
+		// Fill-only: only write supply-master fields that are currently empty.
+		$updates = $this->buildProductFillPayload(existing: $existing, shillinqSource: $lookup['product']);
+		if (empty($updates) === false) {
+			$objectService->saveObject(
+				object: array_merge($existing, $updates),
+				register: $lookup['register'],
+				schema: $lookup['schema'],
+				uuid: $existing['id'] ?? null
+			);
+		}
+
+		$this->writeSourceRecord(
+			store: ['objectService' => $objectService, 'registerId' => $lookup['register']],
+			link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $lookup['product']),
+		);
+
+		return (string)$productId;
+	}//end fillExistingProduct()
+
+	/**
+	 * Create a product from a shillinq record and link its source record.
+	 *
+	 * @param array<string,mixed> $lookup Keys: register, schema, product (the shillinq record), objectService.
+	 *
+	 * @return string The pipelinq productId.
+	 *
+	 * @throws \Throwable When a write fails.
+	 */
+	private function createProduct(array $lookup): string {
+		$objectService = $lookup['objectService'];
+		// Create: map shillinq fields onto the extended product schema.
+		$newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $lookup['product']);
+		$created = $objectService->saveObject(object: $newProduct, register: $lookup['register'], schema: $lookup['schema'], uuid: null);
+		$createdArr = (array)$created;
+		if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
+			$createdArr = $created->jsonSerialize();
+		}
+
+		$productId = $this->reconcileProductId(lookup: $lookup, createdArr: $createdArr);
+
+		$this->writeSourceRecord(
+			store: ['objectService' => $objectService, 'registerId' => $lookup['register']],
+			link: new SourceRecordLink(entityType: 'product', masterEntity: (string)($productId ?? ''), rawAttributes: $lookup['product']),
+		);
+
+		return (string)$productId;
+	}//end createProduct()
+
+	/**
+	 * Ensure a created product's productId equals its object UUID, returning the productId.
+	 *
+	 * @param array<string,mixed> $lookup     Keys: register, schema, product (the shillinq record), objectService.
+	 * @param array<string,mixed> $createdArr The created product.
+	 *
+	 * @return mixed The productId.
+	 *
+	 * @throws \Throwable When the write fails.
+	 */
+	private function reconcileProductId(array $lookup, array $createdArr): mixed {
+		$productId = $createdArr['productId'] ?? $createdArr['id'] ?? null;
+
+		// Ensure productId == object UUID (REQ-PVM-002).
+		if (isset($createdArr['id']) === true && ($createdArr['productId'] ?? null) !== $createdArr['id']) {
+			$createdArr['productId'] = $createdArr['id'];
+			$lookup['objectService']->saveObject(object: $createdArr, register: $lookup['register'], schema: $lookup['schema'], uuid: $createdArr['id']);
+			$productId = $createdArr['id'];
+		}
+
+		return $productId;
+	}//end reconcileProductId()
 
 	/**
 	 * Ingest one shillinq vendor master-data record.
@@ -517,16 +563,9 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return void
 	 */
 	private function storeSupplier(SupplierTarget $target, SourceRecordLink $link): void {
-		$this->upsertSupplier(
-			objectService: $target->objectService,
-			registerId: $target->registerId,
-			schemaId: $target->schemaId,
-			shillinqVendor: $link->rawAttributes,
-			contactsUid: $link->masterEntity,
-			existingSupplier: $this->existingSupplier(target: $target, contactsUid: $link->masterEntity),
-		);
+		$this->upsertSupplier(target: $target, link: $link);
 
-		$this->writeSourceRecord(objectService: $target->objectService, registerId: $target->registerId, link: $link);
+		$this->writeSourceRecord(store: ['objectService' => $target->objectService, 'registerId' => $target->registerId], link: $link);
 	}//end storeSupplier()
 
 	/**
@@ -538,12 +577,23 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * @return array<string,mixed>|null
 	 */
 	private function existingSupplier(SupplierTarget $target, string $contactsUid): ?array {
-		return $this->findSupplierByContactsUid(
-			objectService: $target->objectService,
-			registerId: $target->registerId,
-			schemaId: $target->schemaId,
-			contactsUid: $contactsUid,
+		$results = $target->objectService->findAll(
+			config: [
+				'filters' => [
+					'contactsUid' => $contactsUid,
+					'register' => $target->registerId,
+					'schema' => $target->schemaId,
+				],
+				'limit' => 1,
+				'offset' => 0,
+			]
 		);
+
+		if (empty($results) === true) {
+			return null;
+		}
+
+		return self::rowArray(row: reset($results));
 	}//end existingSupplier()
 
 	/**
@@ -570,31 +620,23 @@ class IngestProductVendorMaster implements IRepairStep {
 	 * When a supplier already exists it is filled only where fields are empty; otherwise a
 	 * new supplier commercial profile is created.
 	 *
-	 * @param object $objectService OR ObjectService.
-	 * @param string $registerId Register id.
-	 * @param string $schemaId Supplier schema id.
-	 * @param array<string,mixed> $shillinqVendor Incoming vendor record.
-	 * @param string $contactsUid Resolved NC contact UID.
-	 * @param array<string,mixed>|null $existingSupplier Existing supplier row, or null.
+	 * @param SupplierTarget   $target The supplier store.
+	 * @param SourceRecordLink $link   The incoming vendor record and its resolved NC contact UID.
 	 *
 	 * @return void
 	 */
-	private function upsertSupplier(
-		object $objectService,
-		string $registerId,
-		string $schemaId,
-		array $shillinqVendor,
-		string $contactsUid,
-		?array $existingSupplier,
-	): void {
+	private function upsertSupplier(SupplierTarget $target, SourceRecordLink $link): void {
+		$objectService = $target->objectService;
+		$shillinqVendor = $link->rawAttributes;
+		$existingSupplier = $this->existingSupplier(target: $target, contactsUid: $link->masterEntity);
 		if ($existingSupplier !== null) {
 			// Fill-only: only write commercial fields that are currently empty.
 			$updates = $this->buildSupplierFillPayload(existing: $existingSupplier, shillinqSource: $shillinqVendor);
 			if (empty($updates) === false) {
 				$objectService->saveObject(
 					object: array_merge($existingSupplier, $updates),
-					register: $registerId,
-					schema: $schemaId,
+					register: $target->registerId,
+					schema: $target->schemaId,
 					uuid: $existingSupplier['id'] ?? null
 				);
 			}
@@ -604,8 +646,8 @@ class IngestProductVendorMaster implements IRepairStep {
 
 		// Create new supplier commercial profile.
 		$newSupplier = $this->mapShillinqVendorToSchema(shillinqVendor: $shillinqVendor);
-		$newSupplier['contactsUid'] = $contactsUid;
-		$objectService->saveObject(object: $newSupplier, register: $registerId, schema: $schemaId, uuid: null);
+		$newSupplier['contactsUid'] = $link->masterEntity;
+		$objectService->saveObject(object: $newSupplier, register: $target->registerId, schema: $target->schemaId, uuid: null);
 	}//end upsertSupplier()
 
 	/**
@@ -888,13 +930,12 @@ class IngestProductVendorMaster implements IRepairStep {
 	/**
 	 * Write an MDM sourceRecord for provenance tracking.
 	 *
-	 * @param mixed            $objectService The OpenRegister ObjectService.
-	 * @param string           $registerId    The register ID.
-	 * @param SourceRecordLink $link          The ingested record and its master entity.
+	 * @param array{objectService: mixed, registerId: string} $store The OpenRegister ObjectService and the register ID.
+	 * @param SourceRecordLink                                $link  The ingested record and its master entity.
 	 *
 	 * @return void
 	 */
-	private function writeSourceRecord(mixed $objectService, string $registerId, SourceRecordLink $link): void {
+	private function writeSourceRecord(array $store, SourceRecordLink $link): void {
 		$sourceRecordSchemaId = $this->appConfig->getValueString(
 			AppIdentity::APP_ID,
 			'sourceRecord_schema',
@@ -909,9 +950,9 @@ class IngestProductVendorMaster implements IRepairStep {
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
 		try {
-			$objectService->saveObject(
+			$store['objectService']->saveObject(
 				object: $link->toRecord(now: $now),
-				register: $registerId,
+				register: $store['registerId'],
 				schema: $sourceRecordSchemaId,
 				uuid: null
 			);
@@ -982,44 +1023,4 @@ class IngestProductVendorMaster implements IRepairStep {
 
 		return (array)$row;
 	}//end rowArray()
-
-	/**
-	 * Find an existing pipelinq supplier by contactsUid.
-	 *
-	 * @param mixed $objectService The OR ObjectService.
-	 * @param string $registerId Register ID.
-	 * @param string $schemaId Schema ID.
-	 * @param string $contactsUid The Nextcloud contact UID.
-	 *
-	 * @return array<string,mixed>|null The supplier, or null.
-	 */
-	private function findSupplierByContactsUid(
-		mixed $objectService,
-		string $registerId,
-		string $schemaId,
-		string $contactsUid,
-	): ?array {
-		$results = $objectService->findAll(
-			config: [
-				'filters' => [
-					'contactsUid' => $contactsUid,
-					'register' => $registerId,
-					'schema' => $schemaId,
-				],
-				'limit' => 1,
-				'offset' => 0,
-			]
-		);
-
-		if (empty($results) === true) {
-			return null;
-		}
-
-		$first = reset($results);
-		if (is_object($first) === true && method_exists($first, 'jsonSerialize') === true) {
-			return $first->jsonSerialize();
-		}
-
-		return (array)$first;
-	}//end findSupplierByContactsUid()
 }//end class

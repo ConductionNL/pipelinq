@@ -27,6 +27,9 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
+use OCA\Pipelinq\Service\Support\FirstValue;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\ResultToArray;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -37,6 +40,10 @@ use RuntimeException;
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactSyncService implements ContactSyncServiceInterface {
+	use InjectedObjectService;
+	use FirstValue;
+	use ResultToArray;
+
 	/**
 	 * Constructor.
 	 *
@@ -78,18 +85,9 @@ class ContactSyncService implements ContactSyncServiceInterface {
 	 * @throws RuntimeException When name is missing or the contact cannot be provisioned.
 	 *
 	 * @spec openspec/specs/unify-client-contact/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
 	 */
 	public function createWithContact(string $objectType, array $form): array {
-		if (in_array($objectType, ['client', 'contact'], true) === false) {
-			throw new RuntimeException('Invalid objectType -- must be client or contact');
-		}
-
-		if (trim((string)($form['name'] ?? '')) === '') {
-			throw new RuntimeException('Name is required');
-		}
+		$this->assertCreatable(objectType: $objectType, form: $form);
 
 		$provision = $this->contactVcardService->provisionContactFromForm(
 			form: $form,
@@ -100,6 +98,45 @@ class ContactSyncService implements ContactSyncServiceInterface {
 			throw new RuntimeException('Could not provision the Nextcloud contact -- is the Contacts app enabled?');
 		}
 
+		$payload = $this->identityPayload(form: $form, provision: $provision);
+		$created = $this->saveCreated(objectType: $objectType, payload: $payload);
+
+		return $this->serializeResult(result: $created);
+	}//end createWithContact()
+
+	/**
+	 * Reject an unknown object type or a create form without a name.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 * @param array $form The raw create-form fields.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the type is invalid or the name is missing.
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function assertCreatable(string $objectType, array $form): void {
+		if (in_array($objectType, ['client', 'contact'], true) === false) {
+			throw new RuntimeException('Invalid objectType -- must be client or contact');
+		}
+
+		if (trim((string)($form['name'] ?? '')) === '') {
+			throw new RuntimeException('Name is required');
+		}
+	}//end assertCreatable()
+
+	/**
+	 * The object payload: the caller's fields plus the resolved contact identity.
+	 *
+	 * @param array $form The raw create-form fields.
+	 * @param array $provision The provisioned contact (contactsUid, name, email, phone).
+	 *
+	 * @return array
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function identityPayload(array $form, array $provision): array {
 		// Build the object payload: caller fields + the resolved identity. The
 		// denormalised name/email/phone mirror the authoritative contact.
 		$payload = $form;
@@ -114,6 +151,22 @@ class ContactSyncService implements ContactSyncServiceInterface {
 			$payload['phone'] = $provision['phone'];
 		}
 
+		return $payload;
+	}//end identityPayload()
+
+	/**
+	 * Save the new object in the schema configured for its type.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 * @param array $payload The object payload.
+	 *
+	 * @return mixed The saved object.
+	 *
+	 * @throws RuntimeException When the register or schema is not configured.
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function saveCreated(string $objectType, array $payload) {
 		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 
@@ -121,33 +174,14 @@ class ContactSyncService implements ContactSyncServiceInterface {
 			throw new RuntimeException('Pipelinq register or schema is not configured');
 		}
 
-		$created = $this->getObjectService()->saveObject(
+		return $this->getObjectService()->saveObject(
 			$payload,
 			[],
 			$registerId,
 			$schemaId,
 			null
 		);
-
-		if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
-			return $created->jsonSerialize();
-		}
-
-		if (is_array($created) === true) {
-			return $created;
-		}
-
-		return [];
-	}//end createWithContact()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
+	}//end saveCreated()
 
 	/**
 	 * Search Nextcloud addressbooks for contacts matching a query.
@@ -189,16 +223,7 @@ class ContactSyncService implements ContactSyncServiceInterface {
 	 * @spec openspec/specs/contacts-sync/spec.md
 	 */
 	public function importContact(string $uid, string $addressBookKey, string $type = 'client', ?string $clientId = null): array {
-		if ($this->contactsManager->isEnabled() === false) {
-			throw new RuntimeException('Nextcloud Contacts is not available');
-		}
-
-		$ncContact = $this->findContactByUid(uid: $uid);
-
-		if ($ncContact === null) {
-			throw new RuntimeException('Contact not found in Nextcloud addressbook');
-		}
-
+		$ncContact = $this->requireContact(uid: $uid);
 		if ($type === 'client') {
 			return $this->contactImportService->importAsClient(
 				ncContact: $ncContact,
@@ -212,6 +237,29 @@ class ContactSyncService implements ContactSyncServiceInterface {
 			clientId: $clientId
 		);
 	}//end importContact()
+
+	/**
+	 * The Nextcloud contact with this UID.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return array The contact.
+	 *
+	 * @throws RuntimeException When Contacts is unavailable or the contact is not found.
+	 */
+	private function requireContact(string $uid): array {
+		if ($this->contactsManager->isEnabled() === false) {
+			throw new RuntimeException('Nextcloud Contacts is not available');
+		}
+
+		$ncContact = $this->findContactByUid(uid: $uid);
+
+		if ($ncContact === null) {
+			throw new RuntimeException('Contact not found in Nextcloud addressbook');
+		}
+
+		return $ncContact;
+	}//end requireContact()
 
 	/**
 	 * Sync a Pipelinq client or contact to Nextcloud Contacts.
@@ -334,19 +382,4 @@ class ContactSyncService implements ContactSyncServiceInterface {
 		$status['updatedAt'] = $this->revisions->toIso(rev: $this->extractFirstValue(value: ($card['REV'] ?? '')));
 		return $status;
 	}//end cardStatus()
-
-	/**
-	 * Extract first value from a vCard property that may be an array or string.
-	 *
-	 * @param mixed $value The value to extract from.
-	 *
-	 * @return string The extracted string value.
-	 */
-	private function extractFirstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			return (string)($value[0] ?? '');
-		}
-
-		return (string)$value;
-	}//end extractFirstValue()
 }//end class

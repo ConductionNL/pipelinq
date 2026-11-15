@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 
 /**
@@ -44,6 +45,7 @@ use OCP\IAppConfig;
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
  */
 class CampaignLinkDecorator {
+	use SavedPayloadId;
 
 	/**
 	 * App-config key for the per-tenant switch. `true` (the default) adds
@@ -116,7 +118,7 @@ class CampaignLinkDecorator {
 			(string)($campaign['utmCampaign'] ?? ''),
 			(string)($blast['name'] ?? ''),
 			(string)($template['name'] ?? ''),
-			$this->blastId(blast: $blast),
+			$this->extractId(payload: $blast),
 		];
 		foreach ($candidates as $candidate) {
 			$slug = self::slugify(value: $candidate);
@@ -152,7 +154,7 @@ class CampaignLinkDecorator {
 			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource', fallback: self::CHANNEL_DEFAULT),
 			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium', fallback: self::CHANNEL_DEFAULT),
 			'utm_campaign' => $this->campaignFor(blast: $blast, template: $template, campaign: $campaign),
-			'utm_content' => $this->blastId(blast: $blast),
+			'utm_content' => $this->extractId(payload: $blast),
 		];
 	}//end utmFor()
 
@@ -361,31 +363,6 @@ class CampaignLinkDecorator {
 
 		return $additions;
 	}//end missingParameters()
-
-	/**
-	 * The blast's id from `uuid`, `id`, `slug` or the `@self` envelope.
-	 *
-	 * @param array<string, mixed> $blast The blast row.
-	 *
-	 * @return string The id or empty.
-	 */
-	private function blastId(array $blast): string {
-		$sources = [$blast];
-		if (is_array($blast['@self'] ?? null) === true) {
-			$sources[] = $blast['@self'];
-		}
-
-		foreach ($sources as $source) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($source[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end blastId()
 
 	/**
 	 * Split a string on the first occurrence of a separator.

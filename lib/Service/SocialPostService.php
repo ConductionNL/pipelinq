@@ -51,7 +51,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
@@ -60,6 +59,9 @@ use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Service\Social\SocialPublishOutcome;
 use OCA\Pipelinq\Service\Social\SocialPublishRequest;
+use OCA\Pipelinq\Service\Support\ClientWritableFields;
+use OCA\Pipelinq\Util\ConfiguredTenantId;
+use OCA\Pipelinq\Service\Support\SocialSpendBudget;
 use OCP\IAppConfig;
 
 /**
@@ -86,6 +88,10 @@ use OCP\IAppConfig;
  *  which is the arrangement that lets a gate be skipped.
  */
 class SocialPostService implements SocialPostServiceInterface {
+	use ConfiguredTenantId;
+	use ClientWritableFields;
+	use SocialSpendBudget;
+
 	/**
 	 * The post schema slug, matching the register fragment.
 	 *
@@ -763,17 +769,7 @@ class SocialPostService implements SocialPostServiceInterface {
 	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	private function budgetRefusal(SocialNetworkAdapter $adapter): ?SocialPublishOutcome {
-		$cost = $adapter->costPerPost();
-		if ($cost <= 0.0) {
-			return null;
-		}
-
-		$allowed = $this->budget->canSend(
-			tenantId: $this->tenantId(),
-			providerId: $adapter->network(),
-			estimatedCostEur: $cost,
-		);
-		if ($allowed === true) {
+		if ($this->withinBudget(adapter: $adapter, cost: $adapter->costPerPost()) === true) {
 			return null;
 		}
 
@@ -798,7 +794,7 @@ class SocialPostService implements SocialPostServiceInterface {
 	private function afterAttempt(string $accountId, SocialNetworkAdapter $adapter, SocialPublishOutcome $outcome): void {
 		if ($outcome->accepted === true && $outcome->cost > 0.0) {
 			$this->budget->recordSend(
-				tenantId: $this->tenantId(),
+				tenantId: $this->getTenantId(),
 				providerId: $adapter->network(),
 				costEur: $outcome->cost,
 			);
@@ -886,37 +882,4 @@ class SocialPostService implements SocialPostServiceInterface {
 
 		return $networks;
 	}//end networksOf()
-
-	/**
-	 * Take only the fields a client may set.
-	 *
-	 * @param array<string, mixed> $payload The client's payload.
-	 *
-	 * @return array<string, mixed> The accepted subset.
-	 */
-	private function clientFields(array $payload): array {
-		$out = [];
-		foreach (self::CLIENT_WRITABLE as $field) {
-			if (array_key_exists($field, $payload) === true) {
-				$out[$field] = $payload[$field];
-			}
-		}
-
-		return $out;
-	}//end clientFields()
-
-	/**
-	 * The tenant the spend budget is kept for, matching the SMS and WhatsApp
-	 * adapters so one tenant is one tenant across every metered channel.
-	 *
-	 * @return string The tenant id.
-	 */
-	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end tenantId()
 }//end class

@@ -47,6 +47,7 @@ use Throwable;
  * once more without it.
  *
  * @covers \OCA\Pipelinq\Controller\AppointmentEligibilityController
+ * @covers \OCA\Pipelinq\Controller\AppointmentFiguresController
  * @covers \OCA\Pipelinq\Controller\AnalyticsController
  * @covers \OCA\Pipelinq\Controller\CampaignController
  * @covers \OCA\Pipelinq\Controller\CompetitorWatchController
@@ -96,6 +97,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 		'CtiEscalationQueueController' => ['index'],
 		'IncomingCallController' => ['show'],
 		'JourneyController' => ['index', 'show', 'compile', 'setStatus', 'runs', 'write'],
+		'KvkSearchController' => ['search'],
 		'LoyaltyController' => ['getAccount', 'getAccountHistory', 'getRedemptionOptions', 'initiateRedemption', 'lookupRedemptionCode', 'useRedemptionCode', 'lookupGiftCard', 'redeemGiftCard', 'activateGiftCard', 'issueGiftCard', 'activateProgramme'],
 		'LoyaltyPaymentController' => ['pay'],
 		'LoyaltyReportingController' => ['kpis', 'liability', 'tierDistribution', 'expiryForecast'],
@@ -114,6 +116,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 		'TicketWooRequestController' => ['availability', 'convert'],
 		'WeeklyReviewController' => ['show', 'generate'],
 		'AppointmentEligibilityController' => ['eligibleResources', 'eligibleResourceCounts'],
+		'AppointmentFiguresController' => ['serviceFigures', 'resourceFigures'],
 	];
 
 	private const PRIVILEGED_USER = 'crm-user';

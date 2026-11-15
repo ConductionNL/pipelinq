@@ -42,6 +42,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ActivityTimelineServiceInterface;
+use OCA\Pipelinq\Service\Support\NonEmptyString;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -55,8 +56,12 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/changes/archive/2026-05-11-activity-timeline/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ActivityTimelineService implements ActivityTimelineServiceInterface {
+	use NonEmptyString;
+
 	/**
 	 * Maximum allowed page size for list endpoints.
 	 */
@@ -246,6 +251,18 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
 	 */
 	public function withoutDuplicateEvents(array $activities): array {
+		$leafUids = $this->calendarLeafUids(activities: $activities);
+		return $this->keepEachEventOnce(activities: $activities, leafUids: $leafUids);
+	}//end withoutDuplicateEvents()
+
+	/**
+	 * The UIDs the calendar leaf delivered, as a set.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 *
+	 * @return array<string, true>
+	 */
+	private function calendarLeafUids(array $activities): array {
 		$leafUids = [];
 		foreach ($activities as $activity) {
 			if (($activity['metadata']['source'] ?? null) === 'calendar-leaf') {
@@ -253,6 +270,18 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 			}
 		}
 
+		return $leafUids;
+	}//end calendarLeafUids()
+
+	/**
+	 * Keep every non-event item, and each calendar event once, the leaf's copy first.
+	 *
+	 * @param array<int,array<string,mixed>> $activities The merged items.
+	 * @param array<string, true>            $leafUids   The UIDs the calendar leaf delivered.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function keepEachEventOnce(array $activities, array $leafUids): array {
 		$seen = [];
 		$kept = [];
 		foreach ($activities as $activity) {
@@ -262,8 +291,7 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 				continue;
 			}
 
-			$fromLeaf = (($activity['metadata']['source'] ?? null) === 'calendar-leaf');
-			if (isset($seen[$uid]) === true || ($fromLeaf === false && isset($leafUids[$uid]) === true)) {
+			if ($this->isShadowedEvent(activity: $activity, uid: $uid, seen: $seen, leafUids: $leafUids) === true) {
 				continue;
 			}
 
@@ -272,7 +300,22 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 		}
 
 		return $kept;
-	}//end withoutDuplicateEvents()
+	}//end keepEachEventOnce()
+
+	/**
+	 * Whether a calendar event was kept already, or is a stale copy of one the leaf delivered.
+	 *
+	 * @param array<string,mixed> $activity The item.
+	 * @param string              $uid      Its event UID.
+	 * @param array<string, true> $seen     The UIDs kept so far.
+	 * @param array<string, true> $leafUids The UIDs the calendar leaf delivered.
+	 *
+	 * @return bool
+	 */
+	private function isShadowedEvent(array $activity, string $uid, array $seen, array $leafUids): bool {
+		$fromLeaf = (($activity['metadata']['source'] ?? null) === 'calendar-leaf');
+		return (isset($seen[$uid]) === true || ($fromLeaf === false && isset($leafUids[$uid]) === true));
+	}//end isShadowedEvent()
 
 	/**
 	 * The activities of every configured schema the filter includes.
@@ -617,26 +660,37 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 			throw new RuntimeException('Contactmoment register or schema not configured.');
 		}
 
-		$payload = $this->worklogPayload(data: $data);
-
-		if ($entityType === 'client') {
-			$payload['client'] = $entityId;
-		} elseif ($entityType === 'request') {
-			$payload['parentTicket'] = $entityId;
-		}
-
+		$payload = $this->linkedWorklog(payload: $this->worklogPayload(data: $data), origin: [$entityType, $entityId]);
 		$saved = $this->ticketService->save(TicketService::TYPE_CONTACTMOMENT, $payload);
 
-		$savedArray = $this->extractObjectArray(saved: $saved);
 		$normalized = $this->normalizeActivity(
 			sourceType: 'interaction',
-			object: $savedArray,
+			object: $this->extractObjectArray(saved: $saved),
 			entityType: $entityType,
 			entityId: $entityId
 		);
 
 		return $normalized ?? [];
 	}//end createWorklog()
+
+	/**
+	 * The worklog payload linked to its client, or to its parent request.
+	 *
+	 * @param array<string,mixed>         $payload The worklog payload.
+	 * @param array{0: string, 1: string} $origin  The entity type (client|request) and UUID.
+	 *
+	 * @return array<string,mixed> The linked payload.
+	 */
+	private function linkedWorklog(array $payload, array $origin): array {
+		[$entityType, $entityId] = $origin;
+		if ($entityType === 'client') {
+			$payload['client'] = $entityId;
+		} elseif ($entityType === 'request') {
+			$payload['parentTicket'] = $entityId;
+		}
+
+		return $payload;
+	}//end linkedWorklog()
 
 	/**
 	 * The contact moment a worklog becomes, before it is tied to its entity.
@@ -869,30 +923,6 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 
 		return $output;
 	}//end secondsToIsoDuration()
-
-	/**
-	 * Coerce a value to a string, or return null when empty/null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The string value or null.
-	 */
-	private function stringOrNull(mixed $value): ?string {
-		if ($value === null) {
-			return null;
-		}
-
-		$stringValue = '';
-		if (is_scalar($value) === true) {
-			$stringValue = (string)$value;
-		}
-
-		if ($stringValue === '') {
-			return null;
-		}
-
-		return $stringValue;
-	}//end stringOrNull()
 
 	/**
 	 * Build an empty timeline result.

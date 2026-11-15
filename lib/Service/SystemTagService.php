@@ -86,7 +86,7 @@ class SystemTagService implements SystemTagServiceInterface {
 
 		$this->validateTagNameUnique(
 			objectType: $objectType,
-			name: $name
+			tag: ['id' => null, 'name' => $name]
 		);
 
 		$tag = $this->tagCrudService->createOrReuseSystemTag(name: $name);
@@ -140,24 +140,31 @@ class SystemTagService implements SystemTagServiceInterface {
 			throw new InvalidArgumentException('Tag name cannot be empty');
 		}
 
-		$this->validateTagNameUnique(
-			objectType: $objectType,
-			name: $newName,
-			excludeId: $tagId
-		);
+		return $this->applyRename(objectType: $objectType, tag: ['id' => $tagId, 'name' => $newName]);
+	}//end renameTag()
+
+	/**
+	 * Rename a tag to a validated, trimmed name and log it.
+	 *
+	 * @param string $objectType The object type.
+	 * @param array{id: int, name: string} $tag The tag ID and its new name.
+	 *
+	 * @return array{id: int, name: string} The renamed tag.
+	 *
+	 * @throws RuntimeException If new name already exists for this type.
+	 */
+	private function applyRename(string $objectType, array $tag): array {
+		$this->validateTagNameUnique(objectType: $objectType, tag: $tag);
 
 		$this->tagCrudService->renameSystemTag(
-			tagId: $tagId,
-			newName: $newName
+			tagId: $tag['id'],
+			newName: $tag['name']
 		);
 
-		$this->logger->info("Pipelinq: Renamed {$objectType} tag ID {$tagId} to: {$newName}");
+		$this->logger->info("Pipelinq: Renamed {$objectType} tag ID {$tag['id']} to: {$tag['name']}");
 
-		return [
-			'id' => $tagId,
-			'name' => $newName,
-		];
-	}//end renameTag()
+		return $tag;
+	}//end applyRename()
 
 	/**
 	 * Ensure default tags exist for an object type (idempotent).
@@ -192,21 +199,21 @@ class SystemTagService implements SystemTagServiceInterface {
 	 * Validate that a tag name is unique within the given object type.
 	 *
 	 * @param string $objectType The object type.
-	 * @param string $name The tag name to check.
-	 * @param ?int $excludeId Optional tag ID to exclude from the check.
+	 * @param array{id: int|null, name: string} $tag The tag name to check, and the tag ID to exclude from the check (or null).
 	 *
 	 * @return void
 	 *
 	 * @throws RuntimeException If the tag name already exists.
 	 */
-	private function validateTagNameUnique(string $objectType, string $name, ?int $excludeId = null): void {
+	private function validateTagNameUnique(string $objectType, array $tag): void {
+		$excludeId = $tag['id'];
 		$existing = $this->getTags(objectType: $objectType);
-		foreach ($existing as $tag) {
-			if ($excludeId !== null && $tag['id'] === $excludeId) {
+		foreach ($existing as $other) {
+			if ($excludeId !== null && $other['id'] === $excludeId) {
 				continue;
 			}
 
-			if (strcasecmp($tag['name'], $name) === 0) {
+			if (strcasecmp($other['name'], $tag['name']) === 0) {
 				throw new RuntimeException('This tag already exists');
 			}
 		}

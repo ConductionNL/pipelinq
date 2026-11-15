@@ -211,34 +211,66 @@ class ReportingService implements ReportingServiceInterface {
 	public function getChannelTrend(string $from, string $to, string $granularity = 'daily'): array {
 		try {
 			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-			$trend = [];
-
-			foreach ($contactmomenten as $moment) {
-				$channel = $moment['channel'] ?? 'unknown';
-				$contactedAt = $moment['contactedAt'] ?? null;
-				if ($contactedAt === null) {
-					continue;
-				}
-
-				try {
-					$dateTime = new DateTimeImmutable($contactedAt);
-					$key = $dateTime->format('Y-m-d');
-					if ($granularity === 'weekly') {
-						$key = $dateTime->format('o-W');
-					}
-				} catch (\Exception) {
-					continue;
-				}
-
-				$trend[$channel][$key] = ($trend[$channel][$key] ?? 0) + 1;
-			}
-
-			return $trend;
+			return $this->channelTrend(moments: $contactmomenten, granularity: $granularity);
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getChannelTrend failed', ['exception' => $e]);
 			return [];
 		}//end try
 	}//end getChannelTrend()
+
+	/**
+	 * Count the contact moments per channel per day or ISO week.
+	 *
+	 * @param array<array<string, mixed>> $moments The contact moments.
+	 * @param string $granularity 'daily' or 'weekly'.
+	 *
+	 * @return array<string, array<string, int>> Time-series data: channel => [date => count].
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
+	 */
+	private function channelTrend(array $moments, string $granularity): array {
+		$trend = [];
+
+		foreach ($moments as $moment) {
+			$channel = $moment['channel'] ?? 'unknown';
+			$key = $this->trendKey(contactedAt: ($moment['contactedAt'] ?? null), granularity: $granularity);
+			if ($key === null) {
+				continue;
+			}
+
+			$trend[$channel][$key] = ($trend[$channel][$key] ?? 0) + 1;
+		}
+
+		return $trend;
+	}//end channelTrend()
+
+	/**
+	 * The day (Y-m-d) or ISO week (o-W) of a contact moment, or null when it has no readable date.
+	 *
+	 * @param mixed $contactedAt The contactedAt value.
+	 * @param string $granularity 'daily' or 'weekly'.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
+	 */
+	private function trendKey($contactedAt, string $granularity): string|null {
+		if ($contactedAt === null) {
+			return null;
+		}
+
+		try {
+			$dateTime = new DateTimeImmutable($contactedAt);
+			$key = $dateTime->format('Y-m-d');
+			if ($granularity === 'weekly') {
+				$key = $dateTime->format('o-W');
+			}
+		} catch (\Exception) {
+			return null;
+		}
+
+		return $key;
+	}//end trendKey()
 
 	/**
 	 * Get per-agent performance metrics for the given date range.
@@ -298,25 +330,37 @@ class ReportingService implements ReportingServiceInterface {
 	public function getSlaCompliance(string $channel, string $from, string $to): float {
 		try {
 			$contactmomenten = $this->fetchContactmomenten(from: $from, to: $to);
-			$channelItems = array_values(
-				array_filter(
-					$contactmomenten,
-					static fn ($moment) => ($moment['channel'] ?? '') === $channel,
-				)
-			);
-
-			$total = count($channelItems);
-			if ($total === 0) {
-				return 100.0;
-			}
-
-			$within = $this->countWithinSla(channel: $channel, moments: $channelItems);
-			return round(($within / $total) * 100, 1);
+			return $this->complianceOf(channel: $channel, moments: $contactmomenten);
 		} catch (\Throwable $e) {
 			$this->logger->error('ReportingService::getSlaCompliance failed', ['exception' => $e]);
 			return 0.0;
 		}//end try
 	}//end getSlaCompliance()
+
+	/**
+	 * The SLA compliance percentage of one channel's contact moments; 100.0 when there are none.
+	 *
+	 * @param string $channel The channel type.
+	 * @param array<array<string, mixed>> $moments All contact moments in the range.
+	 *
+	 * @return float Compliance as a percentage (0-100).
+	 */
+	private function complianceOf(string $channel, array $moments): float {
+		$channelItems = array_values(
+			array_filter(
+				$moments,
+				static fn ($moment) => ($moment['channel'] ?? '') === $channel,
+			)
+		);
+
+		$total = count($channelItems);
+		if ($total === 0) {
+			return 100.0;
+		}
+
+		$within = $this->countWithinSla(channel: $channel, moments: $channelItems);
+		return round(($within / $total) * 100, 1);
+	}//end complianceOf()
 
 	/**
 	 * Calculate first-call resolution rate from an array of contactmoment objects.
@@ -380,19 +424,32 @@ class ReportingService implements ReportingServiceInterface {
 			$compliance = round(($withinSla / $totalContacts) * 100, 1);
 		}
 
-		$status = 'green';
-		if ($compliance < $target - 5) {
-			$status = 'red';
-		} elseif ($compliance < $target) {
-			$status = 'orange';
-		}
-
 		return [
 			'compliance' => $compliance,
 			'target' => $target,
-			'status' => $status,
+			'status' => self::slaStatus(compliance: $compliance, target: $target),
 		];
 	}//end calculateSlaCompliance()
+
+	/**
+	 * The traffic-light status of a compliance against its target.
+	 *
+	 * @param float $compliance The compliance percentage.
+	 * @param float $target The target percentage.
+	 *
+	 * @return string green, orange (below target) or red (more than 5 below).
+	 */
+	private static function slaStatus(float $compliance, float $target): string {
+		if ($compliance < $target - 5) {
+			return 'red';
+		}
+
+		if ($compliance < $target) {
+			return 'orange';
+		}
+
+		return 'green';
+	}//end slaStatus()
 
 	/**
 	 * Get SLA target percentage for a channel.
@@ -455,13 +512,7 @@ class ReportingService implements ReportingServiceInterface {
 	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
 	 */
 	public function setSlaTarget(string $channel, string $metric, string $value): bool {
-		// Validate channel against the allowlist.
-		if (isset(self::DEFAULT_SLA_TARGETS[$channel]) === false) {
-			return false;
-		}
-
-		// Validate metric against the allowed metrics for this channel.
-		if (array_key_exists($metric, self::DEFAULT_SLA_TARGETS[$channel]) === false) {
+		if (self::isKnownTarget(channel: $channel, metric: $metric) === false) {
 			return false;
 		}
 
@@ -469,6 +520,24 @@ class ReportingService implements ReportingServiceInterface {
 		$this->appConfig->setValueString('pipelinq', $key, $value);
 		return true;
 	}//end setSlaTarget()
+
+	/**
+	 * Whether a channel and metric are in the DEFAULT_SLA_TARGETS allowlist.
+	 *
+	 * @param string $channel The channel type.
+	 * @param string $metric The metric name.
+	 *
+	 * @return bool
+	 */
+	private static function isKnownTarget(string $channel, string $metric): bool {
+		// Validate channel against the allowlist.
+		if (isset(self::DEFAULT_SLA_TARGETS[$channel]) === false) {
+			return false;
+		}
+
+		// Validate metric against the allowed metrics for this channel.
+		return array_key_exists($metric, self::DEFAULT_SLA_TARGETS[$channel]);
+	}//end isKnownTarget()
 
 	/**
 	 * Generate CSV content from data.
@@ -569,7 +638,7 @@ class ReportingService implements ReportingServiceInterface {
 			}
 
 			$occurredAt = (string)($data['occurredAt'] ?? '');
-			if ($this->withinRange(occurredAt: $occurredAt, from: $from, to: $to) === true) {
+			if ($this->withinRange(occurredAt: $occurredAt, window: [$from, $to]) === true) {
 				$moments[] = self::momentOf(data: $data, occurredAt: $occurredAt);
 			}
 		}
@@ -630,16 +699,16 @@ class ReportingService implements ReportingServiceInterface {
 	 * unparseable/absent timestamp is excluded (conservative).
 	 *
 	 * @param string $occurredAt The ticket's `occurredAt` (ISO-8601 or empty).
-	 * @param string $from Start date (inclusive), `YYYY-MM-DD`, or ''.
-	 * @param string $to End date (inclusive), `YYYY-MM-DD`, or ''.
+	 * @param array{0: string, 1: string} $window Start and end date (inclusive), `YYYY-MM-DD`, or ''.
 	 *
 	 * @return bool True when the timestamp is inside the window.
 	 */
-	private function withinRange(string $occurredAt, string $from, string $to): bool {
+	private function withinRange(string $occurredAt, array $window): bool {
 		if ($occurredAt === '') {
 			return false;
 		}
 
+		[$from, $to] = $window;
 		$date = substr($occurredAt, 0, 10);
 		if ($from !== '' && $date < substr($from, 0, 10)) {
 			return false;
@@ -682,20 +751,44 @@ class ReportingService implements ReportingServiceInterface {
 	 * @return int Count of contacts within SLA target.
 	 */
 	private function countWithinSla(string $channel, array $moments): int {
-		$within = 0;
+		$threshold = $this->slaThreshold(channel: $channel);
+
+		if ($threshold === 0) {
+			return count($moments);
+		}
+
+		return $this->countMeasuredWithin(channel: $channel, moments: $moments);
+	}//end countWithinSla()
+
+	/**
+	 * The channel's SLA threshold in seconds; 0 for a channel without a target.
+	 *
+	 * @param string $channel The channel.
+	 *
+	 * @return int
+	 */
+	private function slaThreshold(string $channel): int {
 		$targets = self::DEFAULT_SLA_TARGETS[$channel] ?? [];
-		$threshold = match ($channel) {
+		return match ($channel) {
 			'telefoon' => (int)($targets['wait_seconds'] ?? 30),
 			'balie' => (int)($targets['wait_minutes'] ?? 5) * 60,
 			'chat' => (int)($targets['response_seconds'] ?? 30),
 			'email' => (int)($targets['response_hours'] ?? 8) * 3600,
 			default => 0,
 		};
+	}//end slaThreshold()
 
-		if ($threshold === 0) {
-			return count($moments);
-		}
-
+	/**
+	 * Count the contact moments whose measured wait or response time is within the threshold.
+	 *
+	 * @param string $channel The channel.
+	 * @param array<array<string, mixed>> $moments The contactmoment data for this channel.
+	 *
+	 * @return int
+	 */
+	private function countMeasuredWithin(string $channel, array $moments): int {
+		$threshold = $this->slaThreshold(channel: $channel);
+		$within = 0;
 		foreach ($moments as $moment) {
 			$metadata = $moment['channelMetadata'] ?? [];
 			$measured = match ($channel) {
@@ -709,7 +802,7 @@ class ReportingService implements ReportingServiceInterface {
 		}
 
 		return $within;
-	}//end countWithinSla()
+	}//end countMeasuredWithin()
 
 	/**
 	 * Neutralize a CSV cell value to prevent formula injection.

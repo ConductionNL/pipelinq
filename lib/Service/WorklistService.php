@@ -47,9 +47,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
+use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -72,6 +75,7 @@ use RuntimeException;
  */
 class WorklistService implements WorklistServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Priority sort ranks — lower sorts first (MyWorkWidget.vue:43).
@@ -264,11 +268,7 @@ class WorklistService implements WorklistServiceInterface {
 		foreach (self::WORK_TICKET_TYPES as $ticketType) {
 			$requests = array_merge(
 				$requests,
-				$this->findTickets(
-					ticketType: $ticketType,
-					filters: ['assignee' => $userId],
-					limit: self::REQUEST_FETCH_LIMIT
-				)
+				$this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId])
 			);
 		}
 
@@ -499,7 +499,7 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
-			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId], limit: self::REQUEST_FETCH_LIMIT);
+			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
 			foreach ($tickets as $ticket) {
 				if ($done === true || in_array((string)($ticket['status'] ?? ''), self::TERMINAL_TICKET_STATUSES, true) === false) {
 					$rows[] = $this->itemRow(kind: (string)($ticket['ticketType'] ?? $ticketType), record: $ticket, routeName: 'TicketDetail');
@@ -535,6 +535,39 @@ class WorklistService implements WorklistServiceInterface {
 
 		return $rows;
 	}//end taskRows()
+
+	/**
+	 * The figures of My work's "Your week so far" tiles for the user's own
+	 * tickets over the current calendar week (Monday to now): answered (and
+	 * answered today), the share answered within the deadline, the average
+	 * answer time in days and the tickets converted to a case.
+	 *
+	 * Only the `mine` scope exists: the team and organisation scopes come with
+	 * role-based content (REQ-MW-180), and until then any other scope is refused
+	 * rather than silently answered with the user's own figures.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 * @param string $scope  The scope; only `mine`.
+	 *
+	 * @return array<string, mixed> The figures (see WeekStats::of()) and the scope.
+	 *
+	 * @throws InvalidArgumentException For a scope other than `mine`.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 */
+	public function getWeekStats(string $userId, string $scope='mine'): array {
+		if ($scope !== 'mine') {
+			throw new InvalidArgumentException(message: 'Unknown scope');
+		}
+
+		$tickets = [];
+		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
+			$found   = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
+			$tickets = array_merge($tickets, $found);
+		}
+
+		return (new WeekStats())->of(tickets: $tickets, now: new DateTimeImmutable()) + ['scope' => $scope];
+	}//end getWeekStats()
 
 	/**
 	 * One sentence on the user's open work, for My work's header: how many
@@ -604,7 +637,18 @@ class WorklistService implements WorklistServiceInterface {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	private function counted(string $singular, string $plural, int $count): string {
-		$phrase = $this->l10n->n($singular, $plural, $count);
+		return $this->withNumberWord(phrase: $this->l10n->n($singular, $plural, $count), count: $count);
+	}//end counted()
+
+	/**
+	 * The phrase with its count written as a word from one to twenty, as digits above.
+	 *
+	 * @param string $phrase The counted phrase, with the count as digits.
+	 * @param int    $count  The count.
+	 *
+	 * @return string The phrase.
+	 */
+	private function withNumberWord(string $phrase, int $count): string {
 		$word   = (self::NUMBER_WORDS[$count] ?? '');
 		if ($word === '') {
 			return $phrase;
@@ -617,7 +661,7 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		return substr($phrase, 0, $offset) . $this->l10n->t($word) . substr($phrase, ($offset + strlen($digits)));
-	}//end counted()
+	}//end withNumberWord()
 
 	/**
 	 * Each item with the name of its client (`clientName`), read once per
@@ -864,17 +908,16 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @param string $ticketType One of the TicketService::TYPE_* constants.
 	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param int $limit Row limit pushed to OpenRegister.
 	 *
-	 * @return array<int, array<string, mixed>>
+	 * @return array<int, array<string, mixed>> At most REQUEST_FETCH_LIMIT tickets.
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
-	private function findTickets(string $ticketType, array $filters, int $limit): array {
+	private function findTickets(string $ticketType, array $filters): array {
 		$results = $this->ticketService->findByType(
 			ticketType: $ticketType,
 			extraFilters: $filters,
-			limit: $limit
+			limit: self::REQUEST_FETCH_LIMIT
 		);
 
 		$objects = [];
@@ -944,15 +987,4 @@ class WorklistService implements WorklistServiceInterface {
 
 		return array_values(($results ?? []));
 	}//end runFindAll()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

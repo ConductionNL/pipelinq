@@ -23,12 +23,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Support\FirstValue;
+
 /**
  * Service for building import data arrays from Nextcloud contact data.
  *
  * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactDataBuilder {
+	use FirstValue;
+
 	/**
 	 * vCard TYPE parameter (uppercased, single token) -> our `kind` enum
 	 * used on `emails[]`/`phones[]`. TYPE tokens with no mapping (or no
@@ -81,15 +85,7 @@ class ContactDataBuilder {
 		$org = $this->extractFirstValue(value: ($ncContact['ORG'] ?? ''));
 
 		$clientType = $this->determineClientType(name: $name, org: $org);
-
-		if ($name === '' && $org !== '') {
-			$name = $org;
-		}
-
-		$industry = '';
-		if ($clientType === 'person') {
-			$industry = $org;
-		}
+		$name = $this->displayName(name: $name, org: $org);
 
 		$data = ['name' => $name, 'type' => $clientType]
 			+ $this->clientChannels(ncContact: $ncContact)
@@ -104,6 +100,59 @@ class ContactDataBuilder {
 		$data['name'] = $name;
 		$data['type'] = $clientType;
 
+		return $this->withClientExtras(data: $data, ncContact: $ncContact);
+	}//end buildClientImportData()
+
+	/**
+	 * The client's name: the organisation's when the contact has no name of its own.
+	 *
+	 * @param string $name The contact's name.
+	 * @param string $org The contact's organisation.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function displayName(string $name, string $org): string {
+		if ($name === '' && $org !== '') {
+			$name = $org;
+		}
+
+		return $name;
+	}//end displayName()
+
+	/**
+	 * A person's industry is their organisation; an organisation has none from the card.
+	 *
+	 * @param string $clientType The client type.
+	 * @param string $org The contact's organisation.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function industryFor(string $clientType, string $org): string {
+		$industry = '';
+		if ($clientType === 'person') {
+			$industry = $org;
+		}
+
+		return $industry;
+	}//end industryFor()
+
+	/**
+	 * Add the industry when there is one, and a person's preferred name.
+	 *
+	 * @param array $data The client data, with its `type`.
+	 * @param array $ncContact The Nextcloud contact data.
+	 *
+	 * @return array
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
+	 */
+	private function withClientExtras(array $data, array $ncContact): array {
+		$clientType = $data['type'];
+		$industry = $this->industryFor(clientType: $clientType, org: $this->extractFirstValue(value: ($ncContact['ORG'] ?? '')));
 		// `industry` is a list of sectors (pipelinq-forms-review); written only
 		// when there is one, like the scalars above.
 		if ($industry !== '') {
@@ -115,7 +164,7 @@ class ContactDataBuilder {
 		}
 
 		return $data;
-	}//end buildClientImportData()
+	}//end withClientExtras()
 
 	/**
 	 * A client's channels from the card: first email and phone, the typed lists, social profiles and website.
@@ -153,19 +202,12 @@ class ContactDataBuilder {
 	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
 		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
 
-		$emails = $this->extractTypedEntries(value: ($ncContact['EMAIL'] ?? null));
-		$phones = $this->extractTypedEntries(value: ($ncContact['TEL'] ?? null));
-
-		$data = [
-			'name' => $name,
-			'email' => $emails[0]['value'] ?? '',
-			'phone' => $phones[0]['value'] ?? '',
-			'emails' => $emails,
-			'phones' => $phones,
-			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
-			'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
-			'contactsUid' => $uid,
-		];
+		$data = ['name' => $name]
+			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
+			+ [
+				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
+				'contactsUid' => $uid,
+			];
 
 		if ($clientId !== null && $clientId !== '') {
 			$data['client'] = $clientId;
@@ -402,19 +444,4 @@ class ContactDataBuilder {
 
 		return 'person';
 	}//end determineClientType()
-
-	/**
-	 * Extract first value from a vCard property that may be an array or string.
-	 *
-	 * @param mixed $value The value to extract from.
-	 *
-	 * @return string The extracted string value.
-	 */
-	private function extractFirstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			return (string)($value[0] ?? '');
-		}
-
-		return (string)$value;
-	}//end extractFirstValue()
 }//end class

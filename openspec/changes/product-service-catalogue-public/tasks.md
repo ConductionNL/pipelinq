@@ -24,7 +24,8 @@
   - en and nl for every new schema string and card title; the short labels in de, es, fr and it too.
 
 ## 4. UPL list
-- [ ] 4.1 A repair step or occ command that imports the UPL reference list (CSV from the national source) into an OpenRegister lookup so `uplReference` is picked from a list (V1)
+- [x] 4.1 A repair step or occ command that imports the UPL reference list (CSV from the national source) into an OpenRegister lookup so `uplReference` is picked from a list (V1)
+  - Built 2026-11-14: `occ pipelinq:upl:import [--file=<csv>] [--url=<url>]` (`UplImportCommand`, `UplListImporter`, `UplListParser`) downloads the list from the national source (app setting `upl_list_url` overrides it) and keeps a `uplProduct` lookup (name, uri, audience) in step: one object per URI, created, updated when changed, otherwise left alone; entries that leave the list are kept because a product may still point at them. `product.uplReference` (1.2.1) gets `x-options-from` on that lookup by URI, with `hideWhenEmpty` so the field stays a free URI until the list is imported. Running it against the national source on a live instance is not done here.
 
 ## 5. Close
 - [ ] 5.1 Correct the spec's front matter from `done` to the measured state; flip `prod-service-catalogue` to built when 1-3 are live (V1)

@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
+use OCA\Pipelinq\Service\Support\FindAllAsArrays;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -44,6 +46,8 @@ use Psr\Log\LoggerInterface;
  */
 class ForecastExportService implements ForecastExportServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use FindAllAsArrays;
 
 	/**
 	 * The CSV header row.
@@ -84,32 +88,51 @@ class ForecastExportService implements ForecastExportServiceInterface {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-010-01, REQ-FRC-010-05
 	 */
 	public function exportSnapshots(string $periodId, string $level, ?string $ownerId, int $limit, int $offset): array {
-		$filters = ['period_id' => $periodId, 'level' => $level];
+		$filters = ['period_id' => $periodId, 'level' => $level] + self::ownerFilter(ownerId: $ownerId);
+
+		return $this->snapshotPage(filters: $filters, window: ['limit' => $limit, 'offset' => $offset]);
+	}//end exportSnapshots()
+
+	/**
+	 * The owner filter, or none when no owner is given.
+	 *
+	 * @param string|null $ownerId Optional owner filter.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function ownerFilter(?string $ownerId): array {
 		if ($ownerId !== null && $ownerId !== '') {
-			$filters['owner_id'] = $ownerId;
+			return ['owner_id' => $ownerId];
 		}
 
+		return [];
+	}//end ownerFilter()
+
+	/**
+	 * One page of presented snapshots matching the filters, with the full count.
+	 *
+	 * @param array<string, string> $filters The period_id, level and optional owner_id filters.
+	 * @param array{limit: int, offset: int} $window The page size and offset.
+	 *
+	 * @return array{snapshots: array<int, array<string, mixed>>, total: int, limit: int, offset: int}
+	 */
+	private function snapshotPage(array $filters, array $window): array {
 		// Push the ascending sort and the page window down into OpenRegister,
 		// and count the full matching set separately, instead of fetching every
 		// snapshot and sorting/slicing in PHP.
 		$total = $this->countObjects(schemaKey: 'forecastSnapshot_schema', filters: $filters);
 		$page = $this->findObjects(
 			schemaKey: 'forecastSnapshot_schema',
-			query: ['filters' => $filters, 'sort' => ['as_of_date' => 'ASC'], 'limit' => $limit, 'offset' => $offset]
+			query: ['filters' => $filters, 'sort' => ['as_of_date' => 'ASC']] + $window
 		);
 
 		$snapshots = [];
 		foreach ($page as $row) {
-			$snapshots[] = $this->presentSnapshot(row: $row, periodId: $periodId);
+			$snapshots[] = $this->presentSnapshot(row: $row, periodId: $filters['period_id']);
 		}
 
-		return [
-			'snapshots' => $snapshots,
-			'total' => $total,
-			'limit' => $limit,
-			'offset' => $offset,
-		];
-	}//end exportSnapshots()
+		return ['snapshots' => $snapshots, 'total' => $total] + $window;
+	}//end snapshotPage()
 
 	/**
 	 * Render snapshots as injection-safe CSV.
@@ -299,19 +322,7 @@ class ForecastExportService implements ForecastExportServiceInterface {
 		$window = ['limit' => ($query['limit'] ?? null), 'offset' => ($query['offset'] ?? null)];
 		$config += array_filter($window, static fn (?int $value): bool => $value !== null);
 
-		try {
-			$results = $this->getObjectService()->findAll(config: $config);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: forecast export query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(value: $result);
-		}
-
-		return $objects;
+		return $this->findAllAsArrays(config: $config, failure: 'Pipelinq: forecast export query failed');
 	}//end findObjects()
 
 	/**
@@ -356,15 +367,4 @@ class ForecastExportService implements ForecastExportServiceInterface {
 
 		return array_merge(['register' => $register, 'schema' => $schema], $filters);
 	}//end scopedFilters()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

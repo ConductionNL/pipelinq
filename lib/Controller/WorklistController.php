@@ -37,6 +37,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -131,15 +132,31 @@ class WorklistController extends Controller {
 			return new JSONResponse(['message' => 'Invalid bucket'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$lens = (string)$this->request->getParam('lens', '');
-		$sort = (string)$this->request->getParam('sort', 'deadline');
-		$scope = 'open';
-		if (in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true) === true) {
-			$scope = 'all';
+		$result = $this->fetchItems(user: $user, bucket: $bucket);
+		if ($result instanceof JSONResponse) {
+			return $result;
 		}
 
+		return $this->itemsResponse(result: $result);
+	}//end items()
+
+	/**
+	 * Read the user's items for a bucket with the requested lens, sort and scope.
+	 *
+	 * @param IUser $user The signed-in user.
+	 * @param string $bucket The validated bucket.
+	 *
+	 * @return array<string, mixed>|JSONResponse The worklist result, or a 500 envelope when it is unavailable.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function fetchItems(IUser $user, string $bucket): array|JSONResponse {
+		$lens = (string)$this->request->getParam('lens', '');
+		$sort = (string)$this->request->getParam('sort', 'deadline');
+		$scope = $this->scopeParam();
+
 		try {
-			$result = $this->worklistService->items(userId: $user->getUID(), bucket: $bucket, lens: $lens, sort: $sort, scope: $scope);
+			return $this->worklistService->items(userId: $user->getUID(), bucket: $bucket, lens: $lens, sort: $sort, scope: $scope);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[WorklistController] items failed',
@@ -147,13 +164,40 @@ class WorklistController extends Controller {
 			);
 			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+	}//end fetchItems()
 
+	/**
+	 * The requested scope: all items when done ones are asked for, else the open ones.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function scopeParam(): string {
+		$scope = 'open';
+		if (in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true) === true) {
+			$scope = 'all';
+		}
+
+		return $scope;
+	}//end scopeParam()
+
+	/**
+	 * The worklist result as JSON, or as a CSV download when asked for.
+	 *
+	 * @param array<string, mixed> $result The worklist result.
+	 *
+	 * @return JSONResponse|DataDownloadResponse
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function itemsResponse(array $result): JSONResponse|DataDownloadResponse {
 		if ((string)$this->request->getParam('format', '') === 'csv') {
 			return new DataDownloadResponse($this->asCsv(items: $result['items']), 'my-work.csv', 'text/csv');
 		}
 
 		return new JSONResponse($result);
-	}//end items()
+	}//end itemsResponse()
 
 	/**
 	 * GET /api/worklist/summary: one sentence on the session user's open work,

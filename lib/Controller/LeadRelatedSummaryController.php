@@ -84,6 +84,27 @@ class LeadRelatedSummaryController extends Controller {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		$lead = $this->loadLead(id: $id);
+		if ($lead === []) {
+			return new JSONResponse(['message' => 'Not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$lead['id'] = ($lead['id'] ?? $id);
+		if ($this->policy->mayAccess(uid: $user->getUID(), object: $lead, ownerField: 'assignee') === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		return new JSONResponse($this->summary->forLead(lead: $lead));
+	}//end show()
+
+	/**
+	 * The lead as an array, or an empty array when it cannot be found.
+	 *
+	 * @param string $id The lead's id.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function loadLead(string $id): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		try {
@@ -97,15 +118,6 @@ class LeadRelatedSummaryController extends Controller {
 			$lead = (array)$found->jsonSerialize();
 		}
 
-		if ($lead === []) {
-			return new JSONResponse(['message' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		$lead['id'] = ($lead['id'] ?? $id);
-		if ($this->policy->mayAccess(uid: $user->getUID(), object: $lead, ownerField: 'assignee') === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
-		return new JSONResponse($this->summary->forLead(lead: $lead));
-	}//end show()
+		return $lead;
+	}//end loadLead()
 }//end class

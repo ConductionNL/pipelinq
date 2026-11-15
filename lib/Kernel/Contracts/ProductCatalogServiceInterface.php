@@ -74,15 +74,27 @@ interface ProductCatalogServiceInterface {
 	 * The returned figure is rounded to cents and never derived from
 	 * client-supplied price data.
 	 *
-	 * @param array<string, mixed> $product The product object.
-	 * @param float $quantity The ordered quantity (clamped to >= 0).
-	 * @param string|null $variantSku Optional variant SKU.
+	 * With a client, a matching price list's price wins over the product's own.
+	 *
+	 * @param array<string, mixed>      $product    The product object.
+	 * @param float                     $quantity   The ordered quantity (clamped to >= 0).
+	 * @param string|null               $variantSku Optional variant SKU.
+	 * @param array<string, mixed>|null $client     The client the line is for, read with the caller's rights.
+	 * @param string|null               $currency   The quote's currency; EUR when empty.
 	 *
 	 * @return array<string, mixed> The resolution: unitPrice, source
-	 *                              (base|tier|variant), tierLabel, btwClass,
-	 *                              taxRate.
+	 *                              (base|tier|variant|price-list), tierLabel,
+	 *                              btwClass, taxRate; with a client also
+	 *                              priceListId and priceListTitle.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
-	public function resolveEffectivePrice(array $product, float $quantity, ?string $variantSku = null): array;
+	public function resolveEffectivePrice(
+		array $product,
+		float $quantity,
+		?string $variantSku = null,
+		?array $client = null,
+		?string $currency = null
+	): array;
 }//end interface

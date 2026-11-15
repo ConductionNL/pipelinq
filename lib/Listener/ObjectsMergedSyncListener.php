@@ -41,6 +41,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\OpenRegisterSyncServiceInterface;
+use OCA\Pipelinq\Util\ContainerWebhookService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -53,6 +54,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/unify-client-contact/spec.md
  */
 class ObjectsMergedSyncListener implements IEventListener {
+	use ContainerWebhookService;
+
 	/**
 	 * CloudEvent name webhooks subscribe to for MDM sync delivery.
 	 *
@@ -230,17 +233,4 @@ class ObjectsMergedSyncListener implements IEventListener {
 			}
 		}
 	}//end dispatchDownstream()
-
-	/**
-	 * Lazily resolve OpenRegister's WebhookService, or null when OR is absent.
-	 *
-	 * @return object|null The WebhookService, or null.
-	 */
-	private function resolveWebhookService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\WebhookService');
-		} catch (\Throwable $e) {
-			return null;
-		}
-	}//end resolveWebhookService()
 }//end class

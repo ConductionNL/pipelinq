@@ -77,6 +77,29 @@ class RemoveMockPipelinesCommand extends Command {
 			return Command::FAILURE;
 		}
 
+		$this->printRemovals(report: $report, dryRun: $dryRun, output: $output);
+		$this->printDefaults(report: $report, output: $output);
+
+		$counts = [count($report['removed']), count($report['kept']), count($report['failed'])];
+		$output->writeln(vsprintf('<info>%d removed, %d kept, %d refused.</info>', $counts));
+
+		if ($report['failed'] === []) {
+			return Command::SUCCESS;
+		}
+
+		return Command::FAILURE;
+	}//end execute()
+
+	/**
+	 * Print each removed, kept and refused pipeline.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $report The cleanup report.
+	 * @param bool                                             $dryRun Whether nothing was removed.
+	 * @param OutputInterface                                  $output The console output.
+	 *
+	 * @return void
+	 */
+	private function printRemovals(array $report, bool $dryRun, OutputInterface $output): void {
 		$verb = 'Removed';
 		if ($dryRun === true) {
 			$verb = 'Would remove';
@@ -94,19 +117,20 @@ class RemoveMockPipelinesCommand extends Command {
 		foreach ($report['failed'] as $pipeline) {
 			$output->writeln(sprintf('<error>OpenRegister refused to remove "%s" (%s)</error>', $pipeline['title'], $pipeline['id']));
 		}
+	}//end printRemovals()
 
+	/**
+	 * Warn when more than one pipeline is marked as default.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $report The cleanup report.
+	 * @param OutputInterface                                  $output The console output.
+	 *
+	 * @return void
+	 */
+	private function printDefaults(array $report, OutputInterface $output): void {
 		if (count($report['defaults']) > 1) {
 			$titles = array_map(static fn (array $pipeline): string => '"'.$pipeline['title'].'"', $report['defaults']);
 			$output->writeln('<comment>More than one pipeline is marked as default: '.implode(', ', $titles).'</comment>');
 		}
-
-		$counts = [count($report['removed']), count($report['kept']), count($report['failed'])];
-		$output->writeln(vsprintf('<info>%d removed, %d kept, %d refused.</info>', $counts));
-
-		if ($report['failed'] === []) {
-			return Command::SUCCESS;
-		}
-
-		return Command::FAILURE;
-	}//end execute()
+	}//end printDefaults()
 }//end class

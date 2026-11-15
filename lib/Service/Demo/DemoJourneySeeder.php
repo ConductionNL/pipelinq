@@ -206,9 +206,15 @@ class DemoJourneySeeder {
 				continue;
 			}
 
-			$removed = $this->removeJourney(journey: $journey, journeySchema: $journeySchema, runSchema: $runSchema);
-			$counts['journeys'] += $removed['journeys'];
-			$counts['runs'] += $removed['runs'];
+			$journeyId = $this->store->idOf(payload: $journey);
+			if ($journeyId === '') {
+				continue;
+			}
+
+			$counts['runs'] += $this->removeFlowAndRuns(journey: $journey, runSchema: $runSchema);
+			if ($this->store->delete(schemaSlug: $journeySchema, id: $journeyId) === true) {
+				$counts['journeys']++;
+			}
 		}
 
 		return $counts;
@@ -276,35 +282,25 @@ class DemoJourneySeeder {
 	}//end demoNames()
 
 	/**
-	 * Delete one demo journey: its flow, its runs, then the journey itself.
+	 * Delete the flow and the runs of one demo journey, before the journey itself goes.
 	 *
-	 * @param array<string, mixed> $journey The journey row.
-	 * @param string $journeySchema The journey schema.
-	 * @param string $runSchema The journey run schema.
+	 * @param array<string, mixed> $journey   The journey row, with an id.
+	 * @param string               $runSchema The journey run schema.
 	 *
-	 * @return array{journeys: int, runs: int} Counts.
+	 * @return int How many runs were deleted.
 	 */
-	private function removeJourney(array $journey, string $journeySchema, string $runSchema): array {
-		$counts = ['journeys' => 0, 'runs' => 0];
-		$journeyId = $this->store->idOf(payload: $journey);
-		if ($journeyId === '') {
-			return $counts;
-		}
-
+	private function removeFlowAndRuns(array $journey, string $runSchema): int {
 		$this->deleteFlow(flowUuid: trim((string)($journey['flowUuid'] ?? '')));
 
-		foreach ($this->journeyService->runsFor(journeyId: $journeyId) as $run) {
+		$runs = 0;
+		foreach ($this->journeyService->runsFor(journeyId: $this->store->idOf(payload: $journey)) as $run) {
 			if ($this->store->delete(schemaSlug: $runSchema, id: $this->store->idOf(payload: $run)) === true) {
-				$counts['runs']++;
+				$runs++;
 			}
 		}
 
-		if ($this->store->delete(schemaSlug: $journeySchema, id: $journeyId) === true) {
-			$counts['journeys']++;
-		}
-
-		return $counts;
-	}//end removeJourney()
+		return $runs;
+	}//end removeFlowAndRuns()
 
 	/**
 	 * Delete the flow a demo journey compiled into, when the engine can find it.

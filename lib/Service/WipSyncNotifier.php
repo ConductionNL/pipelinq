@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
+use OCA\Pipelinq\Service\Support\AdminNotice;
 use OCP\IGroupManager;
 
 /**
@@ -38,6 +39,8 @@ use OCP\IGroupManager;
  * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
  */
 class WipSyncNotifier implements WipSyncNotifierInterface {
+	use AdminNotice;
+
 	/**
 	 * Constructor.
 	 *
@@ -61,21 +64,10 @@ class WipSyncNotifier implements WipSyncNotifierInterface {
 	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
 	 */
 	public function notifyFailure(string $title, string $uuid): void {
-		$adminGroup = $this->groupManager->get('admin');
-		if ($adminGroup === null) {
-			return;
-		}
-
-		foreach ($adminGroup->getUsers() as $user) {
-			$this->notificationService->sendNotification(
-				userId: $user->getUID(),
-				subject: 'wip_sync_failed',
-				parameters: [
-					'title' => $title,
-				],
-				objectType: 'billingTimeEntry',
-				objectId: $uuid
-			);
-		}
+		$this->notifyAdmins(
+			subject: 'wip_sync_failed',
+			parameters: ['title' => $title],
+			about: new NoticedObject(objectType: 'billingTimeEntry', objectId: $uuid)
+		);
 	}//end notifyFailure()
 }//end class

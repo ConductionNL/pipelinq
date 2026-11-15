@@ -109,6 +109,39 @@ class ResidentViewController extends Controller {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
+		$ticket = $this->findTicket(id: $id);
+		if ($ticket === null) {
+			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$data   = $ticket->getObject();
+		$expose = ($this->tenants->getConfig(PortalTenantServiceInterface::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
+
+		$bespoke = $this->requests->previewDetail(ticket: $data, exposeAssigneeName: $expose);
+		$shown   = $this->bespokeShown(bespoke: $bespoke, expose: $expose);
+
+		$portaliq = $this->portaliqPanel(ticket: $data);
+		if ($portaliq !== null) {
+			$shown = array_merge($shown, array_keys($portaliq['fields']));
+		}
+
+		return new JSONResponse(
+			[
+				'bespoke'        => $bespoke,
+				'portaliq'       => $portaliq,
+				'internalFields' => $this->internalFields(ticket: $data, shown: $shown),
+			]
+		);
+	}//end show()
+
+	/**
+	 * Read a ticket as the calling user, or null when absent or not readable.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return mixed The ticket entity, or null.
+	 */
+	private function findTicket(string $id): mixed {
 		$ticket = null;
 		if ($id !== '') {
 			// OpenRegister's facade reads under the caller's register RBAC
@@ -125,15 +158,19 @@ class ResidentViewController extends Controller {
 			}
 		}
 
-		if ($ticket === null) {
-			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
-		}
+		return $ticket;
+	}//end findTicket()
 
-		$data   = $ticket->getObject();
-		$expose = ($this->tenants->getConfig(PortalTenantServiceInterface::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
-
-		$bespoke = $this->requests->previewDetail(ticket: $data, exposeAssigneeName: $expose);
-		$shown   = [];
+	/**
+	 * The fields the bespoke panel shows.
+	 *
+	 * @param mixed $bespoke The bespoke preview, null when there is none.
+	 * @param bool  $expose  Whether the assignee name is exposed.
+	 *
+	 * @return array<int, string>
+	 */
+	private function bespokeShown(mixed $bespoke, bool $expose): array {
+		$shown = [];
 		if ($bespoke !== null) {
 			$shown = self::BESPOKE_FIELDS;
 			if ($expose === true) {
@@ -141,19 +178,8 @@ class ResidentViewController extends Controller {
 			}
 		}
 
-		$portaliq = $this->portaliqPanel(ticket: $data);
-		if ($portaliq !== null) {
-			$shown = array_merge($shown, array_keys($portaliq['fields']));
-		}
-
-		return new JSONResponse(
-			[
-				'bespoke'        => $bespoke,
-				'portaliq'       => $portaliq,
-				'internalFields' => $this->internalFields(ticket: $data, shown: $shown),
-			]
-		);
-	}//end show()
+		return $shown;
+	}//end bespokeShown()
 
 	/**
 	 * OpenRegister's object facade, which reads under the caller's RBAC.

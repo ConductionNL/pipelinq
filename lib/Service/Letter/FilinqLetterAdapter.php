@@ -207,17 +207,54 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
             throw new RuntimeException('user_required: a letter is filed in the acting user\'s Files');
         }
 
+        $options = $this->letterOptions(userId: $user->getUID(), filename: $filename, outputMode: $outputMode, listRefs: $listRefs);
+        $result  = $this->generateLetter(service: $service, templateId: $templateId, dataRefs: $dataRefs, options: $options);
+
+        return $this->letterFrom(result: $result);
+
+    }//end render()
+
+    /**
+     * The generateDocument options for a PDF letter.
+     *
+     * @param string                     $userId     The acting user's id.
+     * @param string                     $filename   The file name, without extension.
+     * @param string                     $outputMode 'both' keeps a copy in the user's Files, 'return' only returns it.
+     * @param list<array<string, mixed>> $listRefs   Lists the template reads beside the records.
+     *
+     * @return array<string, mixed> The options.
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     */
+    private function letterOptions(string $userId, string $filename, string $outputMode, array $listRefs): array
+    {
+        return [
+            'format'   => 'pdf',
+            'userId'   => $userId,
+            'filename' => $filename,
+            'output'   => ['mode' => $outputMode],
+        ] + $this->listOptions(listRefs: $listRefs);
+
+    }//end letterOptions()
+
+    /**
+     * Have filinq generate the letter, wrapping a refusal.
+     *
+     * @param object                                                  $service    The filinq document service.
+     * @param string                                                  $templateId The filinq template id.
+     * @param list<array{register: string, schema: string, id: string}> $dataRefs   The records the letter reads.
+     * @param array<string, mixed>                                    $options    The generateDocument options.
+     *
+     * @return array<mixed> The raw generateDocument result.
+     *
+     * @throws RuntimeException When the render fails.
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     */
+    private function generateLetter(object $service, string $templateId, array $dataRefs, array $options): array
+    {
         try {
-            $result = (array) $service->generateDocument(
-                $templateId,
-                $dataRefs,
-                [
-                    'format'   => 'pdf',
-                    'userId'   => $user->getUID(),
-                    'filename' => $filename,
-                    'output'   => ['mode' => $outputMode],
-                ] + $this->listOptions(listRefs: $listRefs)
-            );
+            return (array) $service->generateDocument($templateId, $dataRefs, $options);
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: filinq refused a letter render',
@@ -226,30 +263,76 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
             throw new RuntimeException('filinq_render_failed: '.$e->getMessage(), 0, $e);
         }
 
+    }//end generateLetter()
+
+    /**
+     * The letter from a generateDocument result.
+     *
+     * @param array<mixed> $result The raw generateDocument result.
+     *
+     * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
+     *
+     * @throws RuntimeException When filinq returned no document.
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     */
+    private function letterFrom(array $result): array
+    {
         $content = (string) ($result['content'] ?? '');
         if ($content === '') {
             throw new RuntimeException('filinq_render_failed: filinq returned no document');
         }
 
         $output = (array) ($result['output'] ?? []);
+
+        return [
+            'content'  => $content,
+            'fileId'   => $this->outputFileId(output: $output),
+            'path'     => $this->outputPath(output: $output),
+            'warnings' => array_values(array_map('strval', (array) ($result['warnings'] ?? []))),
+        ];
+
+    }//end letterFrom()
+
+    /**
+     * The id of the file filinq kept, when it kept one.
+     *
+     * @param array<mixed> $output The generateDocument output block.
+     *
+     * @return int|null
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     */
+    private function outputFileId(array $output): int|null
+    {
         $fileId = null;
         if (is_numeric($output['fileId'] ?? null) === true) {
             $fileId = (int) $output['fileId'];
         }
 
+        return $fileId;
+
+    }//end outputFileId()
+
+    /**
+     * The path of the file filinq kept, when it kept one.
+     *
+     * @param array<mixed> $output The generateDocument output block.
+     *
+     * @return string|null
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     */
+    private function outputPath(array $output): string|null
+    {
         $path = null;
         if (isset($output['path']) === true) {
             $path = (string) $output['path'];
         }
 
-        return [
-            'content'  => $content,
-            'fileId'   => $fileId,
-            'path'     => $path,
-            'warnings' => array_values(array_map('strval', (array) ($result['warnings'] ?? []))),
-        ];
+        return $path;
 
-    }//end render()
+    }//end outputPath()
 
     /**
      * Have filinq preview a template for these records and name the fields it fills.

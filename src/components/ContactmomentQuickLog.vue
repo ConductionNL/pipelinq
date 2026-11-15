@@ -229,6 +229,7 @@ import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
 import contactMomentDraftMixin from '../mixins/contactMomentDraftMixin.js'
 import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
 import { buildContactMoment } from '../services/contactMomentDraft.js'
+import { openRequestOptions } from '../services/contactMomentRequests.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -317,13 +318,13 @@ export default {
 		},
 
 		/**
+		 * The open requests of the chosen client.
+		 *
 		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * @spec openspec/changes/specify-capability-rows/specs/contactmomenten/spec.md#requirement-a-contact-moment-is-filed-on-an-open-request
 		 */
 		requestSelectOptions() {
-			return this.requests.map((r) => ({
-				value: r.id,
-				label: r.title || r.id,
-			}))
+			return openRequestOptions(this.requests, this.form.client, this.form.parentTicket)
 		},
 
 		/**

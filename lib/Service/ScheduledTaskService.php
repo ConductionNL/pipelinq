@@ -140,7 +140,7 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		$page = max(1, (int)($params['_page'] ?? 1));
 		$limit = min(100, max(1, (int)($params['_limit'] ?? 20)));
 
-		$filters = $this->buildTaskFilters(registerId: $registerId, schemaId: $schemaId, params: $params);
+		$filters = $this->buildTaskFilters(scope: ['register' => $registerId, 'schema' => $schemaId], params: $params);
 
 		$items = [];
 		$total = 0;
@@ -188,17 +188,13 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 	 * Applies the register/schema scope plus the optional status, assignee and
 	 * deadline-window filters from the request params.
 	 *
-	 * @param string $registerId The configured register ID.
-	 * @param string $schemaId The task schema ID.
-	 * @param array<string,mixed> $params The request filter params.
+	 * @param array<string,string> $scope  The configured register and task schema IDs.
+	 * @param array<string,mixed>  $params The request filter params.
 	 *
 	 * @return array<string,mixed> The assembled filter array.
 	 */
-	private function buildTaskFilters(string $registerId, string $schemaId, array $params): array {
-		$filters = [
-			'register' => $registerId,
-			'schema' => $schemaId,
-		];
+	private function buildTaskFilters(array $scope, array $params): array {
+		$filters = $scope;
 
 		foreach (['status', 'assigneeUserId', 'assigneeGroupId'] as $key) {
 			if (isset($params[$key]) === true && $params[$key] !== '') {
@@ -481,13 +477,7 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getPendingTasks(int $windowMinutes = 60): array {
-		if ($windowMinutes > self::MAX_WINDOW_MINUTES) {
-			$windowMinutes = self::MAX_WINDOW_MINUTES;
-		}
-
-		if ($windowMinutes < 1) {
-			$windowMinutes = 1;
-		}
+		$windowMinutes = $this->clampWindow(windowMinutes: $windowMinutes);
 
 		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
@@ -497,22 +487,68 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 		$now = new DateTimeImmutable('now');
 		$cutoff = $now->modify(sprintf('+%d minutes', $windowMinutes));
 
+		$items = $this->pendingItems(query: $this->pendingQuery(scope: ['register' => $registerId, 'schema' => $schemaId], window: [$now, $cutoff]));
+
+		return $this->normaliseAll(items: $items);
+	}//end getPendingTasks()
+
+	/**
+	 * Clamp a look-ahead window to 1 .. MAX_WINDOW_MINUTES.
+	 *
+	 * @param int $windowMinutes The requested window in minutes.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function clampWindow(int $windowMinutes): int {
+		if ($windowMinutes > self::MAX_WINDOW_MINUTES) {
+			$windowMinutes = self::MAX_WINDOW_MINUTES;
+		}
+
+		if ($windowMinutes < 1) {
+			$windowMinutes = 1;
+		}
+
+		return $windowMinutes;
+	}//end clampWindow()
+
+	/**
+	 * The query for open tasks whose deadline falls between now and the cutoff.
+	 *
+	 * @param array<string, string>                              $scope  The register and task schema ids.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window The window start and end.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function pendingQuery(array $scope, array $window): array {
+		return [
+			'filters' => $scope + [
+				'status' => 'open',
+				'deadline' => [
+					'>=' => $window[0]->format(DateTimeInterface::ATOM),
+					'<=' => $window[1]->format(DateTimeInterface::ATOM),
+				],
+			],
+			'limit' => 100,
+			'order' => ['deadline' => 'ASC'],
+		];
+	}//end pendingQuery()
+
+	/**
+	 * Run the pending-task query, logging a failure.
+	 *
+	 * @param array<string, mixed> $query The findAll query.
+	 *
+	 * @return array<mixed> The tasks found; an empty list when the query fails.
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function pendingItems(array $query): array {
 		try {
-			$items = $this->store->objects()->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $schemaId,
-						'status' => 'open',
-						'deadline' => [
-							'>=' => $now->format(DateTimeInterface::ATOM),
-							'<=' => $cutoff->format(DateTimeInterface::ATOM),
-						],
-					],
-					'limit' => 100,
-					'order' => ['deadline' => 'ASC'],
-				]
-			);
+			return $this->store->objects()->findAll($query);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'ScheduledTaskService: getPendingTasks failed',
@@ -520,14 +556,25 @@ class ScheduledTaskService implements ScheduledTaskServiceInterface {
 			);
 			return [];
 		}//end try
+	}//end pendingItems()
 
+	/**
+	 * Normalise every found task to an array.
+	 *
+	 * @param iterable<mixed> $items The tasks found.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function normaliseAll(iterable $items): array {
 		$normalised = [];
 		foreach ($items as $item) {
 			$normalised[] = $this->normalizeToArray(object: $item);
 		}
 
 		return $normalised;
-	}//end getPendingTasks()
+	}//end normaliseAll()
 
 	/**
 	 * Process all due scheduled tasks.

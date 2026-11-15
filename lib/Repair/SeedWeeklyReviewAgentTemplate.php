@@ -122,37 +122,67 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-ships-as-an-agent-template-with-no-send-tool
 	 */
 	public function run(IOutput $output): void {
+		if ($this->prerequisitesMissing(output: $output) === true) {
+			return;
+		}
+
+		$objectService = $this->resolveObjectService(output: $output);
+		if ($objectService === null) {
+			return;
+		}
+
+		$this->seedTemplate(objectService: $objectService, output: $output);
+	}//end run()
+
+	/**
+	 * Whether Hermiq or OpenRegister is missing (reported on the output).
+	 *
+	 * @param IOutput $output The repair output.
+	 *
+	 * @return bool True when the template cannot be seeded.
+	 */
+	private function prerequisitesMissing(IOutput $output): bool {
 		$installed = $this->appManager->getInstalledApps();
 		if (in_array('openregister', $installed, true) === false || in_array('hermiq', $installed, true) === false) {
 			$output->info('Hermiq or OpenRegister is not installed, so the weekly review agent template was not seeded.');
-			return;
+			return true;
 		}
 
+		return false;
+	}//end prerequisitesMissing()
+
+	/**
+	 * Resolve the OpenRegister ObjectService; null (reported) when it is unavailable.
+	 *
+	 * @param IOutput $output The repair output.
+	 *
+	 * @return mixed The ObjectService, or null.
+	 */
+	private function resolveObjectService(IOutput $output) {
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (Throwable $e) {
 			$output->warning('OpenRegister ObjectService unavailable, so the weekly review agent template was not seeded.');
-			return;
+			return null;
 		}
+	}//end resolveObjectService()
 
+	/**
+	 * Seed the template unless it is present; a failure is reported and logged.
+	 *
+	 * @param mixed $objectService The OpenRegister ObjectService.
+	 * @param IOutput $output The repair output.
+	 *
+	 * @return void
+	 */
+	private function seedTemplate($objectService, IOutput $output): void {
 		try {
 			if ($this->exists(objectService: $objectService) === true) {
 				$output->info('The weekly review agent template is already present.');
 				return;
 			}
 
-			// A repair step runs from `occ` with no session, so RBAC resolves
-			// the actor to Anonymous and refuses the write. Both flags off is
-			// how every other seed in this app writes system data.
-			$objectService->saveObject(
-				object: $this->template(),
-				extend: [],
-				register: self::HERMIQ_REGISTER,
-				schema: self::TEMPLATE_SCHEMA,
-				uuid: null,
-				_rbac: false,
-				_multitenancy: false
-			);
+			$this->saveTemplate(objectService: $objectService);
 			$output->info('Seeded the weekly marketing review agent template.');
 		} catch (Throwable $e) {
 			$output->warning('Could not seed the weekly review agent template: ' . $e->getMessage());
@@ -161,7 +191,30 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 				['exception' => $e->getMessage()]
 			);
 		}//end try
-	}//end run()
+	}//end seedTemplate()
+
+	/**
+	 * Write the template as system data.
+	 *
+	 * A repair step runs from `occ` with no session, so RBAC resolves
+	 * the actor to Anonymous and refuses the write. Both flags off is
+	 * how every other seed in this app writes system data.
+	 *
+	 * @param mixed $objectService The OpenRegister ObjectService.
+	 *
+	 * @return void
+	 */
+	private function saveTemplate($objectService): void {
+		$objectService->saveObject(
+			object: $this->template(),
+			extend: [],
+			register: self::HERMIQ_REGISTER,
+			schema: self::TEMPLATE_SCHEMA,
+			uuid: null,
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end saveTemplate()
 
 	/**
 	 * The template as hermiq's `agenttemplate` schema records it.

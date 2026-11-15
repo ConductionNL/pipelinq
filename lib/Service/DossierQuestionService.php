@@ -155,16 +155,11 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 		}
 
 		$snapshot = $this->snapshot(collectionId: $collectionId, collection: $collection);
-		$subject = trim($title);
-		if ($subject === '') {
-			$subject = $snapshot['title'];
-		}
-
 		$saved = $this->tickets->save(
 			schemaKey: self::TICKET,
 			data: [
 				'ticketType' => TicketService::TYPE_REQUEST,
-				'title' => $subject,
+				'title' => $this->subjectLine(title: $title, snapshot: $snapshot),
 				'description' => $question,
 				'channel' => self::CHANNEL_PORTAL,
 				'status' => 'new',
@@ -179,6 +174,23 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			'status' => (string)($saved['status'] ?? 'new'),
 		];
 	}//end ask()
+
+	/**
+	 * The subject line of a question: the resident's own, else the dossier title.
+	 *
+	 * @param string               $title    The optional subject line.
+	 * @param array<string, mixed> $snapshot The dossier snapshot.
+	 *
+	 * @return string
+	 */
+	private function subjectLine(string $title, array $snapshot): string {
+		$subject = trim($title);
+		if ($subject === '') {
+			$subject = $snapshot['title'];
+		}
+
+		return $subject;
+	}//end subjectLine()
 
 	/**
 	 * Add the resident's reply to their own question.
@@ -199,19 +211,9 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			return null;
 		}
 
-		$replies = [];
-		if (is_array($ticket['portalReplies'] ?? null) === true) {
-			$replies = array_values($ticket['portalReplies']);
-		}
-
-		$replies[] = [
-			'message' => $message,
-			'createdAt' => $this->time->getDateTime()->format(DATE_ATOM),
-		];
+		$replies = $this->repliesWith(ticket: $ticket, message: $message);
 		$ticket['portalReplies'] = $replies;
-		if (($ticket['status'] ?? null) === self::STATUS_AWAITING_CUSTOMER) {
-			$ticket['status'] = self::STATUS_IN_PROGRESS;
-		}
+		$ticket = $this->resumeIfAwaiting(ticket: $ticket);
 
 		$saved = $this->tickets->save(schemaKey: self::TICKET, data: $ticket, id: $ticketId);
 
@@ -221,6 +223,47 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 			'portalReplies' => $replies,
 		];
 	}//end reply()
+
+	/**
+	 * The ticket's portal replies with the resident's new reply appended.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 * @param string $message The reply text.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 */
+	private function repliesWith(array $ticket, string $message): array {
+		$replies = [];
+		if (is_array($ticket['portalReplies'] ?? null) === true) {
+			$replies = array_values($ticket['portalReplies']);
+		}
+
+		$replies[] = [
+			'message' => $message,
+			'createdAt' => $this->time->getDateTime()->format(DATE_ATOM),
+		];
+
+		return $replies;
+	}//end repliesWith()
+
+	/**
+	 * Move a ticket that awaited the customer back in progress.
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 */
+	private function resumeIfAwaiting(array $ticket): array {
+		if (($ticket['status'] ?? null) === self::STATUS_AWAITING_CUSTOMER) {
+			$ticket['status'] = self::STATUS_IN_PROGRESS;
+		}
+
+		return $ticket;
+	}//end resumeIfAwaiting()
 
 	/**
 	 * The snapshot of a dossier as the resident sees it now (C4).

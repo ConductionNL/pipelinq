@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -44,6 +45,8 @@ use OCP\IRequest;
  * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-consuming-app-shall-declare-which-kinds-a-record-type-accepts-req-pkr-002
  */
 class PartyKindController extends Controller {
+	use ServiceResultResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -147,18 +150,4 @@ class PartyKindController extends Controller {
 	public function endLink(string $linkId): JSONResponse {
 		return $this->respond(result: $this->linkService->end(linkId: $linkId));
 	}//end endLink()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

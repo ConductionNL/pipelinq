@@ -44,6 +44,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\L10N\IFactory;
@@ -56,6 +57,8 @@ use Throwable;
  * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
  */
 class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInterface {
+	use PartyObjectRead;
+
 	/**
 	 * The rule that produced an answer: the party asked for it.
 	 *
@@ -112,16 +115,45 @@ class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInte
 	 * @spec openspec/specs/parties/spec.md#requirement-the-selectable-languages-are-the-ones-the-instance-can-render-req-pcl-002
 	 */
 	public function available(): array {
+		$tags = $this->languageTags(languages: $this->availableLanguages());
+
+		// The floor is always offered: an instance that renders nothing else
+		// still renders its source strings, and a picker with no options at
+		// all is indistinguishable from a broken one.
+		if (in_array(self::FALLBACK, $tags, true) === false) {
+			$tags[] = self::FALLBACK;
+		}
+
+		sort($tags);
+
+		return $tags;
+	}//end available()
+
+	/**
+	 * The languages Nextcloud lists for the app, or none when they cannot be read.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function availableLanguages(): array {
 		try {
-			$languages = $this->l10nFactory->findAvailableLanguages(AppIdentity::APP_ID);
+			return $this->l10nFactory->findAvailableLanguages(AppIdentity::APP_ID);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'CorrespondenceLanguageService: could not read the available languages',
 				['exception' => $e->getMessage()]
 			);
-			$languages = [];
+			return [];
 		}
+	}//end availableLanguages()
 
+	/**
+	 * The distinct well-formed language tags among the listed languages.
+	 *
+	 * @param array<int, mixed> $languages The listed languages.
+	 *
+	 * @return array<int, string>
+	 */
+	private function languageTags(array $languages): array {
 		$tags = [];
 		foreach ($languages as $language) {
 			$tag = trim((string)$language);
@@ -136,17 +168,8 @@ class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInte
 			}
 		}
 
-		// The floor is always offered: an instance that renders nothing else
-		// still renders its source strings, and a picker with no options at
-		// all is indistinguishable from a broken one.
-		if (in_array(self::FALLBACK, $tags, true) === false) {
-			$tags[] = self::FALLBACK;
-		}
-
-		sort($tags);
-
 		return $tags;
-	}//end available()
+	}//end languageTags()
 
 	/**
 	 * Whether a tag may be written, and what to say when it may not.
@@ -331,27 +354,6 @@ class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInte
 			return null;
 		}
 
-		try {
-			$entity = $this->objectService->find(id: $partyId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'CorrespondenceLanguageService: the party could not be read',
-				['party' => $partyId, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $partyId, failure: 'CorrespondenceLanguageService: the party could not be read', idKey: 'party');
 	}//end readParty()
 }//end class

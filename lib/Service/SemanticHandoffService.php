@@ -206,8 +206,23 @@ class SemanticHandoffService implements SemanticHandoffServiceInterface {
 			return $this->outcome(succeeded:false, reason: 'engine-unavailable');
 		}
 
+		return $this->executedOutcome(
+			execute: static fn () => $engine->execute(register: $register, schema: $schema, id: $id, handoffId: $handoffId),
+			handoffId: $handoffId
+		);
+	}//end handoff()
+
+	/**
+	 * Run the engine's execute call and normalise its answer; a throw or a non-array answer is a failure.
+	 *
+	 * @param callable(): mixed $execute   The engine's execute call.
+	 * @param string            $handoffId The declared handoff entry id, for the log.
+	 *
+	 * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string}
+	 */
+	private function executedOutcome(callable $execute, string $handoffId): array {
 		try {
-			$result = $engine->execute(register: $register, schema: $schema, id: $id, handoffId: $handoffId);
+			$result = $execute();
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SemanticHandoffService.handoff: engine execute failed',
@@ -221,7 +236,7 @@ class SemanticHandoffService implements SemanticHandoffServiceInterface {
 		}
 
 		return $this->resultOutcome(result: $result);
-	}//end handoff()
+	}//end executedOutcome()
 
 	/**
 	 * The outcome of the engine's answer: executed (with the target), parked

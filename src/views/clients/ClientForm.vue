@@ -338,6 +338,7 @@ import {
 	defaultLanguage,
 	emptyClientForm,
 	INDUSTRY_SECTORS,
+	prefilledClientFields,
 } from '../../utils/clientFormFields.js'
 import { CLIENT_TYPE_LABELS, enumOptions } from '../../utils/enumLabels.js'
 
@@ -460,6 +461,15 @@ export default {
 			default: '',
 		},
 
+		/**
+		 * Values to start a new client with, e.g. the fields Paste or scan
+		 * proposed. Only the form's own fields are taken.
+		 */
+		initialValues: {
+			type: Object,
+			default: null,
+		},
+
 		showActions: {
 			type: Boolean,
 			// eslint-disable-next-line vue/no-boolean-default
@@ -484,6 +494,7 @@ export default {
 				...emptyClientForm(),
 				name: this.initialName || '',
 				accountOwner: currentUser()?.uid || null,
+				...prefilledClientFields(this.initialValues),
 			},
 
 			typeOptions: enumOptions(CLIENT_TYPE_LABELS, (text) =>

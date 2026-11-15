@@ -36,14 +36,13 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
+use OCA\Pipelinq\Controller\Support\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -71,6 +70,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -338,13 +339,12 @@ class KassakoppelingAuditController extends Controller {
 	private function run(callable $action, string $label, int $successStatus = Http::STATUS_OK): JSONResponse {
 		try {
 			return new JSONResponse($action(), $successStatus);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (\Throwable $e) {
+			$mapped = $this->ocsErrorResponse(failure: $e);
+			if ($mapped !== null) {
+				return $mapped;
+			}
+
 			$this->logger->error(
 				'KassakoppelingAuditController::' . $label . ' failed',
 				['exception' => $e->getMessage()]

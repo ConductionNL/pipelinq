@@ -39,6 +39,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\SerialisedRows;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -54,6 +56,9 @@ use Throwable;
  * @spec openspec/specs/client-management/spec.md
  */
 class NormalisePartyFormFields implements IRepairStep {
+	use FirstAdminUser;
+	use SerialisedRows;
+
 	/**
 	 * Upper bound on rows fetched per schema.
 	 *
@@ -140,33 +145,92 @@ class NormalisePartyFormFields implements IRepairStep {
 			return;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$output->warning('NormalisePartyFormFields: OpenRegister ObjectService unavailable, skipping (' . $e->getMessage() . ')');
+		$resolved = $this->resolveObjectService(output: $output);
+		if ($resolved === []) {
 			return;
 		}
 
+		$this->repairAll(objectService: $resolved[0], register: $register, output: $output);
+	}//end run()
+
+	/**
+	 * Resolve OpenRegister's ObjectService, warning when it is unavailable.
+	 *
+	 * @param IOutput $output Output.
+	 *
+	 * @return array<int, mixed> The service as a one-element list, or an empty list when unavailable.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function resolveObjectService(IOutput $output): array {
+		try {
+			return [$this->container->get('OCA\OpenRegister\Service\ObjectService')];
+		} catch (Throwable $e) {
+			$output->warning('NormalisePartyFormFields: OpenRegister ObjectService unavailable, skipping (' . $e->getMessage() . ')');
+			return [];
+		}
+	}//end resolveObjectService()
+
+	/**
+	 * Repair every party type and report the totals.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $register The register id.
+	 * @param IOutput $output Output.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function repairAll(object $objectService, string $register, IOutput $output): void {
 		$actingAdmin = $this->actingAdmin();
 		$totals = ['fixed' => 0, 'skipped' => 0, 'stuck' => 0];
 		foreach (self::OBJECT_TYPES as $objectType) {
-			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
-			if ($schema === '') {
-				continue;
-			}
-
-			foreach ($this->readAll(objectService: $objectService, register: $register, schema: $schema) as $row) {
-				$outcome = $this->repairRow(
-					objectService: $objectService,
-					register: $register,
-					schema: $schema,
-					row: $row,
-					actingAdmin: $actingAdmin
-				);
+			foreach ($this->repairType(objectService: $objectService, register: $register, objectType: $objectType, actingAdmin: $actingAdmin) as $outcome) {
 				$totals[$outcome]++;
 			}
 		}
 
+		$this->reportTotals(output: $output, totals: $totals);
+	}//end repairAll()
+
+	/**
+	 * Repair every stored party of one type.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $register The register id.
+	 * @param string $objectType The party type.
+	 * @param IUser|null $actingAdmin The admin to save as.
+	 *
+	 * @return array<int, string> One outcome per row: `fixed`, `skipped` or `stuck`; empty when the type has no schema.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function repairType(object $objectService, string $register, string $objectType, IUser|null $actingAdmin): array {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
+		if ($schema === '') {
+			return [];
+		}
+
+		$outcomes = [];
+		foreach ($this->readAll(objectService: $objectService, register: $register, schema: $schema) as $row) {
+			$outcomes[] = $this->repairRow(objectService: $objectService, register: $register, schema: $schema, row: $row, actingAdmin: $actingAdmin);
+		}
+
+		return $outcomes;
+	}//end repairType()
+
+	/**
+	 * Report the repair totals.
+	 *
+	 * @param IOutput $output Output.
+	 * @param array{fixed: int, skipped: int, stuck: int} $totals The totals.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function reportTotals(IOutput $output, array $totals): void {
 		$output->info(
 			sprintf(
 				'NormalisePartyFormFields: %d record(s) normalised, %d unchanged, %d failed to save',
@@ -175,7 +239,7 @@ class NormalisePartyFormFields implements IRepairStep {
 				$totals['stuck']
 			)
 		);
-	}//end run()
+	}//end reportTotals()
 
 	/**
 	 * Save one party's patch.
@@ -219,17 +283,6 @@ class NormalisePartyFormFields implements IRepairStep {
 	}//end repairRow()
 
 	/**
-	 * Resolve an admin to act as: a repair step has no session.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = ($this->groupManager->get('admin')?->getUsers() ?? []);
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
 	 * Read every row of one schema as arrays, RBAC off (no session on the CLI).
 	 *
 	 * @param object $objectService OpenRegister's ObjectService.
@@ -241,10 +294,7 @@ class NormalisePartyFormFields implements IRepairStep {
 	private function readAll(object $objectService, string $register, string $schema): array {
 		try {
 			$rows = $objectService->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
-					'limit' => self::BATCH_LIMIT,
-				],
+				config: ['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::BATCH_LIMIT],
 				_rbac: false,
 				_multitenancy: false,
 			);
@@ -254,17 +304,6 @@ class NormalisePartyFormFields implements IRepairStep {
 			return [];
 		}
 
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$row = $row->jsonSerialize();
-			}
-
-			if (is_array($row) === true) {
-				$out[] = $row;
-			}
-		}
-
-		return $out;
+		return $this->serialisedRows(rows: $rows);
 	}//end readAll()
 }//end class

@@ -236,7 +236,7 @@ class NaviService implements NaviServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function answer(NaviQueryRun $run, array $context): array {
-		$llmResponse = $this->buildResponseForIntent(intent: $run->intent, query: $run->query, context: $context);
+		$llmResponse = $this->buildResponseForIntent(run: $run, context: $context);
 		$this->logger->info(
 			message: '[NaviService] processed query',
 			context: ['userId' => $run->userId, 'intent' => $run->intent, 'queryLength' => strlen($run->query)]
@@ -384,18 +384,17 @@ class NaviService implements NaviServiceInterface {
 	 * Deterministic — no actual LLM call required; the OpenRegister
 	 * `ChatService` is reserved for free-form summarisation in V2.
 	 *
-	 * @param string $intent Recognised intent.
-	 * @param string $query Trimmed query.
+	 * @param NaviQueryRun $run The query run, with its recognised intent and trimmed query.
 	 * @param array<int, array<string, mixed>> $context Object rows from buildContext.
 	 *
 	 * @return array<string, mixed> The intermediate LLM-response shape.
 	 */
-	private function buildResponseForIntent(string $intent, string $query, array $context): array {
-		return match ($intent) {
+	private function buildResponseForIntent(NaviQueryRun $run, array $context): array {
+		return match ($run->intent) {
 			'trend' => $this->buildTrendResponse(rows: $context),
 			'conversion' => $this->buildConversionResponse(rows: $context),
 			'breakdown' => $this->buildBreakdownResponse(rows: $context),
-			'count' => $this->buildCountResponse(rows: $context, query: $query),
+			'count' => $this->buildCountResponse(rows: $context, query: $run->query),
 			default => [
 				'resultType' => 'text',
 				'textResponse' => 'I am not sure how to answer that yet. Try asking about leads, requests, or trends.',

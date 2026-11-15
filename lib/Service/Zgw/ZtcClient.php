@@ -334,8 +334,27 @@ class ZtcClient implements ZtcClientInterface {
 			return null;
 		}
 
+		$response = $this->callZtc(endpoint: $endpoint, lookup: $lookup, client: $client, ztcUrl: $ztcUrl);
+		if ($response === null) {
+			return null;
+		}
+
+		return self::firstEntry(body: $response['body']);
+	}//end fetchByOmschrijving()
+
+	/**
+	 * Issue the ZTC lookup, or null when it found nothing or failed.
+	 *
+	 * @param array<string, mixed> $endpoint Endpoint payload.
+	 * @param ZtcLookup            $lookup   The lookup.
+	 * @param array<string, mixed> $client   The endpoint's client.
+	 * @param string               $ztcUrl   The ZTC component URL.
+	 *
+	 * @return array<string, mixed>|null The response.
+	 */
+	private function callZtc(array $endpoint, ZtcLookup $lookup, array $client, string $ztcUrl): array|null {
 		try {
-			$response = $this->api->callComponent(
+			return $this->api->callComponent(
 				componentUrl: $ztcUrl,
 				method: 'GET',
 				path: '/' . $lookup->resourceType,
@@ -351,9 +370,7 @@ class ZtcClient implements ZtcClientInterface {
 			);
 			return null;
 		}
-
-		return self::firstEntry(body: $response['body']);
-	}//end fetchByOmschrijving()
+	}//end callZtc()
 
 	/**
 	 * The first entry of a ZTC list answer, when it carries a URL.

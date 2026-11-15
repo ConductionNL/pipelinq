@@ -133,6 +133,23 @@ class IntegriqMarketingConsent {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
 	public function decideMembers(array $members, string $channel, string $category, bool $requiresConsent): array {
+		[$recipients, $byAddress] = $this->recipientsOf(members: $members, channel: $channel);
+
+		$ask = new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent);
+		$decisions = $this->integriq->decide(question: $ask->question(), recipients: $recipients);
+
+		return $this->decisionsByContact(decisions: $decisions, byAddress: $byAddress);
+	}//end decideMembers()
+
+	/**
+	 * The recipients to ask about, and the contact ids behind each address.
+	 *
+	 * @param array<int,array<string,mixed>> $members Segment members, each with `contactId` and maybe `email`.
+	 * @param string                         $channel `email` or `sms`.
+	 *
+	 * @return array{0: array<int, array{address: string, contactRef: mixed}>, 1: array<string, array<int, string>>}
+	 */
+	private function recipientsOf(array $members, string $channel): array {
 		$recipients = [];
 		$byAddress = [];
 		foreach ($members as $member) {
@@ -141,15 +158,7 @@ class IntegriqMarketingConsent {
 				continue;
 			}
 
-			$address = '';
-			if ($channel === 'email') {
-				$address = trim((string)($member['email'] ?? ''));
-			}
-
-			if ($address === '') {
-				$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
-			}
-
+			$address = $this->memberAddress(member: $member, contactId: $contactId, channel: $channel);
 			if ($address === '') {
 				continue;
 			}
@@ -158,16 +167,49 @@ class IntegriqMarketingConsent {
 			$byAddress[$address][] = $contactId;
 		}//end foreach
 
+		return [$recipients, $byAddress];
+	}//end recipientsOf()
+
+	/**
+	 * The member's address on the channel: its own email first, then the address book.
+	 *
+	 * @param array<string,mixed> $member    The segment member.
+	 * @param string              $contactId Its contact id.
+	 * @param string              $channel   `email` or `sms`.
+	 *
+	 * @return string
+	 */
+	private function memberAddress(array $member, string $contactId, string $channel): string {
+		$address = '';
+		if ($channel === 'email') {
+			$address = trim((string)($member['email'] ?? ''));
+		}
+
+		if ($address === '') {
+			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
+		}
+
+		return $address;
+	}//end memberAddress()
+
+	/**
+	 * Integriq's decisions, spread over every contact id behind each address.
+	 *
+	 * @param iterable<string, mixed>           $decisions The decisions, by address.
+	 * @param array<string, array<int, string>> $byAddress The contact ids behind each address.
+	 *
+	 * @return array<string, mixed> By contact id.
+	 */
+	private function decisionsByContact(iterable $decisions, array $byAddress): array {
 		$out = [];
-		$ask = new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent);
-		foreach ($this->integriq->decide(question: $ask->question(), recipients: $recipients) as $address => $decision) {
+		foreach ($decisions as $address => $decision) {
 			foreach (($byAddress[$address] ?? []) as $contactId) {
 				$out[$contactId] = $decision;
 			}
 		}
 
 		return $out;
-	}//end decideMembers()
+	}//end decisionsByContact()
 
 	/**
 	 * Hand integriq a list consent.
@@ -191,7 +233,7 @@ class IntegriqMarketingConsent {
 		string $source,
 		array $evidence,
 	): bool {
-		$outcome = $this->integriq->record(
+		return $this->integriq->record(
 			request: [
 				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 				'state' => 'opted-in',
@@ -204,9 +246,7 @@ class IntegriqMarketingConsent {
 				'source' => $source,
 				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
 			]
-		);
-
-		return $outcome['recorded'];
+		)['recorded'];
 	}//end recordListConsent()
 
 	/**
@@ -226,26 +266,34 @@ class IntegriqMarketingConsent {
 			return false;
 		}
 
-		$scope = 'channel';
-		if ($listId !== null && $listId !== '') {
-			$scope = 'list';
-		}
-
-		$outcome = $this->integriq->record(
+		return $this->integriq->record(
 			request: [
 				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 				'state' => 'opted-out',
-				'scope' => $scope,
+				'scope' => $this->withdrawalScope(listId: $listId),
 				'channel' => $channel,
 				'ref' => (string)$listId,
 				'contactRef' => $this->contactRefOf(contactId: $contactId),
 				'source' => $reason,
 				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
 			]
-		);
-
-		return $outcome['recorded'];
+		)['recorded'];
 	}//end recordWithdrawal()
+
+	/**
+	 * The scope of a withdrawal: the list when one is named, else the channel.
+	 *
+	 * @param string|null $listId The list, or null for the channel.
+	 *
+	 * @return string `list` or `channel`.
+	 */
+	private function withdrawalScope(?string $listId): string {
+		if ($listId !== null && $listId !== '') {
+			return 'list';
+		}
+
+		return 'channel';
+	}//end withdrawalScope()
 
 	/**
 	 * The change request for one consentRecord, or null when it is not migrated.

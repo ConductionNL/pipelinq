@@ -130,24 +130,34 @@ class CallbackService implements CallbackServiceInterface {
 	 */
 	public function addAttempt(array $taskData, string $result, string $notes = ''): array {
 		$attempts = $taskData['attempts'] ?? [];
+		$attempts[] = $this->attempt(result: $result, notes: $notes);
+		$taskData['attempts'] = $attempts;
 
+		return $taskData;
+	}//end addAttempt()
+
+	/**
+	 * One callback attempt, made now by the current user ('system' without one).
+	 *
+	 * @param string $result The attempt result.
+	 * @param string $notes  The attempt notes.
+	 *
+	 * @return array{timestamp: string, result: string, notes: string, agentUserId: string} The attempt.
+	 */
+	private function attempt(string $result, string $notes): array {
 		$user = $this->userSession->getUser();
 		$agentUserId = 'system';
 		if ($user !== null) {
 			$agentUserId = $user->getUID();
 		}
 
-		$attempts[] = [
+		return [
 			'timestamp' => (new DateTime())->format(DateTime::ATOM),
 			'result' => $result,
 			'notes' => $notes,
 			'agentUserId' => $agentUserId,
 		];
-
-		$taskData['attempts'] = $attempts;
-
-		return $taskData;
-	}//end addAttempt()
+	}//end attempt()
 
 	/**
 	 * Check if the attempt threshold has been reached for a task.

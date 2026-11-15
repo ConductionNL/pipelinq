@@ -87,15 +87,10 @@ class SatisfactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {
-		$filters = [];
-		if (trim($surveyId) !== '') {
-			$filters['surveyRef'] = trim($surveyId);
-		}
-
-		if (trim($channel) !== '') {
-			$filters['channel'] = trim($channel);
-		}
-
+		$filters = array_filter(
+			array_map('trim', ['surveyRef' => $surveyId, 'channel' => $channel]),
+			static fn (string $value): bool => $value !== ''
+		);
 		$invitations = $this->dispatchService->withinDays(
 			invitations: $this->dispatchService->read(filters: $filters),
 			days: $days

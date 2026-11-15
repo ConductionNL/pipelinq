@@ -192,29 +192,7 @@ class NotesController extends Controller {
 		}
 
 		try {
-			[$registerId, $schemaId] = $this->resolveScope(schemaKey: $schemaKey);
-
-			if ($registerId === '' || $schemaId === '') {
-				// Settings not yet configured — fail closed.
-				$this->logger->warning('NotesController: register or schema not configured', ['objectType' => $objectType]);
-				return false;
-			}
-
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(
-				id: $objectId,
-				register: $registerId,
-				schema: $schemaId
-			);
-			if ($object === null) {
-				return false;
-			}
-
-			if ($ticketType === null) {
-				return true;
-			}
-
-			return $this->isTicketOfType(object: $object, ticketType: $ticketType);
+			return $this->objectInScope(objectType: $objectType, objectId: $objectId);
 		} catch (\OCP\DB\Exception|\OCP\AppFramework\Db\DoesNotExistException $e) {
 			// Expected "not found" path — return false without noise.
 			return false;
@@ -224,6 +202,40 @@ class NotesController extends Controller {
 			return false;
 		}//end try
 	}//end objectExists()
+
+	/**
+	 * Whether the object is found in the scope of its type (and, for tickets, carries the subtype).
+	 *
+	 * The type's schema key (null for tickets) and ticket subtype (null for
+	 * non-ticket types) come from the type maps.
+	 *
+	 * @param string $objectType The pipelinq object type.
+	 * @param string $objectId   The OR object UUID.
+	 *
+	 * @return bool
+	 */
+	private function objectInScope(string $objectType, string $objectId): bool {
+		$ticketType = (self::OBJECT_TYPE_TO_TICKET_TYPE[$objectType] ?? null);
+		[$registerId, $schemaId] = $this->resolveScope(schemaKey: (self::OBJECT_TYPE_TO_SCHEMA_KEY[$objectType] ?? null));
+
+		if ($registerId === '' || $schemaId === '') {
+			// Settings not yet configured — fail closed.
+			$this->logger->warning('NotesController: register or schema not configured', ['objectType' => $objectType]);
+			return false;
+		}
+
+		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		$object = $objectService->find(id: $objectId, register: $registerId, schema: $schemaId);
+		if ($object === null) {
+			return false;
+		}
+
+		if ($ticketType === null) {
+			return true;
+		}
+
+		return $this->isTicketOfType(object: $object, ticketType: $ticketType);
+	}//end objectInScope()
 
 	/**
 	 * List notes for an entity.
@@ -293,29 +305,33 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->addNoteFromRequest(objectType: $objectType, objectId: $objectId);
+	}//end create()
+
+	/**
+	 * Add the requested note to an authorised object and trigger its note events.
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId   The object ID.
+	 *
+	 * @return JSONResponse The response containing the created note.
+	 */
+	private function addNoteFromRequest(string $objectType, string $objectId): JSONResponse {
 		$message = $this->request->getParam('message', '');
 		if (trim($message) === '') {
 			return new JSONResponse(['error' => $this->l10n->t('Message is required')], 400);
 		}
 
 		try {
-			$note = $this->notesService->addNote(
-				objectType: $objectType,
-				objectId: $objectId,
-				message: $message
-			);
-
-			$this->noteEventService->triggerNoteEvents(
-				objectType: $objectType,
-				objectId: $objectId
-			);
+			$note = $this->notesService->addNote(objectType: $objectType, objectId: $objectId, message: $message);
+			$this->noteEventService->triggerNoteEvents(objectType: $objectType, objectId: $objectId);
 
 			return new JSONResponse(['note' => $note]);
 		} catch (\Exception $e) {
 			$this->logger->error('NotesController: create failed', ['exception' => $e]);
 			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
 		}
-	}//end create()
+	}//end addNoteFromRequest()
 
 	/**
 	 * Delete all notes for an entity (admin/cleanup only).
@@ -355,17 +371,26 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->deleteAllNotes(objectType: $objectType, objectId: $objectId);
+	}//end deleteAll()
+
+	/**
+	 * Delete every note of an authorised object.
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId   The object ID.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function deleteAllNotes(string $objectType, string $objectId): JSONResponse {
 		try {
-			$this->notesService->deleteAllNotes(
-				objectType: $objectType,
-				objectId: $objectId
-			);
+			$this->notesService->deleteAllNotes(objectType: $objectType, objectId: $objectId);
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {
 			$this->logger->error('NotesController: deleteAll failed', ['exception' => $e]);
 			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
 		}
-	}//end deleteAll()
+	}//end deleteAllNotes()
 
 	/**
 	 * Delete a single note (own notes only).

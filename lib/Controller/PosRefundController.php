@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,6 +51,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.2
  */
 class PosRefundController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
@@ -115,19 +118,6 @@ class PosRefundController extends Controller {
 	}//end reject()
 
 	/**
-	 * Require an authenticated user, returning their UID.
-	 *
-	 * Returns a 401 JSONResponse when no user is in the session. Object-level
-	 * access is then scoped to this app's own posRefund schema inside the service
-	 * (a refund in another app/register resolves to a 404), preventing IDOR.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
 	 * Run a lifecycle action with shared error handling.
 	 *
 	 * Maps the service's OCS exceptions to HTTP status codes (404 not found,
@@ -144,13 +134,4 @@ class PosRefundController extends Controller {
 			logLabel: 'PosRefundController::' . $label
 		);
 	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

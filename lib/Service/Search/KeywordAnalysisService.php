@@ -290,15 +290,10 @@ class KeywordAnalysisService {
 		float $minPageShare = self::DEFAULT_MIN_PAGE_SHARE,
 		float $materiality = self::DEFAULT_MATERIALITY,
 	): array {
+		$thresholds = ['minImpressions' => $minImpressions, 'minPageShare' => $minPageShare, 'materiality' => $materiality];
 		$out = [];
 		foreach ($this->byQueryAndPage(rows: $rows) as $query => $pages) {
-			$totals = $this->pageTotals(pages: $pages);
-			if ($totals['impressions'] < $minImpressions || $totals['impressions'] <= 0) {
-				continue;
-			}
-
-			$contenders = $this->contenders(pages: $pages, queryImpressions: $totals['impressions'], minPageShare: $minPageShare);
-			$finding = $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $materiality);
+			$finding = $this->cannibalised(pages: $pages, thresholds: $thresholds);
 			if ($finding !== null) {
 				$out[] = (['query' => $query] + $finding);
 			}
@@ -306,6 +301,24 @@ class KeywordAnalysisService {
 
 		return self::mostImpressionsFirst(findings: $out);
 	}//end cannibalisation()
+
+	/**
+	 * The cannibalisation finding (without its query) for one query's pages, or null.
+	 *
+	 * @param array<string, array<string, mixed>>                              $pages      The query's per-page entries.
+	 * @param array{minImpressions: int, minPageShare: float, materiality: float} $thresholds The qualifying thresholds.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function cannibalised(array $pages, array $thresholds): ?array {
+		$totals = $this->pageTotals(pages: $pages);
+		if ($totals['impressions'] < $thresholds['minImpressions'] || $totals['impressions'] <= 0) {
+			return null;
+		}
+
+		$contenders = $this->contenders(pages: $pages, minPageShare: $thresholds['minPageShare']);
+		return $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $thresholds['materiality']);
+	}//end cannibalised()
 
 	/**
 	 * The cannibalisation finding (without its query) when at least two pages
@@ -624,13 +637,13 @@ class KeywordAnalysisService {
 	/**
 	 * The pages carrying at least the minimum share of the query.
 	 *
-	 * @param array<string, array<string, mixed>> $pages The per-page entries.
-	 * @param int $queryImpressions The query's total impressions.
+	 * @param array<string, array<string, mixed>> $pages The per-page entries of a query with impressions.
 	 * @param float $minPageShare The minimum share.
 	 *
 	 * @return array<string, array<string, mixed>> The contenders, with their rates.
 	 */
-	private function contenders(array $pages, int $queryImpressions, float $minPageShare): array {
+	private function contenders(array $pages, float $minPageShare): array {
+		$queryImpressions = $this->pageTotals(pages: $pages)['impressions'];
 		$out = [];
 		foreach ($pages as $page => $entry) {
 			$impressions = (int)$entry['impressions'];

@@ -99,43 +99,74 @@ class OpenDealsController extends Controller {
 		}
 
 		[$field, $partyId] = $this->party();
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
-		if ($field === '' || $register === '' || $leadSchema === '') {
+		$target = $this->leadTarget(field: $field);
+		if ($target === null) {
 			return new JSONResponse(['error' => 'Name one contact or client'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->openDealsFor(party: [$field, $partyId], target: $target);
+	}//end index()
+
+	/**
+	 * The register and lead schema, or null when no party is named or either is unset.
+	 *
+	 * @param string $field The party field ('' when no party is named).
+	 *
+	 * @return array{0: string, 1: string}|null
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function leadTarget(string $field): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
+		if ($field === '' || $register === '' || $leadSchema === '') {
+			return null;
+		}
+
+		return [$register, $leadSchema];
+	}//end leadTarget()
+
+	/**
+	 * The open-deal summary of a party the caller may read.
+	 *
+	 * @param array{0: string, 1: string} $party  The party field and the party's id.
+	 * @param array{0: string, 1: string} $target The register id and the lead schema id.
+	 *
+	 * @return JSONResponse `{openDealCount, openDealValue}` or an error.
+	 *
+	 * @spec openspec/specs/client-management/spec.md
+	 */
+	private function openDealsFor(array $party, array $target): JSONResponse {
+		[$field, $partyId] = $party;
+		[$register, $leadSchema] = $target;
 		$partySchema = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PARTIES[$field], '');
-		if ($this->canRead(id: $partyId, register: $register, schema: $partySchema) === false) {
+		if ($this->canRead(id: $partyId, where: ['register' => $register, 'schema' => $partySchema]) === false) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}
 
 		try {
 			$rows = $this->objectService->findAll(
-				config: [
-					'filters' => ['register' => $register, 'schema' => $leadSchema, $field => $partyId, 'status' => 'open'],
-					'limit' => self::LIMIT,
-				]
+				config: ['filters' => ['register' => $register, 'schema' => $leadSchema, $field => $partyId, 'status' => 'open'], 'limit' => self::LIMIT]
 			);
 		} catch (Throwable) {
 			return new JSONResponse(['error' => 'Deals unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		return new JSONResponse($this->summarise(rows: $rows, field: $field, partyId: $partyId));
-	}//end index()
+		return new JSONResponse($this->summarise(rows: $rows, party: $party));
+	}//end openDealsFor()
 
 	/**
 	 * Count and sum the open deals of the party.
 	 *
 	 * Each row is checked again rather than trusted to match the query.
 	 *
-	 * @param iterable<mixed> $rows    The rows OpenRegister returned.
-	 * @param string          $field   The lead field naming the party.
-	 * @param string          $partyId The party id.
+	 * @param iterable<mixed>             $rows  The rows OpenRegister returned.
+	 * @param array{0: string, 1: string} $party The lead field naming the party, and the party id.
 	 *
 	 * @return array{openDealCount: int, openDealValue: float}
 	 */
-	private function summarise(iterable $rows, string $field, string $partyId): array {
+	private function summarise(iterable $rows, array $party): array {
+		[$field, $partyId] = $party;
 		$count = 0;
 		$value = 0.0;
 		foreach ($rows as $row) {
@@ -175,19 +206,18 @@ class OpenDealsController extends Controller {
 	/**
 	 * Whether the user may read the party, under their RBAC.
 	 *
-	 * @param string $id       The party id.
-	 * @param string $register The register id.
-	 * @param string $schema   The party schema id.
+	 * @param string                                  $id    The party id.
+	 * @param array{register: string, schema: string} $where The register id and the party schema id.
 	 *
 	 * @return bool True when it exists and is readable.
 	 */
-	private function canRead(string $id, string $register, string $schema): bool {
-		if ($schema === '') {
+	private function canRead(string $id, array $where): bool {
+		if ($where['schema'] === '') {
 			return false;
 		}
 
 		try {
-			return $this->objectService->find(id: $id, register: $register, schema: $schema, _audit: false) !== null;
+			return $this->objectService->find(id: $id, register: $where['register'], schema: $where['schema'], _audit: false) !== null;
 		} catch (Throwable) {
 			return false;
 		}

@@ -157,8 +157,9 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		);
 		$records = $this->recordsFor(submission: $submission);
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(submission: $submission, records: $records)
+		$this->touchpoints->recordSubmission(
+			touchpoint: $this->touchpointFor(submission: $submission, records: $records),
+			landingPage: $this->landingPageOf(event: $event)
 		);
 
 		if ($records->leadId !== '') {
@@ -205,7 +206,12 @@ class LandingPageFormSubmittedListener implements IEventListener {
 				'source' => 'web-form',
 			];
 			$outcome = $this->eventRegistrations->register(event: $campaignEvent, person: $person);
-			$this->mailOutcome(campaignEvent: $campaignEvent, person: $person, outcome: $outcome);
+			if ($outcome->status === EventRegistrationOutcome::CLOSED) {
+				$this->eventMails?->sendClosed(event: $campaignEvent, person: $person);
+				return;
+			}
+
+			$this->mailConfirmation(campaignEvent: $campaignEvent, outcome: $outcome);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: landing page sign-up could not be registered for the event',
@@ -215,23 +221,17 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	}//end registerForEvent()
 
 	/**
-	 * Mail the person the outcome of their registration.
+	 * Mail the person the confirmation of a new registration or waiting-list place.
 	 *
 	 * @param array<string, mixed>     $campaignEvent The event.
-	 * @param array<string, mixed>     $person        The person who signed up.
-	 * @param EventRegistrationOutcome $outcome       What the registration did.
+	 * @param EventRegistrationOutcome $outcome       What the registration did; not CLOSED.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
-	private function mailOutcome(array $campaignEvent, array $person, EventRegistrationOutcome $outcome): void {
+	private function mailConfirmation(array $campaignEvent, EventRegistrationOutcome $outcome): void {
 		if ($this->eventMails === null) {
-			return;
-		}
-
-		if ($outcome->status === EventRegistrationOutcome::CLOSED) {
-			$this->eventMails->sendClosed(event: $campaignEvent, person: $person);
 			return;
 		}
 
@@ -243,7 +243,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		if ($this->eventMails->sendConfirmation(event: $campaignEvent, registration: $outcome->registration) === true) {
 			$this->eventRegistrations?->stamp(registration: $outcome->registration, field: 'confirmationSentAt');
 		}
-	}//end mailOutcome()
+	}//end mailConfirmation()
 
 	/**
 	 * Acknowledge a redelivered submission whose nonce already has a touchpoint.
@@ -475,6 +475,25 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			'nonce' => trim($event->getNonce()),
 		];
 	}//end touchpointFor()
+
+	/**
+	 * The page a submission came from: the portal and the page route.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return string `<portal>/<route>`, or whichever of the two is known.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		$portal = trim($event->getPortal(), " \t/");
+		$route = trim($event->getPageRoute(), " \t/");
+		if ($portal === '' || $route === '') {
+			return ($portal . $route);
+		}
+
+		return ($portal . '/' . $route);
+	}//end landingPageOf()
 
 	/**
 	 * Normalise a UTM block to the five keys the schemas declare.

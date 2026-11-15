@@ -167,8 +167,9 @@ class FollowUpReminderJob extends TimedJob {
 		$now = $this->time->getTime();
 		$windowEnd = ($now + ($this->windowHours() * 3600));
 
-		$this->remindLeads(objectService: $objectService, register: $register, now: $now, windowEnd: $windowEnd);
-		$this->remindTasks(objectService: $objectService, register: $register, now: $now, windowEnd: $windowEnd);
+		$sweep = new FollowUpSweep(objectService: $objectService, register: $register, now: $now, windowEnd: $windowEnd);
+		$this->remindLeads(sweep: $sweep);
+		$this->remindTasks(sweep: $sweep);
 		$this->pruneStaleMarkers(now: $now);
 	}//end run()
 
@@ -256,21 +257,18 @@ class FollowUpReminderJob extends TimedJob {
 	/**
 	 * Remind lead assignees of linked meetings starting inside the window.
 	 *
-	 * @param object $objectService OpenRegister's object service.
-	 * @param string $register      The register.
-	 * @param int    $now           The current timestamp.
-	 * @param int    $windowEnd     The timestamp the window ends at.
+	 * @param FollowUpSweep $sweep The object service, register and window.
 	 *
 	 * @return void
 	 */
-	private function remindLeads(object $objectService, string $register, int $now, int $windowEnd): void {
+	private function remindLeads(FollowUpSweep $sweep): void {
 		$leaf = $this->optionalService(serviceId: self::CALENDAR_LEAF);
 		if ($leaf === null || method_exists($leaf, 'getLinkedEvents') === false) {
 			$this->logger->info('FollowUpReminderJob: calendar leaf unavailable, skipping meeting reminders');
 			return;
 		}
 
-		foreach ($this->rows(objectService: $objectService, register: $register, schemaKey: 'lead_schema') as $lead) {
+		foreach ($this->rows(sweep: $sweep, schemaKey: 'lead_schema') as $lead) {
 			$assignee = (string)($lead['assignee'] ?? '');
 			$leadId = $this->objectId(row: $lead);
 			if ($assignee === '' || $leadId === '' || (string)($lead['status'] ?? 'open') !== 'open') {
@@ -278,30 +276,28 @@ class FollowUpReminderJob extends TimedJob {
 			}
 
 			foreach ($this->linkedEvents(leaf: $leaf, leadId: $leadId) as $event) {
-				$this->remindEvent(
-					event: $event,
-					lead: ['id' => $leadId, 'title' => (string)($lead['title'] ?? ''), 'assignee' => $assignee],
-					now: $now,
-					windowEnd: $windowEnd
-				);
+				if ($this->inWindow(moment: ($event['dtstart'] ?? null), now: $sweep->now, windowEnd: $sweep->windowEnd) === true) {
+					$this->remindEvent(
+						event: $event,
+						lead: ['id' => $leadId, 'title' => (string)($lead['title'] ?? ''), 'assignee' => $assignee]
+					);
+				}
 			}
 		}
 	}//end remindLeads()
 
 	/**
-	 * Remind one lead's assignee of one linked event when it starts inside the window.
+	 * Remind one lead's assignee of one linked event inside the window, once per occurrence.
 	 *
-	 * @param array<string, mixed>  $event     The leaf's event row.
-	 * @param array<string, string> $lead      The lead: id, title and assignee.
-	 * @param int                   $now       The current timestamp.
-	 * @param int                   $windowEnd The timestamp the window ends at.
+	 * @param array<string, mixed>  $event The leaf's event row, starting inside the window.
+	 * @param array<string, string> $lead  The lead: id, title and assignee.
 	 *
 	 * @return void
 	 */
-	private function remindEvent(array $event, array $lead, int $now, int $windowEnd): void {
+	private function remindEvent(array $event, array $lead): void {
 		$uid = (string)($event['uid'] ?? '');
 		$start = ($event['dtstart'] ?? null);
-		if ($uid === '' || $this->inWindow(moment: $start, now: $now, windowEnd: $windowEnd) === false) {
+		if ($uid === '') {
 			return;
 		}
 
@@ -327,42 +323,70 @@ class FollowUpReminderJob extends TimedJob {
 	/**
 	 * Remind assignees of open follow-up tasks whose deadline falls inside the window.
 	 *
-	 * @param object $objectService OpenRegister's object service.
-	 * @param string $register      The register.
-	 * @param int    $now           The current timestamp.
-	 * @param int    $windowEnd     The timestamp the window ends at.
+	 * @param FollowUpSweep $sweep The object service, register and window.
 	 *
 	 * @return void
 	 */
-	private function remindTasks(object $objectService, string $register, int $now, int $windowEnd): void {
-		foreach ($this->rows(objectService: $objectService, register: $register, schemaKey: 'task_schema') as $task) {
-			$taskId = $this->objectId(row: $task);
-			$deadline = ($task['deadline'] ?? null);
-			if ($taskId === '' || $this->isOpenFollowUp(task: $task) === false
-				|| $this->inWindow(moment: $deadline, now: $now, windowEnd: $windowEnd) === false
-			) {
-				continue;
-			}
-
-			$occurrence = 'task|' . $taskId . '|' . (string)$deadline;
-			if ($this->wasRecentlyNotified(occurrence: $occurrence) === true) {
-				continue;
-			}
-
-			[$objectType, $objectId] = $this->taskLink(task: $task, taskId: $taskId);
-			foreach ($this->assignees(task: $task) as $userId) {
-				$this->notificationService->sendNotification(
-					userId: $userId,
-					subject: self::SUBJECT_TASK,
-					parameters: ['title' => (string)($task['subject'] ?? ''), 'deadline' => (string)$deadline],
-					objectType: $objectType,
-					objectId: $objectId
-				);
-			}
-
-			$this->markNotified(occurrence: $occurrence);
-		}//end foreach
+	private function remindTasks(FollowUpSweep $sweep): void {
+		foreach ($this->rows(sweep: $sweep, schemaKey: 'task_schema') as $task) {
+			$this->remindTask(task: $task, sweep: $sweep);
+		}
 	}//end remindTasks()
+
+	/**
+	 * Remind a task's assignees when it is an open follow-up due inside the window and not yet reminded.
+	 *
+	 * @param array<string, mixed> $task  The task.
+	 * @param FollowUpSweep        $sweep The pass, for its window.
+	 *
+	 * @return void
+	 */
+	private function remindTask(array $task, FollowUpSweep $sweep): void {
+		$taskId = $this->objectId(row: $task);
+		$occurrence = $this->dueTaskOccurrence(task: $task, sweep: $sweep);
+		if ($occurrence === null) {
+			return;
+		}
+
+		$deadline = ($task['deadline'] ?? null);
+		[$objectType, $objectId] = $this->taskLink(task: $task, taskId: $taskId);
+		foreach ($this->assignees(task: $task) as $userId) {
+			$this->notificationService->sendNotification(
+				userId: $userId,
+				subject: self::SUBJECT_TASK,
+				parameters: ['title' => (string)($task['subject'] ?? ''), 'deadline' => (string)$deadline],
+				objectType: $objectType,
+				objectId: $objectId
+			);
+		}
+
+		$this->markNotified(occurrence: $occurrence);
+	}//end remindTask()
+
+	/**
+	 * The reminder occurrence key of a task due for a reminder, or null.
+	 *
+	 * @param array<string, mixed> $task  The task.
+	 * @param FollowUpSweep        $sweep The pass, for its window.
+	 *
+	 * @return string|null
+	 */
+	private function dueTaskOccurrence(array $task, FollowUpSweep $sweep): string|null {
+		$taskId = $this->objectId(row: $task);
+		$deadline = ($task['deadline'] ?? null);
+		if ($taskId === '' || $this->isOpenFollowUp(task: $task) === false
+			|| $this->inWindow(moment: $deadline, now: $sweep->now, windowEnd: $sweep->windowEnd) === false
+		) {
+			return null;
+		}
+
+		$occurrence = 'task|' . $taskId . '|' . (string)$deadline;
+		if ($this->wasRecentlyNotified(occurrence: $occurrence) === true) {
+			return null;
+		}
+
+		return $occurrence;
+	}//end dueTaskOccurrence()
 
 	/**
 	 * Whether a task is an open follow-up task.
@@ -429,20 +453,19 @@ class FollowUpReminderJob extends TimedJob {
 	/**
 	 * The rows of a configured schema as arrays; none when unconfigured or unreadable.
 	 *
-	 * @param object $objectService OpenRegister's object service.
-	 * @param string $register      The register.
-	 * @param string $schemaKey     The app config key of the schema.
+	 * @param FollowUpSweep $sweep     The object service and register.
+	 * @param string        $schemaKey The app config key of the schema.
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
-	private function rows(object $objectService, string $register, string $schemaKey): array {
+	private function rows(FollowUpSweep $sweep, string $schemaKey): array {
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($schema === '') {
 			return [];
 		}
 
 		try {
-			$found = $objectService->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
+			$found = $sweep->objectService->findAll(config: ['filters' => ['register' => $sweep->register, 'schema' => $schema]]);
 		} catch (Throwable $e) {
 			$this->logger->warning('FollowUpReminderJob: failed to read ' . $schemaKey, ['exception' => $e->getMessage()]);
 			return [];

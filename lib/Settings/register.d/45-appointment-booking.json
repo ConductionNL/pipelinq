@@ -725,6 +725,12 @@
             "description": "Timestamp the customer joined the queue.",
             "title": "Arrived At"
           },
+          "queueNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The visitor's number in today's queue, starting at 1 each day.",
+            "title": "Queue number"
+          },
           "estimatedReadyAt": {
             "type": "string",
             "format": "date-time",

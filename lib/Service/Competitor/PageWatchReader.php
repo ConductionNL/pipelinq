@@ -115,20 +115,43 @@ class PageWatchReader {
 
 		$fragment = $this->extractor->fragment(html: $result->body, selector: $selector);
 		if ($fragment === null) {
-			return WatchOutcome::failed(
-				outcome: EgressResult::UNPARSABLE,
-				reason: 'The selector ' . $selector . ' matched nothing on ' . $url . '.'
-			);
+			return self::unmatched(selector: $selector, url: $url);
 		}
 
-		$diff = $this->diff(fingerprint: $fingerprint, lineFingerprints: $lineFingerprints, fragment: $fragment);
+		return self::seen(url: $url, diff: $this->diff(fingerprint: $fingerprint, lineFingerprints: $lineFingerprints, fragment: $fragment));
+	}//end read()
+
+	/**
+	 * The failure of a selector that matched nothing on the page.
+	 *
+	 * @param string $selector The CSS selector of the fragment.
+	 * @param string $url      The page URL.
+	 *
+	 * @return WatchOutcome
+	 */
+	private static function unmatched(string $selector, string $url): WatchOutcome {
+		return WatchOutcome::failed(
+			outcome: EgressResult::UNPARSABLE,
+			reason: 'The selector ' . $selector . ' matched nothing on ' . $url . '.'
+		);
+	}//end unmatched()
+
+	/**
+	 * The outcome of a read fragment: its new state, and one item when it changed.
+	 *
+	 * @param string               $url  The page URL.
+	 * @param array<string, mixed> $diff The diff of the fragment.
+	 *
+	 * @return WatchOutcome
+	 */
+	private static function seen(string $url, array $diff): WatchOutcome {
 		$state = ['fingerprint' => $diff['fingerprint'], 'lineFingerprints' => $diff['lineFingerprints']];
 		if ($diff['changed'] === false) {
 			return WatchOutcome::seen(items: [], state: $state);
 		}
 
 		return WatchOutcome::seen(items: [self::changeItem(url: $url, diff: $diff)], state: $state);
-	}//end read()
+	}//end seen()
 
 	/**
 	 * The one item a changed fragment reports.
@@ -159,37 +182,54 @@ class PageWatchReader {
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function diff(string $fingerprint, array $lineFingerprints, string $fragment): array {
-		$lines = $this->lines(fragment: $fragment);
+		$current = $this->currentLines(fragment: $fragment);
+		$seen = [
+			'fingerprint' => $this->hash(value: $fragment),
+			'lineFingerprints' => array_slice(array_keys($current), 0, self::MAX_LINES),
+		];
+		if ($fingerprint !== '' && $fingerprint === $seen['fingerprint']) {
+			return ['changed' => false] + $seen + ['summary' => '', 'added' => [], 'removed' => 0];
+		}
+
+		$previous = ['fingerprint' => $fingerprint, 'lineFingerprints' => $lineFingerprints];
+		return ['changed' => true] + $seen + $this->changes(current: $current, previous: $previous);
+	}//end diff()
+
+	/**
+	 * The fresh fragment's lines by fingerprint.
+	 *
+	 * @param string $fragment The fragment as read now.
+	 *
+	 * @return array<string, string>
+	 */
+	private function currentLines(string $fragment): array {
 		$current = [];
-		foreach ($lines as $line) {
+		foreach ($this->lines(fragment: $fragment) as $line) {
 			$current[$this->hash(value: $line)] = $line;
 		}
 
-		$currentHashes = array_slice(array_keys($current), 0, self::MAX_LINES);
-		$freshFingerprint = $this->hash(value: $fragment);
-		if ($fingerprint !== '' && $fingerprint === $freshFingerprint) {
-			return [
-				'changed' => false,
-				'fingerprint' => $freshFingerprint,
-				'lineFingerprints' => $currentHashes,
-				'summary' => '',
-				'added' => [],
-				'removed' => 0,
-			];
+		return $current;
+	}//end currentLines()
+
+	/**
+	 * The summary, added lines and removed count of a changed fragment.
+	 *
+	 * @param array<string, string>                                         $current  The fresh lines by fingerprint.
+	 * @param array{fingerprint: string, lineFingerprints: array<int, string>} $previous The fingerprints as last seen.
+	 *
+	 * @return array{summary: string, added: array<int, string>, removed: int}
+	 */
+	private function changes(array $current, array $previous): array {
+		$added = self::addedLines(current: $current, lineFingerprints: $previous['lineFingerprints']);
+		$removed = self::removedCount(lineFingerprints: $previous['lineFingerprints'], current: $current);
+
+		$summary = 'First reading of this fragment.';
+		if ($previous['fingerprint'] !== '') {
+			$summary = $this->summary(added: $added, removed: $removed);
 		}
 
-		$added = self::addedLines(current: $current, lineFingerprints: $lineFingerprints);
-		$removed = self::removedCount(lineFingerprints: $lineFingerprints, current: $current);
-
-		return [
-			'changed' => true,
-			'fingerprint' => $freshFingerprint,
-			'lineFingerprints' => $currentHashes,
-			'summary' => $this->summary(added: $added, removed: $removed, first: ($fingerprint === '')),
-			'added' => $added,
-			'removed' => $removed,
-		];
-	}//end diff()
+		return ['summary' => $summary, 'added' => $added, 'removed' => $removed];
+	}//end changes()
 
 	/**
 	 * The lines of the fresh fragment whose fingerprint was not seen last time.
@@ -234,15 +274,10 @@ class PageWatchReader {
 	 *
 	 * @param array<int, string> $added The lines this fetch added.
 	 * @param int $removed How many lines are gone.
-	 * @param bool $first Whether this is the first time the fragment was read.
 	 *
 	 * @return string
 	 */
-	private function summary(array $added, int $removed, bool $first): string {
-		if ($first === true) {
-			return 'First reading of this fragment.';
-		}
-
+	private function summary(array $added, int $removed): string {
 		$parts = [];
 		if ($added !== []) {
 			$parts[] = ('Added: ' . implode(' / ', array_slice($added, 0, self::MAX_QUOTED)));

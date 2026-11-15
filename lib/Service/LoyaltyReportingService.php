@@ -34,6 +34,7 @@ use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -55,6 +56,7 @@ use RuntimeException;
  */
 class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	use OptionalPayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -154,7 +156,28 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	 */
 	public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array {
 		$accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+		$totals = $this->accountTotals(accounts: $accounts);
+		[$debits, $points] = $this->ledgerPoints(query: ['programmeId' => $programmeId, 'from' => $from, 'to' => $to]);
 
+		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
+		$pointValue = (float)($programme['pointValue'] ?? 0.01);
+
+		return ['activeAccounts' => $totals['activeAccounts']]
+			+ $points
+			+ $this->valueKpis(totals: $totals + ['pointValue' => $pointValue], debits: $debits)
+			+ ['period' => ['from' => $from, 'to' => $to]];
+	}//end getKpis()
+
+	/**
+	 * Count active accounts, the tier distribution and the outstanding points.
+	 *
+	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
+	 *
+	 * @return array{activeAccounts: int, tierDistribution: array<string, int>, outstandingPoints: int}
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function accountTotals(array $accounts): array {
 		$activeAccounts = 0;
 		$tierDistribution = [];
 		$outstandingPoints = 0;
@@ -168,59 +191,103 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 			$outstandingPoints += max(0, (int)($a['currentBalance'] ?? 0));
 		}
 
-		$credits = $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
-			type: 'credit',
-			from: $from,
-			to: $to
-		);
-		$debits = $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
-			type: 'debit',
-			from: $from,
-			to: $to
-		);
-		$expiries = $this->ledgerService->getLedgerEntriesForProgramme(
-			programmeId: $programmeId,
-			type: 'expiry',
-			from: $from,
-			to: $to
-		);
+		return ['activeAccounts' => $activeAccounts, 'tierDistribution' => $tierDistribution, 'outstandingPoints' => $outstandingPoints];
+	}//end accountTotals()
 
-		$pointsIssued = (int)array_sum(array_map(fn (array $e): int => (int)($e['count'] ?? 0), $credits));
-		$pointsRedeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $debits));
-		$pointsExpired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $expiries));
+	/**
+	 * Read the credit, debit and expiry ledger entries and sum their points.
+	 *
+	 * The point KPIs are issued, redeemed and expired points with breakage and redemption rates.
+	 *
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The programme UUID and inclusive ISO date window.
+	 *
+	 * @return array{0: array<int, array<string, mixed>>, 1: array<string, int|float>} The debit entries and the point KPIs.
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function ledgerPoints(array $query): array {
+		$credits = $this->ledgerEntries(query: $query, type: 'credit');
+		$debits = $this->ledgerEntries(query: $query, type: 'debit');
+		$expiries = $this->ledgerEntries(query: $query, type: 'expiry');
 
-		$breakagePercent = 0.0;
-		if ($pointsIssued > 0) {
-			$breakagePercent = round($pointsExpired / $pointsIssued * 100, 2);
+		$issued = (int)array_sum(array_map(fn (array $e): int => (int)($e['count'] ?? 0), $credits));
+		$redeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $debits));
+		$expired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $expiries));
+
+		return [
+			$debits,
+			[
+				'pointsIssued' => $issued,
+				'pointsRedeemed' => $redeemed,
+				'pointsExpired' => $expired,
+				'breakagePercent' => $this->percentOf(part: $expired, whole: $issued),
+				'redemptionRate' => $this->percentOf(part: $redeemed, whole: $issued),
+			],
+		];
+	}//end ledgerPoints()
+
+	/**
+	 * Read the ledger entries of one type for a programme and date window.
+	 *
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The programme UUID and inclusive ISO date window.
+	 * @param string $type The ledger entry type (credit, debit or expiry).
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function ledgerEntries(array $query, string $type): array {
+		return $this->ledgerService->getLedgerEntriesForProgramme(
+			programmeId: $query['programmeId'],
+			type: $type,
+			from: $query['from'],
+			to: $query['to']
+		);
+	}//end ledgerEntries()
+
+	/**
+	 * A part as a percentage of a whole, rounded to two decimals; 0.0 when the whole is not positive.
+	 *
+	 * @param int $part The part.
+	 * @param int $whole The whole.
+	 *
+	 * @return float
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function percentOf(int $part, int $whole): float {
+		$percent = 0.0;
+		if ($whole > 0) {
+			$percent = round($part / $whole * 100, 2);
 		}
 
-		$redemptionRate = 0.0;
-		if ($pointsIssued > 0) {
-			$redemptionRate = round($pointsRedeemed / $pointsIssued * 100, 2);
-		}
+		return $percent;
+	}//end percentOf()
 
-		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
-		$pointValue = (float)($programme['pointValue'] ?? 0.01);
-		$estimatedLiability = round($outstandingPoints * $pointValue, 2);
+	/**
+	 * The cost, tier and liability KPIs.
+	 *
+	 * @param array<string, mixed> $totals The account totals (activeAccounts, tierDistribution,
+	 *                                     outstandingPoints) and pointValue, the euro value of one point.
+	 * @param array<int, array<string, mixed>> $debits The debit ledger entries.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-008-01
+	 */
+	private function valueKpis(array $totals, array $debits): array {
+		$pointValue = $totals['pointValue'];
+		$estimatedLiability = round($totals['outstandingPoints'] * $pointValue, 2);
 		$programmeCostPercent = $this->estimateProgrammeCostPercent(debits: $debits);
 
 		return [
-			'activeAccounts' => $activeAccounts,
-			'pointsIssued' => $pointsIssued,
-			'pointsRedeemed' => $pointsRedeemed,
-			'pointsExpired' => $pointsExpired,
-			'breakagePercent' => $breakagePercent,
-			'redemptionRate' => $redemptionRate,
 			'programmeCostPercent' => $programmeCostPercent,
-			'tierDistribution' => $tierDistribution,
-			'outstandingPoints' => $outstandingPoints,
+			'tierDistribution' => $totals['tierDistribution'],
+			'outstandingPoints' => $totals['outstandingPoints'],
 			'estimatedLiability' => $estimatedLiability,
 			'pointValue' => $pointValue,
-			'period' => ['from' => $from, 'to' => $to],
 		];
-	}//end getKpis()
+	}//end valueKpis()
 
 	/**
 	 * Liability snapshot per IFRS 15 / RJ 270.
@@ -377,12 +444,7 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 
 		$programme = $this->programmeService->getProgramme(programmeId: $programmeId);
 		$policy = $programme['expiryPolicy'] ?? [];
-		$type = 'none';
-		if (is_array($policy) === true) {
-			$type = (string)($policy['type'] ?? 'none');
-		}
-
-		if ($type !== 'inactivityMonths') {
+		if ($this->expiryPolicyType(policy: $policy) !== 'inactivityMonths') {
 			return [
 				'points' => 0,
 				'accounts' => 0,
@@ -390,14 +452,80 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 			];
 		}
 
+		return $this->inactivityForecast(accounts: $accounts, window: ['months' => $this->policyMonths(policy: $policy), 'days' => $days]);
+	}//end getExpiryForecast()
+
+	/**
+	 * The expiry policy type, 'none' when the policy is not a map.
+	 *
+	 * @param mixed $policy The programme's expiryPolicy value.
+	 *
+	 * @return string
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function expiryPolicyType($policy): string {
+		$type = 'none';
+		if (is_array($policy) === true) {
+			$type = (string)($policy['type'] ?? 'none');
+		}
+
+		return $type;
+	}//end expiryPolicyType()
+
+	/**
+	 * The inactivity window in months, 12 when the policy is not a map.
+	 *
+	 * @param mixed $policy The programme's expiryPolicy value.
+	 *
+	 * @return int
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function policyMonths($policy): int {
 		$months = 12;
 		if (is_array($policy) === true) {
 			$months = (int)($policy['value'] ?? 12);
 		}
 
+		return $months;
+	}//end policyMonths()
+
+	/**
+	 * Forecast the points of accounts that pass the inactivity cutoff within the window.
+	 *
+	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
+	 * @param array{months: int, days: int} $window The inactivity window in months, and the window size in days.
+	 *
+	 * @return array{points: int, accounts: int, until: string}
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function inactivityForecast(array $accounts, array $window): array {
+		['months' => $months, 'days' => $days] = $window;
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$cutoff = $now->modify('-' . max(0, $months - ((int)round($days / 30))) . ' months');
 
+		[$points, $count] = $this->expiringBalances(accounts: $accounts, cutoff: $cutoff->format('c'));
+
+		return [
+			'points' => $points,
+			'accounts' => $count,
+			'until' => $now->modify("+{$days} days")->format('c'),
+		];
+	}//end inactivityForecast()
+
+	/**
+	 * Sum the positive balances of accounts last active before the cutoff.
+	 *
+	 * @param array<int, array<string, mixed>> $accounts The programme's accounts.
+	 * @param string $cutoff The ISO-8601 cutoff.
+	 *
+	 * @return array{0: int, 1: int} The points and the number of accounts.
+	 *
+	 * @spec exclude phpmd mechanical refactor
+	 */
+	private function expiringBalances(array $accounts, string $cutoff): array {
 		$points = 0;
 		$count = 0;
 		foreach ($accounts as $a) {
@@ -406,18 +534,14 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 				continue;
 			}
 
-			if ($last < $cutoff->format('c') && (int)($a['currentBalance'] ?? 0) > 0) {
+			if ($last < $cutoff && (int)($a['currentBalance'] ?? 0) > 0) {
 				$points += (int)($a['currentBalance'] ?? 0);
 				$count++;
 			}
 		}
 
-		return [
-			'points' => $points,
-			'accounts' => $count,
-			'until' => $now->modify("+{$days} days")->format('c'),
-		];
-	}//end getExpiryForecast()
+		return [$points, $count];
+	}//end expiringBalances()
 
 	/**
 	 * Estimate the programme cost percent: the cost of the redemptions as a share
@@ -514,31 +638,8 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 	 * @return ?array<string, mixed>
 	 */
 	private function getOption(string $optionId): ?array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'redemptionOption_schema', '');
-		if ($register === '' || $schema === '' || $optionId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $optionId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->findObject(schemaKey: 'redemptionOption_schema', id: $optionId);
 	}//end getOption()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.

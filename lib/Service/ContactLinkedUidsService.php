@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -34,6 +35,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactLinkedUidsService {
 	use ResultToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -101,32 +103,31 @@ class ContactLinkedUidsService {
 		$uids = [];
 
 		try {
-			$objects = $objectService->findAll(
-				['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]
-			);
+			$objects = $objectService->findAll(['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]);
 
 			foreach ($objects as $obj) {
-				$data = $this->serializeResult(result: $obj);
-				if (empty($data['contactsUid']) === false) {
-					$uids[] = $data['contactsUid'];
-				}
+				$uids = array_merge($uids, $this->contactsUidOf(obj: $obj));
 			}
 		} catch (\Exception $e) {
-			$this->logger->debug(
-				'Pipelinq: Failed to fetch linked UIDs for ' . $type,
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->debug('Pipelinq: Failed to fetch linked UIDs for ' . $type, ['exception' => $e->getMessage()]);
 		}
 
 		return $uids;
 	}//end getLinkedUidsForType()
 
 	/**
-	 * Get the OpenRegister ObjectService via the container.
+	 * The object's contactsUid as a one-item list, or an empty list when it has none.
 	 *
-	 * @return object The object service.
+	 * @param mixed $obj The found object.
+	 *
+	 * @return array<int, mixed>
 	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
+	private function contactsUidOf(mixed $obj): array {
+		$data = $this->serializeResult(result: $obj);
+		if (empty($data['contactsUid']) === false) {
+			return [$data['contactsUid']];
+		}
+
+		return [];
+	}//end contactsUidOf()
 }//end class

@@ -95,30 +95,55 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 			return [];
 		}
 
-		$patch = [];
 		$name = trim((string)($lead['submitterName'] ?? ''));
+		$patch = $this->contactPatch(lead: $lead, submitter: ['email' => $email, 'name' => $name]);
+		$patch = array_merge($patch, $this->clientPatch(lead: $lead));
+
+		return array_merge($patch, $this->titleFor(lead: $lead, name: $name));
+	}//end partiesFor()
+
+	/**
+	 * The contact a lead without one gets, matched or created from the submitter.
+	 *
+	 * @param array<string, mixed>               $lead      The lead as it is about to be stored.
+	 * @param array{email: string, name: string} $submitter The submitter's email, lower-cased, and name.
+	 *
+	 * @return array<string, string> `contact`, or nothing.
+	 */
+	private function contactPatch(array $lead, array $submitter): array {
 		if (trim((string)($lead['contact'] ?? '')) === '') {
 			$contactId = $this->matchOrCreateContact(
-				email: $email,
-				submitted: trim((string)$lead['submitterEmail']),
-				name: $name,
-				source: (string)($lead['source'] ?? '')
+				submitter: $submitter + [
+					'submitted' => trim((string)$lead['submitterEmail']),
+					'source' => (string)($lead['source'] ?? ''),
+				]
 			);
 			if ($contactId !== '') {
-				$patch['contact'] = $contactId;
+				return ['contact' => $contactId];
 			}
 		}
 
+		return [];
+	}//end contactPatch()
+
+	/**
+	 * The client a lead without one gets, matched or created from the submitter's organisation.
+	 *
+	 * @param array<string, mixed> $lead The lead as it is about to be stored.
+	 *
+	 * @return array<string, string> `client`, or nothing.
+	 */
+	private function clientPatch(array $lead): array {
 		$organisation = trim((string)($lead['submitterOrganisation'] ?? ''));
 		if ($organisation !== '' && trim((string)($lead['client'] ?? '')) === '') {
 			$clientId = $this->matchOrCreateClient(organisation: $organisation);
 			if ($clientId !== '') {
-				$patch['client'] = $clientId;
+				return ['client' => $clientId];
 			}
 		}
 
-		return array_merge($patch, $this->titleFor(lead: $lead, name: $name));
-	}//end partiesFor()
+		return [];
+	}//end clientPatch()
 
 	/**
 	 * The lead's title with the visitor's name, so two leads of one campaign can be told apart.
@@ -194,15 +219,18 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 	 * query, and a duplicate contact is a smaller harm than a scan of every
 	 * contact on the instance.
 	 *
-	 * @param string $email     The submitted address, lowercased.
-	 * @param string $submitted The address as submitted.
-	 * @param string $name      The submitted name, may be empty.
-	 * @param string $source    The lead's origin, recorded on a new contact.
+	 * The submitter carries `email` (the submitted address, lowercased),
+	 * `submitted` (the address as submitted), `name` (may be empty) and
+	 * `source` (the lead's origin, recorded on a new contact).
+	 *
+	 * @param array{email: string, submitted: string, name: string, source: string} $submitter The submitter.
 	 *
 	 * @return string The contact id, or an empty string when the write failed.
 	 */
-	private function matchOrCreateContact(string $email, string $submitted, string $name, string $source): string {
-		foreach (array_unique([$email, $submitted]) as $candidate) {
+	private function matchOrCreateContact(array $submitter): string {
+		$email = $submitter['email'];
+		$name = $submitter['name'];
+		foreach (array_unique([$email, $submitter['submitted']]) as $candidate) {
 			$rows = $this->store->findAll(schemaSlug: self::CONTACT_SCHEMA_SLUG, filters: ['email' => $candidate]);
 			if ($rows !== []) {
 				return $this->store->idOf(payload: $rows[0]);
@@ -218,7 +246,7 @@ class SubmittedLeadIntake implements SubmittedLeadIntakeInterface {
 			payload: [
 				'name' => $name,
 				'email' => $email,
-				'source' => $source,
+				'source' => $submitter['source'],
 				'marketingConsent' => false,
 			],
 		);

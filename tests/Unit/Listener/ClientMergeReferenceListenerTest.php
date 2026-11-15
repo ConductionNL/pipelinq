@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Listener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
 use OCA\Pipelinq\Listener\ClientMergeReferenceListener;
 use OCA\Pipelinq\Service\Merge\PartyReferenceMover;
 use OCA\Pipelinq\Service\Merge\PartyReferences;
@@ -61,6 +62,19 @@ class ClientMergeReferenceListenerTest extends TestCase {
 
 	private LoggerInterface&MockObject $logger;
 
+	/**
+	 * Every card call, as [method, arguments].
+	 *
+	 * @var list<array{0: string, 1: array<string, string>}>
+	 */
+	private array $cardCalls = [];
+
+	private MergedAwayCardInterface&MockObject $card;
+
+	private ObjectServiceInterface&MockObject $objects;
+
+	private IAppConfig&MockObject $appConfig;
+
 	private ClientMergeReferenceListener $listener;
 
 	/**
@@ -70,7 +84,7 @@ class ClientMergeReferenceListenerTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->rows = [
-			'client-a' => [self::CLIENT_SCHEMA, ['name' => 'Bakkerij Jansen']],
+			'client-a' => [self::CLIENT_SCHEMA, ['name' => 'Bakkerij Jansen', 'contactsUid' => 'card-a']],
 			'client-s' => [self::CLIENT_SCHEMA, ['name' => 'Bakkerij Jansen B.V.']],
 			'lead-1' => ['lead', ['title' => 'Oven', 'client' => 'client-a']],
 			'lead-2' => ['lead', ['title' => 'Kassa', 'client' => 'client-x']],
@@ -110,13 +124,29 @@ class ClientMergeReferenceListenerTest extends TestCase {
 			static fn (string $app, string $key): string => ['client_schema' => self::CLIENT_SCHEMA, 'contact_schema' => self::CONTACT_SCHEMA][$key] ?? ''
 		);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->card = $this->createMock(MergedAwayCardInterface::class);
+		$this->card->method('mark')->willReturnCallback(
+			function (string $contactsUid, string $intoUuid, string $intoName): bool {
+				$this->cardCalls[] = ['mark', [$contactsUid, $intoUuid, $intoName]];
+				return true;
+			}
+		);
+		$this->card->method('unmark')->willReturnCallback(
+			function (string $contactsUid): bool {
+				$this->cardCalls[] = ['unmark', [$contactsUid]];
+				return true;
+			}
+		);
 
 		$this->listener = new ClientMergeReferenceListener(
 			objects: $objects,
 			mover: new PartyReferenceMover(objects: $objects),
 			appConfig: $appConfig,
 			logger: $this->logger,
+			card: $this->card,
 		);
+		$this->objects = $objects;
+		$this->appConfig = $appConfig;
 	}//end setUp()
 
 	/**
@@ -167,6 +197,7 @@ class ClientMergeReferenceListenerTest extends TestCase {
 			],
 			$this->rows['client-a'][1][PartyReferences::LEDGER_FIELD]
 		);
+		self::assertSame([['mark', ['card-a', 'client-s', 'Bakkerij Jansen B.V.']]], $this->cardCalls, 'The merged-away card is kept and notes where the record went.');
 	}//end testAMergeMovesTheReferencesAndListsThem()
 
 	/**
@@ -190,6 +221,8 @@ class ClientMergeReferenceListenerTest extends TestCase {
 		self::assertSame('client-x', $this->rows['ticket-1'][1]['client']);
 		self::assertSame('client-s', $this->rows['lead-2'][1]['client'], 'A row the merge never moved stays where it is.');
 		self::assertNull($this->rows['client-a'][1][PartyReferences::LEDGER_FIELD]);
+		self::assertSame(['unmark', ['card-a']], $this->cardCalls[1], 'The restored record has its own card again.');
+		self::assertSame('card-a', $this->rows['client-a'][1]['contactsUid']);
 	}//end testAReversalReturnsTheRowsAndSkipsOneChangedSince()
 
 	/**
@@ -205,7 +238,49 @@ class ClientMergeReferenceListenerTest extends TestCase {
 		self::assertSame('contact-q', $this->rows['ticket-1'][1]['contact']);
 		self::assertSame('client-a', $this->rows['ticket-1'][1]['client']);
 		self::assertSame([['schema' => 'ticket', 'uuid' => 'ticket-1', 'property' => 'contact']], $this->rows['contact-p'][1][PartyReferences::LEDGER_FIELD]);
+		self::assertSame([], $this->cardCalls, 'A record without a card has no card to keep.');
 	}//end testAContactMergeMovesContactReferences()
+
+	/**
+	 * A survivor without a name is named by its uuid in the card's note.
+	 *
+	 * @return void
+	 */
+	public function testAnUnnamedSurvivorIsNamedByItsUuid(): void {
+		$this->rows['client-s'][1]['name'] = '';
+
+		$this->listener->handle(event: self::merge());
+
+		self::assertSame([['mark', ['card-a', 'client-s', 'client-s']]], $this->cardCalls);
+	}//end testAnUnnamedSurvivorIsNamedByItsUuid()
+
+	/**
+	 * A card that cannot be updated is logged and the references are still moved.
+	 *
+	 * @return void
+	 */
+	public function testAFailingCardDoesNotStopTheMerge(): void {
+		$card = $this->createMock(MergedAwayCardInterface::class);
+		$card->method('unmark')->willThrowException(new RuntimeException('contacts down'));
+		$listener = new ClientMergeReferenceListener(
+			objects: $this->objects,
+			mover: new PartyReferenceMover(objects: $this->objects),
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+			card: $card,
+		);
+		$this->listener->handle(event: self::merge());
+		$this->logger->expects(self::once())->method('warning')->with(
+			'Pipelinq merge: the address book card of a merged record could not be updated',
+			['uid' => 'card-a', 'survivor' => 'client-s', 'reversal' => true, 'error' => 'contacts down']
+		);
+		$this->logger->expects(self::never())->method('error');
+
+		$listener->handle(event: self::merge(reversal: true));
+
+		self::assertSame('client-a', $this->rows['lead-1'][1]['client']);
+		self::assertNull($this->rows['client-a'][1][PartyReferences::LEDGER_FIELD]);
+	}//end testAFailingCardDoesNotStopTheMerge()
 
 	/**
 	 * A merge of anything else, another event, or a vanished record moves nothing.
@@ -236,6 +311,8 @@ class ClientMergeReferenceListenerTest extends TestCase {
 			['mergedFrom' => 'client-a', 'survivor' => 'client-s', 'reversal' => false, 'error' => 'register down']
 		);
 
-		(new ClientMergeReferenceListener(objects: $objects, mover: $mover, appConfig: $appConfig, logger: $this->logger))->handle(event: self::merge());
+		$listener = new ClientMergeReferenceListener(objects: $objects, mover: $mover, appConfig: $appConfig, logger: $this->logger, card: $this->card);
+		$listener->handle(event: self::merge());
+		self::assertSame([], $this->cardCalls, 'A merge whose references did not move leaves the card alone.');
 	}//end testAFailureIsLoggedNotThrown()
 }//end class

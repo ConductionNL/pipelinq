@@ -33,7 +33,9 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RapportageServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Service\Support\WinChanceWeightedValue;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -55,6 +57,8 @@ use Psr\Log\LoggerInterface;
  */
 class RapportageService implements RapportageServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use WinChanceWeightedValue;
 
 	/**
 	 * Constructor.
@@ -107,30 +111,6 @@ class RapportageService implements RapportageServiceInterface {
 	}//end getStageValues()
 
 	/**
-	 * A lead's value weighted by its win chance.
-	 *
-	 * The win chance is the lead's qualification score read as a percentage,
-	 * clamped to 0-100; a lead without a score counts as 0 (decided by Ruben,
-	 * 2026-10-06). The `probability` field is hidden on the lead form and
-	 * empty on real installs, so it never feeds a forecast. AnalyticsService
-	 * applies the same rule; keep the two in step.
-	 *
-	 * @param array<string, mixed> $lead The lead row.
-	 *
-	 * @return float The weighted value.
-	 *
-	 * @spec openspec/specs/commercial-dashboard/spec.md
-	 */
-	private function winChanceWeightedValue(array $lead): float {
-		$score = ($lead['qualificationScore'] ?? null);
-		if (is_numeric($score) === false) {
-			return 0.0;
-		}
-
-		return ((float)($lead['value'] ?? 0) * (max(0.0, min(100.0, (float)$score)) / 100.0));
-	}//end winChanceWeightedValue()
-
-	/**
 	 * Source performance: total / won / conversion / avg-won-value per source.
 	 *
 	 * @param string|null $dateFrom Optional ISO 8601 lower bound (lead created date).
@@ -142,7 +122,7 @@ class RapportageService implements RapportageServiceInterface {
 	 */
 	public function getSourcePerformance(?string $dateFrom = null, ?string $dateTo = null): array {
 		$leads = $this->fetchLeads();
-		$byCreated = $this->filterByCreated(leads: $leads, from: $dateFrom, to: $dateTo);
+		$byCreated = $this->filterByCreated(leads: $leads, period: ['from' => $dateFrom, 'to' => $dateTo]);
 
 		$buckets = [];
 		foreach ($byCreated as $lead) {
@@ -312,7 +292,7 @@ class RapportageService implements RapportageServiceInterface {
 			}
 		}
 
-		$closed = $this->filterByCreated(leads: $closed, from: $dateFrom, to: $dateTo);
+		$closed = $this->filterByCreated(leads: $closed, period: ['from' => $dateFrom, 'to' => $dateTo]);
 		$totals = $this->accumulateWinLossTotals(leads: $closed);
 
 		return $this->buildWinLossSummary(totals: $totals);
@@ -424,22 +404,22 @@ class RapportageService implements RapportageServiceInterface {
 	 * Filter leads by `_dateCreated` within the optional bounds.
 	 *
 	 * @param array<int, array<string, mixed>> $leads The leads.
-	 * @param string|null $from ISO 8601 lower bound (inclusive).
-	 * @param string|null $to ISO 8601 upper bound (inclusive).
+	 * @param array{from: string|null, to: string|null} $period ISO 8601 lower and upper bounds (inclusive).
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function filterByCreated(array $leads, ?string $from, ?string $to): array {
+	private function filterByCreated(array $leads, array $period): array {
+		$from = $period['from'];
+		$to = $period['to'];
 		if (($from === null || $from === '') && ($to === null || $to === '')) {
 			return $leads;
 		}
 
-		$fromTs = $this->parseDateBound(value: $from);
-		$toTs = $this->parseDateBound(value: $to);
+		$bounds = ['fromTs' => $this->parseDateBound(value: $from), 'toTs' => $this->parseDateBound(value: $to)];
 
 		$result = [];
 		foreach ($leads as $lead) {
-			if ($this->isWithinCreatedBounds(lead: $lead, fromTs: $fromTs, toTs: $toTs) === true) {
+			if ($this->isWithinCreatedBounds(lead: $lead, bounds: $bounds) === true) {
 				$result[] = $lead;
 			}
 		}
@@ -471,12 +451,13 @@ class RapportageService implements RapportageServiceInterface {
 	 * Whether a lead's `_dateCreated` falls within the optional [from, to] bounds.
 	 *
 	 * @param array<string, mixed> $lead The lead row.
-	 * @param int|null $fromTs Lower bound (inclusive), or null.
-	 * @param int|null $toTs Upper bound (inclusive), or null.
+	 * @param array{fromTs: int|null, toTs: int|null} $bounds Lower and upper bounds (inclusive), each or null.
 	 *
 	 * @return bool
 	 */
-	private function isWithinCreatedBounds(array $lead, ?int $fromTs, ?int $toTs): bool {
+	private function isWithinCreatedBounds(array $lead, array $bounds): bool {
+		$fromTs = $bounds['fromTs'];
+		$toTs = $bounds['toTs'];
 		$created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
 		if ($created === null) {
 			return false;
@@ -556,16 +537,4 @@ class RapportageService implements RapportageServiceInterface {
 
 		return $leads;
 	}//end fetchLeads()
-
-	/**
-	 * Resolve the OpenRegister ObjectService from the container.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-
-	}//end getObjectService()
 }//end class

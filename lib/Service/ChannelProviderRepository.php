@@ -28,7 +28,10 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,6 +51,9 @@ use Throwable;
  */
 class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SchemaRowQuery;
 
 	/**
 	 * Default channelProvider schema slug.
@@ -90,27 +96,18 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 			return [];
 		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'kind' => $kind,
-						'active' => true,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.listActive: findAll failed',
-				['kind' => $kind, 'exception' => $e->getMessage()]
-			);
+		$rows = $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['kind' => $kind, 'active' => true],
+			failure: 'ChannelProviderRepository.listActive: findAll failed',
+			context: ['kind' => $kind]
+		);
+		if ($rows === null) {
 			return [];
 		}
 
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(value: $row);
 			// Defence in depth — schema filter "active=true" should already
 			// remove inactive rows, but some OR backends don't honour
@@ -181,6 +178,19 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 			return null;
 		}
 
+		return $this->findProvider(objectService: $objectService, id: $id, scope: $scope);
+	}//end lookup()
+
+	/**
+	 * Find one provider row, logging a miss.
+	 *
+	 * @param object              $objectService OpenRegister's ObjectService.
+	 * @param string              $id            Provider UUID / slug.
+	 * @param array<string, bool> $scope         Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 */
+	private function findProvider(object $objectService, string $id, array $scope): array|null {
 		try {
 			$entity = $objectService->find(
 				id: $id,
@@ -190,10 +200,7 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
-			$this->logger->info(
-				'ChannelProviderRepository.findById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
+			$this->logger->info('ChannelProviderRepository.findById: not found', ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;
 		}
 
@@ -202,7 +209,7 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end lookup()
+	}//end findProvider()
 
 	/**
 	 * First active row matching kind + vendor.
@@ -222,37 +229,6 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 
 		return null;
 	}//end findByVendor()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ChannelProviderRepository.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug (app-config overridable).

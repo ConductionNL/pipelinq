@@ -38,6 +38,7 @@ use Psr\Log\LoggerInterface;
 /**
  * @covers \OCA\Pipelinq\Service\Labels\LabelRenameService
  * @uses \OCA\Pipelinq\Service\Labels\LabelRenameException
+ * @uses \OCA\Pipelinq\Util\LockedRecord
  * @uses \OCA\Pipelinq\Util\SerialisedPayload
  * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
  * @uses \OCA\Pipelinq\Util\SerialisedToArray
@@ -98,6 +99,20 @@ class LabelRenameServiceTest extends TestCase {
 	 * @var \Throwable|null
 	 */
 	private ?\Throwable $findFailure = null;
+
+	/**
+	 * Ids whose save the fake refuses with an exception.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $saveFailures = [];
+
+	/**
+	 * The logger mock.
+	 *
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface $logger;
 
 	/**
 	 * The job list mock.
@@ -175,7 +190,7 @@ class LabelRenameServiceTest extends TestCase {
 			userSession: $userSession,
 			groupManager: $groupManager,
 			jobList: $this->jobList,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			logger: $this->logger,
 		);
 	}//end service()
 
@@ -187,6 +202,7 @@ class LabelRenameServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->jobList = $this->createMock(originalClassName: IJobList::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 		foreach (['afval', 'duurzaam', 'parkeren', 'ondernemers', 'evenementen'] as $i => $name) {
 			$this->store['itemLabel']['l'.$i] = ['id' => 'l'.$i, 'name' => $name];
 		}
@@ -218,6 +234,26 @@ class LabelRenameServiceTest extends TestCase {
 		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['article']['a1']['tags'], message: 'an article on both names keeps one');
 		$this->assertSame(expected: ['id' => 'l3', 'name' => 'ondernemers centrum', 'rewritten' => 7, 'queued' => false], actual: $result);
 	}//end testARenamedLabelFollowsItsItems()
+
+	/**
+	 * A locked lead keeps the old name and is never written to; the rename
+	 * goes on with the other items (platform-record-lock 1.3).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
+	 */
+	public function testALockedItemKeepsTheOldLabel(): void {
+		$this->store['lead']['lead2']['@self'] = ['id' => 'lead2', 'frozen' => ['by' => 'admin', 'at' => '2026-11-01T00:00:00+00:00']];
+
+		$result = $this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
+
+		$this->assertSame(expected: ['ondernemers', 'duurzaam'], actual: $this->store['lead']['lead2']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum', 'duurzaam'], actual: $this->store['lead']['lead1']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['client']['c1']['labels']);
+		$this->assertSame(expected: [], actual: array_filter($this->writes, fn (array $w): bool => $w[1] === 'lead2'));
+		$this->assertSame(expected: 6, actual: $result['rewritten']);
+	}//end testALockedItemKeepsTheOldLabel()
 
 	/**
 	 * Somebody who is not an administrator is refused before anything is written.
@@ -391,6 +427,42 @@ class LabelRenameServiceTest extends TestCase {
 	}//end testTheQueuedPassRewritesTheRestForAnAdministratorOnly()
 
 	/**
+	 * Renaming a label to the name it already has writes nothing and queues nothing.
+	 *
+	 * @return void
+	 */
+	public function testRenamingToTheSameNameWritesNothing(): void {
+		$this->jobList->expects($this->never())->method('add');
+
+		$result = $this->service()->rename(labelId: 'l3', name: ' ondernemers ');
+
+		$this->assertSame(expected: ['id' => 'l3', 'name' => 'ondernemers', 'rewritten' => 0, 'queued' => false], actual: $result);
+		$this->assertSame(expected: [], actual: $this->writes);
+		$this->assertSame(expected: ['ondernemers', 'duurzaam'], actual: $this->store['lead']['lead1']['labels']);
+	}//end testRenamingToTheSameNameWritesNothing()
+
+	/**
+	 * An item OpenRegister refuses to save keeps the old name, is logged, and
+	 * the rename goes on with the other items.
+	 *
+	 * @return void
+	 */
+	public function testAnItemThatFailsToSaveKeepsTheOldLabelAndTheRestFollow(): void {
+		$this->saveFailures = ['lead2'];
+		$this->logger->expects($this->once())->method('warning')->with(
+			'LabelRenameService: an item kept the old label',
+			['schema' => 'lead', 'id' => 'lead2', 'exception' => 'write refused']
+		);
+
+		$result = $this->service()->rename(labelId: 'l3', name: 'ondernemers centrum');
+
+		$this->assertSame(expected: ['ondernemers', 'duurzaam'], actual: $this->store['lead']['lead2']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum', 'duurzaam'], actual: $this->store['lead']['lead3']['labels']);
+		$this->assertSame(expected: ['ondernemers centrum'], actual: $this->store['client']['c1']['labels']);
+		$this->assertSame(expected: 6, actual: $result['rewritten']);
+	}//end testAnItemThatFailsToSaveKeepsTheOldLabelAndTheRestFollow()
+
+	/**
 	 * Fake find.
 	 *
 	 * @param string $schema The schema slug.
@@ -443,6 +515,10 @@ class LabelRenameServiceTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	public function storeSave(string $schema, string $id, array $payload, bool $rbac): array {
+		if (in_array($id, $this->saveFailures, true) === true) {
+			throw new \RuntimeException(message: 'write refused');
+		}
+
 		$this->writes[] = [$schema, $id, $payload, $rbac];
 		$this->store[$schema][$id] = $payload;
 		return $payload;

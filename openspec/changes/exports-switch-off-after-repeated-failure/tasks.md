@@ -21,16 +21,16 @@
 
 ## 4. BI export page
 
-- [ ] 4.1 In ExportJobsView show "Niet ingepland" as next run for a disabled job and the `pausedReason` under the Failed status in the Last run cell, as on board `PqBiExport` [V1]
+- [x] 4.1 In ExportJobsView show "Niet ingepland" as next run for a disabled job and the `pausedReason` under the Failed status in the Last run cell, as on board `PqBiExport` [V1]
   - Verify: Playwright `tests/e2e/export-switch-off.spec.ts` seeds a switched-off job and reads both texts
-- [ ] 4.2 Make sure the "Last run failed" view lists a job whose last run failed, whether it is enabled or not [V1]
+- [x] 4.2 Make sure the "Last run failed" view lists a job whose last run failed, whether it is enabled or not [V1]
   - Verify: the same Playwright spec selects the view and finds the job
-- [ ] 4.3 Switching the job on from the page clears the reason on screen [V1]
+- [x] 4.3 Switching the job on from the page clears the reason on screen [V1]
   - Verify: the Playwright spec switches it on and the reason is gone after a reload
 
 ## 5. Admin setting
 
-- [ ] 5.1 Add "Switch off an export job after this many failed runs in a row" (1 to 10, default 3) to the admin settings, stored as `export_failure_threshold` [V1]
+- [x] 5.1 Add "Switch off an export job after this many failed runs in a row" (1 to 10, default 3) to the admin settings, stored as `export_failure_threshold` [V1]
   - Verify: PHPUnit for the settings service refuses 0 and 11; Playwright saves 1 and reads it back
 
 ## 6. Text

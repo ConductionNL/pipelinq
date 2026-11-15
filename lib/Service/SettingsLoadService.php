@@ -237,9 +237,14 @@ class SettingsLoadService {
 		// Quotes: the quote number listener and the line roll-up read these keys.
 		'salesQuote',
 		'salesQuoteLine',
+		// Price lists: the price resolver reads this key (products-price-lists).
+		'priceList',
 		// Campaign events: the reminder and check-in read these two keys.
 		'campaignEvent',
 		'eventRegistration',
+		// Call review: the save listener reads the review and its scorecard by these keys.
+		'callScorecard',
+		'callReview',
 	];
 
 	/**

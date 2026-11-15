@@ -264,11 +264,6 @@ class SocialBrokerGateway {
 	 * @return SocialGatewayResult What came back, or which of the six failures happened.
 	 *
 	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The branches ARE the closed
-	 *  failure set this method exists to produce; folding them into a helper
-	 *  would move the mapping without reducing it, and the catch ORDER is the
-	 *  behaviour under test.
 	 */
 	public function request(
 		string $credentialRef,
@@ -278,18 +273,9 @@ class SocialBrokerGateway {
 		?string $body = null,
 		?string $actingUserId = null,
 	): SocialGatewayResult {
-		if ($this->isAvailable() === false) {
-			return SocialGatewayResult::failed(
-				code: SocialGatewayResult::UNAVAILABLE,
-				reason: 'The OpenRegister credential broker is not installed, so nothing can be published.',
-			);
-		}
-
-		if (trim($credentialRef) === '') {
-			return SocialGatewayResult::failed(
-				code: SocialGatewayResult::NOT_CONFIGURED,
-				reason: 'This account is not connected yet, so there is no credential to publish with.',
-			);
+		$refusal = $this->requestRefusal(credentialRef: $credentialRef);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -309,6 +295,31 @@ class SocialBrokerGateway {
 
 		return $this->interpret(response: $response, call: new BrokeredCall(method: $method, path: $path));
 	}//end request()
+
+	/**
+	 * Why a call cannot be made at all: no broker, or no credential. Null when it can.
+	 *
+	 * @param string $credentialRef The broker credential UUID stored on the account.
+	 *
+	 * @return SocialGatewayResult|null
+	 */
+	private function requestRefusal(string $credentialRef): SocialGatewayResult|null {
+		if ($this->isAvailable() === false) {
+			return SocialGatewayResult::failed(
+				code: SocialGatewayResult::UNAVAILABLE,
+				reason: 'The OpenRegister credential broker is not installed, so nothing can be published.',
+			);
+		}
+
+		if (trim($credentialRef) === '') {
+			return SocialGatewayResult::failed(
+				code: SocialGatewayResult::NOT_CONFIGURED,
+				reason: 'This account is not connected yet, so there is no credential to publish with.',
+			);
+		}
+
+		return null;
+	}//end requestRefusal()
 
 	/**
 	 * Turn an exception from the broker into one of the named failures.
