@@ -23,6 +23,7 @@ const axiosMock = vi.hoisted(() => ({ get: vi.fn(), delete: vi.fn() }))
 const ctiMock = vi.hoisted(() => ({ getEventLog: vi.fn() }))
 
 vi.mock('@nextcloud/axios', () => ({ default: axiosMock }))
+vi.mock('@conduction/nextcloud-vue', async () => ({ CnDataTable: (await import('./support/cnDataTableStub.js')).CnDataTableStub }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => '/index.php' + path }))
 vi.mock('../../src/services/ctiApi.js', () => ctiMock)
@@ -124,7 +125,7 @@ describe('CTI event log', () => {
 })
 
 describe('POS tender types', () => {
-	it('lists a tender type with code, GL account, flags, sort and actions', async () => {
+	it('lists a tender type as a table row: name, code, GL account, flags, state and actions', async () => {
 		axiosMock.get.mockResolvedValue({
 			data: {
 				results: [
@@ -144,16 +145,14 @@ describe('POS tender types', () => {
 		const wrapper = mount(PosTenderTypeList, mountOptions)
 		await flushPromises()
 
-		expect(wrapper.find('table').exists()).toBe(false)
-		const type = wrapper.get('[data-testid="pos-tender-type"]')
-		expect(type.get('h3').text()).toBe('Pin')
-		expect(type.text()).toContain('Active')
-		expect(factsOf(type)).toEqual({
-			Code: 'PIN',
-			'GL account': '1100',
-			Flags: 'PIN',
-			Sort: '2',
-		})
+		// One table row per tender type, as the board draws it (pl2 PqBeheerKassa),
+		// sorted and filtered from its own heads.
+		const table = wrapper.get('[data-stub="CnDataTable"]')
+		expect(table.attributes('data-filterable')).toBe('true')
+		expect(table.attributes('data-local-headers')).toBe('true')
+		const type = wrapper.get('.pos-tender-type-list__row')
+		expect(type.element.tagName).toBe('TR')
+		expect(type.findAll('td').map((c) => c.text()).slice(0, 5)).toEqual(['Pin', 'PIN', '1100', 'PIN', 'Active'])
 		const actions = type
 			.findAll('.pos-tender-type-list__row-actions button')
 			.map((b) => b.text())
@@ -162,21 +161,32 @@ describe('POS tender types', () => {
 })
 
 describe('POS roles and staff', () => {
-	it('opens the POS roles as cards', () => {
+	it('lists the POS roles as a table of their rights, as the board draws it', () => {
 		const source = readFileSync(
 			resolve(__dirname, '../../src/views/pos/PosRoleList.vue'),
 			'utf8',
 		)
-		expect(source).toMatch(/viewMode="cards"/)
+		expect(source).toContain('<table v-else-if="objects.length" class="pos-role-list__table">')
+		expect(source).toContain("t('pipelinq', 'May open the drawer')")
+		expect(source).not.toContain('CnIndexPage')
 	})
 
-	it('lets the POS staff headers wrap and drops the doubled padding', () => {
+	it('adds a tender type, role or staff member from the section title row', () => {
+		for (const file of ['PosTenderTypeManager', 'PosRoleManager', 'PosStaffManager']) {
+			const source = readFileSync(resolve(__dirname, `../../src/views/settings/${file}.vue`), 'utf8')
+			expect(source).toContain('<template #actions>')
+			expect(source).toContain('<CnSettingsSection')
+		}
+	})
+
+	it('draws the POS staff through the shared table and drops the doubled padding', () => {
 		const source = readFileSync(
 			resolve(__dirname, '../../src/views/pos/PosStaffList.vue'),
 			'utf8',
 		)
 		const root = source.match(/\.pos-staff-list \{[^}]*\}/)[0]
 		expect(root).not.toMatch(/padding/)
-		expect(source).toMatch(/white-space: normal/)
+		expect(source).toContain('<CnDataTable')
+		expect(source).not.toContain('<table')
 	})
 })

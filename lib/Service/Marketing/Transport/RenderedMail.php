@@ -34,32 +34,78 @@ namespace OCA\Pipelinq\Service\Marketing\Transport;
  */
 final class RenderedMail {
 	/**
+	 * Sender email address.
+	 *
+	 * @var string
+	 */
+	public readonly string $fromEmail;
+
+	/**
+	 * Sender display name (may be empty).
+	 *
+	 * @var string
+	 */
+	public readonly string $fromName;
+
+	/**
+	 * Reply-To address (may be empty, then replies go to `$fromEmail`).
+	 *
+	 * @var string
+	 */
+	public readonly string $replyTo;
+
+	/**
+	 * Recipient email address (one delivery, one recipient).
+	 *
+	 * @var string
+	 */
+	public readonly string $toEmail;
+
+	/**
+	 * Rendered subject.
+	 *
+	 * @var string
+	 */
+	public readonly string $subject;
+
+	/**
+	 * Rendered HTML body.
+	 *
+	 * @var string
+	 */
+	public readonly string $html;
+
+	/**
+	 * Rendered plain-text body.
+	 *
+	 * @var string
+	 */
+	public readonly string $text;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param string $fromEmail Sender email address.
-	 * @param string $fromName Sender display name (may be empty).
-	 * @param string $replyTo Reply-To address (may be empty — falls back to `$fromEmail`).
-	 * @param string $toEmail Recipient email address (one delivery, one recipient).
-	 * @param string $subject Rendered subject.
-	 * @param string $html Rendered HTML body.
-	 * @param string $text Rendered plain-text body.
-	 * @param array<string, string> $headers Extra headers to set when the
-	 *                                       transport supports it (e.g. RFC 8058
-	 *                                       `List-Unsubscribe`). Never required —
-	 *                                       every transport degrades soft when it
-	 *                                       cannot set them.
-	 * @param string $deliveryId The BlastDelivery UUID or slug this mail was rendered for.
+	 * @param MailAddressing        $addressing The sender, reply address and recipient.
+	 * @param MailContent           $content    The subject and both bodies.
+	 * @param array<string, string> $headers    Extra headers to set when the
+	 *                                          transport supports it (e.g. RFC 8058
+	 *                                          `List-Unsubscribe`). Never required:
+	 *                                          every transport degrades soft when it
+	 *                                          cannot set them.
+	 * @param string                $deliveryId The BlastDelivery UUID or slug this mail was rendered for.
 	 */
 	public function __construct(
-		public readonly string $fromEmail,
-		public readonly string $fromName,
-		public readonly string $replyTo,
-		public readonly string $toEmail,
-		public readonly string $subject,
-		public readonly string $html,
-		public readonly string $text,
+		MailAddressing $addressing,
+		MailContent $content,
 		public readonly array $headers,
 		public readonly string $deliveryId,
 	) {
+		$this->fromEmail = $addressing->fromEmail;
+		$this->fromName  = $addressing->fromName;
+		$this->replyTo   = $addressing->replyTo;
+		$this->toEmail   = $addressing->toEmail;
+		$this->subject   = $content->subject;
+		$this->html      = $content->html;
+		$this->text      = $content->text;
 	}//end __construct()
 }//end class

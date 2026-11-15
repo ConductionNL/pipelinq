@@ -31,7 +31,7 @@ import { nextcloudErrorPage } from '../helpers/pipelinq.ts'
 
 const ADMIN_SETTINGS = '/settings/admin/pipelinq'
 
-// @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-page
+// @e2e openspec/specs/cti-screenpop-adapter/spec.md
 test('CTI integration: the settings section renders on the pipelinq admin page', async ({
 	page,
 }) => {
@@ -46,7 +46,7 @@ test('CTI integration: the settings section renders on the pipelinq admin page',
 	})
 })
 
-// @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-actions
+// @e2e openspec/specs/cti-screenpop-adapter/spec.md
 test('CTI integration: exposes Test connection + Save controls', async ({
 	page,
 }) => {
@@ -71,7 +71,7 @@ test('CTI integration: exposes Test connection + Save controls', async ({
 	).toBeVisible()
 })
 
-// @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-page
+// @e2e openspec/specs/cti-screenpop-adapter/spec.md
 test('CTI event log: the event-log section and its table render', async ({
 	page,
 }) => {
@@ -89,7 +89,7 @@ test('CTI event log: the event-log section and its table render', async ({
 	).toBeVisible()
 })
 
-// @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-reload
+// @e2e openspec/specs/cti-screenpop-adapter/spec.md
 test('CTI event log: exposes a Reload action', async ({ page }) => {
 	await page.goto(ADMIN_SETTINGS)
 	const section = page.locator('#pipelinq-settings')

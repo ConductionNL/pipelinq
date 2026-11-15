@@ -87,16 +87,13 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { reportSectionMixin } from './reportSection.js'
 
 export default {
 	name: 'AgentPerformanceSection',
 	components: { NcLoadingIcon },
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [reportSectionMixin],
 
 	props: {
 		/** Relative period token (today / week / month), from `@workspace`.period. */
@@ -114,9 +111,7 @@ export default {
 
 	computed: {
 		effectivePeriod() {
-			if (this.period) return this.period
-			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
-			return (ctx && ctx.period) || 'today'
+			return this.period || this.fromWorkspace('period', 'today')
 		},
 
 		sortedAgents() {
@@ -143,16 +138,6 @@ export default {
 		},
 	},
 
-	watch: {
-		effectivePeriod() {
-			this.fetchData()
-		},
-	},
-
-	mounted() {
-		this.fetchData()
-	},
-
 	methods: {
 		setSort(key) {
 			if (this.sortKey === key) {
@@ -163,17 +148,11 @@ export default {
 			}
 		},
 
-		async fetchData() {
-			this.loading = true
-			try {
-				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/rapportage/agents'),
-					{
-						params: { period: this.effectivePeriod },
-					},
-				)
+		fetchData() {
+			return this.loadInto('agents', async () => {
+				const data = await this.reportData('agents')
 				const agentMap = data.agents ?? {}
-				this.agents = Object.entries(agentMap)
+				return Object.entries(agentMap)
 					.filter(([, metrics]) => (metrics.count ?? 0) >= 1)
 					.map(([id, metrics]) => ({
 						id,
@@ -181,11 +160,7 @@ export default {
 						fcrRate: metrics.fcrRate ?? 0,
 						avgHandlingTime: metrics.avgHandlingTime ?? '0:00',
 					}))
-			} catch {
-				this.agents = []
-			} finally {
-				this.loading = false
-			}
+			})
 		},
 	},
 }

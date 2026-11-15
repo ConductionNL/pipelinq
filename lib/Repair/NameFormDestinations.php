@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\Marketing\FormDestinationBackfill;
+use OCA\Pipelinq\Kernel\Contracts\FormDestinationBackfillInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
@@ -41,12 +41,12 @@ class NameFormDestinations implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param FormDestinationBackfill $backfill Does the work.
+	 * @param FormDestinationBackfillInterface $backfill Does the work.
 	 *
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/marketing-campaigns/spec.md#requirement-a-landing-page-form-submits-into-a-lead-with-its-contact-and-touchpoint
 	 */
 	public function __construct(
-		private readonly FormDestinationBackfill $backfill,
+		private readonly FormDestinationBackfillInterface $backfill,
 	) {
 	}//end __construct()
 

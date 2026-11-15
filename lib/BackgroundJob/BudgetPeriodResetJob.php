@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\BudgetService;
+use OCA\Pipelinq\Kernel\Contracts\BudgetServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -36,21 +36,21 @@ use Psr\Log\LoggerInterface;
 /**
  * Daily messageSendBudget reset.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class BudgetPeriodResetJob extends TimedJob {
 	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param BudgetService $budgetService Budget reset orchestrator.
+	 * @param BudgetServiceInterface $budgetService Budget reset orchestrator.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private BudgetService $budgetService,
+		private BudgetServiceInterface $budgetService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

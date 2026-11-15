@@ -258,4 +258,59 @@ class BlastSendJobTest extends TestCase {
 		$this->assertSame('sendgrid', $stored[0]['provider']);
 		$this->assertSame('twilio', $stored[1]['provider']);
 	}//end testEnqueueWebhookEventAppendsToQueue()
+
+	/**
+	 * Golden: the identity a blast row is known by — its own uuid, id or slug first, then its `@self` one.
+	 *
+	 * @return void
+	 */
+	public function testBlastIdentityIsReadInThisOrder(): void {
+		$extract = new \ReflectionMethod(BlastSendJob::class, 'extractBlastId');
+		$job = $this->buildJob();
+		$cases = [
+			[['uuid' => 'u-1', 'id' => 'i-1', 'slug' => 's-1'], 'u-1'],
+			[['uuid' => '', 'id' => 7, 'slug' => 's-1'], '7'],
+			[['uuid' => ['x'], 'slug' => 's-1'], 's-1'],
+			[['@self' => ['id' => 'self-1', 'uuid' => 'self-u']], 'self-u'],
+			[['uuid' => '', '@self' => ['slug' => 'self-s']], 'self-s'],
+			[['@self' => 'not-a-map'], ''],
+			[['@self' => ['uuid' => false, 'id' => '']], ''],
+			[[], ''],
+		];
+		foreach ($cases as [$row, $expected]) {
+			$this->assertSame($expected, $extract->invoke($job, $row), (string)json_encode($row));
+		}
+	}//end testBlastIdentityIsReadInThisOrder()
+
+	/**
+	 * Golden: the sending-blast read — its filters, the rows it keeps, and a failing read.
+	 *
+	 * @return void
+	 */
+	public function testSendingBlastsAreReadExactly(): void {
+		$load = new \ReflectionMethod(BlastSendJob::class, 'loadSendingBlasts');
+		$this->objectService->sendingBlasts = [['uuid' => 'b-1', 'status' => 'sending'], [], ['uuid' => 'b-2']];
+		$this->assertSame([['uuid' => 'b-1', 'status' => 'sending'], ['uuid' => 'b-2']], $load->invoke($this->buildJob()));
+
+		$this->appConfigStore['blast_schema'] = '';
+		$this->assertSame([], $load->invoke($this->buildJob()));
+		unset($this->appConfigStore['blast_schema']);
+
+		$failing = new class {
+			/**
+			 * @param array<string, mixed> $config The query.
+			 *
+			 * @return array<int, mixed> Never.
+			 */
+			public function findAll(array $config = []): array {
+				throw new \RuntimeException('register offline');
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($failing);
+		$this->logger->expects($this->once())->method('warning')
+			->with('BlastSendJob.loadSendingBlasts: findAll failed', ['exception' => 'register offline']);
+		$job = new BlastSendJob($this->timeFactory, $this->appConfig, $container, $this->blastService, $this->webhookProcessor, $this->logger);
+		$this->assertSame([], $load->invoke($job));
+	}//end testSendingBlastsAreReadExactly()
 }//end class

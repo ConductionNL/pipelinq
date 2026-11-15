@@ -3,35 +3,17 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Print Receipt')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
-		<div class="receipt-modal">
-			<NcSelect
-				v-model="selectedTemplate"
-				:inputLabel="t('pipelinq', 'Receipt Template')"
-				:options="templateOptions"
-				:placeholder="t('pipelinq', 'Select template')"
-				label="label"
-				:clearable="false"
-				@update:modelValue="loadPreview" />
-
+		<ReceiptModalBody v-bind="receiptBody" @update:selectedTemplate="selectTemplate">
 			<p v-if="printerDevice" class="receipt-modal__device">
 				{{ t('pipelinq', 'Configured printer:') }}
 				<strong>{{ printerDevice }}</strong>
 			</p>
-
-			<ReceiptPreviewPane :content="previewText" :loading="previewLoading" />
-
-			<p
-				v-if="statusMessage"
-				class="receipt-modal__status"
-				:class="statusClass">
-				{{ statusMessage }}
-			</p>
-		</div>
+		</ReceiptModalBody>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
@@ -40,108 +22,40 @@
 				{{ t('pipelinq', 'Print') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
-import ReceiptPreviewPane from '../components/pos/ReceiptPreviewPane.vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
+import ReceiptModalBody from '../components/pos/ReceiptModalBody.vue'
+import receiptModalMixin from '../mixins/receiptModalMixin.js'
 
 export default {
 	name: 'PrintReceiptModal',
 	components: {
-		NcDialog,
+		CnDialog,
 		NcButton,
-		NcSelect,
-		ReceiptPreviewPane,
+		ReceiptModalBody,
 	},
 
-	props: {
-		transactionId: {
-			type: String,
-			required: true,
-		},
-
-		templates: {
-			type: Array,
-			default: () => [],
-		},
-	},
+	mixins: [receiptModalMixin],
 
 	emits: ['close', 'printed'],
 	data() {
 		return {
-			selectedTemplate: null,
-			previewText: '',
-			previewLoading: false,
 			printerDevice: '',
 			printing: false,
-			statusMessage: '',
-			statusType: '',
 		}
-	},
-
-	computed: {
-		/**
-		 * Template options for the NcSelect dropdown.
-		 *
-		 * @return {Array} The options.
-		 */
-		templateOptions() {
-			return this.templates.map((tpl) => ({
-				id: tpl.id,
-				label: tpl.name || tpl.id,
-			}))
-		},
-
-		/**
-		 * CSS class for the status message.
-		 *
-		 * @return {object} The class binding.
-		 */
-		statusClass() {
-			return {
-				'receipt-modal__status--error': this.statusType === 'error',
-				'receipt-modal__status--success': this.statusType === 'success',
-			}
-		},
-	},
-
-	async mounted() {
-		await this.loadPreview()
 	},
 
 	methods: {
 		/**
-		 * Load the rendered receipt preview.
+		 * The print modal reads nothing from the preview beyond its text.
+		 *
+		 * @return {void}
 		 */
-		async loadPreview() {
-			this.previewLoading = true
-			this.statusMessage = ''
-			try {
-				const params = this.selectedTemplate
-					? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
-					: ''
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`,
-					),
-					{
-						headers: {
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (response.ok && data.receipt) {
-					this.previewText = data.receipt.text || ''
-				}
-			} finally {
-				this.previewLoading = false
-			}
-		},
+		showPreview() {},
 
 		/**
 		 * Request the ESC/POS byte stream for the transaction.
@@ -155,46 +69,21 @@ export default {
 			this.printing = true
 			this.statusMessage = ''
 			try {
-				const body = {}
-				if (this.selectedTemplate) {
-					body.template = this.selectedTemplate.id
-				}
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/print`,
-					),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(body),
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (!response.ok) {
-					this.statusType = 'error'
-					this.statusMessage =
-						data.error
-						|| t('pipelinq', 'Error printing receipt: {error}', {
-							error: '',
-						})
+				const { ok, data } = await this.postReceipt('print')
+				if (!ok) {
+					this.showReceiptError(data.error || t('pipelinq', 'Error printing receipt: {error}', { error: '' }))
 					return
 				}
-				this.printerDevice =
-					(data.receipt && data.receipt.printerDevice) || ''
-				this.statusType = 'success'
-				this.statusMessage = t('pipelinq', 'Receipt sent to printer')
+				this.printerDevice = (data.receipt && data.receipt.printerDevice) || ''
+				this.showReceiptSuccess(t('pipelinq', 'Receipt sent to printer'))
 				this.$emit('printed', data.receipt)
+				this.closeAfterReceipt()
 			} catch (e) {
-				this.statusType = 'error'
-				this.statusMessage = t(
+				this.showReceiptError(t(
 					'pipelinq',
 					'Error printing receipt: {error}',
 					{ error: e.message },
-				)
+				))
 			} finally {
 				this.printing = false
 			}
@@ -204,28 +93,8 @@ export default {
 </script>
 
 <style scoped>
-.receipt-modal {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding: 8px 0;
-}
-
 .receipt-modal__device {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.receipt-modal__status {
-	font-size: 13px;
-	margin: 0;
-}
-
-.receipt-modal__status--error {
-	color: var(--color-error);
-}
-
-.receipt-modal__status--success {
-	color: var(--color-success);
 }
 </style>

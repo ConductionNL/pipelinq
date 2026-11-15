@@ -30,10 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
+use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
 use OCA\Pipelinq\Lifecycle\BillingHandoffAccessPolicy;
-use OCA\Pipelinq\Service\IntegrationDetector;
-use OCA\Pipelinq\Service\TimeBillingHandoffService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,19 +56,19 @@ class BillingHandoffController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param TimeBillingHandoffService $handoffService The billing handoff service.
+	 * @param TimeBillingHandoffServiceInterface $handoffService The billing handoff service.
 	 * @param BillingHandoffAccessPolicy $accessPolicy The manager access policy.
-	 * @param IntegrationDetector $integrations Detects Shillinq for the deep-link fallback.
+	 * @param IntegrationDetectorInterface $integrations Detects Shillinq for the deep-link fallback.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
-		private TimeBillingHandoffService $handoffService,
+		private TimeBillingHandoffServiceInterface $handoffService,
 		private BillingHandoffAccessPolicy $accessPolicy,
-		private IntegrationDetector $integrations,
+		private IntegrationDetectorInterface $integrations,
 		private IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -81,7 +81,7 @@ class BillingHandoffController extends Controller {
 	 * @return JSONResponse {available, deepLinkUrl, isManager}.
 	 *
 	 * @spec openspec/specs/time-approval-workflow/spec.md
-	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/specs/first-time-setup/spec.md
 	 */
 	#[NoAdminRequired]
 	public function availability(): JSONResponse {
@@ -112,6 +112,20 @@ class BillingHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function trigger(string $clientId, string $periodStart = '', string $periodEnd = ''): JSONResponse {
+		$refusal = $this->managerRefusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->handoff(request: ['clientId' => $clientId, 'periodStart' => $periodStart, 'periodEnd' => $periodEnd]);
+	}//end trigger()
+
+	/**
+	 * The refusal for a caller who is not a signed-in manager, or null.
+	 *
+	 * @return JSONResponse|null 401 without a session, 403 for a non-manager.
+	 */
+	private function managerRefusal(): ?JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
@@ -121,7 +135,18 @@ class BillingHandoffController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		if ($clientId === '' || $periodStart === '' || $periodEnd === '') {
+		return null;
+	}//end managerRefusal()
+
+	/**
+	 * Send a client's period to billing, once the request is complete.
+	 *
+	 * @param array{clientId: string, periodStart: string, periodEnd: string} $request The route parameters.
+	 *
+	 * @return JSONResponse The handoff outcome, or 400 for a missing parameter.
+	 */
+	private function handoff(array $request): JSONResponse {
+		if ($request['clientId'] === '' || $request['periodStart'] === '' || $request['periodEnd'] === '') {
 			return new JSONResponse(
 				['status' => 'invalid-request', 'message' => 'clientId, periodStart and periodEnd are required.'],
 				Http::STATUS_BAD_REQUEST
@@ -129,13 +154,13 @@ class BillingHandoffController extends Controller {
 		}
 
 		$result = $this->handoffService->sendToBilling(
-			clientId: $clientId,
-			periodStart: $periodStart,
-			periodEnd: $periodEnd
+			clientId: $request['clientId'],
+			periodStart: $request['periodStart'],
+			periodEnd: $request['periodEnd']
 		);
 
 		return new JSONResponse($result, $this->statusFor(status: (string)($result['status'] ?? 'failed')));
-	}//end trigger()
+	}//end handoff()
 
 	/**
 	 * Map a handoff outcome status to an HTTP status code.

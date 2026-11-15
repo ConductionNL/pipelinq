@@ -27,8 +27,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-template-013
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-deeplink-014
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-TEMPLATE-013
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-DEEPLINK-014
  */
 
 declare(strict_types=1);
@@ -75,6 +75,7 @@ class TemplateRenderer {
 	 * @return array The variables, with `preferredName` filled where it can be.
 	 *
 	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-the-preferred-name-is-used-where-a-person-is-addressed-req-cpn-002
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	private function withPreferredName(array $variables): array {
 		if (trim((string)($variables['preferredName'] ?? '')) !== '') {
@@ -103,6 +104,7 @@ class TemplateRenderer {
 	 *
 	 * @throws RuntimeException If the body fails XHTML strict validation.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function render(array $template, array $variables): array {
 		$variables = $this->withPreferredName(variables: $variables);
@@ -177,6 +179,8 @@ class TemplateRenderer {
 	 * @param array $variables Vars.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	private function renderString(string $source, array $variables): string {
 		// Triple-brace (raw) first so the double-brace pass doesn't see it.

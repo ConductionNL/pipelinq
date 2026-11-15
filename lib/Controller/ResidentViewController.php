@@ -28,11 +28,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
-use OCA\Pipelinq\Service\Portal\PortalRequestService;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
-use OCA\Pipelinq\Service\TicketService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,21 +74,21 @@ class ResidentViewController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                   $request  The request.
-	 * @param TicketService              $tickets  Register and schema of the ticket supertype, and OpenRegister.
-	 * @param PortalRequestService       $requests The resident portal's request presenter.
+	 * @param TicketServiceInterface              $tickets  Register and schema of the ticket supertype, and OpenRegister.
+	 * @param PortalRequestServiceInterface       $requests The resident portal's request presenter.
 	 * @param PortalContributionProvider $portal   pipelinq's contribution to portaliq.
-	 * @param PortalTenantService        $tenants  The portal tenant settings.
+	 * @param PortalTenantServiceInterface        $tenants  The portal tenant settings.
 	 * @param IAppManager                $apps     Whether portaliq is installed.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TicketService $tickets,
-		private readonly PortalRequestService $requests,
+		private readonly TicketServiceInterface $tickets,
+		private readonly PortalRequestServiceInterface $requests,
 		private readonly PortalContributionProvider $portal,
-		private readonly PortalTenantService $tenants,
+		private readonly PortalTenantServiceInterface $tenants,
 		private readonly IAppManager $apps,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -109,37 +110,16 @@ class ResidentViewController extends Controller {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		$ticket = null;
-		if ($id !== '') {
-			// OpenRegister's facade reads under the caller's register RBAC
-			// (no `_rbac: false`), which is the per-object guard.
-			$objectService = $this->objectService();
-			try {
-				$ticket = $objectService->find(
-					id: $id,
-					register: $this->tickets->getRegisterId(),
-					schema: $this->tickets->getSchemaId()
-				);
-			} catch (Throwable) {
-				$ticket = null;
-			}
-		}
-
+		$ticket = $this->findTicket(id: $id);
 		if ($ticket === null) {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
 
 		$data   = $ticket->getObject();
-		$expose = ($this->tenants->getConfig(PortalTenantService::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
+		$expose = ($this->tenants->getConfig(PortalTenantServiceInterface::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
 
 		$bespoke = $this->requests->previewDetail(ticket: $data, exposeAssigneeName: $expose);
-		$shown   = [];
-		if ($bespoke !== null) {
-			$shown = self::BESPOKE_FIELDS;
-			if ($expose === true) {
-				$shown[] = 'assignee';
-			}
-		}
+		$shown   = $this->bespokeShown(bespoke: $bespoke, expose: $expose);
 
 		$portaliq = $this->portaliqPanel(ticket: $data);
 		if ($portaliq !== null) {
@@ -154,6 +134,55 @@ class ResidentViewController extends Controller {
 			]
 		);
 	}//end show()
+
+	/**
+	 * Read a ticket as the calling user, or null when absent or not readable.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return mixed The ticket entity, or null.
+	 */
+	private function findTicket(string $id): mixed {
+		$ticket = null;
+		if ($id !== '') {
+			// OpenRegister's facade reads under the caller's register RBAC
+			// (no `_rbac: false`), which is the per-object guard.
+			$objectService = $this->objectService();
+			try {
+				$ticket = $objectService->find(
+					id: $id,
+					options: new ObjectFindOptions(
+						register: $this->tickets->getRegisterId(),
+						schema: $this->tickets->getSchemaId()
+					)
+				);
+			} catch (Throwable) {
+				$ticket = null;
+			}
+		}
+
+		return $ticket;
+	}//end findTicket()
+
+	/**
+	 * The fields the bespoke panel shows.
+	 *
+	 * @param mixed $bespoke The bespoke preview, null when there is none.
+	 * @param bool  $expose  Whether the assignee name is exposed.
+	 *
+	 * @return array<int, string>
+	 */
+	private function bespokeShown(mixed $bespoke, bool $expose): array {
+		$shown = [];
+		if ($bespoke !== null) {
+			$shown = self::BESPOKE_FIELDS;
+			if ($expose === true) {
+				$shown[] = 'assignee';
+			}
+		}
+
+		return $shown;
+	}//end bespokeShown()
 
 	/**
 	 * OpenRegister's object facade, which reads under the caller's RBAC.

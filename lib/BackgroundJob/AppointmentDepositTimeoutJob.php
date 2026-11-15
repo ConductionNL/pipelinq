@@ -32,9 +32,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentDepositService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -54,6 +56,9 @@ use Throwable;
  * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentDepositTimeoutJob extends TimedJob {
+	use NullablePayloadToArray;
+	use RowIdOf;
+
 	/**
 	 * Interval in seconds (5 minutes).
 	 *
@@ -79,14 +84,14 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param ContainerInterface $container DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param AppointmentDepositService $depositService The deposit service.
+	 * @param AppointmentDepositServiceInterface $depositService The deposit service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private AppointmentDepositService $depositService,
+		private AppointmentDepositServiceInterface $depositService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -132,10 +137,10 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @return array<int, mixed>
 	 */
 	private function loadPendingDeposits(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
-			BookingService::BOOKING_SCHEMA_KEY,
+			AppIdentity::APP_ID,
+			BookingServiceInterface::BOOKING_SCHEMA_KEY,
 			''
 		);
 		if ($register === '' || $schema === '') {
@@ -143,22 +148,47 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			return [];
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->debug('AppointmentDepositTimeoutJob: OR ObjectService unavailable, skipping');
+		$objectService = $this->objectServiceOrNull();
+		if ($objectService === null) {
 			return [];
 		}
 
+		return $this->pendingDepositRows(
+			objectService: $objectService,
+			config: [
+				'register' => $register,
+				'schema' => $schema,
+				'filters' => ['status' => 'pending-deposit'],
+				'limit' => self::MAX_RELEASES_PER_PASS,
+			]
+		);
+	}//end loadPendingDeposits()
+
+	/**
+	 * OpenRegister's ObjectService, or null when it is unavailable (logged).
+	 *
+	 * @return object|null The ObjectService.
+	 */
+	private function objectServiceOrNull(): ?object {
 		try {
-			$candidates = $objectService->findAll(
-				config: [
-					'register' => $register,
-					'schema' => $schema,
-					'filters' => ['status' => 'pending-deposit'],
-					'limit' => self::MAX_RELEASES_PER_PASS,
-				]
-			);
+			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		} catch (Throwable $e) {
+			$this->logger->debug('AppointmentDepositTimeoutJob: OR ObjectService unavailable, skipping');
+			return null;
+		}
+	}//end objectServiceOrNull()
+
+	/**
+	 * The pending-deposit bookings the query answers, or [] when it fails (logged) or answers no list.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $config        The query.
+	 *
+	 * @return array<int, mixed> The candidates.
+	 */
+	private function pendingDepositRows(object $objectService, array $config): array {
+		try {
+			$candidates = $objectService->findAll(config: $config);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'AppointmentDepositTimeoutJob: pending-deposit query failed',
@@ -172,7 +202,7 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 		}
 
 		return $candidates;
-	}//end loadPendingDeposits()
+	}//end pendingDepositRows()
 
 	/**
 	 * Release a single candidate if its 15-minute window has elapsed.
@@ -187,12 +217,24 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			return 0;
 		}
 
-		$bookingId = $this->idOf(data: $data);
+		$bookingId = $this->idOf(object: $data);
 		$createdAt = $this->createdAt(data: $data);
 		if ($bookingId === '' || $createdAt === '') {
 			return 0;
 		}
 
+		return $this->releaseWhenExpired(bookingId: $bookingId, createdAt: $createdAt);
+	}//end releaseIfExpired()
+
+	/**
+	 * Release a booking's deposit when its window has passed, logging a failure.
+	 *
+	 * @param string $bookingId The booking id.
+	 * @param string $createdAt The booking's creation time, ISO-8601.
+	 *
+	 * @return int 1 when the deposit was released, 0 otherwise.
+	 */
+	private function releaseWhenExpired(string $bookingId, string $createdAt): int {
 		if ($this->depositService->isDepositExpired(createdAtIso: $createdAt) === false) {
 			return 0;
 		}
@@ -207,36 +249,7 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 			);
 			return 0;
 		}
-	}//end releaseIfExpired()
-
-	/**
-	 * Pull the booking id out of an OR object (supporting @self + flat shapes).
-	 *
-	 * @param array<string, mixed> $data The booking row.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $data): string {
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			if (isset($data['@self']['id']) === true) {
-				return (string)$data['@self']['id'];
-			}
-
-			if (isset($data['@self']['uuid']) === true) {
-				return (string)$data['@self']['uuid'];
-			}
-		}
-
-		if (isset($data['id']) === true) {
-			return (string)$data['id'];
-		}
-
-		if (isset($data['uuid']) === true) {
-			return (string)$data['uuid'];
-		}
-
-		return '';
-	}//end idOf()
+	}//end releaseWhenExpired()
 
 	/**
 	 * Pull the creation timestamp out of an OR object.
@@ -249,58 +262,31 @@ class AppointmentDepositTimeoutJob extends TimedJob {
 	 * @return string
 	 */
 	private function createdAt(array $data): string {
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			if (isset($data['@self']['created']) === true) {
-				return (string)$data['@self']['created'];
-			}
+		$self = ($data['@self'] ?? null);
+		if (is_array($self) === true && isset($self['created']) === true) {
+			return (string)$self['created'];
 		}
 
 		if (isset($data['createdAt']) === true) {
 			return (string)$data['createdAt'];
 		}
 
-		$history = ($data['statusHistory'] ?? []);
-		if (is_array($history) === true && isset($history[0]) === true && is_array($history[0]) === true) {
-			return (string)($history[0]['changedAt'] ?? '');
-		}
-
-		return '';
+		return $this->firstStatusChange(data: $data);
 	}//end createdAt()
 
 	/**
-	 * Normalise an OR entity to a plain array.
+	 * When the first status change happened, or '' when there is none.
 	 *
-	 * @param mixed $object Entity, array, or null.
+	 * @param array<string, mixed> $data The booking row.
 	 *
-	 * @return array<string, mixed>|null
+	 * @return string The moment.
 	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
+	private function firstStatusChange(array $data): string {
+		$history = ($data['statusHistory'] ?? []);
+		if (is_array($history) === false || is_array($history[0] ?? null) === false) {
+			return '';
 		}
 
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
+		return (string)($history[0]['changedAt'] ?? '');
+	}//end firstStatusChange()
 }//end class

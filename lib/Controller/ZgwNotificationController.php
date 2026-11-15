@@ -32,17 +32,17 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-007
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-007
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Listener\NrcNotificationListener;
-use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
-use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\NrcNotificationListenerInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZgwApiClientInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -56,25 +56,26 @@ use Psr\Log\LoggerInterface;
  * Public NRC callback controller.
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class ZgwNotificationController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param ZgwRegisterAccess $registers Register facade (NrcAbonnement lookup).
-	 * @param ZgwApiClient $api For vault-ref resolution on callbackAuth.
-	 * @param NrcNotificationListener $listener Per-kanaal dispatcher.
+	 * @param ZgwRegisterAccessInterface $registers Register facade (NrcAbonnement lookup).
+	 * @param ZgwApiClientInterface $api For vault-ref resolution on callbackAuth.
+	 * @param NrcNotificationListenerInterface $listener Per-kanaal dispatcher.
 	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ZgwRegisterAccess $registers,
-		private ZgwApiClient $api,
-		private NrcNotificationListener $listener,
+		private ZgwRegisterAccessInterface $registers,
+		private ZgwApiClientInterface $api,
+		private NrcNotificationListenerInterface $listener,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -91,6 +92,35 @@ class ZgwNotificationController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function inbox(): JSONResponse {
+		$abonnement = $this->bearerAbonnement();
+		if ($abonnement instanceof JSONResponse) {
+			return $abonnement;
+		}
+
+		$payload = json_decode($this->readRawBody(), true);
+		if (is_array($payload) === false) {
+			return new JSONResponse(
+				['error' => 'Invalid JSON payload'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		// The actual dispatch happens synchronously but the controller
+		// returns 202 to NRC immediately — listener errors do not propagate.
+		$this->listener->dispatch($abonnement, $payload);
+
+		return new JSONResponse(
+			['status' => 'accepted'],
+			Http::STATUS_ACCEPTED
+		);
+	}//end inbox()
+
+	/**
+	 * The subscription the request's bearer token belongs to, or the 422 refusing it.
+	 *
+	 * @return array<string, mixed>|JSONResponse The matching abonnement, or the refusal.
+	 */
+	private function bearerAbonnement(): array|JSONResponse {
 		// Webhook authenticity is enforced by the per-abonnement bearer match
 		// below. The endpoint is #[PublicPage] because NRC cannot present a
 		// Nextcloud session cookie; bearer mismatch maps to HTTP 422
@@ -118,23 +148,8 @@ class ZgwNotificationController extends Controller {
 			);
 		}
 
-		$payload = json_decode($this->readRawBody(), true);
-		if (is_array($payload) === false) {
-			return new JSONResponse(
-				['error' => 'Invalid JSON payload'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		// The actual dispatch happens synchronously but the controller
-		// returns 202 to NRC immediately — listener errors do not propagate.
-		$this->listener->dispatch($abonnement, $payload);
-
-		return new JSONResponse(
-			['status' => 'accepted'],
-			Http::STATUS_ACCEPTED
-		);
-	}//end inbox()
+		return $abonnement;
+	}//end bearerAbonnement()
 
 	/**
 	 * Walk all active NrcAbonnement records and return the one whose
@@ -148,7 +163,7 @@ class ZgwNotificationController extends Controller {
 	 * @return array<string, mixed>|null Matching abonnement, or null.
 	 */
 	private function resolveAbonnementByBearer(string $token): ?array {
-		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['active' => true]);
+		$rows = $this->registers->findAll(ZgwRegisterAccessInterface::SCHEMA_ABONN, ['active' => true]);
 		foreach ($rows as $row) {
 			if ((bool)($row['active'] ?? false) === false) {
 				continue;

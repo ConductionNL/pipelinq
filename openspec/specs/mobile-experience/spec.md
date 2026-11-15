@@ -42,3 +42,13 @@ At phone width the My work page MUST show one column with today's calls and foll
 - **GIVEN** Pieter has just left Bakkerij De Jong
 - **WHEN** he taps "Log a visit", types "wants a quote for two ovens" and sets a follow-up for Friday
 - **THEN** the client's timeline shows a visit contact moment with that note and a follow-up task is due on Friday
+
+### Requirement: A follow-up task names the visit it came from
+
+A follow-up task created while logging a visit MUST reference the saved visit (a ticket of type interaction) in `contactMoment`.
+
+#### Scenario: a visit with a follow-up day
+
+- GIVEN an employee logs a visit on a client with a follow-up day
+- WHEN the visit is saved
+- THEN the follow-up task's `contactMoment` is the visit's id

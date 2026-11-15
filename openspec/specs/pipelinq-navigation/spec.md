@@ -1,7 +1,8 @@
 # pipelinq-navigation Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-dashboard-icons-reports-tour. Update Purpose after archive.
+This spec fixes how Pipelinq's navigation reads: the three dashboards share one dashboard icon, the reports sit on one reports page, and settings offers an action to restart the tutorial.
+
 ## Requirements
 ### Requirement: REQ-NAV-PQ-001 — The Three Dashboards Share One Icon
 
@@ -17,21 +18,17 @@ This covers `Dashboard` (Commercial), `OperationalDashboard` (Operational) and
 - **THEN** each SHALL render the `icon-category-dashboard` glyph (the bridged `view-dashboard-icon`)
 - `@e2e exclude` verified live via icon-class inspection; no standing Playwright nav-icon spec in this app.
 
-### Requirement: REQ-NAV-PQ-002 — All Reports Live Under A Reports & Compliance Group
+### Requirement: REQ-NAV-PQ-002: Reports live on one reports page
 
-The navigation SHALL present a single "Reports & Compliance" group that contains every
-reporting and analytics entry — `Rapportage` (Reporting), `BillingCategories`,
-`SlaAttainment` and `MdmDataQuality` — with each entry's report page remaining
-routable. The MDM steward views (`MdmMasterEntities`, `MdmDuplicates`) SHALL remain
-under the Settings foldout.
+The navigation SHALL carry one "Rapportages" entry in its footer, which opens the page that lists every report per category. There SHALL be no "Reports & Compliance" group. The MDM steward views stay in OpenRegister (REQ-MDM-013).
 
-#### Scenario: The group holds every report and each opens
+#### Scenario: The Rapportages entry opens every report
 
 - **GIVEN** the navigation has rendered
-- **WHEN** the "Reports & Compliance" group is expanded
-- **THEN** it SHALL list Reporting, SLA attainment, Billing categories and Data quality
-- **AND** activating each SHALL navigate to its report route
-- `@e2e exclude` verified live by expanding the group and asserting child routes; no standing Playwright spec in this app.
+- **WHEN** a user opens "Rapportages"
+- **THEN** the page SHALL list the reports per category, with a filter "Alle categorieën"
+- **AND** the navigation SHALL show no "Reports & Compliance" group
+- `@e2e exclude` a menu declaration; the absence of the group is asserted for `specs/nav-ia-cleanup`.
 
 ### Requirement: REQ-NAV-PQ-003 — Settings Offers A Restart-Tutorial Action
 

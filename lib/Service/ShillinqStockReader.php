@@ -23,13 +23,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -37,9 +40,11 @@ use Throwable;
 /**
  * ShillinqStockReader: the stock of one product in shillinq.
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
-class ShillinqStockReader {
+class ShillinqStockReader implements ShillinqStockReaderInterface {
+	use SerialisedToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Shillinq's register slug.
@@ -95,51 +100,108 @@ class ShillinqStockReader {
 	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 *         `state` is `ok`, `no-shillinq` or `no-access`.
 	 *
-	 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+	 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 	 */
 	public function stockFor(string $productId, string $sku = ''): array {
-		if ($this->probe() === false) {
-			return $this->answer(state: 'no-shillinq');
-		}
-
-		$objectService = $this->objectService();
+		$objectService = $this->reachableObjectService();
 		if ($objectService === null) {
 			return $this->answer(state: 'no-shillinq');
 		}
 
-		$answer = $this->answer(state: 'ok');
-		foreach (['productId' => trim($productId), 'productSku' => trim($sku)] as $field => $key) {
-			if ($key === '') {
-				continue;
-			}
+		return $this->firstStock(objectService: $objectService, keys: $this->keys(productId: $productId, sku: $sku));
+	}//end stockFor()
 
-			try {
-				$rows = $objectService->findAll(
-					config: [
-						'filters' => [
-							'register' => self::SHILLINQ_REGISTER,
-							'schema' => self::STOCK_SCHEMA,
-							$field => $key,
-						],
-						'limit' => self::MAX_LOCATIONS,
-					]
-				);
-			} catch (Throwable $e) {
-				$this->logger->info(
-					'ShillinqStockReader: the user cannot read shillinq stock',
-					['product' => $key, 'exception' => $e->getMessage()]
-				);
+	/**
+	 * The stock under the first key that finds a location, else the last
+	 * (empty) sum; no access as soon as a read is refused.
+	 *
+	 * @param object                $objectService The object service.
+	 * @param array<string, string> $keys          Field => key, in reading order.
+	 *
+	 * @return array{state: string, available: float, onHand: float, reserved: float,
+	 *     locations: array<int, array{code: string, name: string, available: float}>}
+	 */
+	private function firstStock(object $objectService, array $keys): array {
+		$answer = $this->answer(state: 'ok');
+		foreach ($keys as $field => $key) {
+			$rows = $this->rowsFor(objectService: $objectService, filter: [$field => $key]);
+			if ($rows === null) {
 				return $this->answer(state: 'no-access');
 			}
 
-			$answer = $this->sum(rows: $this->iterable(value: $rows), field: $field, key: $key);
+			$answer = $this->sum(rows: $rows, filter: [$field => $key]);
 			if ($answer['locations'] !== []) {
 				return $answer;
 			}
-		}//end foreach
+		}
 
 		return $answer;
-	}//end stockFor()
+	}//end firstStock()
+
+	/**
+	 * The object service when shillinq is installed and OpenRegister answers, else null.
+	 *
+	 * @return object|null The service.
+	 */
+	private function reachableObjectService(): ?object {
+		if ($this->probe() === false) {
+			return null;
+		}
+
+		return $this->objectService();
+	}//end reachableObjectService()
+
+	/**
+	 * The keys to read on, in order: the trimmed `productId`, then the trimmed
+	 * `productSku`, leaving out an empty one.
+	 *
+	 * @param string $productId The product's `productId`.
+	 * @param string $sku       The product's SKU.
+	 *
+	 * @return array<string, string> Field => key.
+	 */
+	private function keys(string $productId, string $sku): array {
+		return array_filter(
+			['productId' => trim($productId), 'productSku' => trim($sku)],
+			static fn (string $key): bool => $key !== ''
+		);
+	}//end keys()
+
+	/**
+	 * The stock rows matching one key, read as the user; null when the read is refused.
+	 *
+	 * @param object               $objectService The object service.
+	 * @param array<string,string> $filter        The one field => key to read on.
+	 *
+	 * @return iterable<mixed>|null
+	 */
+	private function rowsFor(object $objectService, array $filter): ?iterable {
+		try {
+			$rows = $objectService->findAll(config: $this->query(filter: $filter));
+		} catch (Throwable $e) {
+			$this->logger->info(
+				'ShillinqStockReader: the user cannot read shillinq stock',
+				['product' => current($filter), 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		return $this->iterable(value: $rows);
+	}//end rowsFor()
+
+	/**
+	 * The findAll() config for shillinq stock rows on one field => key.
+	 *
+	 * @param array<string, string> $filter The one field => key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function query(array $filter): array {
+		return [
+			'filters' => ['register' => self::SHILLINQ_REGISTER, 'schema' => self::STOCK_SCHEMA, ...$filter],
+			'limit' => self::MAX_LOCATIONS,
+		];
+	}//end query()
 
 	/**
 	 * A findAll() answer as an iterable.
@@ -162,7 +224,7 @@ class ShillinqStockReader {
 	 *
 	 * @return bool True when shillinq is installed.
 	 *
-	 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
+	 * @spec openspec/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
 	 */
 	protected function probe(): bool {
 		return class_exists(self::SHILLINQ_PROBE_CLASS);
@@ -173,14 +235,15 @@ class ShillinqStockReader {
 	 * because OpenRegister ignores a filter key it does not recognise and
 	 * would then hand back every stock row.
 	 *
-	 * @param iterable<mixed> $rows The rows read.
-	 * @param string $field The field the read filtered on.
-	 * @param string $key The value it filtered for.
+	 * @param iterable<mixed>       $rows   The rows read.
+	 * @param array<string, string> $filter The one field the read filtered on, with the value it filtered for.
 	 *
 	 * @return array{state: string, available: float, onHand: float, reserved: float,
 	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 */
-	private function sum(iterable $rows, string $field, string $key): array {
+	private function sum(iterable $rows, array $filter): array {
+		$field = (string)array_key_first($filter);
+		$key = $filter[$field];
 		$answer = $this->answer(state: 'ok');
 		foreach ($rows as $value) {
 			$row = $this->toArray(value: $value);
@@ -188,25 +251,41 @@ class ShillinqStockReader {
 				continue;
 			}
 
-			$onHand = (float)($row['quantityOnHand'] ?? 0);
-			$reserved = (float)($row['quantityReserved'] ?? 0);
-			$available = ($onHand - $reserved);
-			if (is_numeric($row['quantityAvailable'] ?? null) === true) {
-				$available = (float)$row['quantityAvailable'];
+			$location = $this->location(row: $row);
+			foreach (['onHand', 'reserved', 'available'] as $figure) {
+				$answer[$figure] += $location[$figure];
 			}
 
-			$answer['onHand'] += $onHand;
-			$answer['reserved'] += $reserved;
-			$answer['available'] += $available;
-			$answer['locations'][] = [
-				'code' => (string)($row['locationCode'] ?? ''),
-				'name' => (string)($row['locationName'] ?? ($row['locationCode'] ?? '')),
-				'available' => $available,
-			];
-		}//end foreach
+			$answer['locations'][] = ['code' => $location['code'], 'name' => $location['name'], 'available' => $location['available']];
+		}
 
 		return $answer;
 	}//end sum()
+
+	/**
+	 * One stock row's figures: on hand, reserved, and available (the row's own
+	 * figure when numeric, else on hand minus reserved), with its location.
+	 *
+	 * @param array<string, mixed> $row The stock row.
+	 *
+	 * @return array{onHand: float, reserved: float, available: float, code: string, name: string}
+	 */
+	private function location(array $row): array {
+		$onHand = (float)($row['quantityOnHand'] ?? 0);
+		$reserved = (float)($row['quantityReserved'] ?? 0);
+		$available = ($onHand - $reserved);
+		if (is_numeric($row['quantityAvailable'] ?? null) === true) {
+			$available = (float)$row['quantityAvailable'];
+		}
+
+		return [
+			'onHand' => $onHand,
+			'reserved' => $reserved,
+			'available' => $available,
+			'code' => (string)($row['locationCode'] ?? ''),
+			'name' => (string)($row['locationName'] ?? ($row['locationCode'] ?? '')),
+		];
+	}//end location()
 
 	/**
 	 * An empty answer in one state.
@@ -226,36 +305,6 @@ class ShillinqStockReader {
 	 * @return object|null The service.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ShillinqStockReader: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ShillinqStockReader: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
-
-	/**
-	 * Normalise an OpenRegister entity to a plain array.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain row.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

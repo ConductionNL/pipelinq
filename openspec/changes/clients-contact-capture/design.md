@@ -38,8 +38,21 @@ proposal; only the user's Save writes.
 A photo is uploaded to the parse route as a file, handed to
 `ITaskProcessingManager` as a `core:image2text:ocr` task, and its text goes
 into D1. When no provider serves the task type, the dialog hides the photo
-option and says why; the paste option keeps working. The image is not written
-to Files or OpenRegister.
+option and says why; the paste option keeps working. The image is not kept in
+Files and never written to OpenRegister.
+
+**Decision on the file input.** `core:image2text:ocr` takes `ListOfFiles`: file
+ids the task processing manager reads as the user. So the uploaded photo is
+written as a short-lived file in the user's own storage, in the hidden folder
+`.pipelinq-contact-capture/`, the task is run synchronously through
+`ITaskProcessingManager::runTask()` (in OCP since 30), and the file, and the
+finished task with its recognised text, are deleted in a `finally` whatever the
+outcome. Availability is checked first (`getAvailableTaskTypes()` must contain
+`core:image2text:ocr` for the user): unavailable is a 409 the dialog explains,
+a failed or thrown task a 502, a photo without text a 422. A photo is at most
+10 MB and must be an image by its content (`finfo`), not by its name. Built as
+`lib/Service/ContactPhotoReader.php`; the dialog asks
+`GET /api/contact-capture/status` whether to offer the photo input.
 
 ### D3. The dialog fills the ordinary form
 

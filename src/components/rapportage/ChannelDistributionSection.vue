@@ -51,26 +51,14 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-
-const CHANNEL_COLORS = {
-	telefoon: '#4c84db',
-	email: '#f5a623',
-	balie: '#7ed321',
-	chat: '#9b59b6',
-	social: '#e74c3c',
-	brief: '#1abc9c',
-	unknown: '#95a5a6',
-}
+import { channelColor, reportSectionMixin } from './reportSection.js'
 
 export default {
 	name: 'ChannelDistributionSection',
 	components: { NcButton, NcLoadingIcon },
-	inject: {
-		cnSectionContext: { default: null },
-	},
+	mixins: [reportSectionMixin],
 
 	props: {
 		/** Relative period token (today / week / month), from `@workspace`.period. */
@@ -86,46 +74,24 @@ export default {
 
 	computed: {
 		effectivePeriod() {
-			if (this.period) return this.period
-			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
-			return (ctx && ctx.period) || 'today'
+			return this.period || this.fromWorkspace('period', 'today')
 		},
-	},
-
-	watch: {
-		effectivePeriod() {
-			this.fetchData()
-		},
-	},
-
-	mounted() {
-		this.fetchData()
 	},
 
 	methods: {
-		async fetchData() {
-			this.loading = true
-			try {
-				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/rapportage/channels'),
-					{
-						params: { period: this.effectivePeriod },
-					},
-				)
+		fetchData() {
+			return this.loadInto('channelData', async () => {
+				const data = await this.reportData('channels')
 				const dist = data.distribution ?? {}
 				const totalContacts =
 					Object.values(dist).reduce((s, c) => s + c, 0) || 1
-				this.channelData = Object.entries(dist).map(([name, count]) => ({
+				return Object.entries(dist).map(([name, count]) => ({
 					name,
 					count,
 					percentage: Math.round((count / totalContacts) * 100),
-					color: CHANNEL_COLORS[name] ?? CHANNEL_COLORS.unknown,
+					color: channelColor(name),
 				}))
-			} catch {
-				this.channelData = []
-			} finally {
-				this.loading = false
-			}
+			})
 		},
 
 		exportCsv() {

@@ -16,8 +16,8 @@
  * pipelinq's real formatter registry and the real merged schema, so the test
  * sees what a reader sees.
  *
- * @spec openspec/changes/round5-client-related-and-service-list/specs/client-management/spec.md
- * @spec openspec/changes/round5-client-related-and-service-list/specs/appointment-booking/spec.md
+ * @spec openspec/specs/client-management/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 import { mount } from '@vue/test-utils'
@@ -79,6 +79,9 @@ function overlaps(a, b) {
 function merge(base, override) {
 	const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
 	for (const [key, value] of Object.entries(override)) {
+		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+			continue
+		}
 		if (isObject(value) && isObject(base[key])) {
 			merge(base[key], value)
 		} else {

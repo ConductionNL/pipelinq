@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 
 declare(strict_types=1);
@@ -29,7 +29,13 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -49,9 +55,11 @@ use Throwable;
  * where it withholds the object update event, and the scope is checked before
  * each write: no proven silence, no write. See ObjectEventSilence.
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
-class TaskNameBackfillService {
+class TaskNameBackfillService implements TaskNameBackfillServiceInterface {
+	use FirstAdminUser;
+
 	/**
 	 * Upper bound on the tasks read in one run.
 	 *
@@ -95,13 +103,13 @@ class TaskNameBackfillService {
 	 *
 	 * @return array{status: string, named: int, skipped: int, failed: int} The outcome.
 	 *
-	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+	 * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function backfill(): array {
 		$counts = ['status' => 'done', 'named' => 0, 'skipped' => 0, 'failed' => 0];
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($register === '' || $schema === '') {
 			$counts['status'] = 'not-configured';
 			return $counts;
@@ -115,7 +123,7 @@ class TaskNameBackfillService {
 		}
 
 		$result = $this->objectService->runAsSystem(
-			fn (): array => $this->backfillInScope(register: $register, schema: $schema, counts: $counts)
+			fn (): array => $this->backfillInScope(where: ['register' => $register, 'schema' => $schema], counts: $counts)
 		);
 
 		if (is_array($result) === false) {
@@ -138,81 +146,117 @@ class TaskNameBackfillService {
 	 *   NOT withhold the event; the system scope does.
 	 * - `currentUser`: the folder check needs a user to authorise.
 	 *
-	 * @param string                                                     $register The register id.
-	 * @param string                                                     $schema   The crmTask schema id.
-	 * @param array{status: string, named: int, skipped: int, failed: int} $counts   The counts so far.
+	 * Every task that needs it is named and each outcome counted.
+	 *
+	 * @param array{register: string, schema: string}                      $where  The register id and crmTask schema id.
+	 * @param array{status: string, named: int, skipped: int, failed: int} $counts The counts so far.
 	 *
 	 * @return array{status: string, named: int, skipped: int, failed: int} The outcome.
 	 */
-	private function backfillInScope(string $register, string $schema, array $counts): array {
-		if ($this->silence->isActive() === false) {
-			$counts['status'] = 'scope-inactive';
+	private function backfillInScope(array $where, array $counts): array {
+		$rows = $this->scopedTaskRows(where: $where);
+		if (is_string($rows) === true) {
+			$counts['status'] = $rows;
 			return $counts;
 		}
 
+		$target = $where + ['actingAdmin' => $this->actingAdmin()];
+		foreach ($rows as $row) {
+			$outcome = $this->nameTask(row: $row, target: $target);
+			if ($outcome === 'scope-inactive') {
+				$counts['status'] = 'scope-inactive';
+				break;
+			}
+
+			$counts[$outcome]++;
+		}
+
+		return $counts;
+	}//end backfillInScope()
+
+	/**
+	 * Read every task inside the system scope, or the status that stopped the read.
+	 *
+	 * @param array{register: string, schema: string} $where The register id and crmTask schema id.
+	 *
+	 * @return iterable<mixed>|string The task rows, or 'scope-inactive' / 'read-failed'.
+	 */
+	private function scopedTaskRows(array $where): iterable|string {
+		if ($this->silence->isActive() === false) {
+			return 'scope-inactive';
+		}
+
 		try {
-			$rows = $this->objectService->findAll(
+			return $this->objectService->findAll(
 				config: [
-					'filters' => ['register' => $register, 'schema' => $schema],
+					'filters' => ['register' => $where['register'], 'schema' => $where['schema']],
 					'limit' => self::SCAN_LIMIT,
 				],
 				_rbac: false,
 				_multitenancy: false,
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: could not read tasks for the task name backfill',
-				['exception' => $e->getMessage()]
-			);
-			$counts['status'] = 'read-failed';
-			return $counts;
+			$this->logger->warning('Pipelinq: could not read tasks for the task name backfill', ['exception' => $e->getMessage()]);
+			return 'read-failed';
+		}
+	}//end scopedTaskRows()
+
+	/**
+	 * Name one task when it needs it.
+	 *
+	 * @param mixed                                                         $row    The task row.
+	 * @param array{register: string, schema: string, actingAdmin: IUser|null} $target The register, crmTask schema and the admin to authorise.
+	 *
+	 * @return string 'named', 'skipped', 'failed' or 'scope-inactive'.
+	 */
+	private function nameTask(mixed $row, array $target): string {
+		$task = $this->toArray(row: $row);
+		$uuid = (string)($task['@self']['id'] ?? $task['id'] ?? '');
+		if ($uuid === '' || $this->needsName(task: $task, uuid: $uuid) === false) {
+			return 'skipped';
 		}
 
-		$actingAdmin = $this->actingAdmin();
+		// Checked at every write, not once: a scope that ended part-way
+		// would let the rest of the saves reach the assignees.
+		if ($this->silence->isActive() === false) {
+			return 'scope-inactive';
+		}
 
-		foreach ($rows as $row) {
-			$task = $this->toArray(row: $row);
-			$uuid = (string)($task['@self']['id'] ?? $task['id'] ?? '');
-			if ($uuid === '' || $this->needsName(task: $task, uuid: $uuid) === false) {
-				$counts['skipped']++;
-				continue;
-			}
+		return $this->saveNamedTask(task: $task, target: $target);
+	}//end nameTask()
 
-			// Checked at every write, not once: a scope that ended part-way
-			// would let the rest of the saves reach the assignees.
-			if ($this->silence->isActive() === false) {
-				$counts['status'] = 'scope-inactive';
-				break;
-			}
+	/**
+	 * Save one task so OpenRegister names it after its subject.
+	 *
+	 * @param array<string, mixed>                                          $task   The task, `@self` included.
+	 * @param array{register: string, schema: string, actingAdmin: IUser|null} $target The register, crmTask schema and the admin to authorise.
+	 *
+	 * @return string 'named' or 'failed'.
+	 */
+	private function saveNamedTask(array $task, array $target): string {
+		$uuid = (string)($task['@self']['id'] ?? $task['id'] ?? '');
+		$payload = $task;
+		unset($payload['@self']);
+		$payload = $this->normaliseDateTimes(payload: $payload);
 
-			$payload = $task;
-			unset($payload['@self']);
-			$payload = $this->normaliseDateTimes(payload: $payload);
-
-			try {
-				$this->objectService->saveObject(
-					object: $payload,
-					extend: [],
-					register: $register,
-					schema: $schema,
+		try {
+			$this->objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
 					uuid: $uuid,
-					_rbac: false,
-					_multitenancy: false,
-					silent: true,
-					currentUser: $actingAdmin,
-				);
-				$counts['named']++;
-			} catch (Throwable $e) {
-				$counts['failed']++;
-				$this->logger->error(
-					'Pipelinq: could not name a task after its subject',
-					['uuid' => $uuid, 'exception' => $e->getMessage()]
-				);
-			}
-		}//end foreach
-
-		return $counts;
-	}//end backfillInScope()
+					policy: new SavePolicy(silent: true),
+					actor: new SaveActor(currentUser: $target['actingAdmin'])
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
+			return 'named';
+		} catch (Throwable $e) {
+			$this->logger->error('Pipelinq: could not name a task after its subject', ['uuid' => $uuid, 'exception' => $e->getMessage()]);
+			return 'failed';
+		}
+	}//end saveNamedTask()
 
 	/**
 	 * Whether a task still needs its name, and has a subject to take it from.
@@ -269,20 +313,6 @@ class TaskNameBackfillService {
 
 		return $payload;
 	}//end normaliseDateTimes()
-
-	/**
-	 * The first admin, for OpenRegister's object folder check.
-	 *
-	 * A repair step has no session, and the folder check denies a write with no
-	 * acting user for any task that owns a folder.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 
 	/**
 	 * Coerce an OpenRegister row into a plain array.

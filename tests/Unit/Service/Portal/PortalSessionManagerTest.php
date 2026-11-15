@@ -186,4 +186,35 @@ class PortalSessionManagerTest extends TestCase {
 		$this->now += (6 * 3600);
 		$this->assertNotNull($this->manager->validateSession($created['token'], 'tenant-a'));
 	}//end testExtendSession()
+	/**
+	 * Every session verdict on a stored row: an absent or empty token is
+	 * refused; only a literal true revokes or holds a session for its second
+	 * factor; the tenant must match exactly; a missing or past expiry is
+	 * refused, one a second ahead holds; the row comes back as stored.
+	 *
+	 * @return void
+	 */
+	public function testEverySessionVerdict(): void {
+		$this->assertNull($this->manager->validateSession(null, 'tenant-a'));
+		$this->assertNull($this->manager->validateSession('', 'tenant-a'));
+
+		$ahead = date(DATE_ATOM, ($this->now + 1));
+		$rows = [
+			'ok' => ['tenantId' => 'tenant-a', 'revoked' => 1, 'mfaPending' => 'yes', 'expiresAt' => $ahead],
+			'revoked' => ['tenantId' => 'tenant-a', 'revoked' => true, 'expiresAt' => $ahead],
+			'mfa' => ['tenantId' => 'tenant-a', 'mfaPending' => true, 'expiresAt' => $ahead],
+			'other' => ['tenantId' => 'tenant-b', 'expiresAt' => $ahead],
+			'untenanted' => ['expiresAt' => $ahead],
+			'unexpiring' => ['tenantId' => 'tenant-a'],
+			'past' => ['tenantId' => 'tenant-a', 'expiresAt' => date(DATE_ATOM, $this->now)],
+		];
+		foreach ($rows as $token => $row) {
+			$this->repository->seed('crmPortalSession', 's-' . $token, ['tokenHash' => hash('sha256', $token)] + $row);
+		}
+
+		$this->assertSame(['tokenHash' => hash('sha256', 'ok')] + $rows['ok'] + ['@self' => ['id' => 's-ok']], $this->manager->validateSession('ok', 'tenant-a'));
+		foreach (['revoked', 'mfa', 'other', 'untenanted', 'unexpiring', 'past', 'unknown'] as $token) {
+			$this->assertNull($this->manager->validateSession($token, 'tenant-a'), $token);
+		}
+	}//end testEverySessionVerdict()
 }//end class

@@ -105,3 +105,55 @@ the appropriate `ticketType` instead.
 
 - WHEN a klacht is registered
 - THEN a `ticket` with `ticketType=complaint`, its `complaintCategory` and `slaDeadline` MUST be created
+
+### Requirement: The website submissions are a lens over form tickets
+
+pipelinq SHALL offer a page listing the tickets whose `source` names a form, newest first, with the lenses Not linked yet
+(no client, the default), Linked (a client), Closed and All.
+
+#### Scenario: A new catering request
+
+- **GIVEN** the contact form created a ticket from Joke Smit of Bakkerij De Graaf, without a client
+- **WHEN** a colleague opens Website submissions
+- **THEN** the ticket is listed under Not linked yet with Joke Smit, Bakkerij De Graaf, website-contact and /contact
+
+### Requirement: A colleague links a submission to a client and a contact in one step
+
+On a ticket without a client, Link to a client SHALL show the submission as sent and SHALL let the colleague choose, for
+the client, a new client named after the typed organisation or an existing client, and for the contact person, a new
+contact from the typed name and e-mail or an existing contact, suggesting an existing client with the typed organisation
+name and an existing contact with the typed e-mail. Confirming SHALL create what is new, link the ticket's `client` and
+`contact`, and, when asked, create a lead for that client and contact in the default pipeline. Every write SHALL run as
+the signed-in colleague.
+
+#### Scenario: A new client, a known contact
+
+- **GIVEN** no client named Bakkerij De Graaf and a contact with joke@bakkerijdegraaf.nl
+- **WHEN** the colleague keeps "New client Bakkerij De Graaf", picks the suggested contact and asks for a lead
+- **THEN** the client is created, the ticket points at it and at the existing contact, and a lead "Catering voor de opening van onze nieuwe winkel" exists for both
+
+### Requirement: The Contact moments tab has a title row
+
+The ticket's Contact moments tab SHALL draw a title row with the title, the line "{total} on this ticket, newest first" under it and Log contact as an outlined button with a phone icon beside it. Log contact SHALL not also be drawn under the table.
+
+#### Scenario: A ticket with two contact moments
+
+- **GIVEN** a ticket with two contact moments
+- **WHEN** the user opens the Contactmomenten tab
+- **THEN** the panel reads "Contactmomenten", "2 bij dit ticket, nieuwste eerst" and "Contact vastleggen" in its title row, and no button follows the table
+
+### Requirement: The tickets list assigns a selection to one handler
+
+The tickets list SHALL offer "Assign to" first in its bulk band. It SHALL open CnAssignDialog with the selection, a user search, a required reason and `bulkJob: { register: "pipelinq", schema: "ticket" }`, so OpenRegister's assign job writes `assignee` on each selected ticket after checking the user may update it.
+
+#### Scenario: Three tickets go to Fatma Yildiz
+
+- **GIVEN** three tickets selected on the tickets list
+- **WHEN** the user clicks "Toewijzen aan", picks Fatma Yildiz, writes a reason and applies the rehearsed job
+- **THEN** the three tickets name Fatma Yildiz as handler, each with the reason in its audit trail
+
+#### Scenario: A ticket the user may not change
+
+- **GIVEN** a selection with one ticket whose schema update rule does not include the user
+- **WHEN** the job runs
+- **THEN** that ticket is reported as refused and keeps its handler

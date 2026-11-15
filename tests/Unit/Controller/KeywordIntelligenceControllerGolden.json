@@ -1,0 +1,1200 @@
+{
+    "proposals no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "proposals unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "isPrivileged": "intern"
+            }
+        ]
+    },
+    "proposals defaults": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 100,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [],
+            "crawl": {
+                "crawled": false,
+                "failure": "not_configured",
+                "reason": "No crawl source is configured.",
+                "pages": 0
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals window": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-01",
+            "to": "2026-08-31",
+            "minImpressions": 100,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [],
+            "crawl": {
+                "crawled": false,
+                "failure": "not_configured",
+                "reason": "No crawl source is configured.",
+                "pages": 0
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    "2026-08-01",
+                    "2026-08-31",
+                    "sc-domain:example.nl"
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals floor configured": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 5,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [],
+            "crawl": {
+                "crawled": false,
+                "failure": "not_configured",
+                "reason": "No crawl source is configured.",
+                "pages": 0
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals floor zero": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 100,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [],
+            "crawl": {
+                "crawled": false,
+                "failure": "not_configured",
+                "reason": "No crawl source is configured.",
+                "pages": 0
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals floor text": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 100,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [],
+            "crawl": {
+                "crawled": false,
+                "failure": "not_configured",
+                "reason": "No crawl source is configured.",
+                "pages": 0
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals floor high": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 100000,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [],
+            "cannibalisation": [],
+            "gaps": [],
+            "crawl": {
+                "crawled": false,
+                "failure": "not_configured",
+                "reason": "No crawl source is configured.",
+                "pages": 0
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals crawled pages": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 100,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "position": 12.6,
+                    "terms": [
+                        "woo",
+                        "verzoek",
+                        "indienen"
+                    ]
+                }
+            ],
+            "crawl": {
+                "crawled": true,
+                "failure": null,
+                "reason": "",
+                "pages": 1
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals crawled low floor": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "from": "2026-08-08",
+            "to": "2026-09-05",
+            "minImpressions": 5,
+            "buckets": [
+                {
+                    "bucket": "1-3",
+                    "queries": 1,
+                    "clicks": 20,
+                    "impressions": 60
+                },
+                {
+                    "bucket": "4-10",
+                    "queries": 0,
+                    "clicks": 0,
+                    "impressions": 0
+                },
+                {
+                    "bucket": "11-20",
+                    "queries": 1,
+                    "clicks": 11,
+                    "impressions": 700
+                },
+                {
+                    "bucket": "21+",
+                    "queries": 1,
+                    "clicks": 0,
+                    "impressions": 9
+                }
+            ],
+            "strikingDistance": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "ctr": 0.0157,
+                    "position": 12.6,
+                    "expectedCtr": 0.0169,
+                    "shortfall": 0.0011,
+                    "topPage": "https://example.nl/woo"
+                }
+            ],
+            "cannibalisation": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "combinedCtr": 0.0157,
+                    "bestPage": "https://example.nl/woo",
+                    "bestPageCtr": 0.02,
+                    "pages": [
+                        {
+                            "page": "https://example.nl/woo",
+                            "clicks": 8,
+                            "impressions": 400,
+                            "ctr": 0.02,
+                            "position": 11.5
+                        },
+                        {
+                            "page": "https://example.nl/news",
+                            "clicks": 3,
+                            "impressions": 300,
+                            "ctr": 0.01,
+                            "position": 14.0
+                        }
+                    ]
+                }
+            ],
+            "gaps": [
+                {
+                    "query": "woo verzoek indienen",
+                    "clicks": 11,
+                    "impressions": 700,
+                    "position": 12.6,
+                    "terms": [
+                        "woo",
+                        "verzoek",
+                        "indienen"
+                    ]
+                },
+                {
+                    "query": "afvalkalender",
+                    "clicks": 0,
+                    "impressions": 9,
+                    "position": 35.0,
+                    "terms": [
+                        "afvalkalender"
+                    ]
+                }
+            ],
+            "crawl": {
+                "crawled": true,
+                "failure": null,
+                "reason": "",
+                "pages": 1
+            },
+            "confirmedTerms": [
+                "parkeervergunning"
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "rows": [
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "getValueString": [
+                    "pipelinq",
+                    "search.striking_min_impressions",
+                    ""
+                ]
+            },
+            {
+                "crawl": 4
+            },
+            {
+                "confirmedTerms": true
+            }
+        ]
+    },
+    "proposals array from": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "proposals integer to": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "proposals no session array": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "targets no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "targets unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "isPrivileged": "intern"
+            }
+        ]
+    },
+    "targets listed": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 200,
+        "data": {
+            "targets": [
+                {
+                    "term": "parkeervergunning",
+                    "status": "watch"
+                }
+            ]
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "all": true
+            }
+        ]
+    },
+    "confirm no session": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 401,
+        "data": {
+            "error": "Authentication required"
+        },
+        "trace": []
+    },
+    "confirm unprivileged": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 403,
+        "data": {
+            "error": "Forbidden"
+        },
+        "trace": [
+            {
+                "isPrivileged": "intern"
+            }
+        ]
+    },
+    "confirm full": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "term": "woo verzoek",
+            "status": "use-more",
+            "proposalKind": "striking",
+            "intent": "informational",
+            "targetPageRef": "/woo",
+            "property": "sc-domain:example.nl",
+            "notes": "Rising",
+            "id": "target-1",
+            "createdBy": "marketer"
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "woo verzoek",
+                        "status": "use-more",
+                        "proposalKind": "striking",
+                        "intent": "informational",
+                        "targetPageRef": "/woo",
+                        "property": "sc-domain:example.nl",
+                        "notes": "Rising"
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    },
+    "confirm defaults": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "term": "",
+            "status": "watch",
+            "proposalKind": "manual",
+            "intent": "",
+            "targetPageRef": "",
+            "property": "",
+            "notes": "",
+            "id": "target-1",
+            "createdBy": "marketer"
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "",
+                        "status": "watch",
+                        "proposalKind": "manual",
+                        "intent": "",
+                        "targetPageRef": "",
+                        "property": "",
+                        "notes": ""
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    },
+    "confirm term only": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "term": "zaak",
+            "status": "watch",
+            "proposalKind": "manual",
+            "intent": "",
+            "targetPageRef": "",
+            "property": "",
+            "notes": "",
+            "id": "target-1",
+            "createdBy": "marketer"
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "zaak",
+                        "status": "watch",
+                        "proposalKind": "manual",
+                        "intent": "",
+                        "targetPageRef": "",
+                        "property": "",
+                        "notes": ""
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    },
+    "confirm bad status": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 400,
+        "data": {
+            "error": "The status must be one of use-more, use-less, watch."
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "zaak",
+                        "status": "gebruik-meer",
+                        "proposalKind": "manual",
+                        "intent": "",
+                        "targetPageRef": "",
+                        "property": "",
+                        "notes": ""
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    },
+    "confirm store unavailable": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 503,
+        "data": {
+            "error": "The keyword target could not be stored."
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "woo verzoek",
+                        "status": "use-more",
+                        "proposalKind": "striking",
+                        "intent": "informational",
+                        "targetPageRef": "/woo",
+                        "property": "sc-domain:example.nl",
+                        "notes": "Rising"
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    },
+    "confirm null values": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "term": "zaak",
+            "status": "watch",
+            "proposalKind": "manual",
+            "intent": "",
+            "targetPageRef": "",
+            "property": "",
+            "notes": "",
+            "id": "target-1",
+            "createdBy": "marketer"
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "zaak",
+                        "status": "watch",
+                        "proposalKind": "manual",
+                        "intent": "",
+                        "targetPageRef": "",
+                        "property": "",
+                        "notes": ""
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    },
+    "confirm array term": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "confirm integer notes": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "confirm boolean status": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "confirm no session array": {
+        "class": "OCP\\AppFramework\\Http\\Response",
+        "status": 400,
+        "trace": []
+    },
+    "confirm each field": {
+        "class": "OCP\\AppFramework\\Http\\JSONResponse",
+        "status": 201,
+        "data": {
+            "term": "t",
+            "status": "watch",
+            "proposalKind": "gap",
+            "intent": "i",
+            "targetPageRef": "p",
+            "property": "q",
+            "notes": "n",
+            "id": "target-1",
+            "createdBy": "marketer"
+        },
+        "trace": [
+            {
+                "isPrivileged": "marketer"
+            },
+            {
+                "confirm": [
+                    {
+                        "term": "t",
+                        "status": "watch",
+                        "proposalKind": "gap",
+                        "intent": "i",
+                        "targetPageRef": "p",
+                        "property": "q",
+                        "notes": "n"
+                    },
+                    "marketer"
+                ]
+            }
+        ]
+    }
+}

@@ -37,13 +37,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SocialAdvocacyServiceInterface;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Service\Social\SocialPublishRequest;
@@ -51,9 +52,9 @@ use OCA\Pipelinq\Service\Social\SocialPublishRequest;
 /**
  * The prepared-share path for accounts that cannot be posted to.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+ * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
-class SocialAdvocacyService {
+class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 	/**
 	 * The notification subject sent to an account's owner.
 	 *
@@ -89,26 +90,26 @@ class SocialAdvocacyService {
 	 *
 	 * @return array<string, mixed>|null The updated publication, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
-	public function requestShare(
-		array $publication,
-		array $account,
-		array $post,
-		SocialPublishRequest $request,
-	): ?array {
-		$publication['status'] = SocialPublicationStore::AWAITING_SHARE;
-		$publication['sharePromptedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		// The words are FROZEN here rather than rebuilt when the person opens
-		// the notification. Editing the post afterwards must not change what
-		// somebody was asked to post.
-		$publication['preparedBody'] = $request->bodyWithLink();
-		$publication['preparedMedia'] = $request->media;
-		$publication['failureCode'] = '';
-		$publication['failureReason'] = '';
-		$saved = $this->publications->save(publication: $publication);
+	public function requestShare(array $publication, array $account, array $post, SocialPublishRequest $request): ?array {
+		return $this->shareRequested(share: ['publication' => $publication, 'account' => $account, 'post' => $post], request: $request);
+	}//end requestShare()
 
-		$owner = trim((string)($account['ownerUserId'] ?? ''));
+	/**
+	 * Mark a publication as awaiting its owner's share and notify that owner.
+	 *
+	 * @param array{publication: array<string, mixed>, account: array<string, mixed>, post: array<string, mixed>} $share   The
+	 *        publication row, the account it belongs to and the post being shared.
+	 * @param SocialPublishRequest                                                                              $request The
+	 *        resolved text and link.
+	 *
+	 * @return array<string, mixed>|null The updated publication, or null.
+	 */
+	private function shareRequested(array $share, SocialPublishRequest $request): ?array {
+		$prepared = $this->asAwaitingShare(publication: $share['publication'], request: $request);
+		$saved = $this->publications->save(publication: $prepared);
+		$owner = trim((string)($share['account']['ownerUserId'] ?? ''));
 		if ($owner === '') {
 			return $saved;
 		}
@@ -116,18 +117,50 @@ class SocialAdvocacyService {
 		$this->notifications->sendNotification(
 			userId: $owner,
 			subject: self::SUBJECT_SHARE_REQUESTED,
-			parameters: [
-				'handle' => (string)($account['handle'] ?? ''),
-				'network' => (string)($account['network'] ?? ''),
-				'title' => (string)($post['title'] ?? ''),
-				'body' => $request->bodyWithLink(),
-			],
-			objectType: 'socialPublication',
-			objectId: $this->publications->idOf(publication: $saved ?? $publication),
+			parameters: $this->shareParameters(account: $share['account'], post: $share['post']) + ['body' => $request->bodyWithLink()],
+			objectType: 'socialPublication', objectId: $this->publications->idOf(publication: $saved ?? $prepared),
 		);
 
 		return $saved;
-	}//end requestShare()
+	}//end shareRequested()
+
+	/**
+	 * The publication waiting for its share, with the words and media it
+	 * asks for. The words are FROZEN here rather than rebuilt when the person
+	 * opens the notification: editing the post afterwards must not change
+	 * what somebody was asked to post.
+	 *
+	 * @param array<string, mixed> $publication The opened publication.
+	 * @param SocialPublishRequest $request     The resolved request.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function asAwaitingShare(array $publication, SocialPublishRequest $request): array {
+		$publication['status'] = SocialPublicationStore::AWAITING_SHARE;
+		$publication['sharePromptedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+		$publication['preparedBody'] = $request->bodyWithLink();
+		$publication['preparedMedia'] = $request->media;
+		$publication['failureCode'] = '';
+		$publication['failureReason'] = '';
+
+		return $publication;
+	}//end asAwaitingShare()
+
+	/**
+	 * The share notification's account and post parameters.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 * @param array<string, mixed> $post    The post.
+	 *
+	 * @return array{handle: string, network: string, title: string}
+	 */
+	private function shareParameters(array $account, array $post): array {
+		return [
+			'handle' => (string)($account['handle'] ?? ''),
+			'network' => (string)($account['network'] ?? ''),
+			'title' => (string)($post['title'] ?? ''),
+		];
+	}//end shareParameters()
 
 	/**
 	 * Everything the owner needs to post it: the prepared text, the media and
@@ -138,7 +171,7 @@ class SocialAdvocacyService {
 	 *
 	 * @return array{error?: string, share?: array<string, mixed>} The bundle, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function shareBundle(string $publicationId, string $uid): array {
 		$context = $this->authorised(publicationId: $publicationId, uid: $uid);
@@ -146,33 +179,49 @@ class SocialAdvocacyService {
 			return ['error' => $context['error']];
 		}
 
-		$publication = $context['publication'];
-		$account = $context['account'];
-		$adapter = $this->registry->forNetwork(network: (string)($account['network'] ?? ''));
+		$share = $this->shareOf(publication: $context['publication'], account: $context['account']);
+		return ['share' => ['publicationId' => $publicationId] + $share];
+	}//end shareBundle()
 
-		$request = new SocialPublishRequest(
-			network: (string)($account['network'] ?? ''),
-			body: (string)($publication['preparedBody'] ?? ''),
-			handle: (string)($account['handle'] ?? ''),
-		);
+	/**
+	 * The frozen share of a publication: network, handle, status, the
+	 * prepared words and media, and the network's composer link.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param array<string, mixed> $account     Its account.
+	 *
+	 * @return array{network: string, handle: string, status: string, body: string, media: array<mixed>, composerUrl: string}
+	 */
+	private function shareOf(array $publication, array $account): array {
+		$network = (string)($account['network'] ?? '');
+		$adapter = $this->registry->forNetwork(network: $network);
+		$body = (string)($publication['preparedBody'] ?? '');
+		$request = new SocialPublishRequest(network: $network, body: $body, handle: (string)($account['handle'] ?? ''));
+		return [
+			'network' => $network,
+			'handle' => (string)($account['handle'] ?? ''),
+			'status' => (string)($publication['status'] ?? ''),
+			'body' => $request->body,
+			'media' => $this->preparedMedia(publication: $publication),
+			'composerUrl' => ($adapter?->composerUrl(request: $request) ?? ''),
+		];
+	}//end shareOf()
 
+	/**
+	 * The publication's frozen media; none when they are not a list.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 *
+	 * @return array<mixed>
+	 */
+	private function preparedMedia(array $publication): array {
 		$media = ($publication['preparedMedia'] ?? []);
 		if (is_array($media) === false) {
-			$media = [];
+			return [];
 		}
 
-		return [
-			'share' => [
-				'publicationId' => $publicationId,
-				'network' => (string)($account['network'] ?? ''),
-				'handle' => (string)($account['handle'] ?? ''),
-				'status' => (string)($publication['status'] ?? ''),
-				'body' => $request->body,
-				'media' => $media,
-				'composerUrl' => ($adapter?->composerUrl(request: $request) ?? ''),
-			],
-		];
-	}//end shareBundle()
+		return $media;
+	}//end preparedMedia()
 
 	/**
 	 * Record that the owner posted it.
@@ -183,15 +232,39 @@ class SocialAdvocacyService {
 	 *
 	 * @return array{error?: string, publication?: array<string, mixed>} The updated row, or an error.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function confirmShare(string $publicationId, string $uid, string $url = ''): array {
-		$context = $this->authorised(publicationId: $publicationId, uid: $uid);
+		return $this->shareConfirmed(caller: ['publicationId' => $publicationId, 'uid' => $uid], url: $url);
+	}//end confirmShare()
+
+	/**
+	 * Record that the owner posted a publication, when the caller may.
+	 *
+	 * @param array{publicationId: string, uid: string} $caller The publication and the caller, who must be the account's owner
+	 *                                                          or an administrator.
+	 * @param string                                    $url    Where it landed, when they know.
+	 *
+	 * @return array{error?: string, publication?: array<string, mixed>} The updated row, or an error.
+	 */
+	private function shareConfirmed(array $caller, string $url): array {
+		$context = $this->authorised(publicationId: $caller['publicationId'], uid: $caller['uid']);
 		if (isset($context['error']) === true) {
 			return ['error' => $context['error']];
 		}
 
-		$publication = $context['publication'];
+		return $this->recordShare(publication: $context['publication'], url: $url);
+	}//end shareConfirmed()
+
+	/**
+	 * Mark a publication waiting for its share as shared now, with the share's URL when given.
+	 *
+	 * @param array<string, mixed> $publication The authorised publication.
+	 * @param string               $url         The URL of the share, or ''.
+	 *
+	 * @return array<string, mixed> `publication` on success, `error` otherwise.
+	 */
+	private function recordShare(array $publication, string $url): array {
 		if ((string)($publication['status'] ?? '') !== SocialPublicationStore::AWAITING_SHARE) {
 			return ['error' => 'This publication is not waiting for a share.'];
 		}
@@ -208,7 +281,7 @@ class SocialAdvocacyService {
 		}
 
 		return ['publication' => $saved];
-	}//end confirmShare()
+	}//end recordShare()
 
 	/**
 	 * Load the publication and its account, and refuse a caller who is neither

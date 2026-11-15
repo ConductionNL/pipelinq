@@ -4,14 +4,14 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 1. KPI tiles (REQ-MW-090)
 
-- [ ] 1.1 `lib/Service/WorklistService.php`: `getWeekStats(string $userId, string $scope = 'mine'): array` with answered (week and today), within-deadline percentage (user and team), average answer time, converted to a case.
-- [ ] 1.2 Route `GET /api/my-work/week-stats` on a `MyWorkController` with `#[NoAdminRequired]`, scoped to the signed-in user; unit test in `tests/Unit/Service/WorklistServiceTest.php`.
-- [ ] 1.3 `src/components/myWork/MyWeekTiles.vue`, four tiles with notes, placed as on `PqMijnWerk`; a dash, not 0, for an average with no data.
+- [x] 1.1 `lib/Service/WorklistService.php`: `getWeekStats(string $userId, string $scope = 'mine'): array` with answered (week and today), within-deadline percentage (user and team), average answer time, converted to a case.
+- [x] 1.2 Route `GET /api/my-work/week-stats` on a `MyWorkController` with `#[NoAdminRequired]`, scoped to the signed-in user; unit test in `tests/Unit/Service/WorklistServiceTest.php`.
+- [x] 1.3 `src/components/myWork/MyWeekTiles.vue`, four tiles with notes, placed as on `PqMijnWerk`; a dash, not 0, for an average with no data. Built as manifest configuration: the `my-week` stats-block reads the endpoint, no hand-built component.
 
 ## 2. Quick actions (REQ-MW-100)
 
-- [ ] 2.1 Header buttons "New ticket", "New lead", "New contact" in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
-- [ ] 2.2 Hide "New lead" when the user cannot create leads; refresh the list after a ticket or lead is saved.
+- [ ] 2.1 Header buttons "New ticket" and "New contact" (no "New lead", as on `PqMijnWerk`) in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
+- [ ] 2.2 Refresh the list after a ticket is saved.
 
 ## 3. Recent activity (REQ-MW-110)
 
@@ -38,11 +38,11 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 8. Layout (REQ-MW-160)
 
-- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Reset to default"; the work list cannot be hidden.
+- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Terug naar de standaardindeling"; the work list cannot be hidden.
 
 ## 9. Phone (REQ-MW-170)
 
-- [ ] 9.1 Below 768 px: filter chips with counts as on `PqMobiel`, sticky group headers with counts, 44 px targets kept; quick actions folded into one bottom-right button once block 2 is built.
+- [ ] 9.1 Below 768 px: filter chips with counts as on `PqMobiel`, sticky group headers with counts, 44 px targets kept; quick actions folded into one "Actions" button in the header, as on `PqMobiel`, once block 2 is built.
 
 ## 10. Scope (REQ-MW-180)
 

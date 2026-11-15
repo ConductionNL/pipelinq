@@ -10,13 +10,11 @@
   ServiceStepsEditor in its multiStep slot; creating a service (id "new")
   still uses the full-page ServiceForm.
 
-  On save we delegate to the central ObjectService and then fire a best-effort
-  availability-cache invalidation for every Resource that lists this service
-  in its requiredResourceTypes (REQ-APT-015 scenario "AvailabilityCache MUST
-  be invalidated"). Failures are non-fatal — the per-resource refresh job
-  rebuilds the cache hourly.
+  On save we delegate to the central ObjectService; the server expires the
+  cached availability of the resources the service runs on
+  (AvailabilityCacheInvalidationListener, REQ-APT-015).
 
-  @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+  @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
   @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
@@ -62,6 +60,18 @@
 			</NcButton>
 		</template>
 
+		<CnTabs :ariaLabel="t('pipelinq', 'Service')">
+			<template #nav-end>
+				<CnActionsMenu
+					:showRefresh="true"
+					:refreshing="loading"
+					variant="secondary"
+					:title="serviceData.name || t('pipelinq', 'Service')"
+					surface="page:service-detail"
+					testidBase="service-detail"
+					@refresh="refresh" />
+			</template>
+			<CnTab :title="t('pipelinq', 'Overview')">
 		<div class="service-detail__stack">
 			<CnDetailCard :title="t('pipelinq', 'Service details')">
 				<div class="info-grid">
@@ -175,7 +185,10 @@
 						{{ t('pipelinq', 'Save steps') }}
 					</NcButton>
 				</template>
-				<NcButton v-else @click="startEditSteps">
+				<NcButton v-else class="cn-button--tonal" @click="startEditSteps">
+					<template #icon>
+						<PencilOutline :size="16" />
+					</template>
 					{{ t('pipelinq', 'Edit steps') }}
 				</NcButton>
 			</template>
@@ -222,6 +235,11 @@
 				</table>
 			</div>
 		</CnDetailCard>
+			</CnTab>
+			<CnTab :title="t('pipelinq', 'History')" lazy>
+				<CnAuditTrailCard register="pipelinq" schema="appointmentService" :objectId="serviceId" />
+			</CnTab>
+		</CnTabs>
 
 		<DeleteServiceDialog
 			v-if="showDelete"
@@ -261,10 +279,14 @@
 
 <script>
 import {
+	CnActionsMenu,
+	CnAuditTrailCard,
 	CnDetailCard,
 	CnDetailPage,
 	CnFormDialog,
 	CnStatusBadge,
+	CnTab,
+	CnTabs,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -272,10 +294,11 @@ import { translate } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
+import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
-import { currencyOr } from '../../services/reportingCurrency.js'
+import { bookingCurrency } from '../../components/bookings/bookingFormat.js'
 import { stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import {
@@ -295,7 +318,14 @@ const SERVICE_BOARD_HEADER = Object.freeze({
 	headerMeta: '{durationMinutes} minutes · {price|currency}',
 })
 
-/** The side cards the PqService board draws. */
+/**
+ * The side cards the PqService board draws: how busy the service is, its
+ * upcoming appointments and the resources that can do it. The figures and
+ * the matching resources come from the server, so the page uses the booking
+ * path's own matching rule rather than a copy of it.
+ *
+ * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-service-page-shows-how-busy-the-service-is-req-srg-003
+ */
 const SERVICE_SIDE_COLUMN = Object.freeze([
 	{
 		id: 'service-bookings',
@@ -303,14 +333,40 @@ const SERVICE_SIDE_COLUMN = Object.freeze([
 		title: 'Bookings',
 		content: {
 			label: 'Bookings',
-			caption: 'this week',
-			source: {
-				register: 'pipelinq',
-				schema: 'appointmentBooking',
-				metric: 'count',
-				filter: { serviceId: '@objectId', 'startAt[gte]': '@today-7d' },
+			caption: 'this week, no-shows this month: {noShowsThisMonth}',
+			endpointSource: {
+				url: '/apps/pipelinq/api/appointment-services/@objectId/figures',
 			},
+			valueField: 'bookingsThisWeek',
 			clickRoute: 'Bookings',
+		},
+	},
+	{
+		id: 'service-appointments',
+		type: 'record-list',
+		title: 'Appointments for this service',
+		content: {
+			register: 'pipelinq',
+			schema: 'appointmentBooking',
+			filter: { serviceId: '@objectId', 'startAt[gte]': '@now' },
+			sort: { startAt: 'asc' },
+			limit: 5,
+			presentation: 'rows',
+			title: '{startAt|weekday} {startAt|time}',
+			meta: '{status}',
+			valueLabels: {
+				status: {
+					'pending-deposit': 'Awaiting deposit',
+					confirmed: 'Confirmed',
+					completed: 'Finished',
+					'no-show': 'No-show',
+					'cancelled-by-customer': 'Cancelled by the customer',
+					'cancelled-by-business': 'Cancelled by us',
+					rescheduled: 'Rescheduled',
+				},
+			},
+			rowRoute: 'BookingDetail',
+			emptyText: 'No upcoming appointments',
 		},
 	},
 	{
@@ -318,15 +374,16 @@ const SERVICE_SIDE_COLUMN = Object.freeze([
 		type: 'record-list',
 		title: 'Resources that can do this',
 		content: {
-			register: 'pipelinq',
-			schema: 'appointmentResource',
-			filter: { type: '@object.requiredResourceTypes', status: 'active' },
-			limit: 3,
+			endpointSource: {
+				url: '/apps/pipelinq/api/appointment-services/@objectId/eligible-resources',
+				responsePath: 'resources',
+			},
 			presentation: 'rows',
 			title: '{name}',
-			meta: '{type}',
+			meta: ['{type} · max {maxConcurrent} at a time', '{type} · {skills|values}', '{type}'],
+			valueLabels: { type: { staff: 'Staff', room: 'Room', equipment: 'Equipment' } },
 			rowRoute: 'ResourceDetail',
-			emptyText: 'No resource can carry this service yet',
+			emptyText: 'No resource matches',
 		},
 	},
 ])
@@ -342,10 +399,15 @@ export default {
 	components: {
 		NcButton,
 		Pencil,
+		PencilOutline,
+		CnActionsMenu,
+		CnAuditTrailCard,
 		CnDetailPage,
 		CnDetailCard,
 		CnFormDialog,
 		CnStatusBadge,
+		CnTab,
+		CnTabs,
 		ServiceForm,
 		ServiceStepsEditor,
 		DeleteServiceDialog,
@@ -440,7 +502,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/appointment-booking/spec.md
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		cancellationPolicyLabel() {
 			return enumLabel(
@@ -635,12 +697,22 @@ export default {
 		stepAmount,
 
 		/**
+		 * Read the service again (the tab row's Actions menu, Refresh).
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md#requirement-a-service-reads-in-overview-and-history-tabs
+		 * @return {Promise<void>}
+		 */
+		async refresh() {
+			await this.objectStore.fetchObject('appointmentService', this.serviceId)
+		},
+
+		/**
 		 * The label for a step's stored resource type (`staff` reads Staff).
 		 *
 		 * @param {string} value The stored resource type.
 		 * @return {string} The label, '' without a value.
 		 *
-		 * @spec openspec/changes/round4-readable-values-and-tour-titles/specs/appointment-booking/spec.md
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		resourceTypeLabel(value) {
 			return enumLabel(RESOURCE_TYPE_LABELS, value, (text) =>
@@ -692,7 +764,7 @@ export default {
 		 * @param {Array<object>} products The catalogue rows.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/review-audit-fixes-b/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
+		 * @spec openspec/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
 		 */
 		rememberProductNames(products) {
 			const names = { ...this.productNames }
@@ -726,8 +798,7 @@ export default {
 		},
 
 		/**
-		 * Save the edited steps, then expire the cached availability, as
-		 * every service save does.
+		 * Save the edited steps.
 		 *
 		 * @return {Promise<void>}
 		 *
@@ -753,7 +824,6 @@ export default {
 				}
 				showSuccess(t('pipelinq', 'Steps saved.'))
 				this.editingSteps = false
-				await this.invalidateAvailability(this.serviceId)
 				await this.objectStore.fetchObject(
 					'appointmentService',
 					this.serviceId,
@@ -801,7 +871,6 @@ export default {
 				return
 			}
 			dialog?.setResult({ success: true })
-			await this.invalidateAvailability(saved.id || this.serviceId)
 			await this.objectStore.fetchObject('appointmentService', this.serviceId)
 		},
 
@@ -816,7 +885,6 @@ export default {
 				return
 			}
 			showSuccess(t('pipelinq', 'Service saved.'))
-			await this.invalidateAvailability(saved.id || formData.id)
 			this.$router.push({
 				name: 'ServiceDetail',
 				params: { id: saved.id },
@@ -843,55 +911,6 @@ export default {
 			}
 		},
 
-		/**
-		 * Best-effort availability-cache invalidation after a service save.
-		 *
-		 * Fetches every Resource whose `requiredResourceTypes` overlaps the
-		 * service and deletes its cached availability rows so the next
-		 * portal slot search recomputes. Failures are silent — the hourly
-		 * AvailabilityCacheRefreshJob converges the cache eventually.
-		 *
-		 * @param {string} serviceId The saved service id.
-		 * @return {Promise<void>}
-		 *
-		 * @spec openspec/specs/appointment-booking/spec.md
-		 */
-		async invalidateAvailability(serviceId) {
-			if (!serviceId) return
-			try {
-				const resources = await this.objectStore.fetchCollection(
-					'appointmentResource',
-					{ _limit: 200 },
-				)
-				const types = this.serviceData.requiredResourceTypes || []
-				const targets = (resources || []).filter((r) => {
-					if (!types.length) return true
-					return types.includes(r.type)
-				})
-				for (const resource of targets) {
-					try {
-						const cached = await this.objectStore.fetchCollection(
-							'availabilityCache',
-							{
-								resourceId: resource.id,
-								_limit: 200,
-							},
-						)
-						for (const row of cached || []) {
-							await this.objectStore.deleteObject(
-								'availabilityCache',
-								row.id,
-							)
-						}
-					} catch {
-						// Per-resource invalidation failure must not block save.
-					}
-				}
-			} catch {
-				// Resource list fetch failure: cache is regenerated hourly.
-			}
-		},
-
 		formatDuration(minutes) {
 			const n = Number(minutes) || 0
 			if (n < 60) return t('pipelinq', '{n} min', { n })
@@ -908,20 +927,10 @@ export default {
 		 * @param {number|string} value The amount.
 		 * @param {string} [currency] The currency code.
 		 * @return {string} The formatted amount.
-		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		formatCurrency(value, currency) {
-			const code = currencyOr(currency)
-			const n = Number(value) || 0
-			try {
-				return new Intl.NumberFormat('nl-NL', {
-					style: 'currency',
-					currency: code,
-					maximumFractionDigits: 2,
-				}).format(n)
-			} catch {
-				return `${code} ${n}`
-			}
+			return bookingCurrency(value, currency)
 		},
 
 		statusLabel(status) {
@@ -981,9 +990,9 @@ export default {
 
 .viewTableContainer {
 	background: var(--color-main-background);
-	border-radius: var(--border-radius);
+	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
+	box-shadow: none;
 	border: 1px solid var(--color-border);
 }
 

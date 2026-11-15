@@ -25,7 +25,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use RuntimeException;
 /**
  * Shared OpenConnector-backed transfer for the concrete sink adapters.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
  */
 abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	/**
@@ -161,6 +161,33 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @throws RuntimeException When OpenConnector is unavailable or the write fails.
 	 */
 	protected function transfer(array $credentials, array $destination, string $remotePath, string $contents): array {
+		return self::resultOrPath(result: $this->uploadService()->put($credentials, $destination, $remotePath, $contents), remotePath: $remotePath);
+	}//end transfer()
+
+	/**
+	 * The transfer result metadata, or the path when the transfer answered none.
+	 *
+	 * @param mixed  $result     What the transfer answered.
+	 * @param string $remotePath The remote object key/path.
+	 *
+	 * @return array<string, mixed> The transfer result metadata.
+	 */
+	private static function resultOrPath(mixed $result, string $remotePath): array {
+		if (is_array($result) === false) {
+			return ['path' => $remotePath];
+		}
+
+		return $result;
+	}//end resultOrPath()
+
+	/**
+	 * OpenConnector's CallService, when it is there and can upload files.
+	 *
+	 * @return object The CallService.
+	 *
+	 * @throws RuntimeException When OpenConnector is unavailable or cannot upload.
+	 */
+	private function uploadService(): object {
 		$callService = $this->getCallService();
 		if ($callService === null) {
 			throw new RuntimeException('OpenConnector CallService is not available for export upload.');
@@ -176,13 +203,8 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 			throw new RuntimeException('OpenConnector CallService does not support file uploads.');
 		}
 
-		$result = $callService->put($credentials, $destination, $remotePath, $contents);
-		if (is_array($result) === false) {
-			return ['path' => $remotePath];
-		}
-
-		return $result;
-	}//end transfer()
+		return $callService;
+	}//end uploadService()
 
 	/**
 	 * Resolve the CallService, or null when the connector app is absent.

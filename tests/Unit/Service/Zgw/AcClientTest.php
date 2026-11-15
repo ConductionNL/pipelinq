@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for AcClient scope cache + pre-flight guards.
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
+ * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-006
  */
 class AcClientTest extends TestCase {
 	/**

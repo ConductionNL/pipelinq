@@ -122,8 +122,8 @@ import {
 import SavedReplyPicker from './SavedReplyPicker.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
-/** The ticket kinds a customer can be answered on. */
-const ANSWERABLE = ['request', 'complaint']
+/** A contact moment is a logged interaction; every other ticket kind can be answered. */
+const NOT_ANSWERABLE = ['interaction']
 
 export default {
 	name: 'CustomerReplySection',
@@ -172,7 +172,7 @@ export default {
 		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
 		applies() {
-			return !!this.ticket && ANSWERABLE.includes(this.ticket.ticketType)
+			return !!this.ticket && !NOT_ANSWERABLE.includes(this.ticket.ticketType)
 		},
 
 		/**
@@ -234,7 +234,7 @@ export default {
 		 * Saved reply placeholder values for this ticket.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		placeholderValues() {
 			return {
@@ -248,7 +248,7 @@ export default {
 		 * The customer's correspondence language, contact first.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		language() {
 			const party = this.contact || this.client
@@ -299,7 +299,7 @@ export default {
 		 * Read the ticket's client and contact for the saved reply placeholders.
 		 * A party that cannot be read leaves its placeholder as written.
 		 *
-		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 * @spec openspec/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
 		 */
 		async loadParties() {
 			const store = useObjectStore()
@@ -332,31 +332,15 @@ export default {
 			try {
 				const store = useObjectStore()
 				const current = await store.fetchObject('ticket', this.objectId)
-				if (!current) {
-					this.fail()
-					return
-				}
-				const next = {
-					...current,
-					id: this.objectId,
-					customerMessage: this.message.trim(),
-					portalAnswers: this.answersAfter(current, this.message.trim()),
-				}
-				if (wait) {
-					next.status = 'awaiting_customer'
-				}
-				const saved = await store.saveObject('ticket', next)
+				// A ticket that is gone is not saved again.
+				const saved = current
+					? await store.saveObject('ticket', this.answeredTicket(current, wait))
+					: null
 				if (!saved) {
 					this.fail()
 					return
 				}
-				this.ticket = saved
-				this.$emit('saved', saved)
-				this.notice = t(
-					'pipelinq',
-					'The answer is saved. The customer can read it on the portal.',
-				)
-				this.noticeType = 'success'
+				this.showSaved(saved)
 			} finally {
 				this.busy = false
 			}
@@ -369,7 +353,7 @@ export default {
 		 * @param {object} current The ticket as read just now.
 		 * @param {string} answer The answer being saved.
 		 * @return {Array<object>} `{message, createdAt}` per answer, oldest first.
-		 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+		 * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 		 */
 		answersAfter(current, answer) {
 			const answers = Array.isArray(current.portalAnswers)
@@ -390,6 +374,42 @@ export default {
 		 *
 		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
+		/**
+		 * The ticket with this answer for the customer, waiting for the
+		 * customer when asked.
+		 *
+		 * @param {object} current The ticket as stored.
+		 * @param {boolean} wait Whether to wait for the customer.
+		 * @return {object} The ticket to save.
+		 */
+		answeredTicket(current, wait) {
+			const next = {
+				...current,
+				id: this.objectId,
+				customerMessage: this.message.trim(),
+				portalAnswers: this.answersAfter(current, this.message.trim()),
+			}
+			if (wait) {
+				next.status = 'awaiting_customer'
+			}
+			return next
+		},
+
+		/**
+		 * Keep the saved ticket, tell the host and say the customer can read it.
+		 *
+		 * @param {object} saved The saved ticket.
+		 */
+		showSaved(saved) {
+			this.ticket = saved
+			this.$emit('saved', saved)
+			this.notice = t(
+				'pipelinq',
+				'The answer is saved. The customer can read it on the portal.',
+			)
+			this.noticeType = 'success'
+		},
+
 		fail() {
 			this.notice = t('pipelinq', 'Could not save the answer.')
 			this.noticeType = 'error'

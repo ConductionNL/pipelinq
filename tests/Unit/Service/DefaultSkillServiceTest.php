@@ -27,6 +27,7 @@ use OCA\Pipelinq\Service\RegisterResolverService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Pipelinq\Service\DefaultSkillService
@@ -49,6 +50,7 @@ class DefaultSkillServiceTest extends TestCase {
 		$objects->method('findAll')->willReturn([]);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$titles) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$titles[] = $args[0]['title'];
 				return $this->createMock(ObjectEntityInterface::class);
 			}

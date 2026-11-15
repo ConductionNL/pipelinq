@@ -27,23 +27,22 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\KassakoppelingAuditService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
+use OCA\Pipelinq\Controller\Support\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -68,14 +67,16 @@ use Psr\Log\LoggerInterface;
  *  collaborator surface (request / session / l10n / group manager / logger
  *  + the audit service).
  *
- * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+ * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
  */
 class KassakoppelingAuditController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param KassakoppelingAuditService $service The audit service.
+	 * @param KassakoppelingAuditServiceInterface $service The audit service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager (admin gate).
 	 * @param IL10N $l10n The localisation service.
@@ -83,13 +84,13 @@ class KassakoppelingAuditController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private KassakoppelingAuditService $service,
+		private KassakoppelingAuditServiceInterface $service,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -102,7 +103,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The persisted entry, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -138,7 +139,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The entry list, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -153,6 +154,10 @@ class KassakoppelingAuditController extends Controller {
 			'action' => (string)$this->request->getParam('action', ''),
 			'from' => (string)$this->request->getParam('from', ''),
 			'to' => (string)$this->request->getParam('to', ''),
+			'verified' => (string)$this->request->getParam('verified', ''),
+			'exported' => (string)$this->request->getParam('exported', ''),
+			'search' => (string)$this->request->getParam('search', ''),
+			'order' => (string)$this->request->getParam('order', ''),
 		];
 
 		return $this->run(
@@ -168,7 +173,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The entry, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -190,7 +195,7 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return JSONResponse The verification result, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	#[NoAdminRequired]
 	public function verify(string $id): JSONResponse {
@@ -224,19 +229,12 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @return DataDownloadResponse|JSONResponse The export, or an error.
 	 *
-	 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
+	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function export(): DataDownloadResponse|JSONResponse {
-		$uid = $this->requireUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		if ($this->groupManager->isAdmin($uid) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Alleen administrators kunnen exporteren naar de Belastingdienst.')],
-				Http::STATUS_FORBIDDEN
-			);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$fromDate = (string)$this->request->getParam('from', '');
@@ -249,12 +247,46 @@ class KassakoppelingAuditController extends Controller {
 			);
 		}
 
-		try {
-			$payload = $this->service->exportForBelastingdienst(
+		return $this->exportDownload(
+			export: fn (): array => $this->service->exportForBelastingdienst(
 				fromDate: $fromDate,
 				toDate: $toDate,
 				format: $format
+			)
+		);
+	}//end export()
+
+	/**
+	 * The 401 without a session or the 403 for anyone but an administrator, else null.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function adminRefusal(): ?JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		if ($this->groupManager->isAdmin($uid) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Alleen administrators kunnen exporteren naar de Belastingdienst.')],
+				Http::STATUS_FORBIDDEN
 			);
+		}
+
+		return null;
+	}//end adminRefusal()
+
+	/**
+	 * Build the export and stream it, or answer 422 / 500 when it cannot be built.
+	 *
+	 * @param callable(): array<string, mixed> $export Builds the export payload.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The download, or the error.
+	 */
+	private function exportDownload(callable $export): DataDownloadResponse|JSONResponse {
+		try {
+			$payload = $export();
 		} catch (OCSBadRequestException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (\Throwable $e) {
@@ -270,7 +302,7 @@ class KassakoppelingAuditController extends Controller {
 			(string)$payload['filename'],
 			(string)$payload['contentType']
 		);
-	}//end export()
+	}//end exportDownload()
 
 	/**
 	 * Require an authenticated user, returning their UID.
@@ -307,13 +339,12 @@ class KassakoppelingAuditController extends Controller {
 	private function run(callable $action, string $label, int $successStatus = Http::STATUS_OK): JSONResponse {
 		try {
 			return new JSONResponse($action(), $successStatus);
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (\Throwable $e) {
+			$mapped = $this->ocsErrorResponse(failure: $e);
+			if ($mapped !== null) {
+				return $mapped;
+			}
+
 			$this->logger->error(
 				'KassakoppelingAuditController::' . $label . ' failed',
 				['exception' => $e->getMessage()]

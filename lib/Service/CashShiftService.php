@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+ * @spec openspec/specs/pos-cash-management/spec.md
  */
 
 declare(strict_types=1);
@@ -37,18 +37,23 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service for POS cash-drawer (shift / drop / count / diff) operations.
@@ -73,9 +78,14 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  save / sum / time / uuid) are deliberately small and single-purpose; merging
  *  them would only obscure the lifecycle they support.
  *
- * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+ * @spec openspec/specs/pos-cash-management/spec.md
  */
-class CashShiftService {
+class CashShiftService implements CashShiftServiceInterface {
+	use CastingPayloadToArray;
+	use RandomUuid;
+	use PosObjectReadWrite;
+	use InjectedObjectService;
+
 	/**
 	 * CloudEvent type emitted when a cash variance is approved.
 	 *
@@ -146,7 +156,7 @@ class CashShiftService {
 	 * @throws OCSForbiddenException If the user is not a POS operator.
 	 * @throws OCSBadRequestException If the float is negative.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function openShift(
 		string $drawer,
@@ -193,7 +203,7 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the shift does not exist.
 	 * @throws OCSBadRequestException If the shift is not open or the amount is not positive.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function recordDrop(string $shiftId, float $amount, string $reason, string $userId): array {
 		$this->requirePosUser(userId: $userId);
@@ -237,7 +247,7 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the shift does not exist.
 	 * @throws OCSBadRequestException If the shift is not open or the amount is negative.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function recordCount(string $shiftId, float $amount, string $userId, string $notes = ''): array {
 		$this->requirePosUser(userId: $userId);
@@ -291,7 +301,7 @@ class CashShiftService {
 	 *
 	 * @return array<string, mixed> The persisted cashDiff.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function calculateDiff(array $shift, array $count): array {
 		$shiftId = (string)($shift['id'] ?? $shift['uuid'] ?? '');
@@ -348,7 +358,7 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the diff or its shift does not exist.
 	 * @throws OCSBadRequestException If the diff is not pending.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.2
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function approveDiff(string $diffId, string $userId): array {
 		$this->requireManager(userId: $userId);
@@ -383,6 +393,28 @@ class CashShiftService {
 	}//end approveDiff()
 
 	/**
+	 * The id of a shift's pending cash difference, so an action on the shift
+	 * can approve or reject it without naming the difference.
+	 *
+	 * @param string $shiftId The shift UUID.
+	 *
+	 * @return string The pending diff UUID.
+	 *
+	 * @throws OCSNotFoundException If the shift has no pending difference.
+	 *
+	 * @spec openspec/specs/pos-cash-management/spec.md
+	 */
+	public function pendingDiffId(string $shiftId): string {
+		$diff = $this->findPendingDiff(shiftId: $shiftId);
+		$diffId = (string)($diff['id'] ?? $diff['uuid'] ?? '');
+		if ($diffId === '') {
+			throw new OCSNotFoundException('Deze dienst heeft geen openstaand kasverschil.');
+		}
+
+		return $diffId;
+	}//end pendingDiffId()
+
+	/**
 	 * Reject a pending variance (POS manager only) and reopen the shift.
 	 *
 	 * Requires a non-empty reason. Stamps approvedBy / approvedAt /
@@ -400,7 +432,7 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the diff or its shift does not exist.
 	 * @throws OCSBadRequestException If the diff is not pending or the reason is empty.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.3
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function rejectDiff(string $diffId, string $reason, string $userId): array {
 		$this->requireManager(userId: $userId);
@@ -447,7 +479,7 @@ class CashShiftService {
 	 *
 	 * @return float The sum of in-window confirmed/settled transaction totals.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is the
 	 *  OpenRegister value-object factory; it carries no state to inject.
@@ -498,7 +530,7 @@ class CashShiftService {
 	 *
 	 * @return float The drops total.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	private function sumDrops(string $shiftId): float {
 		$sum = 0.0;
@@ -516,7 +548,7 @@ class CashShiftService {
 	 *
 	 * @return array<string, mixed> The pending diff, or an empty array.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	private function findPendingDiff(string $shiftId): array {
 		foreach ($this->fetchByShift(schemaKey: 'cashDiff_schema', shiftId: $shiftId) as $diff) {
@@ -540,7 +572,7 @@ class CashShiftService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#3.3
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	private function createRecountTask(array $shift, string $reason, string $userId): void {
 		$operator = (string)($shift['operator'] ?? '');
@@ -580,7 +612,7 @@ class CashShiftService {
 	 *
 	 * @return string The generated CloudEvents id, or empty string on failure.
 	 *
-	 * @spec openspec/changes/pos-cash-management/tasks.md#4.2
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
 	public function emitDiffConfirmedEvent(array $shift, array $diff, string $userId, string $approvedAt): string {
 		$eventId = $this->uuid();
@@ -655,8 +687,10 @@ class CashShiftService {
 	 * @return array<string, mixed> The shift.
 	 *
 	 * @throws OCSNotFoundException If the shift is not found.
+	 *
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
-	private function fetchShift(string $id): array {
+	public function fetchShift(string $id): array {
 		return $this->fetchOne(schemaKey: 'cashShift_schema', id: $id, label: 'Shift niet gevonden.');
 	}//end fetchShift()
 
@@ -674,41 +708,16 @@ class CashShiftService {
 	}//end fetchDiff()
 
 	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException If the object is not found.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
-
-	/**
 	 * Fetch all objects of a schema linked to a shift.
 	 *
 	 * @param string $schemaKey The app-config schema key.
 	 * @param string $shiftId The parent shift UUID.
 	 *
 	 * @return array<int, array<string, mixed>> The linked objects.
+	 *
+	 * @spec openspec/specs/pos-cash-management/spec.md
 	 */
-	private function fetchByShift(string $schemaKey, string $shiftId): array {
+	public function fetchByShift(string $schemaKey, string $shiftId): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
@@ -743,6 +752,30 @@ class CashShiftService {
 	}//end fetchByShift()
 
 	/**
+	 * Fetch the objects of a schema that match some filters.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return array<int, array<string, mixed>> The objects; none when they cannot be read.
+	 *
+	 * @spec openspec/specs/pos-cash-management/spec.md
+	 */
+	public function fetchWhere(string $schemaKey, array $filters): array {
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		try {
+			$results = $this->getObjectService()->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schema])]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to fetch cash objects', ['exception' => $e->getMessage(), 'schemaKey' => $schemaKey]);
+			return [];
+		}
+
+		return array_map(fn (mixed $row): array => $this->toArray(object: $row), ($results ?? []));
+	}//end fetchWhere()
+
+	/**
 	 * Persist a shift via the OR ObjectService.
 	 *
 	 * @param string $id The shift UUID (empty to create).
@@ -755,31 +788,6 @@ class CashShiftService {
 	}//end saveShift()
 
 	/**
-	 * Persist an object via the OR ObjectService for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID (empty to create).
-	 * @param array<string, mixed> $object The object data.
-	 *
-	 * @return array<string, mixed> The saved object.
-	 */
-	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		unset($object['@self']);
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
-
-		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
-
-	/**
 	 * Resolve the register + a schema config key into their stored IDs.
 	 *
 	 * @param string $schemaKey The app-config schema key (e.g. cashShift_schema).
@@ -789,8 +797,8 @@ class CashShiftService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('Kassalade-register of -schema is niet geconfigureerd.');
@@ -798,17 +806,6 @@ class CashShiftService {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
@@ -827,35 +824,6 @@ class CashShiftService {
 	}//end getAggregationRunner()
 
 	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
-
-	/**
 	 * Current time as an ISO 8601 string.
 	 *
 	 * @return string The current timestamp.
@@ -863,17 +831,4 @@ class CashShiftService {
 	private function now(): string {
 		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 	}//end now()
-
-	/**
-	 * Generate a v4 UUID.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$data = random_bytes(16);
-		$data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
-		$data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
-
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end uuid()
 }//end class

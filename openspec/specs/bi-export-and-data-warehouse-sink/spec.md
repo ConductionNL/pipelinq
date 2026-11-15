@@ -11,6 +11,10 @@ status: in-progress
 - `bi-export-and-data-warehouse-sink` (archived 2026-06-14) — Initial: export destinations, export jobs, export runs, schema evolution detection, and destination upload for BI/data-warehouse sinks (S3, Azure Data Lake, GCS, BigQuery, Snowflake, SFTP, Postgres). Archived without ever being synced into this canonical spec tree.
 - `export-destination-credentials-fix` (in progress) — Fix `ExportDestinationService`/`ExportUploadService` resolving a dead `OCA\OpenConnector\Service\SourceService::getCredentials()` (the class does not exist); repoint credential resolution at OpenRegister's `ObjectServiceInterface` raw (`_render: false`) read of the connector Source, mirroring the earlier BlastService fix (commit 96a9d16c) for the same class of dead-API bug. This change establishes the capability spec, scoped to REQ-BIE-001, REQ-BIE-008, and the new REQ-BIE-010 credential-resolution requirement — the remaining requirements from the archived design (REQ-BIE-002 through REQ-BIE-007, REQ-BIE-009) are not yet synced here.
 
+## Purpose
+
+Pipelinq exports CRM data to an external BI tool or data warehouse (S3, Azure Data Lake, GCS, BigQuery, Snowflake, SFTP or Postgres). An admin configures a destination, and each export run uploads its data there with retries. Credentials come from the connector source in OpenRegister.
+
 ## Requirements
 
 ### Requirement: Destination configuration and validation (REQ-BIE-001)

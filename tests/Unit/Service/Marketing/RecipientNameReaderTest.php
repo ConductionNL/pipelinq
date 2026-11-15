@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The name a mail greets its recipient by.
@@ -53,7 +54,9 @@ class RecipientNameReaderTest extends TestCase {
 			public function __construct(private array $rows) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($register !== 'pipelinq') {
 					throw new RuntimeException('wrong register: ' . $register);
 				}
@@ -114,6 +117,20 @@ class RecipientNameReaderTest extends TestCase {
 		$this->assertSame('Johannes Jansen', $reader->greetingName('c-1'));
 		$this->assertSame('Hanna de Wit', $reader->greetingName('c-2'));
 	}//end testTheFullNameStandsIn()
+
+	/**
+	 * A list names a recipient by the full name, never the preferred one;
+	 * an unknown recipient has none.
+	 *
+	 * @return void
+	 */
+	public function testAListReadsTheFullName(): void {
+		$reader = $this->reader(rows: ['contact/c-1' => ['name' => 'Johannes Jansen', 'preferredName' => 'Jan']]);
+
+		$this->assertSame(expected: 'Johannes Jansen', actual: $reader->fullName('c-1'));
+		$this->assertSame(expected: '', actual: $reader->fullName('c-9'));
+		$this->assertSame(expected: '', actual: $reader->fullName(''));
+	}//end testAListReadsTheFullName()
 
 	/**
 	 * A recipient that is a client is found after the contact lookup misses,

@@ -1,0 +1,1081 @@
+{
+    "subscribe, list not public": {
+        "result": {
+            "status": "not-found"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "subscribe, invalid address": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "subscribe, honeypot": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "info",
+                "SubscriptionService.subscribe: honeypot filled, discarding",
+                {
+                    "listId": "list-1",
+                    "emailHash": "hash:jan@ex.nl"
+                }
+            ]
+        ]
+    },
+    "subscribe, already confirmed": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ]
+        ]
+    },
+    "subscribe, new": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "pending",
+                    "source": "public-signup",
+                    "lawfulBasis": "consent",
+                    "confirmTokenHash": "digest:nonce-new",
+                    "contactId": "c-1",
+                    "createdAt": "NOW"
+                },
+                ""
+            ],
+            [
+                "setTo",
+                [
+                    [
+                        "jan@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "setSubject",
+                [
+                    "Confirm your subscription to Nieuws"
+                ]
+            ],
+            [
+                "setPlainBody",
+                [
+                    "You asked to receive Nieuws.\n\nOpen this link to confirm. If you did not ask for this, ignore this message and nothing happens.\n\nhttps://ex.nl/confirm/ok:sub-new:nonce-new\n\nStraat 1"
+                ]
+            ],
+            [
+                "setFrom",
+                [
+                    {
+                        "news@ex.nl": "Nieuws"
+                    }
+                ]
+            ],
+            [
+                "setReplyTo",
+                [
+                    [
+                        "reply@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "send"
+            ]
+        ]
+    },
+    "subscribe, pending again": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "pending",
+                    "confirmTokenHash": "digest:nonce-new",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "source": "public-signup",
+                    "lawfulBasis": "consent"
+                },
+                "sub-1"
+            ],
+            [
+                "setTo",
+                [
+                    [
+                        "jan@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "setSubject",
+                [
+                    "Confirm your subscription to Nieuws"
+                ]
+            ],
+            [
+                "setPlainBody",
+                [
+                    "You asked to receive Nieuws.\n\nOpen this link to confirm. If you did not ask for this, ignore this message and nothing happens.\n\nhttps://ex.nl/confirm/ok:sub-1:nonce-new\n\nStraat 1"
+                ]
+            ],
+            [
+                "send"
+            ]
+        ]
+    },
+    "subscribe, unsubscribed again": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "state": "pending",
+                    "contactId": "c-9",
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "confirmTokenHash": "digest:nonce-new",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "source": "public-signup",
+                    "lawfulBasis": "consent"
+                },
+                "sub-1"
+            ],
+            [
+                "setTo",
+                [
+                    [
+                        "jan@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "setSubject",
+                [
+                    "Confirm your subscription to Nieuws"
+                ]
+            ],
+            [
+                "setPlainBody",
+                [
+                    "You asked to receive Nieuws.\n\nOpen this link to confirm. If you did not ask for this, ignore this message and nothing happens.\n\nhttps://ex.nl/confirm/ok:sub-1:nonce-new\n\nStraat 1"
+                ]
+            ],
+            [
+                "setFrom",
+                [
+                    {
+                        "news@ex.nl": "Nieuws"
+                    }
+                ]
+            ],
+            [
+                "setReplyTo",
+                [
+                    [
+                        "reply@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "send"
+            ]
+        ]
+    },
+    "subscribe, save fails": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "pending",
+                    "source": "public-signup",
+                    "lawfulBasis": "consent",
+                    "confirmTokenHash": "digest:nonce-new",
+                    "createdAt": "NOW"
+                },
+                ""
+            ],
+            [
+                "warning",
+                "SubscriptionService.startConfirmation: subscription could not be saved",
+                {
+                    "listId": "list-1",
+                    "emailHash": "hash:jan@ex.nl"
+                }
+            ]
+        ]
+    },
+    "subscribe, saved without id": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "pending",
+                    "source": "public-signup",
+                    "lawfulBasis": "consent",
+                    "confirmTokenHash": "digest:nonce-new",
+                    "createdAt": "NOW"
+                },
+                ""
+            ]
+        ]
+    },
+    "subscribe, mail fails": {
+        "result": {
+            "status": "accepted"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "pending",
+                    "source": "public-signup",
+                    "lawfulBasis": "consent",
+                    "confirmTokenHash": "digest:nonce-new",
+                    "createdAt": "NOW"
+                },
+                ""
+            ],
+            [
+                "setTo",
+                [
+                    [
+                        "jan@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "setSubject",
+                [
+                    "Confirm your subscription to Nieuws"
+                ]
+            ],
+            [
+                "setPlainBody",
+                [
+                    "You asked to receive Nieuws.\n\nOpen this link to confirm. If you did not ask for this, ignore this message and nothing happens.\n\nhttps://ex.nl/confirm/ok:sub-new:nonce-new\n\nStraat 1"
+                ]
+            ],
+            [
+                "setFrom",
+                [
+                    {
+                        "news@ex.nl": "Nieuws"
+                    }
+                ]
+            ],
+            [
+                "setReplyTo",
+                [
+                    [
+                        "reply@ex.nl"
+                    ]
+                ]
+            ],
+            [
+                "send"
+            ],
+            [
+                "warning",
+                "SubscriptionService.sendConfirmationMail: dispatch failed",
+                {
+                    "listName": "Nieuws",
+                    "exception": "smtp down"
+                }
+            ]
+        ]
+    },
+    "confirm, bad token": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "bad",
+                "confirm"
+            ]
+        ]
+    },
+    "confirm, unknown subscription": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-x:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-x"
+            ]
+        ]
+    },
+    "confirm, no nonce": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ]
+        ]
+    },
+    "confirm, spent link": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ]
+        ]
+    },
+    "confirm, wrong nonce": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-2",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ]
+        ]
+    },
+    "confirm, already confirmed": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ]
+        ]
+    },
+    "confirm, save fails": {
+        "result": {
+            "status": "invalid"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "confirmTokenHash": "",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "confirmedAt": "NOW",
+                    "confirmIpHash": "hash:1.2.3.4",
+                    "lawfulBasis": "consent"
+                },
+                "sub-1"
+            ]
+        ]
+    },
+    "confirm, list gone": {
+        "result": {
+            "status": "confirmed"
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "confirmTokenHash": "",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "confirmedAt": "NOW",
+                    "confirmIpHash": "hash:",
+                    "lawfulBasis": "consent"
+                },
+                "sub-1"
+            ],
+            [
+                "recordListConsent",
+                [
+                    "jan@ex.nl",
+                    "list-1",
+                    "email",
+                    "consent",
+                    "double-opt-in",
+                    {
+                        "mechanism": "double-opt-in",
+                        "reference": "sub-1",
+                        "objectionOffered": true,
+                        "objectionOfferedAt": "2026-01-01T00:00:00Z",
+                        "ipHash": "hash:",
+                        "recordedAt": "NOW"
+                    }
+                ]
+            ],
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "confirm, confirmed": {
+        "result": {
+            "status": "confirmed",
+            "list": {
+                "name": "Nieuws"
+            }
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "contactId": "c-1",
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "confirmTokenHash": "",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "confirmedAt": "NOW",
+                    "confirmIpHash": "hash:1.2.3.4",
+                    "lawfulBasis": "consent"
+                },
+                "sub-1"
+            ],
+            [
+                "recordListConsent",
+                [
+                    "c-1",
+                    "list-1",
+                    "email",
+                    "consent",
+                    "double-opt-in",
+                    {
+                        "mechanism": "double-opt-in",
+                        "reference": "sub-1",
+                        "objectionOffered": true,
+                        "objectionOfferedAt": "2026-01-01T00:00:00Z",
+                        "ipHash": "hash:1.2.3.4",
+                        "recordedAt": "NOW"
+                    }
+                ]
+            ],
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "confirm, no createdAt": {
+        "result": {
+            "status": "confirmed",
+            "list": {
+                "name": "Nieuws"
+            }
+        },
+        "calls": [
+            [
+                "verify",
+                "ok:sub-1:nonce-1",
+                "confirm"
+            ],
+            [
+                "find",
+                "subscription",
+                "sub-1"
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "confirmTokenHash": "",
+                    "confirmedAt": "NOW",
+                    "confirmIpHash": "hash:1.2.3.4",
+                    "lawfulBasis": "consent"
+                },
+                "sub-1"
+            ],
+            [
+                "recordListConsent",
+                [
+                    "jan@ex.nl",
+                    "list-1",
+                    "email",
+                    "consent",
+                    "double-opt-in",
+                    {
+                        "mechanism": "double-opt-in",
+                        "reference": "sub-1",
+                        "objectionOffered": true,
+                        "objectionOfferedAt": "NOW",
+                        "ipHash": "hash:1.2.3.4",
+                        "recordedAt": "NOW"
+                    }
+                ]
+            ],
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "import, list gone": {
+        "result": {
+            "status": "refused",
+            "error": "Not found"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "import, double opt-in list": {
+        "result": {
+            "status": "refused",
+            "error": "This list uses double opt-in, so a subscriber has to confirm the link themselves"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "import, invalid address": {
+        "result": {
+            "status": "refused",
+            "error": "That is not a valid email address"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "import, no objection offered": {
+        "result": {
+            "status": "refused",
+            "error": "A soft opt-in needs a record that the customer was offered the chance to object"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "import, new": {
+        "result": {
+            "status": "imported"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "source": "soft-opt-in-import",
+                    "lawfulBasis": "soft-opt-in",
+                    "confirmedAt": "NOW",
+                    "confirmTokenHash": "",
+                    "createdAt": "NOW"
+                },
+                ""
+            ],
+            [
+                "recordListConsent",
+                [
+                    "c-1",
+                    "list-1",
+                    "email",
+                    "soft-opt-in",
+                    "soft-opt-in-import",
+                    {
+                        "mechanism": "soft-opt-in-import",
+                        "recordedAt": "given",
+                        "objectionOffered": true,
+                        "wording": "w"
+                    }
+                ]
+            ]
+        ]
+    },
+    "import, existing": {
+        "result": {
+            "status": "imported"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "confirmTokenHash": "",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "contactId": "c-1",
+                    "source": "soft-opt-in-import",
+                    "lawfulBasis": "soft-opt-in",
+                    "confirmedAt": "NOW"
+                },
+                "sub-1"
+            ],
+            [
+                "recordListConsent",
+                [
+                    "c-1",
+                    "list-1",
+                    "email",
+                    "soft-opt-in",
+                    "soft-opt-in-import",
+                    {
+                        "mechanism": "soft-opt-in-import",
+                        "recordedAt": "NOW",
+                        "objectionOffered": true
+                    }
+                ]
+            ]
+        ]
+    },
+    "import, save fails": {
+        "result": {
+            "status": "refused",
+            "error": "The subscription could not be saved"
+        },
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "source": "soft-opt-in-import",
+                    "lawfulBasis": "soft-opt-in",
+                    "confirmedAt": "NOW",
+                    "confirmTokenHash": "",
+                    "createdAt": "NOW"
+                },
+                ""
+            ]
+        ]
+    },
+    "contact, list gone": {
+        "result": false,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "contact, list archived": {
+        "result": false,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ]
+        ]
+    },
+    "contact, no row and no address": {
+        "result": false,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1"
+                }
+            ]
+        ]
+    },
+    "contact, already confirmed": {
+        "result": false,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1"
+                }
+            ]
+        ]
+    },
+    "contact, new": {
+        "result": true,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "createdAt": "NOW",
+                    "email": "jan@ex.nl",
+                    "listId": "list-1",
+                    "contactId": "c-1",
+                    "state": "confirmed",
+                    "source": "portal",
+                    "lawfulBasis": "consent",
+                    "confirmedAt": "NOW",
+                    "confirmTokenHash": ""
+                },
+                ""
+            ],
+            [
+                "recordListConsent",
+                [
+                    "c-1",
+                    "list-1",
+                    "email",
+                    "consent",
+                    "portal",
+                    {
+                        "mechanism": "portal",
+                        "objectionOffered": true,
+                        "objectionOfferedAt": "NOW",
+                        "recordedAt": "NOW"
+                    }
+                ]
+            ]
+        ]
+    },
+    "contact, existing pending": {
+        "result": true,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "id": "sub-1",
+                    "listId": "list-1",
+                    "email": "jan@ex.nl",
+                    "state": "confirmed",
+                    "confirmTokenHash": "",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "contactId": "c-1",
+                    "source": "preference-centre",
+                    "lawfulBasis": "consent",
+                    "confirmedAt": "NOW"
+                },
+                "sub-1"
+            ],
+            [
+                "recordListConsent",
+                [
+                    "c-1",
+                    "list-1",
+                    "email",
+                    "consent",
+                    "preference-centre",
+                    {
+                        "mechanism": "preference-centre",
+                        "objectionOffered": true,
+                        "objectionOfferedAt": "NOW",
+                        "recordedAt": "NOW"
+                    }
+                ]
+            ]
+        ]
+    },
+    "contact, save fails": {
+        "result": false,
+        "calls": [
+            [
+                "getMailingListById",
+                "list-1"
+            ],
+            [
+                "findAll",
+                "subscription",
+                {
+                    "listId": "list-1",
+                    "contactId": "c-1"
+                }
+            ],
+            [
+                "save",
+                "subscription",
+                {
+                    "createdAt": "NOW",
+                    "email": "jan@ex.nl",
+                    "listId": "list-1",
+                    "contactId": "c-1",
+                    "state": "confirmed",
+                    "source": "preference-centre",
+                    "lawfulBasis": "consent",
+                    "confirmedAt": "NOW",
+                    "confirmTokenHash": ""
+                },
+                ""
+            ]
+        ]
+    }
+}

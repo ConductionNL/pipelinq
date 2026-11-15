@@ -1,6 +1,11 @@
-import { registerTranslations } from '@conduction/nextcloud-vue'
+import { registerIcons, registerTranslations } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { createApp } from 'vue'
+import EmailFastOutline from 'vue-material-design-icons/EmailFastOutline.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import Headset from 'vue-material-design-icons/Headset.vue'
+import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
+import ShareVariant from 'vue-material-design-icons/ShareVariant.vue'
 import Settings from './views/settings/Settings.vue'
 import pinia from './pinia.js'
 import { initializeStores } from './store/store.js'
@@ -22,6 +27,8 @@ app.mixin({ methods: { t, n } })
 // property titles through `cnTranslate`. On the app pages CnAppRoot provides
 // it; this entry has no CnAppRoot, so it provides the app's catalogue itself.
 app.provide('cnTranslate', (text, vars) => t('pipelinq', text, vars))
+// The icons the Integrations tab's connection cards name (lib/Settings/connections.json).
+registerIcons({ EmailFastOutline, EmailOutline, Headset, PowerPlugOutline, ShareVariant })
 app.use(pinia)
 
 // Register object types in the store before mounting, so the object-backed

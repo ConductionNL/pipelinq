@@ -22,15 +22,15 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RETRY-012
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\BerichtenboxService;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Container\ContainerInterface;
@@ -83,27 +83,16 @@ class DispatchQueuedMessagesJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$service = $this->container->get(BerichtenboxService::class);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'DispatchQueuedMessagesJob: BerichtenboxService unavailable.',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
-
-		try {
-			$count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
-			$this->logger->info(
-				'DispatchQueuedMessagesJob processed messages.',
-				['count' => $count]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'DispatchQueuedMessagesJob run failed.',
-				['exception' => $e->getMessage()]
-			);
-		}
+		$pass = new BerichtenboxJobPass(container: $this->container, logger: $this->logger);
+		$pass->run(
+			job: 'DispatchQueuedMessagesJob',
+			work: function (BerichtenboxServiceInterface $service): void {
+				$count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
+				$this->logger->info(
+					'DispatchQueuedMessagesJob processed messages.',
+					['count' => $count]
+				);
+			}
+		);
 	}//end run()
 }//end class

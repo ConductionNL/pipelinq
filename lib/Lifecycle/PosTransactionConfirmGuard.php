@@ -27,16 +27,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * Access (owner/group/admin) + non-empty cart. Fails closed.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
  */
 class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	/**
@@ -80,9 +81,23 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
 	 *  LifecycleGuardInterface signature; this guard only runs for confirm.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
+		return ($this->refusal(object: $object, userId: $userId) ?? GuardResult::allow());
+	}//end check()
+
+	/**
+	 * Why the user may not confirm the transaction, or null when they may.
+	 *
+	 * @param array<string, mixed> $object The posTransaction payload.
+	 * @param string               $userId The acting user UID.
+	 *
+	 * @return GuardResult|null The denial, or null.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) GuardResult exposes only the static deny() factory.
+	 */
+	private function refusal(array $object, string $userId): ?GuardResult {
 		if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {
 			return GuardResult::deny(
 				'U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, '
@@ -95,8 +110,8 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			return GuardResult::deny('Voeg minimaal één artikel toe.');
 		}
 
-		return GuardResult::allow();
-	}//end check()
+		return null;
+	}//end refusal()
 
 	/**
 	 * Whether the transaction has no persisted line items.
@@ -109,15 +124,43 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 *
 	 * @return bool Whether the cart is empty (or could not be verified).
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function cartIsEmpty(string $transactionId): bool {
 		if ($transactionId === '') {
 			return true;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->lineSchema();
+		if ($register === '' || $schema === '') {
+			return true;
+		}
+
+		// Register + schema scope MUST be nested under `@self` (flat
+		// filters.register / filters.schema are treated as ordinary property
+		// filters and match nothing, which made the guard see every cart as
+		// empty and deny every confirm). Transaction stays a top-level filter.
+		return $this->hasNoLines(
+			filters: [
+				'@self' => [
+					'register' => $register,
+					'schema' => $schema,
+				],
+				'transaction' => $transactionId,
+			]
+		);
+	}//end cartIsEmpty()
+
+	/**
+	 * The line schema id: the configured one, else the id resolved from the canonical slug.
+	 *
+	 * @return string The schema id, or '' when neither is available.
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
+	 */
+	private function lineSchema(): string {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransactionLine_schema', '');
 		// Fall back to the numeric schema id resolved from the canonical slug
 		// when the deployed app-config leaves posTransactionLine_schema blank.
 		// findAll()'s `@self.schema` filter requires a numeric id (a slug
@@ -129,36 +172,33 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			$schema = $this->resolveSchemaIdBySlug(slug: 'posTransactionLine');
 		}
 
-		if ($register === '' || $schema === '') {
-			return true;
-		}
+		return $schema;
+	}//end lineSchema()
 
+	/**
+	 * Whether no line matches the filters; a failed lookup counts as no lines (fail closed).
+	 *
+	 * @param array<string, mixed> $filters The `@self` scope and the transaction filter.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
+	 */
+	private function hasNoLines(array $filters): bool {
 		try {
-			// Register + schema scope MUST be nested under `@self` (flat
-			// filters.register / filters.schema are treated as ordinary property
-			// filters and match nothing, which made the guard see every cart as
-			// empty and deny every confirm). Transaction stays a top-level filter.
 			$results = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-				config: [
-					'filters' => [
-						'@self' => [
-							'register' => $register,
-							'schema' => $schema,
-						],
-						'transaction' => $transactionId,
-					],
-				]
+				config: ['filters' => $filters]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: confirm guard could not verify cart contents (fail closed)',
-				['exception' => $e->getMessage(), 'transaction' => $transactionId]
+				['exception' => $e->getMessage(), 'transaction' => $filters['transaction']]
 			);
 			return true;
-		}//end try
+		}
 
 		return count(($results ?? [])) === 0;
-	}//end cartIsEmpty()
+	}//end hasNoLines()
 
 	/**
 	 * Resolve a schema slug to its numeric OpenRegister schema id.
@@ -172,7 +212,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 *
 	 * @return string The numeric schema id, or '' when it cannot be resolved.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.3
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function resolveSchemaIdBySlug(string $slug): string {
 		if ($slug === '') {
@@ -180,13 +220,13 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 		}
 
 		try {
-			$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+			$schemaMapper = $this->container->get(SchemaMapper::class);
 			// RBAC + multi-tenancy disabled: server-authoritative internal id
 			// lookup; the POS schema may be owned by another organisation than
 			// the acting cashier, where the default org filter would throw.
 			// OpenRegister's Schema uses magic getters, so method_exists(...,
 			// 'getId') is false even though getId() resolves — call it directly.
-			$schema = $schemaMapper->find($slug, [], null, false, false);
+			$schema = $schemaMapper->find(id: $slug, _extend: [], _rbac: false, _multitenancy: false);
 			if (is_object($schema) === true) {
 				return (string)$schema->getId();
 			}

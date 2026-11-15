@@ -10,11 +10,6 @@
   Note: the built-in flow is openregister's generic server-side bulk import/
   export; the spec's lead-specific behaviour (default-stage assignment, title
   validation, "X geïmporteerd / Y overgeslagen" summary) is not yet wired.
-
-  The base CnIndexPage from @conduction/nextcloud-vue handles search, sort,
-  pagination and the column rendering driven by the manifest `columns` list.
-  We provide a slot override for the expectedCloseDate cell so overdue leads
-  render the "Xd te laat" treatment without forking the index page.
 -->
 <template>
 	<CnIndexPage
@@ -23,6 +18,7 @@
 		:register="register"
 		:schema="schema"
 		:columns="columns"
+		:rowClass="rowClassFor"
 		:sidebar="sidebarConfig"
 		:quickFilters="quickFilters"
 		:quickFilterMaxVisible="6"
@@ -33,7 +29,16 @@
 		rowTitle="plain"
 		:searchPlaceholder="t('pipelinq', 'Filter by title or client')"
 		:headerButtons="headerButtons"
-		:countText="t('pipelinq', '{shown} of {total} leads · win chance first')"
+		:countText="
+			t(
+				'pipelinq',
+				'{shown} of {total} open leads · {pipeline|currency:EUR} in the pipeline, {weighted|currency:EUR} weighted · win chance first',
+			)
+		"
+		:countValues="countValues"
+		:defaultFilters="defaultFilters"
+		:appConfig="appConfig"
+		:extend="['client']"
 		:footerNote="
 			t(
 				'pipelinq',
@@ -52,6 +57,7 @@
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { CALL_FIRST_SORT, isCallFirstSort } from '../../services/leadScore.js'
 import {
+	defaultPipelineFor,
 	getOverdueDays,
 	getStaleThreshold,
 	isLeadOverdue,
@@ -78,7 +84,7 @@ export default {
 				{
 					key: 'title',
 					label: t('pipelinq', 'Lead'),
-					secondary: '{source}',
+					secondary: '{client.name} · {source}',
 				},
 				{
 					key: 'stage',
@@ -123,7 +129,8 @@ export default {
 					key: 'assignee',
 					label: t('pipelinq', 'Owner'),
 					widget: 'avatar',
-					widgetProps: { user: true },
+					// The Pq boards draw the owner as a 28px grey chip.
+					widgetProps: { user: true, tone: 'neutral', size: 28 },
 				},
 			],
 
@@ -135,6 +142,16 @@ export default {
 			// The sort Call first replaced, restored when it is switched off.
 			sortBeforeCallFirst: [],
 			stages: [],
+			// The default pipeline the list opens on, once it is read.
+			defaultPipelineId: '',
+			// The board opens on the default pipeline, as a removable filter.
+			defaultFilters: { pipeline: '@config.defaultPipeline?' },
+			// The open pipeline's value and its win-chance weighted forecast,
+			// both under the list's filters.
+			countValues: {
+				pipeline: { metric: 'sum', field: 'value', filter: { status: 'open' } },
+				weighted: { endpoint: '/apps/pipelinq/api/analytics/commercial', path: 'weightedForecast', followFilters: true },
+			},
 		}
 	},
 
@@ -174,7 +191,10 @@ export default {
 		quickFilters() {
 			return [
 				{
-					label: t('pipelinq', 'Open'),
+					// The key, untranslated: the bar translates its labels, and a
+					// label whose translation equals its key ("Open") falls back to
+					// the library catalogue, where Open is the verb "Openen".
+					label: 'Open (lead status)',
 					filter: { status: 'open' },
 					default: true,
 					showCount: true,
@@ -202,11 +222,7 @@ export default {
 					},
 
 					// The row badge and this list filter both read `@self.updated`.
-					// The count request goes to OpenRegister's aggregation endpoint,
-					// which ignores `@self[updated]` and answered 0, so no count is
-					// shown until the library can send a date filter that endpoint
-					// understands (library-gaps.md).
-					showCount: false,
+					showCount: true,
 				},
 				{
 					label: t('pipelinq', 'Won'),
@@ -238,6 +254,17 @@ export default {
 					label: t('pipelinq', 'New lead'),
 				},
 			]
+		},
+
+		/**
+		 * The app config the list's default filter reads: the default
+		 * pipeline, once it is read.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-leads-list-is-the-board
+		 */
+		appConfig() {
+			return this.defaultPipelineId ? { defaultPipeline: this.defaultPipelineId } : {}
 		},
 
 		/**
@@ -335,9 +362,10 @@ export default {
 					'pipeline',
 					{ _limit: 50 },
 				)
-				if (!Array.isArray(pipelines)) return
-				const defaultPipeline =
-					pipelines.find((p) => p.isDefault) || pipelines[0]
+				const defaultPipeline = defaultPipelineFor(pipelines, 'lead')
+				if (defaultPipeline && defaultPipeline.id) {
+					this.defaultPipelineId = String(defaultPipeline.id)
+				}
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}
