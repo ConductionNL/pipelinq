@@ -155,7 +155,7 @@ class ClientRiskService {
 			$this->detractorReasons(clientId: $clientId, now: $now),
 			$this->complaintReasons(open: $open),
 			$this->slaReasons(open: $open, now: $now),
-			$this->quietReasons(tickets: $tickets, client: $client, now: $now)
+			$this->quietReasons(latest: $this->latestContact(tickets: $tickets, client: $client), now: $now)
 		);
 
 		$score = array_sum(array_column($reasons, 'points'));
@@ -451,13 +451,29 @@ class ClientRiskService {
 	 * No contact for more than 90 days: the newest ticket of any kind, or the
 	 * client's own creation when it has none. A client with neither is not judged.
 	 *
-	 * @param array<int,array<string,mixed>> $tickets The client's tickets.
-	 * @param array<string,mixed>            $client  The client.
-	 * @param DateTimeImmutable              $now     The moment to judge at.
+	 * @param array{0: DateTimeImmutable|null, 1: string} $latest The latest contact and its ticket ('' for none).
+	 * @param DateTimeImmutable                           $now    The moment to judge at.
 	 *
 	 * @return array<int,array{signal:string, points:int, schema:string, records:array<int,string>}>
 	 */
-	private function quietReasons(array $tickets, array $client, DateTimeImmutable $now): array {
+	private function quietReasons(array $latest, DateTimeImmutable $now): array {
+		[$when, $record] = $latest;
+		if ($when === null || $when >= $now->modify('-'.self::QUIET_AFTER_DAYS.' days')) {
+			return [];
+		}
+
+		return $this->once(signal: 'no-recent-contact', schema: 'ticket', records: array_filter([$record]), always: true);
+	}//end quietReasons()
+
+	/**
+	 * The moment of the newest ticket and its id, else the client's creation and ''.
+	 *
+	 * @param array<int,array<string,mixed>> $tickets The client's tickets.
+	 * @param array<string,mixed>            $client  The client.
+	 *
+	 * @return array{0: DateTimeImmutable|null, 1: string} The latest contact and its ticket.
+	 */
+	private function latestContact(array $tickets, array $client): array {
 		$latest = $this->created(row: $client);
 		$record = '';
 		foreach ($tickets as $ticket) {
@@ -468,12 +484,8 @@ class ClientRiskService {
 			}
 		}
 
-		if ($latest === null || $latest >= $now->modify('-'.self::QUIET_AFTER_DAYS.' days')) {
-			return [];
-		}
-
-		return $this->once(signal: 'no-recent-contact', schema: 'ticket', records: array_filter([$record]), always: true);
-	}//end quietReasons()
+		return [$latest, $record];
+	}//end latestContact()
 
 	/**
 	 * One reason worth the signal's weight once, when it has records.
