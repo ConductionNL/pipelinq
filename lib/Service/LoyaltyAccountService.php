@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -48,6 +49,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 	use PayloadToArray;
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Constructor.
@@ -355,8 +357,9 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			return [];
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
+		return array_map(
+			[$this, 'toArray'],
+			$this->rowList(
 				config: [
 					'filters' => [
 						'programmeId' => $programmeId,
@@ -366,17 +369,8 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 					'limit' => $limit,
 					'offset' => $offset,
 				]
-			);
-		} catch (\Throwable $e) {
-			return [];
-		}
-
-		$values = [];
-		if (is_array($rows) === true) {
-			$values = array_values($rows);
-		}
-
-		return array_map([$this, 'toArray'], $values);
+			)
+		);
 	}//end listAccountsForProgramme()
 
 	/**

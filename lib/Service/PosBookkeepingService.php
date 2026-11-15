@@ -558,11 +558,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 		$zReport['bookkeepingFailedAt'] = null;
 		$zReport['bookkeepingAttempts'] = ((int)($zReport['bookkeepingAttempts'] ?? 0)) + 1;
 
-		$saved = $this->saveObjectFor(
-			schemaKey: 'posZReport_schema',
-			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-			object: $zReport
-		);
+		$saved = $this->saveZReport(zReport: $zReport);
 
 		$this->logger->info(
 			'Pipelinq: POS-day journal raised in shillinq via registry',
@@ -586,11 +582,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	private function projectPending(array $zReport, string $reason): array {
 		$zReport['bookkeepingStatus'] = 'pending';
 
-		$saved = $this->saveObjectFor(
-			schemaKey: 'posZReport_schema',
-			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-			object: $zReport
-		);
+		$saved = $this->saveZReport(zReport: $zReport);
 
 		$this->logger->info(
 			'Pipelinq: POS-day journal raise deferred (pending)',
@@ -618,11 +610,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 		if ($attempts >= $this->maxAttempts()) {
 			$zReport['bookkeepingStatus'] = 'failed';
 
-			$saved = $this->saveObjectFor(
-				schemaKey: 'posZReport_schema',
-				id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-				object: $zReport
-			);
+			$saved = $this->saveZReport(zReport: $zReport);
 
 			$this->sendAlertEmail(
 				subject: 'POS bookkeeping: journaalpost raise naar shillinq permanent gefaald',
@@ -640,11 +628,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		$zReport['bookkeepingStatus'] = 'pending';
 
-		$saved = $this->saveObjectFor(
-			schemaKey: 'posZReport_schema',
-			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-			object: $zReport
-		);
+		$saved = $this->saveZReport(zReport: $zReport);
 
 		$this->logger->info(
 			'Pipelinq: POS-day journal raise transient failure, will retry',
@@ -653,6 +637,21 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		return $saved;
 	}//end onRaiseFailure()
+
+	/**
+	 * Save a Z-report under its own id.
+	 *
+	 * @param array<string, mixed> $zReport The Z-report.
+	 *
+	 * @return array<string, mixed> The persisted Z-report.
+	 */
+	private function saveZReport(array $zReport): array {
+		return $this->saveObjectFor(
+			schemaKey: 'posZReport_schema',
+			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
+			object: $zReport
+		);
+	}//end saveZReport()
 
 	/**
 	 * Build the `shillinq.JournalEntry.raise` CloudEvent payload.

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\Contracts\LoyaltyEngineServiceInterface;
 use OCA\Pipelinq\Service\Loyalty\LoyaltyPurchase;
 use OCA\Pipelinq\Service\Loyalty\PointsCreditRun;
 use OCA\Pipelinq\Service\Loyalty\PointsGrant;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
@@ -55,6 +56,7 @@ use Throwable;
 class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 	use PayloadToArray;
 	use InjectedObjectService;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Constructor.
@@ -415,8 +417,9 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 			return [];
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
+		return array_map(
+			[$this, 'toArray'],
+			$this->rowList(
 				config: [
 					'filters' => [
 						'status' => 'active',
@@ -425,17 +428,8 @@ class LoyaltyEngineService implements LoyaltyEngineServiceInterface {
 					],
 					'limit' => 200,
 				]
-			);
-		} catch (Throwable $e) {
-			return [];
-		}
-
-		$values = [];
-		if (is_array($rows) === true) {
-			$values = array_values($rows);
-		}
-
-		return array_map([$this, 'toArray'], $values);
+			)
+		);
 	}//end getActiveProgrammes()
 
 	/**

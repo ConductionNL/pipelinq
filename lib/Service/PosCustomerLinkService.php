@@ -42,6 +42,8 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -76,6 +78,8 @@ use Throwable;
 class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
+	use ObjectArrayReads;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Hard upper bounds defensively applied to caller-supplied limits.
@@ -767,13 +771,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 
 		unset($transaction['@self']);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $transaction,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $transaction);
 
 		return $this->toArray(object: $saved);
 	}//end saveTransaction()
@@ -788,17 +786,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	 */
 	private function fetchObject(string $id, array $scope): ?array {
 		[$register, $schema] = $scope;
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
 	}//end fetchObject()
 
 	/**

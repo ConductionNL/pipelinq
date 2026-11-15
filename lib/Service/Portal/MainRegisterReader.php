@@ -32,6 +32,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -50,6 +51,7 @@ use RuntimeException;
  */
 class MainRegisterReader implements MainRegisterReaderInterface {
 	use CastingPayloadToArray;
+	use ObjectArrayReads;
 
 	/**
 	 * Constructor.
@@ -120,12 +122,7 @@ class MainRegisterReader implements MainRegisterReaderInterface {
 			return [];
 		}
 
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
-		}
-
-		return $objects;
+		return $this->allAsArrays(results: $results);
 	}//end findAll()
 
 	/**
@@ -147,17 +144,9 @@ class MainRegisterReader implements MainRegisterReaderInterface {
 
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
-		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(
+			find: fn () => $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false)
+		);
 	}//end find()
 
 	/**
@@ -178,17 +167,7 @@ class MainRegisterReader implements MainRegisterReaderInterface {
 
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
-		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(find: fn () => $this->objectService()->find(id: $id, register: $register, schema: $schema));
 	}//end findAsCaller()
 
 	/**

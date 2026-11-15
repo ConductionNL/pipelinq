@@ -54,7 +54,9 @@ use DateTimeZone;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\RandomUuid;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
@@ -85,7 +87,9 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
 class PosTenderService implements PosTenderServiceInterface {
+	use ObjectArrayReads;
 	use RandomUuid;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Money comparison tolerance: floating-point amounts within this epsilon
@@ -154,14 +158,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to list tender types',
@@ -1136,13 +1133,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$saved = $this->getObjectService()->saveObject(
-				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$saved = $this->saveIn(target: [$register, $schema, $id], object: $payload);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to save tender type',
@@ -1166,13 +1157,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$saved = $this->getObjectService()->saveObject(
-				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$saved = $this->saveIn(target: [$register, $schema, $id], object: $payload);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to save tender',
@@ -1245,17 +1230,7 @@ class PosTenderService implements PosTenderServiceInterface {
 
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
 	}//end fetchTransactionOrNull()
 
 	/**
