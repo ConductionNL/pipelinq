@@ -290,15 +290,10 @@ class KeywordAnalysisService {
 		float $minPageShare = self::DEFAULT_MIN_PAGE_SHARE,
 		float $materiality = self::DEFAULT_MATERIALITY,
 	): array {
+		$thresholds = ['minImpressions' => $minImpressions, 'minPageShare' => $minPageShare, 'materiality' => $materiality];
 		$out = [];
 		foreach ($this->byQueryAndPage(rows: $rows) as $query => $pages) {
-			$totals = $this->pageTotals(pages: $pages);
-			if ($totals['impressions'] < $minImpressions || $totals['impressions'] <= 0) {
-				continue;
-			}
-
-			$contenders = $this->contenders(pages: $pages, minPageShare: $minPageShare);
-			$finding = $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $materiality);
+			$finding = $this->cannibalised(pages: $pages, thresholds: $thresholds);
 			if ($finding !== null) {
 				$out[] = (['query' => $query] + $finding);
 			}
@@ -306,6 +301,24 @@ class KeywordAnalysisService {
 
 		return self::mostImpressionsFirst(findings: $out);
 	}//end cannibalisation()
+
+	/**
+	 * The cannibalisation finding (without its query) for one query's pages, or null.
+	 *
+	 * @param array<string, array<string, mixed>>                              $pages      The query's per-page entries.
+	 * @param array{minImpressions: int, minPageShare: float, materiality: float} $thresholds The qualifying thresholds.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function cannibalised(array $pages, array $thresholds): ?array {
+		$totals = $this->pageTotals(pages: $pages);
+		if ($totals['impressions'] < $thresholds['minImpressions'] || $totals['impressions'] <= 0) {
+			return null;
+		}
+
+		$contenders = $this->contenders(pages: $pages, minPageShare: $thresholds['minPageShare']);
+		return $this->materialLoss(contest: new QueryContest(totals: $totals, contenders: $contenders), materiality: $thresholds['materiality']);
+	}//end cannibalised()
 
 	/**
 	 * The cannibalisation finding (without its query) when at least two pages
