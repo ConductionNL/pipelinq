@@ -975,22 +975,10 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * @return array<string, array<string, mixed>> The first-per-parent store.
 	 */
 	private function indexFirstByRequest(DsarMigrationSource $source, DsarSatelliteSchema $satellite): array {
-		$index = [];
-		foreach ($this->readSchema(source: $source, schemaKey: $satellite->schemaKey) as $row) {
-			$data = $this->toArray(row: $row);
-			if ($data === null) {
-				continue;
-			}
-
-			$parent = (string)($data[$satellite->parentField] ?? '');
-			if ($parent === '' || isset($index[$parent]) === true) {
-				continue;
-			}
-
-			$index[$parent] = $data;
-		}
-
-		return $index;
+		return array_map(
+			static fn (array $group): array => $group[0],
+			$this->indexByRequest(source: $source, satellite: $satellite)
+		);
 	}//end indexFirstByRequest()
 
 	/**

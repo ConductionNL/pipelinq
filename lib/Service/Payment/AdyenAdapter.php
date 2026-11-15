@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
+use OCA\Pipelinq\Service\Payment\Support\PspReplies;
 
 /**
  * Adyen payment adapter.
@@ -36,6 +37,8 @@ namespace OCA\Pipelinq\Service\Payment;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 class AdyenAdapter extends AbstractPaymentAdapter {
+	use PspReplies;
+
 	/**
 	 * Adyen Checkout API base (live).
 	 *
@@ -219,11 +222,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
-		if ($rawPayload === '' || $signature === '') {
-			return false;
-		}
-
-		$secret = $this->credential(key: 'webhookSecret');
+		$secret = $this->webhookSecret(rawPayload: $rawPayload, signature: $signature);
 		if ($secret === '') {
 			return false;
 		}

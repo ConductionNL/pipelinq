@@ -140,7 +140,6 @@ class OptOutService implements OptOutServiceInterface {
 		}
 
 		try {
-			[$register, $schema] = $this->config();
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$object = [
 				'bsnHash' => BsnValidationService::hash($rawBsn),
@@ -149,12 +148,7 @@ class OptOutService implements OptOutServiceInterface {
 				'effectiveDate' => $today->format('Y-m-d'),
 				'limited' => ['commerciele-derden', 'kerkgenootschappen', 'derdeportalen'],
 			];
-			$this->getObjectService()->saveObject(
-				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
-			);
+			$this->saveOptOut(object: $object);
 			return true;
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -183,7 +177,6 @@ class OptOutService implements OptOutServiceInterface {
 		?string $note = null,
 	): bool {
 		try {
-			[$register, $schema] = $this->config();
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$object = [
 				'bsnHash' => BsnValidationService::hash($rawBsn),
@@ -195,12 +188,7 @@ class OptOutService implements OptOutServiceInterface {
 				'note' => $note,
 			];
 			$object = array_filter($object, static fn ($v) => $v !== null);
-			$this->getObjectService()->saveObject(
-				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
-			);
+			$this->saveOptOut(object: $object);
 			return true;
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -210,6 +198,23 @@ class OptOutService implements OptOutServiceInterface {
 			return false;
 		}//end try
 	}//end recordLocalOptOut()
+
+	/**
+	 * Save an opt-out record in the configured register and schema.
+	 *
+	 * @param array<string, mixed> $object The opt-out record.
+	 *
+	 * @return void
+	 */
+	private function saveOptOut(array $object): void {
+		[$register, $schema] = $this->config();
+		$this->getObjectService()->saveObject(
+			object: $object,
+			extend: [],
+			register: $register,
+			schema: $schema,
+		);
+	}//end saveOptOut()
 
 	/**
 	 * Returns true when the opt-out is active today (ingangsdatum <= today <= einddatum-or-null).

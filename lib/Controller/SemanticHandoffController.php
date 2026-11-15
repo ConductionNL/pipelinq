@@ -143,18 +143,9 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function requestAvailability(string $id = ''): JSONResponse {
-		// This controller already authorises per object further down via
-		// accessPolicy->mayAccess(); these two entry points reach the handoff
-		// surface before any object is resolved, so the privileged-group half
-		// of the same policy is the check available here.
-		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$request = $this->loadRequestTicket(id: $id);
-		if ($request === null) {
-			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		$request = $this->privilegedRequest(id: $id);
+		if ($request instanceof JSONResponse) {
+			return $request;
 		}
 
 		$available = $this->handoffService->hasImplementer(kindUri: self::KIND_CASE);
@@ -202,10 +193,27 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
-		// This controller already authorises per object further down via
-		// accessPolicy->mayAccess(); these two entry points reach the handoff
-		// surface before any object is resolved, so the privileged-group half
-		// of the same policy is the check available here.
+		$request = $this->privilegedRequest(id: $id);
+		if ($request instanceof JSONResponse) {
+			return $request;
+		}
+
+		return $this->convertLoadedRequest(id: $id, request: $request);
+	}//end convertRequestToCase()
+
+	/**
+	 * The request ticket for a privileged caller, or the 401/403/404 refusal.
+	 *
+	 * This controller already authorises per object further down via
+	 * accessPolicy->mayAccess(); the request entry points reach the handoff
+	 * surface before any object is resolved, so the privileged-group half
+	 * of the same policy is the check available here.
+	 *
+	 * @param string $id Request-ticket UUID.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function privilegedRequest(string $id): array|JSONResponse {
 		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
 		if ($refusal !== null) {
 			return $refusal;
@@ -216,8 +224,33 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->convertLoadedRequest(id: $id, request: $request);
-	}//end convertRequestToCase()
+		return $request;
+	}//end privilegedRequest()
+
+	/**
+	 * The acting user and the contract they may act on, or the 401/404/403 refusal.
+	 *
+	 * @param string $id Contract UUID.
+	 *
+	 * @return array{uid: string, contract: array<string, mixed>}|JSONResponse
+	 */
+	private function actableContract(string $id): array|JSONResponse {
+		$uid = $this->privilege->actingUserId();
+		if ($uid === '') {
+			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
+		if ($contract === null) {
+			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		return ['uid' => $uid, 'contract' => $contract];
+	}//end actableContract()
 
 	/**
 	 * Convert a loaded request ticket into a case.
@@ -355,22 +388,13 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function contractAvailability(string $id = ''): JSONResponse {
-		$uid = $this->privilege->actingUserId();
-		if ($uid === '') {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
-		if ($contract === null) {
-			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$access = $this->actableContract(id: $id);
+		if ($access instanceof JSONResponse) {
+			return $access;
 		}
 
 		$available = $this->handoffService->hasImplementer(kindUri: self::KIND_INVOICE);
-		$status = (string)($contract['status'] ?? '');
+		$status = (string)($access['contract']['status'] ?? '');
 
 		return new JSONResponse(
 			[
@@ -392,23 +416,14 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sendContractToInvoicing(string $id = ''): JSONResponse {
-		$uid = $this->privilege->actingUserId();
-		if ($uid === '') {
-			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$contract = $this->loadObject(schema: $this->resolveSchemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
-		if ($contract === null) {
-			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
-		}
-
 		// Authorize BEFORE the status gate: a stranger must not be able to
 		// distinguish "not yours" from "not active" on someone else's contract.
-		if ($this->mayActOnContract(uid: $uid, contract: $contract) === false) {
-			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$access = $this->actableContract(id: $id);
+		if ($access instanceof JSONResponse) {
+			return $access;
 		}
 
-		return $this->invoiceContract(id: $id, uid: $uid, contract: $contract);
+		return $this->invoiceContract(id: $id, uid: $access['uid'], contract: $access['contract']);
 	}//end sendContractToInvoicing()
 
 	/**
@@ -574,12 +589,25 @@ class SemanticHandoffController extends Controller {
 			return null;
 		}
 
-		try {
-			$entity = $objectService->find(
+		return $this->foundAsArray(
+			find: fn (): mixed => $objectService->find(
 				id: $id,
 				register: $this->registerSlug(),
 				schema: $schema,
-			);
+			)
+		);
+	}//end loadObject()
+
+	/**
+	 * The found object as an array, or null when the lookup fails or finds nothing.
+	 *
+	 * @param \Closure $find The lookup.
+	 *
+	 * @return array<string, mixed>|null The object.
+	 */
+	private function foundAsArray(\Closure $find): ?array {
+		try {
+			$entity = $find();
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -589,7 +617,7 @@ class SemanticHandoffController extends Controller {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end loadObject()
+	}//end foundAsArray()
 
 	/**
 	 * The request with an answer to the customer that names the new case:
@@ -643,17 +671,7 @@ class SemanticHandoffController extends Controller {
 			return null;
 		}
 
-		try {
-			$entity = $objectService->find(id: $id);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->foundAsArray(find: fn (): mixed => $objectService->find(id: $id));
 	}//end loadAnyObject()
 
 	/**

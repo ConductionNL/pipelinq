@@ -1325,11 +1325,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			$encoded = 'true';
 		}
 
-		$this->appConfig->setValueString(
-			AppIdentity::APP_ID,
-			$setting,
-			$encoded
-		);
+		$this->writeString(setting: $setting, value: $encoded);
 	}//end writeBool()
 
 	/**
@@ -1346,11 +1342,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 			return;
 		}
 
-		$this->appConfig->setValueString(
-			AppIdentity::APP_ID,
-			$setting,
-			$encoded
-		);
+		$this->writeString(setting: $setting, value: $encoded);
 	}//end writeObject()
 
 	// ---------------------------------------------------------------------
@@ -1712,6 +1704,24 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	// ---------------------------------------------------------------------
 
 	/**
+	 * The CloudEvent attributes (without `data`) of a new event of the given type.
+	 *
+	 * @param string $type The event type.
+	 *
+	 * @return array<string, string>
+	 */
+	private function eventEnvelope(string $type): array {
+		return [
+			'specversion' => '1.0',
+			'type' => $type,
+			'source' => self::EVENT_SOURCE,
+			'id' => $this->uuid(),
+			'time' => $this->nowIso(),
+			'datacontenttype' => 'application/json',
+		];
+	}//end eventEnvelope()
+
+	/**
 	 * Build the CloudEvent payload for a settled transaction.
 	 *
 	 * @param array<string, mixed> $transaction The transaction.
@@ -1721,13 +1731,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	private function buildSettledPayload(array $transaction): array {
 		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
 
-		return [
-			'specversion' => '1.0',
-			'type' => self::EVENT_SETTLED,
-			'source' => self::EVENT_SOURCE,
-			'id' => $this->uuid(),
-			'time' => $this->nowIso(),
-			'datacontenttype' => 'application/json',
+		return $this->eventEnvelope(type: self::EVENT_SETTLED) + [
 			'data' => [
 				'transactionId' => $id,
 				'reference' => (string)($transaction['reference'] ?? ''),
@@ -1751,13 +1755,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	private function buildRefundedPayload(array $transaction, array $refund): array {
 		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
 
-		return [
-			'specversion' => '1.0',
-			'type' => self::EVENT_REFUNDED,
-			'source' => self::EVENT_SOURCE,
-			'id' => $this->uuid(),
-			'time' => $this->nowIso(),
-			'datacontenttype' => 'application/json',
+		return $this->eventEnvelope(type: self::EVENT_REFUNDED) + [
 			'data' => [
 				'transactionId' => $id,
 				'reference' => (string)($transaction['reference'] ?? ''),

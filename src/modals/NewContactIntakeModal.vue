@@ -246,7 +246,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .cti-intake__history {
 	display: flex;
 	flex-direction: column;
@@ -295,9 +297,6 @@ export default {
 }
 
 .cti-intake__hint {
-	margin: 0;
-	font-size: 13px;
-	line-height: normal;
-	color: var(--color-text-maxcontrast);
+	@include muted-hint;
 }
 </style>

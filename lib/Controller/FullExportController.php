@@ -79,13 +79,9 @@ class FullExportController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
 	public function status(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Sign in to export data.'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groups->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Only an administrator can export all data.'], Http::STATUS_FORBIDDEN);
+		$user = $this->administrator();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		return new JSONResponse(($this->state?->read() ?? ['state' => 'none']));
@@ -103,13 +99,9 @@ class FullExportController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
 	public function start(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Sign in to export data.'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groups->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(['error' => 'Only an administrator can export all data.'], Http::STATUS_FORBIDDEN);
+		$user = $this->administrator();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$this->jobs->add(FullExportJob::class, ['userId' => $user->getUID()]);
@@ -120,4 +112,22 @@ class FullExportController extends Controller {
 			Http::STATUS_ACCEPTED
 		);
 	}//end start()
+
+	/**
+	 * The calling administrator, or the 401 without a caller or the 403 for anyone else.
+	 *
+	 * @return \OCP\IUser|JSONResponse
+	 */
+	private function administrator(): \OCP\IUser|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => 'Sign in to export data.'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->groups->isAdmin($user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Only an administrator can export all data.'], Http::STATUS_FORBIDDEN);
+		}
+
+		return $user;
+	}//end administrator()
 }//end class

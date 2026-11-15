@@ -44,6 +44,8 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -79,6 +81,8 @@ use Psr\Log\LoggerInterface;
 class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
+	use RegisterSchemaObjects;
+	use ObjectArrayReads;
 
 	/**
 	 * Schemas in scope for the audit log.
@@ -179,14 +183,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 		[$register, $schema] = $this->config();
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema]);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: kassakoppeling audit listing failed; returning empty',
@@ -241,17 +238,12 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 	public function getEntry(string $id): array {
 		[$register, $schema] = $this->config();
 
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
+		$entry = $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
+		if ($entry === null) {
 			throw new OCSNotFoundException('Audit entry niet gevonden.');
 		}
 
-		return $this->toArray(object: $object);
+		return $entry;
 	}//end getEntry()
 
 	/**
@@ -734,13 +726,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 
 		unset($object['@self']);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $object);
 
 		return $this->toArray(object: $saved);
 	}//end saveEntry()

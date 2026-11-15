@@ -27,11 +27,13 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosObjectUpsert;
 use OCA\Pipelinq\Service\Support\PosRegisterSchemaIds;
 use OCA\Pipelinq\Service\Support\RandomUuid;
+use OCA\Pipelinq\Util\PosObjectFetch;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -54,6 +56,8 @@ class PosRoleService implements PosRoleServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectUpsert;
+	use RegisterSchemaObjects;
+	use PosObjectFetch;
 
 	/**
 	 * Constructor.
@@ -79,15 +83,7 @@ class PosRoleService implements PosRoleServiceInterface {
 	public function listRoles(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
-		$results = $this->getObjectService()->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-				],
-				'limit' => 1000,
-			]
-		);
+		$results = $this->findPageIn(ids: [$register, $schema], limit: 1000);
 
 		$out = [];
 		foreach ($results as $result) {
@@ -109,19 +105,7 @@ class PosRoleService implements PosRoleServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
 	 */
 	public function getRole(string $id): array {
-		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException('POS-rol niet gevonden.');
-		}
-
-		return $this->toArray(object: $object);
+		return $this->fetchOne(schemaKey: 'posRole_schema', id: $id, label: 'POS-rol niet gevonden.');
 	}//end getRole()
 
 	/**
@@ -226,15 +210,7 @@ class PosRoleService implements PosRoleServiceInterface {
 			// because the original semantics treat a *missing* isActive field as
 			// active ((bool) ($staff['isActive'] ?? true)), which a server-side
 			// `isActive == true` equality filter would wrongly exclude.
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $staffSchema,
-						'posRole' => $roleId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $staffSchema], filters: ['posRole' => $roleId]);
 		} catch (\Throwable $e) {
 			return 0;
 		}

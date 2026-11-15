@@ -102,7 +102,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .cancel-form {
 	display: flex;
 	flex-direction: column;
@@ -126,10 +128,6 @@ export default {
 }
 
 .form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
+	@include textarea-field;
 }
 </style>

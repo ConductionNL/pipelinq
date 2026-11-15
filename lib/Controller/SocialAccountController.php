@@ -45,6 +45,7 @@ use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
+use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -122,13 +123,9 @@ class SocialAccountController extends Controller {
 			return $this->refuse();
 		}
 
-		$account = $this->accounts->getAccount(accountId: $id);
-		if ($account === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
-			return $this->refuse();
+		$account = $this->actableAccount(uid: $uid, accountId: $id);
+		if ($account instanceof JSONResponse) {
+			return $account;
 		}
 
 		return new JSONResponse(['account' => $account]);
@@ -247,13 +244,9 @@ class SocialAccountController extends Controller {
 			return $this->refuse();
 		}
 
-		$account = $this->accounts->getAccount(accountId: $id);
-		if ($account === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
-			return $this->refuse();
+		$account = $this->actableAccount(uid: $uid, accountId: $id);
+		if ($account instanceof JSONResponse) {
+			return $account;
 		}
 
 		return new JSONResponse(['account' => $this->accounts->syncStatus(accountId: $id)]);
@@ -295,6 +288,27 @@ class SocialAccountController extends Controller {
 	}//end requireCrmUser()
 
 	/**
+	 * The account the user may act on, or the 404 or 403 that refuses it.
+	 *
+	 * @param string $uid       The user id.
+	 * @param string $accountId The account UUID or slug.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function actableAccount(string $uid, string $accountId): array|JSONResponse {
+		$account = $this->accounts->getAccount(accountId: $accountId);
+		if ($account === null) {
+			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
+			return $this->refuse();
+		}
+
+		return $account;
+	}//end actableAccount()
+
+	/**
 	 * The single refusal, so an unauthenticated and an unprivileged caller
 	 * cannot tell each other apart.
 	 *
@@ -314,14 +328,6 @@ class SocialAccountController extends Controller {
 	 * @return array<string, mixed> The sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (SocialAccountServiceInterface::CLIENT_WRITABLE as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
-
-		return $body;
+		return (new RequestFields(request: $this->request))->strings(keys: SocialAccountServiceInterface::CLIENT_WRITABLE);
 	}//end collectBody()
 }//end class

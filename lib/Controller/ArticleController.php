@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ArticleServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -251,21 +252,9 @@ class ArticleController extends Controller {
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (['title', 'slug', 'summary', 'body', 'heroImage', 'language', 'portalPageRef'] as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
+		$fields = new RequestFields(request: $this->request);
 
-		foreach (['links', 'tags'] as $key) {
-			$value = $this->request->getParam($key);
-			if (is_array($value) === true) {
-				$body[$key] = $value;
-			}
-		}
-
-		return $body;
+		return $fields->strings(keys: ['title', 'slug', 'summary', 'body', 'heroImage', 'language', 'portalPageRef'])
+			+ $fields->arrays(keys: ['links', 'tags']);
 	}//end collectBody()
 }//end class

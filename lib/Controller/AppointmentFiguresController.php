@@ -9,11 +9,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\PrivilegedAppointmentCaller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\BookingFiguresService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -32,6 +32,8 @@ use OCP\IUserSession;
  * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-a-service-page-shows-how-busy-the-service-is-req-srg-003
  */
 class AppointmentFiguresController extends Controller {
+	use PrivilegedAppointmentCaller;
+
 
 	/**
 	 * Constructor.
@@ -96,13 +98,9 @@ class AppointmentFiguresController extends Controller {
 	 * @return JSONResponse|null The refusal, or null for a privileged caller.
 	 */
 	private function requirePrivileged(): ?JSONResponse {
-		$uid = ($this->userSession->getUser()?->getUID() ?? '');
-		if ($uid === '') {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Authentication required')], statusCode: Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Forbidden')], statusCode: Http::STATUS_FORBIDDEN);
+		$uid = $this->privilegedUid();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		return null;

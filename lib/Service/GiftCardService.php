@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -55,6 +56,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
 	use ConfiguredObjectFind;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Constructor.
@@ -806,8 +808,9 @@ class GiftCardService implements GiftCardServiceInterface {
 			return [];
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
+		return array_map(
+			[$this, 'toArray'],
+			$this->rowList(
 				config: [
 					'filters' => [
 						'customerId' => $customerId,
@@ -816,17 +819,8 @@ class GiftCardService implements GiftCardServiceInterface {
 					],
 					'limit' => 1000,
 				]
-			);
-		} catch (\Throwable $e) {
-			return [];
-		}
-
-		$rowList = [];
-		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
-		}
-
-		return array_map([$this, 'toArray'], $rowList);
+			)
+		);
 	}//end listForKlant()
 
 	/**
@@ -881,13 +875,7 @@ class GiftCardService implements GiftCardServiceInterface {
 		];
 
 		try {
-			$this->getObjectService()->saveObject(
-				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
-			);
+			$this->saveIn(target: [$register, $schema, null], object: $payload);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: gift card transaction log failed',

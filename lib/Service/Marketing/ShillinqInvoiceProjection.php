@@ -70,16 +70,31 @@ class ShillinqInvoiceProjection {
 			return null;
 		}
 
-		return [
-			'id' => $id,
-			'amount' => (float)($row['grossAmount'] ?? 0),
-			'currency' => (string)($row['currency'] ?? 'EUR'),
-			'invoiceDate' => substr((string)($row['invoiceDate'] ?? ''), 0, 10),
+		return $this->head(row: $row, id: $id) + [
 			'dueDate' => substr((string)($row['dueDate'] ?? ''), 0, 10),
 			'lifecycleState' => $state,
 			'lines' => $this->lines(value: ($row['invoiceLines'] ?? null)),
 		];
 	}//end whole()
+
+	/**
+	 * The id, gross amount, currency (EUR when absent) and invoice date (Y-m-d) of one invoice.
+	 *
+	 * @param array<string, mixed> $row The shillinq AR invoice.
+	 * @param string               $id  Its canonical id.
+	 *
+	 * @return array{id: string, amount: float, currency: string, invoiceDate: string} The head.
+	 *
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 */
+	public function head(array $row, string $id): array {
+		return [
+			'id' => $id,
+			'amount' => (float)($row['grossAmount'] ?? 0),
+			'currency' => (string)($row['currency'] ?? 'EUR'),
+			'invoiceDate' => substr((string)($row['invoiceDate'] ?? ''), 0, 10),
+		];
+	}//end head()
 
 	/**
 	 * The canonical id of one shillinq row.

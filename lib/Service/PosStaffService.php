@@ -29,6 +29,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosObjectFetch;
@@ -66,6 +67,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	use InjectedObjectService;
 	use PosObjectFetch;
 	use PosObjectUpsert;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Maximum consecutive failed PIN attempts before a 15-minute lockout.
@@ -115,15 +117,7 @@ class PosStaffService implements PosStaffServiceInterface {
 	public function listStaff(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 
-		$results = $this->getObjectService()->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-				],
-				'limit' => 2000,
-			]
-		);
+		$results = $this->findPageIn(ids: [$register, $schema], limit: 2000);
 
 		$out = [];
 		foreach ($results as $result) {
@@ -630,13 +624,7 @@ class PosStaffService implements PosStaffServiceInterface {
 
 		try {
 			[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
-			$this->getObjectService()->saveObject(
-				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$this->saveIn(target: [$register, $schema, $id], object: $payload);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to update posStaff', ['exception' => $e->getMessage()]);
 		}

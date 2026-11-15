@@ -90,13 +90,9 @@ class TicketAssignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function assignToMe(string $id = ''): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->tickets->isConfigured() === false) {
-			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
+		$user = $this->assigningUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$register = $this->tickets->getRegisterId();
@@ -130,13 +126,9 @@ class TicketAssignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function assignOldest(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->tickets->isConfigured() === false) {
-			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
+		$user = $this->assigningUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$oldest = $this->oldestUnassigned(rows: $this->queueRows());
@@ -146,6 +138,24 @@ class TicketAssignController extends Controller {
 
 		return $this->assign(ticket: array_replace($oldest[0], ['assignee' => $user->getUID()]), id: $oldest[1]);
 	}//end assignOldest()
+
+	/**
+	 * The signed-in user when tickets are configured, or the 401/503 that refuses them.
+	 *
+	 * @return \OCP\IUser|JSONResponse
+	 */
+	private function assigningUser(): \OCP\IUser|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->tickets->isConfigured() === false) {
+			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		return $user;
+	}//end assigningUser()
 
 	/**
 	 * The queue's tickets, oldest first; none when the read fails.

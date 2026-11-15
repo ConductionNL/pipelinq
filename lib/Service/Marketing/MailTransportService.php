@@ -579,22 +579,7 @@ class MailTransportService {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$found = $objectService->find(
-				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-			);
-		} catch (Throwable $e) {
-			$this->logger->info('MailTransportService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
-			return null;
-		}
-
+		$found = $this->findMailTransport(objectService: $this->getObjectService(), id: $id);
 		if ($found === null) {
 			return null;
 		}

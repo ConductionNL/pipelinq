@@ -121,34 +121,8 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		return $this->transportAsArray(found: $this->findTransport(objectService: $objectService, id: $id));
+		return $this->transportAsArray(found: $this->findMailTransport(objectService: $this->getObjectService(), id: $id));
 	}//end loadOne()
-
-	/**
-	 * Find the mail transport; null (logged) when the lookup throws.
-	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $id The transport id.
-	 *
-	 * @return mixed The found object, or null.
-	 */
-	private function findTransport(object $objectService, string $id) {
-		try {
-			return $objectService->find(
-				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-			);
-		} catch (Throwable $e) {
-			$this->logger->info('DeliverabilityCheckService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
-			return null;
-		}
-	}//end findTransport()
 
 	/**
 	 * The found transport as an array, or null when it is missing or not serialisable.

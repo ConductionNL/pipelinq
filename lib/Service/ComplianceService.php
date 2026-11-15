@@ -36,12 +36,13 @@ use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
 use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
 use OCA\Pipelinq\Service\Consent\SendPermitRequest;
+use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
-use OCA\Pipelinq\Service\Support\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -71,9 +72,9 @@ use Throwable;
 class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
-	use PageCount;
 	use ObjectServiceTarget;
 
 	/**
@@ -537,18 +538,7 @@ class ComplianceService implements ComplianceServiceInterface {
 			return false;
 		}
 
-		if ($this->integriq->isActive() === true) {
-			$decision = $this->integriq->decide(
-				contactId: $contactId,
-				channel: $channel,
-				category: IntegriqConsentClient::CATEGORY_MARKETING,
-				requiresConsent: true
-			);
-			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: null) === false);
-		}
-
-		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: null));
-		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
+		return $this->consentPermits(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: null));
 	}//end hasConsentForChannel()
 
 	/**
@@ -574,20 +564,35 @@ class ComplianceService implements ComplianceServiceInterface {
 			return false;
 		}
 
+		return $this->consentPermits(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
+	}//end hasConsentForList()
+
+	/**
+	 * Whether the consent ledger (integriq after the cutover) opens the channel or list of the key.
+	 *
+	 * @param ConsentRecordKey $key The contact, channel and list (null for the channel-wide gate).
+	 *
+	 * @return bool True when gated open.
+	 */
+	private function consentPermits(ConsentRecordKey $key): bool {
 		if ($this->integriq->isActive() === true) {
 			$decision = $this->integriq->decide(
-				contactId: $contactId,
-				channel: $channel,
+				contactId: $key->contactId,
+				channel: $key->channel,
 				category: IntegriqConsentClient::CATEGORY_MARKETING,
 				requiresConsent: true,
-				listId: $listId
+				listId: $key->listId
 			);
-			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === false);
+			if ($decision['send'] !== true) {
+				return false;
+			}
+
+			return $this->isBounceWithdrawn(contactId: $key->contactId, channel: $key->channel, listId: $key->listId) === false;
 		}
 
-		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
-		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
-	}//end hasConsentForList()
+		$record = $this->findConsentRecord(key: $key);
+		return $this->recordPermitsSend(record: $record, contactId: $key->contactId, channel: $key->channel);
+	}//end consentPermits()
 
 	/**
 	 * Whether pipelinq withdrew the contact for a bounce. A bounce stays pipelinq's own.
@@ -900,20 +905,8 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
 	 */
 	public function listTemplates(int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
-		$all = $this->loadTemplatesRaw();
-		$total = count($all);
-		$slice = array_slice($all, (($page - 1) * $limit), $limit);
-		return [
-			'data' => $slice,
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		$window = new ListPage(page: max(1, $page), limit: min(100, max(1, $limit)));
+		return $window->slice(rows: $this->loadTemplatesRaw());
 	}//end listTemplates()
 
 	/**
@@ -1193,13 +1186,12 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return array<string, mixed>|null Saved row or null on failure.
 	 */
 	private function saveTemplateObject(array $payload, ?string $id = null): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getCampaignTemplateSchemaSlug();
-		$objectService = $this->getObjectService();
-		if ($register === '' || $schema === '' || $objectService === null) {
+		$store = $this->templateStore();
+		if ($store === null) {
 			return null;
 		}
 
+		[$objectService, $register, $schema] = $store;
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
@@ -1224,12 +1216,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'campaignTemplate';
+		return $this->resolveSchemaSlug(key: 'campaignTemplate_schema', default: 'campaignTemplate');
 	}//end getCampaignTemplateSchemaSlug()
 
 	/**
@@ -1769,12 +1756,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getConsentRecordSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_CONSENT_RECORD_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'consent_record_schema', default: self::DEFAULT_CONSENT_RECORD_SCHEMA_SLUG);
 	}//end getConsentRecordSchemaSlug()
 
 	/**
@@ -1783,12 +1765,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_delivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'blast_delivery_schema', default: self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG);
 	}//end getBlastDeliverySchemaSlug()
 
 	/**

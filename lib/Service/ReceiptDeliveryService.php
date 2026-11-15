@@ -35,6 +35,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -65,6 +67,8 @@ use RuntimeException;
 class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
+	use RegisterSchemaObjects;
+	use ObjectArrayReads;
 
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
@@ -547,13 +551,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			// Never persist the embedded lines or @self envelope.
 			$persist = $transaction;
 			unset($persist['lines'], $persist['@self']);
-			$this->getObjectService()->saveObject(
-				object: $persist,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$this->saveIn(target: [$register, $schema, $id], object: $persist);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to persist invoice number', ['exception' => $e->getMessage()]);
 		}//end try
@@ -583,14 +581,11 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'transaction' => $transactionId,
-						'invoiceNumber' => $number,
-					],
+			$results = $this->findAllIn(
+				ids: [$register, $schema],
+				filters: [
+					'transaction' => $transactionId,
+					'invoiceNumber' => $number,
 				]
 			);
 		} catch (\Throwable $e) {
@@ -665,17 +660,11 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	private function loadTransactionWithLines(string $id): array {
 		[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransaction_schema');
 
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
+		$transaction = $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
+		if ($transaction === null) {
 			throw new OCSNotFoundException('Transactie niet gevonden.');
 		}
 
-		$transaction = $this->toArray(object: $object);
 		$transaction['lines'] = $this->loadLines(transactionId: $id);
 
 		return $transaction;
@@ -713,27 +702,14 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	private function loadLines(string $transactionId): array {
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransactionLine_schema');
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'transaction' => $transactionId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema], filters: ['transaction' => $transactionId]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to load receipt lines', ['exception' => $e->getMessage()]);
 
 			return [];
 		}
 
-		$lines = [];
-		foreach (($results ?? []) as $result) {
-			$lines[] = $this->toArray(object: $result);
-		}
-
-		return $lines;
+		return $this->allAsArrays(results: $results);
 	}//end loadLines()
 
 	/**

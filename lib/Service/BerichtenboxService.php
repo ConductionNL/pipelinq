@@ -974,26 +974,13 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	 */
 	private function findMessageByLogiusId(string $logiusMessageId): ?array {
 		[$register, $schema] = $this->messageConfig();
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'logiusMessageId' => $logiusMessageId,
-					],
-					'limit' => 1,
-				]
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		foreach ($rows as $row) {
-			return $this->toArray(object: $row);
-		}
-
-		return null;
+		return $this->firstMatch(
+			filters: [
+				'register' => $register,
+				'schema' => $schema,
+				'logiusMessageId' => $logiusMessageId,
+			]
+		);
 	}//end findMessageByLogiusId()
 
 	/**
@@ -1030,7 +1017,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 			return null;
 		}
 
-		return $this->firstTemplate(
+		return $this->firstMatch(
 			filters: $scope + [
 				'caseType' => $options->caseType(),
 				'status' => $message->status,
@@ -1060,14 +1047,14 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	}//end templateScope()
 
 	/**
-	 * The first template matching the filters, or null when none matches
+	 * The first row matching the filters, or null when none matches
 	 * or the lookup fails.
 	 *
-	 * @param array<string, string> $filters The template filters.
+	 * @param array<string, string> $filters The filters, register and schema included.
 	 *
-	 * @return array|null The template, or null.
+	 * @return array|null The row, or null.
 	 */
-	private function firstTemplate(array $filters): ?array {
+	private function firstMatch(array $filters): ?array {
 		try {
 			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => 1]);
 		} catch (\Throwable $e) {
@@ -1079,7 +1066,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 		}
 
 		return null;
-	}//end firstTemplate()
+	}//end firstMatch()
 
 	/**
 	 * Return a minimal default template when no match is configured.
@@ -1188,15 +1175,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	 * @return array
 	 */
 	private function saveMessage(array $payload): array {
-		[$register, $schema] = $this->messageConfig();
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
-		);
-		return ($this->toArray(object: $saved) ?? $payload);
+		return $this->saveIn(payload: $payload, location: $this->messageConfig());
 	}//end saveMessage()
 
 	/**
@@ -1217,6 +1196,19 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 			throw new RuntimeException('BerichtenboxReply register or schema not configured.');
 		}
 
+		return $this->saveIn(payload: $payload, location: [$register, $schema]);
+	}//end saveReply()
+
+	/**
+	 * Save a payload under its own uuid (or as new) into a register and schema.
+	 *
+	 * @param array                       $payload  Payload.
+	 * @param array{0: string, 1: string} $location The register and schema.
+	 *
+	 * @return array The saved row, or the payload when it cannot be read back.
+	 */
+	private function saveIn(array $payload, array $location): array {
+		[$register, $schema] = $location;
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
 			extend: [],
@@ -1225,7 +1217,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 			uuid: ($payload['uuid'] ?? null)
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
-	}//end saveReply()
+	}//end saveIn()
 
 	/**
 	 * Resolve register + message schema config.

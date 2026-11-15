@@ -33,6 +33,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WalkInQueueServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\AppointmentServiceLookup;
 use OCA\Pipelinq\Service\Support\ByteTruncate;
 use OCA\Pipelinq\Util\ConfiguredRegisterId;
@@ -72,6 +73,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	use InjectedObjectService;
 	use ByteTruncate;
 	use WithoutSelf;
+	use RegisterSchemaObjects;
 
 	/**
 	 * App-config key for the WalkInTicket schema id/slug.
@@ -565,16 +567,8 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			return [];
 		}
 
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => ['status' => $status],
-					'register' => $register,
-					'schema' => $schema,
-					'limit' => self::QUEUE_PAGE_SIZE,
-				]
-			);
-		} catch (\Throwable $e) {
+		$rows = $this->findQueuePage(filters: ['status' => $status], ids: [$register, $schema]);
+		if ($rows === null) {
 			$this->logger->warning(
 				'Pipelinq: walk-in queue lookup failed',
 				['status' => $status]
@@ -582,12 +576,8 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			return [];
 		}
 
-		if (is_array($rows) === false) {
-			return [];
-		}
-
 		$out = [];
-		foreach (array_values($rows) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(object: $row);
 			if ($arr !== null) {
 				$out[] = $arr;
@@ -765,17 +755,30 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 	 * @return array<int, array<string, mixed>|object>
 	 */
 	private function fetchResourceRows(string $register, string $schema): array {
+		return ($this->findQueuePage(filters: [], ids: [$register, $schema]) ?? []);
+	}//end fetchResourceRows()
+
+	/**
+	 * Read one page (QUEUE_PAGE_SIZE) of rows matching the filters.
+	 *
+	 * @param array<string, mixed> $filters The equality filters.
+	 * @param array{0: string, 1: string} $ids The register and schema ids.
+	 *
+	 * @return array<int, array<string, mixed>|object>|null The rows, or null when the read failed.
+	 */
+	private function findQueuePage(array $filters, array $ids): ?array {
+		[$register, $schema] = $ids;
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [],
+					'filters' => $filters,
 					'register' => $register,
 					'schema' => $schema,
 					'limit' => self::QUEUE_PAGE_SIZE,
 				]
 			);
 		} catch (\Throwable $e) {
-			return [];
+			return null;
 		}
 
 		if (is_array($rows) === false) {
@@ -783,7 +786,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 		}
 
 		return array_values($rows);
-	}//end fetchResourceRows()
+	}//end findQueuePage()
 
 	/**
 	 * Whether a resource qualifies as a walk-in ETA candidate.
@@ -831,13 +834,7 @@ class WalkInQueueService implements WalkInQueueServiceInterface {
 			throw new RuntimeException('WalkInTicket register/schema not configured');
 		}
 
-		return $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
+		return $this->saveIn(target: [$register, $schema, $uuid], object: $payload);
 	}//end saveTicket()
 
 	/**

@@ -765,23 +765,7 @@ class AppointmentCalendarLeafProvider {
 	 * @return array<string, mixed>|null
 	 */
 	private function loadResource(string $resourceId): ?array {
-		$register = $this->registerSlug();
-		$schema = $this->schemaSlug(key: self::RESOURCE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $resourceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findQuietly(schemaKey: self::RESOURCE_SCHEMA_KEY, id: $resourceId);
 	}//end loadResource()
 
 	/**
@@ -796,15 +780,27 @@ class AppointmentCalendarLeafProvider {
 			return null;
 		}
 
+		return $this->findQuietly(schemaKey: self::SERVICE_SCHEMA_KEY, id: $serviceId);
+	}//end loadServiceQuiet()
+
+	/**
+	 * Load an object of the schema under an app-config key; null when unconfigured or the read fails.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param string $id The object UUID/slug.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findQuietly(string $schemaKey, string $id): ?array {
 		$register = $this->registerSlug();
-		$schema = $this->schemaSlug(key: self::SERVICE_SCHEMA_KEY);
+		$schema = $this->schemaSlug(key: $schemaKey);
 		if ($register === '' || $schema === '') {
 			return null;
 		}
 
 		try {
 			$found = $this->getObjectService()->find(
-				id: $serviceId,
+				id: $id,
 				register: $register,
 				schema: $schema
 			);
@@ -813,7 +809,7 @@ class AppointmentCalendarLeafProvider {
 		}
 
 		return $this->toArray(object: $found);
-	}//end loadServiceQuiet()
+	}//end findQuietly()
 
 	/**
 	 * Resolve the pipelinq register slug from app config.

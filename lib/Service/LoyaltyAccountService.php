@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -48,6 +49,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 	use PayloadToArray;
 	use InjectedObjectService;
 	use ConfiguredObjectSave;
+	use RegisterSchemaObjects;
 
 	/**
 	 * Constructor.
@@ -382,34 +384,21 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 			return [];
 		}
 
-		return $this->accountRows(
-			filters: ['programmeId' => $programmeId, 'register' => $register, 'schema' => $schema],
-			page: ['limit' => $limit, 'offset' => $offset]
+		return array_map(
+			[$this, 'toArray'],
+			$this->rowList(
+				config: [
+					'filters' => [
+						'programmeId' => $programmeId,
+						'register' => $register,
+						'schema' => $schema,
+					],
+					'limit' => $limit,
+					'offset' => $offset,
+				]
+			)
 		);
 	}//end listAccountsForProgramme()
-
-	/**
-	 * One page of accounts matching the filters; none when the lookup fails.
-	 *
-	 * @param array<string, string>           $filters The account filters.
-	 * @param array{limit: int, offset: int} $page    The page to read.
-	 *
-	 * @return array<int, array<string, mixed>> The accounts.
-	 */
-	private function accountRows(array $filters, array $page): array {
-		try {
-			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters] + $page);
-		} catch (\Throwable $e) {
-			return [];
-		}
-
-		$values = [];
-		if (is_array($rows) === true) {
-			$values = array_values($rows);
-		}
-
-		return array_map([$this, 'toArray'], $values);
-	}//end accountRows()
 
 	/**
 	 * Persist an account (create when uuid is null, update otherwise).

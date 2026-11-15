@@ -104,6 +104,80 @@ class ChannelAdapterLookupsTest extends TestCase {
 			->with('ChannelAdapterLookupsHost.persistMessage: save failed', ['exception' => 'locked']);
 		$this->assertNull($this->host([], $store, $logger)->call('persistMessage', ['fail' => true]));
 	}//end testPersistMessage()
+
+	/**
+	 * @return void
+	 */
+	public function testFindOrOpenConversation(): void {
+		$this->assertSame('', $this->host([])->call('findOrOpenConversation', 'c1', 'p1', 'sms'));
+
+		$store = new class {
+			/** @var array<int, mixed> */
+			public array $rows = [];
+
+			/** @var array<int, array<int, mixed>> */
+			public array $saved = [];
+
+			public bool $broken = false;
+
+			/**
+			 * @param array<string, mixed> $config        Config.
+			 * @param bool                 $_rbac         Rbac.
+			 * @param bool                 $_multitenancy Multitenancy.
+			 * @return array<int, mixed>
+			 */
+			public function findAll(array $config, bool $_rbac, bool $_multitenancy): array {
+				if ($this->broken === true) {
+					throw new RuntimeException('down');
+				}
+
+				$this->saved[] = [$config['filters'], $_rbac, $_multitenancy];
+				return $this->rows;
+			}
+
+			/**
+			 * @param array<string, mixed> $object   Object.
+			 * @param string               $register Register.
+			 * @param string               $schema   Schema.
+			 * @param string|null          $uuid     Uuid.
+			 * @return array<string, mixed>
+			 */
+			public function saveObject(array $object, string $register, string $schema, ?string $uuid): array {
+				if ($this->broken === true) {
+					throw new RuntimeException('locked');
+				}
+
+				$this->saved[] = [$object, $register, $schema, $uuid];
+				return $object + ['id' => 'new'];
+			}
+		};
+
+		$store->rows = [['id' => 'existing']];
+		$this->assertSame('existing', $this->host([], $store)->call('findOrOpenConversation', 'c1', 'p1', 'sms', ['_rbac' => false]));
+		$identity = ['contactId' => 'c1', 'providerId' => 'p1', 'channel' => 'sms', 'status' => 'open'];
+		$this->assertSame([[$identity + ['register' => 'reg', 'schema' => 'channelConversation'], false, true]], $store->saved);
+
+		$store->rows = [];
+		$store->saved = [];
+		$this->assertSame('new', $this->host([], $store)->call('findOrOpenConversation', 'c1', 'p1', 'sms'));
+		$this->assertSame([$identity + ['lastInboundAt' => '2026-01-01T00:00:00Z'], 'reg', 'channelConversation', null], $store->saved[1]);
+
+		$store->broken = true;
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->exactly(2))->method('warning')->willReturnCallback(
+			function (string $message, array $context): void {
+				$this->assertContains(
+					$message,
+					[
+						'ChannelAdapterLookupsHost.findOrOpenConversation: findAll failed',
+						'ChannelAdapterLookupsHost.findOrOpenConversation: open failed',
+					]
+				);
+				$this->assertArrayHasKey('exception', $context);
+			}
+		);
+		$this->assertSame('', $this->host([], $store, $logger)->call('findOrOpenConversation', 'c1', 'p1', 'sms'));
+	}//end testFindOrOpenConversation()
 }//end class
 
 /**
@@ -113,6 +187,12 @@ final class ChannelAdapterLookupsHost {
 	use ChannelAdapterLookups;
 
 	private const DEFAULT_MESSAGE_SCHEMA_SLUG = 'channelMessage';
+
+	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'channelConversation';
+
+	private const CONVERSATION_LOOKUP_FAILURE = 'findAll failed';
+
+	private const CONVERSATION_OPENING_STAMPS = ['lastInboundAt'];
 
 	/**
 	 * @param IAppConfig         $appConfig The app config.
@@ -148,6 +228,21 @@ final class ChannelAdapterLookupsHost {
 	 */
 	private function toArray(mixed $value): array {
 		return (array)$value;
+	}
+
+	/**
+	 * @param array<string, mixed> $payload The row.
+	 * @return string
+	 */
+	private function extractId(array $payload): string {
+		return (string)($payload['id'] ?? '');
+	}
+
+	/**
+	 * @return string
+	 */
+	private function nowIso(): string {
+		return '2026-01-01T00:00:00Z';
 	}
 
 	/**

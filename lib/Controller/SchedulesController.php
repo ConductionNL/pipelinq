@@ -102,12 +102,10 @@ class SchedulesController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$userId = $this->sessionUser->uid();
-		if ($userId === '') {
-			return $this->unauthenticated();
+		$userId = $this->localisedUserId();
+		if ($userId instanceof JSONResponse) {
+			return $userId;
 		}
-
-		$this->applyAcceptLanguage();
 
 		try {
 			// Non-admins always see only their own tasks regardless of the
@@ -243,12 +241,10 @@ class SchedulesController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$userId = $this->sessionUser->uid();
-		if ($userId === '') {
-			return $this->unauthenticated();
+		$userId = $this->localisedUserId();
+		if ($userId instanceof JSONResponse) {
+			return $userId;
 		}
-
-		$this->applyAcceptLanguage();
 
 		try {
 			$task = $this->scheduledTaskService->getScheduledTask($id);
@@ -396,6 +392,22 @@ class SchedulesController extends Controller {
 
 		return null;
 	}//end mutationRefusal()
+
+	/**
+	 * The session user's id once the request's language is applied, or the 401.
+	 *
+	 * @return string|JSONResponse
+	 */
+	private function localisedUserId(): string|JSONResponse {
+		$userId = $this->sessionUser->uid();
+		if ($userId === '') {
+			return $this->unauthenticated();
+		}
+
+		$this->applyAcceptLanguage();
+
+		return $userId;
+	}//end localisedUserId()
 
 	/**
 	 * Hand the request's Accept-Language to the task service.

@@ -107,11 +107,7 @@ class EligibilityService implements EligibilityServiceInterface {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function getEligibleResources(string $serviceId): array {
-		if ($serviceId === '') {
-			return [];
-		}
-
-		$service = $this->loadService(serviceId: $serviceId);
+		$service = $this->serviceIfNamed(serviceId: $serviceId);
 		if ($service === null) {
 			return [];
 		}
@@ -146,11 +142,7 @@ class EligibilityService implements EligibilityServiceInterface {
 	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
 	 */
 	public function getMatchingResources(string $serviceId): array {
-		if ($serviceId === '') {
-			return [];
-		}
-
-		$service = $this->loadService(serviceId: $serviceId);
+		$service = $this->serviceIfNamed(serviceId: $serviceId);
 		if ($service === null) {
 			return [];
 		}
@@ -320,11 +312,7 @@ class EligibilityService implements EligibilityServiceInterface {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function getEligibleResourcesPerStep(string $serviceId): array {
-		if ($serviceId === '') {
-			return [];
-		}
-
-		$service = $this->loadService(serviceId: $serviceId);
+		$service = $this->serviceIfNamed(serviceId: $serviceId);
 		if ($service === null) {
 			return [];
 		}
@@ -504,6 +492,21 @@ class EligibilityService implements EligibilityServiceInterface {
 
 		return true;
 	}//end matchesSkillRequirements()
+
+	/**
+	 * The Service by id, or null when the id is empty or the Service cannot be loaded.
+	 *
+	 * @param string $serviceId Service UUID/slug.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function serviceIfNamed(string $serviceId): ?array {
+		if ($serviceId === '') {
+			return null;
+		}
+
+		return $this->loadService(serviceId: $serviceId);
+	}//end serviceIfNamed()
 
 	/**
 	 * Load a Service entity by id/slug.

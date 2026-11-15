@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\MarketingCallerGate;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
@@ -49,6 +50,8 @@ use OCP\IUserSession;
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
 class BlastController extends Controller {
+	use MarketingCallerGate;
+
 	/**
 	 * Constructor.
 	 *
@@ -128,14 +131,9 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		$uid = $this->crmGate()->privilegedUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$blast = $this->blastService->getBlastById(blastId: $id);
-		if ($blast === null) {
-			return $this->notFound();
+		$blast = $this->visibleBlast(blastId: $id);
+		if ($blast instanceof JSONResponse) {
+			return $blast;
 		}
 
 		return new JSONResponse($blast);
@@ -260,14 +258,9 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		$uid = $this->crmGate()->privilegedUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$blast = $this->blastService->getBlastById(blastId: $id);
-		if ($blast === null) {
-			return $this->notFound();
+		$blast = $this->visibleBlast(blastId: $id);
+		if ($blast instanceof JSONResponse) {
+			return $blast;
 		}
 
 		$summary = $this->attributionService->getBlastAttributionSummary(blastId: $id);
@@ -306,6 +299,27 @@ class BlastController extends Controller {
 	}//end performance()
 
 	/**
+	 * The blast for a CRM user, or the refusal or the 404.
+	 *
+	 * @param string $blastId Blast UUID or slug.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function visibleBlast(string $blastId): array|JSONResponse {
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$blast = $this->blastService->getBlastById(blastId: $blastId);
+		if ($blast === null) {
+			return $this->notFound();
+		}
+
+		return $blast;
+	}//end visibleBlast()
+
+	/**
 	 * Collect a sanitised draft-blast body from the request.
 	 *
 	 * Any frontend-supplied `createdBy` is dropped here — it's only set
@@ -338,22 +352,4 @@ class BlastController extends Controller {
 
 		return new JSONResponse($result['blast'] ?? null, Http::STATUS_CREATED);
 	}//end renderCreate()
-
-	/**
-	 * Generic 404 response.
-	 *
-	 * @return JSONResponse
-	 */
-	private function notFound(): JSONResponse {
-		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-	}//end notFound()
-
-	/**
-	 * The caller check shared by the marketing controllers.
-	 *
-	 * @return CrmCallerGate The gate.
-	 */
-	private function crmGate(): CrmCallerGate {
-		return new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
-	}//end crmGate()
 }//end class

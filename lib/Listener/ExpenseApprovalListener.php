@@ -34,6 +34,7 @@ use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqApServiceInterface;
 use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead;
 use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
+use OCA\Pipelinq\Listener\Support\DefersObjectWork;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -92,6 +93,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	use EntityAccessorTrait;
 	use ConfiguredSchemaObjectRead;
 	use ConfiguredSchemaObjectWrite;
+	use DefersObjectWork;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -200,11 +202,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 			return;
 		}
 
-		$this->deferral->defer(
-			jobClass: DeferredObjectListenerJob::class,
-			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid],
-			dedupeKey: self::HANDLER_KEY . '|' . $uuid
-		);
+		$this->deferObjectWork(uuid: $uuid);
 	}//end queueApDispatch()
 
 	/**

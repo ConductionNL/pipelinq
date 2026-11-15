@@ -113,6 +113,16 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	private const SOFT_BOUNCE_KEY_PREFIX = 'blast.soft_bounce_count.';
 
 	/**
+	 * Per promoted status: the timestamp field stamped once and the statuses it replaces.
+	 *
+	 * @var array<string, array{0: string, 1: list<string>}>
+	 */
+	private const PROMOTIONS = [
+		'delivered' => ['deliveredAt', ['queued', 'sent']],
+		'opened' => ['openedAt', ['delivered', 'sent']],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container — lazy
@@ -247,22 +257,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processDelivered(array $event): void {
-		$delivery = $this->locateDelivery(event: $event);
-		if ($delivery === null) {
-			return;
-		}
-
-		$payload = $delivery;
-		if (empty($payload['deliveredAt']) === true) {
-			$payload['deliveredAt'] = $this->extractTimestamp(event: $event);
-		}
-
-		$current = (string)($payload['status'] ?? '');
-		if (in_array($current, ['queued', 'sent'], true) === true) {
-			$payload['status'] = 'delivered';
-		}
-
-		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
+		$this->promoteDelivery(event: $event, status: 'delivered');
 	}//end processDelivered()
 
 	/**
@@ -339,57 +334,82 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return void
 	 */
 	private function withdrawAfterBounce(array $delivery, string $bounceType): void {
-		$contactId = (string)($delivery['contactId'] ?? '');
-		$channel = (string)($delivery['channel'] ?? 'email');
-		$blastId = (string)($delivery['blastId'] ?? '');
-		if ($contactId === '') {
+		$recipient = $this->deliveryRecipient(delivery: $delivery);
+		if ($recipient === null) {
 			return;
 		}
 
 		if ($bounceType === 'hard') {
-			$this->withdrawBouncedConsent(contactId: $contactId, channel: $channel, reason: 'bounce-hard', blastId: $blastId);
+			$this->withdrawBouncedConsent(recipient: $recipient, reason: 'bounce-hard');
 			return;
 		}
 
 		// Soft bounce — bump per-contact counter; withdraw when at threshold.
-		$this->countSoftBounce(contactId: $contactId, channel: $channel, blastId: $blastId);
+		$this->countSoftBounce(recipient: $recipient);
 	}//end withdrawAfterBounce()
 
 	/**
-	 * Bump the soft-bounce counter; withdraw consent when it reaches the threshold.
+	 * The delivery's contact, channel (default email) and blast id; null when it names no contact.
 	 *
-	 * @param string $contactId The contact.
-	 * @param string $channel   The channel.
-	 * @param string $blastId   The blast the bounce came from.
+	 * @param array<string, mixed> $delivery The delivery row.
 	 *
-	 * @return void
+	 * @return array{0: string, 1: string, 2: string}|null The contact, channel and blast id.
 	 */
-	private function countSoftBounce(string $contactId, string $channel, string $blastId): void {
-		$threshold = $this->resolveSoftBounceThreshold();
-		$next = $this->incrementSoftBounceCounter(contactId: $contactId, channel: $channel);
-		if ($next >= $threshold) {
-			$this->withdrawBouncedConsent(contactId: $contactId, channel: $channel, reason: 'bounce-soft-x' . $threshold, blastId: $blastId);
+	private function deliveryRecipient(array $delivery): ?array {
+		$contactId = (string)($delivery['contactId'] ?? '');
+		$channel = (string)($delivery['channel'] ?? 'email');
+		$blastId = (string)($delivery['blastId'] ?? '');
+		if ($contactId === '') {
+			return null;
 		}
-	}//end countSoftBounce()
+
+		return [$contactId, $channel, $blastId];
+	}//end deliveryRecipient()
 
 	/**
-	 * Record a consent withdrawal for a bounce and clear the soft-bounce counter.
+	 * Record a consent withdrawal for the recipient's contact and channel.
 	 *
-	 * @param string $contactId The contact.
-	 * @param string $channel   The channel.
-	 * @param string $reason    The withdrawal reason.
-	 * @param string $blastId   The blast the bounce came from.
+	 * @param array{0: string, 1: string, 2: string} $recipient The contact, channel and blast id.
+	 * @param string                                 $reason    The withdrawal reason.
 	 *
 	 * @return void
 	 */
-	private function withdrawBouncedConsent(string $contactId, string $channel, string $reason, string $blastId): void {
+	private function recordWithdrawal(array $recipient, string $reason): void {
+		[$contactId, $channel, $blastId] = $recipient;
 		$this->complianceService->recordConsentWithdrawal(
 			contactId: $contactId,
 			channel: $channel,
 			reason: $reason,
 			sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
 		);
-		$this->clearSoftBounceCounter(contactId: $contactId, channel: $channel);
+	}//end recordWithdrawal()
+
+	/**
+	 * Bump the soft-bounce counter; withdraw consent when it reaches the threshold.
+	 *
+	 * @param array{0: string, 1: string, 2: string} $recipient The contact, channel and blast id.
+	 *
+	 * @return void
+	 */
+	private function countSoftBounce(array $recipient): void {
+		$threshold = $this->resolveSoftBounceThreshold();
+		$next = $this->incrementSoftBounceCounter(contactId: $recipient[0], channel: $recipient[1]);
+		if ($next >= $threshold) {
+			$this->withdrawBouncedConsent(recipient: $recipient, reason: 'bounce-soft-x' . $threshold);
+		}
+	}//end countSoftBounce()
+
+	/**
+	 * Record a consent withdrawal for a bounce and clear the soft-bounce counter.
+	 *
+	 * @param array{0: string, 1: string, 2: string} $recipient The contact, channel and blast id.
+	 * @param string                                 $reason    The withdrawal reason.
+	 *
+	 * @return void
+	 */
+	private function withdrawBouncedConsent(array $recipient, string $reason): void {
+		$this->recordWithdrawal(recipient: $recipient, reason: $reason);
+		$this->clearSoftBounceCounter(contactId: $recipient[0], channel: $recipient[1]);
 	}//end withdrawBouncedConsent()
 
 	/**
@@ -402,22 +422,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processOpen(array $event): void {
-		$delivery = $this->locateDelivery(event: $event);
-		if ($delivery === null) {
-			return;
-		}
-
-		$payload = $delivery;
-		if (empty($payload['openedAt']) === true) {
-			$payload['openedAt'] = $this->extractTimestamp(event: $event);
-		}
-
-		$current = (string)($payload['status'] ?? '');
-		if (in_array($current, ['delivered', 'sent'], true) === true) {
-			$payload['status'] = 'opened';
-		}
-
-		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
+		$this->promoteDelivery(event: $event, status: 'opened');
 	}//end processOpen()
 
 	/**
@@ -465,29 +470,12 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @spec openspec/specs/marketing-blast-delivery/spec.md#requirement-unsubscribe-propagates-within-minutes
 	 */
 	public function processUnsubscribe(array $event): void {
-		$delivery = $this->locateDelivery(event: $event);
+		$delivery = $this->markDelivery(event: $event, status: 'unsubscribed');
 		if ($delivery === null) {
 			return;
 		}
 
-		$payload = $delivery;
-		$payload['status'] = 'unsubscribed';
-		$payload['unsubscribedAt'] = $this->extractTimestamp(event: $event);
-		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
-
-		$contactId = (string)($delivery['contactId'] ?? '');
-		$channel = (string)($delivery['channel'] ?? 'email');
-		$blastId = (string)($delivery['blastId'] ?? '');
-		if ($contactId === '') {
-			return;
-		}
-
-		$this->complianceService->recordConsentWithdrawal(
-			contactId: $contactId,
-			channel: $channel,
-			reason: 'user-unsubscribed',
-			sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
-		);
+		$this->withdrawForDelivery(delivery: $delivery, reason: 'user-unsubscribed');
 	}//end processUnsubscribe()
 
 	/**
@@ -503,30 +491,78 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processComplaint(array $event): void {
+		$delivery = $this->markDelivery(event: $event, status: 'complained');
+		if ($delivery === null) {
+			return;
+		}
+
+		$this->withdrawForDelivery(delivery: $delivery, reason: 'spam-complaint');
+	}//end processComplaint()
+
+	/**
+	 * Stamp the event time on a located delivery once and promote its status
+	 * when it still holds one of the earlier statuses (PROMOTIONS).
+	 *
+	 * @param array<string, mixed> $event  Normalised event.
+	 * @param string               $status The status to promote to.
+	 *
+	 * @return void
+	 */
+	private function promoteDelivery(array $event, string $status): void {
 		$delivery = $this->locateDelivery(event: $event);
 		if ($delivery === null) {
 			return;
 		}
 
+		[$stamp, $earlier] = self::PROMOTIONS[$status];
 		$payload = $delivery;
-		$payload['status'] = 'complained';
-		$payload['complainedAt'] = $this->extractTimestamp(event: $event);
-		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
-
-		$contactId = (string)($delivery['contactId'] ?? '');
-		$channel = (string)($delivery['channel'] ?? 'email');
-		$blastId = (string)($delivery['blastId'] ?? '');
-		if ($contactId === '') {
-			return;
+		if (empty($payload[$stamp]) === true) {
+			$payload[$stamp] = $this->extractTimestamp(event: $event);
 		}
 
-		$this->complianceService->recordConsentWithdrawal(
-			contactId: $contactId,
-			channel: $channel,
-			reason: 'spam-complaint',
-			sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
-		);
-	}//end processComplaint()
+		$current = (string)($payload['status'] ?? '');
+		if (in_array($current, $earlier, true) === true) {
+			$payload['status'] = $status;
+		}
+
+		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
+	}//end promoteDelivery()
+
+	/**
+	 * Set a located delivery's status and its `<status>At` event time, and save it.
+	 *
+	 * @param array<string, mixed> $event  Normalised event.
+	 * @param string               $status The new status.
+	 *
+	 * @return array<string, mixed>|null The delivery as it was located, or null when none matches.
+	 */
+	private function markDelivery(array $event, string $status): ?array {
+		$delivery = $this->locateDelivery(event: $event);
+		if ($delivery === null) {
+			return null;
+		}
+
+		$payload = $delivery;
+		$payload['status'] = $status;
+		$payload[$status.'At'] = $this->extractTimestamp(event: $event);
+		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
+		return $delivery;
+	}//end markDelivery()
+
+	/**
+	 * Withdraw the delivery contact's consent on its channel for the given reason.
+	 *
+	 * @param array<string, mixed> $delivery The delivery row.
+	 * @param string               $reason   The withdrawal reason.
+	 *
+	 * @return void
+	 */
+	private function withdrawForDelivery(array $delivery, string $reason): void {
+		$recipient = $this->deliveryRecipient(delivery: $delivery);
+		if ($recipient !== null) {
+			$this->recordWithdrawal(recipient: $recipient, reason: $reason);
+		}
+	}//end withdrawForDelivery()
 
 	/**
 	 * Normalise a SendGrid event into our internal shape.

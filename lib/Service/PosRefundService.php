@@ -32,6 +32,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
+use OCA\Pipelinq\Service\Support\PosTransitionErrors;
+use OCA\Pipelinq\Service\Support\RegisterSchemaObjects;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosObjectFetch;
@@ -43,7 +46,6 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use ReflectionClass;
 
 /**
  * Service for POS refund business operations.
@@ -83,6 +85,34 @@ class PosRefundService implements PosRefundServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectFetch;
+	use RegisterSchemaObjects;
+	use PosTransitionErrors;
+	use ObjectArrayReads;
+
+	/**
+	 * The 403 message of an RBAC transition denial without a message of its own.
+	 */
+	private const TRANSITION_FORBIDDEN = 'Geen toegang tot deze retour.';
+
+	/**
+	 * Message markers of a guard's access denial (→ 403).
+	 *
+	 * @var array<int, string>
+	 */
+	private const TRANSITION_ACCESS_MARKERS = ['beheerder mag een retour'];
+
+	/**
+	 * Message markers of an invalid-state or other precondition failure (→ 422).
+	 *
+	 * @var array<int, string>
+	 */
+	private const TRANSITION_PRECONDITION_MARKERS = [
+		'overschrijdt',
+		'not allowed from',
+		'not declared',
+		'ontbreekt',
+		'Originele kassabon niet gevonden',
+	];
 
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
@@ -344,94 +374,6 @@ class PosRefundService implements PosRefundServiceInterface {
 	}//end transitionObject()
 
 	/**
-	 * Map a TransitionEngine throwable to the correct OCS exception.
-	 *
-	 * Authorization denials → 403; invalid-state / cap / guard denials → 422;
-	 * missing object → 404; otherwise the original is rethrown for the
-	 * controller's generic 500 handler.
-	 *
-	 * @param \Throwable $e The engine throwable.
-	 *
-	 * @return \Throwable The mapped OCS exception (or the original on no match).
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function mapTransitionError(\Throwable $e): \Throwable {
-		$short = (new ReflectionClass($e))->getShortName();
-		$message = $e->getMessage();
-
-		// Per-object RBAC denial → 403.
-		if ($short === 'NotAuthorizedException' || stripos($message, 'permission') !== false) {
-			return $this->forbiddenFor(message: $message);
-		}
-
-		// Manager-authorization denial from PosRefundManagerGuard → 403.
-		if (stripos($message, 'beheerder mag een retour') !== false) {
-			return new OCSForbiddenException($message);
-		}
-
-		return $this->mapByMessage(e: $e, message: $message);
-	}//end mapTransitionError()
-
-	/**
-	 * The 403 for an RBAC denial, carrying the engine's message when it has one.
-	 *
-	 * @param string $message The engine's message.
-	 *
-	 * @return OCSForbiddenException
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function forbiddenFor(string $message): OCSForbiddenException {
-		$forbidden = 'Geen toegang tot deze retour.';
-		if ($message !== '') {
-			$forbidden = $message;
-		}
-
-		return new OCSForbiddenException($forbidden);
-	}//end forbiddenFor()
-
-	/**
-	 * Map a non-authorization transition failure by its message: 422, 404, or the original.
-	 *
-	 * @param \Throwable $e The original failure.
-	 * @param string $message Its message.
-	 *
-	 * @return \Throwable
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function mapByMessage(\Throwable $e, string $message): \Throwable {
-		// Over-refund cap, invalid-state, or other precondition → 422.
-		if ($this->isPreconditionFailure(message: $message) === true) {
-			return new OCSBadRequestException($message);
-		}
-
-		if (stripos($message, 'not found') !== false) {
-			return new OCSNotFoundException($message);
-		}
-
-		return $e;
-	}//end mapByMessage()
-
-	/**
-	 * Whether a message reports an over-refund, an invalid-state transition or another precondition.
-	 *
-	 * @param string $message The engine's message.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#3.3
-	 */
-	private function isPreconditionFailure(string $message): bool {
-		return stripos($message, 'overschrijdt') !== false
-			|| stripos($message, 'not allowed from') !== false
-			|| stripos($message, 'not declared') !== false
-			|| stripos($message, 'ontbreekt') !== false
-			|| stripos($message, 'Originele kassabon niet gevonden') !== false;
-	}//end isPreconditionFailure()
-
-	/**
 	 * Emit the pipelinq.TransactionRefund.completed CloudEvent (fire-and-forget).
 	 *
 	 * Dispatched through OpenRegister's WebhookService for any subscriber (e.g.
@@ -630,26 +572,13 @@ class PosRefundService implements PosRefundServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posRefundLine_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'refund' => $refundId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema], filters: ['refund' => $refundId]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to fetch refund lines', ['exception' => $e->getMessage()]);
 			return [];
 		}
 
-		$lines = [];
-		foreach (($results ?? []) as $result) {
-			$lines[] = $this->toArray(object: $result);
-		}
-
-		return $lines;
+		return $this->allAsArrays(results: $results);
 	}//end fetchRefundLines()
 
 	/**
@@ -725,13 +654,7 @@ class PosRefundService implements PosRefundServiceInterface {
 
 		unset($refund['@self']);
 
-		$saved = $this->getObjectService()->saveObject(
-			object: $refund,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
+		$saved = $this->saveIn(target: [$register, $schema, $id], object: $refund);
 
 		return $this->toArray(object: $saved);
 	}//end saveRefund()
@@ -756,13 +679,7 @@ class PosRefundService implements PosRefundServiceInterface {
 		unset($line['@self']);
 
 		try {
-			$this->getObjectService()->saveObject(
-				object: $line,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
-			);
+			$this->saveIn(target: [$register, $schema, $id], object: $line);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to persist refund line', ['exception' => $e->getMessage()]);
 		}

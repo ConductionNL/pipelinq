@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
+use OCA\Pipelinq\Service\Payment\Support\MappedStatusCapture;
+use OCA\Pipelinq\Service\Payment\Support\PspReplies;
 
 /**
  * Mollie payment adapter.
@@ -37,6 +39,9 @@ namespace OCA\Pipelinq\Service\Payment;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-003
  */
 class MollieAdapter extends AbstractPaymentAdapter {
+	use MappedStatusCapture;
+	use PspReplies;
+
 	/**
 	 * Mollie API base URL.
 	 *
@@ -174,13 +179,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 
 		$call = new PspCall(url: self::BASE_URL . '/payments/' . urlencode($sessionId), context: 'capture failed');
 		$response = $this->send(call: $call, body: null);
-		$error = $this->replyError(response: $response);
-		if ($error !== null) {
-			return $this->failedCapture(sessionId: $sessionId, message: $error);
-		}
-
-		$status = (string)($response['body']['status'] ?? 'pending');
-		return $this->settled(sessionId: $sessionId, status: $this->mapStatus(providerStatus: $status));
+		return $this->settledCapture(response: $response, sessionId: $sessionId);
 	}//end capture()
 
 	/**
@@ -202,12 +201,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 		$rawBody = (string)json_encode(['description' => $this->refundReason(reason: $reason)]);
 		$call = new PspCall(url: self::BASE_URL . '/payments/' . urlencode($sessionId) . '/refunds', context: 'refund failed');
 		$response = $this->send(call: $call, body: $rawBody);
-		$error = $this->replyError(response: $response);
-		if ($error !== null) {
-			return $this->failedRefund(sessionId: $sessionId, message: $error);
-		}
-
-		return $this->refunded(sessionId: $sessionId, refundId: (string)($response['body']['id'] ?? ''));
+		return $this->refundedById(response: $response, sessionId: $sessionId);
 	}//end refund()
 
 	/**
@@ -221,11 +215,7 @@ class MollieAdapter extends AbstractPaymentAdapter {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
-		if ($rawPayload === '' || $signature === '') {
-			return false;
-		}
-
-		$secret = $this->credential(key: 'webhookSecret');
+		$secret = $this->webhookSecret(rawPayload: $rawPayload, signature: $signature);
 		if ($secret === '') {
 			return false;
 		}
