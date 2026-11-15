@@ -123,11 +123,15 @@ class KassakoppelingAuditController extends Controller {
 			'description' => $this->request->getParam('description', null),
 		];
 
-		return $this->run(
+		$response = $this->run(
 			action: fn (): array => ['entry' => $this->service->createEntry(data: $data)],
-			label: 'create',
-			successStatus: Http::STATUS_CREATED
+			label: 'create'
 		);
+		if ($response->getStatus() === Http::STATUS_OK) {
+			$response->setStatus(Http::STATUS_CREATED);
+		}
+
+		return $response;
 	}//end create()
 
 	/**
@@ -331,13 +335,12 @@ class KassakoppelingAuditController extends Controller {
 	 *
 	 * @param callable $action The action to run.
 	 * @param string $label A short label for log context.
-	 * @param int $successStatus The success HTTP status (default 200).
 	 *
-	 * @return JSONResponse The response.
+	 * @return JSONResponse The response, 200 on success.
 	 */
-	private function run(callable $action, string $label, int $successStatus = Http::STATUS_OK): JSONResponse {
+	private function run(callable $action, string $label): JSONResponse {
 		try {
-			return new JSONResponse($action(), $successStatus);
+			return new JSONResponse($action(), Http::STATUS_OK);
 		} catch (OCSNotFoundException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
 		} catch (OCSForbiddenException $e) {
