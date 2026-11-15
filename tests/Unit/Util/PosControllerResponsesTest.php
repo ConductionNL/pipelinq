@@ -35,6 +35,7 @@ use Psr\Log\LoggerInterface;
  * The session user's id or a 401, and actions answered through PosResponses.
  *
  * @covers \OCA\Pipelinq\Util\PosControllerResponses
+ * @uses \OCA\Pipelinq\Controller\PosResponses
  */
 class PosControllerResponsesTest extends TestCase {
 

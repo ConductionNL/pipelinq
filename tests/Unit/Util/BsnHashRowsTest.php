@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
  * Rows are looked up by the BSN's hash in the host's register and schema.
  *
  * @covers \OCA\Pipelinq\Util\BsnHashRows
+ * @uses \OCA\Pipelinq\Service\BsnValidationService
  */
 class BsnHashRowsTest extends TestCase {
 

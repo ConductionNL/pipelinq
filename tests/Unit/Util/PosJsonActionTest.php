@@ -29,6 +29,9 @@ use Psr\Log\LoggerInterface;
  * The action's result is the JSON body; a crash logs under the host's name.
  *
  * @covers \OCA\Pipelinq\Util\PosJsonAction
+ * @uses   \OCA\Pipelinq\Controller\PosResponses
+ * @uses   \OCA\Pipelinq\Util\OcsErrorResponse
+ * @uses   \OCA\Pipelinq\Util\PosControllerResponses
  */
 class PosJsonActionTest extends TestCase {
 

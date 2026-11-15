@@ -34,6 +34,7 @@ use PHPUnit\Framework\TestCase;
  * Every admin gets the notice; without an admin group nobody does.
  *
  * @covers \OCA\Pipelinq\Util\AdminNotice
+ * @uses \OCA\Pipelinq\Service\NoticedObject
  */
 class AdminNoticeTest extends TestCase {
 

@@ -33,6 +33,7 @@ use RuntimeException;
  * Contact-moment, phone, tenant and slug reads, and the message save.
  *
  * @covers \OCA\Pipelinq\Util\ChannelAdapterLookups
+ * @uses \OCA\Pipelinq\Util\ConfiguredSchemaSlug
  */
 class ChannelAdapterLookupsTest extends TestCase {
 

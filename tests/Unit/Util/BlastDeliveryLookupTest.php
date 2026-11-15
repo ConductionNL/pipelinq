@@ -30,6 +30,7 @@ use Psr\Log\LoggerInterface;
  * A delivery is read from the configured schema; gaps and misses are null.
  *
  * @covers \OCA\Pipelinq\Util\BlastDeliveryLookup
+ * @uses   \OCA\Pipelinq\Util\ObjectServiceTarget
  */
 class BlastDeliveryLookupTest extends TestCase {
 
