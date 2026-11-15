@@ -54,6 +54,7 @@ use DateTimeZone;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -85,6 +86,7 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
  */
 class PosTenderService implements PosTenderServiceInterface {
+	use ObjectArrayReads;
 	use RandomUuid;
 
 	/**
@@ -1245,17 +1247,7 @@ class PosTenderService implements PosTenderServiceInterface {
 
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(find: fn () => $this->getObjectService()->find(id: $id, register: $register, schema: $schema));
 	}//end fetchTransactionOrNull()
 
 	/**

@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -52,6 +53,8 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
 class MdmObjectRepository implements MdmObjectRepositoryInterface {
+	use ObjectArrayReads;
+
 	/**
 	 * App-config key holding the Pipelinq register id.
 	 *
@@ -134,21 +137,11 @@ class MdmObjectRepository implements MdmObjectRepositoryInterface {
 	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function find(string $schemaSlug, string $id): ?array {
-		try {
-			$object = $this->objectService()->find(
-				id: $id,
-				register: $this->register(),
-				schema: $this->schema(schemaSlug: $schemaSlug)
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(find: fn () => $this->objectService()->find(
+			id: $id,
+			register: $this->register(),
+			schema: $this->schema(schemaSlug: $schemaSlug)
+		));
 	}//end find()
 
 	/**
@@ -178,12 +171,7 @@ class MdmObjectRepository implements MdmObjectRepositoryInterface {
 			return [];
 		}
 
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
-		}
-
-		return $objects;
+		return $this->allAsArrays(results: $results);
 	}//end findAll()
 
 	/**

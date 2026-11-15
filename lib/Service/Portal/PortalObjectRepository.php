@@ -48,6 +48,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\IAppConfig;
@@ -68,6 +69,7 @@ use RuntimeException;
  */
 class PortalObjectRepository implements PortalObjectRepositoryInterface {
 	use CastingPayloadToArray;
+	use ObjectArrayReads;
 	use NullableRowIdOf {
 		idOf as public;
 	}
@@ -169,23 +171,13 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 			return null;
 		}
 
-		try {
-			$object = $this->objectService()->find(
-				id: $id,
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $object);
+		return $this->foundAsArray(find: fn () => $this->objectService()->find(
+			id: $id,
+			register: $this->registerId(),
+			schema: $this->schemaId(schemaSlug: $schemaSlug),
+			_rbac: false,
+			_multitenancy: false
+		));
 	}//end find()
 
 	/**
@@ -224,12 +216,7 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 			return [];
 		}
 
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(object: $result);
-		}
-
-		return $objects;
+		return $this->allAsArrays(results: $results);
 	}//end findAll()
 
 	/**
