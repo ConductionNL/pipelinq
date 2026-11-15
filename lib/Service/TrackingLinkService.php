@@ -317,7 +317,7 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 			$this->blastService->updateBlastTotals(blastId: $blastId);
 		}
 
-		$this->reportToTraffic(kind: 'open', delivery: $delivery, clickedUrl: null);
+		$this->reportToTraffic(delivery: $delivery, event: ['kind' => 'open', 'clickedUrl' => null]);
 	}//end recordOpen()
 
 	/**
@@ -351,7 +351,7 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 			$this->blastService->updateBlastTotals(blastId: $blastId);
 		}
 
-		$this->reportToTraffic(kind: 'click', delivery: $delivery, clickedUrl: $url);
+		$this->reportToTraffic(delivery: $delivery, event: ['kind' => 'click', 'clickedUrl' => $url]);
 	}//end recordClick()
 
 	/**
@@ -361,24 +361,23 @@ class TrackingLinkService implements TrackingLinkServiceInterface {
 	 * a Portaliq outage can never lose the record, and swallows anything
 	 * the emitter lets through so the pixel or redirect still answers.
 	 *
-	 * @param string $kind `open` or `click`.
-	 * @param array<string, mixed> $delivery The loaded blastDelivery row.
-	 * @param string|null $clickedUrl The decoded click target, or null.
+	 * @param array<string, mixed>                       $delivery The loaded blastDelivery row.
+	 * @param array{kind: string, clickedUrl: string|null} $event    `open` or `click`, and the decoded click target or null.
 	 *
 	 * @return void
 	 */
-	private function reportToTraffic(string $kind, array $delivery, ?string $clickedUrl): void {
+	private function reportToTraffic(array $delivery, array $event): void {
 		try {
 			$this->trafficEventEmitter->emitEmailEvent(
-				kind: $kind,
+				kind: $event['kind'],
 				delivery: $delivery,
 				blast: $this->blastOf(delivery: $delivery),
-				clickedUrl: $clickedUrl,
+				clickedUrl: $event['clickedUrl'],
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'TrackingLinkService.reportToTraffic: traffic dual-write failed',
-				['kind' => $kind, 'exception' => $e->getMessage()]
+				['kind' => $event['kind'], 'exception' => $e->getMessage()]
 			);
 		}
 	}//end reportToTraffic()

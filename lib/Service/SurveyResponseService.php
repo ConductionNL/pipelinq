@@ -392,7 +392,19 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
-		$response = $this->savedResponse(invitation: $invitation, answers: $answers);
+		return $this->accepted(invitation: $invitation, submission: ['answers' => $answers, 'optOut' => $optOut]);
+	}//end submit()
+
+	/**
+	 * Save the answers to an open invitation, close it, record an opt-out and raise the follow-up.
+	 *
+	 * @param array<string, mixed>                                    $invitation The open invitation.
+	 * @param array{answers: array<string, mixed>, optOut: bool|null} $submission The answers and the opt-out answer.
+	 *
+	 * @return array<string, mixed> `status` plus either the response or `error`.
+	 */
+	private function accepted(array $invitation, array $submission): array {
+		$response = $this->savedResponse(invitation: $invitation, answers: $submission['answers']);
 		if ($response === null) {
 			return ['status' => 500, 'error' => 'The response could not be saved.'];
 		}
@@ -401,12 +413,12 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 		// while the follow-up is still being raised finds the token spent.
 		$this->closeInvitation(invitation: $invitation, response: $response);
 
-		if ($optOut === true) {
+		if ($submission['optOut'] === true) {
 			$this->optOut->record(contactRef: (string)($invitation['contactRef'] ?? ''));
 		}
 
 		return ['status' => 201, 'response' => $this->followedUp(invitation: $invitation, response: $response)];
-	}//end submit()
+	}//end accepted()
 
 	/**
 	 * Write the response to an open invitation, with the id it was saved under.
