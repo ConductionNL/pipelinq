@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Cti\Adapter;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Service\Cti\Adapter\Support\ConfiguredWebhookToken;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
@@ -41,6 +42,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.4
  */
 class AsteriskAdapter implements CtiAdapterInterface {
+	use ConfiguredWebhookToken;
+
 	/**
 	 * Presence value per Asterisk device state.
 	 *
@@ -274,11 +277,6 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
-		$expected = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_asterisk_webhook_secret', '');
-		if ($expected === '' || $signature === '') {
-			return false;
-		}
-
-		return hash_equals($expected, $signature);
+		return $this->matchesConfiguredToken(configKey: 'cti_asterisk_webhook_secret', signature: $signature);
 	}//end verifyWebhookSignature()
 }//end class
