@@ -31,6 +31,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
 use OCA\Pipelinq\Service\Support\BsnHashRows;
+use OCA\Pipelinq\Util\BrpRetentionDate;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
@@ -47,6 +48,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	use SerialisedToArray;
 	use InjectedObjectService;
 	use BsnHashRows;
+	use BrpRetentionDate;
 
 	/**
 	 * Default TTL in hours (24h per design.md).
@@ -123,14 +125,8 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	 * @return bool
 	 */
 	private function isUnexpired(array $row, DateTimeImmutable $now): bool {
-		$retentionTo = (string)($row['retentionTo'] ?? '');
-		if ($retentionTo === '') {
-			return false;
-		}
-
-		try {
-			$retentionDt = new DateTimeImmutable($retentionTo, new DateTimeZone('UTC'));
-		} catch (Throwable $e) {
+		$retentionDt = $this->retentionDate(row: $row);
+		if ($retentionDt === null) {
 			return false;
 		}
 
