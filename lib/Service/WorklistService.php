@@ -230,14 +230,12 @@ class WorklistService implements WorklistServiceInterface {
 	public function getMine(string $userId, ?int $limit = null): array {
 		$leads = $this->findObjects(
 			schemaKey: 'lead_schema',
-			filters: ['assignee' => $userId],
-			limit: self::LEAD_FETCH_LIMIT
+			query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]
 		);
 		$requests = $this->assignedTickets(userId: $userId);
 		$pipelines = $this->findObjects(
 			schemaKey: 'pipeline_schema',
-			filters: [],
-			limit: self::PIPELINE_FETCH_LIMIT
+			query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT]
 		);
 
 		$openLeads = $this->openLeads(leads: $leads, closedStages: $this->getClosedStageNames(pipelines: $pipelines));
@@ -488,13 +486,14 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	private function openWorkRows(string $userId, bool $done): array {
 		$closedStages = $this->getClosedStageNames(
-			pipelines: $this->findObjects(schemaKey: 'pipeline_schema', filters: [], limit: self::PIPELINE_FETCH_LIMIT)
+			pipelines: $this->findObjects(schemaKey: 'pipeline_schema', query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT])
 		);
 
 		$rows = [];
-		foreach ($this->findObjects(schemaKey: 'lead_schema', filters: ['assignee' => $userId], limit: self::LEAD_FETCH_LIMIT) as $lead) {
+		$leads = $this->findObjects(schemaKey: 'lead_schema', query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]);
+		foreach ($leads as $lead) {
 			if ($done === true || in_array((string)($lead['stage'] ?? ''), $closedStages, true) === false) {
-				$rows[] = $this->itemRow(kind: 'lead', record: $lead, routeName: 'LeadDetail');
+				$rows[] = $this->itemRow(record: $lead, shape: ['lead', 'LeadDetail']);
 			}
 		}
 
@@ -502,7 +501,7 @@ class WorklistService implements WorklistServiceInterface {
 			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
 			foreach ($tickets as $ticket) {
 				if ($done === true || in_array((string)($ticket['status'] ?? ''), self::TERMINAL_TICKET_STATUSES, true) === false) {
-					$rows[] = $this->itemRow(kind: (string)($ticket['ticketType'] ?? $ticketType), record: $ticket, routeName: 'TicketDetail');
+					$rows[] = $this->itemRow(record: $ticket, shape: [(string)($ticket['ticketType'] ?? $ticketType), 'TicketDetail']);
 				}
 			}
 		}
@@ -529,8 +528,8 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		$rows = [];
-		foreach ($this->findObjects(schemaKey: 'task_schema', filters: $filters, limit: self::REQUEST_FETCH_LIMIT) as $task) {
-			$rows[] = $this->itemRow(kind: 'task', record: $task, routeName: 'TaskDetail');
+		foreach ($this->findObjects(schemaKey: 'task_schema', query: ['filters' => $filters, 'limit' => self::REQUEST_FETCH_LIMIT]) as $task) {
+			$rows[] = $this->itemRow(record: $task, shape: ['task', 'TaskDetail']);
 		}
 
 		return $rows;
@@ -706,13 +705,13 @@ class WorklistService implements WorklistServiceInterface {
 	/**
 	 * One work item before it is sorted into a list.
 	 *
-	 * @param string               $kind      The ticket type, `lead` or `task`.
-	 * @param array<string, mixed> $record    The object as stored.
-	 * @param string               $routeName The detail page.
+	 * @param array<string, mixed>        $record The object as stored.
+	 * @param array{0: string, 1: string} $shape  The kind (ticket type, `lead` or `task`) and the detail page.
 	 *
 	 * @return array<string, mixed> The item.
 	 */
-	private function itemRow(string $kind, array $record, string $routeName): array {
+	private function itemRow(array $record, array $shape): array {
+		[$kind, $routeName] = $shape;
 		$priority = (string)($record['priority'] ?? '');
 		if ($priority === '') {
 			$priority = 'normal';
@@ -937,15 +936,14 @@ class WorklistService implements WorklistServiceInterface {
 	 * "no data" (logged); OR failures surface as RuntimeException so
 	 * the controller can map them to a 500.
 	 *
-	 * @param string $schemaKey The app-config key holding the schema ID.
-	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param int $limit Row limit pushed to OpenRegister.
+	 * @param string                                          $schemaKey The app-config key holding the schema ID.
+	 * @param array{filters: array<string, mixed>, limit: int} $query     Additional equality filters and the row limit pushed to OpenRegister.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
-	private function findObjects(string $schemaKey, array $filters, int $limit): array {
+	private function findObjects(string $schemaKey, array $query): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
@@ -957,8 +955,8 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		$config = [
-			'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
-			'limit' => $limit,
+			'filters' => array_merge(['register' => $register, 'schema' => $schema], $query['filters']),
+			'limit' => $query['limit'],
 		];
 		return array_map(fn ($result): array => $this->toArray(value: $result), $this->runFindAll(config: $config, schemaKey: $schemaKey));
 	}//end findObjects()
