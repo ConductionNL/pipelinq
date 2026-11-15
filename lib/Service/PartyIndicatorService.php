@@ -234,12 +234,24 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 		$effect = self::effectOf(act: $act);
 		$blocking = self::withEffect(indicators: $this->resolve(partyId: $partyId, onDay: $onDay), effect: $effect);
 
+		return self::blockAnswer(act: $act, blocking: $blocking);
+	}//end isBlocked()
+
+	/**
+	 * The answer for an act: blocked when any indicator blocks it.
+	 *
+	 * @param string            $act      The act.
+	 * @param array<int, mixed> $blocking The indicators that block it.
+	 *
+	 * @return array{blocked: bool, act: string, indicators: array<int, mixed>}
+	 */
+	private static function blockAnswer(string $act, array $blocking): array {
 		return [
 			'blocked' => ($blocking !== []),
 			'act' => $act,
 			'indicators' => $blocking,
 		];
-	}//end isBlocked()
+	}//end blockAnswer()
 
 	/**
 	 * The indicator effect flag that blocks an act.
