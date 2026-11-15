@@ -349,12 +349,29 @@ class CampaignService implements CampaignServiceInterface {
 			return null;
 		}
 
-		$campaign['landingPage'] = $landingPage;
-		$campaign['formRef'] = $formId;
-		unset($campaign['@self'], $campaign['id'], $campaign['uuid'], $campaign['slug']);
+		$campaign = self::withLanding(campaign: $campaign, landing: ['landingPage' => $landingPage, 'formRef' => $formId]);
 
 		return $this->store->save(schemaSlug: $this->schemaSlug(), payload: $campaign, id: $id);
 	}//end recordLandingPage()
+
+	/**
+	 * The campaign as written back with its landing page: the answer stamped
+	 * on it, its identity fields left to the store.
+	 *
+	 * @param array<string, mixed> $campaign The stored campaign.
+	 * @param array<string, mixed> $landing  `landingPage` and `formRef`.
+	 *
+	 * @return array<string, mixed> The payload to save.
+	 */
+	private static function withLanding(array $campaign, array $landing): array {
+		foreach ($landing as $field => $value) {
+			$campaign[$field] = $value;
+		}
+
+		unset($campaign['@self'], $campaign['id'], $campaign['uuid'], $campaign['slug']);
+
+		return $campaign;
+	}//end withLanding()
 
 	/**
 	 * The canonical id of a campaign row.
