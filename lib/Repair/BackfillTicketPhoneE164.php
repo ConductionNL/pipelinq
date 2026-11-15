@@ -28,8 +28,8 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -44,6 +44,7 @@ use Throwable;
  * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.3
  */
 class BackfillTicketPhoneE164 implements IRepairStep {
+	use FirstAdminUser;
 
 	/**
 	 * Tickets read per batch.
@@ -183,17 +184,6 @@ class BackfillTicketPhoneE164 implements IRepairStep {
 
 		return 'updated';
 	}//end backfill()
-
-	/**
-	 * An admin to act as while saving, so OpenRegister's folder check has a user.
-	 *
-	 * @return IUser|null
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 
 	/**
 	 * Coerce an OpenRegister row into a plain array.

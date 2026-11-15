@@ -45,9 +45,9 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCA\Pipelinq\Service\LeadStagePlacer;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -61,6 +61,7 @@ use Throwable;
  */
 class BackfillLeadRelations implements IRepairStep {
 	use ReadsSchemaRows;
+	use FirstAdminUser;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -97,22 +98,6 @@ class BackfillLeadRelations implements IRepairStep {
 	public function getName(): string {
 		return 'Backfill the pipeline and stage every lead requires';
 	}//end getName()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any object that owns a file folder.
-	 * Saving as an admin gives that check someone to authorise, without
-	 * loosening the check itself.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = ($this->groupManager->get('admin')?->getUsers() ?? []);
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 
 
 

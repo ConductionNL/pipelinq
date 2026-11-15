@@ -38,9 +38,9 @@ namespace OCA\Pipelinq\Repair;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -55,6 +55,7 @@ use Throwable;
  */
 class BackfillContactChannelArrays implements IRepairStep {
 	use ReadsSchemaRows;
+	use FirstAdminUser;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -261,18 +262,4 @@ class BackfillContactChannelArrays implements IRepairStep {
 			return 'stuck';
 		}
 	}//end savePatch()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any object that owns a file folder.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = ($this->groupManager->get('admin')?->getUsers() ?? []);
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 }//end class

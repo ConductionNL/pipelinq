@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -54,6 +55,8 @@ use Throwable;
  * @spec openspec/specs/client-management/spec.md
  */
 class NormalisePartyFormFields implements IRepairStep {
+	use FirstAdminUser;
+
 	/**
 	 * Upper bound on rows fetched per schema.
 	 *
@@ -276,17 +279,6 @@ class NormalisePartyFormFields implements IRepairStep {
 			return 'stuck';
 		}
 	}//end repairRow()
-
-	/**
-	 * Resolve an admin to act as: a repair step has no session.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = ($this->groupManager->get('admin')?->getUsers() ?? []);
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 
 	/**
 	 * Read every row of one schema as arrays, RBAC off (no session on the CLI).

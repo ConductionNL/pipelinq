@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -51,6 +52,7 @@ use Throwable;
  */
 class MigrateContactMomentDirection implements IRepairStep {
 	use JsonSerializableToArray;
+	use FirstAdminUser;
 
 	/**
 	 * Upper bound on rows fetched in one pass.
@@ -286,18 +288,4 @@ class MigrateContactMomentDirection implements IRepairStep {
 			return 0;
 		}//end try
 	}//end saveMigrated()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any ticket that owns a file folder.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 }//end class

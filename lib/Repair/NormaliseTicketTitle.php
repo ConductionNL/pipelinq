@@ -40,9 +40,10 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Util\SystemRowSaver;
 use OCP\IGroupManager;
-use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -55,6 +56,8 @@ use Throwable;
  */
 class NormaliseTicketTitle implements IRepairStep {
 	use JsonSerializableToArray;
+	use FirstAdminUser;
+	use SystemRowSaver;
 
 	/**
 	 * Preferred locale order when collapsing a translation map.
@@ -86,22 +89,6 @@ class NormaliseTicketTitle implements IRepairStep {
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any ticket that owns a file folder
-	 * ("Access to folder 'N' is denied for the acting user"). Saving as an admin
-	 * gives that check someone to authorise, without loosening the check itself.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
 
 	/**
 	 * Get the repair step name.
@@ -155,7 +142,7 @@ class NormaliseTicketTitle implements IRepairStep {
 
 		return [
 			$this->rowFetcher(objectService: $objectService, register: $register, schema: $schema),
-			$this->titleSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin),
+			$this->rowSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin),
 		];
 	}//end repairSteps()
 
@@ -188,34 +175,6 @@ class NormaliseTicketTitle implements IRepairStep {
 			_multitenancy: false,
 		);
 	}//end rowFetcher()
-
-	/**
-	 * Build the writer that saves one normalised row as the acting admin.
-	 *
-	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param IUser|null $actingAdmin The admin to act as, or null when none exists.
-	 *
-	 * @return callable(array<string, mixed>): mixed
-	 *
-	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
-	 */
-	private function titleSaver(ObjectServiceInterface $objectService, string $register, string $schema, IUser|null $actingAdmin): callable {
-		// Bypass RBAC here — and ONLY here: this is a system context
-		// reshaping data it already owns. TicketService::save() keeps
-		// RBAC on, because controllers call it.
-		return static fn (array $data): mixed => $objectService->saveObject(
-			object: $data,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: (string)($data['id'] ?? ''),
-			_rbac: false,
-			_multitenancy: false,
-			currentUser: $actingAdmin,
-		);
-	}//end titleSaver()
 
 	/**
 	 * Normalise every row of one subtype and add the outcomes to the counts.
