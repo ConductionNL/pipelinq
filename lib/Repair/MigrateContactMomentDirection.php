@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\ContactMomentRows;
 use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IGroupManager;
@@ -53,6 +54,7 @@ use Throwable;
 class MigrateContactMomentDirection implements IRepairStep {
 	use JsonSerializableToArray;
 	use FirstAdminUser;
+	use ContactMomentRows;
 
 	/**
 	 * Upper bound on rows fetched in one pass.
@@ -191,41 +193,13 @@ class MigrateContactMomentDirection implements IRepairStep {
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
-		$rows = $this->readContactMoments(objectService: $objectService, register: $register, schema: $schema);
+		$rows = $this->contactMomentRows(objectService: $objectService, register: $register, schema: $schema);
 		[$filled, $untouched] = $this->migrateRows(rows: $rows, target: [$objectService, $register, $schema, $actingAdmin]);
 
 		$output->info(
 			sprintf('Contact moment directions: %d filled, %d already set.', $filled, $untouched)
 		);
 	}//end run()
-
-	/**
-	 * Read one batch of contact moments with RBAC and multitenancy off.
-	 *
-	 * Read with RBAC off for the same reason NormaliseTicketTitle does: a
-	 * repair step has no session, so an RBAC-filtered read would migrate
-	 * only the rows 'Anonymous' may see and call that a complete run.
-	 *
-	 * @param mixed $objectService The OpenRegister ObjectService.
-	 * @param mixed $register The ticket register id.
-	 * @param mixed $schema The ticket schema id.
-	 *
-	 * @return iterable<mixed> The rows.
-	 */
-	private function readContactMoments($objectService, $register, $schema): iterable {
-		return $objectService->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-					'ticketType' => TicketServiceInterface::TYPE_CONTACTMOMENT,
-				],
-				'limit' => self::BATCH_LIMIT,
-			],
-			_rbac: false,
-			_multitenancy: false,
-		);
-	}//end readContactMoments()
 
 	/**
 	 * Fill the direction on every row that lacks one.

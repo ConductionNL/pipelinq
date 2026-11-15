@@ -33,8 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Util\ContactMomentRows;
 use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCA\Pipelinq\Util\SystemRowSaver;
@@ -53,6 +53,7 @@ class WidenContactMomentCaseReference implements IRepairStep {
 	use JsonSerializableToArray;
 	use FirstAdminUser;
 	use SystemRowSaver;
+	use ContactMomentRows;
 
 	/**
 	 * Upper bound on rows fetched in one pass.
@@ -142,32 +143,6 @@ class WidenContactMomentCaseReference implements IRepairStep {
 
 		$output->info(sprintf('Contact moment case sets: %d widened, %d already a set.', $counts['widened'], $counts['untouched']));
 	}//end run()
-
-	/**
-	 * Fetch every stored contact moment, with RBAC off.
-	 *
-	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param string $register The register id.
-	 * @param string $schema The ticket schema id.
-	 *
-	 * @return array<mixed>
-	 *
-	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
-	 */
-	private function contactMomentRows(ObjectServiceInterface $objectService, string $register, string $schema): array {
-		return $objectService->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-					'ticketType' => TicketServiceInterface::TYPE_CONTACTMOMENT,
-				],
-				'limit' => self::BATCH_LIMIT,
-			],
-			_rbac: false,
-			_multitenancy: false,
-		);
-	}//end contactMomentRows()
 
 	/**
 	 * Widen every row and count the outcomes.

@@ -29,6 +29,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
 use OCA\Pipelinq\Util\FirstValue;
 use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\ResultToArray;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -41,6 +42,7 @@ use RuntimeException;
 class ContactSyncService implements ContactSyncServiceInterface {
 	use InjectedObjectService;
 	use FirstValue;
+	use ResultToArray;
 
 	/**
 	 * Constructor.
@@ -99,7 +101,7 @@ class ContactSyncService implements ContactSyncServiceInterface {
 		$payload = $this->identityPayload(form: $form, provision: $provision);
 		$created = $this->saveCreated(objectType: $objectType, payload: $payload);
 
-		return $this->createdData(created: $created);
+		return $this->serializeResult(result: $created);
 	}//end createWithContact()
 
 	/**
@@ -180,27 +182,6 @@ class ContactSyncService implements ContactSyncServiceInterface {
 			null
 		);
 	}//end saveCreated()
-
-	/**
-	 * The created object's data.
-	 *
-	 * @param mixed $created The saved object.
-	 *
-	 * @return array The serialised object, the array itself, or an empty array.
-	 *
-	 * @spec openspec/specs/unify-client-contact/spec.md
-	 */
-	private function createdData($created): array {
-		if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
-			return $created->jsonSerialize();
-		}
-
-		if (is_array($created) === true) {
-			return $created;
-		}
-
-		return [];
-	}//end createdData()
 
 	/**
 	 * Search Nextcloud addressbooks for contacts matching a query.
