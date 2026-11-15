@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Cti\Adapter;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Cti\Adapter\Support\ConfiguredWebhookToken;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\PresenceSubscribingInterface;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
@@ -43,8 +42,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.3
  */
 class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInterface {
-	use ConfiguredWebhookToken;
-
 	/**
 	 * Normalised event type per party status code (lower-cased).
 	 *
@@ -272,6 +269,11 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
-		return $this->matchesConfiguredToken(configKey: 'cti_ringcentral_webhook_token', signature: $signature);
+		$expected = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_ringcentral_webhook_token', '');
+		if ($expected === '' || $signature === '') {
+			return false;
+		}
+
+		return hash_equals($expected, $signature);
 	}//end verifyWebhookSignature()
 }//end class
