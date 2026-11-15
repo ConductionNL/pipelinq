@@ -558,10 +558,8 @@ class TicketService implements TicketServiceInterface {
 		?string $notes = null,
 	): array {
 		$fields = [
-			'client' => trim($client),
-			'channel' => trim($channel),
-			'title' => trim($title),
-			'direction' => trim($direction),
+			'client' => trim($client), 'channel' => trim($channel),
+			'title' => trim($title), 'direction' => trim($direction),
 		];
 
 		return $this->loggedContactmoment(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
