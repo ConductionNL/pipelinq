@@ -40,6 +40,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\SerialisedRows;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -56,6 +57,7 @@ use Throwable;
  */
 class NormalisePartyFormFields implements IRepairStep {
 	use FirstAdminUser;
+	use SerialisedRows;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -302,28 +304,6 @@ class NormalisePartyFormFields implements IRepairStep {
 			return [];
 		}
 
-		return $this->rowArrays(rows: $rows);
+		return $this->serialisedRows(rows: $rows);
 	}//end readAll()
-
-	/**
-	 * The rows as arrays, serialising objects and dropping anything else.
-	 *
-	 * @param mixed $rows The rows findAll returned.
-	 *
-	 * @return array<int,array<string,mixed>> The rows.
-	 */
-	private function rowArrays($rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$row = $row->jsonSerialize();
-			}
-
-			if (is_array($row) === true) {
-				$out[] = $row;
-			}
-		}
-
-		return $out;
-	}//end rowArrays()
 }//end class

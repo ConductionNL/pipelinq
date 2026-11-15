@@ -49,6 +49,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableRows;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -62,6 +63,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class PartyIndicatorService implements PartyIndicatorServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The acts a caller can ask about, and the effect each one reads.
 	 *
@@ -491,32 +494,6 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 
 		return $this->plainRows(rows: $rows);
 	}//end read()
-
-	/**
-	 * Rows as plain arrays; a row with no array shape is dropped.
-	 *
-	 * @param iterable<mixed> $rows The rows OpenRegister returned.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function plainRows(iterable $rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
-			}
-		}
-
-		return $out;
-	}//end plainRows()
 
 	/**
 	 * The pipelinq register id.
