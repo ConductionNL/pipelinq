@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
+use OCA\Pipelinq\Service\Support\LoggedFindAsArray;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -55,6 +56,7 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	use ConfiguredSchemaSlug;
 	use ContainerObjectService;
 	use SchemaRowQuery;
+	use LoggedFindAsArray;
 
 	/**
 	 * Default channelProvider schema slug.
@@ -192,24 +194,19 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	 * @return array<string, mixed>|null Row or null.
 	 */
 	private function findProvider(object $objectService, string $id, array $scope): array|null {
-		try {
-			$entity = $objectService->find(
+		return $this->loggedFindAsArray(
+			find: fn (): mixed => $objectService->find(
 				id: $id,
 				register: $this->getRegisterSlug(),
 				schema: $this->getSchemaSlug(),
 				_rbac: ($scope['_rbac'] ?? true),
 				_multitenancy: ($scope['_multitenancy'] ?? true),
-			);
-		} catch (Throwable $e) {
-			$this->logger->info('ChannelProviderRepository.findById: not found', ['id' => $id, 'exception' => $e->getMessage()]);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+			),
+			onFailure: fn (Throwable $e) => $this->logger->info(
+				'ChannelProviderRepository.findById: not found',
+				['id' => $id, 'exception' => $e->getMessage()]
+			)
+		);
 	}//end findProvider()
 
 	/**

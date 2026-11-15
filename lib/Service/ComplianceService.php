@@ -39,6 +39,7 @@ use OCA\Pipelinq\Service\Consent\SendPermitRequest;
 use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Service\Support\LoggedFindAsArray;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
@@ -76,6 +77,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	use ContainerObjectService;
 	use SavedPayloadId;
 	use ObjectServiceTarget;
+	use LoggedFindAsArray;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -957,21 +959,13 @@ class ComplianceService implements ComplianceServiceInterface {
 	 */
 	private function findTemplate(string $templateId, array $store): array|null {
 		[$objectService, $register, $schema] = $store;
-		try {
-			$entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info(
+		return $this->loggedFindAsArray(
+			find: fn (): mixed => $objectService->find(id: $templateId, register: $register, schema: $schema),
+			onFailure: fn (Throwable $e) => $this->logger->info(
 				'ComplianceService.getTemplateById: not found',
 				['templateId' => $templateId, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+			)
+		);
 	}//end findTemplate()
 
 	/**

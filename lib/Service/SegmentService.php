@@ -34,6 +34,7 @@ use OCA\Pipelinq\Service\Marketing\ListQueryWhereCapability;
 use OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Service\Support\LoggedFindAsArray;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
@@ -80,6 +81,7 @@ class SegmentService implements SegmentServiceInterface {
 	use ContainerObjectService;
 	use SavedPayloadId;
 	use ObjectServiceTarget;
+	use LoggedFindAsArray;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -2379,25 +2381,16 @@ class SegmentService implements SegmentServiceInterface {
 	 */
 	private function findSegment(array $target, string $segmentId): array|null {
 		[$register, $schema, $objectService] = $target;
-		try {
-			$entity = $objectService->find(id: $segmentId, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info('SegmentService.loadSegment: not found', ['segmentId' => $segmentId, 'exception' => $e->getMessage()]);
-			return null;
-		}
-
-		// OpenRegister's find() is documented to return null on a miss
-		// rather than always throwing (ADR-084). Returning early here —
-		// rather than letting a null fall through to toArray(), which
-		// normalises it to `[]` — is what lets updateSegment()
-		// (marketing-segments-ui-repair) tell "no such Segment" apart from
-		// "an empty Segment row"; getSegmentById()
-		// and show()'s 404 depend on the same distinction.
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		// A miss answers null rather than `[]`: updateSegment()
+		// (marketing-segments-ui-repair), getSegmentById() and show()'s 404
+		// depend on telling "no such Segment" apart from "an empty Segment row".
+		return $this->loggedFindAsArray(
+			find: fn (): mixed => $objectService->find(id: $segmentId, register: $register, schema: $schema),
+			onFailure: fn (Throwable $e) => $this->logger->info(
+				'SegmentService.loadSegment: not found',
+				['segmentId' => $segmentId, 'exception' => $e->getMessage()]
+			)
+		);
 	}//end findSegment()
 
 	/**

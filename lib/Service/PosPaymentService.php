@@ -48,6 +48,7 @@ use OCA\Pipelinq\Service\Payment\PaymentWebhook;
 use OCA\Pipelinq\Service\Payment\PosTransactionStore;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
+use OCA\Pipelinq\Util\JsonConfigArray;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -92,6 +93,7 @@ use Throwable;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
  */
 class PosPaymentService implements PosPaymentServiceInterface {
+	use JsonConfigArray;
 	use NullablePayloadToArray;
 	use RandomUuid;
 
@@ -1278,21 +1280,7 @@ class PosPaymentService implements PosPaymentServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function readObject(string $name, string $key): array {
-		$raw = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			$this->settingKey(name: $name, key: $key),
-			''
-		);
-		if ($raw === '') {
-			return [];
-		}
-
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		return $decoded;
+		return $this->jsonConfigArray(key: $this->settingKey(name: $name, key: $key));
 	}//end readObject()
 
 	/**

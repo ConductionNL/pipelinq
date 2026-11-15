@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\KeyedServiceResult;
 use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
@@ -48,6 +49,8 @@ use OCP\IUserSession;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
 class MailingListController extends Controller {
+	use KeyedServiceResult;
+
 	/**
 	 * Constructor.
 	 *
@@ -140,15 +143,7 @@ class MailingListController extends Controller {
 	public function update(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$result = $this->lists->updateMailingList(listId: $id, patch: $this->collectBody());
-			if (($result['error'] ?? '') === 'Not found') {
-				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-			}
-
-			if (isset($result['error']) === true) {
-				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-			}
-
-			return new JSONResponse(['list' => ($result['list'] ?? null)]);
+			return $this->keyedResult(result: $result, key: 'list');
 		});
 	}//end update()
 

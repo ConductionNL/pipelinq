@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\BrpRetentionDate;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -41,6 +42,8 @@ use Throwable;
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008
  */
 class BrpRetentionJob extends TimedJob {
+	use BrpRetentionDate;
+
 	/**
 	 * Default interval (24h).
 	 */
@@ -186,14 +189,8 @@ class BrpRetentionJob extends TimedJob {
 	 * @return bool True when the record may be deleted.
 	 */
 	private function isRetentionExpired(array $record, DateTimeImmutable $now): bool {
-		$retentionTo = (string)($record['retentionTo'] ?? '');
-		if ($retentionTo === '') {
-			return false;
-		}
-
-		try {
-			$retentionDt = new DateTimeImmutable($retentionTo, new DateTimeZone('UTC'));
-		} catch (Throwable $e) {
+		$retentionDt = $this->retentionDate(row: $record);
+		if ($retentionDt === null) {
 			return false;
 		}
 

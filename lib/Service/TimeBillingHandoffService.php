@@ -61,7 +61,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
+use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\LooseServiceLookup;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -82,6 +84,8 @@ use Throwable;
  */
 class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	use CastingPayloadToArray;
+	use ObjectArrayReads;
+	use LooseServiceLookup;
 
 	/**
 	 * Fixed namespace UUID (RFC 4122 URL namespace) seeding the deterministic
@@ -727,17 +731,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 			return null;
 		}
 
-		try {
-			$entity = $objectService->find(id: $clientId, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(object: $entity);
+		return $this->foundAsArray(find: fn (): mixed => $objectService->find(id: $clientId, register: $register, schema: $schema));
 	}//end fetchClient()
 
 	/**
@@ -746,17 +740,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	 * @return object|null The service, or null when unavailable.
 	 */
 	private function objectService(): ?object {
-		try {
-			$service = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (is_object($service) === false) {
-			return null;
-		}
-
-		return $service;
+		return $this->looseService(serviceId: 'OCA\\OpenRegister\\Service\\ObjectService', method: '');
 	}//end objectService()
 
 	/**
@@ -768,17 +752,7 @@ class TimeBillingHandoffService implements TimeBillingHandoffServiceInterface {
 	 * @return object|null The intake service, or null when unavailable.
 	 */
 	private function resolveIntakeService(): ?object {
-		try {
-			$service = $this->container->get(self::SHILLINQ_INTAKE_SERVICE);
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (is_object($service) === false || method_exists($service, 'ingest') === false) {
-			return null;
-		}
-
-		return $service;
+		return $this->looseService(serviceId: self::SHILLINQ_INTAKE_SERVICE, method: 'ingest');
 	}//end resolveIntakeService()
 
 	/**
