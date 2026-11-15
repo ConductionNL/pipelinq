@@ -215,29 +215,45 @@ class MessagingService implements MessagingServiceInterface {
 	public function send(MessageRoute $route, MessageContent $content, string $actor): array {
 		$context = $route->adapterContext(agent: $actor);
 
+		$outcome = $this->adapterOutcome(content: $content, call: ['route' => $route, 'context' => $context]);
+		if ($outcome === null) {
+			return ['status' => 'unsupported-channel'];
+		}
+
+		return $this->sanitiseOutcome(outcome: $outcome);
+	}//end send()
+
+	/**
+	 * Hand the message to the adapter of its channel; null for a channel without one.
+	 *
+	 * @param MessageContent                                            $content The channel, text and template.
+	 * @param array{route: MessageRoute, context: array<string, mixed>} $call    The route and the adapter context.
+	 *
+	 * @return array<string, mixed>|null The raw adapter outcome.
+	 */
+	private function adapterOutcome(MessageContent $content, array $call): ?array {
+		$route = $call['route'];
 		if ($content->channel === 'sms') {
-			$outcome = $this->smsAdapter->send(
+			return $this->smsAdapter->send(
 				contact: $route->contact,
 				body: $content->body,
 				providerHint: $route->providerHint,
-				context: $context
+				context: $call['context']
 			);
-			return $this->sanitiseOutcome(outcome: $outcome);
 		}
 
 		if ($content->channel === 'whatsapp') {
-			$outcome = $this->whatsAppAdapter->send(
+			return $this->whatsAppAdapter->send(
 				contact: $route->contact,
 				body: $content->body,
 				templateId: $content->templateId,
 				parameters: $content->parameters,
-				context: $context
+				context: $call['context']
 			);
-			return $this->sanitiseOutcome(outcome: $outcome);
 		}
 
-		return ['status' => 'unsupported-channel'];
-	}//end send()
+		return null;
+	}//end adapterOutcome()
 
 	/**
 	 * Load one channelMessage row through the register RBAC.
