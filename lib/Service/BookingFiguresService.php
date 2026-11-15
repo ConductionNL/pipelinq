@@ -169,7 +169,7 @@ class BookingFiguresService {
 			}
 
 			foreach ($assignments as $assignment) {
-				$booked += $this->minutesWithin(assignment: $assignment, from: $weekStart, until: $weekEnd);
+				$booked += $this->minutesWithin(assignment: $assignment, window: [$weekStart, $weekEnd]);
 			}
 		}
 
@@ -282,13 +282,13 @@ class BookingFiguresService {
 	/**
 	 * The minutes of an assignment that fall inside a window.
 	 *
-	 * @param array<string, mixed> $assignment A resource assignment of a booking.
-	 * @param DateTimeImmutable    $from       Window start, inclusive.
-	 * @param DateTimeImmutable    $until      Window end, exclusive.
+	 * @param array<string, mixed>                              $assignment A resource assignment of a booking.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window     Its start, inclusive, and end, exclusive.
 	 *
 	 * @return int
 	 */
-	private function minutesWithin(array $assignment, DateTimeImmutable $from, DateTimeImmutable $until): int {
+	private function minutesWithin(array $assignment, array $window): int {
+		[$from, $until] = $window;
 		$start = $this->moment(value: ($assignment['startAt'] ?? null));
 		$end = $this->moment(value: ($assignment['endAt'] ?? null));
 		if ($start === null || $end === null) {
