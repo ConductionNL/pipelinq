@@ -76,13 +76,7 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getKpis(): JSONResponse {
-		// Reporting aggregates across the customer base — a CRM capability.
-		$refusal = $this->privilege->refusalAsMessage();
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$period = $this->validatedPeriod();
+		$period = $this->permittedPeriod();
 		if ($period instanceof JSONResponse) {
 			return $period;
 		}
@@ -101,13 +95,7 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getChannels(): JSONResponse {
-		// Reporting aggregates across the customer base — a CRM capability.
-		$refusal = $this->privilege->refusalAsMessage();
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$period = $this->validatedPeriod();
+		$period = $this->permittedPeriod();
 		if ($period instanceof JSONResponse) {
 			return $period;
 		}
@@ -132,13 +120,7 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-contactmomenten-rapportage/tasks.md#task-1
 	 */
 	public function getAgents(): JSONResponse {
-		// Reporting aggregates across the customer base — a CRM capability.
-		$refusal = $this->privilege->refusalAsMessage();
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$period = $this->validatedPeriod();
+		$period = $this->permittedPeriod();
 		if ($period instanceof JSONResponse) {
 			return $period;
 		}
@@ -273,13 +255,7 @@ class ReportingController extends Controller {
 	 * @spec openspec/changes/wire-rapportage-csv-export/tasks.md#2-build-the-export-table
 	 */
 	public function exportCsv(): DataDownloadResponse|JSONResponse {
-		// Reporting aggregates across the customer base — a CRM capability.
-		$refusal = $this->privilege->refusalAsMessage();
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$period = $this->validatedPeriod();
+		$period = $this->permittedPeriod();
 		if ($period instanceof JSONResponse) {
 			return $period;
 		}
@@ -393,6 +369,21 @@ class ReportingController extends Controller {
 		$dayNum = (int)$day->format('N');
 		return $day->sub(new DateInterval('P' . ($dayNum - 1) . 'D'));
 	}//end mondayOf()
+
+	/**
+	 * The requested period for a CRM user, or the refusal: reporting
+	 * aggregates across the customer base, a CRM capability.
+	 *
+	 * @return array{0: string, 1: string}|JSONResponse The period, or the refusal.
+	 */
+	private function permittedPeriod(): array|JSONResponse {
+		$refusal = $this->privilege->refusalAsMessage();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->validatedPeriod();
+	}//end permittedPeriod()
 
 	/**
 	 * The requested [from, to] period, or the 400 that refuses it.

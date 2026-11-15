@@ -290,7 +290,21 @@ class KeywordAnalysisService {
 		float $minPageShare = self::DEFAULT_MIN_PAGE_SHARE,
 		float $materiality = self::DEFAULT_MATERIALITY,
 	): array {
-		$thresholds = ['minImpressions' => $minImpressions, 'minPageShare' => $minPageShare, 'materiality' => $materiality];
+		return $this->cannibalisationFindings(
+			rows: $rows,
+			thresholds: ['minImpressions' => $minImpressions, 'minPageShare' => $minPageShare, 'materiality' => $materiality]
+		);
+	}//end cannibalisation()
+
+	/**
+	 * The cannibalisation findings of every query, most impressions first.
+	 *
+	 * @param array<int, array<string, mixed>>                                 $rows       `searchQueryDaily` rows.
+	 * @param array{minImpressions: int, minPageShare: float, materiality: float} $thresholds The qualifying thresholds.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function cannibalisationFindings(array $rows, array $thresholds): array {
 		$out = [];
 		foreach ($this->byQueryAndPage(rows: $rows) as $query => $pages) {
 			$finding = $this->cannibalised(pages: $pages, thresholds: $thresholds);
@@ -300,7 +314,7 @@ class KeywordAnalysisService {
 		}
 
 		return self::mostImpressionsFirst(findings: $out);
-	}//end cannibalisation()
+	}//end cannibalisationFindings()
 
 	/**
 	 * The cannibalisation finding (without its query) for one query's pages, or null.
@@ -373,20 +387,45 @@ class KeywordAnalysisService {
 		}
 
 		$haystacks = $this->haystacksOf(pages: $pages);
-		$out = [];
-		foreach ($this->byQuery(rows: $rows) as $entry) {
-			if ($entry['impressions'] < $minImpressions) {
-				continue;
-			}
+		$entries = self::withImpressions(entries: $this->byQuery(rows: $rows), minImpressions: $minImpressions);
 
+		return self::mostImpressionsFirst(findings: $this->gapsAmong(entries: $entries, haystacks: $haystacks));
+	}//end contentGaps()
+
+	/**
+	 * The query entries with at least the impressions to qualify.
+	 *
+	 * @param array<int|string, array<string, mixed>> $entries        The query entries.
+	 * @param int                                     $minImpressions Impressions a query needs.
+	 *
+	 * @return array<int|string, array<string, mixed>> The qualifying entries.
+	 */
+	private static function withImpressions(array $entries, int $minImpressions): array {
+		return array_filter(
+			$entries,
+			static fn (array $entry): bool => ($entry['impressions'] < $minImpressions) === false
+		);
+	}//end withImpressions()
+
+	/**
+	 * The gap findings of the qualifying queries.
+	 *
+	 * @param array<array-key, array<string, mixed>> $entries   The per-query entries with enough impressions.
+	 * @param array<string, string>                  $haystacks The normalised text per page URL.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function gapsAmong(array $entries, array $haystacks): array {
+		$out = [];
+		foreach ($entries as $entry) {
 			$gap = $this->gapFinding(entry: $entry, haystacks: $haystacks);
 			if ($gap !== null) {
 				$out[] = $gap;
 			}
 		}
 
-		return self::mostImpressionsFirst(findings: $out);
-	}//end contentGaps()
+		return $out;
+	}//end gapsAmong()
 
 	/**
 	 * Normalised title-and-headings text per crawled page URL.

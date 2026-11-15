@@ -303,19 +303,30 @@ class SocialAccountService implements SocialAccountServiceInterface {
 			return $found;
 		}
 
-		$account = $found['account'];
+		return $this->connectParameters(account: $found['account'], request: ['accountId' => $accountId, 'returnUrl' => $returnUrl]);
+	}//end connectRequest()
+
+	/**
+	 * The connect parameters of an account the user may connect, or the refusal when its network is not configured.
+	 *
+	 * @param array<string, mixed>                       $account The account as read.
+	 * @param array{accountId: string, returnUrl: string} $request The account id and the path to come back to.
+	 *
+	 * @return array{error?: string, connect?: array<string, mixed>} The parameters, or an error.
+	 */
+	private function connectParameters(array $account, array $request): array {
 		$network = (string)($account['network'] ?? '');
 		$readiness = $this->registry->readinessFor(network: $network);
 		if ($readiness['state'] === SocialBrokerGateway::NOT_CONFIGURED) {
 			// Refuse, and say what is missing. The account is left as it is: a
 			// row sitting in `pending` would read as a connection under way.
-			$this->stampStatus(accountId: $accountId, account: $account, status: self::STATUS_NOT_CONFIGURED, reason: $readiness['reason']);
+			$this->stampStatus(accountId: $request['accountId'], account: $account, status: self::STATUS_NOT_CONFIGURED, reason: $readiness['reason']);
 			return ['error' => $readiness['reason']];
 		}
 
-		$tail = ['returnUrl' => $returnUrl, 'readiness' => $readiness];
+		$tail = ['returnUrl' => $request['returnUrl'], 'readiness' => $readiness];
 		return ['connect' => array_merge($this->connectFor(account: $account, network: $network), $tail, $this->optionalConnectFields(account: $account))];
-	}//end connectRequest()
+	}//end connectParameters()
 
 	/**
 	 * The account the user may connect, or the refusal: it does not exist,
@@ -417,16 +428,27 @@ class SocialAccountService implements SocialAccountServiceInterface {
 			return $found;
 		}
 
-		$account = $found['account'];
+		return $this->attachedCredential(account: $found['account'], request: ['accountId' => $accountId, 'uid' => $uid, 'payload' => $payload]);
+	}//end attachCredential()
+
+	/**
+	 * Resolve and check the credential of a completed connection, then save it on the account.
+	 *
+	 * @param array<string, mixed>                                             $account The account as read.
+	 * @param array{accountId: string, uid: string, payload: array<string, mixed>} $request The account id, the caller and the client's payload.
+	 *
+	 * @return array{error?: string, account?: array<string, mixed>} The updated account, or an error.
+	 */
+	private function attachedCredential(array $account, array $request): array {
 		$provider = $this->registry->providerFor(network: (string)($account['network'] ?? ''));
-		$credential = $this->resolveCredential(payload: $payload, provider: $provider, uid: $uid);
-		$refusal = $this->credentialRefusal(credential: $credential, uid: $uid);
+		$credential = $this->resolveCredential(payload: $request['payload'], owner: ['provider' => $provider, 'uid' => $request['uid']]);
+		$refusal = $this->credentialRefusal(credential: $credential, uid: $request['uid']);
 		if ($refusal !== null) {
 			return ['error' => $refusal];
 		}
 
-		return $this->savedConnection(accountId: $accountId, update: $this->withCredential(account: $account, credential: $credential));
-	}//end attachCredential()
+		return $this->savedConnection(accountId: $request['accountId'], update: $this->withCredential(account: $account, credential: $credential));
+	}//end attachedCredential()
 
 	/**
 	 * Save the account with its credential; the saved account, or the refusal.
@@ -696,19 +718,18 @@ class SocialAccountService implements SocialAccountServiceInterface {
 	 * when it named one, otherwise the newest this user connected for that
 	 * provider.
 	 *
-	 * @param array<string, mixed> $payload The client's payload.
-	 * @param string $provider The broker provider.
-	 * @param string $uid The caller.
+	 * @param array<string, mixed>              $payload The client's payload.
+	 * @param array{provider: string, uid: string} $owner   The broker provider and the caller.
 	 *
 	 * @return array<string, mixed>|null The credential metadata, or null.
 	 */
-	private function resolveCredential(array $payload, string $provider, string $uid): ?array {
+	private function resolveCredential(array $payload, array $owner): ?array {
 		$named = trim((string)($payload['credentialRef'] ?? ''));
 		if ($named !== '') {
 			return $this->credentials->read(credentialRef: $named);
 		}
 
-		return $this->credentials->findLatest(provider: $provider, ownerUid: $uid);
+		return $this->credentials->findLatest(provider: $owner['provider'], ownerUid: $owner['uid']);
 	}//end resolveCredential()
 
 	/**

@@ -71,7 +71,7 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 
 		$end = $this->dateOf(value: $contract['endDate'] ?? null);
 		$year = (int)$today->format('Y');
-		[$sent, $invoiced] = $this->invoicedIn(contract: $contract, year: $year, perPeriod: $perPeriod);
+		[$sent, $invoiced] = $this->invoicedIn(contract: $contract, basis: ['year' => $year, 'perPeriod' => $perPeriod]);
 
 		return [
 			'currency' => (string)($contract['currency'] ?? ''),
@@ -121,13 +121,13 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 	 * The sends of a year and their amount. Read from `invoiceHistory`; a
 	 * contract without one counts its last send (`invoicedAt`) at the period value.
 	 *
-	 * @param array<string, mixed> $contract The contract.
-	 * @param int $year The year.
-	 * @param float $perPeriod The value per period.
+	 * @param array<string, mixed>             $contract The contract.
+	 * @param array{year: int, perPeriod: float} $basis    The year and the value per period.
 	 *
 	 * @return array{0: int, 1: float} The sends and the amount.
 	 */
-	private function invoicedIn(array $contract, int $year, float $perPeriod): array {
+	private function invoicedIn(array $contract, array $basis): array {
+		['year' => $year, 'perPeriod' => $perPeriod] = $basis;
 		$inYear = $this->sendsIn(sends: $this->sendsOf(contract: $contract, perPeriod: $perPeriod), year: $year);
 		$amount = 0.0;
 		foreach ($inYear as $send) {

@@ -151,23 +151,24 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 			return false;
 		}
 
-		$eventClass = $this->resolveEventClass(eventClass: self::STATUS_EVENT);
-		if ($eventClass === null) {
-			return false;
-		}
-
-		return $this->dispatchReport(eventClass: $eventClass, report: ['key' => $key, 'status' => $status, 'message' => $message]);
+		return $this->dispatchReport(report: ['key' => $key, 'status' => $status, 'message' => $message]);
 	}//end report()
 
 	/**
 	 * Dispatch a connection report as integriq's status event; a failure is logged.
 	 *
-	 * @param string                                              $eventClass The event class integriq ships.
-	 * @param array{key: string, status: string, message: string} $report     The connection key, status and message.
+	 * Without the event class integriq ships nothing is sent.
+	 *
+	 * @param array{key: string, status: string, message: string} $report The connection key, status and message.
 	 *
 	 * @return bool True when the report was dispatched.
 	 */
-	private function dispatchReport(string $eventClass, array $report): bool {
+	private function dispatchReport(array $report): bool {
+		$eventClass = $this->resolveEventClass(eventClass: self::STATUS_EVENT);
+		if ($eventClass === null) {
+			return false;
+		}
+
 		try {
 			$event = new $eventClass(
 				app: AppIdentity::APP_ID,

@@ -129,27 +129,61 @@ class JourneyService implements JourneyServiceInterface {
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function save(array $payload, string $createdByUid, ?string $journeyId = null): ?array {
-		$now = date('c', $this->time->getTime());
-		$payload['updatedAt'] = $now;
-		$before = null;
-		if ($journeyId !== null) {
-			$before = $this->find(journeyId: $journeyId);
+		$write = ['journeyId' => $journeyId, 'author' => $createdByUid];
+
+		return $this->storedAndCompiled(journey: $this->stamped(payload: $payload, write: $write), write: $write);
+	}//end save()
+
+	/**
+	 * The journey stamped for a write: updated now, created by the author when new, and its activation.
+	 *
+	 * @param array<string, mixed>                       $payload The journey fields.
+	 * @param array{journeyId: ?string, author: string} $write   The id when updating (null when creating) and the author.
+	 *
+	 * @return array<string, mixed> The journey to store.
+	 */
+	private function stamped(array $payload, array $write): array {
+		$payload['updatedAt'] = date('c', $this->time->getTime());
+		$before = $this->storedBefore(journeyId: $write['journeyId']);
+		if ($write['journeyId'] === null) {
+			$payload['createdAt'] = $payload['updatedAt'];
+			$payload['createdBy'] = $write['author'];
 		}
 
-		if ($journeyId === null) {
-			$payload['createdAt'] = $now;
-			$payload['createdBy'] = $createdByUid;
-		}
+		return $this->stampActivation(journey: $payload, before: $before);
+	}//end stamped()
 
-		$payload = $this->stampActivation(journey: $payload, before: $before, now: $now);
-
-		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $payload, id: $journeyId);
+	/**
+	 * Store a stamped journey and compile it as its author.
+	 *
+	 * @param array<string, mixed>                       $journey The journey to store.
+	 * @param array{journeyId: ?string, author: string} $write   The id when updating (null when creating) and the author.
+	 *
+	 * @return array<string, mixed>|null The stored journey, or null when the write failed.
+	 */
+	private function storedAndCompiled(array $journey, array $write): ?array {
+		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $write['journeyId']);
 		if ($stored === null) {
 			return null;
 		}
 
-		return $this->compile(journeyId: $this->store->idOf($stored), runAs: $createdByUid);
-	}//end save()
+		return $this->compile(journeyId: $this->store->idOf($stored), runAs: $write['author']);
+	}//end storedAndCompiled()
+
+	/**
+	 * The journey as stored before a write, or null for a new one.
+	 *
+	 * @param string|null $journeyId The id when updating, null when creating.
+	 *
+	 * @return array<string, mixed>|null The stored journey, or null.
+	 */
+	private function storedBefore(?string $journeyId): ?array {
+		if ($journeyId === null) {
+			return null;
+		}
+
+		return $this->find(journeyId: $journeyId);
+	}//end storedBefore()
 
 	/**
 	 * Pause or resume a journey and compile it again, so its flow is
@@ -169,18 +203,41 @@ class JourneyService implements JourneyServiceInterface {
 			return null;
 		}
 
-		$now = date('c', $this->time->getTime());
-		$before  = $journey;
-		$journey['status']    = $status;
-		$journey['updatedAt'] = $now;
-		$journey = $this->stampActivation(journey: $journey, before: $before, now: $now);
-		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $journeyId);
+		return $this->storedStatus(journey: $this->withStatus(journey: $journey, status: $status), write: ['journeyId' => $journeyId, 'runAs' => $runAs]);
+	}//end setStatus()
+
+	/**
+	 * Store a journey with its new status and compile it again.
+	 *
+	 * @param array<string, mixed>                     $journey The journey to store.
+	 * @param array{journeyId: string, runAs: string} $write   The journey UUID or slug, and the identity a scheduled journey runs as.
+	 *
+	 * @return array<string, mixed>|null The journey with its flow status, or null when the write failed.
+	 */
+	private function storedStatus(array $journey, array $write): ?array {
+		$stored = $this->store->save(schemaSlug: $this->schema(), payload: $journey, id: $write['journeyId']);
 		if ($stored === null) {
 			return null;
 		}
 
-		return $this->compile(journeyId: $journeyId, runAs: $runAs);
-	}//end setStatus()
+		return $this->compile(journeyId: $write['journeyId'], runAs: $write['runAs']);
+	}//end storedStatus()
+
+	/**
+	 * The journey with a new status, stamped now.
+	 *
+	 * @param array<string, mixed> $journey The journey as stored.
+	 * @param string               $status  `active` or `paused`.
+	 *
+	 * @return array<string, mixed> The journey to store.
+	 */
+	private function withStatus(array $journey, string $status): array {
+		$before  = $journey;
+		$journey['status']    = $status;
+		$journey['updatedAt'] = date('c', $this->time->getTime());
+
+		return $this->stampActivation(journey: $journey, before: $before);
+	}//end withStatus()
 
 	/**
 	 * Compile one journey into a published flow.
@@ -309,18 +366,17 @@ class JourneyService implements JourneyServiceInterface {
 	/**
 	 * Record when a journey went live: the moment its status becomes active.
 	 *
-	 * @param array<string, mixed>      $journey The journey as it will be stored.
+	 * @param array<string, mixed>      $journey The journey as it will be stored, its `updatedAt` the current moment.
 	 * @param array<string, mixed>|null $before  The journey as stored before, or null for a new one.
-	 * @param string                    $now     The current moment, ISO 8601.
 	 *
 	 * @return array<string, mixed> The journey, with `activatedAt` set when it went live now.
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md
 	 */
-	private function stampActivation(array $journey, ?array $before, string $now): array {
+	private function stampActivation(array $journey, ?array $before): array {
 		$wasActive = (($before['status'] ?? '') === 'active');
 		if (($journey['status'] ?? '') === 'active' && $wasActive === false) {
-			$journey['activatedAt'] = $now;
+			$journey['activatedAt'] = $journey['updatedAt'];
 		}
 
 		return $journey;

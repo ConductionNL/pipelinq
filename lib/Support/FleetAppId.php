@@ -167,26 +167,25 @@ final class FleetAppId
      */
     public static function appPath(IAppManager $appManager, string $canonical, string $suffix = ''): ?string
     {
-        $id = self::resolve(appManager: $appManager, canonical: $canonical);
-        if ($id === null) {
-            return null;
-        }
-
-        return self::pathOf(appId: $id, suffix: $suffix);
+        return self::pathOf(appId: self::resolve(appManager: $appManager, canonical: $canonical), suffix: $suffix);
 
     }//end appPath()
 
 
     /**
-     * The app-scoped path of an installed app id.
+     * The app-scoped path of an installed app id, or null when no app is installed.
      *
-     * @param string $appId  The installed app id.
-     * @param string $suffix Path after the app segment, no leading slash.
+     * @param string|null $appId  The installed app id, or null.
+     * @param string      $suffix Path after the app segment, no leading slash.
      *
-     * @return string The path.
+     * @return string|null The path.
      */
-    private static function pathOf(string $appId, string $suffix): string
+    private static function pathOf(?string $appId, string $suffix): ?string
     {
+        if ($appId === null) {
+            return null;
+        }
+
         $path = '/apps/'.$appId;
         if ($suffix !== '') {
             $path .= '/'.ltrim($suffix, '/');

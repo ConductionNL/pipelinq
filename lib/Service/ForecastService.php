@@ -79,17 +79,27 @@ class ForecastService implements ForecastServiceInterface {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-006-03
 	 */
 	public function computeRollUp(string $ownerId, string $periodId, string $level): array {
-		$scope = ['owner_id' => $ownerId, 'period_id' => $periodId, 'level' => $level];
+		return $this->rollUpFor(scope: ['owner_id' => $ownerId, 'period_id' => $periodId, 'level' => $level]);
+	}//end computeRollUp()
+
+	/**
+	 * The override-applied roll-up of one owner, period and level.
+	 *
+	 * @param array{owner_id: string, period_id: string, level: string} $scope The owner, fiscal period and hierarchy level.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function rollUpFor(array $scope): array {
 		$snapshot = $this->latestSnapshot(scope: $scope);
 
 		$result = $scope + $this->snapshotFigures(snapshot: $snapshot) + [
-			'quota' => $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level),
+			'quota' => $this->quotaService->getQuotaAmount(ownerId: $scope['owner_id'], periodId: $scope['period_id'], level: $scope['level']),
 			'deal_snapshot_ids' => ($snapshot['deal_snapshot_ids'] ?? []),
 			'partial' => (bool)($snapshot['partial'] ?? false),
 		];
 
 		return $this->withOverrides(rollUp: $result, scope: $scope);
-	}//end computeRollUp()
+	}//end rollUpFor()
 
 	/**
 	 * The roll-up with the latest commit and best-case overrides applied.

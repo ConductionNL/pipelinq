@@ -131,15 +131,9 @@ class BlastWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function sendgrid(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		$refusal = $this->signatureRefusal(provider: 'sendgrid', rawBody: $rawBody, header: 'X-Twilio-Email-Event-Webhook-Signature');
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$events = json_decode($rawBody, true);
-		if (is_array($events) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$events = $this->signedPayload(provider: 'sendgrid', header: 'X-Twilio-Email-Event-Webhook-Signature');
+		if ($events instanceof JSONResponse) {
+			return $events;
 		}
 
 		$accepted = $this->enqueueSendGridBatch(events: $events);
@@ -162,15 +156,9 @@ class BlastWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function ses(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		$refusal = $this->signatureRefusal(provider: 'ses', rawBody: $rawBody, header: 'X-Amz-Sns-Message-Signature');
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$envelope = json_decode($rawBody, true);
-		if (is_array($envelope) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$envelope = $this->signedPayload(provider: 'ses', header: 'X-Amz-Sns-Message-Signature');
+		if ($envelope instanceof JSONResponse) {
+			return $envelope;
 		}
 
 		$event = $this->extractSesEvent(envelope: $envelope);
@@ -225,15 +213,9 @@ class BlastWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function brevo(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		$refusal = $this->signatureRefusal(provider: 'brevo', rawBody: $rawBody, header: 'X-Sib-Signature');
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$decoded = json_decode($rawBody, true);
-		if (is_array($decoded) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$decoded = $this->signedPayload(provider: 'brevo', header: 'X-Sib-Signature');
+		if ($decoded instanceof JSONResponse) {
+			return $decoded;
 		}
 
 		return $this->enqueueEventList(
@@ -256,15 +238,9 @@ class BlastWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mailjet(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		$refusal = $this->signatureRefusal(provider: 'mailjet', rawBody: $rawBody, header: 'X-Mailjet-Signature');
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$decoded = json_decode($rawBody, true);
-		if (is_array($decoded) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$decoded = $this->signedPayload(provider: 'mailjet', header: 'X-Mailjet-Signature');
+		if ($decoded instanceof JSONResponse) {
+			return $decoded;
 		}
 
 		return $this->enqueueEventList(
@@ -291,15 +267,9 @@ class BlastWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mailgun(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		$refusal = $this->signatureRefusal(provider: 'mailgun', rawBody: $rawBody, header: 'X-Mailgun-Signature-256');
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$envelope = json_decode($rawBody, true);
-		if (is_array($envelope) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$envelope = $this->signedPayload(provider: 'mailgun', header: 'X-Mailgun-Signature-256');
+		if ($envelope instanceof JSONResponse) {
+			return $envelope;
 		}
 
 		$eventData = ($envelope['event-data'] ?? $envelope);
@@ -328,15 +298,9 @@ class BlastWebhookController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function postmark(): JSONResponse {
-		$rawBody = $this->readRawBody();
-		$refusal = $this->signatureRefusal(provider: 'postmark', rawBody: $rawBody, header: 'X-Pipelinq-Signature');
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$event = json_decode($rawBody, true);
-		if (is_array($event) === false) {
-			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		$event = $this->signedPayload(provider: 'postmark', header: 'X-Pipelinq-Signature');
+		if ($event instanceof JSONResponse) {
+			return $event;
 		}
 
 		$this->blastSendJob->enqueueWebhookEvent(provider: 'postmark', event: $this->normalisePostmarkEvent(event: $event));
@@ -345,7 +309,32 @@ class BlastWebhookController extends Controller {
 	}//end postmark()
 
 	/**
+	 * The signed request body decoded as JSON, or the signature refusal or
+	 * the 400 for a body that is not a JSON object or array.
+	 *
+	 * @param string $provider The provider key.
+	 * @param string $header   The provider's signature header.
+	 *
+	 * @return array<mixed>|JSONResponse
+	 */
+	private function signedPayload(string $provider, string $header): array|JSONResponse {
+		$rawBody = $this->readRawBody();
+		$refusal = $this->signatureRefusal(provider: $provider, rawBody: $rawBody, header: $header);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$decoded = json_decode($rawBody, true);
+		if (is_array($decoded) === false) {
+			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		}
+
+		return $decoded;
+	}//end signedPayload()
+
+	/**
 	 * Enqueue every event of a decoded batch, normalised, and answer the count.
+	 * The body is either a single event object or a JSON array of events.
 	 *
 	 * @param string                                       $provider  The provider key.
 	 * @param array<mixed>                                 $decoded   The decoded body.
@@ -354,8 +343,13 @@ class BlastWebhookController extends Controller {
 	 * @return JSONResponse `{ok, accepted}`.
 	 */
 	private function enqueueEventList(string $provider, array $decoded, callable $normalise): JSONResponse {
+		$events = [$decoded];
+		if (array_is_list($decoded) === true) {
+			$events = array_values(array_filter($decoded, static fn ($item) => is_array($item) === true));
+		}
+
 		$accepted = 0;
-		foreach ($this->asEventList(decoded: $decoded) as $event) {
+		foreach ($events as $event) {
 			$this->blastSendJob->enqueueWebhookEvent(provider: $provider, event: $normalise($event));
 			$accepted++;
 		}
@@ -390,22 +384,6 @@ class BlastWebhookController extends Controller {
 
 		return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
 	}//end signatureRefusal()
-
-	/**
-	 * Normalise a decoded webhook body into a list of event arrays —
-	 * accepts either a single event object or a JSON array of events.
-	 *
-	 * @param array<int|string, mixed> $decoded Decoded JSON body.
-	 *
-	 * @return array<int, array<string, mixed>> List of event arrays.
-	 */
-	private function asEventList(array $decoded): array {
-		if (array_is_list($decoded) === true) {
-			return array_values(array_filter($decoded, static fn ($item) => is_array($item) === true));
-		}
-
-		return [$decoded];
-	}//end asEventList()
 
 	/**
 	 * Normalise a Brevo event into our internal event shape.

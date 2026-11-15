@@ -119,7 +119,9 @@ class NormaliseTicketTitle implements IRepairStep {
 		$counts = ['repaired' => 0, 'skipped' => 0];
 
 		foreach (TicketServiceInterface::TYPES as $ticketType) {
-			$counts = $this->normaliseRows(rows: $fetchRows($ticketType), save: $saveRow, counts: $counts);
+			foreach ($this->normaliseRows(rows: $fetchRows($ticketType), save: $saveRow) as $outcome) {
+				$counts[$outcome]++;
+			}
 		}
 
 		$output->info(
@@ -141,7 +143,7 @@ class NormaliseTicketTitle implements IRepairStep {
 		$actingAdmin = $this->actingAdmin();
 
 		return [
-			$this->rowFetcher(objectService: $objectService, register: $register, schema: $schema),
+			$this->rowFetcher(objectService: $objectService, location: ['register' => $register, 'schema' => $schema]),
 			$this->rowSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin),
 		];
 	}//end repairSteps()
@@ -149,15 +151,14 @@ class NormaliseTicketTitle implements IRepairStep {
 	/**
 	 * Build the reader that fetches all rows of one ticket subtype.
 	 *
-	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param ObjectServiceInterface                 $objectService The OR object service.
+	 * @param array{register: string, schema: string} $location      The register and schema ids.
 	 *
 	 * @return callable(string): array<mixed>
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
 	 */
-	private function rowFetcher(ObjectServiceInterface $objectService, string $register, string $schema): callable {
+	private function rowFetcher(ObjectServiceInterface $objectService, array $location): callable {
 		// Read with RBAC off for the same reason we write with it off: on the
 		// CLI there is no session, so an RBAC-filtered findAll returns only
 		// the handful of objects 'Anonymous' may read and the repair would
@@ -165,8 +166,8 @@ class NormaliseTicketTitle implements IRepairStep {
 		return static fn (string $ticketType): array => $objectService->findAll(
 			config: [
 				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
+					'register' => $location['register'],
+					'schema' => $location['schema'],
 					'ticketType' => $ticketType,
 				],
 				'limit' => self::BATCH_LIMIT,
@@ -177,25 +178,25 @@ class NormaliseTicketTitle implements IRepairStep {
 	}//end rowFetcher()
 
 	/**
-	 * Normalise every row of one subtype and add the outcomes to the counts.
+	 * Normalise every row of one subtype and list the counters to raise.
 	 *
 	 * @param array<mixed> $rows The fetched rows.
 	 * @param callable(array<string, mixed>): mixed $save The row writer.
-	 * @param array{repaired: int, skipped: int} $counts The running counts.
 	 *
-	 * @return array{repaired: int, skipped: int}
+	 * @return list<'repaired'|'skipped'> One counter per row that raised one.
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
 	 */
-	private function normaliseRows(array $rows, callable $save, array $counts): array {
+	private function normaliseRows(array $rows, callable $save): array {
+		$outcomes = [];
 		foreach ($rows as $row) {
 			$outcome = $this->normaliseRow(row: $row, save: $save);
 			if ($outcome !== null) {
-				$counts[$outcome]++;
+				$outcomes[] = $outcome;
 			}
 		}
 
-		return $counts;
+		return $outcomes;
 	}//end normaliseRows()
 
 	/**
@@ -214,27 +215,25 @@ class NormaliseTicketTitle implements IRepairStep {
 			return null;
 		}
 
-		$title = ($data['title'] ?? null);
-		if (is_array($title) === false) {
+		if (is_array(($data['title'] ?? null)) === false) {
 			return 'skipped';
 		}
 
-		return $this->rewriteTitle(data: $data, title: $title, save: $save);
+		return $this->rewriteTitle(data: $data, save: $save);
 	}//end normaliseRow()
 
 	/**
 	 * Collapse a row's translation-map title and save the row.
 	 *
-	 * @param array<string, mixed> $data The row data.
-	 * @param array<string, mixed> $title The stored translation map.
+	 * @param array<string, mixed> $data The row data; its `title` is the stored translation map.
 	 * @param callable(array<string, mixed>): mixed $save The row writer.
 	 *
 	 * @return 'repaired'|null 'repaired' when saved, null when left untouched or the save failed.
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records
 	 */
-	private function rewriteTitle(array $data, array $title, callable $save): string|null {
-		$plain = $this->collapse(map: $title);
+	private function rewriteTitle(array $data, callable $save): string|null {
+		$plain = $this->collapse(map: $data['title']);
 		if ($plain === null) {
 			$this->logger->warning('NormaliseTicketTitle: unusable title map, left untouched', ['uuid' => ($data['id'] ?? '')]);
 			return null;

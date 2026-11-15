@@ -62,11 +62,10 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import ConvertToCaseDialog from '../../dialogs/ConvertToCaseDialog.vue'
+import { handoffAvailability, handoffRefusal, noLongerAvailable, postHandoff } from '../../services/semanticHandoffApi.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { sectionObjectId } from '../../utils/sectionContext.js'
 
@@ -216,12 +215,7 @@ export default {
 			}
 			this.loading = true
 			try {
-				const { data } = await axios.get(
-					generateUrl(
-						'/apps/pipelinq/api/handoff/request/{id}/availability',
-						{ id: this.resolvedId },
-					),
-				)
+				const data = await handoffAvailability('request', this.resolvedId)
 				this.availability = {
 					available: !!data.available,
 					status: data.status || '',
@@ -249,11 +243,8 @@ export default {
 			}
 			this.busy = true
 			try {
-				const { data } = await axios.post(
-					generateUrl(
-						'/apps/pipelinq/api/handoff/request/{id}/convert-to-case',
-						{ id: this.resolvedId },
-					),
+				const data = await postHandoff(
+					{ path: 'request/{id}/convert-to-case', id: this.resolvedId },
 					conversionRequest(choice),
 				)
 				this.showConverted(data.caseReference || '')
@@ -290,11 +281,8 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async explainConversionFailure(err) {
-			const body = (err && err.response && err.response.data) || {}
-			if (
-				body.status === 'invalid-status'
-				|| body.status === 'not-available'
-			) {
+			const body = handoffRefusal(err)
+			if (noLongerAvailable(body)) {
 				showError(
 					t(
 						'pipelinq',
@@ -324,7 +312,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .request-conversion-section {
 	display: flex;
 	flex-direction: column;
@@ -344,9 +334,6 @@ export default {
 }
 
 .request-conversion-section__reference-value {
-	padding: 2px 8px;
-	border-radius: var(--border-radius, 4px);
-	background-color: var(--color-background-hover);
-	font-size: 13px;
+	@include reference-value;
 }
 </style>

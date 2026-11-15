@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
@@ -291,21 +292,9 @@ class SocialPostController extends Controller {
 	 * @return array<string, mixed> The sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (['title', 'articleId', 'campaignId', 'body', 'link', 'scheduledFor'] as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
+		$fields = new RequestFields(request: $this->request);
 
-		foreach (['accountIds', 'media', 'variants'] as $key) {
-			$value = $this->request->getParam($key);
-			if (is_array($value) === true) {
-				$body[$key] = $value;
-			}
-		}
-
-		return $body;
+		return $fields->strings(keys: ['title', 'articleId', 'campaignId', 'body', 'link', 'scheduledFor'])
+			+ $fields->arrays(keys: ['accountIds', 'media', 'variants']);
 	}//end collectBody()
 }//end class
