@@ -30,6 +30,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
+use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -61,6 +62,7 @@ use Psr\Log\LoggerInterface;
 class ProductCatalogService implements ProductCatalogServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
+	use RegisterSchemaFindAll;
 
 	/**
 	 * Canonical Dutch BTW class to tax-rate mapping.
@@ -378,14 +380,7 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 		}
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to fetch price lists', ['exception' => $e->getMessage()]);
 			return [];
@@ -718,14 +713,7 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 	 */
 	private function fetchProducts(string $register, string $schema): array {
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to fetch products for barcode lookup', ['exception' => $e->getMessage()]);
 			return [];

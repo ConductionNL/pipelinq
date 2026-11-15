@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
+use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosObjectUpsert;
@@ -54,6 +55,7 @@ class PosRoleService implements PosRoleServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectUpsert;
+	use RegisterSchemaFindAll;
 
 	/**
 	 * Constructor.
@@ -226,15 +228,7 @@ class PosRoleService implements PosRoleServiceInterface {
 			// because the original semantics treat a *missing* isActive field as
 			// active ((bool) ($staff['isActive'] ?? true)), which a server-side
 			// `isActive == true` equality filter would wrongly exclude.
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $staffSchema,
-						'posRole' => $roleId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $staffSchema], filters: ['posRole' => $roleId]);
 		} catch (\Throwable $e) {
 			return 0;
 		}

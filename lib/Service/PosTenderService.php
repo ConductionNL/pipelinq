@@ -56,6 +56,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCA\Pipelinq\Service\Support\ObjectArrayReads;
 use OCA\Pipelinq\Service\Support\RandomUuid;
+use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
@@ -88,6 +89,7 @@ use Throwable;
 class PosTenderService implements PosTenderServiceInterface {
 	use ObjectArrayReads;
 	use RandomUuid;
+	use RegisterSchemaFindAll;
 
 	/**
 	 * Money comparison tolerance: floating-point amounts within this epsilon
@@ -156,14 +158,7 @@ class PosTenderService implements PosTenderServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to list tender types',

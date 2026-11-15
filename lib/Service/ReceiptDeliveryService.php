@@ -35,6 +35,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -65,6 +66,7 @@ use RuntimeException;
 class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	use CastingPayloadToArray;
 	use InjectedObjectService;
+	use RegisterSchemaFindAll;
 
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
@@ -583,14 +585,11 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'transaction' => $transactionId,
-						'invoiceNumber' => $number,
-					],
+			$results = $this->findAllIn(
+				ids: [$register, $schema],
+				filters: [
+					'transaction' => $transactionId,
+					'invoiceNumber' => $number,
 				]
 			);
 		} catch (\Throwable $e) {
@@ -713,15 +712,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	private function loadLines(string $transactionId): array {
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransactionLine_schema');
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'transaction' => $transactionId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema], filters: ['transaction' => $transactionId]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to load receipt lines', ['exception' => $e->getMessage()]);
 

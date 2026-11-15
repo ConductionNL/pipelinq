@@ -44,6 +44,7 @@ use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
@@ -85,6 +86,7 @@ class CashShiftService implements CashShiftServiceInterface {
 	use RandomUuid;
 	use PosObjectReadWrite;
 	use InjectedObjectService;
+	use RegisterSchemaFindAll;
 
 	/**
 	 * CloudEvent type emitted when a cash variance is approved.
@@ -721,15 +723,7 @@ class CashShiftService implements CashShiftServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'shift' => $shiftId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema], filters: ['shift' => $shiftId]);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: failed to fetch cash objects for shift',

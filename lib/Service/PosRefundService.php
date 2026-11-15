@@ -32,6 +32,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\Contracts\PosRefundServiceInterface;
+use OCA\Pipelinq\Service\Support\RegisterSchemaFindAll;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PosObjectFetch;
@@ -83,6 +84,7 @@ class PosRefundService implements PosRefundServiceInterface {
 	use PosRegisterSchemaIds;
 	use InjectedObjectService;
 	use PosObjectFetch;
+	use RegisterSchemaFindAll;
 
 	/**
 	 * CloudEvent type emitted on refund completion (accounting reversal).
@@ -630,15 +632,7 @@ class PosRefundService implements PosRefundServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posRefundLine_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'refund' => $refundId,
-					],
-				]
-			);
+			$results = $this->findAllIn(ids: [$register, $schema], filters: ['refund' => $refundId]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to fetch refund lines', ['exception' => $e->getMessage()]);
 			return [];
