@@ -1574,37 +1574,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	}//end saveConversationWindow()
 
 	/**
-	 * Persist a message payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return array<string, mixed>|null Saved row.
-	 */
-	private function persistMessage(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WhatsAppAdapter.persistMessage: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistMessage()
-
-	/**
 	 * Load a messageTemplate by id.
 	 *
 	 * @param string $id Template UUID / slug.

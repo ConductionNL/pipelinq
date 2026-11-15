@@ -25,9 +25,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Util;
 
 /**
- * Collects the legacy secret fields and the configured authentication block of
- * a connector source. The host class provides an
- * OPENCONNECTOR_LEGACY_SECRET_FIELDS constant.
+ * Resolves a destination's connector source and collects its legacy secret
+ * fields and configured authentication block. The host class provides
+ * ConnectorSourceRegister `$connectorRegister` and LoggerInterface `$logger`
+ * properties, getObjectService() and toArray() steps, and
+ * OPENCONNECTOR_LEGACY_SECRET_FIELDS, OPENCONNECTOR_SOURCE_SCHEMA_SLUG and
+ * CREDENTIALS_FAILURE_MESSAGE constants.
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
@@ -61,4 +64,70 @@ trait ExportSourceCredentials {
 
 		return $credentials;
 	}//end extractSourceCredentials()
+
+	/**
+	 * Resolve credentials for the destination's OpenConnector source.
+	 *
+	 * `OCA\OpenConnector\Service\SourceService` — the class this used to
+	 * resolve credentials through — no longer exists; Source objects moved
+	 * onto OpenRegister's generic object API (register `openconnector`,
+	 * schema `source`). A RENDERED read strips every write-only secret field
+	 * unconditionally (admins included); only `_render: false` survives that
+	 * boundary — the same raw re-read OpenConnector's own CallService /
+	 * RawSourceResolver use internally (ocon#242). `_rbac`/`_multitenancy`
+	 * stay true, so this is access-neutral, not a widened read.
+	 *
+	 * Never returns the credentials to a client — they are consumed only inside
+	 * the sink adapter. When OC is unavailable an empty map is returned and the
+	 * upload fails closed.
+	 *
+	 * @param array<string, mixed> $destination The destination configuration.
+	 *
+	 * @return array<string, mixed> The resolved credentials (empty when unavailable).
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function resolveCredentials(array $destination): array {
+		$sourceId = (string)($destination['connectorSourceId'] ?? '');
+		if ($sourceId === '') {
+			return [];
+		}
+
+		// The register is asked for, never assumed. Reading with a slug this
+		// instance does not carry returns no source, and this method's empty
+		// return then reads as "no credentials" — the wrong diagnosis for a
+		// register that is not there. ConnectorSourceRegister logs which it was.
+		$registerSlug = $this->connectorRegister->slugOrNull(
+			operation: substr(strrchr(self::class, '\\'), 1).'.resolveCredentials',
+			sourceId: $sourceId
+		);
+		if ($registerSlug === null) {
+			return [];
+		}
+
+		try {
+			$source = $this->getObjectService()->find(
+				id: $sourceId,
+				register: $registerSlug,
+				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+				_rbac: true,
+				_multitenancy: true,
+				_render: false,
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				self::CREDENTIALS_FAILURE_MESSAGE,
+				['sourceId' => $sourceId, 'error' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		if ($source === null) {
+			return [];
+		}
+
+		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
+	}//end resolveCredentials()
 }//end trait

@@ -29,9 +29,11 @@ use OCA\Pipelinq\Service\ContactmomentService;
 use Throwable;
 
 /**
- * Contact-moment service, phone, tenant and schema-slug reads of a channel
- * adapter. The host class provides IAppConfig `$appConfig` and
- * ContainerInterface `$container` properties.
+ * Contact-moment service, phone, tenant and schema-slug reads and the message
+ * save of a channel adapter. The host class provides IAppConfig `$appConfig`,
+ * ContainerInterface `$container` and LoggerInterface `$logger` properties,
+ * getObjectService(), getRegisterSlug() and toArray() steps and a
+ * DEFAULT_MESSAGE_SCHEMA_SLUG constant.
  *
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
@@ -112,4 +114,37 @@ trait ChannelAdapterLookups {
 
 		return $default;
 	}//end resolveSchemaSlug()
+
+	/**
+	 * Persist a message payload via OpenRegister.
+	 *
+	 * @param array<string, mixed> $payload Payload.
+	 *
+	 * @return array<string, mixed>|null Saved row.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function persistMessage(array $payload): ?array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return null;
+		}
+
+		try {
+			$saved = $objectService->saveObject(
+				object: $payload,
+				register: $this->getRegisterSlug(),
+				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+				uuid: null,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				substr(strrchr(self::class, '\\'), 1).'.persistMessage: save failed',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		return $this->toArray(value: $saved);
+	}//end persistMessage()
 }//end trait

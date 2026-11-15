@@ -785,37 +785,6 @@ class SmsAdapter implements SmsAdapterInterface {
 	}//end verifiedInbound()
 
 	/**
-	 * Persist a message payload via OpenRegister.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return array<string, mixed>|null Saved row.
-	 */
-	private function persistMessage(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.persistMessage: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistMessage()
-
-	/**
 	 * Look up the open conversation for (contact, provider, channel)
 	 * or open a new one.
 	 *
