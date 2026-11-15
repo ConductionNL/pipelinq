@@ -334,57 +334,82 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return void
 	 */
 	private function withdrawAfterBounce(array $delivery, string $bounceType): void {
-		$contactId = (string)($delivery['contactId'] ?? '');
-		$channel = (string)($delivery['channel'] ?? 'email');
-		$blastId = (string)($delivery['blastId'] ?? '');
-		if ($contactId === '') {
+		$recipient = $this->deliveryRecipient(delivery: $delivery);
+		if ($recipient === null) {
 			return;
 		}
 
 		if ($bounceType === 'hard') {
-			$this->withdrawBouncedConsent(contactId: $contactId, channel: $channel, reason: 'bounce-hard', blastId: $blastId);
+			$this->withdrawBouncedConsent(recipient: $recipient, reason: 'bounce-hard');
 			return;
 		}
 
 		// Soft bounce — bump per-contact counter; withdraw when at threshold.
-		$this->countSoftBounce(contactId: $contactId, channel: $channel, blastId: $blastId);
+		$this->countSoftBounce(recipient: $recipient);
 	}//end withdrawAfterBounce()
 
 	/**
-	 * Bump the soft-bounce counter; withdraw consent when it reaches the threshold.
+	 * The delivery's contact, channel (default email) and blast id; null when it names no contact.
 	 *
-	 * @param string $contactId The contact.
-	 * @param string $channel   The channel.
-	 * @param string $blastId   The blast the bounce came from.
+	 * @param array<string, mixed> $delivery The delivery row.
 	 *
-	 * @return void
+	 * @return array{0: string, 1: string, 2: string}|null The contact, channel and blast id.
 	 */
-	private function countSoftBounce(string $contactId, string $channel, string $blastId): void {
-		$threshold = $this->resolveSoftBounceThreshold();
-		$next = $this->incrementSoftBounceCounter(contactId: $contactId, channel: $channel);
-		if ($next >= $threshold) {
-			$this->withdrawBouncedConsent(contactId: $contactId, channel: $channel, reason: 'bounce-soft-x' . $threshold, blastId: $blastId);
+	private function deliveryRecipient(array $delivery): ?array {
+		$contactId = (string)($delivery['contactId'] ?? '');
+		$channel = (string)($delivery['channel'] ?? 'email');
+		$blastId = (string)($delivery['blastId'] ?? '');
+		if ($contactId === '') {
+			return null;
 		}
-	}//end countSoftBounce()
+
+		return [$contactId, $channel, $blastId];
+	}//end deliveryRecipient()
 
 	/**
-	 * Record a consent withdrawal for a bounce and clear the soft-bounce counter.
+	 * Record a consent withdrawal for the recipient's contact and channel.
 	 *
-	 * @param string $contactId The contact.
-	 * @param string $channel   The channel.
-	 * @param string $reason    The withdrawal reason.
-	 * @param string $blastId   The blast the bounce came from.
+	 * @param array{0: string, 1: string, 2: string} $recipient The contact, channel and blast id.
+	 * @param string                                 $reason    The withdrawal reason.
 	 *
 	 * @return void
 	 */
-	private function withdrawBouncedConsent(string $contactId, string $channel, string $reason, string $blastId): void {
+	private function recordWithdrawal(array $recipient, string $reason): void {
+		[$contactId, $channel, $blastId] = $recipient;
 		$this->complianceService->recordConsentWithdrawal(
 			contactId: $contactId,
 			channel: $channel,
 			reason: $reason,
 			sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
 		);
-		$this->clearSoftBounceCounter(contactId: $contactId, channel: $channel);
+	}//end recordWithdrawal()
+
+	/**
+	 * Bump the soft-bounce counter; withdraw consent when it reaches the threshold.
+	 *
+	 * @param array{0: string, 1: string, 2: string} $recipient The contact, channel and blast id.
+	 *
+	 * @return void
+	 */
+	private function countSoftBounce(array $recipient): void {
+		$threshold = $this->resolveSoftBounceThreshold();
+		$next = $this->incrementSoftBounceCounter(contactId: $recipient[0], channel: $recipient[1]);
+		if ($next >= $threshold) {
+			$this->withdrawBouncedConsent(recipient: $recipient, reason: 'bounce-soft-x' . $threshold);
+		}
+	}//end countSoftBounce()
+
+	/**
+	 * Record a consent withdrawal for a bounce and clear the soft-bounce counter.
+	 *
+	 * @param array{0: string, 1: string, 2: string} $recipient The contact, channel and blast id.
+	 * @param string                                 $reason    The withdrawal reason.
+	 *
+	 * @return void
+	 */
+	private function withdrawBouncedConsent(array $recipient, string $reason): void {
+		$this->recordWithdrawal(recipient: $recipient, reason: $reason);
+		$this->clearSoftBounceCounter(contactId: $recipient[0], channel: $recipient[1]);
 	}//end withdrawBouncedConsent()
 
 	/**
@@ -533,19 +558,10 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return void
 	 */
 	private function withdrawForDelivery(array $delivery, string $reason): void {
-		$contactId = (string)($delivery['contactId'] ?? '');
-		$channel = (string)($delivery['channel'] ?? 'email');
-		$blastId = (string)($delivery['blastId'] ?? '');
-		if ($contactId === '') {
-			return;
+		$recipient = $this->deliveryRecipient(delivery: $delivery);
+		if ($recipient !== null) {
+			$this->recordWithdrawal(recipient: $recipient, reason: $reason);
 		}
-
-		$this->complianceService->recordConsentWithdrawal(
-			contactId: $contactId,
-			channel: $channel,
-			reason: $reason,
-			sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
-		);
 	}//end withdrawForDelivery()
 
 	/**
