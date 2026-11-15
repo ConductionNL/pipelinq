@@ -28,6 +28,8 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
 use OCA\Pipelinq\Util\AdminOnlyResponse;
+use OCA\Pipelinq\Util\PosControllerResponses;
+use OCA\Pipelinq\Util\PosJsonAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,6 +55,8 @@ use Psr\Log\LoggerInterface;
  */
 class PosRoleController extends Controller {
 	use AdminOnlyResponse;
+	use PosControllerResponses;
+	use PosJsonAction;
 
 	/**
 	 * Constructor.
@@ -208,37 +212,4 @@ class PosRoleController extends Controller {
 			'canNoSale' => (bool)$this->request->getParam('canNoSale', false),
 		];
 	}//end payload()
-
-	/**
-	 * Require an authenticated user.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
-	 * Run an action with shared error handling.
-	 *
-	 * @param callable $action The action.
-	 * @param string $label A short label for log context.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function run(callable $action, string $label): JSONResponse {
-		return $this->posResponses()->run(
-			respond: fn (): JSONResponse => new JSONResponse($action()),
-			logLabel: 'PosRoleController::' . $label
-		);
-	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

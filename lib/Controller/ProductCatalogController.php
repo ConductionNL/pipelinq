@@ -29,6 +29,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CallerObjectReader;
+use OCA\Pipelinq\Util\PosJsonAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,6 +57,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
  */
 class ProductCatalogController extends Controller {
+	use PosJsonAction;
+
 	/**
 	 * Constructor.
 	 *
@@ -250,21 +253,6 @@ class ProductCatalogController extends Controller {
 
 		return $uid;
 	}//end requireUserId()
-
-	/**
-	 * Run an action with shared error handling.
-	 *
-	 * @param callable $action The action to run.
-	 * @param string $label A short label for log context.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function run(callable $action, string $label): JSONResponse {
-		return $this->posResponses()->run(
-			respond: fn (): JSONResponse => new JSONResponse($action()),
-			logLabel: 'ProductCatalogController::' . $label
-		);
-	}//end run()
 
 	/**
 	 * The login check and error mapping shared by the POS controllers.
