@@ -536,7 +536,21 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function originateCall(string $userId, string $extension, string $targetNumber): OriginateResult {
-		$platform = $this->activePlatform();
+		return $this->originateOn(
+			platform: $this->activePlatform(),
+			call: ['agent' => new CallAgent(userId: $userId, extension: $extension), 'targetNumber' => $targetNumber]
+		);
+	}//end originateCall()
+
+	/**
+	 * Place an outbound call on the active platform, or refuse when none is configured.
+	 *
+	 * @param string                                       $platform The active platform, or ''.
+	 * @param array{agent: CallAgent, targetNumber: string} $call     The agent placing the call and the destination number.
+	 *
+	 * @return OriginateResult The outcome.
+	 */
+	private function originateOn(string $platform, array $call): OriginateResult {
 		if ($platform === '') {
 			return new OriginateResult(
 				success: false,
@@ -544,10 +558,8 @@ class CtiService implements CtiServiceInterface {
 			);
 		}
 
-		$call = $this->outboundCall(agent: new CallAgent(userId: $userId, extension: $extension), targetNumber: $targetNumber);
-
-		return $this->dialOut(platform: $platform, call: $call);
-	}//end originateCall()
+		return $this->dialOut(platform: $platform, call: $this->outboundCall(agent: $call['agent'], targetNumber: $call['targetNumber']));
+	}//end originateOn()
 
 	/**
 	 * The outbound call from the configured caller id to the target number.
@@ -623,16 +635,26 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void {
+		$this->syncPresenceRecord(
+			presence: ['user_id' => $userId, 'extension' => ($extension ?? ''), 'presence_state' => $presenceState, 'platform' => $platform]
+		);
+	}//end syncPresence()
+
+	/**
+	 * Store an agent's presence record, when the presence schema is configured.
+	 *
+	 * @param array<string, mixed> $presence The presence record.
+	 *
+	 * @return void
+	 */
+	private function syncPresenceRecord(array $presence): void {
 		$target = $this->schemaTarget(schemaKey: 'ctiAgentPresence_schema');
 		if ($target === null) {
 			return;
 		}
 
-		$this->savePresence(
-			target: $target,
-			presence: ['user_id' => $userId, 'extension' => ($extension ?? ''), 'presence_state' => $presenceState, 'platform' => $platform]
-		);
-	}//end syncPresence()
+		$this->savePresence(target: $target, presence: $presence);
+	}//end syncPresenceRecord()
 
 	/**
 	 * Store an agent's presence record over its existing one; a failure is logged.
@@ -873,14 +895,24 @@ class CtiService implements CtiServiceInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {
+		return $this->eventLogRows(query: new EventLogQuery(filters: $filters, limit: $limit, offset: $offset));
+	}//end listEventLog()
+
+	/**
+	 * The event log rows a query selects; none when the event log schema is unconfigured.
+	 *
+	 * @param EventLogQuery $query The filters and the page.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 */
+	private function eventLogRows(EventLogQuery $query): array {
 		$target = $this->schemaTarget(schemaKey: 'ctiEventLog_schema');
 		if ($target === null) {
 			return [];
 		}
 
-		$query = new EventLogQuery(filters: $filters, limit: $limit, offset: $offset);
 		return $this->readEventLog(config: $query->config(register: $target[0], schema: $target[1]));
-	}//end listEventLog()
+	}//end eventLogRows()
 
 	/**
 	 * Read event log rows as plain arrays; a failed read is logged and a
@@ -1323,11 +1355,8 @@ class CtiService implements CtiServiceInterface {
 	 */
 	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes, string $queue=''): array {
 		return $this->dispositionService->processDisposition(
-			interactionId: $interactionId,
-			subject: $subject,
-			outcome: $outcome,
-			notes: $notes,
-			queue: $queue,
+			interactionId: $interactionId, subject: $subject, outcome: $outcome,
+			notes: $notes, queue: $queue,
 		);
 	}//end processDisposition()
 
