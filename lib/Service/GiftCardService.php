@@ -119,7 +119,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	/**
 	 * A freshly issued card (status "issued", balance = initial, PIN hashed), valid from now.
 	 *
-	 * @param array{programmeId: ?string, serial: string, initialBalance: float, expiryDays: int, channel: string, issuedIn: ?string} $terms The issue terms and the generated serial.
+	 * @param array{programmeId: ?string, serial: string, initialBalance: float, expiryDays: int, channel: string, issuedIn: ?string} $terms Issue terms.
 	 * @param string $pin The plaintext PIN, stored as a bcrypt hash.
 	 *
 	 * @return array<string, mixed>
@@ -887,7 +887,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	/**
 	 * Append a GiftCardTransaction ledger entry (immutable).
 	 *
-	 * @param array{giftCardId: string, type: string, amount: float, balanceAfter: float, posTransactionId: ?string} $entry The card UUID, transaction type, movement amount, balance after the movement and POS transaction id.
+	 * @param array{giftCardId: string, type: string, amount: float, balanceAfter: float, posTransactionId: ?string} $entry The ledger entry.
 	 *
 	 * @return void
 	 */

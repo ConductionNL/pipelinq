@@ -19,10 +19,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
-use OCA\Pipelinq\Kernel\Contracts\BillingHandoffAccessPolicyInterface;
-use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
-use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
-use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -110,9 +106,6 @@ class LifecycleRegistrar {
 			}
 		);
 
-		$context->registerServiceAlias(BillingHandoffAccessPolicyInterface::class, BillingHandoffAccessPolicy::class);
-		$context->registerServiceAlias(ForecastAccessInterface::class, ForecastAccess::class);
-		$context->registerServiceAlias(PosAccessPolicyInterface::class, PosAccessPolicy::class);
-		$context->registerServiceAlias(SessionUserInterface::class, SessionUser::class);
+		(new LifecycleContractRegistrar())->register(context: $context);
 	}//end register()
 }//end class

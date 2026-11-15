@@ -248,7 +248,7 @@ class NormalisePartyFormFields implements IRepairStep {
 	/**
 	 * Save one party's patch.
 	 *
-	 * @param array{objectService: object, register: string, schema: string, actingAdmin: IUser|null} $pass OpenRegister's ObjectService, the register and schema ids, and the admin to save as.
+	 * @param array{objectService: object, register: string, schema: string, actingAdmin: IUser|null} $pass Where and as whom rows are saved.
 	 * @param array<string,mixed> $row The stored party.
 	 *
 	 * @return string `fixed`, `skipped` or `stuck`.

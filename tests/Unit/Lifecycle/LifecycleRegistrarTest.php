@@ -53,6 +53,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Lifecycle\PosRefundManagerGuard
  * @uses   \OCA\Pipelinq\Lifecycle\ConfiguredGroup
  * @uses   \OCA\Pipelinq\Lifecycle\ConfiguredGroupGate
+ * @uses   \OCA\Pipelinq\Lifecycle\LifecycleContractRegistrar
  */
 class LifecycleRegistrarTest extends TestCase {
 
