@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\Marketing\ObjectQuery;
 use OCA\Pipelinq\Service\Marketing\ObjectSelection;
 use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -82,6 +83,7 @@ use Throwable;
 class BlastService implements BlastServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
 	use ContainerObjectService;
@@ -851,12 +853,7 @@ class BlastService implements BlastServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getMailingListSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailing_list_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'mailingList';
+		return $this->resolveSchemaSlug(key: 'mailing_list_schema', default: 'mailingList');
 	}//end getMailingListSchemaSlug()
 
 	/**
@@ -1979,12 +1976,7 @@ class BlastService implements BlastServiceInterface {
 	 * @return string Slug.
 	 */
 	private function getBlastSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'blast_schema', default: self::DEFAULT_BLAST_SCHEMA_SLUG);
 	}//end getBlastSchemaSlug()
 
 	/**
@@ -1993,12 +1985,7 @@ class BlastService implements BlastServiceInterface {
 	 * @return string Slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_CAMPAIGN_TEMPLATE_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'campaignTemplate_schema', default: self::DEFAULT_CAMPAIGN_TEMPLATE_SCHEMA_SLUG);
 	}//end getCampaignTemplateSchemaSlug()
 
 	/**

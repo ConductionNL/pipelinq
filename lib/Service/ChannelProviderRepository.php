@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SchemaRowQuery;
@@ -52,6 +52,7 @@ use Throwable;
 class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use ContainerObjectService;
 	use SchemaRowQuery;
 
@@ -236,16 +237,6 @@ class ChannelProviderRepository implements ChannelProviderRepositoryInterface {
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			'channelProvider_schema',
-			''
-		);
-
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'channelProvider_schema', default: self::DEFAULT_SCHEMA_SLUG);
 	}//end getSchemaSlug()
 }//end class

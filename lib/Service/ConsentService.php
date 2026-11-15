@@ -33,6 +33,7 @@ use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -68,6 +69,7 @@ use Throwable;
 class ConsentService implements ConsentServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ContainerObjectService;
 	use SchemaRowArrays;
@@ -844,16 +846,6 @@ class ConsentService implements ConsentServiceInterface {
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			'messagingConsentRecord_schema',
-			''
-		);
-
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'messagingConsentRecord_schema', default: self::DEFAULT_SCHEMA_SLUG);
 	}//end getSchemaSlug()
 }//end class

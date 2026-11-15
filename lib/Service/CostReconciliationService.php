@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CostReconciliationServiceInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -52,6 +52,7 @@ use Throwable;
 class CostReconciliationService implements CostReconciliationServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ContainerObjectService;
 
@@ -273,12 +274,7 @@ class CostReconciliationService implements CostReconciliationServiceInterface {
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'message_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_SCHEMA_SLUG);
 	}//end getSchemaSlug()
 
 	/**

@@ -31,6 +31,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
@@ -49,6 +50,7 @@ use Throwable;
 class AttributionService implements AttributionServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use SavedPayloadId;
 	use ConfiguredBlastDeliverySchemaSlug;
 	use ContainerObjectService;
@@ -604,12 +606,7 @@ class AttributionService implements AttributionServiceInterface {
 	 * @return string Slug.
 	 */
 	private function getAttributionLinkSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'attributionLink_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_ATTRIBUTION_LINK_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'attributionLink_schema', default: self::DEFAULT_ATTRIBUTION_LINK_SCHEMA_SLUG);
 	}//end getAttributionLinkSchemaSlug()
 
 	/**
@@ -618,12 +615,7 @@ class AttributionService implements AttributionServiceInterface {
 	 * @return string Slug.
 	 */
 	private function getLeadSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_LEAD_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'lead_schema', default: self::DEFAULT_LEAD_SCHEMA_SLUG);
 	}//end getLeadSchemaSlug()
 
 	/**

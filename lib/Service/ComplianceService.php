@@ -40,6 +40,7 @@ use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -71,6 +72,7 @@ use Throwable;
 class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
+	use ConfiguredSchemaSlug;
 	use ContainerObjectService;
 	use SavedPayloadId;
 	use ObjectServiceTarget;
@@ -581,7 +583,11 @@ class ComplianceService implements ComplianceServiceInterface {
 				requiresConsent: true,
 				listId: $key->listId
 			);
-			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $key->contactId, channel: $key->channel, listId: $key->listId) === false);
+			if ($decision['send'] !== true) {
+				return false;
+			}
+
+			return $this->isBounceWithdrawn(contactId: $key->contactId, channel: $key->channel, listId: $key->listId) === false;
 		}
 
 		$record = $this->findConsentRecord(key: $key);
@@ -1210,12 +1216,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'campaignTemplate';
+		return $this->resolveSchemaSlug(key: 'campaignTemplate_schema', default: 'campaignTemplate');
 	}//end getCampaignTemplateSchemaSlug()
 
 	/**
@@ -1755,12 +1756,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getConsentRecordSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_CONSENT_RECORD_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'consent_record_schema', default: self::DEFAULT_CONSENT_RECORD_SCHEMA_SLUG);
 	}//end getConsentRecordSchemaSlug()
 
 	/**
@@ -1769,12 +1765,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	 * @return string Schema slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_delivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
+		return $this->resolveSchemaSlug(key: 'blast_delivery_schema', default: self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG);
 	}//end getBlastDeliverySchemaSlug()
 
 	/**
