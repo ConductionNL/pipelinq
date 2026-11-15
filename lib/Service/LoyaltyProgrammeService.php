@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\ConfiguredSchemaCount;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -41,6 +42,7 @@ use RuntimeException;
 class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	use PayloadToArray;
 	use LoggedRegisterSchemaIds;
+	use ConfiguredSchemaCount;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
@@ -212,31 +214,7 @@ class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	 * @return int
 	 */
 	private function countByProgramme(string $schemaKey, string $programmeId): int {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-		if ($register === '' || $schema === '') {
-			return 0;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1000,
-				]
-			);
-		} catch (\Throwable $e) {
-			return 0;
-		}
-
-		if (is_array($rows) === true) {
-			return count($rows);
-		}
-
-		return 0;
+		return $this->countMatching(schemaKey: $schemaKey, filters: ['programmeId' => $programmeId]);
 	}//end countByProgramme()
 
 	/**

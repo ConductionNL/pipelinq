@@ -29,6 +29,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredSchemaCount;
 use OCA\Pipelinq\Util\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -47,6 +48,7 @@ use RuntimeException;
 class RedemptionService implements RedemptionServiceInterface {
 	use PayloadToArray;
 	use LoggedRegisterSchemaIds;
+	use ConfiguredSchemaCount;
 
 	/**
 	 * Constructor.
@@ -433,33 +435,10 @@ class RedemptionService implements RedemptionServiceInterface {
 	 * @return int
 	 */
 	private function countUsedRedemptions(string $accountId, string $optionId): int {
-		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');
-		if ($register === '' || $schema === '') {
-			return 0;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'accountId' => $accountId,
-						'optionId' => $optionId,
-						'status' => 'used',
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1000,
-				]
-			);
-		} catch (\Throwable $e) {
-			return 0;
-		}
-
-		if (is_array($rows) === true) {
-			return count($rows);
-		}
-
-		return 0;
+		return $this->countMatching(
+			schemaKey: 'redemption_schema',
+			filters: ['accountId' => $accountId, 'optionId' => $optionId, 'status' => 'used']
+		);
 	}//end countUsedRedemptions()
 
 	/**

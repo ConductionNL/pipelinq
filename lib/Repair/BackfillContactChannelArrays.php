@@ -36,8 +36,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
 use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
-use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -54,7 +54,7 @@ use Throwable;
  * @spec openspec/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
 class BackfillContactChannelArrays implements IRepairStep {
-	use SerialisedPayload;
+	use ReadsSchemaRows;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -275,49 +275,4 @@ class BackfillContactChannelArrays implements IRepairStep {
 
 		return (array_values($admins)[0] ?? null);
 	}//end actingAdmin()
-
-	/**
-	 * Read every row of one schema.
-	 *
-	 * RBAC is off for the same reason the writes turn it off: on the CLI
-	 * there is no session, so an RBAC-filtered read returns only what
-	 * 'Anonymous' may see and the backfill would quietly cover a fraction
-	 * of the rows.
-	 *
-	 * @param SchemaWriteTarget $target The schema to read.
-	 *
-	 * @return array<int,array<string,mixed>> The rows.
-	 */
-	private function readAll(SchemaWriteTarget $target): array {
-		try {
-			$rows = $target->objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $target->register,
-						'schema' => $target->schema,
-					],
-					'limit' => self::BATCH_LIMIT,
-				],
-				_rbac: false,
-				_multitenancy: false,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BackfillContactChannelArrays: findAll failed',
-				['schema' => $target->schema, 'error' => $e->getMessage()]
-			);
-
-			return [];
-		}//end try
-
-		$out = [];
-		foreach ($rows as $row) {
-			$data = $this->serialisedPayload(value: $row);
-			if ($data !== null) {
-				$out[] = $data;
-			}
-		}
-
-		return $out;
-	}//end readAll()
 }//end class

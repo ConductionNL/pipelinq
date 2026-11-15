@@ -42,8 +42,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Repair\Support\ReadsSchemaRows;
+use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCA\Pipelinq\Service\LeadStagePlacer;
-use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -59,7 +60,7 @@ use Throwable;
  * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
  */
 class BackfillLeadRelations implements IRepairStep {
-	use SerialisedPayload;
+	use ReadsSchemaRows;
 
 	/**
 	 * Upper bound on rows fetched per schema.
@@ -112,52 +113,6 @@ class BackfillLeadRelations implements IRepairStep {
 
 		return (array_values($admins)[0] ?? null);
 	}//end actingAdmin()
-
-	/**
-	 * Read every row of one schema.
-	 *
-	 * RBAC is off for the same reason the writes turn it off: on the CLI there
-	 * is no session, so an RBAC-filtered read returns only what 'Anonymous' may
-	 * see and the backfill would quietly cover a fraction of the rows.
-	 *
-	 * @param object $objectService OpenRegister ObjectService.
-	 * @param string $register      Register id.
-	 * @param string $schema        Schema id.
-	 *
-	 * @return array<int,array<string,mixed>> The rows.
-	 */
-	private function readAll(object $objectService, string $register, string $schema): array {
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => self::BATCH_LIMIT,
-				],
-				_rbac: false,
-				_multitenancy: false,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BackfillLeadRelations: findAll failed',
-				['schema' => $schema, 'error' => $e->getMessage()]
-			);
-
-			return [];
-		}//end try
-
-		$out = [];
-		foreach ($rows as $row) {
-			$data = $this->serialisedPayload(value: $row);
-			if ($data !== null) {
-				$out[] = $data;
-			}
-		}
-
-		return $out;
-	}//end readAll()
 
 
 
@@ -279,7 +234,9 @@ class BackfillLeadRelations implements IRepairStep {
 	 * @return void
 	 */
 	private function backfillAll(object $objectService, IOutput $output, array $context, string $pipelineSchema): void {
-		$leads = $this->readAll(objectService: $objectService, register: $context['register'], schema: $context['schema']);
+		$leads = $this->readAll(
+			target: new SchemaWriteTarget(objectService: $objectService, register: $context['register'], schema: $context['schema'], actingAdmin: null)
+		);
 		if ($leads === []) {
 			$output->info('BackfillLeadRelations: no leads to inspect');
 			return;
@@ -320,9 +277,7 @@ class BackfillLeadRelations implements IRepairStep {
 		$pipelines = [];
 		if ($pipelineSchema !== '') {
 			$pipelines = $this->readAll(
-				objectService: $objectService,
-				register: $register,
-				schema: $pipelineSchema
+				target: new SchemaWriteTarget(objectService: $objectService, register: $register, schema: $pipelineSchema, actingAdmin: null)
 			);
 		}
 
