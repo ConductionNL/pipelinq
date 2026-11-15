@@ -127,14 +127,9 @@ class TemplateController extends Controller {
 	public function show(string $id): JSONResponse {
 		// Message templates carry customer-facing copy and compliance state —
 		// a CRM capability. Admins bypass via the policy.
-		$uid = $this->crmGate()->privilegedUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$template = $this->complianceService->getTemplateById(templateId: $id);
-		if ($template === null) {
-			return $this->notFound();
+		$template = $this->visibleTemplate(templateId: $id);
+		if ($template instanceof JSONResponse) {
+			return $template;
 		}
 
 		return new JSONResponse($template);
@@ -180,14 +175,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
-		$uid = $this->crmGate()->privilegedUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$template = $this->complianceService->getTemplateById(templateId: $id);
-		if ($template === null) {
-			return $this->notFound();
+		$template = $this->visibleTemplate(templateId: $id);
+		if ($template instanceof JSONResponse) {
+			return $template;
 		}
 
 		$ids = ($template['articleIds'] ?? []);
@@ -311,14 +301,9 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function validate(string $id): JSONResponse {
-		$uid = $this->crmGate()->privilegedUserId();
-		if ($uid instanceof JSONResponse) {
-			return $uid;
-		}
-
-		$template = $this->complianceService->getTemplateById(templateId: $id);
-		if ($template === null) {
-			return $this->notFound();
+		$template = $this->visibleTemplate(templateId: $id);
+		if ($template instanceof JSONResponse) {
+			return $template;
 		}
 
 		$channel = (string)$this->request->getParam('channel', (string)($template['channel'] ?? 'email'));
@@ -326,6 +311,27 @@ class TemplateController extends Controller {
 
 		return new JSONResponse(['valid' => ($error === null), 'error' => $error]);
 	}//end validate()
+
+	/**
+	 * The template for a CRM user, or the refusal or the generic 404.
+	 *
+	 * @param string $templateId Template UUID or slug.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function visibleTemplate(string $templateId): array|JSONResponse {
+		$uid = $this->crmGate()->privilegedUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $templateId);
+		if ($template === null) {
+			return $this->notFound();
+		}
+
+		return $template;
+	}//end visibleTemplate()
 
 	/**
 	 * Collect a sanitised template body from the fields the request carries.

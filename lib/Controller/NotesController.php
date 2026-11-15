@@ -250,19 +250,9 @@ class NotesController extends Controller {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function list(string $objectType, string $objectId): JSONResponse {
-		// Notes hang off CRM records and are read by objectType/objectId from
-		// the request — a CRM capability. Admins bypass.
-		$refusal = $this->privilege->translatedRefusal($this->l10n);
+		$refusal = $this->refuseCrmTarget(objectType: $objectType, objectId: $objectId);
 		if ($refusal !== null) {
 			return $refusal;
-		}
-
-		if (in_array($objectType, NotesServiceInterface::VALID_TYPES, true) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
-		}
-
-		if ($this->objectExists(objectType: $objectType, objectId: $objectId) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
 		}
 
 		try {
@@ -290,13 +280,43 @@ class NotesController extends Controller {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function create(string $objectType, string $objectId): JSONResponse {
-		// Notes hang off CRM records and are read by objectType/objectId from
-		// the request — a CRM capability. Admins bypass.
+		$refusal = $this->refuseCrmTarget(objectType: $objectType, objectId: $objectId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->addNoteFromRequest(objectType: $objectType, objectId: $objectId);
+	}//end create()
+
+	/**
+	 * The refusal for a caller without the CRM capability or for an invalid
+	 * target, or null when allowed. Notes hang off CRM records and are read by
+	 * objectType/objectId from the request; admins bypass.
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId   The object ID.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function refuseCrmTarget(string $objectType, string $objectId): ?JSONResponse {
 		$refusal = $this->privilege->translatedRefusal($this->l10n);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
+		return $this->refuseTarget(objectType: $objectType, objectId: $objectId);
+	}//end refuseCrmTarget()
+
+	/**
+	 * The 400 for an unknown object type or the 404 for a missing object,
+	 * or null when the target is valid.
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId   The object ID.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function refuseTarget(string $objectType, string $objectId): ?JSONResponse {
 		if (in_array($objectType, NotesServiceInterface::VALID_TYPES, true) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
 		}
@@ -305,8 +325,8 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->addNoteFromRequest(objectType: $objectType, objectId: $objectId);
-	}//end create()
+		return null;
+	}//end refuseTarget()
 
 	/**
 	 * Add the requested note to an authorised object and trigger its note events.
@@ -363,12 +383,9 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Admin privileges required')], Http::STATUS_FORBIDDEN);
 		}
 
-		if (in_array($objectType, NotesServiceInterface::VALID_TYPES, true) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
-		}
-
-		if ($this->objectExists(objectType: $objectType, objectId: $objectId) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Object not found')], Http::STATUS_NOT_FOUND);
+		$refusal = $this->refuseTarget(objectType: $objectType, objectId: $objectId);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return $this->deleteAllNotes(objectType: $objectType, objectId: $objectId);
