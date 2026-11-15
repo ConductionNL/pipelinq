@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RoutingServiceInterface;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -52,6 +53,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class RoutingService implements RoutingServiceInterface {
+	use SerialisedToArray;
+
 	/**
 	 * Terminal statuses excluded from workload counts.
 	 *
@@ -528,28 +531,6 @@ class RoutingService implements RoutingServiceInterface {
 		$max = (int)($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT);
 		return $workload >= $max;
 	}//end isAgentAtCapacity()
-
-	/**
-	 * Normalise an OpenRegister entity to a plain array.
-	 *
-	 * OpenRegister's findAll() returns ObjectEntity instances, which cannot be read with
-	 * array access.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$value = $value->jsonSerialize();
-		}
-
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the injected OpenRegister ObjectService.

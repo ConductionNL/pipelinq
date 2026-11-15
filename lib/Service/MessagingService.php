@@ -32,10 +32,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -54,6 +54,7 @@ use Throwable;
  */
 class MessagingService implements MessagingServiceInterface {
 	use PayloadToArray;
+	use ConfiguredSchemaSlug;
 
 	/**
 	 * FQCN of the OpenRegister dispatch leaf used for connectivity tests.
@@ -126,8 +127,8 @@ class MessagingService implements MessagingServiceInterface {
 		}
 
 		$schemas = [
-			$this->schemaSlug(key: 'contact_schema', default: 'contact'),
-			$this->schemaSlug(key: 'client_schema', default: 'client'),
+			$this->resolveSchemaSlug(key: 'contact_schema', default: 'contact'),
+			$this->resolveSchemaSlug(key: 'client_schema', default: 'client'),
 		];
 
 		return $this->findInSchemas(objectService: $objectService, contactId: $contactId, target: ['register' => $register, 'schemas' => $schemas]);
@@ -431,7 +432,7 @@ class MessagingService implements MessagingServiceInterface {
 	 * @return string Slug.
 	 */
 	private function messageSchema(): string {
-		return $this->schemaSlug(key: 'message_schema', default: 'channelMessage');
+		return $this->resolveSchemaSlug(key: 'message_schema', default: 'channelMessage');
 	}//end messageSchema()
 
 	/**
@@ -585,7 +586,7 @@ class MessagingService implements MessagingServiceInterface {
 					'filters' => [
 						'status' => 'approved',
 						'register' => $register,
-						'schema' => $this->schemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
+						'schema' => $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
 					],
 				]
 			);
@@ -668,33 +669,11 @@ class MessagingService implements MessagingServiceInterface {
 	 * empty value, so the query silently inherits whatever register context an
 	 * earlier call in the same request left on the shared service instance.
 	 * Normalising '' back to the built-in slug, exactly as the sibling
-	 * schemaSlug() already does, keeps every call scoped.
+	 * resolveSchemaSlug() already does, keeps every call scoped.
 	 *
 	 * @return string Slug; never empty.
 	 */
 	private function registerSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return 'pipelinq';
+		return $this->resolveSchemaSlug(key: 'register', default: 'pipelinq');
 	}//end registerSlug()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function schemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end schemaSlug()
 }//end class

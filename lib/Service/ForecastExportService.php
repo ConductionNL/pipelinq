@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
+use OCA\Pipelinq\Util\FindAllAsArrays;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -44,6 +46,8 @@ use Psr\Log\LoggerInterface;
  */
 class ForecastExportService implements ForecastExportServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use FindAllAsArrays;
 
 	/**
 	 * The CSV header row.
@@ -299,19 +303,7 @@ class ForecastExportService implements ForecastExportServiceInterface {
 		$window = ['limit' => ($query['limit'] ?? null), 'offset' => ($query['offset'] ?? null)];
 		$config += array_filter($window, static fn (?int $value): bool => $value !== null);
 
-		try {
-			$results = $this->getObjectService()->findAll(config: $config);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: forecast export query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(value: $result);
-		}
-
-		return $objects;
+		return $this->findAllAsArrays(config: $config, failure: 'Pipelinq: forecast export query failed');
 	}//end findObjects()
 
 	/**
@@ -356,15 +348,4 @@ class ForecastExportService implements ForecastExportServiceInterface {
 
 		return array_merge(['register' => $register, 'schema' => $schema], $filters);
 	}//end scopedFilters()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -33,7 +33,12 @@ use OCA\Pipelinq\Service\Marketing\ListQueryWhereCapability;
 use OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler;
 use OCA\Pipelinq\Service\Marketing\SegmentRuleTree;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
+use OCA\Pipelinq\Util\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -71,6 +76,11 @@ use Throwable;
  */
 class SegmentService implements SegmentServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use PageCount;
+	use ObjectServiceTarget;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -400,25 +410,6 @@ class SegmentService implements SegmentServiceInterface {
 	}//end listSegments()
 
 	/**
-	 * Compute the page-count from a total + page-size pair.
-	 *
-	 * Centralised so the inline ternary stays out of the envelope
-	 * builder (matches the team's "no inline IF" coding style).
-	 *
-	 * @param int $total Total row count.
-	 * @param int $limit Page size.
-	 *
-	 * @return int Page count (0 when total is 0).
-	 */
-	private function computePages(int $total, int $limit): int {
-		if ($total <= 0 || $limit <= 0) {
-			return 0;
-		}
-
-		return (int)ceil($total / $limit);
-	}//end computePages()
-
-	/**
 	 * Public accessor returning one Segment payload (or null).
 	 *
 	 * Returns the raw Segment with the rules tree as stored, enabling the
@@ -688,7 +679,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		$estimated = 0;
-		$idForSize = $this->extractSegmentId(payload: $saved);
+		$idForSize = $this->extractId(payload: $saved);
 		if ($idForSize !== '') {
 			$estimated = $this->estimateSize(segmentId: $idForSize);
 			$saved['estimatedSize'] = $estimated;
@@ -767,7 +758,7 @@ class SegmentService implements SegmentServiceInterface {
 		// controller answer honestly; the caller can retry.
 		$saved = $this->saveSegmentObject(
 			payload: $payload,
-			id: $this->extractSegmentId(payload: $segment)
+			id: $this->extractId(payload: $segment)
 		);
 		if ($saved === null) {
 			throw new RuntimeException('Pipelinq: the refreshed segment size could not be persisted.');
@@ -794,27 +785,6 @@ class SegmentService implements SegmentServiceInterface {
 
 		return $this->persistSegmentObject(target: $target, payload: $payload, id: $id);
 	}//end saveSegmentObject()
-
-	/**
-	 * The register, schema and ObjectService to read or write through, or null when one is missing.
-	 *
-	 * @param string $register The register slug.
-	 * @param string $schema   The schema slug.
-	 *
-	 * @return array{0: string, 1: string, 2: object}|null
-	 */
-	private function objectTarget(string $register, string $schema): array|null {
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		return [$register, $schema, $objectService];
-	}//end objectTarget()
 
 	/**
 	 * Save a Segment payload, logging a failed save.
@@ -889,31 +859,9 @@ class SegmentService implements SegmentServiceInterface {
 	}//end findEntities()
 
 	/**
-	 * Extract the id from a Segment payload (uuid > id > slug).
-	 *
-	 * @param array<string, mixed> $payload Segment payload.
-	 *
-	 * @return string Id or empty string.
-	 */
-	private function extractSegmentId(array $payload): string {
-		$id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
-		}
-
-		return '';
-	}//end extractSegmentId()
-
-	/**
 	 * First non-empty scalar value among the given keys.
 	 *
-	 * Extracted so {@see extractSegmentId()} (and other id-resolution
-	 * helpers) share one implementation; behaviour is unchanged: a
-	 * missing key or a non-scalar / empty-string value is skipped.
+	 * A missing key or a non-scalar / empty-string value is skipped.
 	 *
 	 * @param array<string, mixed> $source Source array to probe.
 	 * @param array<int, string> $keys Keys to check, in priority order.
@@ -2636,20 +2584,6 @@ class SegmentService implements SegmentServiceInterface {
 	}//end getSegmentSchemaSlugPublic()
 
 	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Register slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
 	 * Extract the rule tree from a Segment payload.
 	 *
 	 * @param array<string, mixed> $segment The Segment payload.
@@ -2752,24 +2686,6 @@ class SegmentService implements SegmentServiceInterface {
 			return null;
 		}
 	}//end getEstimateCache()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService, or null when OpenRegister is
-	 *                     not loaded.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SegmentService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Resolve the OpenRegister SchemaMapper lazily.

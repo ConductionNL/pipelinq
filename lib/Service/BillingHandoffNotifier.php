@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Util\AdminNotice;
 use OCP\IGroupManager;
 
 /**
@@ -41,6 +42,8 @@ use OCP\IGroupManager;
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class BillingHandoffNotifier {
+	use AdminNotice;
+
 	/**
 	 * Constructor.
 	 *
@@ -65,22 +68,10 @@ class BillingHandoffNotifier {
 	 * @spec openspec/specs/time-approval-workflow/spec.md
 	 */
 	public function notifyFailure(string $clientName, string $clientId, string $batchId): void {
-		$adminGroup = $this->groupManager->get('admin');
-		if ($adminGroup === null) {
-			return;
-		}
-
-		foreach ($adminGroup->getUsers() as $user) {
-			$this->notificationService->sendNotification(
-				userId: $user->getUID(),
-				subject: 'billing_handoff_failed',
-				parameters: [
-					'title' => $clientName,
-					'batchId' => $batchId,
-				],
-				objectType: 'client',
-				objectId: $clientId
-			);
-		}
+		$this->notifyAdmins(
+			subject: 'billing_handoff_failed',
+			parameters: ['title' => $clientName, 'batchId' => $batchId],
+			about: new NoticedObject(objectType: 'client', objectId: $clientId)
+		);
 	}//end notifyFailure()
 }//end class

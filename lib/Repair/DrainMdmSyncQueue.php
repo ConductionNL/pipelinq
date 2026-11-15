@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
+use OCA\Pipelinq\Util\ContainerWebhookService;
 use OCP\EventDispatcher\Event;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -52,6 +53,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014-one-time-drain-of-in-flight-queue-rows
  */
 class DrainMdmSyncQueue implements IRepairStep {
+	use ContainerWebhookService;
+
 	/**
 	 * The retired queue's schema slug.
 	 *
@@ -259,17 +262,4 @@ class DrainMdmSyncQueue implements IRepairStep {
 
 		return $id;
 	}//end nullableId()
-
-	/**
-	 * Lazily resolve OpenRegister's WebhookService, or null when OR is absent.
-	 *
-	 * @return object|null The WebhookService, or null.
-	 */
-	private function resolveWebhookService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\WebhookService');
-		} catch (\Throwable $e) {
-			return null;
-		}
-	}//end resolveWebhookService()
 }//end class

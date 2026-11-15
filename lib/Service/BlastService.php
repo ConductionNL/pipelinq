@@ -43,7 +43,11 @@ use OCA\Pipelinq\Service\Marketing\ListPage;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\ObjectQuery;
 use OCA\Pipelinq\Service\Marketing\ObjectSelection;
+use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -77,6 +81,10 @@ use Throwable;
  */
 class BlastService implements BlastServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug used when no `register` app config value is set.
@@ -1772,16 +1780,13 @@ class BlastService implements BlastServiceInterface {
 	 * @return array<int, array<string, mixed>> Matching rows.
 	 */
 	private function loadDeliveries(array $filters, ?ListPage $page = null): array {
-		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(schemaSlug: $schema);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $objectService] = $target;
 
 		$config = ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)] + ($page?->window() ?? []);
 		$query = new ObjectQuery(config: $config, failure: 'BlastService.loadDeliveries: findAll failed', logContext: ['filters' => $filters]);
@@ -1798,16 +1803,13 @@ class BlastService implements BlastServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-1/tasks.md#task-5
 	 */
 	private function countDeliveries(array $filters): int {
-		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(schemaSlug: $schema);
+		if ($target === null) {
 			return 0;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return 0;
-		}
+		[$register, $objectService] = $target;
 
 		try {
 			return $objectService->count(
@@ -1972,35 +1974,6 @@ class BlastService implements BlastServiceInterface {
 	}//end emptySummary()
 
 	/**
-	 * Extract the object id from a saved payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id (uuid / id / slug) or empty.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat fallback chain over candidate
-	 *  id keys; each branch is an independent early return.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
 	 * Resolve the Blast schema slug from app config.
 	 *
 	 * @return string Slug.
@@ -2015,20 +1988,6 @@ class BlastService implements BlastServiceInterface {
 	}//end getBlastSchemaSlug()
 
 	/**
-	 * Resolve the BlastDelivery schema slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
-
-	/**
 	 * Resolve the CampaignTemplate schema slug from app config.
 	 *
 	 * @return string Slug.
@@ -2041,37 +2000,6 @@ class BlastService implements BlastServiceInterface {
 
 		return self::DEFAULT_CAMPAIGN_TEMPLATE_SCHEMA_SLUG;
 	}//end getCampaignTemplateSchemaSlug()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Current time as an ISO-8601 string.

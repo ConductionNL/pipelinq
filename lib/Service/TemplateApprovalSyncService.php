@@ -28,7 +28,11 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -51,6 +55,10 @@ use Throwable;
  */
 class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use SchemaRowQuery;
 
 	/**
 	 * Default register slug.
@@ -316,26 +324,18 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 			return [];
 		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'providerId' => $providerId,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TemplateApprovalSyncService.buildLocalIndex: findAll failed',
-				['providerId' => $providerId, 'exception' => $e->getMessage()]
-			);
+		$rows = $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['providerId' => $providerId],
+			failure: 'TemplateApprovalSyncService.buildLocalIndex: findAll failed',
+			context: ['providerId' => $providerId]
+		);
+		if ($rows === null) {
 			return [];
 		}
 
 		$index = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$arr = $this->toArray(value: $row);
 			$externalId = (string)($arr['externalId'] ?? '');
 			$language = (string)($arr['language'] ?? 'nl');
@@ -423,63 +423,6 @@ class TemplateApprovalSyncService implements TemplateApprovalSyncServiceInterfac
 
 		return $this->toArray(value: $saved);
 	}//end saveObject()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TemplateApprovalSyncService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$searchSpaces = [$payload];
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			$searchSpaces[] = $self;
-		}
-
-		foreach ($searchSpaces as $space) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($space[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug.

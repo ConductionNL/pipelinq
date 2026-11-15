@@ -46,6 +46,8 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -58,6 +60,9 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterface {
+	use JsonSerializableToArray;
+	use PartyObjectRead;
+
 	/**
 	 * The default depth cap, used when the instance has not set one.
 	 *
@@ -456,28 +461,7 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 	 * @return array<string, mixed>|null The row, or null.
 	 */
 	private function read(string $id): ?array {
-		try {
-			$entity = $this->objectService->find(id: $id);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'PartyOrganisationTreeService: could not read the organisation',
-				['uuid' => $id, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $id, failure: 'PartyOrganisationTreeService: could not read the organisation', idKey: 'uuid');
 	}//end read()
 
 	/**
@@ -507,26 +491,4 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 			return false;
 		}
 	}//end write()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The row data, or null.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end toArray()
 }//end class

@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
+use OCA\Pipelinq\Util\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -50,6 +51,8 @@ use OCP\IRequest;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PublicSurveyController extends Controller {
+	use ServiceResultResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -101,18 +104,4 @@ class PublicSurveyController extends Controller {
 			result: $this->responses->submit(token: $token, answers: $answers, optOut: $optOut)
 		);
 	}//end submitInvitation()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

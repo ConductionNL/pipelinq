@@ -30,6 +30,9 @@ use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Util\BsnHashRows;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,6 +44,10 @@ use Throwable;
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */
 class BrpCacheService implements BrpCacheServiceInterface {
+	use SerialisedToArray;
+	use InjectedObjectService;
+	use BsnHashRows;
+
 	/**
 	 * Default TTL in hours (24h per design.md).
 	 */
@@ -75,7 +82,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 		string $rawBsn,
 	): ?array {
 		try {
-			return $this->latestUnexpired(results: $this->cachedRows(rawBsn: $rawBsn));
+			return $this->latestUnexpired(results: $this->rowsForBsn(rawBsn: $rawBsn));
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'BRP cache lookup failed',
@@ -84,29 +91,6 @@ class BrpCacheService implements BrpCacheServiceInterface {
 			return null;
 		}//end try
 	}//end get()
-
-	/**
-	 * The cached BrpPersoon rows for a raw BSN, looked up by its hash.
-	 *
-	 * @param string $rawBsn Raw BSN — hashed in-process only.
-	 *
-	 * @return mixed The findAll answer.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
-	 */
-	private function cachedRows(#[\SensitiveParameter] string $rawBsn): mixed {
-		[$register, $schema] = $this->config();
-		$hash = BsnValidationService::hash($rawBsn);
-		return $this->getObjectService()->findAll(
-			config: [
-				'filters' => [
-					'bsnHash' => $hash,
-					'register' => $register,
-					'schema' => $schema,
-				],
-			]
-		);
-	}//end cachedRows()
 
 	/**
 	 * The most recently fetched row whose retention has not passed, or null.
@@ -119,7 +103,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$latest = null;
 		foreach (($results ?? []) as $object) {
-			$arr = self::toArray(object: $object);
+			$arr = $this->toArray(value: $object);
 			if ($this->isUnexpired(row: $arr, now: $now) === false) {
 				continue;
 			}
@@ -201,7 +185,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 			register: $register,
 			schema: $schema,
 		);
-		return self::toArray(object: $saved);
+		return $this->toArray(value: $saved);
 	}//end set()
 
 	/**
@@ -223,22 +207,13 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	): int {
 		try {
 			[$register, $schema] = $this->config();
-			$hash = BsnValidationService::hash($rawBsn);
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $hash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->rowsForBsn(rawBsn: $rawBsn);
 
 			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$expired = $now->modify('-1 second')->format(DATE_ATOM);
 			$count = 0;
 			foreach (($results ?? []) as $object) {
-				$arr = self::toArray(object: $object);
+				$arr = $this->toArray(value: $object);
 				$uuid = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
 				if ($uuid === '') {
 					continue;
@@ -285,30 +260,6 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	}//end getConfiguredTtlHours()
 
 	/**
-	 * Normalise an OR object (entity or array) to an array.
-	 *
-	 * @param mixed $object OR object (entity or array) to normalise.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private static function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serial = $object->jsonSerialize();
-			if (is_array($serial) === true) {
-				return $serial;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toArray()
-
-	/**
 	 * Resolve [register, schema].
 	 *
 	 * @return array{0:string, 1:string}
@@ -324,15 +275,4 @@ class BrpCacheService implements BrpCacheServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Lazy OR ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

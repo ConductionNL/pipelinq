@@ -39,6 +39,8 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
+use OCA\Pipelinq\Util\ByteTruncate;
+use OCA\Pipelinq\Util\CentsAsDecimal;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -66,6 +68,8 @@ use Throwable;
  */
 class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	use NullablePayloadToArray;
+	use CentsAsDecimal;
+	use ByteTruncate;
 
 	/**
 	 * App-config key for the openconnector payment source slug.
@@ -666,30 +670,6 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 	}//end withDepositPaidAt()
 
 	/**
-	 * Render an integer-cent amount as a `nn.nn` decimal string.
-	 *
-	 * Mollie / Stripe expect a string-encoded major-unit amount
-	 * (e.g. `"20.00"`), but pipelinq stores cents end-to-end to avoid
-	 * float drift. Conversion happens once at the openconnector boundary.
-	 *
-	 * @param int $cents Amount in integer cents.
-	 *
-	 * @return string
-	 */
-	private function centsToDecimal(int $cents): string {
-		$sign = '';
-		$absolute = $cents;
-		if ($cents < 0) {
-			$sign = '-';
-			$absolute = -$cents;
-		}
-
-		$major = intdiv($absolute, 100);
-		$minor = ($absolute % 100);
-		return sprintf('%s%d.%02d', $sign, $major, $minor);
-	}//end centsToDecimal()
-
-	/**
 	 * Pull a string field out of a PaymentService result.
 	 *
 	 * @param mixed $result Raw result (array or object).
@@ -708,22 +688,6 @@ class AppointmentDepositService implements AppointmentDepositServiceInterface {
 
 		return '';
 	}//end stringField()
-
-	/**
-	 * Truncate a string to a maximum length.
-	 *
-	 * @param string $value Raw value.
-	 * @param int $max Maximum length.
-	 *
-	 * @return string
-	 */
-	private function truncate(string $value, int $max): string {
-		if (strlen($value) <= $max) {
-			return $value;
-		}
-
-		return substr($value, 0, $max);
-	}//end truncate()
 
 	/**
 	 * Now in ISO-8601 UTC.

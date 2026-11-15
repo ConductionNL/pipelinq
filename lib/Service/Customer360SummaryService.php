@@ -32,6 +32,7 @@ use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -55,6 +56,8 @@ use Throwable;
  * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
 class Customer360SummaryService implements Customer360SummaryServiceInterface {
+	use SerialisedPayload;
+
 	/**
 	 * Ticket statuses considered "open" (mirrors KccWerkplekService::OPEN_REQUEST_STATUSES
 	 * and the ticket schema's `x-openregister-lifecycle` non-final states).
@@ -285,22 +288,12 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 	 * @return array<string, mixed> Plain associative array.
 	 */
 	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true) {
+		$serialised = $this->serialisedPayload(value: $object);
+		if ($serialised === null && is_object($object) === true) {
 			return (array)$object;
 		}
 
-		return [];
+		return ($serialised ?? []);
 	}//end toArray()
 
 	/**

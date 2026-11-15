@@ -47,7 +47,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCA\Pipelinq\Service\Social\MeteredRead;
 use OCA\Pipelinq\Service\Social\NetworkTotals;
@@ -57,6 +56,8 @@ use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
 use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
+use OCA\Pipelinq\Util\ConfiguredTenantId;
+use OCA\Pipelinq\Util\SocialSpendBudget;
 use OCP\IAppConfig;
 
 /**
@@ -75,6 +76,9 @@ use OCP\IAppConfig;
  *  into every adapter, would add a collaborator that constructs a struct.
  */
 class SocialMetricsService implements SocialMetricsServiceInterface {
+	use ConfiguredTenantId;
+	use SocialSpendBudget;
+
 	/**
 	 * Constructor.
 	 *
@@ -395,7 +399,7 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 		$result = $this->brokered(call: $read->call, account: $account);
 		if ($cost > 0.0 && $result->accepted === true) {
 			$this->budget->recordSend(
-				tenantId: $this->tenantId(),
+				tenantId: $this->getTenantId(),
 				providerId: $adapter->network(),
 				costEur: $cost,
 			);
@@ -413,16 +417,7 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 	 * @return SocialGatewayResult|null
 	 */
 	private function budgetStop(SocialNetworkAdapter $adapter, float $cost): ?SocialGatewayResult {
-		if ($cost <= 0.0) {
-			return null;
-		}
-
-		$allowed = $this->budget->canSend(
-			tenantId: $this->tenantId(),
-			providerId: $adapter->network(),
-			estimatedCostEur: $cost,
-		);
-		if ($allowed === true) {
+		if ($this->withinBudget(adapter: $adapter, cost: $cost) === true) {
 			return null;
 		}
 
@@ -456,19 +451,4 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 			actingUserId: $acting,
 		);
 	}//end brokered()
-
-	/**
-	 * The tenant the spend budget is kept for, matching every other metered
-	 * channel in this app.
-	 *
-	 * @return string The tenant id.
-	 */
-	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end tenantId()
 }//end class

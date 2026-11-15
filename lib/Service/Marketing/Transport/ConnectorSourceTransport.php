@@ -38,6 +38,8 @@ namespace OCA\Pipelinq\Service\Marketing\Transport;
 
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
+use OCA\Pipelinq\Util\CastSerialisedToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -53,6 +55,9 @@ use Throwable;
  *  "shape a request for this provider" concern across several files.
  */
 final class ConnectorSourceTransport implements TransportInterface {
+	use CastSerialisedToArray;
+	use ContainerObjectServiceLookup;
+
 	/**
 	 * OpenConnector's Source schema slug.
 	 *
@@ -447,15 +452,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 	 * @return object|null
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConnectorSourceTransport.resolveObjectService: unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ConnectorSourceTransport.resolveObjectService: unavailable', errorKey: 'exception');
 	}//end resolveObjectService()
 
 	/**
@@ -552,29 +549,4 @@ final class ConnectorSourceTransport implements TransportInterface {
 
 		return null;
 	}//end extractProviderId()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) into a plain array.
-	 *
-	 * @param mixed $value The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true) {
-			if (method_exists($value, 'jsonSerialize') === true) {
-				return (array)$value->jsonSerialize();
-			}
-
-			if (method_exists($value, 'getObject') === true) {
-				return (array)$value->getObject();
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

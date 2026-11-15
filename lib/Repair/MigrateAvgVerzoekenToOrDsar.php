@@ -44,6 +44,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -60,6 +61,7 @@ use Psr\Log\LoggerInterface;
  */
 class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	use RunsUnderSystemIdentity;
+	use JsonSerializableToArray;
 
 	/**
 	 * OR's data-subject-requests register slug.
@@ -209,7 +211,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		}
 
 		foreach ((array)$cases as $case) {
-			$row = $this->rowToArray(row: $case);
+			$row = $this->toArray(row: $case);
 			$notes = ($row['notes'] ?? null);
 
 			// OpenRegister may hand `notes` back as the raw JSON string OR as an
@@ -383,7 +385,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	private function migrateAll(DsarMigrationRun $run, array $verzoeken): array {
 		$counts = ['migrated' => 0, 'skipped' => 0, 'unmappable' => 0, 'failed' => 0];
 		foreach ($verzoeken as $row) {
-			$request = $this->rowToArray(row: $row);
+			$request = $this->toArray(row: $row);
 			if ($request === null) {
 				continue;
 			}
@@ -934,7 +936,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	private function indexByRequest(DsarMigrationSource $source, DsarSatelliteSchema $satellite): array {
 		$index = [];
 		foreach ($this->readSchema(source: $source, schemaKey: $satellite->schemaKey) as $row) {
-			$data = $this->rowToArray(row: $row);
+			$data = $this->toArray(row: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -961,7 +963,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	private function indexFirstByRequest(DsarMigrationSource $source, DsarSatelliteSchema $satellite): array {
 		$index = [];
 		foreach ($this->readSchema(source: $source, schemaKey: $satellite->schemaKey) as $row) {
-			$data = $this->rowToArray(row: $row);
+			$data = $this->toArray(row: $row);
 			if ($data === null) {
 				continue;
 			}
@@ -1017,26 +1019,4 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 
 		return [];
 	}//end findSchemaRows()
-
-	/**
-	 * Normalise a findAll row (ObjectEntity or rendered array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The data, or null when unreadable.
-	 */
-	private function rowToArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if ($row instanceof \JsonSerializable === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end rowToArray()
 }//end class

@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SocialAdvocacyServiceInterface;
+use OCA\Pipelinq\Util\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -49,6 +50,8 @@ use OCP\IUserSession;
  * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
  */
 class SocialAdvocacyController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
@@ -112,21 +115,6 @@ class SocialAdvocacyController extends Controller {
 			),
 		);
 	}//end confirmShare()
-
-	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
 
 	/**
 	 * The single refusal.

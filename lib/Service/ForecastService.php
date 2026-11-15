@@ -28,6 +28,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastServiceInterface;
 use OCA\Pipelinq\Service\Forecast\CategoryOverride;
+use OCA\Pipelinq\Util\FindAllAsArrays;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -44,6 +46,8 @@ use Psr\Log\LoggerInterface;
  */
 class ForecastService implements ForecastServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use FindAllAsArrays;
 
 	/**
 	 * Constructor.
@@ -363,19 +367,7 @@ class ForecastService implements ForecastServiceInterface {
 	 * @return array<int, array<string, mixed>> The objects.
 	 */
 	private function readObjects(array $config): array {
-		try {
-			$results = $this->getObjectService()->findAll(config: $config);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: forecast query failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$objects = [];
-		foreach (($results ?? []) as $result) {
-			$objects[] = $this->toArray(value: $result);
-		}
-
-		return $objects;
+		return $this->findAllAsArrays(config: $config, failure: 'Pipelinq: forecast query failed');
 	}//end readObjects()
 
 	/**
@@ -401,15 +393,4 @@ class ForecastService implements ForecastServiceInterface {
 
 		return null;
 	}//end objectId()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

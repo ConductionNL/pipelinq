@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
+use OCA\Pipelinq\Util\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,6 +56,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pos-end-of-day-bookkeeping-post/tasks.md#2.2
  */
 class PosBookkeepingController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
@@ -114,17 +117,6 @@ class PosBookkeepingController extends Controller {
 	}//end post()
 
 	/**
-	 * Require an authenticated user, returning their UID.
-	 *
-	 * Returns a 401 JSONResponse when no user is in the session.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
 	 * Run a lifecycle action with shared error handling.
 	 *
 	 * Maps the service's OCS exceptions to HTTP status codes:
@@ -141,13 +133,4 @@ class PosBookkeepingController extends Controller {
 			logLabel: 'PosBookkeepingController::' . $label
 		);
 	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

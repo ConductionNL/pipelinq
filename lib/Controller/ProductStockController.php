@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,6 +43,7 @@ use Throwable;
  * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 class ProductStockController extends Controller {
+	use SerialisedPayload;
 
 	/**
 	 * Constructor.
@@ -118,7 +120,7 @@ class ProductStockController extends Controller {
 			return null;
 		}
 
-		return $this->productData(entity: $this->findProduct(id: $id));
+		return $this->serialisedPayload(value: $this->findProduct(id: $id));
 	}//end loadProduct()
 
 	/**
@@ -140,28 +142,6 @@ class ProductStockController extends Controller {
 			return null;
 		}
 	}//end findProduct()
-
-	/**
-	 * A found product as an array, or null when it is neither an array nor serialises to one.
-	 *
-	 * @param mixed $entity The found product.
-	 *
-	 * @return array<string, mixed>|null The product.
-	 */
-	private function productData($entity): array|null {
-		if (is_array($entity) === true) {
-			return $entity;
-		}
-
-		if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
-			$data = $entity->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end productData()
 
 	/**
 	 * An app-config slug, never empty.

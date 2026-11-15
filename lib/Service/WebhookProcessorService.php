@@ -46,7 +46,12 @@ namespace OCA\Pipelinq\Service;
 use Closure;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Util\BlastDeliveryLookup;
+use OCA\Pipelinq\Util\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -75,6 +80,11 @@ use Throwable;
  */
 class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use BlastDeliveryLookup;
 
 	/**
 	 * Default register slug — matches the chain root schemas.
@@ -797,32 +807,7 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return array<string, mixed>|null Delivery row or null.
 	 */
 	private function loadDeliveryById(string $id): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				'WebhookProcessorService.loadDeliveryById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->findBlastDelivery(id: $id, notFound: 'WebhookProcessorService.loadDeliveryById: not found');
 	}//end loadDeliveryById()
 
 	/**
@@ -833,16 +818,12 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	 * @return array<int, array<string, mixed>> Matching rows.
 	 */
 	private function findDeliveries(array $filters): array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $this->getRegisterSlug(), schema: $this->getBlastDeliverySchemaSlug());
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
 		$rows = $this->findAllDeliveries(objectService: $objectService, filters: $filters, register: $register, schema: $schema);
 		return $this->deliveryArrays(rows: $rows);
@@ -922,16 +903,11 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	private function deliveryWriteTarget(string $id): array|null {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '' || $id === '') {
+		if ($id === '') {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		return [$register, $schema, $objectService];
+		return $this->objectTarget(register: $register, schema: $schema);
 	}//end deliveryWriteTarget()
 
 	/**
@@ -975,75 +951,4 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 			}
 		}
 	}//end refreshBlastTotals()
-
-	/**
-	 * Extract the object id from a saved payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id (uuid / id / slug) or empty.
-	 */
-	private function extractId(array $payload): string {
-		$searchSpaces = [$payload];
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			$searchSpaces[] = $self;
-		}
-
-		foreach ($searchSpaces as $space) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($space[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve the BlastDelivery schema slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
-
-	/**
-	 * Lazy-resolve OpenRegister's ObjectService.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 }//end class

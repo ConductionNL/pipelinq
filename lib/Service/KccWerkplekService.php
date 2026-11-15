@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,6 +52,9 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekService implements KccWerkplekServiceInterface {
+	use SerialisedPayload;
+	use ConfiguredRegisterId;
+
 	/**
 	 * Request statuses considered "open" for the inbox (REQ-KWP-020).
 	 *
@@ -132,31 +137,6 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	}//end getSchema()
 
 	/**
-	 * Read the pipelinq register slug from the app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string Register slug (typically `pipelinq`); '' when unconfigured.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
-	 */
-	private function getRegister(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end getRegister()
-
-	/**
 	 * Normalise an OpenRegister entity (object or array) to a plain array.
 	 *
 	 * @param mixed $object The object or array returned by ObjectService.
@@ -166,22 +146,12 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true) {
+		$serialised = $this->serialisedPayload(value: $object);
+		if ($serialised === null && is_object($object) === true) {
 			return (array)$object;
 		}
 
-		return [];
+		return ($serialised ?? []);
 	}//end toArray()
 
 	/**
@@ -195,34 +165,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function findAllSafe(string $schemaKey): array {
-		$register = $this->getRegister();
-		$schema = $this->getSchema(schemaKey: $schemaKey);
-		if ($register === '' || $schema === '') {
-			$this->logger->info(
-				message: '[KccWerkplekService] register or schema not configured',
-				context: ['schemaKey' => $schemaKey]
-			);
-			return [];
-		}
-
-		try {
-			$results = $this->getObjectService()->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema]]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[KccWerkplekService] findAll failed',
-				context: ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
+		return $this->findSafe(schemaKey: $schemaKey, filters: [], failure: '[KccWerkplekService] findAll failed');
 	}//end findAllSafe()
 
 	/**
@@ -242,7 +185,21 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
 	 */
 	private function findFilteredSafe(string $schemaKey, array $filters): array {
-		$register = $this->getRegister();
+		return $this->findSafe(schemaKey: $schemaKey, filters: $filters, failure: '[KccWerkplekService] filtered findAll failed');
+	}//end findFilteredSafe()
+
+	/**
+	 * Find objects of a schema matching the filters, logging an unconfigured
+	 * schema or a failed read and answering [] for either.
+	 *
+	 * @param string               $schemaKey App config key (e.g. `task_schema`).
+	 * @param array<string, mixed> $filters   Field criteria (eq / IN).
+	 * @param string               $failure   Warning logged when the read fails.
+	 *
+	 * @return array<int, array<string, mixed>> Plain object arrays.
+	 */
+	private function findSafe(string $schemaKey, array $filters, string $failure): array {
+		$register = $this->registerId();
 		$schema = $this->getSchema(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			$this->logger->info(
@@ -258,7 +215,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				message: '[KccWerkplekService] filtered findAll failed',
+				message: $failure,
 				context: ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
 			);
 			return [];
@@ -270,7 +227,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 		}
 
 		return $out;
-	}//end findFilteredSafe()
+	}//end findSafe()
 
 	/**
 	 * Find tickets of one subtype matching the given equality / IN filters.
@@ -410,7 +367,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @throws RuntimeException When the agentProfile schema is not configured.
 	 */
 	private function agentProfileScope(): array {
-		$register = $this->getRegister();
+		$register = $this->registerId();
 		$schema = $this->getSchema(schemaKey: 'agentProfile_schema');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('agentProfile schema is not configured');

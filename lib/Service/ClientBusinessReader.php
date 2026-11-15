@@ -32,6 +32,7 @@ use DateTime;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Util\SerialisedCast;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -45,6 +46,7 @@ use Throwable;
  * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
 class ClientBusinessReader implements ClientBusinessReaderInterface {
+	use SerialisedCast;
 
 	private const OBJECT_SERVICE = 'OCA\OpenRegister\Service\ObjectService';
 
@@ -347,19 +349,4 @@ class ClientBusinessReader implements ClientBusinessReaderInterface {
 
 		return $this->asArray(object: $object);
 	}//end readClient()
-
-	/**
-	 * An object as an array.
-	 *
-	 * @param mixed $object The object.
-	 *
-	 * @return array<string, mixed> The array.
-	 */
-	private function asArray(mixed $object): array {
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return (array)$object->jsonSerialize();
-		}
-
-		return (array)$object;
-	}//end asArray()
 }//end class

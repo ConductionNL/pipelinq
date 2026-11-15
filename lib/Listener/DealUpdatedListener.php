@@ -26,9 +26,10 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredSchemaObjectRead;
+use OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -69,6 +70,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 class DealUpdatedListener implements IEventListener, DeferredObjectWork {
+	use ConfiguredSchemaObjectRead;
+	use ConfiguredSchemaObjectWrite;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -76,6 +79,27 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @var string
 	 */
 	public const HANDLER_KEY = 'deal-updated';
+
+	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'lead_schema';
+
+	/**
+	 * Log line when the deferred re-read fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to re-read deal for deferred forecast_category correction';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist forecast_category correction on deal update';
 
 	/**
 	 * Constructor.
@@ -249,67 +273,4 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 		$entityType = $this->schemaMapService->resolveEntityType(schemaId: $entity->getSchema());
 		return $entityType === 'lead';
 	}//end isLead()
-
-	/**
-	 * Read the deal's current data.
-	 *
-	 * @param string $uuid The deal UUID.
-	 *
-	 * @return array<string, mixed>|null The deal data, or null when it is gone.
-	 */
-	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return null;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to re-read deal for deferred forecast_category correction',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetch()
-
-	/**
-	 * Persist mutated deal data back to OpenRegister.
-	 *
-	 * @param string $uuid The deal UUID.
-	 * @param array<string, mixed> $data The deal data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist forecast_category correction on deal update',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

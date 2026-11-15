@@ -45,6 +45,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -77,6 +78,7 @@ use Psr\Log\LoggerInterface;
  */
 class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface {
 	use CastingPayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Schemas in scope for the audit log.
@@ -760,17 +762,6 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Resolve the OR ObjectService through the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Current UTC ISO 8601 timestamp.

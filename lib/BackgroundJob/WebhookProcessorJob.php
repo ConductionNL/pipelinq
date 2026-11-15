@@ -31,7 +31,11 @@ namespace OCA\Pipelinq\BackgroundJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Util\SchemaRowQuery;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -49,6 +53,10 @@ use Throwable;
  */
 class WebhookProcessorJob extends TimedJob {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use SchemaRowQuery;
 
 	/**
 	 * Default register slug.
@@ -136,23 +144,12 @@ class WebhookProcessorJob extends TimedJob {
 	 * @return mixed
 	 */
 	private function queuedRows(object $objectService): mixed {
-		try {
-			return $objectService->findAll(
-				config: [
-					'filters' => [
-						'status' => 'queued',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->getSchemaSlug(),
-					],
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorJob.drain: findAll failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->findSchemaRows(
+			objectService: $objectService,
+			filters: ['status' => 'queued'],
+			failure: 'WebhookProcessorJob.drain: findAll failed',
+			context: []
+		);
 	}//end queuedRows()
 
 	/**
@@ -240,77 +237,6 @@ class WebhookProcessorJob extends TimedJob {
 
 		return ['status' => 'unknownChannel'];
 	}//end dispatchChannel()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorJob.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$keys = ['uuid', 'id', 'slug'];
-		$direct = $this->firstScalar(source: $payload, keys: $keys);
-		if ($direct !== '') {
-			return $direct;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalar(source: $payload['@self'], keys: $keys);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Return the first non-empty scalar value among the given keys.
-	 *
-	 * @param array<string, mixed> $source Source array.
-	 * @param array<int, string> $keys Candidate keys, in priority order.
-	 *
-	 * @return string First matching value cast to string, or empty.
-	 */
-	private function firstScalar(array $source, array $keys): string {
-		foreach ($keys as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalar()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
 
 	/**
 	 * Schema slug.

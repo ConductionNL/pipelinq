@@ -30,8 +30,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredMailTransportSchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Util\QuietObjectSave;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,6 +47,12 @@ use Throwable;
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface {
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ConfiguredMailTransportSchemaSlug;
+	use ContainerObjectServiceLookup;
+	use QuietObjectSave;
+
 	/**
 	 * Default register slug used when no `register` app config value is set.
 	 */
@@ -308,21 +318,12 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 		$payload['dmarcStatus'] = $verdict['dmarcStatus'];
 		$payload['deliverabilityCheckedAt'] = $verdict['checkedAt'];
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
-
-		try {
-			$objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
-				uuid: $id,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('DeliverabilityCheckService.persistVerdict: save failed', ['id' => $id, 'exception' => $e->getMessage()]);
-		}
+		$this->saveQuietly(
+			payload: $payload,
+			schema: $this->getMailTransportSchemaSlug(),
+			id: $id,
+			failure: 'DeliverabilityCheckService.persistVerdict: save failed'
+		);
 	}//end persistVerdict()
 
 	/**
@@ -331,69 +332,8 @@ class DeliverabilityCheckService implements DeliverabilityCheckServiceInterface 
 	 * @return object|null
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('DeliverabilityCheckService.getObjectService: unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'DeliverabilityCheckService.getObjectService: unavailable', errorKey: 'exception');
 	}//end getObjectService()
-
-	/**
-	 * The configured `pipelinq` register slug.
-	 *
-	 * @return string
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * The configured `mailTransport` schema slug.
-	 *
-	 * @return string
-	 */
-	private function getMailTransportSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'mailTransport_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
-	}//end getMailTransportSchemaSlug()
-
-	/**
-	 * Extract a UUID/id/slug from an OpenRegister payload.
-	 *
-	 * @param array<string, mixed> $payload The payload.
-	 *
-	 * @return string The id, or '' when none is present.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($payload[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($self[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
 
 	/**
 	 * Current UTC instant, ISO 8601.

@@ -26,9 +26,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
+use OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -46,6 +46,22 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
  */
 class TimeApprovalListener implements IEventListener {
+	use ConfiguredSchemaObjectWrite;
+
+	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'timeEntry_schema';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist time entry WIP sync status';
+
 	/**
 	 * Constructor.
 	 *
@@ -116,39 +132,4 @@ class TimeApprovalListener implements IEventListener {
 			uuid: $uuid
 		);
 	}//end handle()
-
-	/**
-	 * Persist the mutated time entry data back to OpenRegister.
-	 *
-	 * No-op when the timeEntry register/schema config keys are unset so the
-	 * listener is safe to install before the schema is bound.
-	 *
-	 * @param string $uuid The time entry UUID.
-	 * @param array<string, mixed> $data The mutated time entry data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'timeEntry_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist time entry WIP sync status',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

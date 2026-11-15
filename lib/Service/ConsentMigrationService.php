@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ConsentMigrationServiceInterface;
+use OCA\Pipelinq\Util\SerialisedRows;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,6 +44,7 @@ use Throwable;
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
  */
 class ConsentMigrationService implements ConsentMigrationServiceInterface {
+	use SerialisedRows;
 
 	/**
 	 * Constructor.
@@ -199,7 +201,7 @@ class ConsentMigrationService implements ConsentMigrationServiceInterface {
 			return [];
 		}
 
-		return $this->plainRecords(rows: (array)$rows);
+		return $this->serialisedRows(rows: (array)$rows);
 	}//end consentRecords()
 
 	/**
@@ -220,28 +222,6 @@ class ConsentMigrationService implements ConsentMigrationServiceInterface {
 
 		return [$register, $schema];
 	}//end consentTarget()
-
-	/**
-	 * Rows as plain arrays; a row with no array shape is dropped.
-	 *
-	 * @param array<mixed> $rows The rows OpenRegister returned.
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
-	private function plainRecords(array $rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-				$row = $row->jsonSerialize();
-			}
-
-			if (is_array($row) === true) {
-				$out[] = $row;
-			}
-		}
-
-		return $out;
-	}//end plainRecords()
 
 	/**
 	 * The UUID of a record.
