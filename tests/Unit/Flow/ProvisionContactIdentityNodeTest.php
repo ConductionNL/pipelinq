@@ -345,14 +345,16 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			});
 
 		$this->node->execute(
-			$this->items(['person' => ['name' => '  Jan Jansen ', 'email' => ['work' => 'jan@example.org']]]),
-			[
-				'objectType' => 'contact',
-				'nameFrom' => 'person.name',
-				'emailFrom' => 'person.email',
-				'output' => 'uid',
-			],
-			[]
+			new FlowNodeCall(
+				items: $this->items(['person' => ['name' => '  Jan Jansen ', 'email' => ['work' => 'jan@example.org']]]),
+				config: [
+					'objectType' => 'contact',
+					'nameFrom' => 'person.name',
+					'emailFrom' => 'person.email',
+					'output' => 'uid',
+				],
+				context: []
+			)
 		);
 
 		$this->assertSame('Jan Jansen', $seen['name']);

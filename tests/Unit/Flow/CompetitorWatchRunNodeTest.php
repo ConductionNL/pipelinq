@@ -219,9 +219,11 @@ class CompetitorWatchRunNodeTest extends TestCase {
 		$this->watches->expects($this->once())->method('runDue')->willReturn($summary);
 
 		$out = $this->node->execute(
-			items: [['json' => ['id' => 'a']], ['json' => ['id' => 'b'], 'binary' => 'x']],
-			config: [],
-			context: []
+			new FlowNodeCall(
+				items: [['json' => ['id' => 'a']], ['json' => ['id' => 'b'], 'binary' => 'x']],
+				config: [],
+				context: []
+			)
 		);
 
 		$this->assertSame(
