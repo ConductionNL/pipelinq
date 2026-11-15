@@ -161,14 +161,41 @@ class OpenMailService implements OpenMailServiceInterface {
 	 * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md#requirement-the-pane-shows-the-senders-record-or-adds-it-req-mai-002
 	 */
 	public function addSender(string $name, string $email, string $client = ''): array {
+		$form = self::senderForm(name: $name, email: $email);
+		return $this->contactSync->createWithContact(objectType: 'contact', form: $this->withSenderClient(form: $form, client: trim($client)));
+	}//end addSender()
+
+	/**
+	 * The trimmed name and lower-cased address of a sender.
+	 *
+	 * @param string $name  The sender's name.
+	 * @param string $email The sender's address.
+	 *
+	 * @return array{name: string, email: string} The form.
+	 *
+	 * @throws InvalidArgumentException When the name or the address is missing or malformed.
+	 */
+	private static function senderForm(string $name, string $email): array {
 		$name = trim($name);
 		$email = strtolower(trim($email));
 		if ($name === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
 			throw new InvalidArgumentException('A name and an email address are required.');
 		}
 
-		$form = ['name' => $name, 'email' => $email];
-		$client = trim($client);
+		return ['name' => $name, 'email' => $email];
+	}//end senderForm()
+
+	/**
+	 * The form with the client the sender belongs to, which the caller must be able to read.
+	 *
+	 * @param array<string, string> $form   The sender form.
+	 * @param string                $client The trimmed client id, or ''.
+	 *
+	 * @return array<string, string> The form.
+	 *
+	 * @throws OutOfBoundsException When the caller cannot read the client.
+	 */
+	private function withSenderClient(array $form, string $client): array {
 		if ($client !== '') {
 			if ($this->reader->read(id: $client, schemaKey: self::SCHEMA_KEYS['client']) === null) {
 				throw new OutOfBoundsException('client not found');
@@ -177,8 +204,8 @@ class OpenMailService implements OpenMailServiceInterface {
 			$form['client'] = $client;
 		}
 
-		return $this->contactSync->createWithContact(objectType: 'contact', form: $form);
-	}//end addSender()
+		return $form;
+	}//end withSenderClient()
 
 	/**
 	 * Log a mail as an inbound contact moment on a contact or a client.
@@ -201,21 +228,45 @@ class OpenMailService implements OpenMailServiceInterface {
 	 */
 	public function logMail(string $entityType, string $entityId, string $subject, string $sentAt, string $preview): array {
 		$payload = $this->contactMomentFor(entityType: $entityType, entityId: $entityId);
-		$title = $this->required(value: $subject, field: 'subject');
-		$occurredAt = $this->occurredAt(sentAt: $sentAt);
+		$mail = ['title' => $this->required(value: $subject, field: 'subject'), 'occurredAt' => $this->occurredAt(sentAt: $sentAt)];
 
-		$payload['title'] = mb_substr($title, 0, self::TITLE_MAX_CHARS);
+		return $this->savedMail(payload: $payload, mail: $mail + ['preview' => trim($preview)]);
+	}//end logMail()
+
+	/**
+	 * Save the mail as an inbound contact moment on the target's payload.
+	 *
+	 * @param array<string, string>                                    $payload The contact moment fields of the target.
+	 * @param array{title: string, occurredAt: string, preview: string} $mail    The trimmed subject, the sent-at instant and the trimmed preview.
+	 *
+	 * @return array<string, string> The contact moment's id and the fields written.
+	 */
+	private function savedMail(array $payload, array $mail): array {
+		$payload['title'] = mb_substr($mail['title'], 0, self::TITLE_MAX_CHARS);
 		$payload['channel'] = 'email';
 		$payload['direction'] = 'inbound';
-		$payload['occurredAt'] = $occurredAt;
-		$preview = trim($preview);
+		$payload['occurredAt'] = $mail['occurredAt'];
+		$payload = self::withPreview(payload: $payload, preview: $mail['preview']);
+
+		$saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
+		return (['id' => $this->uuidOf(saved: $saved)] + $payload);
+	}//end savedMail()
+
+	/**
+	 * The payload with the opening of the mail as its description, when there is one.
+	 *
+	 * @param array<string, string> $payload The contact moment fields.
+	 * @param string                $preview The trimmed opening of the mail's text.
+	 *
+	 * @return array<string, string> The payload.
+	 */
+	private static function withPreview(array $payload, string $preview): array {
 		if ($preview !== '') {
 			$payload['description'] = mb_substr($preview, 0, self::PREVIEW_MAX_CHARS);
 		}
 
-		$saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
-		return (['id' => $this->uuidOf(saved: $saved)] + $payload);
-	}//end logMail()
+		return $payload;
+	}//end withPreview()
 
 	/**
 	 * A required value, trimmed.

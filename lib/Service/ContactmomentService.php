@@ -25,6 +25,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -148,13 +152,8 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		string $clientId = '',
 		string $agent = '',
 	): ?string {
-		try {
-			$config = $this->getConfig();
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				'ContactmomentService.recordOutboundMessage: audit skipped (ticket schema unconfigured)',
-				['exception' => $e->getMessage()]
-			);
+		$config = $this->configOrNull(logMessage: 'ContactmomentService.recordOutboundMessage: audit skipped (ticket schema unconfigured)');
+		if ($config === null) {
 			return null;
 		}
 
@@ -171,13 +170,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 			'occurredAt' => gmdate('Y-m-d\TH:i:s\Z'),
 			'channelMetadata' => $channelMetadata,
 		];
-		if ($clientId !== '') {
-			$payload['client'] = $clientId;
-		}
-
-		if ($agent !== '') {
-			$payload['assignee'] = $agent;
-		}
+		$payload += array_filter(['client' => $clientId, 'assignee' => $agent], static fn (string $value): bool => $value !== '');
 
 		return $this->saveTicket(payload: $payload, config: $config);
 	}//end recordOutboundMessage()
@@ -210,23 +203,12 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		string $body,
 		string $messageId,
 	): ?string {
-		try {
-			$config = $this->getConfig();
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				'ContactmomentService.recordInboundFromUnknownNumber: skipped (ticket schema unconfigured)',
-				['exception' => $e->getMessage()]
-			);
+		$config = $this->configOrNull(logMessage: 'ContactmomentService.recordInboundFromUnknownNumber: skipped (ticket schema unconfigured)');
+		if ($config === null) {
 			return null;
 		}
 
-		$channel = 'sms';
-		$title = $this->l10n->t('SMS from unknown number %s', [$phone]);
-		if ($platform === 'whatsapp') {
-			$channel = 'chat';
-			$title = $this->l10n->t('WhatsApp message from unknown number %s', [$phone]);
-		}
-
+		[$channel, $title] = $this->inboundChannelAndTitle(platform: $platform, phone: $phone);
 		$payload = [
 			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
 			'title' => $title,
@@ -247,6 +229,38 @@ class ContactmomentService implements ContactmomentServiceInterface {
 	}//end recordInboundFromUnknownNumber()
 
 	/**
+	 * The ticket register and schema, or null (logged) when they are unconfigured.
+	 *
+	 * @param string $logMessage The info line logged when they are unconfigured.
+	 *
+	 * @return array{register: string, schema: string}|null The ids, or null.
+	 */
+	private function configOrNull(string $logMessage): ?array {
+		try {
+			return $this->getConfig();
+		} catch (\Throwable $e) {
+			$this->logger->info($logMessage, ['exception' => $e->getMessage()]);
+			return null;
+		}
+	}//end configOrNull()
+
+	/**
+	 * The ticket channel and title of an inbound message from an unknown number.
+	 *
+	 * @param string $platform `sms` or `whatsapp`.
+	 * @param string $phone    Sender in E.164.
+	 *
+	 * @return array{0: string, 1: string} The channel and the title.
+	 */
+	private function inboundChannelAndTitle(string $platform, string $phone): array {
+		if ($platform === 'whatsapp') {
+			return ['chat', $this->l10n->t('WhatsApp message from unknown number %s', [$phone])];
+		}
+
+		return ['sms', $this->l10n->t('SMS from unknown number %s', [$phone])];
+	}//end inboundChannelAndTitle()
+
+	/**
 	 * Write a contact moment ticket, log-and-continue.
 	 *
 	 * The write is issued directly against the injected ObjectService rather
@@ -263,9 +277,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $payload,
-				register: $config['register'],
-				schema: $config['schema'],
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -309,11 +321,41 @@ class ContactmomentService implements ContactmomentServiceInterface {
 		$objectService = $this->getObjectService();
 		$config = $this->getConfig();
 
+		$object = $this->loadContactmoment(config: $config, id: $id);
+
+		$this->assertMayDelete(object: $object, currentUserId: $currentUserId);
+
+		$objectService
+			->setRegister($config['register'])
+			->setSchema($config['schema'])
+			->deleteObject(new ObjectDeletion(uuid: $id));
+
+		$this->logger->info(
+			'Contactmoment deleted',
+			[
+				'id' => $id,
+				'userId' => $currentUserId,
+			]
+		);
+
+		return true;
+	}//end delete()
+
+	/**
+	 * Load a contactmoment ticket; another ticket subtype counts as absent.
+	 *
+	 * @param array<string, mixed> $config Keys: register, schema.
+	 * @param string               $id     The contactmoment ticket UUID.
+	 *
+	 * @return object The ticket entity.
+	 *
+	 * @throws DoesNotExistException If contactmoment not found.
+	 */
+	private function loadContactmoment(array $config, string $id): object {
 		// Fetch the object to check ownership.
-		$object = $objectService->find(
+		$object = $this->objectService->find(
 			id: $id,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 		);
 
 		if ($object === null) {
@@ -330,6 +372,20 @@ class ContactmomentService implements ContactmomentServiceInterface {
 			);
 		}
 
+		return $object;
+	}//end loadContactmoment()
+
+	/**
+	 * Refuse a delete by anyone but the creating agent or an admin.
+	 *
+	 * @param object $object        The contactmoment ticket entity.
+	 * @param string $currentUserId The ID of the user requesting deletion.
+	 *
+	 * @return void
+	 *
+	 * @throws NotPermittedException If user lacks permission.
+	 */
+	private function assertMayDelete(object $object, string $currentUserId): void {
 		// Use the OR-immutable createdBy field (set by the platform on every
 		// saveObject/createObject call) rather than the user-mutable `assignee`
 		// field. Any caller with OR write-access can stamp `assignee: victim_uid`;
@@ -351,22 +407,7 @@ class ContactmomentService implements ContactmomentServiceInterface {
 				'Only the creating agent or an admin can delete this contactmoment.'
 			);
 		}
-
-		$objectService
-			->setRegister($config['register'])
-			->setSchema($config['schema'])
-			->deleteObject(uuid: $id);
-
-		$this->logger->info(
-			'Contactmoment deleted',
-			[
-				'id' => $id,
-				'userId' => $currentUserId,
-			]
-		);
-
-		return true;
-	}//end delete()
+	}//end assertMayDelete()
 
 	/**
 	 * Normalise an OpenRegister entity (or already-rendered row) to an array.

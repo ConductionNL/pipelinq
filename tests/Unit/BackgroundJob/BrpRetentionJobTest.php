@@ -31,6 +31,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The BRP retention sweep. Dates are far in the past or future so the
@@ -151,7 +154,8 @@ class BrpRetentionJobTest extends TestCase {
 			 *
 			 * @return bool
 			 */
-			public function deleteObject(string $uuid): bool {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$uuid = $deletion->uuid;
 				if (in_array($uuid, $this->failOn, true) === true) {
 					throw new \RuntimeException('locked ' . $uuid);
 				}
@@ -167,7 +171,9 @@ class BrpRetentionJobTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$found = $this->contacts[$id] ?? null;
 				if ($found instanceof \Throwable) {
 					throw $found;
@@ -185,7 +191,11 @@ class BrpRetentionJobTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $object;
 			}

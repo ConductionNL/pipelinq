@@ -85,17 +85,35 @@ class DocumentSigningService implements DocumentSigningServiceInterface {
 		string $accountId,
 		int $ttlMinutes = self::DEFAULT_TTL_MINUTES,
 	): array {
+		return $this->signedUrl(payload: $this->stamped(
+			subject: ['objectId' => $objectId, 'objectType' => $objectType, 'accountId' => $accountId], ttlMinutes: $ttlMinutes
+		));
+	}//end generateUrl()
+
+	/**
+	 * The token payload: the object and account, issued now and expiring after the TTL.
+	 *
+	 * @param array{objectId: string, objectType: string, accountId: string} $subject    The object and the account.
+	 * @param int                                                            $ttlMinutes The TTL in minutes.
+	 *
+	 * @return array{objectId: string, objectType: string, accountId: string, issuedAt: int, expiresAt: int}
+	 */
+	private function stamped(array $subject, int $ttlMinutes): array {
 		$issuedAt = $this->time->getTime();
-		$expiresAt = ($issuedAt + (max(1, $ttlMinutes) * 60));
+		$subject['issuedAt'] = $issuedAt;
+		$subject['expiresAt'] = ($issuedAt + (max(1, $ttlMinutes) * 60));
 
-		$payload = [
-			'objectId' => $objectId,
-			'objectType' => $objectType,
-			'accountId' => $accountId,
-			'issuedAt' => $issuedAt,
-			'expiresAt' => $expiresAt,
-		];
+		return $subject;
+	}//end stamped()
 
+	/**
+	 * The signed token for a payload and its download path.
+	 *
+	 * @param array{objectId: string, objectType: string, accountId: string, issuedAt: int, expiresAt: int} $payload The token payload.
+	 *
+	 * @return array{token: string, path: string, expiresAt: int} The signed material.
+	 */
+	private function signedUrl(array $payload): array {
 		$encoded = $this->base64UrlEncode(data: json_encode($payload));
 		$signature = $this->base64UrlEncode(data: $this->sign(encoded: $encoded));
 		$token = $encoded . '.' . $signature;
@@ -103,9 +121,9 @@ class DocumentSigningService implements DocumentSigningServiceInterface {
 		return [
 			'token' => $token,
 			'path' => '/portal/api/documents/' . $token . '/download',
-			'expiresAt' => $expiresAt,
+			'expiresAt' => $payload['expiresAt'],
 		];
-	}//end generateUrl()
+	}//end signedUrl()
 
 	/**
 	 * Validate a token: verify the signature, then the expiry.

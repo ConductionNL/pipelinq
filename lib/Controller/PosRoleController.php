@@ -27,6 +27,9 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
+use OCA\Pipelinq\Controller\Support\AdminOnlyResponse;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
+use OCA\Pipelinq\Controller\Support\PosJsonAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,6 +54,10 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 class PosRoleController extends Controller {
+	use AdminOnlyResponse;
+	use PosControllerResponses;
+	use PosJsonAction;
+
 	/**
 	 * Constructor.
 	 *
@@ -124,12 +131,7 @@ class PosRoleController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function create(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['role' => $this->service->saveRole(data: $this->payload())],
 			label: 'create'
 		);
@@ -176,12 +178,7 @@ class PosRoleController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function destroy(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: function () use ($id): array {
 				$this->service->deleteRole(id: $id);
 				return ['deleted' => true];
@@ -205,61 +202,4 @@ class PosRoleController extends Controller {
 			'canNoSale' => (bool)$this->request->getParam('canNoSale', false),
 		];
 	}//end payload()
-
-	/**
-	 * Require an authenticated user.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
-	 * Require an authenticated admin user.
-	 *
-	 * @return null|JSONResponse Null when the caller is an admin; 401/403 otherwise.
-	 */
-	private function requireAdmin(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		if ($this->groupManager->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Admin privileges required')],
-				Http::STATUS_FORBIDDEN
-			);
-		}
-
-		return null;
-	}//end requireAdmin()
-
-	/**
-	 * Run an action with shared error handling.
-	 *
-	 * @param callable $action The action.
-	 * @param string $label A short label for log context.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function run(callable $action, string $label): JSONResponse {
-		return $this->posResponses()->run(
-			respond: fn (): JSONResponse => new JSONResponse($action()),
-			logLabel: 'PosRoleController::' . $label
-		);
-	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

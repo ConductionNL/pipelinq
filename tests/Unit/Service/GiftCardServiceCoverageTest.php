@@ -33,6 +33,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Exercises the GiftCardService lifecycle against mocked boundaries.
@@ -84,7 +86,11 @@ class GiftCardServiceCoverageTest extends TestCase {
 	 */
 	private function recordSaves(?string $assignedId = null): void {
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid) use ($assignedId): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($assignedId): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = [$object, $register, $schema, $uuid];
 				if ($assignedId !== null && $schema === 'card') {
 					$object['@self'] = ['id' => $assignedId];
@@ -335,7 +341,10 @@ class GiftCardServiceCoverageTest extends TestCase {
 	public function testIssueSurvivesTransactionLogFailure(): void {
 		$this->objects->method('findAll')->willReturn([]);
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				if ($schema === 'tx') {
 					throw new \Exception('tx store down');
 				}
@@ -370,7 +379,13 @@ class GiftCardServiceCoverageTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefundRefusesMissingCard(): void {
-		$this->objects->expects($this->once())->method('find')->with('card-1', [], false, 'reg', 'card')->willReturn(null);
+		$this->objects->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'card-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'reg',
+				'schema' => 'card',
+			]))->willReturn(null);
 		$this->objects->expects($this->never())->method('saveObject');
 		$this->expectExceptionMessage(message: 'Gift card not found.');
 		$this->service()->refundGiftCard(giftCardId: 'card-1', amount: 5.0);

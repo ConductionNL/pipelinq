@@ -27,7 +27,6 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\NotPermittedException;
 use OCP\IL10N;
@@ -74,18 +73,15 @@ class ContactmomentController extends Controller {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
 	 */
 	public function destroy(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$uid = (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->userSession->getUser());
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		try {
 			$this->contactmomentService->delete(
 				$id,
-				$user->getUID()
+				$uid
 			);
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {

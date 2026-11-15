@@ -47,6 +47,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for ExportUploadService with a mocked external sink.
@@ -384,17 +385,13 @@ class ExportUploadServiceTest extends TestCase {
 		$calls = [];
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
-			function (
-				$id,
-				$_extend = [],
-				$files = false,
-				$register = null,
-				$schema = null,
-				$_rbac = true,
-				$_multitenancy = true,
-				$_render = true,
-				$_audit = true,
-			) use (&$calls) {
+			function ($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use (&$calls) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
+				$_audit = $options?->audit ?? true;
 				$calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, '_render' => $_render];
 				return $this->sourceEntity(['apikey' => 'super-secret-key']);
 			}

@@ -42,6 +42,7 @@ use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
+use OCP\Mail\IMessage;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -114,18 +115,22 @@ class EventEmailService implements EventEmailServiceInterface {
 			);
 			return $this->dispatch(
 				registration: $registration,
-				subject: $this->l10n->t('You are on the waiting list for %s', [$title]),
-				body: $this->withCancelLink(body: $body, event: $event, registration: $registration),
-				ics: null
+				mail: [
+					'subject' => $this->l10n->t('You are on the waiting list for %s', [$title]),
+					'body' => $this->withCancelLink(body: $body, event: $event, registration: $registration),
+					'ics' => null,
+				]
 			);
 		}
 
 		$body = $this->l10n->t('You are registered for %1$s on %2$s.', [$title, $this->when(event: $event)]);
 		return $this->dispatch(
 			registration: $registration,
-			subject: $this->l10n->t('Your registration for %s', [$title]),
-			body: $this->withCancelLink(body: $this->withPlace(body: $body, event: $event), event: $event, registration: $registration),
-			ics: $this->ics(event: $event, registration: $registration)
+			mail: [
+				'subject' => $this->l10n->t('Your registration for %s', [$title]),
+				'body' => $this->withCancelLink(body: $this->withPlace(body: $body, event: $event), event: $event, registration: $registration),
+				'ics' => $this->ics(event: $event, registration: $registration),
+			]
 		);
 	}//end sendConfirmation()
 
@@ -147,9 +152,11 @@ class EventEmailService implements EventEmailServiceInterface {
 		);
 		return $this->dispatch(
 			registration: $registration,
-			subject: $this->l10n->t('You have a place at %s', [$title]),
-			body: $this->withCancelLink(body: $this->withPlace(body: $body, event: $event), event: $event, registration: $registration),
-			ics: $this->ics(event: $event, registration: $registration)
+			mail: [
+				'subject' => $this->l10n->t('You have a place at %s', [$title]),
+				'body' => $this->withCancelLink(body: $this->withPlace(body: $body, event: $event), event: $event, registration: $registration),
+				'ics' => $this->ics(event: $event, registration: $registration),
+			]
 		);
 	}//end sendPlaceFreed()
 
@@ -167,11 +174,40 @@ class EventEmailService implements EventEmailServiceInterface {
 		$title = $this->title(event: $event);
 		return $this->dispatch(
 			registration: $person,
-			subject: $this->l10n->t('Registration for %s has closed', [$title]),
-			body: $this->l10n->t('Thank you for your interest in %s. Registration has closed, so we could not register you.', [$title]),
-			ics: null
+			mail: [
+				'subject' => $this->l10n->t('Registration for %s has closed', [$title]),
+				'body' => $this->l10n->t('Thank you for your interest in %s. Registration has closed, so we could not register you.', [$title]),
+				'ics' => null,
+			]
 		);
 	}//end sendClosed()
+
+	/**
+	 * Tell someone with a place, or on the waiting list, that the event is cancelled.
+	 *
+	 * No calendar file and no cancel link: there is nothing left to attend or cancel.
+	 *
+	 * @param array<string, mixed> $event        The cancelled event.
+	 * @param array<string, mixed> $registration The registration.
+	 *
+	 * @return bool True when the mail was accepted for delivery.
+	 *
+	 * @spec openspec/changes/marketing-events/tasks.md#3.1
+	 */
+	public function sendEventCancelled(array $event, array $registration): bool {
+		$title = $this->title(event: $event);
+		return $this->dispatch(
+			registration: $registration,
+			mail: [
+				'subject' => $this->l10n->t('%s is cancelled', [$title]),
+				'body' => $this->l10n->t(
+					'We are sorry: %1$s on %2$s is cancelled. Your registration lapses; you do not need to do anything.',
+					[$title, $this->when(event: $event)]
+				),
+				'ics' => null,
+			]
+		);
+	}//end sendEventCancelled()
 
 	/**
 	 * Remind a registered person the day before, with the join link of an online event.
@@ -188,9 +224,11 @@ class EventEmailService implements EventEmailServiceInterface {
 		$body = $this->l10n->t('A reminder: %1$s is on %2$s.', [$title, $this->when(event: $event)]);
 		return $this->dispatch(
 			registration: $registration,
-			subject: $this->l10n->t('Reminder: %s', [$title]),
-			body: $this->withCancelLink(body: $this->withPlace(body: $body, event: $event), event: $event, registration: $registration),
-			ics: null
+			mail: [
+				'subject' => $this->l10n->t('Reminder: %s', [$title]),
+				'body' => $this->withCancelLink(body: $this->withPlace(body: $body, event: $event), event: $event, registration: $registration),
+				'ics' => null,
+			]
 		);
 	}//end sendReminder()
 
@@ -357,33 +395,19 @@ class EventEmailService implements EventEmailServiceInterface {
 	/**
 	 * Send one mail.
 	 *
-	 * @param array<string, mixed> $registration Who it goes to (`email`).
-	 * @param string               $subject      The subject.
-	 * @param string               $body         The plain-text body.
-	 * @param string|null          $ics          The calendar file, or null.
+	 * @param array<string, mixed>                                $registration Who it goes to (`email`).
+	 * @param array{subject: string, body: string, ics: string|null} $mail         The subject, plain-text body and calendar file (or null).
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 */
-	private function dispatch(array $registration, string $subject, string $body, ?string $ics): bool {
+	private function dispatch(array $registration, array $mail): bool {
 		$address = trim((string)($registration['email'] ?? ''));
 		if ($address === '' || $this->mailer->validateMailAddress($address) === false) {
 			return false;
 		}
 
 		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$address]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
-			$message->setHtmlBody(nl2br(htmlspecialchars($body, ENT_QUOTES, 'UTF-8')));
-			if ($ics !== null) {
-				$message->attach($this->mailer->createAttachment($ics, 'event.ics', 'text/calendar; method=REQUEST; charset=UTF-8'));
-			}
-
-			$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SENDER_KEY, '');
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender]);
-			}
+			$message = $this->composeMessage(address: $address, mail: $mail);
 
 			return empty($this->mailer->send($message)) === true;
 		} catch (Throwable $e) {
@@ -394,6 +418,32 @@ class EventEmailService implements EventEmailServiceInterface {
 			return false;
 		}//end try
 	}//end dispatch()
+
+	/**
+	 * Compose an event mail, with the calendar file and the configured sender when there are any.
+	 *
+	 * @param string                                                $address The recipient.
+	 * @param array{subject: string, body: string, ics: string|null} $mail    The subject, plain-text body and calendar file (or null).
+	 *
+	 * @return IMessage
+	 */
+	private function composeMessage(string $address, array $mail): IMessage {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$address]);
+		$message->setSubject($mail['subject']);
+		$message->setPlainBody($mail['body']);
+		$message->setHtmlBody(nl2br(htmlspecialchars($mail['body'], ENT_QUOTES, 'UTF-8')));
+		if ($mail['ics'] !== null) {
+			$message->attach($this->mailer->createAttachment($mail['ics'], 'event.ics', 'text/calendar; method=REQUEST; charset=UTF-8'));
+		}
+
+		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, self::SENDER_KEY, '');
+		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
+			$message->setFrom([$sender]);
+		}
+
+		return $message;
+	}//end composeMessage()
 
 	/**
 	 * The signing secret, created on first use.

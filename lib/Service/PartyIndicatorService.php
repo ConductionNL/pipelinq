@@ -47,8 +47,12 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -58,8 +62,13 @@ use Throwable;
  * Resolve a party's indicators, and answer whether one blocks an act.
  *
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class PartyIndicatorService implements PartyIndicatorServiceInterface {
+	use JsonSerializableRows;
+	use PartyObjectRead;
+
 	/**
 	 * The acts a caller can ask about, and the effect each one reads.
 	 *
@@ -147,36 +156,64 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			}
 
 			$code = (string)($value['indicator'] ?? '');
-			$declared = ($vocabulary[$code] ?? null);
-			if ($declared === null) {
-				// A value against a code nobody declares is reported rather
-				// than dropped: a dropped safety flag is silent, and silence
-				// is the failure this whole capability exists to prevent.
-				$this->logger->warning(
-					'PartyIndicatorService: an indicator value names an undeclared indicator',
-					['party' => $partyId, 'indicator' => $code]
-				);
-				$declared = ['code' => $code, 'label' => $code, 'severity' => 'warning'];
-			}
+			$declared = ($vocabulary[$code] ?? $this->undeclared(code: $code, partyId: $partyId));
 
-			$resolved[] = [
-				'id' => (string)($value['id'] ?? $value['uuid'] ?? ''),
-				'code' => $code,
-				'label' => (string)($declared['label'] ?? $code),
-				'severity' => (string)($declared['severity'] ?? 'warning'),
-				'blocksOutbound' => (bool)($declared['blocksOutbound'] ?? false),
-				'blocksAddressPublication' => (bool)($declared['blocksAddressPublication'] ?? false),
-				'requiresAcknowledgement' => (bool)($declared['requiresAcknowledgement'] ?? false),
-				'validFrom' => (string)($value['validFrom'] ?? ''),
-				'validUntil' => (string)($value['validUntil'] ?? ''),
-				'source' => (string)($value['source'] ?? ''),
-				'acknowledgedBy' => (string)($value['acknowledgedBy'] ?? ''),
-				'acknowledgedAt' => (string)($value['acknowledgedAt'] ?? ''),
-			];
+			$resolved[] = self::indicatorRow(value: $value, declared: $declared);
 		}
 
 		return $resolved;
 	}//end resolve()
+
+	/**
+	 * The warning stand-in for a code nobody declares, logged.
+	 *
+	 * A value against a code nobody declares is reported rather than
+	 * dropped: a dropped safety flag is silent, and silence is the failure
+	 * this whole capability exists to prevent.
+	 *
+	 * @param string $code    The indicator code.
+	 * @param string $partyId The party record's uuid (logged).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function undeclared(string $code, string $partyId): array {
+		$this->logger->warning(
+			'PartyIndicatorService: an indicator value names an undeclared indicator',
+			['party' => $partyId, 'indicator' => $code]
+		);
+
+		return ['code' => $code, 'label' => $code, 'severity' => 'warning'];
+	}//end undeclared()
+
+	/**
+	 * One resolved indicator: its declaration's label, severity and effects plus the value's period and acknowledgement.
+	 *
+	 * @param array<string, mixed> $value    The stored indicator value; its `indicator` is the code.
+	 * @param array<string, mixed> $declared The declared indicator.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function indicatorRow(array $value, array $declared): array {
+		$code = (string)($value['indicator'] ?? '');
+		$row = [
+			'id' => (string)($value['id'] ?? $value['uuid'] ?? ''),
+			'code' => $code,
+			'label' => (string)($declared['label'] ?? $code),
+			'severity' => (string)($declared['severity'] ?? 'warning'),
+		];
+
+		$effects = [];
+		foreach (['blocksOutbound', 'blocksAddressPublication', 'requiresAcknowledgement'] as $effect) {
+			$effects[$effect] = (bool)($declared[$effect] ?? false);
+		}
+
+		$period = [];
+		foreach (['validFrom', 'validUntil', 'source', 'acknowledgedBy', 'acknowledgedAt'] as $field) {
+			$period[$field] = (string)($value[$field] ?? '');
+		}
+
+		return array_merge($row, $effects, $period);
+	}//end indicatorRow()
 
 	/**
 	 * Whether an act on a party is blocked, and by which indicator.
@@ -203,12 +240,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			);
 		}
 
-		$blocking = array_values(
-			array_filter(
-				$this->resolve(partyId: $partyId, onDay: $onDay),
-				static fn (array $indicator): bool => ($indicator[$effect] ?? false) === true
-			)
-		);
+		$blocking = self::withEffect(indicators: $this->resolve(partyId: $partyId, onDay: $onDay), effect: $effect);
 
 		return [
 			'blocked' => ($blocking !== []),
@@ -216,6 +248,23 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			'indicators' => $blocking,
 		];
 	}//end isBlocked()
+
+	/**
+	 * The indicators that carry an effect, in order.
+	 *
+	 * @param array<int, array<string, mixed>> $indicators The resolved indicators.
+	 * @param string                           $effect     The effect flag.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function withEffect(array $indicators, string $effect): array {
+		return array_values(
+			array_filter(
+				$indicators,
+				static fn (array $indicator): bool => ($indicator[$effect] ?? false) === true
+			)
+		);
+	}//end withEffect()
 
 	/**
 	 * Record that a handler has seen an indicator that demands it.
@@ -233,46 +282,69 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			return ['status' => 400, 'error' => 'An indicator value is required.'];
 		}
 
-		try {
-			$entity = $this->objectService->find(id: $valueId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'PartyIndicatorService: could not read the indicator value',
-				['uuid' => $valueId, 'exception' => $e->getMessage()]
-			);
-			$entity = null;
-		}
-
-		if ($entity === null) {
+		$data = $this->findValueData(valueId: $valueId);
+		if ($data === null) {
 			return ['status' => 404, 'error' => 'That indicator value could not be read.'];
 		}
 
-		$data = $entity->jsonSerialize();
-		if (is_array($data) === false) {
-			return ['status' => 404, 'error' => 'That indicator value could not be read.'];
-		}
+		$data = $this->withAcknowledgement(data: $data);
 
+		return $this->saveAcknowledgement(data: $data, target: ['schema' => $schema, 'uuid' => $valueId]);
+	}//end acknowledge()
+
+	/**
+	 * Read an indicator value as an array, or null when it cannot be read.
+	 *
+	 * @param string $valueId The indicator value's uuid.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findValueData(string $valueId): array|null {
+		return $this->readLogged(id: $valueId, failure: 'PartyIndicatorService: could not read the indicator value', idKey: 'uuid');
+	}//end findValueData()
+
+	/**
+	 * Stamp who acknowledged the indicator value, and when.
+	 *
+	 * @param array<string, mixed> $data The indicator value.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withAcknowledgement(array $data): array {
 		$data['acknowledgedBy'] = ($this->userSession->getUser()?->getUID() ?? '');
 		$data['acknowledgedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
+		return $data;
+	}//end withAcknowledgement()
+
+	/**
+	 * Save the acknowledged value and answer 200, or 500 when the save fails.
+	 *
+	 * @param array<string, mixed>  $data   The acknowledged value.
+	 * @param array<string, string> $target The indicator-value schema id (`schema`) and the value's `uuid`.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function saveAcknowledgement(array $data, array $target): array {
 		try {
 			$this->objectService->saveObject(
 				object: $data,
-				register: $this->registerId(),
-				schema: $schema,
-				uuid: $valueId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerId(), schema: $target['schema']),
+					uuid: $target['uuid']
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'PartyIndicatorService: the acknowledgement could not be saved',
-				['uuid' => $valueId, 'exception' => $e->getMessage()]
+				['uuid' => $target['uuid'], 'exception' => $e->getMessage()]
 			);
 
 			return ['status' => 500, 'error' => 'The acknowledgement could not be saved.'];
 		}
 
 		return ['status' => 200, 'indicatorValue' => $data];
-	}//end acknowledge()
+	}//end saveAcknowledgement()
 
 	/**
 	 * The indicator values two merging parties end up with.
@@ -413,22 +485,7 @@ class PartyIndicatorService implements PartyIndicatorServiceInterface {
 			return [];
 		}
 
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
-			}
-		}
-
-		return $out;
+		return $this->plainRows(rows: $rows);
 	}//end read()
 
 	/**

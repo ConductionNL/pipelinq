@@ -47,9 +47,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
+use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -72,6 +75,7 @@ use RuntimeException;
  */
 class WorklistService implements WorklistServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Priority sort ranks — lower sorts first (MyWorkWidget.vue:43).
@@ -226,20 +230,18 @@ class WorklistService implements WorklistServiceInterface {
 	public function getMine(string $userId, ?int $limit = null): array {
 		$leads = $this->findObjects(
 			schemaKey: 'lead_schema',
-			filters: ['assignee' => $userId],
-			limit: self::LEAD_FETCH_LIMIT
+			query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]
 		);
 		$requests = $this->assignedTickets(userId: $userId);
 		$pipelines = $this->findObjects(
 			schemaKey: 'pipeline_schema',
-			filters: [],
-			limit: self::PIPELINE_FETCH_LIMIT
+			query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT]
 		);
 
 		$openLeads = $this->openLeads(leads: $leads, closedStages: $this->getClosedStageNames(pipelines: $pipelines));
 		$nowTs = (new DateTimeImmutable())->getTimestamp();
 		$items = array_merge(
-			$this->buildLeadRows(leads: $openLeads, nowTs: $nowTs),
+			array_values(array_map(fn (array $lead): array => $this->leadRow(lead: $lead, nowTs: $nowTs), $openLeads)),
 			$this->buildRequestRows(requests: $requests, nowTs: $nowTs)
 		);
 
@@ -264,11 +266,7 @@ class WorklistService implements WorklistServiceInterface {
 		foreach (self::WORK_TICKET_TYPES as $ticketType) {
 			$requests = array_merge(
 				$requests,
-				$this->findTickets(
-					ticketType: $ticketType,
-					filters: ['assignee' => $userId],
-					limit: self::REQUEST_FETCH_LIMIT
-				)
+				$this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId])
 			);
 		}
 
@@ -304,22 +302,6 @@ class WorklistService implements WorklistServiceInterface {
 			'requestCount' => ($total - $leadCount),
 		];
 	}//end mineResponse()
-
-	/**
-	 * Normalize the user's leads into worklist rows.
-	 *
-	 * Port of the lead branch in MyWorkWidget.vue:75-87: skip leads in a
-	 * closed stage, default stage to `-` and priority to `normal`, due
-	 * date = expectedCloseDate, overdue when strictly before now.
-	 *
-	 * @param array<int, array<string, mixed>> $leads Open lead rows from OpenRegister.
-	 * @param int                              $nowTs Current Unix timestamp.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function buildLeadRows(array $leads, int $nowTs): array {
-		return array_values(array_map(fn (array $lead): array => $this->leadRow(lead: $lead, nowTs: $nowTs), $leads));
-	}//end buildLeadRows()
 
 	/**
 	 * The leads that are open work: not in a closed pipeline stage (MyWorkWidget.vue:76).
@@ -458,20 +440,35 @@ class WorklistService implements WorklistServiceInterface {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function items(string $userId, string $bucket='', string $lens='', string $sort='deadline', string $scope='open'): array {
+		$list = ['now' => new DateTimeImmutable(), 'bucket' => $bucket, 'lens' => $lens, 'sort' => $sort];
+		$items = self::listed(rows: $this->openWorkRows(userId: $userId, done: $scope === 'all'), list: $list);
+
+		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
+	}//end items()
+
+	/**
+	 * The work rows decorated with their bucket, kept to one list and lens, and sorted.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The open work rows.
+	 * @param array{now: DateTimeImmutable, bucket: string, lens: string, sort: string} $list The moment to judge on, the
+	 *   bucket ('' for all), the lens ('' or `all` for all) and the sort.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 */
+	private static function listed(array $rows, array $list): array {
 		$buckets = new WorkBuckets();
-		$now     = new DateTimeImmutable();
 		$items   = [];
-		foreach ($this->openWorkRows(userId: $userId, done: $scope === 'all') as $row) {
-			$row = $buckets->decorate(row: $row, now: $now);
-			if (($bucket === '' || $row['bucket'] === $bucket) && $buckets->inLens(kind: $row['kind'], lens: $lens) === true) {
+		foreach ($rows as $row) {
+			$row = $buckets->decorate(row: $row, now: $list['now']);
+			if (($list['bucket'] === '' || $row['bucket'] === $list['bucket']) && $buckets->inLens(kind: $row['kind'], lens: $list['lens']) === true) {
 				$items[] = $row;
 			}
 		}
 
-		usort($items, $buckets->comparator(sort: $sort));
+		usort($items, $buckets->comparator(sort: $list['sort']));
 
-		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
-	}//end items()
+		return $items;
+	}//end listed()
 
 	/**
 	 * The user's open leads (not in a closed stage), tickets (not closed) and
@@ -488,21 +485,22 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	private function openWorkRows(string $userId, bool $done): array {
 		$closedStages = $this->getClosedStageNames(
-			pipelines: $this->findObjects(schemaKey: 'pipeline_schema', filters: [], limit: self::PIPELINE_FETCH_LIMIT)
+			pipelines: $this->findObjects(schemaKey: 'pipeline_schema', query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT])
 		);
 
 		$rows = [];
-		foreach ($this->findObjects(schemaKey: 'lead_schema', filters: ['assignee' => $userId], limit: self::LEAD_FETCH_LIMIT) as $lead) {
+		$leads = $this->findObjects(schemaKey: 'lead_schema', query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]);
+		foreach ($leads as $lead) {
 			if ($done === true || in_array((string)($lead['stage'] ?? ''), $closedStages, true) === false) {
-				$rows[] = $this->itemRow(kind: 'lead', record: $lead, routeName: 'LeadDetail');
+				$rows[] = $this->itemRow(record: $lead, shape: ['lead', 'LeadDetail']);
 			}
 		}
 
 		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
-			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId], limit: self::REQUEST_FETCH_LIMIT);
+			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
 			foreach ($tickets as $ticket) {
 				if ($done === true || in_array((string)($ticket['status'] ?? ''), self::TERMINAL_TICKET_STATUSES, true) === false) {
-					$rows[] = $this->itemRow(kind: (string)($ticket['ticketType'] ?? $ticketType), record: $ticket, routeName: 'TicketDetail');
+					$rows[] = $this->itemRow(record: $ticket, shape: [(string)($ticket['ticketType'] ?? $ticketType), 'TicketDetail']);
 				}
 			}
 		}
@@ -529,12 +527,45 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		$rows = [];
-		foreach ($this->findObjects(schemaKey: 'task_schema', filters: $filters, limit: self::REQUEST_FETCH_LIMIT) as $task) {
-			$rows[] = $this->itemRow(kind: 'task', record: $task, routeName: 'TaskDetail');
+		foreach ($this->findObjects(schemaKey: 'task_schema', query: ['filters' => $filters, 'limit' => self::REQUEST_FETCH_LIMIT]) as $task) {
+			$rows[] = $this->itemRow(record: $task, shape: ['task', 'TaskDetail']);
 		}
 
 		return $rows;
 	}//end taskRows()
+
+	/**
+	 * The figures of My work's "Your week so far" tiles for the user's own
+	 * tickets over the current calendar week (Monday to now): answered (and
+	 * answered today), the share answered within the deadline, the average
+	 * answer time in days and the tickets converted to a case.
+	 *
+	 * Only the `mine` scope exists: the team and organisation scopes come with
+	 * role-based content (REQ-MW-180), and until then any other scope is refused
+	 * rather than silently answered with the user's own figures.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 * @param string $scope  The scope; only `mine`.
+	 *
+	 * @return array<string, mixed> The figures (see WeekStats::of()) and the scope.
+	 *
+	 * @throws InvalidArgumentException For a scope other than `mine`.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 */
+	public function getWeekStats(string $userId, string $scope='mine'): array {
+		if ($scope !== 'mine') {
+			throw new InvalidArgumentException(message: 'Unknown scope');
+		}
+
+		$tickets = [];
+		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
+			$found   = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
+			$tickets = array_merge($tickets, $found);
+		}
+
+		return (new WeekStats())->of(tickets: $tickets, now: new DateTimeImmutable()) + ['scope' => $scope];
+	}//end getWeekStats()
 
 	/**
 	 * One sentence on the user's open work, for My work's header: how many
@@ -604,7 +635,18 @@ class WorklistService implements WorklistServiceInterface {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	private function counted(string $singular, string $plural, int $count): string {
-		$phrase = $this->l10n->n($singular, $plural, $count);
+		return $this->withNumberWord(phrase: $this->l10n->n($singular, $plural, $count), count: $count);
+	}//end counted()
+
+	/**
+	 * The phrase with its count written as a word from one to twenty, as digits above.
+	 *
+	 * @param string $phrase The counted phrase, with the count as digits.
+	 * @param int    $count  The count.
+	 *
+	 * @return string The phrase.
+	 */
+	private function withNumberWord(string $phrase, int $count): string {
 		$word   = (self::NUMBER_WORDS[$count] ?? '');
 		if ($word === '') {
 			return $phrase;
@@ -617,7 +659,7 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		return substr($phrase, 0, $offset) . $this->l10n->t($word) . substr($phrase, ($offset + strlen($digits)));
-	}//end counted()
+	}//end withNumberWord()
 
 	/**
 	 * Each item with the name of its client (`clientName`), read once per
@@ -662,13 +704,13 @@ class WorklistService implements WorklistServiceInterface {
 	/**
 	 * One work item before it is sorted into a list.
 	 *
-	 * @param string               $kind      The ticket type, `lead` or `task`.
-	 * @param array<string, mixed> $record    The object as stored.
-	 * @param string               $routeName The detail page.
+	 * @param array<string, mixed>        $record The object as stored.
+	 * @param array{0: string, 1: string} $shape  The kind (ticket type, `lead` or `task`) and the detail page.
 	 *
 	 * @return array<string, mixed> The item.
 	 */
-	private function itemRow(string $kind, array $record, string $routeName): array {
+	private function itemRow(array $record, array $shape): array {
+		[$kind, $routeName] = $shape;
 		$priority = (string)($record['priority'] ?? '');
 		if ($priority === '') {
 			$priority = 'normal';
@@ -864,17 +906,16 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @param string $ticketType One of the TicketService::TYPE_* constants.
 	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param int $limit Row limit pushed to OpenRegister.
 	 *
-	 * @return array<int, array<string, mixed>>
+	 * @return array<int, array<string, mixed>> At most REQUEST_FETCH_LIMIT tickets.
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
-	private function findTickets(string $ticketType, array $filters, int $limit): array {
+	private function findTickets(string $ticketType, array $filters): array {
 		$results = $this->ticketService->findByType(
 			ticketType: $ticketType,
 			extraFilters: $filters,
-			limit: $limit
+			limit: self::REQUEST_FETCH_LIMIT
 		);
 
 		$objects = [];
@@ -894,15 +935,14 @@ class WorklistService implements WorklistServiceInterface {
 	 * "no data" (logged); OR failures surface as RuntimeException so
 	 * the controller can map them to a 500.
 	 *
-	 * @param string $schemaKey The app-config key holding the schema ID.
-	 * @param array<string, mixed> $filters Additional equality filters.
-	 * @param int $limit Row limit pushed to OpenRegister.
+	 * @param string                                          $schemaKey The app-config key holding the schema ID.
+	 * @param array{filters: array<string, mixed>, limit: int} $query     Additional equality filters and the row limit pushed to OpenRegister.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
-	private function findObjects(string $schemaKey, array $filters, int $limit): array {
+	private function findObjects(string $schemaKey, array $query): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
@@ -914,8 +954,8 @@ class WorklistService implements WorklistServiceInterface {
 		}
 
 		$config = [
-			'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
-			'limit' => $limit,
+			'filters' => array_merge(['register' => $register, 'schema' => $schema], $query['filters']),
+			'limit' => $query['limit'],
 		];
 		return array_map(fn ($result): array => $this->toArray(value: $result), $this->runFindAll(config: $config, schemaKey: $schemaKey));
 	}//end findObjects()
@@ -944,15 +984,4 @@ class WorklistService implements WorklistServiceInterface {
 
 		return array_values(($results ?? []));
 	}//end runFindAll()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -37,6 +37,7 @@ use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for MailboxResolver.
@@ -99,6 +100,7 @@ class MailboxResolverTest extends TestCase {
 		$objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(function (...$args) use (&$captured) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$named = func_get_args();
 				$captured = $named[0]; // First positional arg is the object array.
 				return $named[0];

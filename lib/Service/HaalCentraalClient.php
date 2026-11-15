@@ -46,6 +46,8 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) OR-first + legacy OAuth2/mTLS paths plus HAL normalisation live in one cohesive client.
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class HaalCentraalClient implements HaalCentraalClientInterface {
 	/**
@@ -636,31 +638,47 @@ class HaalCentraalClient implements HaalCentraalClientInterface {
 		// Tests / unit coverage may stub this client; runtime mTLS is enforced through
 		// Nextcloud's `proxyuserpwd` + sslcert hooks below.
 		if ($forToken === false) {
-			$certPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cert_path', '');
-			$keyPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.key_path', '');
-			$caBundle = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.ca_bundle', '');
-			if ($certPath !== '' && $keyPath !== '') {
-				// The NC client wrapper supports setDefaultOptions on newer cores; older
-				// cores fall back to TLS-without-cert which the RvIG endpoint will reject.
-				if (method_exists($client, 'setDefaultOptions') === true) {
-					$verify = true;
-					if ($caBundle !== '') {
-						$verify = $caBundle;
-					}
-
-					$client->setDefaultOptions(
-						[
-							'cert' => $certPath,
-							'ssl_key' => $keyPath,
-							'verify' => $verify,
-						]
-					);
-				}
-			}
-		}//end if
+			$this->applyMtlsOptions(client: $client);
+		}
 
 		return $client;
 	}//end buildHttpClient()
+
+	/**
+	 * Attach the configured client certificate, key and CA bundle to the client.
+	 *
+	 * @param IClient $client The HTTP client.
+	 *
+	 * @return void
+	 */
+	private function applyMtlsOptions(IClient $client): void {
+		$certPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cert_path', '');
+		$keyPath = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.key_path', '');
+		$caBundle = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.ca_bundle', '');
+		if ($certPath !== '' && $keyPath !== '') {
+			// The NC client wrapper supports setDefaultOptions on newer cores; older
+			// cores fall back to TLS-without-cert which the RvIG endpoint will reject.
+			if (method_exists($client, 'setDefaultOptions') === true) {
+				$client->setDefaultOptions(['cert' => $certPath, 'ssl_key' => $keyPath, 'verify' => $this->mtlsVerify(caBundle: $caBundle)]);
+			}
+		}
+	}//end applyMtlsOptions()
+
+	/**
+	 * The TLS verify option: the CA bundle path when configured, else true.
+	 *
+	 * @param string $caBundle The configured CA bundle path.
+	 *
+	 * @return bool|string The verify option.
+	 */
+	private function mtlsVerify(string $caBundle): bool|string {
+		$verify = true;
+		if ($caBundle !== '') {
+			$verify = $caBundle;
+		}
+
+		return $verify;
+	}//end mtlsVerify()
 
 	/**
 	 * Resolve the base URL for the HaalCentraal Personen API.
@@ -729,6 +747,27 @@ class HaalCentraalClient implements HaalCentraalClientInterface {
 	 * @return array<string,mixed>
 	 */
 	private function normalisePerson(array $raw): array {
+		$birth = $this->arrayField(raw: $raw, key: 'geboorte');
+
+		return $this->nameFields(name: $this->personName(raw: $raw)) + [
+			'dateOfBirth' => (string)($birth['datum']['datum'] ?? $birth['datum'] ?? ''),
+			'birthPlace' => $this->valueOrSubKey(value: ($birth['plaats'] ?? ''), subKey: 'omschrijving'),
+			'birthCountry' => $this->valueOrSubKey(value: ($birth['land'] ?? ''), subKey: 'code'),
+			'gender' => self::mapGeslacht(code: $this->valueOrSubKey(value: ($raw['gender'] ?? ''), subKey: 'code')),
+			'residence' => self::mapResidence(residence: $this->arrayField(raw: $raw, key: 'residence')),
+			'indicationSecret' => (string)($raw['indicationSecret'] ?? '0'),
+			'sourceSystem' => 'HaalCentraal-BRP-v2.0',
+		];
+	}//end normalisePerson()
+
+	/**
+	 * The person's name block, from `name` or from the Dutch v2 `naam`.
+	 *
+	 * @param array<string, mixed> $raw The raw person.
+	 *
+	 * @return array<string, mixed> The name block.
+	 */
+	private function personName(array $raw): array {
 		$name = [];
 		if (is_array($raw['name'] ?? null) === true) {
 			$name = $raw['name'];
@@ -743,52 +782,58 @@ class HaalCentraalClient implements HaalCentraalClientInterface {
 			];
 		}
 
-		$birth = [];
-		if (is_array($raw['geboorte'] ?? null) === true) {
-			$birth = $raw['geboorte'];
-		}
+		return $name;
+	}//end personName()
 
-		$residence = [];
-		if (is_array($raw['residence'] ?? null) === true) {
-			$residence = $raw['residence'];
-		}
-
-		$gender = $raw['gender'] ?? '';
-		if (is_array($gender) === true) {
-			$gender = ($gender['code'] ?? '');
-		}
-
-		$gender = (string)$gender;
-
-		$birthPlace = $birth['plaats'] ?? '';
-		if (is_array($birthPlace) === true) {
-			$birthPlace = ($birthPlace['omschrijving'] ?? '');
-		}
-
-		$birthPlace = (string)$birthPlace;
-
-		$birthCountry = $birth['land'] ?? '';
-		if (is_array($birthCountry) === true) {
-			$birthCountry = ($birthCountry['code'] ?? '');
-		}
-
-		$birthCountry = (string)$birthCountry;
-
+	/**
+	 * The normalised name fields of a person.
+	 *
+	 * @param array<string, mixed> $name The name block.
+	 *
+	 * @return array<string, string> The name fields.
+	 */
+	private function nameFields(array $name): array {
 		return [
 			'givenNames' => (string)($name['givenNames'] ?? ''),
 			'initials' => (string)($name['initials'] ?? ''),
 			'namePrefix' => (string)($name['namePrefix'] ?? ''),
 			'surname' => (string)($name['surname'] ?? ''),
 			'nobiliaryTitle' => (string)($name['adellijkeTitelPredicaat'] ?? ''),
-			'dateOfBirth' => (string)($birth['datum']['datum'] ?? $birth['datum'] ?? ''),
-			'birthPlace' => $birthPlace,
-			'birthCountry' => $birthCountry,
-			'gender' => self::mapGeslacht(code: $gender),
-			'residence' => self::mapResidence(residence: $residence),
-			'indicationSecret' => (string)($raw['indicationSecret'] ?? '0'),
-			'sourceSystem' => 'HaalCentraal-BRP-v2.0',
 		];
-	}//end normalisePerson()
+	}//end nameFields()
+
+	/**
+	 * A raw field when it is an array, else an empty array.
+	 *
+	 * @param array<string, mixed> $raw The raw person.
+	 * @param string $key The field name.
+	 *
+	 * @return array<string, mixed> The field, or [].
+	 */
+	private function arrayField(array $raw, string $key): array {
+		$field = [];
+		if (is_array($raw[$key] ?? null) === true) {
+			$field = $raw[$key];
+		}
+
+		return $field;
+	}//end arrayField()
+
+	/**
+	 * A scalar value as string, or the given sub-key when the value is an object-like array.
+	 *
+	 * @param mixed $value The raw value.
+	 * @param string $subKey The sub-key to read when the value is an array.
+	 *
+	 * @return string The value.
+	 */
+	private function valueOrSubKey(mixed $value, string $subKey): string {
+		if (is_array($value) === true) {
+			$value = ($value[$subKey] ?? '');
+		}
+
+		return (string)$value;
+	}//end valueOrSubKey()
 
 	/**
 	 * Map HaalCentraal geslacht codes to schema enum values.

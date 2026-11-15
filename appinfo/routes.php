@@ -51,11 +51,15 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // Organisation enrichment from the KvK (organisation-enrichment).
         ['name' => 'organisationEnrichment#propose', 'url' => '/api/organisations/enrich/proposals', 'verb' => 'POST'],
         ['name' => 'organisationEnrichment#apply', 'url' => '/api/organisations/enrich/apply', 'verb' => 'POST'],
+        // KVK single search for the new request dialog's KVK pill (request-dialog-client-lookups).
+        ['name' => 'kvkSearch#search', 'url' => '/api/kvk/search', 'verb' => 'GET'],
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
-        // Paste a signature, get proposed contact fields; reads and stores nothing (clients-contact-capture REQ-CCC-001).
+        // Paste a signature or send a card photo, get proposed contact fields; reads and stores nothing
+        // (clients-contact-capture REQ-CCC-001, REQ-CCC-002). Status says whether photos can be read here.
         ['name' => 'contactCapture#parse', 'url' => '/api/contact-capture/parse', 'verb' => 'POST'],
+        ['name' => 'contactCapture#status', 'url' => '/api/contact-capture/status', 'verb' => 'GET'],
         // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
         // add as contact, log this mail. Called with an app password.
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
@@ -113,6 +117,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'worklist#items', 'url' => '/api/worklist/items', 'verb' => 'GET'],
         ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
         ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
+        ['name' => 'myWork#weekStats', 'url' => '/api/my-work/week-stats', 'verb' => 'GET'],
         ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
@@ -134,6 +139,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
         ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
+        ['name' => 'clientHistorySummary#show', 'url' => '/api/clients/{id}/history-summary', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
         ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
@@ -228,6 +234,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'callback#claim', 'url' => '/api/callbacks/{id}/claim', 'verb' => 'POST'],
         ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
         ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
+        ['name' => 'callReview#agree', 'url' => '/api/call-reviews/{id}/coaching-points/{index}/agree', 'verb' => 'POST'],
 
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
@@ -484,12 +491,14 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
         // Export all data in one archive (data-portability-full-export REQ-DPE-002), administrators only.
         ['name' => 'fullExport#start',          'url' => '/api/export/full',                  'verb' => 'POST'],
+        ['name' => 'fullExport#status',         'url' => '/api/export/full',                  'verb' => 'GET'],
         ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
         ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
         ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
         ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
         ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
 
+        ['name' => 'exportJob#describeSchedule', 'url' => '/api/export/schedule/describe', 'verb' => 'GET'],
         ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
         ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
         ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],
@@ -517,6 +526,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // service, and the count per service for the services list.
         ['name' => 'appointmentEligibility#eligibleResourceCounts', 'url' => '/api/appointment-services/eligible-resources', 'verb' => 'GET'],
         ['name' => 'appointmentEligibility#eligibleResources',      'url' => '/api/appointment-services/{id}/eligible-resources', 'verb' => 'GET'],
+        // How busy a service or resource is (REQ-SRG-003, REQ-SRG-004): one call per page.
+        ['name' => 'appointmentFigures#serviceFigures',  'url' => '/api/appointment-services/{id}/figures',  'verb' => 'GET'],
+        ['name' => 'appointmentFigures#resourceFigures', 'url' => '/api/appointment-resources/{id}/figures', 'verb' => 'GET'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
@@ -792,7 +804,6 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
         ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
         ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],
-        ['name' => 'brp#monitor',          'url' => '/api/brp/monitor',                   'verb' => 'GET'],
         ['name' => 'brpAdmin#get',                 'url' => '/api/brp/settings',                  'verb' => 'GET'],
         ['name' => 'brpAdmin#save',                'url' => '/api/brp/settings',                  'verb' => 'POST'],
         ['name' => 'brpAdmin#rotateWebhookSecret', 'url' => '/api/brp/settings/webhook-secret',   'verb' => 'POST'],

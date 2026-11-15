@@ -29,6 +29,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Loyalty accounts: creation behind mandatory opt-in, lookup, get-or-create,
@@ -101,7 +103,11 @@ class LoyaltyAccountServiceTest extends TestCase {
 	 */
 	private function recordSaves(): void {
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $this->entity(['id' => $uuid ?? 'new-id'] + $object);
 			}
@@ -179,7 +185,13 @@ class LoyaltyAccountServiceTest extends TestCase {
 	 */
 	public function testGetAccountFindsByIdInTheSchema(): void {
 		$this->objectService->expects(self::once())->method('find')
-			->with('acc-1', self::anything(), self::anything(), 'pipelinq', 'loyaltyAccount')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'acc-1',
+				'_extend' => self::anything(),
+				'files' => self::anything(),
+				'register' => 'pipelinq',
+				'schema' => 'loyaltyAccount',
+			]))
 			->willReturn($this->entity(['id' => 'acc-1', 'currentBalance' => 40]));
 
 		self::assertSame(['id' => 'acc-1', 'currentBalance' => 40], $this->service()->getAccount('acc-1'));

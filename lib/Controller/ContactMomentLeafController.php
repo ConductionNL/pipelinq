@@ -37,6 +37,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,6 +52,7 @@ use OCP\IRequest;
  */
 class ContactMomentLeafController extends Controller {
 	use ReadsTypedRequestParameters;
+	use ServiceResultResponse;
 
 	/**
 	 * The request parameters create() reads: name => [type, default]. The
@@ -177,25 +179,7 @@ class ContactMomentLeafController extends Controller {
 	#[NoAdminRequired]
 	public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): JSONResponse {
 		return $this->respond(
-			result: $this->filingService->unfileFromCase(
-				momentId: $momentId,
-				caseId: $caseId,
-				newPrimary: $newPrimary,
-			)
+			result: $this->filingService->unfileFromCase(momentId: $momentId, caseId: $caseId, newPrimary: $newPrimary)
 		);
 	}//end unfileFromCase()
-
-	/**
-	 * Turn a provider result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The provider's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

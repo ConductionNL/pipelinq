@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
@@ -155,31 +156,16 @@ class ContactAddressLookup {
 	 * @return array<string,mixed>|null The row.
 	 */
 	private function loadContact(string $contactId): ?array {
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
+		$resolved = $this->resolveObjectService();
+		if ($resolved === []) {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($register === '') {
-			$register = 'pipelinq';
-		}
+		$register = $this->configuredOr(key: 'register', default: 'pipelinq');
 
 		foreach (['contact_schema' => 'contact', 'client_schema' => 'client'] as $key => $default) {
-			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-			if ($schema === '') {
-				$schema = $default;
-			}
-
-			try {
-				$entity = $objectService->find(id: $contactId, register: $register, schema: $schema);
-			} catch (Throwable $e) {
-				$this->logger->debug('ContactAddressLookup: not found in '.$schema, ['contactId' => $contactId]);
-				$entity = null;
-			}
-
-			$row = $this->toArray(value: $entity);
+			$schema = $this->configuredOr(key: $key, default: $default);
+			$row = $this->rowInSchema(objectService: $resolved[0], lookup: ['contactId' => $contactId, 'register' => $register, 'schema' => $schema]);
 			if ($row !== []) {
 				return $row;
 			}
@@ -187,4 +173,56 @@ class ContactAddressLookup {
 
 		return null;
 	}//end loadContact()
+
+	/**
+	 * OpenRegister's ObjectService.
+	 *
+	 * @return array<int, mixed> The service as a one-element list, or an empty list when unavailable.
+	 */
+	private function resolveObjectService(): array {
+		try {
+			return [$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')];
+		} catch (Throwable $e) {
+			return [];
+		}
+	}//end resolveObjectService()
+
+	/**
+	 * An app-config value, or the default when it is unset.
+	 *
+	 * @param string $key The app-config key.
+	 * @param string $default The default.
+	 *
+	 * @return string
+	 */
+	private function configuredOr(string $key, string $default): string {
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		if ($value === '') {
+			$value = $default;
+		}
+
+		return $value;
+	}//end configuredOr()
+
+	/**
+	 * The contact's row in one schema; empty when it is not found there.
+	 *
+	 * @param mixed $objectService OpenRegister's ObjectService.
+	 * @param array{contactId: string, register: string, schema: string} $lookup The UUID, the register id and the schema id.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function rowInSchema($objectService, array $lookup): array {
+		try {
+			$entity = $objectService->find(
+				id: $lookup['contactId'],
+				options: new ObjectFindOptions(register: $lookup['register'], schema: $lookup['schema'])
+			);
+		} catch (Throwable $e) {
+			$this->logger->debug('ContactAddressLookup: not found in '.$lookup['schema'], ['contactId' => $lookup['contactId']]);
+			$entity = null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end rowInSchema()
 }//end class

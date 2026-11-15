@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { exportMoment, exportSchedule, lastRunLine } from '../../src/views/export/exportRunText.js'
+import { exportMoment, exportSchedule, lastRunCell, lastRunLine, switchedOffLine } from '../../src/views/export/exportRunText.js'
 
 const NOW = new Date(2026, 9, 7, 12, 0, 0)
 const iso = (y, m, d, h, min) => new Date(y, m - 1, d, h, min).toISOString()
@@ -30,6 +30,29 @@ describe('the BI export run texts', () => {
 		expect(lastRunLine({ lastRunStatus: 'partial', lastRunAt: at, lastRunFiles: 2, lastRunFilesExpected: 3 }, NOW, 'nl')).toBe('7 okt, 02:04 · 2 of 3 files')
 		expect(lastRunLine({ lastRunStatus: 'failed', lastRunAt: at, lastRunError: 'verbinding geweigerd' }, NOW, 'nl')).toBe('7 okt, 02:04 · verbinding geweigerd')
 		expect(lastRunLine({}, NOW, 'nl')).toBe('')
+	})
+
+	it('say why a job was switched off, only while it is off', () => {
+		const off = { enabled: false, consecutiveFailures: 3, pausedReason: 'Switched off after 3 failed runs in a row' }
+		expect(switchedOffLine(off)).toBe('Switched off after 3 failed runs in a row')
+		expect(switchedOffLine({ ...off, consecutiveFailures: 1 })).toBe('Switched off after 1 failed run in a row')
+		expect(switchedOffLine({ ...off, consecutiveFailures: 'x', pausedReason: ' Stored reason ' })).toBe('Stored reason')
+		expect(switchedOffLine({ ...off, consecutiveFailures: 0 })).toBe('Switched off after 3 failed runs in a row')
+		expect(switchedOffLine({ ...off, enabled: true })).toBe('')
+		expect(switchedOffLine({ ...off, pausedReason: null })).toBe('')
+		expect(switchedOffLine({ ...off, pausedReason: '  ' })).toBe('')
+		expect(switchedOffLine(null)).toBe('')
+	})
+
+	it('put the switch-off reason after the failed run in the last run cell', () => {
+		const at = iso(2026, 10, 6, 1, 0)
+		const failed = { lastRunStatus: 'failed', lastRunAt: at, lastRunError: 'connection refused' }
+		const off = { ...failed, enabled: false, consecutiveFailures: 3, pausedReason: 'Switched off after 3 failed runs in a row' }
+		expect(lastRunCell(off, NOW, 'nl')).toBe('6 okt, 01:00 · connection refused · Switched off after 3 failed runs in a row')
+		expect(lastRunCell(failed, NOW, 'nl')).toBe('6 okt, 01:00 · connection refused')
+		expect(lastRunCell({ ...off, enabled: true, pausedReason: null }, NOW, 'nl')).toBe('6 okt, 01:00 · connection refused')
+		expect(lastRunCell({ enabled: false, consecutiveFailures: 2, pausedReason: 'x' }, NOW, 'nl')).toBe('Switched off after 2 failed runs in a row')
+		expect(lastRunCell({}, NOW, 'nl')).toBe('')
 	})
 
 	it('say a schedule in words, and keep anything else as written', () => {

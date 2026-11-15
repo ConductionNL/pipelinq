@@ -37,6 +37,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyLeafProviderInterface;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -47,6 +48,8 @@ use Throwable;
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
  */
 class PartyLeafProvider implements PartyLeafProviderInterface {
+	use PartyObjectRead;
+
 	/**
 	 * The leaf id a host declares in its schema's `linkedTypes`.
 	 *
@@ -247,27 +250,6 @@ class PartyLeafProvider implements PartyLeafProviderInterface {
 	 * @return array<string, mixed>|null The party, or null.
 	 */
 	private function readParty(string $partyId): ?array {
-		try {
-			$entity = $this->objectService->find(id: $partyId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'PartyLeafProvider: the party could not be read',
-				['party' => $partyId, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $partyId, failure: 'PartyLeafProvider: the party could not be read', idKey: 'party');
 	}//end readParty()
 }//end class

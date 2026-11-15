@@ -30,6 +30,10 @@ namespace OCA\Pipelinq\Service\Mdm;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCP\IAppConfig;
@@ -137,8 +141,10 @@ class MdmObjectRepository implements MdmObjectRepositoryInterface {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->register(),
-				schema: $this->schema(schemaSlug: $schemaSlug)
+				options: new ObjectFindOptions(
+					register: $this->register(),
+					schema: $this->schema(schemaSlug: $schemaSlug)
+				)
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -201,10 +207,13 @@ class MdmObjectRepository implements MdmObjectRepositoryInterface {
 
 		$saved = $this->objectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $this->register(),
-			schema: $this->schema(schemaSlug: $schemaSlug),
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $this->register(),
+						schema: $this->schema(schemaSlug: $schemaSlug)
+					),
+				uuid: $uuid
+			)
 		);
 
 		return $this->toArray(object: $saved);
@@ -222,7 +231,7 @@ class MdmObjectRepository implements MdmObjectRepositoryInterface {
 	public function delete(string $schemaSlug, string $id): void {
 		// Resolve to validate the schema is configured before mutating.
 		$this->schema(schemaSlug: $schemaSlug);
-		$this->objectService()->deleteObject($id);
+		$this->objectService()->deleteObject(new ObjectDeletion(uuid: $id));
 	}//end delete()
 
 	/**

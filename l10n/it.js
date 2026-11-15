@@ -2363,13 +2363,19 @@ OC.L10N.register(
         "Restore draft": "Ripristina bozza",
         "Discard": "Scarta",
         "Your session has ended. Log in again in a new tab, then press Save here.": "La sessione è scaduta. Accedi di nuovo in una nuova scheda, poi premi Salva qui.",
+        "Deal room": "Stanza dell'opportunità",
+        "Client room": "Stanza del cliente",
+        "Board": "Bacheca",
         "Apply link": "Link per la richiesta",
         "At the desk": "Allo sportello",
         "By post": "Per posta",
         "Published from": "Pubblicato dal",
         "Published until": "Pubblicato fino al",
         "UPL reference": "Riferimento UPL",
-        "Catalogue": "Catalogo"
+        "Catalogue": "Catalogo",
+        "UPL product": "Prodotto UPL",
+        "Residents": "Residenti",
+        "Businesses": "Imprese"
     },
     "nplurals=2; plural=(n != 1);"
 )

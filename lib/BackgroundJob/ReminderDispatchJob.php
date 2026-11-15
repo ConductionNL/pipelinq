@@ -202,23 +202,37 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function isDueForReminder(array $booking, string $windowStartIso, string $windowEndIso): bool {
-		$status = (string)($booking['status'] ?? '');
-		if ($status !== 'confirmed') {
-			return false;
-		}
-
-		$reminderAt = (string)($booking['reminderSentAt'] ?? '');
-		if ($reminderAt !== '') {
-			return false;
-		}
-
-		$startAt = (string)($booking['startAt'] ?? '');
-		if ($startAt === '') {
-			return false;
-		}
-
-		return ($startAt >= $windowStartIso && $startAt <= $windowEndIso);
+		return self::startsWithin(booking: $booking, window: [$windowStartIso, $windowEndIso]);
 	}//end isDueForReminder()
+
+	/**
+	 * Whether a booking awaiting its reminder starts inside the window.
+	 *
+	 * @param array<string, mixed>        $booking The booking.
+	 * @param array{0: string, 1: string} $window  The ISO window start and end, inclusive.
+	 *
+	 * @return bool
+	 */
+	private static function startsWithin(array $booking, array $window): bool {
+		$startAt = (string)($booking['startAt'] ?? '');
+		if (self::awaitsReminder(booking: $booking) === false || $startAt === '') {
+			return false;
+		}
+
+		return ($startAt >= $window[0] && $startAt <= $window[1]);
+	}//end startsWithin()
+
+	/**
+	 * Whether a booking is confirmed and has had no reminder yet.
+	 *
+	 * @param array<string, mixed> $booking The booking entity.
+	 *
+	 * @return bool
+	 */
+	private static function awaitsReminder(array $booking): bool {
+		return (string)($booking['status'] ?? '') === 'confirmed'
+			&& (string)($booking['reminderSentAt'] ?? '') === '';
+	}//end awaitsReminder()
 
 	/**
 	 * Load candidate bookings (confirmed + reminderSentAt unset) for the cycle.

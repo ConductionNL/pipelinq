@@ -147,7 +147,7 @@ class ClientRetentionSchemaTest extends TestCase {
 				'defaultBewaartermijn' => 'P2Y',
 				'defaultNominatie' => 'vernietigen',
 			],
-			$client['archive']
+			array_diff_key($client['archive'], ['anonymisation' => true])
 		);
 		$this->assertArrayHasKey($client['archive']['sourceDateProperty'], $client['properties']);
 		$this->assertArrayNotHasKey('x-openregister-archival', $client);
@@ -172,4 +172,58 @@ class ClientRetentionSchemaTest extends TestCase {
 		$this->assertSame('vernietigen', $archive['defaultNominatie']);
 		$this->assertArrayNotHasKey('x-openregister-archival', $contact);
 	}//end testAContactPersonFollowsItsClient()
+
+	/**
+	 * Both schemas declare their personal data beside the `archive` block, and
+	 * every property the profile names is one the merged schema declares, so
+	 * OpenRegister's save check (which refuses an undeclared name) accepts it
+	 * (REQ-PCR-004).
+	 *
+	 * @return void
+	 */
+	public function testBothProfilesNameOnlyDeclaredProperties(): void {
+		$expected = [
+			'client'  => ['address', 'email', 'emails', 'name', 'notes', 'phone', 'phones', 'website'],
+			'contact' => ['brpPersonId', 'email', 'emails', 'name', 'phone', 'phones'],
+		];
+
+		foreach ($expected as $slug => $names) {
+			$profile = ($this->schemas[$slug]['archive']['anonymisation'] ?? null);
+			$this->assertIsArray($profile, $slug);
+
+			$named = array_keys($profile);
+			sort($named);
+			$this->assertSame($names, $named, $slug);
+			$this->assertSame([], array_diff($named, array_keys($this->schemas[$slug]['properties'])), $slug);
+			$this->assertArrayNotHasKey('x-openregister-archival', $this->schemas[$slug]);
+		}
+	}//end testBothProfilesNameOnlyDeclaredProperties()
+
+	/**
+	 * Contact details are removed; the required name gets one fixed value so the
+	 * record still validates; what a statistic needs is kept.
+	 *
+	 * @return void
+	 */
+	public function testTheProfileRemovesContactDetailsAndKeepsWhatStatisticsNeed(): void {
+		$client = $this->schemas['client']['archive']['anonymisation'];
+		$contact = $this->schemas['contact']['archive']['anonymisation'];
+
+		foreach (['email', 'emails', 'phone', 'phones', 'address', 'website', 'notes'] as $property) {
+			$this->assertSame('remove', $client[$property], $property);
+		}
+
+		foreach (['email', 'emails', 'phone', 'phones', 'brpPersonId'] as $property) {
+			$this->assertSame('remove', $contact[$property], $property);
+		}
+
+		$this->assertSame(['treatment' => 'fixed', 'value' => 'Anonymised client'], $client['name']);
+		$this->assertSame(['treatment' => 'fixed', 'value' => 'Anonymised contact person'], $contact['name']);
+		$this->assertContains('name', $this->schemas['client']['required']);
+
+		foreach (['industry', 'segment', 'type', 'accountStatus', 'relationshipEndedAt'] as $kept) {
+			$this->assertArrayHasKey($kept, $this->schemas['client']['properties'], $kept);
+			$this->assertArrayNotHasKey($kept, $client, $kept);
+		}
+	}//end testTheProfileRemovesContactDetailsAndKeepsWhatStatisticsNeed()
 }//end class

@@ -2363,13 +2363,19 @@ OC.L10N.register(
         "Restore draft": "Restaurer le brouillon",
         "Discard": "Abandonner",
         "Your session has ended. Log in again in a new tab, then press Save here.": "Votre session a expiré. Reconnectez-vous dans un nouvel onglet, puis cliquez ici sur Enregistrer.",
+        "Deal room": "Salon de l'affaire",
+        "Client room": "Salon du client",
+        "Board": "Tableau",
         "Apply link": "Lien de demande",
         "At the desk": "Au guichet",
         "By post": "Par courrier",
         "Published from": "Publié à partir du",
         "Published until": "Publié jusqu'au",
         "UPL reference": "Référence UPL",
-        "Catalogue": "Catalogue"
+        "Catalogue": "Catalogue",
+        "UPL product": "Produit UPL",
+        "Residents": "Habitants",
+        "Businesses": "Entreprises"
     },
     "nplurals=2; plural=(n != 1);"
 )

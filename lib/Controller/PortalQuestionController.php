@@ -120,15 +120,38 @@ class PortalQuestionController extends Controller {
 
 		$collectionId = $this->text(name: 'collectionId');
 		$question = $this->text(name: 'question');
-		if ($collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT) {
+		if ($this->isInvalidQuestion(collectionId: $collectionId, question: $question) === true) {
 			return new JSONResponse(['error' => 'invalid_request'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->fileQuestion(subjectRef: $subjectRef);
+	}//end ask()
+
+	/**
+	 * Whether a question names no collection, is empty, or is too long.
+	 *
+	 * @param string $collectionId The dossier collection id.
+	 * @param string $question     The question text.
+	 *
+	 * @return bool
+	 */
+	private function isInvalidQuestion(string $collectionId, string $question): bool {
+		return $collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT;
+	}//end isInvalidQuestion()
+
+	/**
+	 * File the request's question: 201 with the ticket, 404 (throttled) for a dossier not theirs, 503 when it cannot be saved.
+	 *
+	 * @param string $subjectRef The resident's subject reference.
+	 *
+	 * @return JSONResponse
+	 */
+	private function fileQuestion(string $subjectRef): JSONResponse {
 		try {
 			$result = $this->questions->ask(
 				subjectRef: $subjectRef,
-				collectionId: $collectionId,
-				question: $question,
+				collectionId: $this->text(name: 'collectionId'),
+				question: $this->text(name: 'question'),
 				title: $this->text(name: 'title')
 			);
 		} catch (RuntimeException $e) {
@@ -136,13 +159,8 @@ class PortalQuestionController extends Controller {
 			return new JSONResponse(['error' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		if ($result === null) {
-			$this->registerRejected();
-			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse($result, Http::STATUS_CREATED);
-	}//end ask()
+		return $this->answer(result: $result, status: Http::STATUS_CREATED);
+	}//end fileQuestion()
 
 	/**
 	 * `replyToQuestion`: add the resident's reply to their own question.
@@ -174,13 +192,26 @@ class PortalQuestionController extends Controller {
 			return new JSONResponse(['error' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
+		return $this->answer(result: $result, status: Http::STATUS_OK);
+	}//end reply()
+
+	/**
+	 * The saved result, or the 404 for a target the subject may not reach
+	 * (registered as a rejected attempt).
+	 *
+	 * @param array<string, mixed>|null $result The service result.
+	 * @param int                       $status The success status.
+	 *
+	 * @return JSONResponse
+	 */
+	private function answer(?array $result, int $status): JSONResponse {
 		if ($result === null) {
 			$this->registerRejected();
 			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return new JSONResponse($result);
-	}//end reply()
+		return new JSONResponse($result, $status);
+	}//end answer()
 
 	/**
 	 * The verified subject reference, or the refusal to return.

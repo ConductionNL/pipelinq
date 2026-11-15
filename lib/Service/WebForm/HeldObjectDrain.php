@@ -40,6 +40,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\WebForm;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\Pipelinq\Kernel\Contracts\HeldObjectDrainInterface;
 use OCA\Pipelinq\Service\SystemServiceAccount;
 use Throwable;
@@ -99,47 +101,57 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-held-website-messages-are-drained-into-the-destination-their-form-names
 	 */
 	public function drain(string $register, string $schema, string $keyProperty, array $openFilter, bool $apply): array {
-		$report = ['delivered' => [], 'refused' => [], 'unmapped' => [], 'pending' => 0];
-		$forms = [];
-		foreach ($this->openObjects(register: $register, schema: $schema, filter: $openFilter) as $held) {
-			$heldId = (string)$held['id'];
-			$key = (string)($held[$keyProperty] ?? '');
-			if (array_key_exists($key, $forms) === false) {
-				$forms[$key] = $this->finder->publishedByKey(key: $key);
-			}
+		$run = new HeldDrainRun(register: $register, schema: $schema, keyProperty: $keyProperty, openFilter: $openFilter, apply: $apply);
+		foreach ($this->openObjects(run: $run) as $held) {
+			$this->drainOne(run: $run, held: $held);
+		}
 
-			$form = $forms[$key];
-			if ($form === null) {
-				$report['unmapped'][] = ['id' => $heldId, 'key' => $key];
-				$report['pending']++;
-				continue;
-			}
-
-			if ($apply === false) {
-				$report['delivered'][] = ['id' => $heldId, 'key' => $key, 'destination' => $this->destinationOf(form: $form), 'reference' => ''];
-				$report['pending']++;
-				continue;
-			}
-
-			$this->deliver(held: $held, form: $form, register: $register, schema: $schema, report: $report);
-		}//end foreach
-
-		return $report;
+		return $run->report;
 
 	}//end drain()
 
 	/**
-	 * Submit one held object and, once its destination exists, delete it.
+	 * Report one held object as unmapped or as what would be delivered, or deliver it.
 	 *
-	 * @param array<string, mixed> $held     The held object.
-	 * @param array<string, mixed> $form     Its published form.
-	 * @param string               $register The register.
-	 * @param string               $schema   The held schema.
-	 * @param array<string, mixed> $report   The report, by reference.
+	 * @param HeldDrainRun         $run  The drain.
+	 * @param array<string, mixed> $held The held object.
 	 *
 	 * @return void
 	 */
-	private function deliver(array $held, array $form, string $register, string $schema, array &$report): void {
+	private function drainOne(HeldDrainRun $run, array $held): void {
+		$heldId = (string)$held['id'];
+		$key = $run->keyOf(held: $held);
+		if (array_key_exists($key, $run->forms) === false) {
+			$run->forms[$key] = $this->finder->publishedByKey(key: $key);
+		}
+
+		$form = $run->forms[$key];
+		if ($form === null) {
+			$run->add(list: 'unmapped', entry: ['id' => $heldId, 'key' => $key]);
+			$run->stillHeld();
+			return;
+		}
+
+		if ($run->apply === false) {
+			$run->add(list: 'delivered', entry: ['id' => $heldId, 'key' => $key, 'destination' => $this->destinationOf(form: $form), 'reference' => '']);
+			$run->stillHeld();
+			return;
+		}
+
+		$this->deliver(run: $run, held: $held, form: $form);
+
+	}//end drainOne()
+
+	/**
+	 * Submit one held object and, once its destination exists, delete it.
+	 *
+	 * @param HeldDrainRun         $run  The drain.
+	 * @param array<string, mixed> $held The held object.
+	 * @param array<string, mixed> $form Its published form.
+	 *
+	 * @return void
+	 */
+	private function deliver(HeldDrainRun $run, array $held, array $form): void {
 		$heldId = (string)$held['id'];
 		$payload = $held;
 		unset($payload['id'], $payload['@self']);
@@ -147,12 +159,8 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 		try {
 			$answer = $this->intake->submit(form: $form, payload: $payload, idempotencyKey: 'drain:' . $heldId);
 		} catch (WebFormSubmitException $e) {
-			$report['refused'][] = [
-				'id' => $heldId,
-				'status' => $e->getStatus(),
-				'codes' => array_map(static fn (array $finding): string => (string)($finding['code'] ?? ''), $e->getFindings()),
-			];
-			$report['pending']++;
+			$run->add(list: 'refused', entry: $this->refusalOf(heldId: $heldId, refusal: $e));
+			$run->stillHeld();
 			return;
 		}
 
@@ -162,25 +170,55 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 			'destination' => $this->destinationOf(form: $form),
 			'reference' => (string)$answer['reference'],
 		];
+		$run->add(list: 'delivered', entry: $this->removeHeld(run: $run, entry: $entry));
+
+	}//end deliver()
+
+	/**
+	 * The report entry of a held object its destination refused.
+	 *
+	 * @param string                 $heldId  The held object id.
+	 * @param WebFormSubmitException $refusal The refusal.
+	 *
+	 * @return array<string, mixed> The entry.
+	 */
+	private function refusalOf(string $heldId, WebFormSubmitException $refusal): array {
+		return [
+			'id' => $heldId,
+			'status' => $refusal->getStatus(),
+			'codes' => array_map(static fn (array $finding): string => (string)($finding['code'] ?? ''), $refusal->getFindings()),
+		];
+
+	}//end refusalOf()
+
+	/**
+	 * Delete a delivered held object; when that fails it stays pending and its entry says why.
+	 *
+	 * @param HeldDrainRun         $run   The drain.
+	 * @param array<string, mixed> $entry The delivered entry; `id` is the held object.
+	 *
+	 * @return array<string, mixed> The entry.
+	 */
+	private function removeHeld(HeldDrainRun $run, array $entry): array {
 		try {
 			$this->objectService->deleteObject(
-				uuid: $heldId,
-				register: $register,
-				schema: $schema,
-				_rbac: true,
-				_multitenancy: false,
-				currentUser: $this->account->account(),
+				new ObjectDeletion(
+					uuid: $entry['id'],
+					target: new ObjectFindTarget(register: $run->register, schema: $run->schema),
+					currentUser: $this->account->account()
+				),
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			// Delivered, but still held: counted pending so the schema is not
 			// removed over it, and named so a person can delete it by hand.
 			$entry['notRemoved'] = $e->getMessage();
-			$report['pending']++;
+			$run->stillHeld();
 		}
 
-		$report['delivered'][] = $entry;
+		return $entry;
 
-	}//end deliver()
+	}//end removeHeld()
 
 	/**
 	 * The destination a form names, for the report.
@@ -203,18 +241,16 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 	 * Read with RBAC off: the drain is an admin's command over the whole
 	 * store, and an object it cannot see would be counted as drained.
 	 *
-	 * @param string               $register The register.
-	 * @param string               $schema   The held schema.
-	 * @param array<string, mixed> $filter   Property filters for the open objects.
+	 * @param HeldDrainRun $run The drain.
 	 *
 	 * @return array<int, array<string, mixed>> The held objects.
 	 */
-	private function openObjects(string $register, string $schema, array $filter): array {
+	private function openObjects(HeldDrainRun $run): array {
 		$held = [];
 		for ($offset = 0; $offset < self::MAX_ROWS; $offset += self::PAGE_SIZE) {
 			$rows = (array)$this->objectService->findAll(
 				config: [
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filter),
+					'filters' => array_merge(['register' => $run->register, 'schema' => $run->schema], $run->openFilter),
 					'limit' => self::PAGE_SIZE,
 					'offset' => $offset,
 				],
@@ -223,7 +259,7 @@ class HeldObjectDrain implements HeldObjectDrainInterface {
 			);
 			foreach ($rows as $row) {
 				$body = $this->bodyOf(row: $row);
-				if ($body !== null && $this->matches(body: $body, filter: $filter) === true) {
+				if ($body !== null && $this->matches(body: $body, filter: $run->openFilter) === true) {
 					$held[] = $body;
 				}
 			}

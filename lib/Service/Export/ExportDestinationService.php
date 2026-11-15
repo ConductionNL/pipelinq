@@ -34,6 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
+use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -48,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-001
  */
 class ExportDestinationService extends AbstractExportService implements ExportDestinationServiceInterface {
+	use ExportSourceCredentials;
+
 	/**
 	 * The exportDestination schema config key.
 	 *
@@ -90,6 +93,13 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 	 * @var string
 	 */
 	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
+
+	/**
+	 * Log line when the connector source behind a destination cannot be read.
+	 *
+	 * @var string
+	 */
+	private const CREDENTIALS_FAILURE_MESSAGE = 'Pipelinq: export destination credential resolution failed';
 
 	/**
 	 * Legacy write-only credential fields still present on some Source
@@ -442,92 +452,4 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 
 		return array_intersect_key($data, array_flip($allowed));
 	}//end sanitize()
-
-	/**
-	 * Resolve OC credentials for a destination (never returned to clients).
-	 *
-	 * `OCA\OpenConnector\Service\SourceService` — the class this used to
-	 * resolve credentials through — no longer exists; Source objects moved
-	 * onto OpenRegister's generic object API (register `openconnector`,
-	 * schema `source`). A RENDERED read strips every write-only secret field
-	 * unconditionally (admins included); only `_render: false` survives that
-	 * boundary — the same raw re-read OpenConnector's own CallService /
-	 * RawSourceResolver use internally (ocon#242). `_rbac`/`_multitenancy`
-	 * stay true, so this is access-neutral, not a widened read.
-	 *
-	 * @param array<string, mixed> $destination The destination config.
-	 *
-	 * @return array<string, mixed> The credentials (empty when unavailable).
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function resolveCredentials(array $destination): array {
-		$sourceId = (string)($destination['connectorSourceId'] ?? '');
-		if ($sourceId === '') {
-			return [];
-		}
-
-		// The register is asked for, never assumed. Reading with a slug this
-		// instance does not carry returns no source, and this method's empty
-		// return then reads as "the destination has no credentials" rather than
-		// "the register those credentials live in is not here".
-		// ConnectorSourceRegister logs which it was.
-		$registerSlug = $this->connectorRegister->slugOrNull(
-			operation: 'ExportDestinationService.resolveCredentials',
-			sourceId: $sourceId
-		);
-		if ($registerSlug === null) {
-			return [];
-		}
-
-		try {
-			$source = $this->getObjectService()->find(
-				id: $sourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
-				_rbac: true,
-				_multitenancy: true,
-				_render: false,
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: export destination credential resolution failed',
-				['sourceId' => $sourceId, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		if ($source === null) {
-			return [];
-		}
-
-		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
-	}//end resolveCredentials()
-
-	/**
-	 * Extract the legacy write-only credential fields (and any non-secret
-	 * broker authentication config) from a raw OpenConnector Source.
-	 *
-	 * @param array<string, mixed> $source The raw (unrendered) Source object.
-	 *
-	 * @return array<string, mixed> The extracted credentials.
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function extractSourceCredentials(array $source): array {
-		$credentials = [];
-		foreach (self::OPENCONNECTOR_LEGACY_SECRET_FIELDS as $field) {
-			$value = $source[$field] ?? null;
-			if (is_string($value) === true && $value !== '') {
-				$credentials[$field] = $value;
-			}
-		}
-
-		$authentication = $source['configuration']['authentication'] ?? null;
-		if (is_array($authentication) === true && $authentication !== []) {
-			$credentials['authentication'] = $authentication;
-		}
-
-		return $credentials;
-	}//end extractSourceCredentials()
 }//end class

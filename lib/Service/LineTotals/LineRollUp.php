@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service\LineTotals;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LineRollUpInterface;
 use OCP\IAppConfig;
@@ -92,7 +94,7 @@ class LineRollUp implements LineRollUpInterface {
 
 		$patch = $this->patchFor(parent: $parent);
 		if ($patch !== []) {
-			$this->objects->patchObject(objectId: $parent->parentId, data: $patch, _rbac: false, _multitenancy: false);
+			$this->objects->patchObject(new ObjectPatch(objectId: $parent->parentId, data: $patch), _rbac: false, _multitenancy: false);
 		}
 	}//end apply()
 
@@ -210,7 +212,7 @@ class LineRollUp implements LineRollUpInterface {
 	 * @return array<string, mixed> The data, empty when it is not found.
 	 */
 	private function dataOf(string $objectId): array {
-		$found = $this->objects->find(id: $objectId, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$found = $this->objects->find(id: $objectId, options: new ObjectFindOptions(render: false, audit: false), _rbac: false, _multitenancy: false);
 		return (array)($found?->getObject() ?? []);
 	}//end dataOf()
 

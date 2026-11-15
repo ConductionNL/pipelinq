@@ -30,8 +30,13 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\AvailabilityServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -65,6 +70,8 @@ use Psr\Log\LoggerInterface;
 class AvailabilityService implements AvailabilityServiceInterface {
 	use RowIdOf;
 	use NullablePayloadToArray;
+	use ConfiguredRegisterId;
+	use InjectedObjectService;
 
 	/**
 	 * Slot alignment in minutes.
@@ -176,32 +183,54 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		$blocked = $this->getBlockedTimes(resourceId: $resourceId, date: $date);
-		$aligned = $this->alignToSlots(
-			startTime: $hours['openTime'],
-			endTime: $hours['closeTime'],
-			intervalMinutes: self::SLOT_INTERVAL_MINUTES
-		);
+		$aligned = $this->alignToSlots(startTime: $hours['openTime'], endTime: $hours['closeTime'], intervalMinutes: self::SLOT_INTERVAL_MINUTES);
 
+		return $this->freeSlots(aligned: $aligned, hours: $hours, blocked: $blocked, duration: $serviceDurationMinutes);
+	}//end computeAvailability()
+
+	/**
+	 * The aligned slot starts that leave room for the duration and overlap no block.
+	 *
+	 * @param array<int, int>                    $aligned  Slot starts in minutes from midnight.
+	 * @param array{openTime: string, closeTime: string} $hours The day's working hours.
+	 * @param array<int, array<string, int>>     $blocked  The blocked intervals.
+	 * @param int                                $duration Service duration in minutes.
+	 *
+	 * @return array<int, array{startTime: string, endTime: string, durationMinutes: int}>
+	 */
+	private function freeSlots(array $aligned, array $hours, array $blocked, int $duration): array {
 		$free = [];
 		foreach ($aligned as $slotStartMin) {
-			$slotEndMin = ($slotStartMin + $serviceDurationMinutes);
+			$slotEndMin = ($slotStartMin + $duration);
 			if ($slotEndMin > $this->minutesFromHHMM(time: $hours['closeTime'])) {
 				continue;
 			}
 
-			if ($this->overlapsAny(startMin: $slotStartMin, endMin: $slotEndMin, blocks: $blocked) === true) {
+			if ($this->overlapsAny(slot: ['startMin' => $slotStartMin, 'endMin' => $slotEndMin], blocks: $blocked) === true) {
 				continue;
 			}
 
-			$free[] = [
-				'startTime' => $this->minutesToHHMM(minutes: $slotStartMin),
-				'endTime' => $this->minutesToHHMM(minutes: $slotEndMin),
-				'durationMinutes' => $serviceDurationMinutes,
-			];
+			$free[] = $this->slotRow(startMin: $slotStartMin, endMin: $slotEndMin);
 		}
 
 		return $free;
-	}//end computeAvailability()
+	}//end freeSlots()
+
+	/**
+	 * One free slot as the API answers it.
+	 *
+	 * @param int $startMin Slot start in minutes from midnight.
+	 * @param int $endMin   Slot end in minutes from midnight; the service duration after the start.
+	 *
+	 * @return array{startTime: string, endTime: string, durationMinutes: int}
+	 */
+	private function slotRow(int $startMin, int $endMin): array {
+		return [
+			'startTime' => $this->minutesToHHMM(minutes: $startMin),
+			'endTime' => $this->minutesToHHMM(minutes: $endMin),
+			'durationMinutes' => ($endMin - $startMin),
+		];
+	}//end slotRow()
 
 	/**
 	 * Resolve the Resource's working hours for the given week day.
@@ -405,8 +434,20 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return [];
 		}
 
-		$start = $this->minutesFromHHMM(time: $startTime);
-		$end = $this->minutesFromHHMM(time: $endTime);
+		$range = [$this->minutesFromHHMM(time: $startTime), $this->minutesFromHHMM(time: $endTime)];
+		return self::alignedStarts(range: $range, intervalMinutes: $intervalMinutes);
+	}//end alignToSlots()
+
+	/**
+	 * The slot starts inside a range, aligned to the interval.
+	 *
+	 * @param array{0: int, 1: int} $range           Start and end in minutes from midnight.
+	 * @param int                   $intervalMinutes Slot interval, above 0.
+	 *
+	 * @return array<int, int> Slot starts in minutes from midnight.
+	 */
+	private static function alignedStarts(array $range, int $intervalMinutes): array {
+		[$start, $end] = $range;
 		if ($end <= $start) {
 			return [];
 		}
@@ -419,7 +460,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		return $slots;
-	}//end alignToSlots()
+	}//end alignedStarts()
 
 	/**
 	 * Delete the availability-cache entry for a resource on a date.
@@ -434,12 +475,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function invalidateCache(string $resourceId, string $date): void {
-		$entry = $this->loadCacheEntry(resourceId: $resourceId, date: $date);
-		if ($entry === null) {
-			return;
-		}
-
-		$uuid = $this->idOf(object: $entry);
+		$uuid = $this->cacheEntryId(resourceId: $resourceId, date: $date);
 		if ($uuid === '') {
 			return;
 		}
@@ -452,17 +488,29 @@ class AvailabilityService implements AvailabilityServiceInterface {
 
 		try {
 			$this->getObjectService()->deleteObject(
-				uuid: $uuid,
-				register: $register,
-				schema: $schema
+				new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: availability cache invalidation failed',
-				['resource' => $resourceId, 'date' => $date]
-			);
+			$this->logger->warning('Pipelinq: availability cache invalidation failed', ['resource' => $resourceId, 'date' => $date]);
 		}
 	}//end invalidateCache()
+
+	/**
+	 * The id of the cache entry for a resource on a date, or '' when there is none.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 * @param string $date       ISO date `YYYY-MM-DD`.
+	 *
+	 * @return string
+	 */
+	private function cacheEntryId(string $resourceId, string $date): string {
+		$entry = $this->loadCacheEntry(resourceId: $resourceId, date: $date);
+		if ($entry === null) {
+			return '';
+		}
+
+		return $this->idOf(object: $entry);
+	}//end cacheEntryId()
 
 	/**
 	 * Delete every availability-cache row of a resource, whatever its date.
@@ -485,26 +533,57 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return 0;
 		}
 
+		$rows = $this->findRows(schema: $schema, filters: ['resourceId' => $resourceId]);
+		return $this->deleteCacheRows(
+			rows: $rows,
+			scope: new AvailabilityCacheScope(register: $register, schema: $schema, resourceId: $resourceId)
+		);
+	}//end invalidateResource()
+
+	/**
+	 * Delete cache rows, counting the ones that went.
+	 *
+	 * @param array<int, array<string, mixed>> $rows  The cache rows.
+	 * @param AvailabilityCacheScope           $scope The register, cache schema and resource.
+	 *
+	 * @return int How many rows were deleted.
+	 */
+	private function deleteCacheRows(array $rows, AvailabilityCacheScope $scope): int {
 		$deleted = 0;
-		foreach ($this->findRows(schema: $schema, filters: ['resourceId' => $resourceId]) as $row) {
+		foreach ($rows as $row) {
 			$uuid = $this->idOf(object: $row);
 			if ($uuid === '') {
 				continue;
 			}
 
-			try {
-				$this->getObjectService()->deleteObject(uuid: $uuid, register: $register, schema: $schema);
-				$deleted++;
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Pipelinq: availability cache row could not be deleted',
-					['resource' => $resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
-				);
-			}
+			$deleted += $this->deleteCacheRow(uuid: $uuid, scope: $scope);
 		}
 
 		return $deleted;
-	}//end invalidateResource()
+	}//end deleteCacheRows()
+
+	/**
+	 * Delete one cache row, logging a failed delete.
+	 *
+	 * @param string                 $uuid  The row's uuid.
+	 * @param AvailabilityCacheScope $scope The register, cache schema and resource.
+	 *
+	 * @return int 1 when the row was deleted, otherwise 0.
+	 */
+	private function deleteCacheRow(string $uuid, AvailabilityCacheScope $scope): int {
+		try {
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $scope->register, schema: $scope->schema))
+			);
+			return 1;
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: availability cache row could not be deleted',
+				['resource' => $scope->resourceId, 'row' => $uuid, 'exception' => $e->getMessage()]
+			);
+			return 0;
+		}
+	}//end deleteCacheRow()
 
 	/**
 	 * Delete the cached availability of every resource a service can run on:
@@ -551,9 +630,22 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			return [];
 		}
 
+		$rows = $this->findAllRows(filters: array_merge(['register' => $register, 'schema' => $schema], $filters), schema: $schema);
+		return $this->rowArrays(rows: $rows);
+	}//end findRows()
+
+	/**
+	 * Run the findAll for one schema, logging a failed read.
+	 *
+	 * @param array<string, string> $filters The register and schema ids, then equality filters.
+	 * @param string                $schema  The schema id, for the log.
+	 *
+	 * @return mixed The rows, or an empty array when the read failed.
+	 */
+	private function findAllRows(array $filters, string $schema): mixed {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+			return $this->getObjectService()->findAll(
+				config: ['filters' => $filters]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -562,7 +654,16 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			);
 			return [];
 		}
+	}//end findAllRows()
 
+	/**
+	 * The rows that convert to arrays.
+	 *
+	 * @param mixed $rows The findAll answer.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function rowArrays(mixed $rows): array {
 		$out = [];
 		foreach (($rows ?? []) as $row) {
 			$data = $this->toArray(object: $row);
@@ -572,7 +673,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		return $out;
-	}//end findRows()
+	}//end rowArrays()
 
 	/**
 	 * Read the cached free-block list, regenerating + persisting when missing.
@@ -598,14 +699,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		$nowIso = $this->nowIso();
 
 		if ($entry !== null) {
-			$expiresAt = (string)($entry['expiresAt'] ?? '');
-			$isStale = ($expiresAt === '' || strtotime($expiresAt) < strtotime($nowIso));
-			return [
-				'freeBlocks' => $this->normaliseFreeBlocks(blocks: ($entry['freeBlocks'] ?? [])),
-				'generatedAt' => (string)($entry['generatedAt'] ?? ''),
-				'expiresAt' => $expiresAt,
-				'stale' => $isStale,
-			];
+			return $this->cachedSnapshot(entry: $entry, nowIso: $nowIso);
 		}
 
 		$free = $this->computeAvailability(
@@ -613,17 +707,47 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			date: $date,
 			serviceDurationMinutes: $duration
 		);
-		$entry = [
-			'resourceId' => $resourceId,
-			'date' => $date,
-			'freeBlocks' => $free,
-			'generatedAt' => $nowIso,
-			'expiresAt' => $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS),
+
+		return $this->storedSnapshot(
+			entry: ['resourceId' => $resourceId, 'date' => $date, 'freeBlocks' => $free],
+			nowIso: $nowIso
+		);
+	}//end getOrComputeCache()
+
+	/**
+	 * The snapshot of a cached entry, flagged stale once past its `expiresAt`.
+	 *
+	 * @param array<string, mixed> $entry  The cache entry.
+	 * @param string               $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function cachedSnapshot(array $entry, string $nowIso): array {
+		$expiresAt = (string)($entry['expiresAt'] ?? '');
+		$isStale = ($expiresAt === '' || strtotime($expiresAt) < strtotime($nowIso));
+		return [
+			'freeBlocks' => $this->normaliseFreeBlocks(blocks: ($entry['freeBlocks'] ?? [])),
+			'generatedAt' => (string)($entry['generatedAt'] ?? ''),
+			'expiresAt' => $expiresAt,
+			'stale' => $isStale,
 		];
+	}//end cachedSnapshot()
+
+	/**
+	 * Persist a freshly computed entry, stamped now with its expiry, and answer its snapshot.
+	 *
+	 * @param array{resourceId: string, date: string, freeBlocks: mixed} $entry  The computed entry.
+	 * @param string                                                     $nowIso The current time, ISO 8601.
+	 *
+	 * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` snapshot.
+	 */
+	private function storedSnapshot(array $entry, string $nowIso): array {
+		$entry['generatedAt'] = $nowIso;
+		$entry['expiresAt'] = $this->isoOffsetSeconds(seconds: self::CACHE_TTL_SECONDS);
 		$this->persistCacheEntry(entry: $entry);
 
 		return array_diff_key($entry, ['resourceId' => true, 'date' => true]) + ['stale' => false];
-	}//end getOrComputeCache()
+	}//end storedSnapshot()
 
 	/**
 	 * Load a Resource by id/slug, scoped to the pipelinq register/schema.
@@ -638,6 +762,26 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		$cache = $this->resourceCache();
+		$hit = $this->cachedResource(cache: $cache, resourceId: $resourceId);
+		if ($hit !== null) {
+			return $hit;
+		}
+
+		$normalised = $this->fetchResource(resourceId: $resourceId);
+		$this->rememberResource(cache: $cache, resourceId: $resourceId, normalised: $normalised);
+
+		return $normalised;
+	}//end loadResource()
+
+	/**
+	 * The cached resource, or null on a miss or without a cache.
+	 *
+	 * @param ICache|null $cache      The resource cache.
+	 * @param string      $resourceId Resource UUID/slug.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function cachedResource(ICache|null $cache, string $resourceId): array|null {
 		if ($cache !== null) {
 			$hit = $cache->get('res:' . $resourceId);
 			if (is_array($hit) === true) {
@@ -645,6 +789,17 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			}
 		}
 
+		return null;
+	}//end cachedResource()
+
+	/**
+	 * Read the resource from OpenRegister, logging a failed read.
+	 *
+	 * @param string $resourceId Resource UUID/slug.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function fetchResource(string $resourceId): array|null {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: self::RESOURCE_SCHEMA_KEY);
 		if ($register === '' || $schema === '') {
@@ -652,26 +807,29 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		}
 
 		try {
-			$result = $this->getObjectService()->find(
-				id: $resourceId,
-				register: $register,
-				schema: $schema
-			);
+			$result = $this->getObjectService()->find(id: $resourceId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: resource load failed',
-				['resource' => $resourceId]
-			);
+			$this->logger->warning('Pipelinq: resource load failed', ['resource' => $resourceId]);
 			return null;
 		}
 
-		$normalised = $this->toArray(object: $result);
+		return $this->toArray(object: $result);
+	}//end fetchResource()
+
+	/**
+	 * Cache a loaded resource for a minute.
+	 *
+	 * @param ICache|null               $cache      The resource cache.
+	 * @param string                    $resourceId Resource UUID/slug.
+	 * @param array<string, mixed>|null $normalised The loaded resource, or null.
+	 *
+	 * @return void
+	 */
+	private function rememberResource(ICache|null $cache, string $resourceId, array|null $normalised): void {
 		if ($cache !== null && $normalised !== null) {
 			$cache->set('res:' . $resourceId, $normalised, 60);
 		}
-
-		return $normalised;
-	}//end loadResource()
+	}//end rememberResource()
 
 	/**
 	 * Lazily resolve a per-request L1 cache for resource lookups.
@@ -808,28 +966,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	 * @return array{before: int, after: int}
 	 */
 	private function buffersFor(string $serviceId): array {
-		if ($serviceId === '') {
-			return ['before' => 0, 'after' => 0];
-		}
-
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return ['before' => 0, 'after' => 0];
-		}
-
-		try {
-			$svc = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: service lookup failed', ['service' => $serviceId]);
-			return ['before' => 0, 'after' => 0];
-		}
-
-		$data = $this->toArray(object: $svc);
+		$data = $this->serviceData(serviceId: $serviceId);
 		if ($data === null) {
 			return ['before' => 0, 'after' => 0];
 		}
@@ -839,6 +976,34 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			'after' => max(0, (int)($data['bufferAfterMinutes'] ?? 0)),
 		];
 	}//end buffersFor()
+
+	/**
+	 * Read a Service as an array, or null when there is none to read.
+	 *
+	 * @param string $serviceId Service id; empty yields null.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function serviceData(string $serviceId): array|null {
+		if ($serviceId === '') {
+			return null;
+		}
+
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		try {
+			$svc = $this->getObjectService()->find(id: $serviceId, options: new ObjectFindOptions(register: $register, schema: $schema));
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: service lookup failed', ['service' => $serviceId]);
+			return null;
+		}
+
+		return $this->toArray(object: $svc);
+	}//end serviceData()
 
 	/**
 	 * True when any of the vacation ranges contains the given date.
@@ -946,10 +1111,7 @@ class AvailabilityService implements AvailabilityServiceInterface {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $entry,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1029,13 +1191,14 @@ class AvailabilityService implements AvailabilityServiceInterface {
 	/**
 	 * True when [startMin, endMin) overlaps any block.
 	 *
-	 * @param int $startMin Slot start (minutes from midnight).
-	 * @param int $endMin Slot end (minutes from midnight).
+	 * @param array{startMin: int, endMin: int} $slot Slot start and end (minutes from midnight).
 	 * @param array<int, array{startMin: int, endMin: int}> $blocks Blocked ranges.
 	 *
 	 * @return bool
 	 */
-	private function overlapsAny(int $startMin, int $endMin, array $blocks): bool {
+	private function overlapsAny(array $slot, array $blocks): bool {
+		$startMin = $slot['startMin'];
+		$endMin = $slot['endMin'];
 		foreach ($blocks as $block) {
 			$blockStart = $block['startMin'];
 			$blockEnd = $block['endMin'];
@@ -1230,49 +1393,4 @@ class AvailabilityService implements AvailabilityServiceInterface {
 			->modify(sprintf('+%d seconds', $seconds));
 		return $dateTime->format('Y-m-d\TH:i:sP');
 	}//end isoOffsetSeconds()
-
-	/**
-	 * Resolve the pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key, e.g. `resource_schema`.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

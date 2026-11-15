@@ -41,6 +41,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 require_once __DIR__.'/RecordingDeferralService.php';
 
@@ -49,6 +51,8 @@ require_once __DIR__.'/RecordingDeferralService.php';
  *
  * @covers \OCA\Pipelinq\Listener\DealUpdatedListener
  * @uses   \OCA\Pipelinq\Listener\DeferredWorkGuard
+ * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectRead
+ * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
  */
 class DealUpdatedListenerTest extends TestCase {
 
@@ -217,7 +221,9 @@ class DealUpdatedListenerTest extends TestCase {
 			 *
 			 * @return ObjectEntity|null
 			 */
-			public function find(string $id, string $register, string $schema): ?ObjectEntity {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntity {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
 				if ($this->found instanceof \Throwable) {
 					throw $this->found;
@@ -237,7 +243,11 @@ class DealUpdatedListenerTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->onSave !== null) {
 					throw $this->onSave;

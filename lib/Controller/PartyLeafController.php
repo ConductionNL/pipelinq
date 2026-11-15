@@ -38,6 +38,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyLeafProviderInterface;
 use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -49,6 +50,8 @@ use OCP\IRequest;
  * @spec openspec/specs/party-fields-and-indicators/spec.md#requirement-a-consuming-app-shall-read-party-fields-and-indicators-through-a-leaf-req-pfi-007
  */
 class PartyLeafController extends Controller {
+	use ServiceResultResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -139,18 +142,4 @@ class PartyLeafController extends Controller {
 			result: $this->treeService->setParent(nodeId: $partyId, parentId: $parentId)
 		);
 	}//end setParent()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

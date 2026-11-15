@@ -30,6 +30,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\FullExportServiceInterface;
+use OCA\Pipelinq\Service\Export\FullExportState;
+use OCA\Pipelinq\Service\UserNotice;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\Notification\IManager;
@@ -50,6 +52,7 @@ class FullExportJob extends QueuedJob {
 	 * @param FullExportServiceInterface $export        Builds and stores the archive.
 	 * @param IManager          $notifications Nextcloud notifications.
 	 * @param LoggerInterface   $logger        The logger.
+	 * @param FullExportState|null $state The state of the last export, for the page.
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
@@ -58,6 +61,7 @@ class FullExportJob extends QueuedJob {
 		private readonly FullExportServiceInterface $export,
 		private readonly IManager $notifications,
 		private readonly LoggerInterface $logger,
+		private readonly ?FullExportState $state = null,
 	) {
 		parent::__construct(time: $time);
 	}//end __construct()
@@ -82,34 +86,34 @@ class FullExportJob extends QueuedJob {
 			$stored = $this->export->exportFor(userId: $userId);
 		} catch (Throwable $e) {
 			$this->logger->error('FullExportJob: the archive could not be built', ['exception' => $e->getMessage()]);
-			$this->notify(userId: $userId, subject: 'full_export_failed', parameters: []);
+			$this->state?->failed(userId: $userId);
+			$this->notify(userId: $userId, notice: new UserNotice(subject: 'full_export_failed', parameters: []));
 			return;
 		}
 
+		$this->state?->ready(userId: $userId, name: (string) $stored['name'], fileId: (string) $stored['fileId']);
 		$this->notify(
 			userId: $userId,
-			subject: 'full_export_ready',
-			parameters: ['name' => $stored['name'], 'fileId' => (string) $stored['fileId']]
+			notice: new UserNotice(subject: 'full_export_ready', parameters: ['name' => $stored['name'], 'fileId' => (string) $stored['fileId']])
 		);
 	}//end run()
 
 	/**
 	 * Send the administrator a notification.
 	 *
-	 * @param string               $userId     The administrator.
-	 * @param string               $subject    The subject.
-	 * @param array<string, mixed> $parameters The subject parameters.
+	 * @param string     $userId The administrator.
+	 * @param UserNotice $notice The subject and its parameters.
 	 *
 	 * @return void
 	 */
-	private function notify(string $userId, string $subject, array $parameters): void {
+	private function notify(string $userId, UserNotice $notice): void {
 		try {
 			$notification = $this->notifications->createNotification();
 			$notification->setApp(AppIdentity::APP_ID)
 				->setUser($userId)
 				->setDateTime($this->time->getDateTime())
-				->setObject('export', (string) ($parameters['fileId'] ?? 'full'))
-				->setSubject($subject, $parameters);
+				->setObject('export', (string) ($notice->parameters['fileId'] ?? 'full'))
+				->setSubject($notice->subject, $notice->parameters);
 			$this->notifications->notify($notification);
 		} catch (Throwable $e) {
 			$this->logger->warning('FullExportJob: the administrator could not be notified', ['exception' => $e->getMessage()]);

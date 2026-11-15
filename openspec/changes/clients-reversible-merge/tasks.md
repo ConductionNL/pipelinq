@@ -14,15 +14,18 @@
 - [x] 2.2 Guard test listing every property that references `client` or `contact` across `lib/Settings` and failing when the listener's list misses one
   - Verify: the test fails when a fixture adds `invoice.client`, passes on the real register
   - done: `tests/Unit/Service/Merge/PartyReferencesRegisterTest.php`, by property name and by `$ref`; it found `salesQuote.client`, `posTransaction.customer` and `relationship.from/toContact`, which the design's list lacked.
-- [ ] 2.3 Keep the merged-away Nextcloud contact during the window and relink it on reversal
+- [x] 2.3 Keep the merged-away Nextcloud contact during the window and relink it on reversal
   - Verify: PHPUnit on the contact handling
+  - done: `lib/Service/Merge/MergedAwayCard.php`, called by `ClientMergeReferenceListener`. Nothing deletes the card; on a merge one note line `[merged-into:<uuid>] Merged into <name>` is written to the card, on a reversal it is taken off again. OpenRegister keeps the merged-away record's data (only its status changes) and restores it on reversal, so its `contactsUid` still names that card. A card in a read-only address book, or one that cannot be written, is logged and never stops the merge. `tests/Unit/Service/Merge/MergedAwayCardTest.php`, `tests/Unit/Listener/ClientMergeReferenceListenerTest.php`.
 
 ## 3. Screens
 
-- [ ] 3.1 Merge into another record dialog in `src/modals/`, previewing through `merge#preview` and executing through `merge#execute`
+- [x] 3.1 Merge into another record dialog in `src/modals/`, previewing through `merge#preview` and executing through `merge#execute`
   - Verify: Playwright `tests/e2e/client-merge.spec.ts` merges two clients and sees the second one's lead on the survivor
-- [ ] 3.2 Merges section on the survivor with Undo inside the window, through `merge#reverse`
+  - done: not built in pipelinq, by decision. The spec (REQ-CRM-001: "OpenRegister's steward surface SHALL offer the merge and its preview") and screens.md ("pipelinq has no board of its own for merging") put starting a merge in OpenRegister, so pipelinq adds no dialog of its own. The Playwright check is a live test and was not run.
+- [x] 3.2 Merges section on the survivor with Undo inside the window, through `merge#reverse`
   - Verify: Playwright undoes the merge from 3.1 and sees both clients with their own leads again
+  - done: `src/components/merge/RecordMergesSection.vue` over `src/services/mergeOperations.js`, registered as the `RecordMergesSection` body section and placed on ClientDetail and ContactDetail (`merges`). It lists OpenRegister's `mergeOperation` rows with `mergedIntoUuid` = this record, offers Undo (one confirmation, then `merge#reverse`) while `mergedAt` + 30 days has not passed and the row is still reversible, and shows "Final since <date>" after it (REQ-CRM-003). Kept in pipelinq because the spec's scenarios open the Merges section of the client. `tests/vitest/recordMergesSection.spec.js`, `tests/vitest/mergeOperations.spec.js`. The Playwright check is a live test and was not run.
 - [x] 3.3 Merged-away record shows merged into with a link
   - Verify: Vitest on the detail header state
   - done: already built by #3113 (MergedAwayRecordListener, the merged-into line under the party strip).

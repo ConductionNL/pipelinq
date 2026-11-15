@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -52,6 +53,8 @@ use Throwable;
  * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
  */
 class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * Upper bound on the rows read per question.
 	 *
@@ -197,25 +200,35 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function mayLink(string $recordType, string $recordId, string $kind, string $party = ''): array {
-		$recordType = trim($recordType);
-		$kind = trim($kind);
+		return $this->slotAnswer(record: ['recordType' => trim($recordType), 'recordId' => $recordId], slot: ['kind' => trim($kind), 'party' => $party]);
+	}//end mayLink()
 
-		$refusal = $this->kindRefusal(recordType: $recordType, kind: $kind);
+	/**
+	 * Refuse a kind the record type does not accept, and a kind that holds one
+	 * party when another party already holds it on the record.
+	 *
+	 * @param array{recordType: string, recordId: string} $record The trimmed record type and the record.
+	 * @param array{kind: string, party: string}          $slot   The trimmed kind and the party being linked.
+	 *
+	 * @return array{allowed: bool, reason: string} The answer.
+	 */
+	private function slotAnswer(array $record, array $slot): array {
+		$refusal = $this->kindRefusal(recordType: $record['recordType'], kind: $slot['kind']);
 		if ($refusal !== '') {
 			return ['allowed' => false, 'reason' => $refusal];
 		}
 
-		if ($this->holdsOne(kind: $kind) === false) {
+		if ($this->holdsOne(kind: $slot['kind']) === false) {
 			return ['allowed' => true, 'reason' => ''];
 		}
 
-		$holder = self::otherHolder(links: $this->linksOn(recordType: $recordType, recordId: $recordId), slot: ['kind' => $kind, 'party' => $party]);
+		$holder = self::otherHolder(links: $this->linksOn(recordType: $record['recordType'], recordId: $record['recordId']), slot: $slot);
 		if ($holder !== null) {
-			return self::slotTaken(kind: $kind, holder: $holder);
+			return self::slotTaken(kind: $slot['kind'], holder: $holder);
 		}
 
 		return ['allowed' => true, 'reason' => ''];
-	}//end mayLink()
+	}//end slotAnswer()
 
 	/**
 	 * Why a kind may not be linked to a record type at all; '' when it may.
@@ -314,38 +327,72 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
 	 */
 	public function judgeBatch(string $recordType, string $recordId, array $rows): array {
-		$accepted = [];
-		$refused = [];
-		$taken = [];
+		$verdict = $this->batchVerdict(record: ['recordType' => $recordType, 'recordId' => $recordId], rows: $rows);
 
+		return ['accepted' => $verdict['accepted'], 'refused' => $verdict['refused']];
+	}//end judgeBatch()
+
+	/**
+	 * Judge every row of a batch for one record, in order.
+	 *
+	 * @param array{recordType: string, recordId: string} $record The record type literal and the record.
+	 * @param array<int, array<string, string>>           $rows   Each with `party` and `kind`.
+	 *
+	 * @return array<string, array<array-key, mixed>> The accepted and refused rows, and the party taking each kind.
+	 */
+	private function batchVerdict(array $record, array $rows): array {
+		$verdict = ['accepted' => [], 'refused' => [], 'taken' => []];
 		foreach ($rows as $row) {
-			$kind = trim((string)($row['kind'] ?? ''));
-			$party = trim((string)($row['party'] ?? ''));
-
-			$answer = $this->mayLink(
-				recordType: $recordType,
-				recordId: $recordId,
-				kind: $kind,
-				party: $party,
-			);
-
-			// A batch judges itself as well as the store: two aanvragers in
-			// one import must not both land because neither was written yet.
-			if ($answer['allowed'] === true && isset($taken[$kind]) === true && $this->holdsOne(kind: $kind) === true) {
-				$answer = self::slotTaken(kind: $kind, holder: $taken[$kind]);
-			}
-
-			if ($answer['allowed'] === true) {
-				$accepted[] = ['party' => $party, 'kind' => $kind];
-				$taken[$kind] = $party;
-				continue;
-			}
-
-			$refused[] = ['party' => $party, 'kind' => $kind, 'reason' => $answer['reason']];
+			$slot = ['kind' => trim((string)($row['kind'] ?? '')), 'party' => trim((string)($row['party'] ?? ''))];
+			$answer = $this->mayLink(recordType: $record['recordType'], recordId: $record['recordId'], kind: $slot['kind'], party: $slot['party']);
+			$verdict = $this->judgeRow(judged: $answer + $slot, verdict: $verdict);
 		}
 
-		return ['accepted' => $accepted, 'refused' => $refused];
-	}//end judgeBatch()
+		return $verdict;
+	}//end batchVerdict()
+
+	/**
+	 * Judge one row, already judged against the store, against the rows of the batch accepted so far.
+	 *
+	 * @param array<string, mixed>                   $judged  The store's answer (`allowed`, `reason`) with the row's trimmed `kind` and `party`.
+	 * @param array<string, array<array-key, mixed>> $verdict The accepted and refused rows so far, and the party taking each kind.
+	 *
+	 * @return array<string, array<array-key, mixed>>
+	 *
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 */
+	private function judgeRow(array $judged, array $verdict): array {
+		$kind = $judged['kind'];
+
+		// A batch judges itself as well as the store: two aanvragers in
+		// one import must not both land because neither was written yet.
+		if ($judged['allowed'] === true && isset($verdict['taken'][$kind]) === true && $this->holdsOne(kind: $kind) === true) {
+			$judged = self::slotTaken(kind: $kind, holder: $verdict['taken'][$kind]) + $judged;
+		}
+
+		return self::recordVerdict(verdict: $verdict, judged: $judged);
+	}//end judgeRow()
+
+	/**
+	 * Record a row as accepted (taking its kind's slot) or refused with the answer's reason.
+	 *
+	 * @param array<string, array<array-key, mixed>> $verdict The accepted and refused rows so far, and the party taking each kind.
+	 * @param array<string, mixed>                   $judged  The answer for the row (`allowed`, `reason`) with its `kind` and `party`.
+	 *
+	 * @return array<string, array<array-key, mixed>>
+	 *
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-party-link-with-an-unaccepted-kind-shall-be-refused-on-the-write-req-pkr-004
+	 */
+	private static function recordVerdict(array $verdict, array $judged): array {
+		if ($judged['allowed'] === true) {
+			$verdict['accepted'][] = ['party' => $judged['party'], 'kind' => $judged['kind']];
+			$verdict['taken'][$judged['kind']] = $judged['party'];
+			return $verdict;
+		}
+
+		$verdict['refused'][] = ['party' => $judged['party'], 'kind' => $judged['kind'], 'reason' => $judged['reason']];
+		return $verdict;
+	}//end recordVerdict()
 
 	/**
 	 * The links currently written on one record.
@@ -397,7 +444,7 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 			return [];
 		}
 
-		return self::plainRows(rows: $rows);
+		return $this->plainRows(rows: $rows);
 	}//end read()
 
 	/**
@@ -421,31 +468,4 @@ class PartyKindRegistryService implements PartyKindRegistryServiceInterface {
 
 		return ['register' => $register, 'schema' => $schema];
 	}//end scopeOf()
-
-	/**
-	 * The rows as plain arrays: arrays as they are, serialisable entities by
-	 * what they serialise to; anything else is dropped.
-	 *
-	 * @param iterable<mixed> $rows The rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private static function plainRows($rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
-			}
-		}
-
-		return $out;
-	}//end plainRows()
 }//end class

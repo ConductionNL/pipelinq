@@ -30,6 +30,7 @@ use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for EligibilityService.
@@ -192,6 +193,7 @@ class EligibilityServiceTest extends TestCase {
 	private function wireFind(ObjectServiceInterface $mock, array $bySchema): void {
 		$mock->method('find')->willReturnCallback(
 			callback: static function (mixed ...$args) use ($bySchema): ?ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$id = (string)($args[0] ?? '');
 				$schema = '';
 				if (isset($args[4]) === true && is_string($args[4]) === true) {

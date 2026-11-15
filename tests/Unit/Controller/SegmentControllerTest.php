@@ -51,6 +51,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for SegmentController::members() and SegmentController::refreshSize().
@@ -447,6 +448,7 @@ class SegmentControllerTest extends TestCase {
 			->method('saveObject')
 			->willReturnCallback(
 				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
+					$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 					$persisted = $object;
 					return self::entity($object);
 				}
@@ -667,6 +669,7 @@ class SegmentControllerTest extends TestCase {
 			->method('saveObject')
 			->willReturnCallback(
 				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
+					$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 					$persisted = $object;
 					return self::entity($object);
 				}

@@ -107,10 +107,7 @@ class NotesService implements NotesServiceInterface {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function addNote(string $objectType, string $objectId, string $message): array {
-		$userId = $this->userSession->getUser()?->getUID();
-		if ($userId === null) {
-			throw new RuntimeException('No authenticated user');
-		}
+		$userId = $this->authenticatedUserId();
 
 		$comment = $this->commentsManager->create(
 			actorType: 'users',
@@ -118,10 +115,51 @@ class NotesService implements NotesServiceInterface {
 			objectType: $objectType,
 			objectId: $objectId
 		);
-		$comment->setMessage(trim($message));
+
+		return $this->savedNote(comment: $comment, note: ['message' => $message, 'userId' => $userId]);
+	}//end addNote()
+
+	/**
+	 * The current user's id.
+	 *
+	 * @return string The user id.
+	 *
+	 * @throws RuntimeException When no user is logged in.
+	 */
+	private function authenticatedUserId(): string {
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null) {
+			throw new RuntimeException('No authenticated user');
+		}
+
+		return $userId;
+	}//end authenticatedUserId()
+
+	/**
+	 * Give a new comment its trimmed message, save it and return it as the author's note.
+	 *
+	 * @param IComment                                $comment The created comment.
+	 * @param array{message: string, userId: string} $note    The note message and its author, the current user.
+	 *
+	 * @return array{id: int, message: string, authorId: string, authorName: string, timestamp: string, isOwn: bool}
+	 */
+	private function savedNote(IComment $comment, array $note): array {
+		$comment->setMessage(trim($note['message']));
 		$comment->setVerb('comment');
 		$this->commentsManager->save($comment);
 
+		return $this->ownNoteOf(comment: $comment, userId: $note['userId']);
+	}//end savedNote()
+
+	/**
+	 * A comment the current user just wrote, as a note.
+	 *
+	 * @param IComment $comment The saved comment.
+	 * @param string   $userId  The author, the current user.
+	 *
+	 * @return array{id: int, message: string, authorId: string, authorName: string, timestamp: string, isOwn: bool}
+	 */
+	private function ownNoteOf(IComment $comment, string $userId): array {
 		$user = $this->userManager->get($userId);
 
 		return [
@@ -132,7 +170,7 @@ class NotesService implements NotesServiceInterface {
 			'timestamp' => $comment->getCreationDateTime()->format('c'),
 			'isOwn' => true,
 		];
-	}//end addNote()
+	}//end ownNoteOf()
 
 	/**
 	 * Delete a single note. Only the author may delete their own note.
@@ -144,10 +182,7 @@ class NotesService implements NotesServiceInterface {
 	 * @spec openspec/specs/entity-notes/spec.md
 	 */
 	public function deleteNote(int $noteId): void {
-		$userId = $this->userSession->getUser()?->getUID();
-		if ($userId === null) {
-			throw new RuntimeException('No authenticated user');
-		}
+		$userId = $this->authenticatedUserId();
 
 		$comment = $this->commentsManager->get((string)$noteId);
 		if ($comment->getActorId() !== $userId) {

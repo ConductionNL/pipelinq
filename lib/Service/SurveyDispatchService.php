@@ -45,8 +45,11 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
@@ -55,9 +58,13 @@ use Throwable;
 /**
  * Match dispatch rules, run the guards, and write the invitation.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
+ *
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
  */
 class SurveyDispatchService implements SurveyDispatchServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The app-config key holding the dispatch rules, as a JSON array.
 	 *
@@ -146,35 +153,39 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 */
 	public function matchingRules(string $entityType, string $status, string $channel = ''): array {
 		$matching = [];
+		$interaction = new CompletedInteraction(entityType: $entityType, status: $status, channel: $channel);
 
 		foreach ($this->rules() as $rule) {
-			if (($rule['enabled'] ?? false) !== true) {
-				continue;
+			if ($this->ruleMatches(rule: $rule, interaction: $interaction) === true) {
+				$matching[] = $rule;
 			}
-
-			$trigger = ($rule['trigger'] ?? []);
-			if (is_array($trigger) === false) {
-				continue;
-			}
-
-			if (trim((string)($trigger['entityType'] ?? '')) !== $entityType) {
-				continue;
-			}
-
-			if (trim((string)($trigger['statusEquals'] ?? '')) !== $status) {
-				continue;
-			}
-
-			$channelFilter = trim((string)($trigger['channelEquals'] ?? ''));
-			if ($channelFilter !== '' && $channelFilter !== $channel) {
-				continue;
-			}
-
-			$matching[] = $rule;
 		}
 
 		return $matching;
 	}//end matchingRules()
+
+	/**
+	 * Whether a rule is enabled and its trigger matches the interaction.
+	 *
+	 * @param array<string, mixed> $rule The dispatch rule.
+	 * @param CompletedInteraction $interaction The completed interaction.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-configurable-survey-dispatch-rules
+	 */
+	private function ruleMatches(array $rule, CompletedInteraction $interaction): bool {
+		if (($rule['enabled'] ?? false) !== true) {
+			return false;
+		}
+
+		$trigger = ($rule['trigger'] ?? []);
+		if (is_array($trigger) === false) {
+			return false;
+		}
+
+		return $interaction->matches(trigger: $trigger);
+	}//end ruleMatches()
 
 	/**
 	 * Why this dispatch must be suppressed, or null to go ahead.
@@ -201,6 +212,21 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	): ?string {
 		$now = ($now ?? new DateTimeImmutable());
 
+		return $this->contactSuppression(contact: $contact)
+			?? $this->cooldownSuppression(recentInvitations: $recentInvitations, since: $this->cooldownStart(rule: $rule, now: $now))
+			?? $this->channelSuppression(rule: $rule, contact: $contact);
+	}//end suppressionReason()
+
+	/**
+	 * Why the contact itself blocks a survey: no address at all, or an opt-out.
+	 *
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return string|null The reason, or null.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function contactSuppression(array $contact): string|null {
 		if (trim((string)($contact['contactsUid'] ?? $contact['id'] ?? '')) === '') {
 			return 'no-channel-address';
 		}
@@ -209,35 +235,98 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return 'opt-out';
 		}
 
+		return null;
+	}//end contactSuppression()
+
+	/**
+	 * The start of the rule's cooldown, or null when the rule has none.
+	 *
+	 * @param array<string, mixed> $rule The dispatch rule.
+	 * @param DateTimeImmutable $now The reference time.
+	 *
+	 * @return DateTimeImmutable|null
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function cooldownStart(array $rule, DateTimeImmutable $now): ?DateTimeImmutable {
 		$cooldownDays = (int)($rule['cooldownDays'] ?? self::DEFAULT_COOLDOWN_DAYS);
 		if ($cooldownDays > 0) {
-			$since = $now->modify("-{$cooldownDays} days");
-			foreach ($recentInvitations as $invitation) {
-				// Counted ACROSS surveys: somebody asked about a permit last
-				// week is not fair game today because it is a different
-				// questionnaire.
-				$sentAt = trim((string)($invitation['sentAt'] ?? ''));
-				if ($sentAt === '') {
-					continue;
-				}
+			return $now->modify("-{$cooldownDays} days");
+		}
 
-				try {
-					if (new DateTimeImmutable($sentAt) >= $since) {
-						return 'cooldown';
-					}
-				} catch (Throwable $e) {
-					continue;
+		return null;
+	}//end cooldownStart()
+
+	/**
+	 * 'cooldown' when the contact was invited, to any survey, since the cooldown start.
+	 *
+	 * @param array<int, array<string, mixed>> $recentInvitations The contact's recent invitations.
+	 * @param DateTimeImmutable|null $since The cooldown start, or null when the rule has no cooldown.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function cooldownSuppression(array $recentInvitations, ?DateTimeImmutable $since): string|null {
+		if ($since !== null) {
+			foreach ($recentInvitations as $invitation) {
+				if ($this->sentSince(invitation: $invitation, since: $since) === true) {
+					return 'cooldown';
 				}
 			}
 		}
 
+		return null;
+	}//end cooldownSuppression()
+
+	/**
+	 * Whether an invitation was sent at or after a moment; false when it has no readable sentAt.
+	 *
+	 * @param mixed $invitation The invitation.
+	 * @param mixed $since The cooldown start.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function sentSince($invitation, $since): bool {
+		// Counted ACROSS surveys: somebody asked about a permit last
+		// week is not fair game today because it is a different
+		// questionnaire.
+		$sentAt = trim((string)($invitation['sentAt'] ?? ''));
+		if ($sentAt === '') {
+			return false;
+		}
+
+		try {
+			if (new DateTimeImmutable($sentAt) >= $since) {
+				return true;
+			}
+		} catch (Throwable $e) {
+			return false;
+		}
+
+		return false;
+	}//end sentSince()
+
+	/**
+	 * 'no-channel-address' when the contact has no address on the rule's channel.
+	 *
+	 * @param array<string, mixed> $rule The dispatch rule.
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 */
+	private function channelSuppression(array $rule, array $contact): string|null {
 		$channel = trim((string)($rule['channel'] ?? 'email'));
 		if ($this->addressFor(contact: $contact, channel: $channel) === '') {
 			return 'no-channel-address';
 		}
 
 		return null;
-	}//end suppressionReason()
+	}//end channelSuppression()
 
 	/**
 	 * The address a channel would deliver to, or '' when there is none.
@@ -281,10 +370,35 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		?DateTimeImmutable $now = null,
 	): array {
 		$now = ($now ?? new DateTimeImmutable());
+		$invitation = $this->draftInvitation(
+			occasion: new SurveyInvitationOccasion(rule: $rule, contact: $contact, entity: $entity, now: $now)
+		);
+
+		$reason = $this->suppressionReason(
+			rule: $rule,
+			contact: $contact,
+			recentInvitations: $recentInvitations,
+			now: $now,
+		);
+
+		return $this->withStatus(invitation: $invitation, reason: $reason);
+	}//end buildInvitation()
+
+	/**
+	 * The invitation fields an occasion produces, before its status is decided.
+	 *
+	 * @param SurveyInvitationOccasion $occasion The rule, recipient, record and moment.
+	 *
+	 * @return array<string, mixed> The invitation without status.
+	 */
+	private function draftInvitation(SurveyInvitationOccasion $occasion): array {
+		$rule = $occasion->rule;
+		$contact = $occasion->contact;
+		$entity = $occasion->entity;
 		$delayMinutes = max(0, (int)($rule['delayMinutes'] ?? 0));
 		$expiryDays = max(1, (int)($rule['expiryDays'] ?? self::DEFAULT_EXPIRY_DAYS));
 
-		$invitation = [
+		return [
 			'token' => $this->random->generate(32, ISecureRandom::CHAR_ALPHANUMERIC),
 			'surveyRef' => trim((string)($rule['surveyRef'] ?? '')),
 			'contactRef' => trim((string)($contact['contactsUid'] ?? $contact['id'] ?? '')),
@@ -297,17 +411,20 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 				channel: trim((string)($rule['channel'] ?? 'email')),
 			),
 			'dispatchRuleId' => trim((string)($rule['id'] ?? '')),
-			'scheduledFor' => $now->modify("+{$delayMinutes} minutes")->format(DateTimeInterface::ATOM),
-			'expiresAt' => $now->modify("+{$expiryDays} days")->format(DateTimeInterface::ATOM),
+			'scheduledFor' => $occasion->now->modify("+{$delayMinutes} minutes")->format(DateTimeInterface::ATOM),
+			'expiresAt' => $occasion->now->modify("+{$expiryDays} days")->format(DateTimeInterface::ATOM),
 		];
+	}//end draftInvitation()
 
-		$reason = $this->suppressionReason(
-			rule: $rule,
-			contact: $contact,
-			recentInvitations: $recentInvitations,
-			now: $now,
-		);
-
+	/**
+	 * The invitation marked suppressed with its reason, or scheduled when there is none.
+	 *
+	 * @param array<string, mixed> $invitation The drafted invitation.
+	 * @param string|null $reason The suppression reason, or null.
+	 *
+	 * @return array<string, mixed> The invitation to persist.
+	 */
+	private function withStatus(array $invitation, ?string $reason): array {
 		if ($reason !== null) {
 			$invitation['status'] = 'suppressed';
 			$invitation['suppressionReason'] = $reason;
@@ -318,7 +435,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		$invitation['status'] = 'scheduled';
 
 		return $invitation;
-	}//end buildInvitation()
+	}//end withStatus()
 
 	/**
 	 * Create the invitations a completed interaction earns.
@@ -345,6 +462,19 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 
+		return $this->writeInvitations(rules: $rules, interaction: ['entity' => $entity, 'contact' => $contact]);
+	}//end onInteractionCompleted()
+
+	/**
+	 * Build and write the invitation each matching rule produces for the contact.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The matching rules.
+	 * @param array{entity: array<string, mixed>, contact: array<string, mixed>} $interaction The completed record and the recipient.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations written.
+	 */
+	private function writeInvitations(array $rules, array $interaction): array {
+		$contact = $interaction['contact'];
 		$recent = $this->invitationsForContact(
 			contactRef: trim((string)($contact['contactsUid'] ?? $contact['id'] ?? ''))
 		);
@@ -354,7 +484,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			$invitation = $this->buildInvitation(
 				rule: $rule,
 				contact: $contact,
-				entity: $entity,
+				entity: $interaction['entity'],
 				recentInvitations: $recent,
 			);
 
@@ -364,7 +494,7 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		}
 
 		return $written;
-	}//end onInteractionCompleted()
+	}//end writeInvitations()
 
 	/**
 	 * Every invitation already sent to one contact, whatever the survey.
@@ -387,6 +517,8 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 	 * @param array<string, mixed> $filters Extra filters.
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
+	 *
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function read(array $filters): array {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
@@ -397,39 +529,30 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 			return [];
 		}
 
+		return $this->plainRows(rows: $this->findInvitations(filters: array_merge(['register' => $register, 'schema' => $schema], $filters)));
+	}//end read()
+
+	/**
+	 * Find invitations matching the filters, or none when the read fails.
+	 *
+	 * @param array<string, mixed> $filters The register, schema and extra filters.
+	 *
+	 * @return array<mixed>
+	 */
+	private function findInvitations(array $filters): array {
 		try {
-			$rows = $this->objectService->findAll(
+			return $this->objectService->findAll(
 				[
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
+					'filters' => $filters,
 					'limit' => self::LIMIT,
 				]
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SurveyDispatchService: the invitation read failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('SurveyDispatchService: the invitation read failed', ['exception' => $e->getMessage()]);
 
 			return [];
 		}
-
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
-			}
-		}
-
-		return $out;
-	}//end read()
+	}//end findInvitations()
 
 	/**
 	 * Persist one invitation.
@@ -449,9 +572,10 @@ class SurveyDispatchService implements SurveyDispatchServiceInterface {
 		try {
 			$this->objectService->saveObject(
 				object: $invitation,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
 			);
 
 			return true;

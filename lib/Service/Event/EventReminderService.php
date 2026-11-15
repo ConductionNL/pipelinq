@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service\Event;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\EventReminderServiceInterface;
 use OCA\Pipelinq\Service\CallerObjectReader;
@@ -128,9 +130,13 @@ class EventReminderService implements EventReminderServiceInterface
         try {
             $this->objectService->saveObject(
                 object: array_merge($event, ['reminderSentAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM)]),
-                register: $register,
-                schema: $schema,
-                uuid: $eventId,
+                options: new ObjectSaveOptions(
+                	target: new ObjectFindTarget(
+	                		register: $register,
+	                		schema: $schema
+	                	),
+                	uuid: $eventId
+                )
             );
         } catch (Throwable $e) {
             throw new RuntimeException('event_not_saved: '.$e->getMessage(), 0, $e);
@@ -160,6 +166,19 @@ class EventReminderService implements EventReminderServiceInterface
             ]
         );
 
+        return $this->registrationArrays(rows: $rows);
+
+    }//end confirmedRegistrations()
+
+    /**
+     * The registrations as arrays, serialising objects and dropping anything else.
+     *
+     * @param array<mixed> $rows The registrations found.
+     *
+     * @return list<array<string, mixed>> The registrations.
+     */
+    private function registrationArrays(array $rows): array
+    {
         $out = [];
         foreach ($rows as $row) {
             $data = $row;
@@ -174,7 +193,7 @@ class EventReminderService implements EventReminderServiceInterface
 
         return $out;
 
-    }//end confirmedRegistrations()
+    }//end registrationArrays()
 
     /**
      * Mail one registration.

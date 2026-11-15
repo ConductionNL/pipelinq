@@ -63,6 +63,7 @@ final class PartyReferences implements PartyReferencesInterface {
 		['socialConnection', 'clientId'],
 		['surveyResponse', 'clientRef'],
 		['ticket', 'client'],
+		['touchpoint', 'clientId'],
 	];
 
 	/**

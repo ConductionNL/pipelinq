@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\RejectedTokenCount;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
@@ -69,6 +70,8 @@ use Throwable;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class ListPublicController extends Controller {
+	use RejectedTokenCount;
+
 	/**
 	 * Brute-force throttler action for rejected list tokens.
 	 *
@@ -139,6 +142,17 @@ class ListPublicController extends Controller {
 			return new JSONResponse(['error' => self::GENERIC_REFUSAL], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->subscribeAnswer(result: $result);
+	}//end subscribe()
+
+	/**
+	 * The answer to a signup: 404 for an unusable list, 400 for a malformed address, else 202.
+	 *
+	 * @param array<string, mixed> $result The subscription service's result.
+	 *
+	 * @return JSONResponse 202, 400 or 404.
+	 */
+	private function subscribeAnswer(array $result): JSONResponse {
 		if ($result['status'] === 'not-found') {
 			return new JSONResponse(['error' => self::GENERIC_REFUSAL], Http::STATUS_NOT_FOUND);
 		}
@@ -154,7 +168,7 @@ class ListPublicController extends Controller {
 			['message' => $this->l10n->t('Check your inbox. We sent you a link to confirm.')],
 			Http::STATUS_ACCEPTED
 		);
-	}//end subscribe()
+	}//end subscribeAnswer()
 
 	/**
 	 * GET /api/lists/confirm/{token} — spend a confirmation link.
@@ -188,10 +202,12 @@ class ListPublicController extends Controller {
 
 		$listName = (string)(($result['list']['name'] ?? ''));
 		return $this->page(
-			title: $this->l10n->t('You are subscribed'),
-			heading: $this->l10n->t('You are subscribed'),
-			body: $this->l10n->t('You will receive %s from now on. Every message carries a link to stop.', [$listName]),
-			form: '',
+			text: new ListPageText(
+				title: $this->l10n->t('You are subscribed'),
+				heading: $this->l10n->t('You are subscribed'),
+				body: $this->l10n->t('You will receive %s from now on. Every message carries a link to stop.', [$listName]),
+				form: '',
+			)
 		);
 	}//end confirm()
 
@@ -237,10 +253,12 @@ class ListPublicController extends Controller {
 			. '</form>';
 
 		return $this->page(
-			title: $this->l10n->t('Unsubscribe'),
-			heading: $this->l10n->t('Unsubscribe from %s', [$listName]),
-			body: $this->l10n->t('You are about to stop receiving this list. Nothing has changed yet.'),
-			form: $form,
+			text: new ListPageText(
+				title: $this->l10n->t('Unsubscribe'),
+				heading: $this->l10n->t('Unsubscribe from %s', [$listName]),
+				body: $this->l10n->t('You are about to stop receiving this list. Nothing has changed yet.'),
+				form: $form,
+			)
 		);
 	}//end unsubscribePage()
 
@@ -274,6 +292,17 @@ class ListPublicController extends Controller {
 			$this->logger->warning('ListPublicController.unsubscribe: failed', ['exception' => $e->getMessage()]);
 		}
 
+		return $this->unsubscribeAnswer(result: $result);
+	}//end unsubscribe()
+
+	/**
+	 * The answer to a one-click unsubscribe: 200 with the count, else the token is throttled and 410.
+	 *
+	 * @param array<string, mixed> $result The subscription service's result.
+	 *
+	 * @return JSONResponse 200 on success, 410 otherwise.
+	 */
+	private function unsubscribeAnswer(array $result): JSONResponse {
 		if ($result['status'] !== 'unsubscribed') {
 			$this->registerRejectedToken();
 			return new JSONResponse(['error' => self::GENERIC_REFUSAL], Http::STATUS_GONE);
@@ -286,7 +315,7 @@ class ListPublicController extends Controller {
 			],
 			Http::STATUS_OK
 		);
-	}//end unsubscribe()
+	}//end unsubscribeAnswer()
 
 	/**
 	 * GET /api/lists/preferences/{token} — the preference centre.
@@ -356,37 +385,18 @@ class ListPublicController extends Controller {
 	}//end savePreferences()
 
 	/**
-	 * Count a rejected token with the brute-force throttler.
-	 *
-	 * The half that COUNTS; `#[BruteForceProtection]` is the half that
-	 * ENFORCES. Either alone is inert — see ADR-082.
-	 *
-	 * @return void
-	 */
-	private function registerRejectedToken(): void {
-		try {
-			$this->throttler->registerAttempt(
-				action: self::THROTTLE_ACTION,
-				ip: $this->request->getRemoteAddress()
-			);
-		} catch (Throwable $throttlerFailure) {
-			$this->logger->warning(
-				'ListPublicController: registerAttempt failed: ' . $throttlerFailure->getMessage()
-			);
-		}
-	}//end registerRejectedToken()
-
-	/**
 	 * Render the shared refusal page.
 	 *
 	 * @return DataDisplayResponse A 410 page.
 	 */
 	private function gonePage(): DataDisplayResponse {
 		return $this->page(
-			title: $this->l10n->t('Link expired'),
-			heading: $this->l10n->t('This link no longer works'),
-			body: $this->l10n->t('It may have been used already, or it may be too old. Ask for a new one from any message you received.'),
-			form: '',
+			text: new ListPageText(
+				title: $this->l10n->t('Link expired'),
+				heading: $this->l10n->t('This link no longer works'),
+				body: $this->l10n->t('It may have been used already, or it may be too old. Ask for a new one from any message you received.'),
+				form: '',
+			),
 			status: Http::STATUS_GONE,
 		);
 	}//end gonePage()
@@ -400,25 +410,33 @@ class ListPublicController extends Controller {
 	 * button. Every interpolated value is escaped, the document declares its
 	 * language, and it carries no script.
 	 *
-	 * @param string $title The document title.
-	 * @param string $heading The visible heading.
-	 * @param string $body One sentence of explanation.
-	 * @param string $form Pre-escaped markup for the action, or an empty
-	 *                     string for a page with nothing to do.
-	 * @param int $status HTTP status.
+	 * @param ListPageText $text   The title, heading, explanation and action markup.
+	 * @param int          $status HTTP status.
 	 *
 	 * @phpstan-param Http::STATUS_OK|Http::STATUS_GONE $status
 	 *
 	 * @return DataDisplayResponse The rendered page.
 	 */
-	private function page(
-		string $title,
-		string $heading,
-		string $body,
-		string $form,
-		int $status = Http::STATUS_OK,
-	): DataDisplayResponse {
-		$html = '<!DOCTYPE html><html lang="' . $this->escape(value: $this->l10n->getLanguageCode()) . '">'
+	private function page(ListPageText $text, int $status = Http::STATUS_OK): DataDisplayResponse {
+		$html = $this->documentHead(title: $text->title)
+			. '<body>'
+			. '<h1>' . $this->escape(value: $text->heading) . '</h1>'
+			. '<p>' . $this->escape(value: $text->body) . '</p>'
+			. $text->form
+			. '</body></html>';
+
+		return self::htmlResponse(html: $html, status: $status);
+	}//end page()
+
+	/**
+	 * The document up to and including its head: language, robots meta, title and style.
+	 *
+	 * @param string $title The document title.
+	 *
+	 * @return string The markup.
+	 */
+	private function documentHead(string $title): string {
+		return '<!DOCTYPE html><html lang="' . $this->escape(value: $this->l10n->getLanguageCode()) . '">'
 			. '<head><meta charset="utf-8">'
 			. '<meta name="viewport" content="width=device-width, initial-scale=1">'
 			. '<meta name="robots" content="noindex, nofollow">'
@@ -426,12 +444,20 @@ class ListPublicController extends Controller {
 			. '<style>body{font-family:system-ui,sans-serif;margin:0;padding:3rem 1.5rem;max-width:34rem}'
 			. 'h1{font-size:1.4rem}button{font:inherit;padding:.6rem 1.2rem;margin:1rem 0}'
 			. 'label{display:block;font-size:.9rem}</style>'
-			. '</head><body>'
-			. '<h1>' . $this->escape(value: $heading) . '</h1>'
-			. '<p>' . $this->escape(value: $body) . '</p>'
-			. $form
-			. '</body></html>';
+			. '</head>';
+	}//end documentHead()
 
+	/**
+	 * A page response that is never cached or indexed.
+	 *
+	 * @param string $html   The page.
+	 * @param int    $status HTTP status.
+	 *
+	 * @phpstan-param Http::STATUS_OK|Http::STATUS_GONE $status
+	 *
+	 * @return DataDisplayResponse The response.
+	 */
+	private static function htmlResponse(string $html, int $status): DataDisplayResponse {
 		return new DataDisplayResponse(
 			$html,
 			$status,
@@ -441,7 +467,7 @@ class ListPublicController extends Controller {
 				'X-Robots-Tag' => 'noindex, nofollow',
 			]
 		);
-	}//end page()
+	}//end htmlResponse()
 
 	/**
 	 * Escape a value for HTML text and attribute context.

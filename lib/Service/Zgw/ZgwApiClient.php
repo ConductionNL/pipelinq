@@ -56,6 +56,8 @@ use Throwable;
  * Base transport for all ZGW component calls.
  *
  * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-001
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class ZgwApiClient implements ZgwApiClientInterface {
 	/**
@@ -248,7 +250,7 @@ class ZgwApiClient implements ZgwApiClientInterface {
 				default => throw new ZgwException('ZGW: unsupported HTTP method "' . $method . '"'),
 			};
 		} catch (Throwable $e) {
-			$this->translateTransportError(error: $e, url: $url, method: $method);
+			$this->translateTransportError(error: $e, call: ['method' => $method, 'url' => $url]);
 			// TranslateTransportError always throws; this is unreachable but keeps static analysis happy.
 			throw new ZgwException('ZGW: transport error', 0, $e);
 		}
@@ -300,9 +302,8 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	/**
 	 * Translate a transport-level exception into a domain error.
 	 *
-	 * @param Throwable $error The underlying exception.
-	 * @param string $url Target URL (for the error message).
-	 * @param string $method HTTP method (for the error message).
+	 * @param Throwable                          $error The underlying exception.
+	 * @param array{method: string, url: string} $call  HTTP method and target URL (for the error message).
 	 *
 	 * @return void
 	 *
@@ -311,7 +312,8 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	 * @throws OptimisticLockException
 	 * @throws ZgwException
 	 */
-	private function translateTransportError(Throwable $error, string $url, string $method): void {
+	private function translateTransportError(Throwable $error, array $call): void {
+		['method' => $method, 'url' => $url] = $call;
 		[$status, $body] = $this->extractErrorContext(error: $error);
 		$message = $error->getMessage();
 
@@ -320,14 +322,7 @@ class ZgwApiClient implements ZgwApiClientInterface {
 			['method' => $method, 'url' => $url, 'status' => $status, 'msg' => $message]
 		);
 
-		if ($status === 401 || $status === 403) {
-			if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
-				throw new ClockSkewException(
-					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
-					observedTime: time()
-				);
-			}
-		}
+		$this->throwIfClockSkew(status: $status, context: ['body' => $body, 'message' => $message, 'url' => $url]);
 
 		if ($status === 404) {
 			throw new ZgwResourceNotFoundException($url);
@@ -349,6 +344,28 @@ class ZgwApiClient implements ZgwApiClientInterface {
 			$error
 		);
 	}//end translateTransportError()
+
+	/**
+	 * Throw a ClockSkewException for a 401/403 whose body or message reads as a JWT clock-skew rejection.
+	 *
+	 * @param int                                               $status  The HTTP status.
+	 * @param array{body: string, message: string, url: string} $context The response body, the transport error message
+	 *   and the request URL.
+	 *
+	 * @return void
+	 *
+	 * @throws ClockSkewException On a clock-skew rejection.
+	 */
+	private function throwIfClockSkew(int $status, array $context): void {
+		if ($status === 401 || $status === 403) {
+			if (self::looksLikeClockSkew(text: $context['body']) === true || self::looksLikeClockSkew(text: $context['message']) === true) {
+				throw new ClockSkewException(
+					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $context['url'], $status),
+					observedTime: time()
+				);
+			}
+		}
+	}//end throwIfClockSkew()
 
 	/**
 	 * Extract the HTTP status and response body from a transport exception.
@@ -437,14 +454,23 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public static function encodeJwt(array $header, array $payload, string $secret): string {
-		$segments = [];
-		$segments[] = self::base64UrlEncode(input: (string)json_encode($header, JSON_UNESCAPED_SLASHES));
-		$segments[] = self::base64UrlEncode(input: (string)json_encode($payload, JSON_UNESCAPED_SLASHES));
-		$signing = implode('.', $segments);
-		$signature = hash_hmac('sha256', $signing, $secret, true);
-		$segments[] = self::base64UrlEncode(input: $signature);
-		return implode('.', $segments);
+		$signing = self::base64UrlEncode(input: (string)json_encode($header, JSON_UNESCAPED_SLASHES))
+			. '.' . self::base64UrlEncode(input: (string)json_encode($payload, JSON_UNESCAPED_SLASHES));
+		return self::signedJwt(signing: $signing, secret: $secret);
 	}//end encodeJwt()
+
+	/**
+	 * The signing input with its HS256 signature appended.
+	 *
+	 * @param string $signing The encoded header and payload, dot-separated.
+	 * @param string $secret  HS256 secret.
+	 *
+	 * @return string Compact JWT.
+	 */
+	private static function signedJwt(string $signing, string $secret): string {
+		$signature = hash_hmac('sha256', $signing, $secret, true);
+		return $signing . '.' . self::base64UrlEncode(input: $signature);
+	}//end signedJwt()
 
 	/**
 	 * Decode a JWT segment (header or payload only).

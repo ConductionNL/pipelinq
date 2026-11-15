@@ -180,12 +180,13 @@ class ReceiptService {
 		$width = $this->layoutWidth(template: $template, transaction: $transaction);
 		$invoice = $this->renderAsInvoice(transaction: $transaction, template: $template);
 		$context = $this->buildContext(transaction: $transaction);
+		$layout = new ReceiptLayout(width: $width, invoice: $invoice);
 
 		$lines = array_merge(
-			$this->headerLines(context: $context, width: $width, invoice: $invoice),
-			$this->bodyLines(context: $context, width: $width),
-			$this->summaryLines(context: $context, width: $width, invoice: $invoice),
-			$this->footerLines(context: $context, width: $width, invoice: $invoice)
+			$this->headerLines(context: $context, layout: $layout),
+			$this->bodyLines(context: $context, layout: $layout),
+			$this->summaryLines(context: $context, layout: $layout),
+			$this->footerLines(context: $context, layout: $layout)
 		);
 
 		return implode("\n", $lines) . "\n";
@@ -213,35 +214,34 @@ class ReceiptService {
 	 * Build the header lines (company, title, invoice no., reference, date).
 	 *
 	 * @param array<string, mixed> $context The render context.
-	 * @param int $width The layout width.
-	 * @param bool $invoice Whether this is an invoice.
+	 * @param ReceiptLayout $layout The layout width and variant.
 	 *
 	 * @return array<int, string> The header lines.
 	 */
-	private function headerLines(array $context, int $width, bool $invoice): array {
+	private function headerLines(array $context, ReceiptLayout $layout): array {
 		$lines = [];
-		$lines[] = $this->center(text: $context['company']['name'], width: $width);
+		$lines[] = $this->center(text: $context['company']['name'], width: $layout->width);
 		if ($context['company']['address'] !== '') {
-			$lines[] = $this->center(text: $context['company']['address'], width: $width);
+			$lines[] = $this->center(text: $context['company']['address'], width: $layout->width);
 		}
 
 		if ($context['company']['phone'] !== '') {
-			$lines[] = $this->center(text: 'Tel: ' . $context['company']['phone'], width: $width);
+			$lines[] = $this->center(text: 'Tel: ' . $context['company']['phone'], width: $layout->width);
 		}
 
-		$lines[] = str_repeat('=', $width);
-		$lines[] = $this->center(text: $this->headingLabel(invoice: $invoice), width: $width);
+		$lines[] = str_repeat('=', $layout->width);
+		$lines[] = $this->center(text: $this->headingLabel(invoice: $layout->invoice), width: $layout->width);
 
-		if ($invoice === true && $context['invoiceNumber'] !== '') {
+		if ($layout->invoice === true && $context['invoiceNumber'] !== '') {
 			$lines[] = $this->center(
 				text: $this->l10n->t('Invoice no.') . ' ' . $context['invoiceNumber'],
-				width: $width
+				width: $layout->width
 			);
 		}
 
 		$lines[] = $context['reference'];
 		$lines[] = $context['date'];
-		$lines[] = str_repeat('-', $width);
+		$lines[] = str_repeat('-', $layout->width);
 
 		return $lines;
 	}//end headerLines()
@@ -250,14 +250,14 @@ class ReceiptService {
 	 * Build the line-item rows.
 	 *
 	 * @param array<string, mixed> $context The render context.
-	 * @param int $width The layout width.
+	 * @param ReceiptLayout $layout The layout width and variant.
 	 *
 	 * @return array<int, string> The line rows.
 	 */
-	private function bodyLines(array $context, int $width): array {
+	private function bodyLines(array $context, ReceiptLayout $layout): array {
 		$lines = [];
 		foreach ($context['lines'] as $line) {
-			$lines[] = $this->lineRow(line: $line, width: $width);
+			$lines[] = $this->lineRow(line: $line, layout: $layout);
 		}
 
 		return $lines;
@@ -267,30 +267,28 @@ class ReceiptService {
 	 * Build the totals / BTW summary lines.
 	 *
 	 * @param array<string, mixed> $context The render context.
-	 * @param int $width The layout width.
-	 * @param bool $invoice Whether this is an invoice.
+	 * @param ReceiptLayout $layout The layout width and variant.
 	 *
 	 * @return array<int, string> The summary lines.
 	 */
-	private function summaryLines(array $context, int $width, bool $invoice): array {
+	private function summaryLines(array $context, ReceiptLayout $layout): array {
 		$lines = [];
-		$lines[] = str_repeat('-', $width);
-		$lines[] = $this->amountRow(label: $this->l10n->t('Subtotal'), amount: $context['subtotal'], width: $width);
+		$lines[] = str_repeat('-', $layout->width);
+		$lines[] = $layout->row(left: $this->l10n->t('Subtotal'), right: $this->euro(amount: $context['subtotal']));
 		if ($context['discountTotal'] > 0) {
-			$lines[] = $this->amountRow(
-				label: $this->l10n->t('Discount'),
-				amount: -$context['discountTotal'],
-				width: $width
+			$lines[] = $layout->row(
+				left: $this->l10n->t('Discount'),
+				right: $this->euro(amount: -$context['discountTotal'])
 			);
 		}
 
-		foreach ($this->taxLines(context: $context, width: $width, invoice: $invoice) as $taxLine) {
+		foreach ($this->taxLines(context: $context, layout: $layout) as $taxLine) {
 			$lines[] = $taxLine;
 		}
 
-		$lines[] = str_repeat('=', $width);
-		$lines[] = $this->amountRow(label: $this->l10n->t('Total'), amount: $context['total'], width: $width);
-		$lines[] = str_repeat('=', $width);
+		$lines[] = str_repeat('=', $layout->width);
+		$lines[] = $layout->row(left: $this->l10n->t('Total'), right: $this->euro(amount: $context['total']));
+		$lines[] = str_repeat('=', $layout->width);
 
 		return $lines;
 	}//end summaryLines()
@@ -299,19 +297,18 @@ class ReceiptService {
 	 * Build the per-rate (invoice) or aggregate (receipt) BTW lines.
 	 *
 	 * @param array<string, mixed> $context The render context.
-	 * @param int $width The layout width.
-	 * @param bool $invoice Whether this is an invoice.
+	 * @param ReceiptLayout $layout The layout width and variant.
 	 *
 	 * @return array<int, string> The tax lines.
 	 */
-	private function taxLines(array $context, int $width, bool $invoice): array {
-		if ($invoice === false) {
-			return [$this->amountRow(label: $this->l10n->t('VAT'), amount: $context['totalTax'], width: $width)];
+	private function taxLines(array $context, ReceiptLayout $layout): array {
+		if ($layout->invoice === false) {
+			return [$layout->row(left: $this->l10n->t('VAT'), right: $this->euro(amount: $context['totalTax']))];
 		}
 
 		$lines = [];
 		foreach ($context['btwLines'] as $vat) {
-			$lines[] = $this->amountRow(label: $vat['label'], amount: $vat['tax'], width: $width);
+			$lines[] = $layout->row(left: $vat['label'], right: $this->euro(amount: $vat['tax']));
 		}
 
 		return $lines;
@@ -321,14 +318,13 @@ class ReceiptService {
 	 * Build the footer lines (compliance footer for invoices, thanks otherwise).
 	 *
 	 * @param array<string, mixed> $context The render context.
-	 * @param int $width The layout width.
-	 * @param bool $invoice Whether this is an invoice.
+	 * @param ReceiptLayout $layout The layout width and variant.
 	 *
 	 * @return array<int, string> The footer lines.
 	 */
-	private function footerLines(array $context, int $width, bool $invoice): array {
-		if ($invoice === false) {
-			return ['', $this->center(text: $this->l10n->t('Thank you for your purchase'), width: $width)];
+	private function footerLines(array $context, ReceiptLayout $layout): array {
+		if ($layout->invoice === false) {
+			return ['', $this->center(text: $this->l10n->t('Thank you for your purchase'), width: $layout->width)];
 		}
 
 		return array_merge([''], $this->complianceFooter(context: $context));
@@ -538,39 +534,28 @@ class ReceiptService {
 	 * Render a single line item row.
 	 *
 	 * @param array<string, mixed> $line The line context.
-	 * @param int $width The layout width.
+	 * @param ReceiptLayout $layout The layout width and variant.
 	 *
 	 * @return string The row.
 	 */
-	private function lineRow(array $line, int $width): string {
+	private function lineRow(array $line, ReceiptLayout $layout): string {
 		$qty = rtrim(rtrim(number_format((float)$line['quantity'], 2, '.', ''), '0'), '.');
 		$label = (string)$line['description'] . ' x' . $qty;
 		$price = $this->money(value: (float)$line['lineTotal']);
 
-		return $this->amountRow(label: $label, amount: (float)$line['lineTotal'], width: $width, prefix: '', display: $price);
+		return $layout->row(left: $label, right: $price);
 	}//end lineRow()
 
 	/**
-	 * Render a label + right-aligned euro amount on a single line.
+	 * A euro amount as the receipt shows it.
 	 *
-	 * @param string $label The left label.
 	 * @param float $amount The amount.
-	 * @param int $width The layout width.
-	 * @param string $prefix An optional label prefix.
-	 * @param string|null $display An optional pre-formatted amount string.
 	 *
-	 * @return string The row.
+	 * @return string The amount with its euro sign.
 	 */
-	private function amountRow(string $label, float $amount, int $width, string $prefix = '', ?string $display = null): string {
-		$right = $display ?? ('€' . $this->money(value: $amount));
-		$left = $prefix . $label;
-		$space = ($width - mb_strlen($left) - mb_strlen($right));
-		if ($space < 1) {
-			$space = 1;
-		}
-
-		return $left . str_repeat(' ', $space) . $right;
-	}//end amountRow()
+	private function euro(float $amount): string {
+		return '€' . $this->money(value: $amount);
+	}//end euro()
 
 	/**
 	 * Centre a string within the layout width.

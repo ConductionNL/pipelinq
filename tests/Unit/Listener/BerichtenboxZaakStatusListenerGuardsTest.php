@@ -35,6 +35,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Only a status change into a trigger status, on the configured case schema,
@@ -223,7 +224,13 @@ class BerichtenboxZaakStatusListenerGuardsTest extends TestCase {
 		$row = $this->entity(data: ['bsn' => '999993653']);
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->expects($this->once())->method('find')
-			->with('cm-1', [], false, 'reg-1', 'sch-ticket')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'cm-1',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'reg-1',
+				'schema' => 'sch-ticket',
+			]))
 			->willReturn($row);
 		$this->tickets->method('isConfigured')->willReturn(true);
 		$this->tickets->method('getObjectService')->willReturn($objects);

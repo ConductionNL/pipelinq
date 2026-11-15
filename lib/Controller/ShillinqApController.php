@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ShillinqApServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectFind;
+use OCA\Pipelinq\Util\ContainerObjectSave;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,6 +47,23 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
 class ShillinqApController extends Controller {
+	use ContainerObjectFind;
+	use ContainerObjectSave;
+
+	/**
+	 * Log line when reading the object fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to load expense for AP retry';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist expense AP retry status';
+
 	/**
 	 * Constructor.
 	 *
@@ -84,17 +103,48 @@ class ShillinqApController extends Controller {
 			return new JSONResponse(['error' => 'Shillinq is not installed.'], 400);
 		}
 
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
-		if ($register === '' || $schema === '' || $id === '') {
+		$scope = $this->expenseScope(id: $id);
+		if ($scope === null) {
 			return new JSONResponse(['error' => 'Expense schema configuration is incomplete.'], 400);
 		}
 
-		$expense = $this->fetchExpense(register: $register, schema: $schema, uuid: $id);
+		[$register, $schema] = $scope;
+		$expense = $this->findObjectData(register: $register, schema: $schema, uuid: $id);
 		if ($expense === null) {
 			return new JSONResponse(['error' => 'Expense not found.'], 404);
 		}
 
+		return $this->redispatch(register: $register, schema: $schema, id: $id, expense: $expense);
+	}//end retry()
+
+	/**
+	 * The register and expense schema, or null when either or the id is missing.
+	 *
+	 * @param string $id The expense UUID.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function expenseScope(string $id): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'expense_schema', '');
+		if ($register === '' || $schema === '' || $id === '') {
+			return null;
+		}
+
+		return [$register, $schema];
+	}//end expenseScope()
+
+	/**
+	 * Re-dispatch a failed expense and record the outcome.
+	 *
+	 * @param string               $register The register id.
+	 * @param string               $schema   The schema id.
+	 * @param string               $id       The expense UUID.
+	 * @param array<string, mixed> $expense  The expense data.
+	 *
+	 * @return JSONResponse
+	 */
+	private function redispatch(string $register, string $schema, string $id, array $expense): JSONResponse {
 		// Only failed entries may be retried (REQ-AP-003 Scenario 11).
 		if (($expense['apSyncStatus'] ?? null) !== 'failed') {
 			return new JSONResponse(
@@ -105,8 +155,24 @@ class ShillinqApController extends Controller {
 
 		// Reset to pending before re-dispatch (REQ-AP-003 Scenario 11).
 		$expense['apSyncStatus'] = 'pending';
-		$this->persist(register: $register, schema: $schema, uuid: $id, data: $expense);
+		$this->saveObjectData(register: $register, schema: $schema, uuid: $id, data: $expense);
 
+		$outcome = $this->dispatchExpense(expense: $expense, id: $id);
+		$expense = $this->withRetryOutcome(expense: $expense, outcome: $outcome);
+		$this->saveObjectData(register: $register, schema: $schema, uuid: $id, data: $expense);
+
+		return $this->retryResponse(expense: $expense);
+	}//end redispatch()
+
+	/**
+	 * Send the expense to the Shillinq AP webhook.
+	 *
+	 * @param array<string, mixed> $expense The expense data.
+	 * @param string               $id      The expense UUID.
+	 *
+	 * @return string 'synced' when the dispatch succeeded, otherwise 'failed'.
+	 */
+	private function dispatchExpense(array $expense, string $id): string {
 		$approvedBy = (string)($expense['approvedBy'] ?? '');
 		$approvedAt = (string)($expense['approvedAt'] ?? $this->apService->now());
 
@@ -117,10 +183,38 @@ class ShillinqApController extends Controller {
 		);
 
 		if ($success === true) {
-			$expense['apSyncStatus'] = 'synced';
-			$expense['apSyncedAt'] = $this->apService->now();
-			$this->persist(register: $register, schema: $schema, uuid: $id, data: $expense);
+			return 'synced';
+		}
 
+		return 'failed';
+	}//end dispatchExpense()
+
+	/**
+	 * The expense with its AP sync status after the dispatch.
+	 *
+	 * @param array<string, mixed> $expense The expense data.
+	 * @param string               $outcome 'synced' or 'failed'.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withRetryOutcome(array $expense, string $outcome): array {
+		$expense['apSyncStatus'] = $outcome;
+		if ($outcome === 'synced') {
+			$expense['apSyncedAt'] = $this->apService->now();
+		}
+
+		return $expense;
+	}//end withRetryOutcome()
+
+	/**
+	 * The response for a finished retry.
+	 *
+	 * @param array<string, mixed> $expense The expense data, with its outcome.
+	 *
+	 * @return JSONResponse
+	 */
+	private function retryResponse(array $expense): JSONResponse {
+		if ($expense['apSyncStatus'] === 'synced') {
 			return new JSONResponse(
 				[
 					'apSyncStatus' => 'synced',
@@ -129,64 +223,6 @@ class ShillinqApController extends Controller {
 			);
 		}
 
-		$expense['apSyncStatus'] = 'failed';
-		$this->persist(register: $register, schema: $schema, uuid: $id, data: $expense);
-
 		return new JSONResponse(['apSyncStatus' => 'failed', 'error' => 'AP dispatch failed.'], 502);
-	}//end retry()
-
-	/**
-	 * Fetch an expense's data by UUID.
-	 *
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param string $uuid The expense UUID.
-	 *
-	 * @return array<string, mixed>|null The expense data, or null when not found.
-	 */
-	private function fetchExpense(string $register, string $schema, string $uuid): ?array {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to load expense for AP retry',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetchExpense()
-
-	/**
-	 * Persist the mutated expense data back to OpenRegister.
-	 *
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
-	 * @param string $uuid The expense UUID.
-	 * @param array<string, mixed> $data The mutated expense data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $register, string $schema, string $uuid, array $data): void {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist expense AP retry status',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
+	}//end retryResponse()
 }//end class

@@ -39,6 +39,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\QuestionAnsweredNoticeInterface;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
@@ -158,8 +160,10 @@ class QuestionAnsweredNotice implements QuestionAnsweredNoticeInterface {
 			$this->objectService->runAsSystem(
 				fn (): mixed => $this->objectService->saveObject(
 					object: $message,
-					register: self::PORTAL_MESSAGE_REGISTER,
-					schema: self::PORTAL_MESSAGE_SCHEMA,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(
+							register: self::PORTAL_MESSAGE_REGISTER,
+							schema: self::PORTAL_MESSAGE_SCHEMA
+						)),
 					_rbac: false,
 					_multitenancy: false
 				)

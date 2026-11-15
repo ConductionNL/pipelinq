@@ -28,6 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\CallReview;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CallTranscriptionServiceInterface;
 use OCA\Pipelinq\Service\TicketService;
@@ -128,14 +131,49 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 	 */
 	private function outcome(array $ticket, DateTimeImmutable $now): array {
 		$url = trim((string) ($ticket['recording_url'] ?? ''));
+		$blocked = $this->blockedStatus(ticket: $ticket, now: $now);
+		if ($blocked !== null) {
+			return ['transcriptStatus' => $blocked];
+		}
+
+		$transcript = $this->transcribeRecording(url: $url, ticket: $ticket);
+		if ($transcript === null) {
+			return ['transcriptStatus' => self::STATUS_FAILED];
+		}
+
+		return $this->withSummary(fields: ['transcript' => $transcript, 'transcriptStatus' => self::STATUS_DONE], ticket: $ticket);
+	}//end outcome()
+
+	/**
+	 * The status for a call that cannot be transcribed (expired or no speech-to-text), else null.
+	 *
+	 * @param array<string,mixed> $ticket The contact moment, with its recording URL.
+	 * @param DateTimeImmutable   $now    The moment to judge the retention at.
+	 *
+	 * @return string|null
+	 */
+	private function blockedStatus(array $ticket, DateTimeImmutable $now): string|null {
+		$url = trim((string) ($ticket['recording_url'] ?? ''));
 		if ($url === '' || $this->expired(ticket: $ticket, now: $now) === true) {
-			return ['transcriptStatus' => self::STATUS_EXPIRED];
+			return self::STATUS_EXPIRED;
 		}
 
 		if (in_array(self::TASK_TYPE, $this->taskProcessing->getAvailableTaskTypeIds(), true) === false) {
-			return ['transcriptStatus' => self::STATUS_UNAVAILABLE];
+			return self::STATUS_UNAVAILABLE;
 		}
 
+		return null;
+	}//end blockedStatus()
+
+	/**
+	 * Download the recording and turn it into text; null (logged) when that fails.
+	 *
+	 * @param string              $url    The recording URL.
+	 * @param array<string,mixed> $ticket The contact moment.
+	 *
+	 * @return string|null The transcript.
+	 */
+	private function transcribeRecording(string $url, array $ticket): string|null {
 		$file = null;
 		try {
 			$file       = $this->download(url: $url, ticketId: (string) ($ticket['id'] ?? ''));
@@ -145,19 +183,30 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 				'CallTranscriptionService: the call was not transcribed',
 				['ticket' => ($ticket['id'] ?? ''), 'exception' => $e->getMessage()]
 			);
-			return ['transcriptStatus' => self::STATUS_FAILED];
+			return null;
 		} finally {
 			$this->discard(file: $file);
 		}
 
-		$fields = ['transcript' => $transcript, 'transcriptStatus' => self::STATUS_DONE];
-		$summary = $this->summaryWriter->summarise(transcript: $transcript, userId: ($ticket['assignee'] ?? null));
+		return $transcript;
+	}//end transcribeRecording()
+
+	/**
+	 * Add the call summary when one was written and the ticket has none yet.
+	 *
+	 * @param array<string,string> $fields The transcript fields, the transcript included.
+	 * @param array<string,mixed>  $ticket The contact moment.
+	 *
+	 * @return array<string,string>
+	 */
+	private function withSummary(array $fields, array $ticket): array {
+		$summary = $this->summaryWriter->summarise(transcript: $fields['transcript'], userId: ($ticket['assignee'] ?? null));
 		if ($summary !== '' && trim((string) ($ticket['callSummary'] ?? '')) === '') {
 			$fields['callSummary'] = $summary;
 		}
 
 		return $fields;
-	}//end outcome()
+	}//end withSummary()
 
 	/**
 	 * Whether the platform has already deleted the recording.
@@ -275,10 +324,12 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 		try {
 			$found = $this->ticketService->getObjectService()->find(
 				id: $ticketId,
-				register: $this->ticketService->getRegisterId(),
-				schema: $this->ticketService->getSchemaId(),
+				options: new ObjectFindOptions(
+					register: $this->ticketService->getRegisterId(),
+					schema: $this->ticketService->getSchemaId()
+				),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('CallTranscriptionService: the contact moment could not be read', ['ticket' => $ticketId, 'exception' => $e->getMessage()]);
@@ -309,11 +360,15 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 		try {
 			$this->ticketService->getObjectService()->saveObject(
 				object: $object,
-				register: $this->ticketService->getRegisterId(),
-				schema: $this->ticketService->getSchemaId(),
-				uuid: (string) $ticket['id'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->ticketService->getRegisterId(),
+							schema: $this->ticketService->getSchemaId()
+						),
+					uuid: (string) $ticket['id']
+				),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error('CallTranscriptionService: the transcript could not be stored', ['ticket' => $ticket['id'], 'exception' => $e->getMessage()]);

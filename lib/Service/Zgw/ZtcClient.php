@@ -115,15 +115,10 @@ class ZtcClient implements ZtcClientInterface {
 	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-004
 	 */
 	public function resolveStatustype(array $endpoint, string $caseTypeUrl, string $omschrijving): string {
-		$hit = $this->resolveByOmschrijving(
+		return $this->caseTypeChildUrl(
 			endpoint: $endpoint,
 			lookup: new ZtcLookup(resourceType: self::RESOURCE_STATUSTYPE, omschrijving: $omschrijving, extraQuery: ['caseType' => $caseTypeUrl])
 		);
-		if ($hit === null) {
-			throw new ZaaktypeNotInCatalogusException($omschrijving);
-		}
-
-		return $hit['url'];
 	}//end resolveStatustype()
 
 	/**
@@ -139,16 +134,30 @@ class ZtcClient implements ZtcClientInterface {
 	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-004
 	 */
 	public function resolveRoltype(array $endpoint, string $caseTypeUrl, string $omschrijving): string {
-		$hit = $this->resolveByOmschrijving(
+		return $this->caseTypeChildUrl(
 			endpoint: $endpoint,
 			lookup: new ZtcLookup(resourceType: self::RESOURCE_ROLTYPE, omschrijving: $omschrijving, extraQuery: ['caseType' => $caseTypeUrl])
 		);
+	}//end resolveRoltype()
+
+	/**
+	 * The URL of a type that belongs to a zaaktype, looked up by omschrijving.
+	 *
+	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
+	 * @param ZtcLookup            $lookup   The lookup, scoped to the parent zaaktype.
+	 *
+	 * @return string The type's URL.
+	 *
+	 * @throws ZaaktypeNotInCatalogusException When no type matches.
+	 */
+	private function caseTypeChildUrl(array $endpoint, ZtcLookup $lookup): string {
+		$hit = $this->resolveByOmschrijving(endpoint: $endpoint, lookup: $lookup);
 		if ($hit === null) {
-			throw new ZaaktypeNotInCatalogusException($omschrijving);
+			throw new ZaaktypeNotInCatalogusException($lookup->omschrijving);
 		}
 
 		return $hit['url'];
-	}//end resolveRoltype()
+	}//end caseTypeChildUrl()
 
 	/**
 	 * Resolve a besluittype URL by omschrijving.
@@ -334,12 +343,33 @@ class ZtcClient implements ZtcClientInterface {
 			return null;
 		}
 
+		$response = $this->callZtc(
+			lookup: $lookup,
+			component: ['endpointId' => (string)($endpoint['id'] ?? ''), 'client' => $client, 'url' => $ztcUrl]
+		);
+		if ($response === null) {
+			return null;
+		}
+
+		return self::firstEntry(body: $response['body']);
+	}//end fetchByOmschrijving()
+
+	/**
+	 * Issue the ZTC lookup, or null when it found nothing or failed.
+	 *
+	 * @param ZtcLookup                                                           $lookup    The lookup.
+	 * @param array{endpointId: string, client: array<string, mixed>, url: string} $component The endpoint's id, its client and
+	 *                                                                                        the ZTC component URL.
+	 *
+	 * @return array<string, mixed>|null The response.
+	 */
+	private function callZtc(ZtcLookup $lookup, array $component): array|null {
 		try {
-			$response = $this->api->callComponent(
-				componentUrl: $ztcUrl,
+			return $this->api->callComponent(
+				componentUrl: $component['url'],
 				method: 'GET',
 				path: '/' . $lookup->resourceType,
-				client: $client,
+				client: $component['client'],
 				query: $lookup->query()
 			);
 		} catch (ZgwResourceNotFoundException) {
@@ -347,13 +377,11 @@ class ZtcClient implements ZtcClientInterface {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ZGW ZTC: lookup failed',
-				['endpoint' => (string)($endpoint['id'] ?? ''), 'resource' => $lookup->resourceType, 'om' => $lookup->omschrijving, 'err' => $e->getMessage()]
+				['endpoint' => $component['endpointId'], 'resource' => $lookup->resourceType, 'om' => $lookup->omschrijving, 'err' => $e->getMessage()]
 			);
 			return null;
 		}
-
-		return self::firstEntry(body: $response['body']);
-	}//end fetchByOmschrijving()
+	}//end callZtc()
 
 	/**
 	 * The first entry of a ZTC list answer, when it carries a URL.

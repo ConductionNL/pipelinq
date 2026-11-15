@@ -35,7 +35,11 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\JsonConfigArray;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -53,7 +57,11 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
  */
 class BlastSendJob extends TimedJob implements BlastSendJobInterface {
+	use JsonConfigArray;
 	use PayloadToArray;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use ObjectServiceTarget;
 
 	/**
 	 * Interval in seconds (5 minutes).
@@ -233,16 +241,15 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @return array<int, array<string, mixed>> Sending blasts.
 	 */
 	private function loadSendingBlasts(): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', 'blast');
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(
+			register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', 'pipelinq'),
+			schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', 'blast')
+		);
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
 		return $this->payloadsOf(
 			rows: $this->sendingRows(
@@ -307,17 +314,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @return array<int, array<string, mixed>> Queue entries.
 	 */
 	private function readQueue(): array {
-		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::WEBHOOK_QUEUE_KEY, '');
-		if ($raw === '') {
-			return [];
-		}
-
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		return $decoded;
+		return $this->jsonConfigArray(key: self::WEBHOOK_QUEUE_KEY);
 	}//end readQueue()
 
 	/**
@@ -358,51 +355,6 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @return string Identifier or empty.
 	 */
 	private function extractBlastId(array $blast): string {
-		$identity = $this->firstIdentity(source: $blast);
-		if ($identity !== '') {
-			return $identity;
-		}
-
-		$self = ($blast['@self'] ?? null);
-		if (is_array($self) === true) {
-			return $this->firstIdentity(source: $self);
-		}
-
-		return '';
+		return $this->extractId(payload: $blast);
 	}//end extractBlastId()
-
-	/**
-	 * The first non-empty scalar of `uuid`, `id` and `slug`.
-	 *
-	 * @param array<string, mixed> $source The row or its `@self`.
-	 *
-	 * @return string The identity, or ''.
-	 */
-	private function firstIdentity(array $source): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstIdentity()
-
-	/**
-	 * Lazy-resolve OpenRegister's ObjectService.
-	 *
-	 * @return object|null ObjectService or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastSendJob.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 }//end class

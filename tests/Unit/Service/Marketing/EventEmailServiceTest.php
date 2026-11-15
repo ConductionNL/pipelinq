@@ -250,6 +250,27 @@ class EventEmailServiceTest extends TestCase {
 	}//end testTheReminderOfAnOnlineEventCarriesTheJoinLink()
 
 	/**
+	 * The cancellation notice names the event and its date, with no calendar file and no cancel link.
+	 *
+	 * @return void
+	 */
+	public function testTheEventCancelledNoticeHasNoCalendarFileOrCancelLink(): void {
+		$ok = $this->service()->sendEventCancelled(
+			event: $this->event(),
+			registration: ['uuid' => 'r-1', 'email' => 'anna@example.nl', 'status' => 'confirmed']
+		);
+
+		$this->assertTrue($ok);
+		$this->assertSame(['anna@example.nl'], $this->sent[0]['to']);
+		$this->assertSame('Webinar AI, gemeenten is cancelled', $this->sent[0]['subject']);
+		$this->assertSame(
+			'We are sorry: Webinar AI, gemeenten on 12-11-2026 14:00 is cancelled. Your registration lapses; you do not need to do anything.',
+			$this->sent[0]['body']
+		);
+		$this->assertSame([], $this->sent[0]['attachments']);
+	}//end testTheEventCancelledNoticeHasNoCalendarFileOrCancelLink()
+
+	/**
 	 * The closed notice goes to the person, and nothing goes to an invalid address.
 	 *
 	 * @return void

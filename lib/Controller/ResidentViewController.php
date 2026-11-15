@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
@@ -109,22 +110,7 @@ class ResidentViewController extends Controller {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		$ticket = null;
-		if ($id !== '') {
-			// OpenRegister's facade reads under the caller's register RBAC
-			// (no `_rbac: false`), which is the per-object guard.
-			$objectService = $this->objectService();
-			try {
-				$ticket = $objectService->find(
-					id: $id,
-					register: $this->tickets->getRegisterId(),
-					schema: $this->tickets->getSchemaId()
-				);
-			} catch (Throwable) {
-				$ticket = null;
-			}
-		}
-
+		$ticket = $this->findTicket(id: $id);
 		if ($ticket === null) {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
@@ -133,13 +119,7 @@ class ResidentViewController extends Controller {
 		$expose = ($this->tenants->getConfig(PortalTenantServiceInterface::DEFAULT_TENANT)['exposeAssigneeName'] ?? false) === true;
 
 		$bespoke = $this->requests->previewDetail(ticket: $data, exposeAssigneeName: $expose);
-		$shown   = [];
-		if ($bespoke !== null) {
-			$shown = self::BESPOKE_FIELDS;
-			if ($expose === true) {
-				$shown[] = 'assignee';
-			}
-		}
+		$shown   = $this->bespokeShown(bespoke: $bespoke, expose: $expose);
 
 		$portaliq = $this->portaliqPanel(ticket: $data);
 		if ($portaliq !== null) {
@@ -154,6 +134,55 @@ class ResidentViewController extends Controller {
 			]
 		);
 	}//end show()
+
+	/**
+	 * Read a ticket as the calling user, or null when absent or not readable.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return mixed The ticket entity, or null.
+	 */
+	private function findTicket(string $id): mixed {
+		$ticket = null;
+		if ($id !== '') {
+			// OpenRegister's facade reads under the caller's register RBAC
+			// (no `_rbac: false`), which is the per-object guard.
+			$objectService = $this->objectService();
+			try {
+				$ticket = $objectService->find(
+					id: $id,
+					options: new ObjectFindOptions(
+						register: $this->tickets->getRegisterId(),
+						schema: $this->tickets->getSchemaId()
+					)
+				);
+			} catch (Throwable) {
+				$ticket = null;
+			}
+		}
+
+		return $ticket;
+	}//end findTicket()
+
+	/**
+	 * The fields the bespoke panel shows.
+	 *
+	 * @param mixed $bespoke The bespoke preview, null when there is none.
+	 * @param bool  $expose  Whether the assignee name is exposed.
+	 *
+	 * @return array<int, string>
+	 */
+	private function bespokeShown(mixed $bespoke, bool $expose): array {
+		$shown = [];
+		if ($bespoke !== null) {
+			$shown = self::BESPOKE_FIELDS;
+			if ($expose === true) {
+				$shown[] = 'assignee';
+			}
+		}
+
+		return $shown;
+	}//end bespokeShown()
 
 	/**
 	 * OpenRegister's object facade, which reads under the caller's RBAC.

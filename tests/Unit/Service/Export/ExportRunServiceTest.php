@@ -27,6 +27,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every state transition writes the run it read back under the run schema,
@@ -69,7 +71,11 @@ class ExportRunServiceTest extends TestCase {
 	protected function setUp(): void {
 		$this->objects = $this->createMock(ObjectServiceInterface::class);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], ?string $register = null, ?string $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $this->entity(payload: $object + ['id' => ($uuid ?? 'new-id')]);
 			}
@@ -133,7 +139,11 @@ class ExportRunServiceTest extends TestCase {
 	 */
 	public function testGetRun(): void {
 		$this->objects->expects($this->exactly(3))->method('find')->willReturnCallback(
-			function (string $id, ?array $extend = [], bool $files = false, ?string $register = null, ?string $schema = null): ?ObjectEntityInterface {
+			function (string $id, ?ObjectFindOptions $options = null): ?ObjectEntityInterface {
+				$extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($register !== 'reg' || $schema !== 'runs') {
 					return null;
 				}

@@ -14,7 +14,7 @@
 
 ## 3. Mails and the cancel page
 
-- [ ] 3.1 Add `lib/Service/Marketing/EventEmailService.php`: confirmation with `.ics`, waiting list notice, seat-freed mail, cancellation notice, signed cancel link
+- [x] 3.1 Add `lib/Service/Marketing/EventEmailService.php`: confirmation with `.ics`, waiting list notice, seat-freed mail, cancellation notice, signed cancel link
   - Verify: PHPUnit: the confirmation carries an `.ics` with the event start; a waitlisted attendee gets no `.ics`; the link signature verifies and a changed id does not
 - [x] 3.2 Add `lib/BackgroundJob/EventReminderJob.php` and register it in `appinfo/info.xml`
   - Verify: PHPUnit: an attendee of an event starting in 23.5 hours gets one reminder and `reminderSentAt`; a second run sends nothing
@@ -54,8 +54,29 @@
 - 4.1 and 4.2 are left open: the Events and event pages exist from campaign-events;
   wiring Mark attended, Mark no-show and Add attendee buttons on them to the new
   endpoints, and the Playwright run, are not done in this build.
-- 3.1 is left open: the confirmation with `.ics`, the waiting list notice, the
-  place-freed mail, the closed notice and the signed cancel link are built and
-  tested; the notice to everyone when an event is cancelled is not, because
-  nothing in pipelinq yet acts on an event's status changing to cancelled.
+- 3.1: the notice when an event is cancelled is `EventEmailService::sendEventCancelled()`,
+  sent by `lib/Listener/EventCancelledListener.php` when an event's `signupStatus`
+  turns `cancelled`: in the deferred job, to every `confirmed` and `waitlist`
+  registration, and only if the event is still cancelled when the job runs.
+- 4.2 (second build): Mark attended and Mark no-show are row actions on the
+  event's Registrations tab, through `POST /api/event-registrations/{id}/attendance`,
+  with an Attendance column. The campaign page already shows its events
+  (the Events card from campaign-events), so no separate `CampaignEventSection`
+  is added. Add attendee is not wired: the endpoint exists, but a manifest
+  `api-call` action has no form for the name and address; it needs a dialog.
+  The Playwright run is not done here.
+- 4.1 stays open: the Events and event pages exist (`CampaignEvents`,
+  `CampaignEventDetail`), but the board keeps the Marketing menu to campaigns and
+  newsletters (the note on `CampaignEvents`), so a menu entry needs a decision first.
 - 5.2: the docs build was not run here.
+- 4.2 (third build): Add attendee is the `add-attendee` action in the event
+  page's More menu. It opens the library's `CnActionDialog` with a name
+  (optional) and an email address, and posts them to
+  `POST /api/campaign-events/{id}/registrations`, so a hand-added attendee gets
+  the seat count, the waiting list and the confirmation like a form sign-up.
+  It is shown only while registration is open or full. Vitest
+  `tests/vitest/eventAddAttendee.spec.js` mounts the dialog and checks the post.
+  4.2 stays unchecked only for its Playwright run, which needs a live instance.
+- 4.1 is still open for the same reason as before: the pages exist, and adding
+  a menu entry would go against the board, which keeps the Marketing menu to
+  campaigns and newsletters.

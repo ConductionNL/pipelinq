@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\Marketing\ListPage;
 
 /**
  * MailingListService — CRUD and validation for mailing lists.
@@ -100,20 +101,8 @@ class MailingListService implements MailingListServiceInterface {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
 	 */
 	public function listMailingLists(int $page, int $limit): array {
-		$page = max(1, $page);
-		$limit = min(100, max(1, $limit));
-		$all = $this->loadAll();
-		$total = count($all);
-
-		return [
-			'data' => array_slice($all, (($page - 1) * $limit), $limit),
-			'pagination' => [
-				'page' => $page,
-				'limit' => $limit,
-				'total' => $total,
-				'pages' => $this->computePages(total: $total, limit: $limit),
-			],
-		];
+		$window = new ListPage(page: max(1, $page), limit: min(100, max(1, $limit)));
+		return $window->slice(rows: $this->loadAll());
 	}//end listMailingLists()
 
 	/**
@@ -444,22 +433,6 @@ class MailingListService implements MailingListServiceInterface {
 			id: $id,
 		);
 	}//end save()
-
-	/**
-	 * Compute the page count from a total and a page size.
-	 *
-	 * @param int $total Total row count.
-	 * @param int $limit Page size.
-	 *
-	 * @return int Page count, 0 when the total is 0.
-	 */
-	private function computePages(int $total, int $limit): int {
-		if ($total <= 0 || $limit <= 0) {
-			return 0;
-		}
-
-		return (int)ceil($total / $limit);
-	}//end computePages()
 
 	/**
 	 * Current UTC timestamp in the format the schemas declare.

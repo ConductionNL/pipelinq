@@ -62,11 +62,40 @@ class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 	 * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
 	 */
 	public function payWithPoints(string $accountId, int $points, string $posTransactionId): array {
-		if ($points <= 0 || $posTransactionId === '') {
+		return $this->payFor(spend: ['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId]);
+	}//end payWithPoints()
+
+	/**
+	 * Check a spend, then debit it from an account that holds enough points.
+	 *
+	 * @param array{accountId: string, points: int, posTransactionId: string} $spend The account, the points and the sale.
+	 *
+	 * @return array{points: int, amount: float, currentBalance: int} What was spent and what is left.
+	 *
+	 * @throws RuntimeException When the spend is incomplete, or the account, the point value or the balance does not allow it.
+	 */
+	private function payFor(array $spend): array {
+		if ($spend['points'] <= 0 || $spend['posTransactionId'] === '') {
 			throw new RuntimeException('Give the points to spend and the sale they pay for.');
 		}
 
-		$balance = $this->spendableBalance(accountId: $accountId, points: $points);
+		$balance = $this->spendableBalance(accountId: $spend['accountId'], points: $spend['points']);
+
+		return $this->spend(spend: $spend, balance: $balance);
+	}//end payFor()
+
+	/**
+	 * Debit the points against the sale and answer with what was spent and what is left.
+	 *
+	 * @param array{accountId: string, points: int, posTransactionId: string} $spend   The account, the points and the sale.
+	 * @param array{balance: int, programmeId: string}                         $balance The account's balance and programme.
+	 *
+	 * @return array{points: int, amount: float, currentBalance: int}
+	 *
+	 * @throws RuntimeException When the programme gives points no value.
+	 */
+	private function spend(array $spend, array $balance): array {
+		['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId] = $spend;
 		$pointValue = $this->pointValueOf(programmeId: $balance['programmeId']);
 
 		$source = ['posTransactionId' => $posTransactionId, 'kind' => 'pos-payment'];
@@ -78,7 +107,7 @@ class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 			'amount'         => round($points * $pointValue, 2),
 			'currentBalance' => $balance['balance'] - $points,
 		];
-	}//end payWithPoints()
+	}//end spend()
 
 	/**
 	 * The account's balance and programme, when it holds at least the points.

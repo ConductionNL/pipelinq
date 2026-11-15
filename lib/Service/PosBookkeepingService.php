@@ -55,6 +55,8 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -101,6 +103,8 @@ use Psr\Log\LoggerInterface;
  */
 class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	use CastingPayloadToArray;
+	use PosObjectReadWrite;
+	use InjectedObjectService;
 
 	/**
 	 * CloudEvent type emitted when a Z-report is generated.
@@ -191,24 +195,45 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 			throw new OCSBadRequestException('reportDate moet in YYYY-MM-DD formaat zijn.');
 		}
 
-		$transactions = $this->fetchTransactionsForDate(reportDate: $reportDate, terminalId: $terminalId);
+		$scope = new ZReportScope(reportDate: $reportDate, terminalId: $terminalId);
+		$transactions = $this->fetchTransactionsForDate(scope: $scope);
 
 		$aggregate = $this->aggregateTransactions(transactions: $transactions);
 
+		$report = $this->buildZReport(scope: $scope, aggregate: $aggregate);
+
+		$persisted = $this->saveObjectFor(schemaKey: 'posZReport_schema', id: '', object: $report);
+
+		$this->emitZReportSubmittedEvent(zReport: $persisted);
+
+		$this->logZReportGenerated(scope: $scope, aggregate: $aggregate);
+
+		return $persisted;
+	}//end generateZReport()
+
+	/**
+	 * Build the Z-report object from the day's aggregate.
+	 *
+	 * @param ZReportScope         $scope     The report date and terminal filter.
+	 * @param array<string, mixed> $aggregate The aggregated totals.
+	 *
+	 * @return array<string, mixed> The Z-report object.
+	 */
+	private function buildZReport(ZReportScope $scope, array $aggregate): array {
 		$status = 'draft';
 		if ($aggregate['transactionCount'] > 0) {
 			$status = 'ready';
 		}
 
-		$reference = 'Z-' . $reportDate;
-		if ($terminalId !== null && $terminalId !== '') {
-			$reference .= '-' . strtoupper($terminalId);
+		$reference = 'Z-' . $scope->reportDate;
+		if ($scope->hasTerminal() === true) {
+			$reference .= '-' . strtoupper((string) $scope->terminalId);
 		}
 
-		$report = [
+		return [
 			'reference' => $reference,
-			'reportDate' => $reportDate,
-			'terminalId' => $terminalId,
+			'reportDate' => $scope->reportDate,
+			'terminalId' => $scope->terminalId,
 			'transactionIds' => $aggregate['transactionIds'],
 			'transactionCount' => $aggregate['transactionCount'],
 			'subtotal' => $aggregate['subtotal'],
@@ -222,23 +247,27 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 			'status' => $status,
 			'bookkeepingStatus' => 'pending',
 		];
+	}//end buildZReport()
 
-		$persisted = $this->saveObjectFor(schemaKey: 'posZReport_schema', id: '', object: $report);
-
-		$this->emitZReportSubmittedEvent(zReport: $persisted);
-
+	/**
+	 * Log that a Z-report was generated.
+	 *
+	 * @param ZReportScope         $scope     The report date and terminal filter.
+	 * @param array<string, mixed> $aggregate The aggregated totals.
+	 *
+	 * @return void
+	 */
+	private function logZReportGenerated(ZReportScope $scope, array $aggregate): void {
 		$this->logger->info(
 			'Pipelinq: Z-report generated',
 			[
-				'reportDate' => $reportDate,
-				'terminalId' => $terminalId,
+				'reportDate' => $scope->reportDate,
+				'terminalId' => $scope->terminalId,
 				'transactionCount' => $aggregate['transactionCount'],
 				'total' => $aggregate['total'],
 			]
 		);
-
-		return $persisted;
-	}//end generateZReport()
+	}//end logZReportGenerated()
 
 	/**
 	 * Aggregate a transaction list into the Z-report summary fields.
@@ -266,28 +295,76 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	public function aggregateTransactions(array $transactions): array {
-		$ids = [];
-		$subtotal = 0.0;
-		$discountTotal = 0.0;
-		$totalTax = 0.0;
-		$grandTotal = 0.0;
-		$byRate = [];
-		$byMethod = [];
-		$latestSettled = null;
+		$sums = $this->sumTransactionTotals(transactions: $transactions);
 
+		return [
+			'transactionIds' => $sums['ids'],
+			'transactionCount' => count($sums['ids']),
+			'subtotal' => $this->money(value: $sums['subtotal']),
+			'discountTotal' => $this->money(value: $sums['discountTotal']),
+			'taxBreakdown' => $this->taxBreakdownOf(transactions: $transactions),
+			'totalTax' => $this->money(value: $sums['totalTax']),
+			'total' => $this->money(value: $sums['total']),
+			'paymentMethodBreakdown' => $this->paymentBreakdownOf(transactions: $transactions),
+			'settledAt' => $sums['settledAt'],
+		];
+	}//end aggregateTransactions()
+
+	/**
+	 * Collect the ids, the raw money sums and the latest settled stamp of the transactions.
+	 *
+	 * @param array<int, array<string, mixed>> $transactions The transactions.
+	 *
+	 * @return array<string, mixed> The ids, subtotal, discountTotal, totalTax, total and settledAt.
+	 */
+	private function sumTransactionTotals(array $transactions): array {
+		$sums = ['ids' => [], 'subtotal' => 0.0, 'discountTotal' => 0.0, 'totalTax' => 0.0, 'total' => 0.0, 'settledAt' => null];
 		foreach ($transactions as $txn) {
 			$id = (string)($txn['id'] ?? $txn['uuid'] ?? '');
 			if ($id !== '') {
-				$ids[] = $id;
+				$sums['ids'][] = $id;
 			}
 
-			$subtotal += (float)($txn['subtotal'] ?? 0);
-			$discountTotal += (float)($txn['discountTotal'] ?? 0);
-			$totalTax += (float)($txn['totalTax'] ?? 0);
-			$grandTotal += (float)($txn['total'] ?? 0);
+			$sums['subtotal'] += (float)($txn['subtotal'] ?? 0);
+			$sums['discountTotal'] += (float)($txn['discountTotal'] ?? 0);
+			$sums['totalTax'] += (float)($txn['totalTax'] ?? 0);
+			$sums['total'] += (float)($txn['total'] ?? 0);
+			$sums['settledAt'] = $this->maxIso(left: $sums['settledAt'], right: (string)($txn['settledAt'] ?? $txn['confirmedAt'] ?? ''));
+		}
 
-			$latestSettled = $this->maxIso(left: $latestSettled, right: (string)($txn['settledAt'] ?? $txn['confirmedAt'] ?? ''));
+		return $sums;
+	}//end sumTransactionTotals()
 
+	/**
+	 * The tax breakdown per rate, rounded to money.
+	 *
+	 * @param array<int, array<string, mixed>> $transactions The transactions.
+	 *
+	 * @return array<int, array<string, mixed>> One row per tax rate.
+	 */
+	private function taxBreakdownOf(array $transactions): array {
+		$taxBreakdown = [];
+		foreach ($this->taxRateBuckets(transactions: $transactions) as $row) {
+			$taxBreakdown[] = [
+				'rate' => $row['rate'],
+				'base' => $this->money(value: (float)$row['base']),
+				'tax' => $this->money(value: (float)$row['tax']),
+			];
+		}
+
+		return $taxBreakdown;
+	}//end taxBreakdownOf()
+
+	/**
+	 * Accumulate base and tax per rate across every transaction's tax breakdown.
+	 *
+	 * @param array<int, array<string, mixed>> $transactions The transactions.
+	 *
+	 * @return array<int|string, array<string, float|int>> Buckets keyed by rate.
+	 */
+	private function taxRateBuckets(array $transactions): array {
+		$byRate = [];
+		foreach ($transactions as $txn) {
 			foreach (($txn['taxBreakdown'] ?? []) as $entry) {
 				$rate = (string)(int)($entry['rate'] ?? 0);
 				if (isset($byRate[$rate]) === false) {
@@ -297,7 +374,21 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 				$byRate[$rate]['base'] += (float)($entry['base'] ?? 0);
 				$byRate[$rate]['tax'] += (float)($entry['tax'] ?? 0);
 			}
+		}
 
+		return $byRate;
+	}//end taxRateBuckets()
+
+	/**
+	 * The paid amount per payment method, rounded to money.
+	 *
+	 * @param array<int, array<string, mixed>> $transactions The transactions.
+	 *
+	 * @return array<int, array<string, mixed>> One row per payment method.
+	 */
+	private function paymentBreakdownOf(array $transactions): array {
+		$byMethod = [];
+		foreach ($transactions as $txn) {
 			$method = (string)($txn['paymentMethod'] ?? '');
 			if ($method !== '') {
 				if (isset($byMethod[$method]) === false) {
@@ -306,37 +397,15 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 				$byMethod[$method]['amount'] += (float)($txn['total'] ?? 0);
 			}
-		}//end foreach
-
-		$taxBreakdown = [];
-		foreach ($byRate as $row) {
-			$taxBreakdown[] = [
-				'rate' => $row['rate'],
-				'base' => $this->money(value: (float)$row['base']),
-				'tax' => $this->money(value: (float)$row['tax']),
-			];
 		}
 
 		$paymentBreakdown = [];
 		foreach ($byMethod as $row) {
-			$paymentBreakdown[] = [
-				'method' => $row['method'],
-				'amount' => $this->money(value: (float)$row['amount']),
-			];
+			$paymentBreakdown[] = ['method' => $row['method'], 'amount' => $this->money(value: (float)$row['amount'])];
 		}
 
-		return [
-			'transactionIds' => $ids,
-			'transactionCount' => count($ids),
-			'subtotal' => $this->money(value: $subtotal),
-			'discountTotal' => $this->money(value: $discountTotal),
-			'taxBreakdown' => $taxBreakdown,
-			'totalTax' => $this->money(value: $totalTax),
-			'total' => $this->money(value: $grandTotal),
-			'paymentMethodBreakdown' => $paymentBreakdown,
-			'settledAt' => $latestSettled,
-		];
-	}//end aggregateTransactions()
+		return $paymentBreakdown;
+	}//end paymentBreakdownOf()
 
 	/**
 	 * Compute the deterministic idempotency key for a Z-report.
@@ -488,11 +557,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 		$zReport['bookkeepingFailedAt'] = null;
 		$zReport['bookkeepingAttempts'] = ((int)($zReport['bookkeepingAttempts'] ?? 0)) + 1;
 
-		$saved = $this->saveObjectFor(
-			schemaKey: 'posZReport_schema',
-			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-			object: $zReport
-		);
+		$saved = $this->saveZReport(zReport: $zReport);
 
 		$this->logger->info(
 			'Pipelinq: POS-day journal raised in shillinq via registry',
@@ -516,11 +581,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	private function projectPending(array $zReport, string $reason): array {
 		$zReport['bookkeepingStatus'] = 'pending';
 
-		$saved = $this->saveObjectFor(
-			schemaKey: 'posZReport_schema',
-			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-			object: $zReport
-		);
+		$saved = $this->saveZReport(zReport: $zReport);
 
 		$this->logger->info(
 			'Pipelinq: POS-day journal raise deferred (pending)',
@@ -548,11 +609,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 		if ($attempts >= $this->maxAttempts()) {
 			$zReport['bookkeepingStatus'] = 'failed';
 
-			$saved = $this->saveObjectFor(
-				schemaKey: 'posZReport_schema',
-				id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-				object: $zReport
-			);
+			$saved = $this->saveZReport(zReport: $zReport);
 
 			$this->sendAlertEmail(
 				subject: 'POS bookkeeping: journaalpost raise naar shillinq permanent gefaald',
@@ -570,11 +627,7 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		$zReport['bookkeepingStatus'] = 'pending';
 
-		$saved = $this->saveObjectFor(
-			schemaKey: 'posZReport_schema',
-			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
-			object: $zReport
-		);
+		$saved = $this->saveZReport(zReport: $zReport);
 
 		$this->logger->info(
 			'Pipelinq: POS-day journal raise transient failure, will retry',
@@ -583,6 +636,21 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		return $saved;
 	}//end onRaiseFailure()
+
+	/**
+	 * Save a Z-report under its own id.
+	 *
+	 * @param array<string, mixed> $zReport The Z-report.
+	 *
+	 * @return array<string, mixed> The persisted Z-report.
+	 */
+	private function saveZReport(array $zReport): array {
+		return $this->saveObjectFor(
+			schemaKey: 'posZReport_schema',
+			id: (string)($zReport['id'] ?? $zReport['uuid'] ?? ''),
+			object: $zReport
+		);
+	}//end saveZReport()
 
 	/**
 	 * Build the `shillinq.JournalEntry.raise` CloudEvent payload.
@@ -731,23 +799,32 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	 * `settledAt` or `confirmedAt` in UTC). A row that cannot be parsed simply
 	 * does not contribute — the report degrades gracefully rather than aborting.
 	 *
-	 * @param string $reportDate The settlement date in YYYY-MM-DD.
-	 * @param string|null $terminalId Optional terminal filter.
+	 * @param ZReportScope $scope The settlement date and optional terminal filter.
 	 *
 	 * @return array<int, array<string, mixed>> The matching transactions.
 	 */
-	private function fetchTransactionsForDate(string $reportDate, ?string $terminalId): array {
+	private function fetchTransactionsForDate(ZReportScope $scope): array {
+		$matches = [];
+		foreach ($this->readPosTransactions() as $result) {
+			$txn = $this->toArray(object: $result);
+			if ($this->isZReportTransaction(txn: $txn, scope: $scope) === true) {
+				$matches[] = $txn;
+			}
+		}
+
+		return $matches;
+	}//end fetchTransactionsForDate()
+
+	/**
+	 * Read every POS transaction, or none when the read fails.
+	 *
+	 * @return array<int, mixed> The raw transaction rows.
+	 */
+	private function readPosTransactions(): array {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->getObjectService()->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: failed to read POS transactions for Z-report; total assumed 0',
@@ -756,29 +833,31 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 			return [];
 		}
 
-		$matches = [];
-		foreach (($results ?? []) as $result) {
-			$txn = $this->toArray(object: $result);
-			$status = (string)($txn['status'] ?? '');
-			if (in_array($status, ['confirmed', 'settled'], true) === false) {
-				continue;
-			}
+		return ($results ?? []);
+	}//end readPosTransactions()
 
-			if ($terminalId !== null && $terminalId !== '' && (string)($txn['terminalId'] ?? '') !== $terminalId) {
-				continue;
-			}
-
-			$stamp = (string)($txn['settledAt'] ?? $txn['confirmedAt'] ?? '');
-			$day = $this->isoDay(value: $stamp);
-			if ($day !== $reportDate) {
-				continue;
-			}
-
-			$matches[] = $txn;
+	/**
+	 * Whether a transaction is confirmed/settled on the report date and, when given, on the terminal.
+	 *
+	 * @param array<string, mixed> $txn   The transaction.
+	 * @param ZReportScope         $scope The report date and terminal filter.
+	 *
+	 * @return bool True when the transaction belongs in the Z-report.
+	 */
+	private function isZReportTransaction(array $txn, ZReportScope $scope): bool {
+		$status = (string)($txn['status'] ?? '');
+		if (in_array($status, ['confirmed', 'settled'], true) === false) {
+			return false;
 		}
 
-		return $matches;
-	}//end fetchTransactionsForDate()
+		if ($scope->hasTerminal() === true && (string)($txn['terminalId'] ?? '') !== $scope->terminalId) {
+			return false;
+		}
+
+		$stamp = (string)($txn['settledAt'] ?? $txn['confirmedAt'] ?? '');
+		$day = $this->isoDay(value: $stamp);
+		return $day === $scope->reportDate;
+	}//end isZReportTransaction()
 
 	/**
 	 * Assert the user is a POS manager (accounting role).
@@ -808,58 +887,6 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 	public function fetchZReport(string $id): array {
 		return $this->fetchOne(schemaKey: 'posZReport_schema', id: $id, label: 'Z-report niet gevonden.');
 	}//end fetchZReport()
-
-	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException When the object is not found.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
-
-	/**
-	 * Persist an object via the OR ObjectService for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID (empty to create).
-	 * @param array<string, mixed> $object The object data.
-	 *
-	 * @return array<string, mixed> The saved object.
-	 */
-	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		unset($object['@self']);
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
-
-		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
 
 	/**
 	 * Resolve the register + a schema config key into their stored IDs.
@@ -904,17 +931,6 @@ class PosBookkeepingService implements PosBookkeepingServiceInterface {
 
 		return self::DEFAULT_MAX_ATTEMPTS;
 	}//end maxAttempts()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * The greater of two ISO 8601 timestamp strings (null-safe).

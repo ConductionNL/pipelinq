@@ -140,16 +140,12 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 
 		[$register, $clientSchema, $ticketSchema] = array_values($ids);
 
-		$refOfClient = $this->refOfClients(register: $register, schema: $clientSchema, refs: $refs);
+		$refOfClient = $this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: $refs);
+		$found = $this->ticketsOf(refOfClient: $refOfClient, query: ['register' => $register, 'schema' => $ticketSchema, 'status' => $status]);
 
 		return [
 			'status' => 200,
-			'tickets' => $this->ticketsOf(
-				refs: $refs,
-				refOfClient: $refOfClient,
-				filters: ['register' => $register, 'schema' => $ticketSchema],
-				status: $status
-			),
+			'tickets' => array_replace(array_fill_keys($refs, []), $found),
 		];
 	}//end byMasterEntity()
 
@@ -186,31 +182,24 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 	}//end surfaceIds()
 
 	/**
-	 * The tickets of the clients, grouped by their master entity, every
-	 * reference present.
+	 * The tickets of the clients, grouped by their master entity; a reference without tickets is absent.
 	 *
-	 * @param array<int, string>    $refs        The master entity references.
 	 * @param array<string, string> $refOfClient Master entity per client id.
-	 * @param array<string, string> $filters     The register and ticket schema.
-	 * @param string                $status      `open`, `closed` or `all`.
+	 * @param array<string, string> $query       The register, the ticket schema and the status (`open`, `closed` or `all`).
 	 *
 	 * @return array<string, array<int, array<string, string>>> Tickets per reference.
 	 */
-	private function ticketsOf(array $refs, array $refOfClient, array $filters, string $status): array {
-		$tickets = array_fill_keys($refs, []);
+	private function ticketsOf(array $refOfClient, array $query): array {
+		$tickets = [];
 		if ($refOfClient === []) {
 			return $tickets;
 		}
 
+		$status = $query['status'];
+		$filters = ['register' => $query['register'], 'schema' => $query['schema']];
 		$filters['client'] = ['in' => array_keys($refOfClient)];
 		$filters['ticketType'] = ['in' => self::TICKET_TYPES];
-		if ($status === 'open') {
-			$filters['status'] = ['notIn' => self::CLOSED_STATUSES];
-		}
-
-		if ($status === 'closed') {
-			$filters['status'] = ['in' => self::CLOSED_STATUSES];
-		}
+		$filters += self::statusFilter(status: $status);
 
 		foreach ($this->read(filters: $filters) as $ticket) {
 			$ref = ($refOfClient[(string)($ticket['client'] ?? '')] ?? '');
@@ -221,6 +210,25 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 
 		return $tickets;
 	}//end ticketsOf()
+
+	/**
+	 * The store filter for a status: open or closed tickets, none for all.
+	 *
+	 * @param string $status `open`, `closed` or `all`.
+	 *
+	 * @return array<string, array<string, array<int, string>>>
+	 */
+	private static function statusFilter(string $status): array {
+		if ($status === 'open') {
+			return ['status' => ['notIn' => self::CLOSED_STATUSES]];
+		}
+
+		if ($status === 'closed') {
+			return ['status' => ['in' => self::CLOSED_STATUSES]];
+		}
+
+		return [];
+	}//end statusFilter()
 
 	/**
 	 * Whether a ticket the store answered fits the asked status filter, so a
@@ -263,21 +271,20 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 			return [];
 		}
 
-		return array_keys($this->refOfClients(register: $register, schema: $clientSchema, refs: [$ref]));
+		return array_keys($this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: [$ref]));
 	}//end clientIdsOf()
 
 	/**
 	 * The master entity of each client that maps to one of the references, by client id.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The client schema id.
+	 * @param array<string, string> $filters The register and client schema ids.
 	 * @param array<int, string> $refs The master entity references.
 	 *
 	 * @return array<string, string> Master entity per client id.
 	 */
-	private function refOfClients(string $register, string $schema, array $refs): array {
+	private function refOfClients(array $filters, array $refs): array {
 		$refOfClient = [];
-		foreach ($this->read(filters: ['register' => $register, 'schema' => $schema, 'masterEntityRef' => ['in' => $refs]]) as $client) {
+		foreach ($this->read(filters: $filters + ['masterEntityRef' => ['in' => $refs]]) as $client) {
 			$id = (string)($client['id'] ?? $client['uuid'] ?? '');
 			$ref = (string)($client['masterEntityRef'] ?? '');
 			if ($id !== '' && in_array($ref, $refs, true) === true) {

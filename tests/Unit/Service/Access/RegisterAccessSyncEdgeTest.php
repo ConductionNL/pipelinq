@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Pipelinq\Service\Access\RegisterAccessSync
@@ -118,6 +119,7 @@ class RegisterAccessSyncEdgeTest extends TestCase {
 			}
 
 			public function find(string|int $id, mixed ...$rest): object {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				if (isset($this->rows[$id]) === false) {
 					throw new RuntimeException('absent');
 				}

@@ -36,6 +36,7 @@ use OCP\TaskProcessing\Task;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A recorded call is transcribed into its contact moment, and its audio never stays.
@@ -105,6 +106,7 @@ class CallTranscriptionServiceTest extends TestCase {
 			return $entity;
 		});
 		$objects->method('saveObject')->willReturnCallback(function (...$args): ObjectEntityInterface {
+			$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 			// Positional: object, extend, register, schema, uuid, _rbac, _multitenancy.
 			$this->saved[] = [$args[0], $args[4], $args[5]];
 			return $this->createMock(ObjectEntityInterface::class);
@@ -307,6 +309,7 @@ class CallTranscriptionServiceTest extends TestCase {
 			return $entity;
 		});
 		$objects->method('saveObject')->willReturnCallback(function (...$args) use ($saveThrows): ObjectEntityInterface {
+			$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 			if ($saveThrows === true) {
 				throw new RuntimeException('db down');
 			}

@@ -43,9 +43,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -61,6 +64,7 @@ use Psr\Log\LoggerInterface;
  */
 class MigratePosBookkeepingToShillinq implements IRepairStep {
 	use CastingPayloadToArray;
+	use ContainerObjectServiceLookup;
 	use \OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 
 	/**
@@ -165,9 +169,22 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 
 		$zReportsById = $this->indexZReports(objectService: $objectService, register: $register);
 
-		$raised = 0;
-		$projected = 0;
-		$pending = 0;
+		$counts = $this->migrateAll(objectService: $objectService, register: $register, outbounds: $outbounds, zReportsById: $zReportsById);
+		$this->reportMigration(output: $output, counts: $counts);
+	}//end runInner()
+
+	/**
+	 * Migrate every outbound record, counting the outcomes.
+	 *
+	 * @param object                           $objectService OpenRegister's ObjectService.
+	 * @param string                           $register      The register slug.
+	 * @param array<int, array<string, mixed>> $outbounds     The outbound journal records.
+	 * @param array<string, mixed>             $zReportsById  The Z-reports, keyed by id.
+	 *
+	 * @return array{raised: int, projected: int, pending: int}
+	 */
+	private function migrateAll(object $objectService, string $register, array $outbounds, array $zReportsById): array {
+		$counts = ['raised' => 0, 'projected' => 0, 'pending' => 0];
 		foreach ($outbounds as $outbound) {
 			$result = $this->migrateOne(
 				objectService: $objectService,
@@ -175,30 +192,38 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 				outbound: $outbound,
 				zReportsById: $zReportsById
 			);
-			if ($result === 'raised') {
-				$raised++;
-			} elseif ($result === 'projected') {
-				$projected++;
-			} elseif ($result === 'pending') {
-				$pending++;
+			if (array_key_exists($result, $counts) === true) {
+				$counts[$result]++;
 			}
 		}
 
+		return $counts;
+	}//end migrateAll()
+
+	/**
+	 * Report the migration's outcome to the output and the log.
+	 *
+	 * @param IOutput                                         $output Progress reporting.
+	 * @param array{raised: int, projected: int, pending: int} $counts The outcome counts.
+	 *
+	 * @return void
+	 */
+	private function reportMigration(IOutput $output, array $counts): void {
 		$output->info(
 			sprintf(
 				'POS bookkeeping migration: %d re-raised, %d posted-projected, %d left pending for retry. '
 				. 'No glAccountMapping / posJournalEntryOutbound data was deleted. '
 				. 'One-off: export the glAccountMapping VAT->GL profiles into shillinq\'s GL configuration manually.',
-				$raised,
-				$projected,
-				$pending
+				$counts['raised'],
+				$counts['projected'],
+				$counts['pending']
 			)
 		);
 		$this->logger->info(
 			'POS bookkeeping migration completed',
-			['raised' => $raised, 'projected' => $projected, 'pending' => $pending]
+			['raised' => $counts['raised'], 'projected' => $counts['projected'], 'pending' => $counts['pending']]
 		);
-	}//end runInner()
+	}//end reportMigration()
 
 	/**
 	 * Migrate a single outbound record onto the Z-report projection / registry.
@@ -273,10 +298,10 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 				->setSchema(self::ZREPORT_SCHEMA)
 				->saveObject(
 					object: $zReport,
-					extend: [],
-					register: $register,
-					schema: self::ZREPORT_SCHEMA,
-					uuid: (string)($zReport['id'] ?? $zReport['uuid'] ?? '')
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: self::ZREPORT_SCHEMA),
+						uuid: (string)($zReport['id'] ?? $zReport['uuid'] ?? '')
+					)
 				);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -350,14 +375,6 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 * @return object|null The object service, or null.
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'POS bookkeeping migration: OpenRegister ObjectService not resolvable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'POS bookkeeping migration: OpenRegister ObjectService not resolvable', errorKey: 'exception');
 	}//end resolveObjectService()
 }//end class

@@ -30,9 +30,15 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -46,6 +52,11 @@ use RuntimeException;
  */
 class GiftCardService implements GiftCardServiceInterface {
 	use PayloadToArray;
+	use LoggedRegisterSchemaIds;
+	use SerialisedPayload;
+	use InjectedObjectService;
+	use ConfiguredObjectSave;
+	use ConfiguredObjectFind;
 
 	/**
 	 * Constructor.
@@ -443,7 +454,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	 *                                   row is not a redemption.
 	 */
 	private function replayFromTransactionRow(mixed $row): ?array {
-		$array = $this->transactionRowToArray(row: $row);
+		$array = $this->serialisedPayload(value: $row);
 		if ($array === null || in_array((string)($array['type'] ?? ''), ['redeem', 'partial_redeem'], true) === false) {
 			return null;
 		}
@@ -474,27 +485,6 @@ class GiftCardService implements GiftCardServiceInterface {
 	}//end balanceStatus()
 
 	/**
-	 * A stored transaction row as an array, or null when it is neither an
-	 * array nor a serialisable entity.
-	 *
-	 * @param mixed $row A stored giftCardTransaction row.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function transactionRowToArray(mixed $row): ?array {
-		$array = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$array = $row->jsonSerialize();
-		}
-
-		if (is_array($array) === false) {
-			return null;
-		}
-
-		return $array;
-	}//end transactionRowToArray()
-
-	/**
 	 * Refund an amount onto a card.
 	 *
 	 * @param string $giftCardId The card UUID.
@@ -518,6 +508,19 @@ class GiftCardService implements GiftCardServiceInterface {
 			throw new RuntimeException('Gift card not found.');
 		}
 
+		$card = $this->refundedCard(card: $card, amount: $amount);
+		return $this->saveRefund(card: $card, giftCardId: $giftCardId, amount: $amount, posTransactionId: $posTransactionId);
+	}//end refundGiftCard()
+
+	/**
+	 * The card with the refund added to its balance; a depleted card becomes active again.
+	 *
+	 * @param array<string, mixed> $card   The card.
+	 * @param float                $amount Amount to refund (positive).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function refundedCard(array $card, float $amount): array {
 		$balance = (float)($card['currentBalance'] ?? 0);
 		$after = round($balance + $amount, 2);
 		$card['currentBalance'] = $after;
@@ -526,19 +529,33 @@ class GiftCardService implements GiftCardServiceInterface {
 			$card['status'] = 'active';
 		}
 
+		return $card;
+	}//end refundedCard()
+
+	/**
+	 * Save the refunded card and log the refund transaction.
+	 *
+	 * @param array<string, mixed> $card             The refunded card.
+	 * @param string               $giftCardId       The card UUID.
+	 * @param float                $amount           Amount refunded.
+	 * @param string|null          $posTransactionId Optional POS transaction id.
+	 *
+	 * @return array<string, mixed> The updated card.
+	 */
+	private function saveRefund(array $card, string $giftCardId, float $amount, string|null $posTransactionId): array {
 		$saved = $this->persistCard(payload: $card, uuid: $giftCardId);
 
 		$this->logTransaction(
 			giftCardId: $giftCardId,
 			type: 'refund',
 			amount: $amount,
-			balanceAfter: $after,
+			balanceAfter: $card['currentBalance'],
 			posTransactionId: $posTransactionId,
 			processedBy: 'gift-card-service'
 		);
 
 		return $saved;
-	}//end refundGiftCard()
+	}//end saveRefund()
 
 	/**
 	 * Block a card (e.g. fraud / dispute).
@@ -715,22 +732,7 @@ class GiftCardService implements GiftCardServiceInterface {
 	 *   and nothing inherited it
 	 */
 	public function getCard(string $giftCardId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');
-		if ($register === '' || $schema === '' || $giftCardId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $giftCardId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'giftCard_schema'), id: $giftCardId);
 	}//end getCard()
 
 	/**
@@ -883,10 +885,7 @@ class GiftCardService implements GiftCardServiceInterface {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -930,49 +929,8 @@ class GiftCardService implements GiftCardServiceInterface {
 	 * @return array<string, mixed>
 	 */
 	private function persistCard(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('GiftCard schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(schemaKey: 'giftCard_schema'), payload: $payload, uuid: $uuid, label: 'GiftCard');
 	}//end persistCard()
-
-	/**
-	 * Resolve register + schema id.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @param string $schemaKey The schema config key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] ids, each ''
-	 *                                     when unconfigured.
-	 */
-	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
-				['schemaKey' => $schemaKey]
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end config()
 
 	/**
 	 * Extract UUID from an OR entity array.
@@ -989,15 +947,4 @@ class GiftCardService implements GiftCardServiceInterface {
 
 		return $object['giftCardId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Get the ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

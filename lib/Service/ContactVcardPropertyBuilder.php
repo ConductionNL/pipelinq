@@ -23,7 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -35,6 +37,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ContactVcardPropertyBuilder {
 	use ResultToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -321,10 +324,7 @@ class ContactVcardPropertyBuilder {
 		try {
 			$client = $objectService->find(
 				$clientId,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 			$data = $this->serializeResult(result: $client);
 			return $data['name'] ?? null;
@@ -332,13 +332,4 @@ class ContactVcardPropertyBuilder {
 			return null;
 		}
 	}//end resolveClientName()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ResultToArray;
 use OCP\IAppConfig;
@@ -82,6 +83,22 @@ class ContactObjectReader {
 			return null;
 		}
 
+		$target = $this->syncTarget(objectType: $objectType);
+		if ($target === null) {
+			return null;
+		}
+
+		return $this->findForSync(objectId: $objectId, target: $target);
+	}//end fetch()
+
+	/**
+	 * The contact register and the object type's schema; null (logged) when either is not configured.
+	 *
+	 * @param string $objectType The object type.
+	 *
+	 * @return array{0: string, 1: string}|null The register and schema ids.
+	 */
+	private function syncTarget(string $objectType): array|null {
 		$registerId = $this->registerResolver->resolve('contact');
 		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
 
@@ -90,13 +107,23 @@ class ContactObjectReader {
 			return null;
 		}
 
+		return [$registerId, $schemaId];
+	}//end syncTarget()
+
+	/**
+	 * Fetch the object and serialise it; null (logged) when the fetch fails.
+	 *
+	 * @param string $objectId The object id.
+	 * @param array{0: string, 1: string} $target The register and schema ids.
+	 *
+	 * @return array<string, mixed>|null The object data.
+	 */
+	private function findForSync(string $objectId, array $target): array|null {
+		[$registerId, $schemaId] = $target;
 		try {
 			$object = $this->objectService->find(
 				$objectId,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 		} catch (\Exception $e) {
 			$this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);
@@ -104,5 +131,5 @@ class ContactObjectReader {
 		}
 
 		return $this->serializeResult(result: $object);
-	}//end fetch()
+	}//end findForSync()
 }//end class

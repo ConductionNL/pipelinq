@@ -34,6 +34,9 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for the destination lifecycle over an in-memory object store.
@@ -132,7 +135,11 @@ class ExportDestinationServiceLifecycleTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($schema === 'source') {
 					return $this->entity(['apikey' => 'k-1']);
 				}
@@ -148,7 +155,11 @@ class ExportDestinationServiceLifecycleTest extends TestCase {
 			fn (array $config = []): array => array_map(fn (array $o): ObjectEntityInterface => $this->entity($o), array_values($this->store))
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['uuid' => $uuid, 'object' => $object, 'register' => $register, 'schema' => $schema];
 				$id = $uuid ?? $this->newId;
 				$this->store[$id] = array_merge($object, ['id' => $id]);
@@ -156,7 +167,10 @@ class ExportDestinationServiceLifecycleTest extends TestCase {
 			}
 		);
 		$objects->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register = null, $schema = null): bool {
+			function (ObjectDeletion $deletion): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				$this->deletes[] = ['uuid' => $uuid, 'register' => $register, 'schema' => $schema];
 				unset($this->store[$uuid]);
 				return true;

@@ -143,91 +143,170 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public function sync(bool $force=false): int {
-		$crm         = $this->setting(key: ObjectOwnerAccessPolicy::CRM_GROUP_KEY);
-		$read        = $this->setting(key: self::READ_GROUP_KEY);
-		$crmApplied  = $this->setting(key: ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED);
-		$readApplied = $this->setting(key: self::READ_GROUP_KEY.self::APPLIED);
-
-		if ($force === false && $crm === $crmApplied && $read === $readApplied) {
+		$groups = $this->groupSettings();
+		if ($force === false && $groups['crm'] === $groups['crmApplied'] && $groups['read'] === $groups['readApplied']) {
 			return 0;
 		}
 
-		try {
-			$registers = $this->container->get(self::REGISTER_MAPPER);
-			$schemas   = $this->container->get(self::SCHEMA_MAPPER);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: the CRM groups could not be written into the registers, OpenRegister is unavailable',
-				['error' => $e->getMessage()]
-			);
+		$mappers = $this->mappers();
+		if ($mappers === []) {
 			return -1;
 		}
 
-		$groups  = ['read' => $read, 'readApplied' => $readApplied, 'crm' => $crm, 'crmApplied' => $crmApplied];
-		$written = 0;
-		foreach (self::REGISTERS as $slug) {
-			try {
-				$register = $registers->find($slug, _rbac: false, _multitenancy: false);
-			} catch (Throwable $e) {
-				continue;
-			}
-
-			$written += $this->syncRegister(registers: $registers, schemas: $schemas, register: $register, groups: $groups);
-		}
-
-		$this->appConfig->setValueString(AppIdentity::APP_ID, ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED, $crm);
-		$this->appConfig->setValueString(AppIdentity::APP_ID, self::READ_GROUP_KEY.self::APPLIED, $read);
+		$written = $this->syncRegisters(mappers: $mappers, groups: $groups);
+		$this->markApplied(groups: $groups);
 
 		return $written;
 	}//end sync()
 
 	/**
-	 * Rewrite one register and its schemas.
+	 * The configured and the last applied CRM and read groups.
+	 *
+	 * @return array{read: string, readApplied: string, crm: string, crmApplied: string}
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function groupSettings(): array {
+		$crm         = $this->setting(key: ObjectOwnerAccessPolicy::CRM_GROUP_KEY);
+		$read        = $this->setting(key: self::READ_GROUP_KEY);
+		$crmApplied  = $this->setting(key: ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED);
+		$readApplied = $this->setting(key: self::READ_GROUP_KEY.self::APPLIED);
+
+		return ['read' => $read, 'readApplied' => $readApplied, 'crm' => $crm, 'crmApplied' => $crmApplied];
+	}//end groupSettings()
+
+	/**
+	 * OpenRegister's register and schema mappers.
+	 *
+	 * @return array<int, mixed> The register mapper and the schema mapper, or an empty list when OpenRegister is unavailable.
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function mappers(): array {
+		try {
+			return [$this->container->get(self::REGISTER_MAPPER), $this->container->get(self::SCHEMA_MAPPER)];
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: the CRM groups could not be written into the registers, OpenRegister is unavailable',
+				['error' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end mappers()
+
+	/**
+	 * Write the groups into every pipelinq register that exists.
 	 *
 	 * The register never names the read group; a schema names it only when
 	 * it is one of READ_SCHEMAS, and loses a previous one either way.
 	 *
-	 * @param object                $registers The register mapper.
-	 * @param object                $schemas   The schema mapper.
-	 * @param object                $register  The register.
-	 * @param array<string, string> $groups    read, readApplied, crm and crmApplied.
+	 * @param array<int, mixed> $mappers OpenRegister's register mapper and schema mapper.
+	 * @param array<string, string> $groups The configured and applied groups.
 	 *
-	 * @return int The number of entities written.
+	 * @return int The number of registers and schemas written.
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
-	private function syncRegister(object $registers, object $schemas, object $register, array $groups): int {
-		$written = $this->rewrite(
-			mapper: $registers,
-			entity: $register,
-			read: '',
-			readApplied: '',
-			crm: $groups['crm'],
-			crmApplied: $groups['crmApplied']
-		);
-
-		foreach ((array)$register->getSchemas() as $schemaId) {
-			try {
-				$schema = $schemas->find($schemaId, [], _rbac: false, _multitenancy: false);
-			} catch (Throwable $e) {
+	private function syncRegisters(array $mappers, array $groups): int {
+		$written = 0;
+		foreach (self::REGISTERS as $slug) {
+			$found = $this->findRegister(registers: $mappers[0], slug: $slug);
+			if ($found === []) {
 				continue;
 			}
 
-			$read = '';
-			if (in_array((string)$schema->getSlug(), self::READ_SCHEMAS, true) === true) {
-				$read = $groups['read'];
-			}
-
-			$written += $this->rewrite(
-				mapper: $schemas,
-				entity: $schema,
-				read: $read,
-				readApplied: $groups['readApplied'],
-				crm: $groups['crm'],
-				crmApplied: $groups['crmApplied']
-			);
+			$written += $this->rewrite(mapper: $mappers[0], entity: $found[0], groups: ['read' => '', 'readApplied' => ''] + $groups);
+			$written += $this->syncSchemas(schemas: $mappers[1], register: $found[0], groups: $groups);
 		}
 
 		return $written;
-	}//end syncRegister()
+	}//end syncRegisters()
+
+	/**
+	 * Find a register by slug.
+	 *
+	 * @param object $registers OpenRegister's register mapper.
+	 * @param string $slug The register slug.
+	 *
+	 * @return array<int, mixed> The register as a one-element list, or an empty list when it does not exist.
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function findRegister(object $registers, string $slug): array {
+		try {
+			return [$registers->find($slug, _rbac: false, _multitenancy: false)];
+		} catch (Throwable $e) {
+			return [];
+		}
+	}//end findRegister()
+
+	/**
+	 * Record the groups as applied.
+	 *
+	 * @param array<string, string> $groups The configured and applied groups.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
+	 */
+	private function markApplied(array $groups): void {
+		$this->appConfig->setValueString(AppIdentity::APP_ID, ObjectOwnerAccessPolicy::CRM_GROUP_KEY.self::APPLIED, $groups['crm']);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::READ_GROUP_KEY.self::APPLIED, $groups['read']);
+	}//end markApplied()
+
+	/**
+	 * Rewrite the schemas of one register.
+	 *
+	 * @param object                $schemas  The schema mapper.
+	 * @param object                $register The register.
+	 * @param array<string, string> $groups   read, readApplied, crm and crmApplied.
+	 *
+	 * @return int The number of schemas written.
+	 */
+	private function syncSchemas(object $schemas, object $register, array $groups): int {
+		$written = 0;
+		foreach ((array)$register->getSchemas() as $schemaId) {
+			$schema = $this->findSchema(schemas: $schemas, schemaId: $schemaId);
+			if ($schema !== null) {
+				$written += $this->rewrite(mapper: $schemas, entity: $schema, groups: self::schemaGroups(schema: $schema, groups: $groups));
+			}
+		}
+
+		return $written;
+	}//end syncSchemas()
+
+	/**
+	 * A schema by id, or null when it cannot be read.
+	 *
+	 * @param object $schemas  The schema mapper.
+	 * @param mixed  $schemaId The schema id.
+	 *
+	 * @return object|null
+	 */
+	private function findSchema(object $schemas, mixed $schemaId): ?object {
+		try {
+			return $schemas->find($schemaId, [], _rbac: false, _multitenancy: false);
+		} catch (Throwable $e) {
+			return null;
+		}
+	}//end findSchema()
+
+	/**
+	 * The groups for one schema: it names the read group only when it is one of READ_SCHEMAS.
+	 *
+	 * @param object                $schema The schema.
+	 * @param array<string, string> $groups read, readApplied, crm and crmApplied.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function schemaGroups(object $schema, array $groups): array {
+		$read = '';
+		if (in_array((string)$schema->getSlug(), self::READ_SCHEMAS, true) === true) {
+			$read = $groups['read'];
+		}
+
+		return ['read' => $read] + $groups;
+	}//end schemaGroups()
 
 	/**
 	 * The block with the CRM group granted wherever the staff group is, and the group last applied gone.
@@ -245,19 +324,26 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-the-configured-crm-group-is-granted-wherever-the-staff-group-is
 	 */
 	public static function grant(array $authorization, string $group, string $previous=''): array {
-		$addable   = (in_array($group, self::RESERVED, true) === false);
-		$removable = (in_array($previous, self::RESERVED, true) === false && $previous !== $group);
+		return self::grantedBlock(authorization: $authorization, plan: self::plan(group: $group, previous: $previous));
+	}//end grant()
 
+	/**
+	 * The block with the planned group granted wherever the staff group is, and the group last applied gone.
+	 *
+	 * @param array<string, mixed>                                                  $authorization The block.
+	 * @param array{group: string, previous: string, addable: bool, removable: bool} $plan          The plan.
+	 *
+	 * @return array<string, mixed> The rewritten block.
+	 */
+	private static function grantedBlock(array $authorization, array $plan): array {
+		$group = $plan['group'];
 		foreach ($authorization as $verb => $rules) {
 			if (is_array($rules) === false || in_array(self::STAFF_GROUP, $rules, true) === false) {
 				continue;
 			}
 
-			if ($removable === true) {
-				$rules = array_values(array_filter($rules, static fn ($rule): bool => $rule !== $previous));
-			}
-
-			if ($addable === true && in_array($group, $rules, true) === false) {
+			$rules = self::withoutPrevious(rules: $rules, plan: $plan);
+			if ($plan['addable'] === true && in_array($group, $rules, true) === false) {
 				$rules[] = $group;
 			}
 
@@ -265,7 +351,41 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 		}
 
 		return $authorization;
-	}//end grant()
+	}//end grantedBlock()
+
+	/**
+	 * Whether a group may be added and the group last applied may be taken out.
+	 *
+	 * @param string $group    The configured group, or ''.
+	 * @param string $previous The group last applied, or ''.
+	 *
+	 * @return array{group: string, previous: string, addable: bool, removable: bool}
+	 */
+	private static function plan(string $group, string $previous): array {
+		return [
+			'group'     => $group,
+			'previous'  => $previous,
+			'addable'   => (in_array($group, self::RESERVED, true) === false),
+			'removable' => (in_array($previous, self::RESERVED, true) === false && $previous !== $group),
+		];
+	}//end plan()
+
+	/**
+	 * The rules with the group last applied taken out, when it may be.
+	 *
+	 * @param array<int, mixed>                                                     $rules The verb's rules.
+	 * @param array{group: string, previous: string, addable: bool, removable: bool} $plan  The plan.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function withoutPrevious(array $rules, array $plan): array {
+		if ($plan['removable'] === false) {
+			return $rules;
+		}
+
+		$previous = $plan['previous'];
+		return array_values(array_filter($rules, static fn ($rule): bool => $rule !== $previous));
+	}//end withoutPrevious()
 
 	/**
 	 * The block with the read group granted `read` and `export`, and the group last applied gone.
@@ -284,20 +404,27 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * @spec openspec/changes/close-pipelinq-register-to-staff/specs/register-access/spec.md#requirement-a-configured-read-group-reads-the-parties-and-contact-moments-and-writes-nothing
 	 */
 	public static function grantRead(array $authorization, string $group, string $previous=''): array {
-		$addable   = (in_array($group, self::RESERVED, true) === false);
-		$removable = (in_array($previous, self::RESERVED, true) === false && $previous !== $group);
+		return self::readBlock(authorization: $authorization, plan: self::plan(group: $group, previous: $previous));
+	}//end grantRead()
 
+	/**
+	 * The block with the planned read group granted `read` and `export` where the staff group reads.
+	 *
+	 * @param array<string, mixed>                                                  $authorization The block.
+	 * @param array{group: string, previous: string, addable: bool, removable: bool} $plan          The plan.
+	 *
+	 * @return array<string, mixed> The rewritten block.
+	 */
+	private static function readBlock(array $authorization, array $plan): array {
+		$group = $plan['group'];
 		foreach ($authorization as $verb => $rules) {
 			if (is_array($rules) === false) {
 				continue;
 			}
 
-			if ($removable === true) {
-				$rules = array_values(array_filter($rules, static fn ($rule): bool => $rule !== $previous));
-			}
-
+			$rules = self::withoutPrevious(rules: $rules, plan: $plan);
 			$reads = in_array($verb, self::READ_VERBS, true) === true && in_array(self::STAFF_GROUP, $rules, true) === true;
-			if ($addable === true && $reads === true && in_array($group, $rules, true) === false) {
+			if ($plan['addable'] === true && $reads === true && in_array($group, $rules, true) === false) {
 				$rules[] = $group;
 			}
 
@@ -305,7 +432,7 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 		}
 
 		return $authorization;
-	}//end grantRead()
+	}//end readBlock()
 
 	/**
 	 * A setting's trimmed value.
@@ -324,24 +451,15 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 	 * The CRM read group is applied first, so a group named in both settings
 	 * ends with the CRM group's grants.
 	 *
-	 * @param object $mapper      The entity's mapper.
-	 * @param object $entity      The register or schema.
-	 * @param string $read        The read group for this entity, or ''.
-	 * @param string $readApplied The read group last applied.
-	 * @param string $crm         The CRM group.
-	 * @param string $crmApplied  The CRM group last applied.
+	 * @param object                $mapper The entity's mapper.
+	 * @param object                $entity The register or schema.
+	 * @param array<string, string> $groups The read group for this entity (or ''), readApplied, crm and crmApplied.
 	 *
 	 * @return int 1 when written, else 0.
 	 */
-	private function rewrite(object $mapper, object $entity, string $read, string $readApplied, string $crm, string $crmApplied): int {
-		$current = $entity->getAuthorization();
-		if (is_array($current) === false || $current === []) {
-			return 0;
-		}
-
-		$next = self::grantRead(authorization: $current, group: $read, previous: $readApplied);
-		$next = self::grant(authorization: $next, group: $crm, previous: $crmApplied);
-		if ($next === $current) {
+	private function rewrite(object $mapper, object $entity, array $groups): int {
+		$next = self::nextBlock(entity: $entity, groups: $groups);
+		if ($next === null) {
 			return 0;
 		}
 
@@ -355,4 +473,27 @@ class RegisterAccessSync implements RegisterAccessSyncInterface {
 
 		return 1;
 	}//end rewrite()
+
+	/**
+	 * The entity's rewritten block, or null when it has none or nothing changes.
+	 *
+	 * @param object                $entity The register or schema.
+	 * @param array<string, string> $groups The read group for this entity (or ''), readApplied, crm and crmApplied.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function nextBlock(object $entity, array $groups): ?array {
+		$current = $entity->getAuthorization();
+		if (is_array($current) === false || $current === []) {
+			return null;
+		}
+
+		$next = self::grantRead(authorization: $current, group: $groups['read'], previous: $groups['readApplied']);
+		$next = self::grant(authorization: $next, group: $groups['crm'], previous: $groups['crmApplied']);
+		if ($next === $current) {
+			return null;
+		}
+
+		return $next;
+	}//end nextBlock()
 }//end class
