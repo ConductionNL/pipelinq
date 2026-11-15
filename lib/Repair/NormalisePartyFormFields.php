@@ -42,6 +42,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Repair\Support\SchemaWriteTarget;
 use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\SerialisedRows;
 use OCP\IAppConfig;
@@ -215,7 +216,7 @@ class NormalisePartyFormFields implements IRepairStep {
 			return [];
 		}
 
-		$target = new PartyRepairTarget(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+		$target = new SchemaWriteTarget(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
 		$outcomes = [];
 		foreach ($this->readAll(objectService: $objectService, register: $register, schema: $schema) as $row) {
 			$outcomes[] = $this->repairRow(target: $target, row: $row);
@@ -248,12 +249,12 @@ class NormalisePartyFormFields implements IRepairStep {
 	/**
 	 * Save one party's patch.
 	 *
-	 * @param PartyRepairTarget   $target Where to save and as whom.
+	 * @param SchemaWriteTarget   $target Where to save and as whom.
 	 * @param array<string,mixed> $row    The stored party.
 	 *
 	 * @return string `fixed`, `skipped` or `stuck`.
 	 */
-	private function repairRow(PartyRepairTarget $target, array $row): string {
+	private function repairRow(SchemaWriteTarget $target, array $row): string {
 		$objectService = $target->objectService;
 		$register = $target->register;
 		$schema = $target->schema;
