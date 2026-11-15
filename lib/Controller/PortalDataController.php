@@ -111,7 +111,7 @@ class PortalDataController extends PortalApiController {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function invoice(string $id): JSONResponse {
-		return $this->requireObjectAccess(facade: $this->invoices, feature: 'invoices', id: $id);
+		return $this->requireObjectAccess(feature: 'invoices', id: $id);
 	}//end invoice()
 
 	/**
@@ -149,7 +149,7 @@ class PortalDataController extends PortalApiController {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function contract(string $id): JSONResponse {
-		return $this->requireObjectAccess(facade: $this->contracts, feature: 'contracts', id: $id);
+		return $this->requireObjectAccess(feature: 'contracts', id: $id);
 	}//end contract()
 
 	/**
@@ -187,7 +187,7 @@ class PortalDataController extends PortalApiController {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function order(string $id): JSONResponse {
-		return $this->requireObjectAccess(facade: $this->orders, feature: 'orders', id: $id);
+		return $this->requireObjectAccess(feature: 'orders', id: $id);
 	}//end order()
 
 	/**
@@ -216,13 +216,13 @@ class PortalDataController extends PortalApiController {
 	/**
 	 * Shared detail handler: authenticate, feature-gate, fetch-or-404.
 	 *
-	 * @param AbstractPortalReadFacade $facade The read facade.
-	 * @param string $feature The feature key.
+	 * @param string $feature The feature key, which names the read facade.
 	 * @param string $id The object id.
 	 *
 	 * @return JSONResponse The object, or 404.
 	 */
-	private function requireObjectAccess(AbstractPortalReadFacade $facade, string $feature, string $id): JSONResponse {
+	private function requireObjectAccess(string $feature, string $id): JSONResponse {
+		$facade = $this->facadeFor(feature: $feature);
 		return $this->guarded(
 			handler: function () use ($facade, $feature, $id): array {
 				$ctx = $this->requireSession();
@@ -236,4 +236,19 @@ class PortalDataController extends PortalApiController {
 			}
 		);
 	}//end requireObjectAccess()
+
+	/**
+	 * The read facade of a feature.
+	 *
+	 * @param string $feature `invoices`, `contracts` or `orders`.
+	 *
+	 * @return AbstractPortalReadFacade The facade.
+	 */
+	private function facadeFor(string $feature): AbstractPortalReadFacade {
+		return match ($feature) {
+			'invoices' => $this->invoices,
+			'contracts' => $this->contracts,
+			'orders' => $this->orders,
+		};
+	}//end facadeFor()
 }//end class
