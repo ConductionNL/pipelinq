@@ -38,6 +38,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use LogicException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -243,12 +244,15 @@ class PortalDataController extends PortalApiController {
 	 * @param string $feature `invoices`, `contracts` or `orders`.
 	 *
 	 * @return AbstractPortalReadFacade The facade.
+	 *
+	 * @throws LogicException For a feature without a read facade.
 	 */
 	private function facadeFor(string $feature): AbstractPortalReadFacade {
 		return match ($feature) {
 			'invoices' => $this->invoices,
 			'contracts' => $this->contracts,
 			'orders' => $this->orders,
+			default => throw new LogicException('No portal read facade for feature ' . $feature . '.'),
 		};
 	}//end facadeFor()
 }//end class
