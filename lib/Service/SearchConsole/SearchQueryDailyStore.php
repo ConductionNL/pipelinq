@@ -89,11 +89,24 @@ class SearchQueryDailyStore {
 			return false;
 		}
 
+		$identity = ['property' => $property, 'date' => $row['date'], 'query' => $row['query'], 'page' => $row['page']];
+
+		return $this->save(objectService: $objectService, payload: ($identity + $row + ['source' => 'gsc', 'importedAt' => $importedAt]));
+	}//end upsert()
+
+	/**
+	 * Save a day's row over the object already holding its identity, or as a new one.
+	 *
+	 * @param object               $objectService The OpenRegister object service.
+	 * @param array<string, mixed> $payload       The object: property, date, query, page first, then the row.
+	 *
+	 * @return bool True when saved.
+	 */
+	private function save(object $objectService, array $payload): bool {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
-		$identity = ['property' => $property, 'date' => $row['date'], 'query' => $row['query'], 'page' => $row['page']];
+		$identity = array_slice($payload, 0, 4, true);
 		$existingId = $this->findExistingId(objectService: $objectService, filters: (['register' => $register, 'schema' => $schema] + $identity));
-		$payload = ($identity + $row + ['source' => 'gsc', 'importedAt' => $importedAt]);
 
 		try {
 			$objectService->saveObject(
@@ -110,7 +123,7 @@ class SearchQueryDailyStore {
 		}
 
 		return true;
-	}//end upsert()
+	}//end save()
 
 	/**
 	 * The id of the object already holding this identity, or null.
