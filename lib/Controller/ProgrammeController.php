@@ -36,6 +36,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammeEstimationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCA\Pipelinq\Util\ServiceResultResponse;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -51,6 +52,7 @@ use Throwable;
  */
 class ProgrammeController extends Controller {
 	use ServiceResultResponse;
+	use PartyObjectRead;
 
 	/**
 	 * Constructor.
@@ -245,16 +247,6 @@ class ProgrammeController extends Controller {
 			return null;
 		}
 
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->serialisedEntity(entity: $entity);
 	}//end readObject()
 }//end class

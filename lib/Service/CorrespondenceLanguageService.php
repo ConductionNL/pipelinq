@@ -44,6 +44,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
+use OCA\Pipelinq\Util\PartyObjectRead;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\L10N\IFactory;
@@ -56,6 +57,8 @@ use Throwable;
  * @spec openspec/specs/parties/spec.md#requirement-a-party-carries-the-language-it-asked-to-be-written-in-req-pcl-001
  */
 class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInterface {
+	use PartyObjectRead;
+
 	/**
 	 * The rule that produced an answer: the party asked for it.
 	 *
@@ -351,27 +354,6 @@ class CorrespondenceLanguageService implements CorrespondenceLanguageServiceInte
 			return null;
 		}
 
-		try {
-			$entity = $this->objectService->find(id: $partyId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				'CorrespondenceLanguageService: the party could not be read',
-				['party' => $partyId, 'exception' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
+		return $this->readLogged(id: $partyId, failure: 'CorrespondenceLanguageService: the party could not be read', idKey: 'party');
 	}//end readParty()
 }//end class
