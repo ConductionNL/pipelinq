@@ -19,20 +19,18 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 
 /**
  * Places a lead whose pipeline was deleted.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 final class OrphanedLeadPlacer {
 	/**
@@ -62,18 +60,11 @@ final class OrphanedLeadPlacer {
 	 *
 	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing applies.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function forOrphanedLead(array $lead, array $pipelines, ?string $now = null): array {
-		$pipelineId = trim((string)($lead['pipeline'] ?? ''));
-		if ($pipelineId === '') {
+		if (self::isOrphaned(pipelineId: trim((string)($lead['pipeline'] ?? '')), pipelines: $pipelines) === false) {
 			return [];
-		}
-
-		foreach ($pipelines as $pipeline) {
-			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
-				return [];
-			}
 		}
 
 		$target = $this->placer->defaultPipeline(pipelines: $pipelines);
@@ -88,11 +79,33 @@ final class OrphanedLeadPlacer {
 		if ($stage !== null) {
 			$patch['stage'] = $stage['name'];
 			$patch['stageOrder'] = $stage['order'];
-			$patch['stageEnteredAt'] = $this->moment(iso: $now);
+			$patch['stageEnteredAt'] = $this->placer->entryMoment(iso: $now);
 		}
 
 		return $patch;
 	}//end forOrphanedLead()
+
+	/**
+	 * Whether a lead's pipeline id names a pipeline that is not stored; a lead without one is not orphaned.
+	 *
+	 * @param string                           $pipelineId The lead's trimmed pipeline id.
+	 * @param array<int, array<string, mixed>> $pipelines  Stored pipelines.
+	 *
+	 * @return bool
+	 */
+	private static function isOrphaned(string $pipelineId, array $pipelines): bool {
+		if ($pipelineId === '') {
+			return false;
+		}
+
+		foreach ($pipelines as $pipeline) {
+			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isOrphaned()
 
 	/**
 	 * The closed stage a won or lost lead belongs in, by stage order.
@@ -108,40 +121,13 @@ final class OrphanedLeadPlacer {
 		}
 
 		$wantWon = ($status === 'won');
-		$stages = array_values(array_filter(
+		$stages = array_filter(
 			(array)($pipeline['stages'] ?? []),
 			static fn ($stage): bool => is_array($stage) === true
 				&& trim((string)($stage['name'] ?? '')) !== ''
 				&& ($stage['isClosed'] ?? false) === true
 				&& (($stage['isWon'] ?? false) === true) === $wantWon
-		));
-		if ($stages === []) {
-			return null;
-		}
-
-		usort(
-			$stages,
-			static fn (array $left, array $right): int => ((int)($left['order'] ?? 0) <=> (int)($right['order'] ?? 0))
 		);
-
-		return [
-			'name' => (string)$stages[0]['name'],
-			'order' => (int)($stages[0]['order'] ?? 1),
-		];
+		return $this->placer->lowestStage(stages: $stages);
 	}//end closedStageFor()
-
-	/**
-	 * An ISO 8601 moment: the given one, or now.
-	 *
-	 * @param string|null $iso The moment, or null for now.
-	 *
-	 * @return string The moment.
-	 */
-	private function moment(?string $iso): string {
-		if ($iso !== null && trim($iso) !== '') {
-			return $iso;
-		}
-
-		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-	}//end moment()
 }//end class

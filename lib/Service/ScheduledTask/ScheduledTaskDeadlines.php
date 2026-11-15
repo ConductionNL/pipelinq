@@ -19,14 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\ScheduledTask;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\NotificationService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -38,7 +38,7 @@ use Throwable;
  * into processing, or the assignee and the escalation group of an expired
  * one. A failed notification is logged and does not stop the run.
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
 class ScheduledTaskDeadlines {
 	/**
@@ -75,7 +75,7 @@ class ScheduledTaskDeadlines {
 	 */
 	public function expiryCutMinutes(): int {
 		$seconds = $this->appConfig->getValueString(
-			app: Application::APP_ID,
+			app: AppIdentity::APP_ID,
 			key: 'task_expiry.escalation_threshold_seconds',
 			default: ''
 		);
@@ -96,7 +96,7 @@ class ScheduledTaskDeadlines {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function notifyAssignee(array $task): void {
 		$assignee = $task['assigneeUserId'] ?? '';
@@ -135,6 +135,20 @@ class ScheduledTaskDeadlines {
 	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
 	 */
 	public function notifyExpired(array $task): void {
+		foreach ($this->expiryRecipients(task: $task) as $userId) {
+			$this->notifyExpiredTo(task: $task, userId: $userId);
+		}
+	}//end notifyExpired()
+
+	/**
+	 * Who hears of an expired task: its assignee first, then every member of
+	 * the escalation group not already named.
+	 *
+	 * @param array<string, mixed> $task The task.
+	 *
+	 * @return array<int, string>
+	 */
+	private function expiryRecipients(array $task): array {
 		$recipients = [];
 		$assignee   = (string)($task['assigneeUserId'] ?? '');
 		if ($assignee !== '') {
@@ -147,22 +161,30 @@ class ScheduledTaskDeadlines {
 			}
 		}
 
-		foreach ($recipients as $userId) {
-			try {
-				$this->notificationService->notifyTaskExpired(
-					title: (string)($task['subject'] ?? 'Scheduled task'),
-					userId: $userId,
-					objectId: (string)($task['id'] ?? ''),
-					deadline: (string)($task['deadline'] ?? '')
-				);
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'ScheduledTaskService: expiry notification dispatch failed',
-					['exception' => $e]
-				);
-			}
+		return $recipients;
+	}//end expiryRecipients()
+
+	/**
+	 * Tell one user the task expired; a failure is logged and the next user
+	 * still hears of it.
+	 *
+	 * @param array<string, mixed> $task   The task.
+	 * @param string               $userId The user.
+	 *
+	 * @return void
+	 */
+	private function notifyExpiredTo(array $task, string $userId): void {
+		try {
+			$this->notificationService->notifyTaskExpired(
+				title: (string)($task['subject'] ?? 'Scheduled task'),
+				userId: $userId,
+				objectId: (string)($task['id'] ?? ''),
+				deadline: (string)($task['deadline'] ?? '')
+			);
+		} catch (Throwable $e) {
+			$this->logger->error('ScheduledTaskService: expiry notification dispatch failed', ['exception' => $e]);
 		}
-	}//end notifyExpired()
+	}//end notifyExpiredTo()
 
 	/**
 	 * The members of the escalation group (app config
@@ -174,7 +196,7 @@ class ScheduledTaskDeadlines {
 	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
 	 */
 	private function getEscalationUserIds(): array {
-		$groupId = $this->appConfig->getValueString(app: Application::APP_ID, key: 'task_expiry.escalation_group', default: '');
+		$groupId = $this->appConfig->getValueString(app: AppIdentity::APP_ID, key: 'task_expiry.escalation_group', default: '');
 		if ($groupId === '') {
 			return [];
 		}

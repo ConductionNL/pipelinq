@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ namespace OCA\Pipelinq\Service\Social;
 /**
  * One social network, as the publishing job needs to see it.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 interface SocialNetworkAdapter {
 	/**
@@ -46,7 +46,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string;
 
@@ -56,7 +56,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return string The broker provider identifier.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function brokerProvider(): string;
 
@@ -65,7 +65,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int;
 
@@ -74,7 +74,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return int The media limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function maxMedia(): int;
 
@@ -83,7 +83,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return float The cost per published post.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	public function costPerPost(): float;
 
@@ -94,7 +94,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return float The cost per metrics read.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	public function costPerRead(): float;
 
@@ -108,7 +108,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return SocialAdapterCall The request to make.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall;
 
@@ -119,7 +119,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return SocialPublishOutcome The network's id and address, or a named failure.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function publish(SocialPublishRequest $request): SocialPublishOutcome;
 
@@ -132,7 +132,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null when there is none.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall;
 
@@ -146,7 +146,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function normaliseMetrics(array $payload, string $externalId = ''): array;
 
@@ -158,7 +158,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function followersCall(array $account): ?SocialAdapterCall;
 
@@ -169,7 +169,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return int The follower count, or 0 when the payload does not carry one.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function readFollowers(array $payload): int;
 
@@ -181,7 +181,7 @@ interface SocialNetworkAdapter {
 	 *
 	 * @return string An address that opens the network's composer.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function composerUrl(SocialPublishRequest $request): string;
 }//end interface

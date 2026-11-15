@@ -19,8 +19,18 @@
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../../store/modules/object.js'
+import workspaceContextMixin from './workspaceContextMixin.js'
 
 const TYPE_SLUG = 'pipelinq-client'
+
+/**
+ * @param {unknown} items The clients read.
+ * @return {string|number|undefined} The id of the first one, if any.
+ */
+function firstClientId(items) {
+	const first = Array.isArray(items) ? items[0] : null
+	return first && (first.id || (first['@self'] && first['@self'].id))
+}
 
 /**
  * WerkplekClientSelect — the Customer Support page's client in focus, beside
@@ -36,26 +46,9 @@ export default {
 
 	components: { CnResourceSelect },
 
-	inject: {
-		cnWorkspaceContext: { default: null },
-	},
+	mixins: [workspaceContextMixin],
 
 	computed: {
-		/**
-		 * The page's workspace context; the provided ref may arrive unwrapped or as `{ value }`.
-		 *
-		 * @return {object|null}
-		 *
-		 * @spec openspec/specs/kcc-werkplek/spec.md
-		 */
-		workspace() {
-			const c = this.cnWorkspaceContext
-			if (!c || typeof c !== 'object') {
-				return null
-			}
-			return 'value' in c ? c.value : c
-		},
-
 		/**
 		 * The id of the client in focus, or an empty string.
 		 *
@@ -98,8 +91,7 @@ export default {
 			const items = await store.fetchCollectionForOptions(TYPE_SLUG, {
 				_limit: 1,
 			})
-			const first = Array.isArray(items) ? items[0] : null
-			const id = first && (first.id || (first['@self'] && first['@self'].id))
+			const id = firstClientId(items)
 			if (id && !this.selectedClient) {
 				this.onSelect(String(id))
 			}

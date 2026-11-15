@@ -25,22 +25,23 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Competitor;
 
+use OCA\Pipelinq\Kernel\Contracts\WatchEventStoreInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
  * Idempotent writes of watch events.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
-class WatchEventStore {
+class WatchEventStore implements WatchEventStoreInterface {
 
 	/**
 	 * The schema slug the register fragment declares.
@@ -62,7 +63,7 @@ class WatchEventStore {
 	 * @param ListObjectStore $store Register-scoped object access.
 	 * @param ITimeFactory $time Time factory for the first-sighting stamp.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -75,7 +76,7 @@ class WatchEventStore {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function schemaSlug(): string {
 		return $this->store->schemaSlug(configKey: self::SCHEMA_CONFIG_KEY, default: self::SCHEMA_SLUG);
@@ -88,7 +89,7 @@ class WatchEventStore {
 	 *
 	 * @return array<int, array<string, mixed>> The events.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-the-competitors-page-shows-what-changed-and-says-what-did-not-run
 	 */
 	public function all(array $filters = []): array {
 		return $this->store->findAll(schemaSlug: $this->schemaSlug(), filters: $filters);
@@ -131,7 +132,7 @@ class WatchEventStore {
 	 *
 	 * @return array{created: bool, event: array<string, mixed>|null}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function upsert(array $watch, array $item, array $extra = []): array {
 		$watchId = $this->store->idOf(payload: $watch);
@@ -148,16 +149,8 @@ class WatchEventStore {
 		// hermiq wrote on an earlier run.
 		$base = ($existing ?? []);
 		unset($base['@self'], $base['id'], $base['uuid']);
-		$record = [
-			'competitorId' => trim((string)($watch['competitorId'] ?? '')),
-			'watchId' => $watchId,
-			'kind' => trim((string)($watch['kind'] ?? '')),
-			'title' => mb_substr(trim((string)($item['title'] ?? $url)), 0, 500, 'UTF-8'),
-			'url' => $url,
-			'diffSummary' => mb_substr(trim((string)($item['summary'] ?? '')), 0, 2000, 'UTF-8'),
-			'sourceStamp' => mb_substr(trim((string)($item['stamp'] ?? '')), 0, 128, 'UTF-8'),
-			'seenAt' => $this->seenAt(existing: $existing),
-		];
+		$record = self::eventFields(watch: ['watchId' => $watchId] + $watch, item: ['url' => $url] + $item)
+			+ ['seenAt' => $this->seenAt(existing: $existing)];
 
 		$id = null;
 		if ($existing !== null) {
@@ -172,6 +165,28 @@ class WatchEventStore {
 
 		return ['created' => ($existing === null), 'event' => $saved];
 	}//end upsert()
+
+	/**
+	 * The event's fields from its watch and item, trimmed and cut to their stored lengths.
+	 *
+	 * @param array<string, mixed> $watch The watch, with its resolved id as `watchId`.
+	 * @param array<string, mixed> $item  The item, with its trimmed `url`.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function eventFields(array $watch, array $item): array {
+		$url = (string)$item['url'];
+
+		return [
+			'competitorId' => trim((string)($watch['competitorId'] ?? '')),
+			'watchId' => (string)$watch['watchId'],
+			'kind' => trim((string)($watch['kind'] ?? '')),
+			'title' => mb_substr(trim((string)($item['title'] ?? $url)), 0, 500, 'UTF-8'),
+			'url' => $url,
+			'diffSummary' => mb_substr(trim((string)($item['summary'] ?? '')), 0, 2000, 'UTF-8'),
+			'sourceStamp' => mb_substr(trim((string)($item['stamp'] ?? '')), 0, 128, 'UTF-8'),
+		];
+	}//end eventFields()
 
 	/**
 	 * The event already holding this identity, or null.

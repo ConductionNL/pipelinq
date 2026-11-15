@@ -104,12 +104,6 @@
 			appId="pipelinq" />
 
 
-		<!-- BRP lookups and the mTLS certificate (bsn-validatie-en-brp-lookup). -->
-		<CnSettingsFieldsSection
-			v-if="isAdmin"
-			v-bind="sections.brpMonitor"
-			appId="pipelinq" />
-
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -245,6 +239,14 @@
 
 			<!-- Shillinq and XWiki, detected rather than typed. -->
 			<DetectedIntegrations v-if="isAdmin" />
+
+			<!-- Call transcription and the call review scorecards (contact-moments-call-review). -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.callReview"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
+			<ScorecardManager v-if="isAdmin && isConfigured" />
 
 			<!-- The CTI webhook log: not on the board, kept after its sections. -->
 			<CtiEventLog v-if="isAdmin && isConfigured" />
@@ -393,6 +395,7 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
@@ -408,7 +411,7 @@ import adminSections from './adminSections.json'
 /**
  * Whether the server detected the Shillinq app (IntegrationDetector).
  *
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
+ * @spec openspec/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
  * @return {boolean} True when Shillinq is installed.
  */
 function shillinqDetected() {
@@ -520,6 +523,7 @@ export default {
 		PipelineManager,
 		ProductCategoryManager,
 		ProspectSettings,
+		ScorecardManager,
 		TagManager,
 		SkillSettings,
 		AgentProfileSettings,
@@ -668,28 +672,28 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-87
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-87
 		 */
 		settingsStore() {
 			return useSettingsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-74
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-74
 		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-85
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-85
 		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-76
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-76
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -700,35 +704,35 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-72
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-72
 		 */
 		leadSourceTags() {
 			return this.leadSourcesStore.tags
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-73
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-73
 		 */
 		leadSourcesLoading() {
 			return this.leadSourcesStore.loading
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-83
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-83
 		 */
 		requestChannelTags() {
 			return this.requestChannelsStore.tags
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-84
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-84
 		 */
 		requestChannelsLoading() {
 			return this.requestChannelsStore.loading
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-77
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-77
 		 */
 		registerGroups() {
 			const types = objectTypes()
@@ -750,7 +754,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-75
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-75
 	 */
 	async mounted() {
 		const data = await this.settingsStore.fetchSettings()
@@ -797,7 +801,7 @@ export default {
 		 * so the sections show what the import wrote.
 		 *
 		 * @param {object} data The re-import response.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
 		 */
 		onReimported(data) {
 			if (data && data.config) {
@@ -810,7 +814,7 @@ export default {
 		 * reports the server's message as an error. Read the config again, so
 		 * the sections show what the import did write.
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
 		 */
 		async onReimportError() {
 			const data = await this.settingsStore.fetchSettings()
@@ -824,7 +828,7 @@ export default {
 		 * section saved, so the other sections do not overwrite it.
 		 *
 		 * @param {object} updated The updated config returned by the section.
-		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		onMarketingTrafficSaved(updated) {
 			this.config = updated || this.config
@@ -835,7 +839,7 @@ export default {
 		 * so the register mapping does not write an older value back.
 		 *
 		 * @param {object} sent What the section sent, by setting key.
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-the-admin-forms-are-declared-sections
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-the-admin-forms-are-declared-sections
 		 */
 		onSectionSaved(sent) {
 			this.config = { ...this.config, ...(sent || {}) }
@@ -846,7 +850,7 @@ export default {
 		 *
 		 * @param {object} configuration The full settings payload to save.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
 		 */
 		async save(configuration) {
 			this.saving = true
@@ -862,7 +866,7 @@ export default {
 
 		/**
 		 * @param {string} name The lead source to add.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
 		 */
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
@@ -870,7 +874,7 @@ export default {
 
 		/**
 		 * @param {string} id Identifier of the lead source to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
 		 */
 		async removeLeadSource(id) {
 			await this.leadSourcesStore.removeSource(id)
@@ -879,7 +883,7 @@ export default {
 		/**
 		 * @param {string} id Identifier of the lead source.
 		 * @param {string} name The new name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-81
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-81
 		 */
 		async renameLeadSource(id, name) {
 			await this.leadSourcesStore.renameSource(id, name)
@@ -887,7 +891,7 @@ export default {
 
 		/**
 		 * @param {string} name The request channel to add.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
 		 */
 		async addRequestChannel(name) {
 			await this.requestChannelsStore.addChannel(name)
@@ -895,7 +899,7 @@ export default {
 
 		/**
 		 * @param {string} id Identifier of the request channel to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
 		 */
 		async removeRequestChannel(id) {
 			await this.requestChannelsStore.removeChannel(id)
@@ -904,7 +908,7 @@ export default {
 		/**
 		 * @param {string} id Identifier of the request channel.
 		 * @param {string} name The new name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-82
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-82
 		 */
 		async renameRequestChannel(id, name) {
 			await this.requestChannelsStore.renameChannel(id, name)
@@ -912,7 +916,7 @@ export default {
 
 		/**
 		 * @param {string} sourceName The lead source to count references for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
 		 */
 		async checkLeadSourceUsage(sourceName) {
 			return this.countObjectsWithField('lead', 'source', sourceName)
@@ -920,7 +924,7 @@ export default {
 
 		/**
 		 * @param {string} channelName The request channel to count references for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
 		 */
 		async checkRequestChannelUsage(channelName) {
 			// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype),
@@ -933,7 +937,7 @@ export default {
 		/**
 		 * Persist xWiki integration settings (xwiki-integration).
 		 *
-		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#8.1
 		 */
 		async saveXwiki() {
 			this.savingXwiki = true
@@ -965,7 +969,7 @@ export default {
 		/**
 		 * Test the xWiki connection via /api/xwiki/status.
 		 *
-		 * @spec openspec/changes/xwiki-integration/tasks.md#8.1
+		 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#8.1
 		 */
 		async testXwiki() {
 			this.testingXwiki = true
@@ -1016,7 +1020,7 @@ export default {
 		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
 		 *   down to one of its subtypes (unify-ticket-supertype).
 		 *
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
 		 */
 		async countObjectsWithField(type, field, value, extraFilters = {}) {
 			const config = this.objectStore.objectTypeRegistry[type]

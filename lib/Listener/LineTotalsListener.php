@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Service\LineTotals\LineRollUp;
+use OCA\Pipelinq\Kernel\Contracts\LineRollUpInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -38,19 +38,19 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 class LineTotalsListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LineRollUp      $rollUp Writes the parent's totals.
+	 * @param LineRollUpInterface      $rollUp Writes the parent's totals.
 	 * @param LoggerInterface $logger Logs a roll-up that failed.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function __construct(
-		private readonly LineRollUp $rollUp,
+		private readonly LineRollUpInterface $rollUp,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -62,7 +62,7 @@ class LineTotalsListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function handle(Event $event): void {
 		$line = $this->objectOf(event: $event);

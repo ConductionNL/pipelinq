@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -34,6 +35,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/pipeline/spec.md#requirement-default-pipelines-mvp
  */
 class DefaultPipelineService {
+	use InjectedObjectService;
+
 	/**
 	 * Constructor.
 	 *
@@ -65,7 +68,7 @@ class DefaultPipelineService {
 	 * @return void
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 * @spec openspec/specs/pipeline/spec.md
 	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	public function createDefaultPipelines(): void {
@@ -81,12 +84,12 @@ class DefaultPipelineService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 * @spec openspec/specs/pipeline/spec.md
 	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	private function createDefaultPipelinesAsCaller(): void {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$pipelineSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$pipelineSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 
 		if ($registerId === '' || $pipelineSchemaId === '') {
 			$this->logger->warning(
@@ -96,80 +99,95 @@ class DefaultPipelineService {
 		}
 
 		try {
-			$objectService = $this->getObjectService();
-
-			$existing = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $pipelineSchemaId,
-					],
-					'limit' => 1,
-				]
-			);
-
-			if (empty($existing) === false) {
-				$this->logger->info('Pipelinq: The register has pipelines, skipping the default pipelines');
-				return;
-			}
-
-			// Retrieve the default view ID if available.
-			$defaultViewId = $this->appConfig->getValueString(Application::APP_ID, 'default_view', '');
-			$viewId = null;
-			if ($defaultViewId !== '') {
-				$viewId = $defaultViewId;
-			}
-
-			$this->savePipeline(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $pipelineSchemaId,
-				data: $this->stageData->getSalesPipelineData(
-					viewId: $viewId,
-					currency: $this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR')
-				)
-			);
-
-			$this->savePipeline(
-				objectService: $objectService,
-				registerId: $registerId,
-				schemaId: $pipelineSchemaId,
-				data: $this->stageData->getServiceRequestsPipelineData(viewId: $viewId)
-			);
+			$this->createWhenEmpty(registerId: $registerId, schemaId: $pipelineSchemaId);
 		} catch (\Exception $e) {
 			$this->logger->error('Pipelinq: Failed to create default pipelines', ['exception' => $e->getMessage()]);
 		}//end try
 	}//end createDefaultPipelinesAsCaller()
 
 	/**
-	 * Save a pipeline object.
+	 * Create the default pipelines unless the register already holds a pipeline.
 	 *
-	 * @param object $objectService The object service.
 	 * @param string $registerId The register ID.
 	 * @param string $schemaId The pipeline schema ID.
-	 * @param array $data The pipeline data.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
+	 */
+	private function createWhenEmpty(string $registerId, string $schemaId): void {
+		$objectService = $this->getObjectService();
+
+		$existing = $objectService->findAll(
+			['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 1]
+		);
+
+		if (empty($existing) === false) {
+			$this->logger->info('Pipelinq: The register has pipelines, skipping the default pipelines');
+			return;
+		}
+
+		$this->saveDefaultPipelines(registerId: $registerId, schemaId: $schemaId);
+	}//end createWhenEmpty()
+
+	/**
+	 * Save the sales pipeline and the service requests pipeline.
+	 *
+	 * @param string $registerId The register ID.
+	 * @param string $schemaId The pipeline schema ID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pipeline/spec.md
+	 */
+	private function saveDefaultPipelines(string $registerId, string $schemaId): void {
+		$target = [$registerId, $schemaId];
+		$viewId = $this->defaultViewId();
+		$currency = $this->appConfig->getValueString(AppIdentity::APP_ID, 'currency', 'EUR');
+
+		$sales = $this->stageData->getSalesPipelineData(viewId: $viewId, currency: $currency);
+		$this->savePipeline(target: $target, data: $sales);
+
+		$serviceRequests = $this->stageData->getServiceRequestsPipelineData(viewId: $viewId);
+		$this->savePipeline(target: $target, data: $serviceRequests);
+	}//end saveDefaultPipelines()
+
+	/**
+	 * The configured default view ID, or null when none is set.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/pipeline/spec.md
+	 */
+	private function defaultViewId(): string|null {
+		// Retrieve the default view ID if available.
+		$defaultViewId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'default_view', '');
+		$viewId = null;
+		if ($defaultViewId !== '') {
+			$viewId = $defaultViewId;
+		}
+
+		return $viewId;
+	}//end defaultViewId()
+
+	/**
+	 * Save a pipeline object.
+	 *
+	 * @param array{0: string, 1: string} $target The register ID and the pipeline schema ID.
+	 * @param array                       $data   The pipeline data.
 	 *
 	 * @return void
 	 */
-	private function savePipeline(object $objectService, string $registerId, string $schemaId, array $data): void {
-		$objectService->saveObject(
+	private function savePipeline(array $target, array $data): void {
+		$this->getObjectService()->saveObject(
 			$data,
 			[],
-			$registerId,
-			$schemaId,
+			$target[0],
+			$target[1],
 			null
 		);
 
 		$title = $data['title'] ?? 'Unknown';
 		$this->logger->info("Pipelinq: Created default {$title}");
 	}//end savePipeline()
-
-	/**
-	 * Get the OpenRegister ObjectService via the container.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

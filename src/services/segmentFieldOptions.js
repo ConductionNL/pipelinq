@@ -8,7 +8,7 @@
 // that is a materially larger surface than a UI-repair change warrants; see
 // DEFERRED_QUESTIONS in openspec/changes/marketing-segments-ui-repair/proposal.md.
 //
-// @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+// @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 
 /**
  * Dotted array-of-object field options shared by both audiences -- `contact`
@@ -21,7 +21,7 @@
  *
  * @type {Array<{value:string,label:string,type:string}>}
  *
- * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+ * @spec openspec/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
  */
 export const CHANNEL_FIELD_OPTIONS = [
 	{ value: 'emails.kind', label: 'Email kind', type: 'string' },
@@ -71,7 +71,7 @@ export const CUSTOMER_FIELD_OPTIONS = [
  * @param {string} entityType 'contact' or 'customer'.
  * @return {Array<{value:string,label:string,type:string}>} The field options.
  *
- * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+ * @spec openspec/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
  */
 export function fieldOptionsFor(entityType) {
 	return entityType === 'customer' ? CUSTOMER_FIELD_OPTIONS : CONTACT_FIELD_OPTIONS

@@ -40,6 +40,7 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Pipelinq\Service\Demo\DemoRecordSweeper
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  * @uses   \OCA\Pipelinq\Service\Demo\DemoUserFields
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class DemoRegisterImporterTest extends TestCase {
 	/**

@@ -27,7 +27,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 declare(strict_types=1);
@@ -62,7 +62,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array<string, mixed>|null The pipeline, or null when none applies.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function defaultPipeline(array $pipelines): ?array {
 		$fallback = null;
@@ -88,15 +88,29 @@ final class LeadStagePlacer {
 	 *
 	 * @return array{name: string, order: int}|null The stage, or null when the pipeline has no open stage.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function firstOpenStage(array $pipeline): ?array {
-		$stages = array_values(array_filter(
+		$stages = array_filter(
 			(array)($pipeline['stages'] ?? []),
 			static fn ($stage): bool => is_array($stage) === true
 				&& trim((string)($stage['name'] ?? '')) !== ''
 				&& ($stage['isClosed'] ?? false) !== true
-		));
+		);
+		return $this->lowestStage(stages: $stages);
+	}//end firstOpenStage()
+
+	/**
+	 * The stage with the lowest order (a missing order sorts as 0 and reads as 1).
+	 *
+	 * @param array<array-key, array<string, mixed>> $stages Named stages.
+	 *
+	 * @return array{name: string, order: int}|null The stage, or null when there is none.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md
+	 */
+	public function lowestStage(array $stages): ?array {
+		$stages = array_values($stages);
 		if ($stages === []) {
 			return null;
 		}
@@ -110,7 +124,7 @@ final class LeadStagePlacer {
 			'name' => (string)$stages[0]['name'],
 			'order' => (int)($stages[0]['order'] ?? 1),
 		];
-	}//end firstOpenStage()
+	}//end lowestStage()
 
 	/**
 	 * The fields a NEW lead is missing to sit in a stage.
@@ -125,7 +139,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing is missing or nothing fits.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function forNewLead(array $lead, array $pipelines, ?string $now = null): array {
 		$patch = $this->stagePatch(lead: $lead, pipelines: $pipelines);
@@ -134,7 +148,7 @@ final class LeadStagePlacer {
 		}
 
 		if (isset($patch['stage']) === true || $this->isBlank(value: $lead['stageEnteredAt'] ?? null) === true) {
-			$patch['stageEnteredAt'] = $this->moment(iso: $now);
+			$patch['stageEnteredAt'] = $this->entryMoment(iso: $now);
 		}
 
 		return $patch;
@@ -153,7 +167,7 @@ final class LeadStagePlacer {
 	 *
 	 * @return array<string, mixed> The fields to merge into the lead; [] when nothing is missing or nothing fits.
 	 *
-	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
 	public function forStoredLead(array $lead, array $pipelines, ?string $enteredAt = null): array {
 		$patch = $this->stagePatch(lead: $lead, pipelines: $pipelines);
@@ -162,7 +176,7 @@ final class LeadStagePlacer {
 		}
 
 		if (isset($patch['stage']) === true) {
-			$patch['stageEnteredAt'] = $this->moment(iso: $enteredAt);
+			$patch['stageEnteredAt'] = $this->entryMoment(iso: $enteredAt);
 		}
 
 		return $patch;
@@ -195,23 +209,49 @@ final class LeadStagePlacer {
 
 		$stageName = trim((string)($lead['stage'] ?? ''));
 		if ($stageName === '') {
-			$first = $this->firstOpenStage(pipeline: $pipeline);
-			if ($first === null) {
-				return $patch;
-			}
+			return $this->withFirstOpenStage(patch: $patch, pipeline: $pipeline);
+		}
 
-			$patch['stage'] = $first['name'];
-			$patch['stageOrder'] = $first['order'];
+		return $this->withStageOrder(patch: $patch, lead: $lead, pipeline: $pipeline, stageName: $stageName);
+	}//end stagePatch()
+
+	/**
+	 * Place a stageless lead on the pipeline's first open stage, when it has one.
+	 *
+	 * @param array<string, mixed> $patch The patch so far.
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 *
+	 * @return array<string, mixed> The patch.
+	 */
+	private function withFirstOpenStage(array $patch, array $pipeline): array {
+		$first = $this->firstOpenStage(pipeline: $pipeline);
+		if ($first === null) {
 			return $patch;
 		}
 
+		$patch['stage'] = $first['name'];
+		$patch['stageOrder'] = $first['order'];
+		return $patch;
+	}//end withFirstOpenStage()
+
+	/**
+	 * Fill in the stage order of a lead whose stage is known but whose order is blank.
+	 *
+	 * @param array<string, mixed> $patch The patch so far.
+	 * @param array<string, mixed> $lead The lead.
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 * @param string $stageName The lead's stage name.
+	 *
+	 * @return array<string, mixed> The patch.
+	 */
+	private function withStageOrder(array $patch, array $lead, array $pipeline, string $stageName): array {
 		$order = $this->stageOrder(pipeline: $pipeline, stageName: $stageName);
 		if ($order !== null && $this->isBlank(value: $lead['stageOrder'] ?? null) === true) {
 			$patch['stageOrder'] = $order;
 		}
 
 		return $patch;
-	}//end stagePatch()
+	}//end withStageOrder()
 
 	/**
 	 * An ISO 8601 moment: the given one, or now.
@@ -219,14 +259,16 @@ final class LeadStagePlacer {
 	 * @param string|null $iso The moment, or null for now.
 	 *
 	 * @return string The moment.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md
 	 */
-	private function moment(?string $iso): string {
+	public function entryMoment(?string $iso): string {
 		if ($iso !== null && trim($iso) !== '') {
 			return $iso;
 		}
 
 		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-	}//end moment()
+	}//end entryMoment()
 
 	/**
 	 * The pipeline a lead belongs to: its own, or the default when it has none.

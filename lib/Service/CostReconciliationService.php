@@ -26,8 +26,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CostReconciliationServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,8 +49,11 @@ use Throwable;
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class CostReconciliationService {
+class CostReconciliationService implements CostReconciliationServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ContainerObjectService;
 
 	/**
 	 * Default register slug.
@@ -82,11 +89,6 @@ class CostReconciliationService {
 	 * @return array{scanned: int, reconciled: int} Summary.
 	 *
 	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-row guard clauses
-	 *  over the pending-cost scan; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat per-row guards; path count is
-	 *  a product of independent skip conditions, not nesting.
 	 */
 	public function reconcile(): array {
 		$objectService = $this->getObjectService();
@@ -94,8 +96,88 @@ class CostReconciliationService {
 			return ['scanned' => 0, 'reconciled' => 0];
 		}
 
+		$rows = $this->findCandidateRows(objectService: $objectService);
+		if ($rows === null) {
+			return ['scanned' => 0, 'reconciled' => 0];
+		}
+
+		return $this->reconcileRows(objectService: $objectService, rows: $rows);
+	}//end reconcile()
+
+	/**
+	 * Reconcile each pending-cost row and count the outcomes.
+	 *
+	 * @param object          $objectService The OpenRegister ObjectService.
+	 * @param iterable<mixed> $rows          The candidate rows.
+	 *
+	 * @return array{scanned: int, reconciled: int} Summary.
+	 */
+	private function reconcileRows(object $objectService, iterable $rows): array {
+		$scanned = 0;
+		$reconciled = 0;
+		foreach ($rows as $raw) {
+			$outcome = $this->reconcileRow(objectService: $objectService, raw: $raw);
+			if ($outcome !== null) {
+				$scanned++;
+			}
+
+			if ($outcome === 'reconciled') {
+				$reconciled++;
+			}
+		}
+
+		return ['scanned' => $scanned, 'reconciled' => $reconciled];
+	}//end reconcileRows()
+
+	/**
+	 * Reconcile one row when its cost is pending.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param mixed  $raw           The row.
+	 *
+	 * @return string|null 'reconciled', 'scanned' when it stays pending, null when it was not pending.
+	 */
+	private function reconcileRow(object $objectService, mixed $raw): string|null {
+		$arr = $this->toArray(value: $raw);
+		if ($this->isCostPending(row: $arr) === false) {
+			return null;
+		}
+
+		$converted = $this->convertedRow(row: $arr);
+		if ($converted === null) {
+			return 'scanned';
+		}
+
+		if ($this->saveReconciled(objectService: $objectService, row: $converted) === true) {
+			return 'reconciled';
+		}
+
+		return 'scanned';
+	}//end reconcileRow()
+
+	/**
+	 * Whether a message row's cost still waits for currency conversion.
+	 *
+	 * @param array<string, mixed> $row The message row.
+	 *
+	 * @return bool
+	 */
+	private function isCostPending(array $row): bool {
+		$meta = (array)($row['metadata'] ?? []);
+		return (bool)($meta['costCurrencyPending'] ?? false);
+	}//end isCostPending()
+
+	/**
+	 * The rows to reconcile: those flagged pending, or every message row
+	 * when the metadata filter cannot be queried.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 *
+	 * @return mixed The rows, or null when neither query succeeds.
+	 */
+	private function findCandidateRows(object $objectService): mixed {
 		try {
-			$rows = $objectService->findAll(
+			return $objectService->findAll(
 				config: [
 					'filters' => [
 						'metadata.costCurrencyPending' => true,
@@ -109,132 +191,81 @@ class CostReconciliationService {
 				'CostReconciliationService.reconcile: findAll failed — falling back to full scan',
 				['exception' => $e->getMessage()]
 			);
+		}
 
-			try {
-				$rows = $objectService->findAll(
-					config: [
-						'filters' => [
-							'register' => $this->getRegisterSlug(),
-							'schema' => $this->getSchemaSlug(),
-						],
-					]
-				);
-			} catch (Throwable $e2) {
-				return ['scanned' => 0, 'reconciled' => 0];
-			}
-		}//end try
-
-		$scanned = 0;
-		$reconciled = 0;
-		foreach (($rows ?? []) as $raw) {
-			$arr = $this->toArray(value: $raw);
-			$meta = (array)($arr['metadata'] ?? []);
-			$pending = (bool)($meta['costCurrencyPending'] ?? false);
-			if ($pending === false) {
-				continue;
-			}
-
-			$scanned++;
-			$currency = (string)($meta['costCurrency'] ?? '');
-			$amount = (float)($meta['costSourceAmount'] ?? 0.0);
-			if ($currency === '' || $amount <= 0.0) {
-				continue;
-			}
-
-			$eur = $this->exchangeRate->toEur(amount: $amount, currency: $currency);
-			if ($eur === null) {
-				continue;
-			}
-
-			$arr['costEur'] = round($eur, 6);
-			$meta['costCurrencyPending'] = false;
-			$meta['costReconciledAt'] = $this->nowIso();
-			$arr['metadata'] = $meta;
-
-			$id = $this->extractId(payload: $arr);
-			try {
-				$uuid = $id;
-				if ($id === '') {
-					$uuid = null;
-				}
-
-				$objectService->saveObject(
-					object: $arr,
-					register: $this->getRegisterSlug(),
-					schema: $this->getSchemaSlug(),
-					uuid: $uuid,
-				);
-				$reconciled++;
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'CostReconciliationService.reconcile: save failed',
-					['id' => $id, 'exception' => $e->getMessage()]
-				);
-			}
-		}//end foreach
-
-		return ['scanned' => $scanned, 'reconciled' => $reconciled];
-	}//end reconcile()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
 		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'CostReconciliationService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
+			return $objectService->findAll(
+				config: [
+					'filters' => [
+						'register' => $this->getRegisterSlug(),
+						'schema' => $this->getSchemaSlug(),
+					],
+				]
 			);
+		} catch (Throwable $e2) {
 			return null;
 		}
-	}//end getObjectService()
+	}//end findCandidateRows()
 
 	/**
-	 * Extract a UUID / id / slug from a payload.
+	 * A pending row with its cost converted to EUR, or null when it cannot be.
 	 *
-	 * @param array<string, mixed> $payload Payload.
+	 * @param array<string, mixed> $row The pending message row.
 	 *
-	 * @return string Id or empty.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat fallback chain over candidate
-	 *  id keys; each branch is an independent early return.
+	 * @return array<string, mixed>|null The reconciled row, or null without a currency, amount or rate.
 	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
+	private function convertedRow(array $row): ?array {
+		$meta = (array)($row['metadata'] ?? []);
+		$currency = (string)($meta['costCurrency'] ?? '');
+		$amount = (float)($meta['costSourceAmount'] ?? 0.0);
+		if ($currency === '' || $amount <= 0.0) {
+			return null;
 		}
 
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
+		$eur = $this->exchangeRate->toEur(amount: $amount, currency: $currency);
+		if ($eur === null) {
+			return null;
 		}
 
-		return '';
-	}//end extractId()
+		$row['costEur'] = round($eur, 6);
+		$meta['costCurrencyPending'] = false;
+		$meta['costReconciledAt'] = $this->nowIso();
+		$row['metadata'] = $meta;
+
+		return $row;
+	}//end convertedRow()
 
 	/**
-	 * Register slug.
+	 * Save a reconciled row; a failed save is logged.
 	 *
-	 * @return string Slug.
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $row           The reconciled row.
+	 *
+	 * @return bool True when the row was saved.
 	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
+	private function saveReconciled(object $objectService, array $row): bool {
+		$id = $this->extractId(payload: $row);
+		try {
+			$uuid = $id;
+			if ($id === '') {
+				$uuid = null;
+			}
 
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
+			$objectService->saveObject(
+				object: $row,
+				register: $this->getRegisterSlug(),
+				schema: $this->getSchemaSlug(),
+				uuid: $uuid,
+			);
+			return true;
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'CostReconciliationService.reconcile: save failed',
+				['id' => $id, 'exception' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end saveReconciled()
 
 	/**
 	 * Schema slug.
@@ -242,7 +273,7 @@ class CostReconciliationService {
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'message_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'message_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}

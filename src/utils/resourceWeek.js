@@ -72,44 +72,129 @@ function isoDay(date) {
  * @spec openspec/changes/screens-inloop-resource-board/specs/appointment-booking/spec.md
  */
 export function resourceWeekLoad({ bookings = [], resourceId, workingHours = [], vacations = [], now = new Date() }) {
-	const { start, end } = weekBounds(now)
+	const week = weekBounds(now)
+	const bookable = bookableMinutes(week.start, { workingHours, vacations })
+	const { count, booked } = bookedInWeek(bookings, { resourceId, week })
+	return {
+		count,
+		percent: sharePercent(booked, bookable),
+	}
+}
 
+/**
+ * @param {number} booked The booked minutes.
+ * @param {number} bookable The bookable minutes.
+ * @return {(number|null)} The booked share as a whole percentage; null without bookable time.
+ */
+function sharePercent(booked, bookable) {
+	return bookable > 0 ? Math.round((booked / bookable) * 100) : null
+}
+
+/**
+ * The bookable minutes of the week: the working hours of each day the
+ * resource is not away.
+ *
+ * @param {Date} start The Monday the week starts on.
+ * @param {{workingHours: Array<object>, vacations: Array<object>}} availability The hours per weekday and the vacations.
+ * @return {number} The minutes.
+ */
+function bookableMinutes(start, availability) {
 	let bookable = 0
 	for (let i = 0; i < 7; i++) {
 		const day = new Date(start)
 		day.setDate(day.getDate() + i)
-		const iso = isoDay(day)
-		const away = vacations.some((v) => v && v.startDate && iso >= String(v.startDate).slice(0, 10) && iso <= String(v.endDate || v.startDate).slice(0, 10))
-		if (away) {
+		if (isAway(isoDay(day), availability.vacations)) {
 			continue
 		}
-		for (const row of workingHours) {
-			if (row && row.day === WEEKDAYS[day.getDay()]) {
-				bookable += minutesBetween(row.openTime, row.closeTime)
-			}
+		bookable += dayMinutes(availability.workingHours, WEEKDAYS[day.getDay()])
+	}
+	return bookable
+}
+
+/**
+ * Whether a vacation covers the day; one without an end covers its start day.
+ *
+ * @param {string} iso The day, YYYY-MM-DD.
+ * @param {Array<object>} vacations The vacations.
+ * @return {boolean} Whether the resource is away.
+ */
+function isAway(iso, vacations) {
+	return vacations.some((v) => v && v.startDate && iso >= String(v.startDate).slice(0, 10) && iso <= String(v.endDate || v.startDate).slice(0, 10))
+}
+
+/**
+ * The working minutes of a weekday, over every row for that day.
+ *
+ * @param {Array<object>} workingHours The hours per weekday.
+ * @param {string} weekday The weekday name.
+ * @return {number} The minutes.
+ */
+function dayMinutes(workingHours, weekday) {
+	let minutes = 0
+	for (const row of workingHours) {
+		if (row && row.day === weekday) {
+			minutes += minutesBetween(row.openTime, row.closeTime)
 		}
 	}
+	return minutes
+}
 
+/**
+ * The resource's bookings that start in the week, and the minutes they last.
+ *
+ * @param {Array<object>} bookings Bookings, any resource.
+ * @param {{resourceId: string, week: {start: Date, end: Date}}} scope The resource and the week.
+ * @return {{count: number, booked: number}} The count and the minutes.
+ */
+function bookedInWeek(bookings, scope) {
 	let count = 0
 	let booked = 0
 	for (const booking of bookings) {
-		if (!booking || CANCELLED.has(booking.status)) {
-			continue
-		}
-		const assigned = (booking.resourceAssignments || []).some((a) => a && a.resourceId === resourceId)
-		const from = new Date(booking.startAt)
-		if (!assigned || Number.isNaN(from.getTime()) || from < start || from >= end) {
+		if (!isLiveBooking(booking) || !isAssignedTo(booking, scope.resourceId) || !startsIn(booking, scope.week)) {
 			continue
 		}
 		count++
-		const to = new Date(booking.endAt)
-		if (!Number.isNaN(to.getTime()) && to > from) {
-			booked += (to - from) / 60000
-		}
+		booked += bookingMinutes(booking)
 	}
+	return { count, booked }
+}
 
-	return {
-		count,
-		percent: bookable > 0 ? Math.round((booked / bookable) * 100) : null,
+/**
+ * @param {?object} booking The booking.
+ * @return {boolean} Whether it is a booking that was not cancelled or moved.
+ */
+function isLiveBooking(booking) {
+	return Boolean(booking) && !CANCELLED.has(booking.status)
+}
+
+/**
+ * @param {object} booking The booking.
+ * @param {string} resourceId The resource.
+ * @return {boolean} Whether the resource is assigned to it.
+ */
+function isAssignedTo(booking, resourceId) {
+	return (booking.resourceAssignments || []).some((a) => a && a.resourceId === resourceId)
+}
+
+/**
+ * @param {object} booking The booking.
+ * @param {{start: Date, end: Date}} week The week.
+ * @return {boolean} Whether it starts inside the week.
+ */
+function startsIn(booking, week) {
+	const from = new Date(booking.startAt)
+	return !Number.isNaN(from.getTime()) && from >= week.start && from < week.end
+}
+
+/**
+ * @param {object} booking The booking.
+ * @return {number} Its length in minutes; zero without a usable end.
+ */
+function bookingMinutes(booking) {
+	const from = new Date(booking.startAt)
+	const to = new Date(booking.endAt)
+	if (!Number.isNaN(to.getTime()) && to > from) {
+		return (to - from) / 60000
 	}
+	return 0
 }

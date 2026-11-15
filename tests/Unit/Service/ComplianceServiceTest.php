@@ -427,6 +427,49 @@ class ComplianceServiceTest extends TestCase {
 	}//end testCheckSegmentComplianceShortCircuitsEmptySegment()
 
 	/**
+	 * A list-scoped send is gated by the list record, a channel send by the
+	 * channel record, and a suppressed contact is refused after consent.
+	 *
+	 * @return void
+	 */
+	public function testPermitsSendGatesOnTheScopeAskedFor(): void {
+		$this->seedConsent('c-l', 'email', 'consent', ['uuid' => 'c-l-list', 'listId' => 'list-1']);
+		$this->seedConsent('c-c', 'email', 'consent');
+		$this->dunning['c-c'] = 'overdue';
+
+		$this->assertSame(['allowed' => true, 'reason' => ''], $this->service->permitsSend('c-l', 'email', ComplianceService::INTENT_PROMOTIONAL, 'list-1'));
+		$this->assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_NO_CONSENT], $this->service->permitsSend('c-l', 'email'));
+		$this->assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_NO_CONSENT], $this->service->permitsSend('c-c', 'email', ComplianceService::INTENT_PROMOTIONAL, 'list-1'));
+		$this->assertSame(['allowed' => false, 'reason' => ComplianceService::REASON_SUPPRESSED], $this->service->permitsSend('c-c', 'email', ComplianceService::INTENT_PROMOTIONAL, ''));
+		$this->assertSame(['allowed' => true, 'reason' => ''], $this->service->permitsSend('c-c', 'email', ComplianceService::INTENT_SERVICE));
+	}//end testPermitsSendGatesOnTheScopeAskedFor()
+
+	/**
+	 * A segment check lists each missing and suppressed member once, a
+	 * member without a contact id as missing, and keeps the key order.
+	 *
+	 * @return void
+	 */
+	public function testASegmentCheckReportsEveryBucketOnce(): void {
+		$this->segmentService->method('getMembersForBlast')->willReturn([
+			['contactId' => 'c1'],
+			['contactId' => 'c2'],
+			['email' => 'no-id@example.test'],
+			['contactId' => 'c3'],
+			['contactId' => 'c2'],
+			['contactId' => 'c3'],
+		]);
+		$this->seedConsent('c1', 'email', 'consent');
+		$this->seedConsent('c3', 'email', 'consent');
+		$this->dunning['c3'] = 'overdue';
+
+		$this->assertSame(
+			['compliant' => false, 'missingConsent' => ['c2', ''], 'missingCount' => 2, 'suppressed' => ['c3'], 'suppressedCount' => 1],
+			$this->service->checkSegmentCompliance('seg-x', ' Email ')
+		);
+	}//end testASegmentCheckReportsEveryBucketOnce()
+
+	/**
 	 * validateTemplate: an email template missing the
 	 * `{{unsubscribe_link}}` token is rejected (GDPR Art. 7(3)).
 	 *
@@ -786,4 +829,186 @@ class ComplianceServiceTest extends TestCase {
 		$this->assertFalse($this->service->hasConsentForList('c-both', 'list-news', 'email'));
 		$this->assertTrue($this->service->hasConsentForChannel('c-both', 'email'));
 	}//end testWithdrawalScopedToAListLeavesTheChannelRecordAlone()
+
+	/**
+	 * A withdrawal without an existing record writes exactly this ledger
+	 * row, the list id only when the withdrawal is scoped to a list, and
+	 * logs what it recorded.
+	 *
+	 * @return void
+	 */
+	public function testTheWithdrawalLedgerRowAndItsLogLine(): void {
+		$logs = $this->captureInfoLogs();
+
+		$this->service->recordConsentWithdrawal('c-led', ' EMAIL ', 'bounce-hard', 'b-9');
+		$this->service->recordConsentWithdrawal('c-led', 'sms', 'user-unsubscribed', null, 'list-1');
+		$this->service->recordConsentWithdrawal('c-led', 'sms', 'user-unsubscribed', null, '');
+
+		$this->assertCount(3, $this->objectService->saved);
+		foreach ($this->objectService->saved as $row) {
+			$this->assertSame($row['consentedAt'], $row['withdrawnAt']);
+			$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $row['withdrawnAt']);
+		}
+
+		$rows = array_map(
+			static function (array $row): array {
+				unset($row['consentedAt'], $row['withdrawnAt']);
+				return $row;
+			},
+			$this->objectService->saved
+		);
+		$this->assertSame(
+			[
+				['contactId' => 'c-led', 'channel' => 'email', 'lawfulBasis' => 'consent', 'consentSource' => 'auto-withdrawal-ledger', 'withdrawnReason' => 'bounce-hard', 'softBounceCount' => 0, 'uuid' => 'saved-0'],
+				['contactId' => 'c-led', 'channel' => 'sms', 'lawfulBasis' => 'consent', 'consentSource' => 'auto-withdrawal-ledger', 'withdrawnReason' => 'user-unsubscribed', 'softBounceCount' => 0, 'listId' => 'list-1', 'uuid' => 'saved-1'],
+				['contactId' => 'c-led', 'channel' => 'sms', 'lawfulBasis' => 'consent', 'consentSource' => 'auto-withdrawal-ledger', 'withdrawnReason' => 'user-unsubscribed', 'softBounceCount' => 0, 'uuid' => 'saved-2'],
+			],
+			$rows
+		);
+		$this->assertSame(
+			[
+				['ComplianceService.recordConsentWithdrawal: withdrawal recorded', ['contactId' => 'c-led', 'channel' => 'email', 'listId' => null, 'reason' => 'bounce-hard', 'sourceBlastId' => 'b-9']],
+				['ComplianceService.recordConsentWithdrawal: withdrawal recorded', ['contactId' => 'c-led', 'channel' => 'sms', 'listId' => 'list-1', 'reason' => 'user-unsubscribed', 'sourceBlastId' => null]],
+				['ComplianceService.recordConsentWithdrawal: withdrawal recorded', ['contactId' => 'c-led', 'channel' => 'sms', 'listId' => '', 'reason' => 'user-unsubscribed', 'sourceBlastId' => null]],
+			],
+			$logs->lines
+		);
+	}//end testTheWithdrawalLedgerRowAndItsLogLine()
+
+	/**
+	 * A withdrawal of an already-withdrawn record logs that, writes
+	 * nothing to the record, and still logs the withdrawal.
+	 *
+	 * @return void
+	 */
+	public function testAnAlreadyWithdrawnRecordIsLoggedAndLeftAlone(): void {
+		$logs = $this->captureInfoLogs();
+		$this->seedConsent('c-y', 'email', 'consent', ['withdrawnAt' => '2026-01-15T10:00:00Z']);
+
+		$this->service->recordConsentWithdrawal('c-y', 'Email', 'complaint', 'b-3');
+
+		$this->assertSame([], $this->objectService->saved);
+		$this->assertSame(
+			[
+				['ComplianceService.recordConsentWithdrawal: already withdrawn', ['contactId' => 'c-y', 'channel' => 'email', 'listId' => null, 'sourceBlastId' => 'b-3']],
+				['ComplianceService.recordConsentWithdrawal: withdrawal recorded', ['contactId' => 'c-y', 'channel' => 'email', 'listId' => null, 'reason' => 'complaint', 'sourceBlastId' => 'b-3']],
+			],
+			$logs->lines
+		);
+	}//end testAnAlreadyWithdrawnRecordIsLoggedAndLeftAlone()
+
+	/**
+	 * A withdrawal missing its contact, channel or reason does nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnIncompleteWithdrawalDoesNothing(): void {
+		$logs = $this->captureInfoLogs();
+		$this->seedConsent('c-z', 'email', 'consent');
+
+		$this->service->recordConsentWithdrawal('', 'email', 'complaint');
+		$this->service->recordConsentWithdrawal('c-z', '  ', 'complaint');
+		$this->service->recordConsentWithdrawal('c-z', 'email', '');
+
+		$this->assertSame([], $this->objectService->saved);
+		$this->assertSame([], $this->objectService->updates);
+		$this->assertSame([], $logs->lines);
+		$this->assertTrue($this->service->hasConsentForChannel('c-z', 'email'));
+	}//end testAnIncompleteWithdrawalDoesNothing()
+
+	/**
+	 * A consent lookup that fails is logged and refuses: no consent.
+	 *
+	 * @return void
+	 */
+	public function testAFailingConsentLookupIsLoggedAndRefuses(): void {
+		$this->objectService = new class {
+			/**
+			 * The lookup fails.
+			 *
+			 * @param array<string, mixed> $config The query.
+			 *
+			 * @return array<int, mixed>
+			 */
+			public function findAll(array $config = []): array {
+				throw new \RuntimeException('store down');
+			}
+		};
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(
+			function (string $message, array $context = []) use (&$warnings): void {
+				$warnings[] = [$message, $context];
+			}
+		);
+
+		$this->assertFalse($this->service->hasConsentForChannel('c-1', 'email'));
+		$this->assertSame(
+			[['ComplianceService.findConsentRecord: findAll failed', ['contactId' => 'c-1', 'channel' => 'email', 'exception' => 'store down']]],
+			$warnings
+		);
+	}//end testAFailingConsentLookupIsLoggedAndRefuses()
+
+	/**
+	 * A record of another contact, channel or list is never taken for the
+	 * one asked for, even when the store ignores a filter.
+	 *
+	 * @return void
+	 */
+	public function testARecordOfAnotherContactChannelOrListIsNotTaken(): void {
+		$this->objectService->consentRecords = [];
+		$loose = new class {
+			/**
+			 * Rows the store returns whatever was asked.
+			 *
+			 * @var array<int, array<string, mixed>>
+			 */
+			public array $rows = [];
+
+			/**
+			 * Ignore every filter.
+			 *
+			 * @param array<string, mixed> $config The query.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = []): array {
+				return $this->rows;
+			}
+		};
+		$loose->rows = [
+			['contactId' => 'c-other', 'channel' => 'email', 'lawfulBasis' => 'consent', 'consentedAt' => '2026-01-01T00:00:00Z'],
+			['contactId' => 'c-1', 'channel' => 'sms', 'lawfulBasis' => 'consent', 'consentedAt' => '2026-01-01T00:00:00Z'],
+			['contactId' => 'c-1', 'channel' => 'email', 'listId' => 'list-1', 'lawfulBasis' => 'consent', 'consentedAt' => '2026-01-01T00:00:00Z'],
+		];
+		$this->objectService = $loose;
+
+		$this->assertFalse($this->service->hasConsentForChannel('c-1', 'email'));
+		$this->assertTrue($this->service->hasConsentForList('c-1', 'list-1', 'EMAIL'));
+		$this->assertFalse($this->service->hasConsentForList('c-1', 'list-2', 'email'));
+
+		$loose->rows[] = ['contactId' => 'c-1', 'channel' => 'Email', 'lawfulBasis' => 'consent', 'consentedAt' => '2026-01-01T00:00:00Z'];
+		$this->assertTrue($this->service->hasConsentForChannel('c-1', 'email'));
+	}//end testARecordOfAnotherContactChannelOrListIsNotTaken()
+
+	/**
+	 * Record the info lines the service logs.
+	 *
+	 * @return object An object whose `lines` hold [message, context] pairs.
+	 */
+	private function captureInfoLogs(): object {
+		$logs = new class {
+			/**
+			 * The logged lines.
+			 *
+			 * @var array<int, array{0: string, 1: array<string, mixed>}>
+			 */
+			public array $lines = [];
+		};
+		$this->logger->method('info')->willReturnCallback(
+			static function (string $message, array $context = []) use ($logs): void {
+				$logs->lines[] = [$message, $context];
+			}
+		);
+		return $logs;
+	}//end captureInfoLogs()
 }//end class

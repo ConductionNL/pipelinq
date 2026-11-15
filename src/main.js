@@ -222,7 +222,7 @@ seedMenuRuntime(
  * @param {object} manifest The bundled manifest (with `pages[]`).
  * @return {Array<object>} vue-router 3 routes config.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({

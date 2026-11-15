@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-7.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\CtiContactMatcher;
+use OCA\Pipelinq\Kernel\Contracts\CtiContactMatcherInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -38,19 +38,19 @@ use Psr\Log\LoggerInterface;
  * normalised `phoneE164` field. Re-running the step is a safe no-op as the
  * matcher skips records that already have a current `phoneE164`.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-7.1
  */
 class NormaliseCtiPhoneNumbers implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
 	 * @param IAppManager $appManager The app manager.
-	 * @param CtiContactMatcher $contactMatcher The CTI contact matcher.
+	 * @param CtiContactMatcherInterface $contactMatcher The CTI contact matcher.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly CtiContactMatcher $contactMatcher,
+		private readonly CtiContactMatcherInterface $contactMatcher,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

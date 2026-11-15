@@ -31,7 +31,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use OCP\EventDispatcher\Event;
 /**
  * Fired when a tender on a settled posTransaction has been queued for GL posting.
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 class TenderPostedEvent extends Event {
 	/**

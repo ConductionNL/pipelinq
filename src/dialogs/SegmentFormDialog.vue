@@ -132,6 +132,7 @@ import Check from 'vue-material-design-icons/Check.vue'
 import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
 import { cloneTree } from '../services/segmentRules.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 /**
  * @return {object} A blank segment.
@@ -159,33 +160,7 @@ export default {
 		SegmentBuilder,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the index page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The row being edited, or null to create. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -204,7 +179,7 @@ export default {
 		 *
 		 * @return {string|null}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
 		 */
 		segmentId() {
 			return (
@@ -326,25 +301,16 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Reset the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
-			 */
-			handler(open) {
-				if (open) {
-					this.reset()
-				}
-			},
-		},
-	},
-
 	methods: {
+		/**
+		 * Reset the form each time the dialog opens.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+		 */
+		prepareOnOpen() {
+			this.reset()
+		},
+
 		/**
 		 * Clear the form, and read the segment when editing one.
 		 *
@@ -363,7 +329,7 @@ export default {
 		/**
 		 * Read the segment being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
 		 */
 		async loadSegment() {
 			this.loading = true
@@ -387,7 +353,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+		 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 		 */
 		async save() {
 			if (!this.canSave) {

@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Integration\TicketLeafProvider;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketLeafProviderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -44,15 +44,15 @@ class TicketPartyController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param TicketLeafProvider $provider Resolves a master entity to its clients.
+	 * @param TicketLeafProviderInterface $provider Resolves a master entity to its clients.
 	 * @param IURLGenerator $urlGenerator Builds the ticket list URL.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TicketLeafProvider $provider,
+		private readonly TicketLeafProviderInterface $provider,
 		private readonly IURLGenerator $urlGenerator,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

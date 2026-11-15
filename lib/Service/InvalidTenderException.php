@@ -25,9 +25,9 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-003
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-004
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-003
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-004
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Exception;
  * transaction; tender sum vs. total mismatch), 400 for validation errors
  * (missing reference, amount < 0.01).
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-002
  */
 class InvalidTenderException extends Exception {
 	/**

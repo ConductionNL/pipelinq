@@ -21,15 +21,15 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+ * @spec openspec/specs/my-work/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,15 +63,15 @@ class TicketAssignController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest      $request     The request.
-	 * @param TicketService $tickets     Register and schema of the ticket supertype, and OpenRegister.
+	 * @param TicketServiceInterface $tickets     Register and schema of the ticket supertype, and OpenRegister.
 	 * @param IUserSession  $userSession The signed-in user.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly TicketService $tickets,
+		private readonly TicketServiceInterface $tickets,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -86,7 +86,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, or an error.
 	 *
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 * @spec openspec/specs/my-work/spec.md
 	 */
 	#[NoAdminRequired]
 	public function assignToMe(string $id = ''): JSONResponse {
@@ -113,7 +113,7 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->assign(ticket: $ticket->getObject(), id: $id, uid: $user->getUID());
+		return $this->assign(ticket: array_replace($ticket->getObject(), ['assignee' => $user->getUID()]), id: $id);
 	}//end assignToMe()
 
 	/**
@@ -126,7 +126,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, 404 when nothing waits, or an error.
 	 *
-	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 * @spec openspec/specs/my-work/spec.md
 	 */
 	#[NoAdminRequired]
 	public function assignOldest(): JSONResponse {
@@ -139,8 +139,24 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
+		$oldest = $this->oldestUnassigned(rows: $this->queueRows());
+		if ($oldest === null) {
+			return new JSONResponse(['error' => 'Nothing is waiting in the queue'], Http::STATUS_NOT_FOUND);
+		}
+
+		return $this->assign(ticket: array_replace($oldest[0], ['assignee' => $user->getUID()]), id: $oldest[1]);
+	}//end assignOldest()
+
+	/**
+	 * The queue's tickets, oldest first; none when the read fails.
+	 *
+	 * @return array<mixed>
+	 *
+	 * @spec openspec/specs/my-work/spec.md
+	 */
+	private function queueRows(): array {
 		try {
-			$rows = $this->tickets->getObjectService()->findAll(
+			return $this->tickets->getObjectService()->findAll(
 				config: [
 					'filters' => ['register' => $this->tickets->getRegisterId(), 'schema' => $this->tickets->getSchemaId()],
 					'sort' => ['occurredAt' => 'asc'],
@@ -148,39 +164,62 @@ class TicketAssignController extends Controller {
 				]
 			);
 		} catch (Throwable) {
-			$rows = [];
+			return [];
 		}
+	}//end queueRows()
 
+	/**
+	 * The first open, unassigned ticket and its id.
+	 *
+	 * @param array<mixed> $rows The queue's tickets, oldest first.
+	 *
+	 * @return array{0: array<string, mixed>, 1: string}|null
+	 *
+	 * @spec openspec/specs/my-work/spec.md
+	 */
+	private function oldestUnassigned(array $rows): array|null {
 		foreach ($rows as $row) {
-			$data = $row;
-			if (is_array($row) === false) {
-				$data = $row->getObject();
-				$data['id'] = $data['id'] ?? $row->getUuid();
-			}
-
+			$data = $this->ticketData(row: $row);
 			$id = (string) ($data['id'] ?? '');
 			if ($id === '' || empty($data['assignee']) === false || in_array($data['status'] ?? '', self::CLOSED_STATUSES, true) === true) {
 				continue;
 			}
 
-			return $this->assign(ticket: $data, id: $id, uid: $user->getUID());
+			return [$data, $id];
 		}
 
-		return new JSONResponse(['error' => 'Nothing is waiting in the queue'], Http::STATUS_NOT_FOUND);
-	}//end assignOldest()
+		return null;
+	}//end oldestUnassigned()
+
+	/**
+	 * A queue row's ticket data, with its id.
+	 *
+	 * @param mixed $row The queue row.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/specs/my-work/spec.md
+	 */
+	private function ticketData($row): array {
+		$data = $row;
+		if (is_array($row) === false) {
+			$data = $row->getObject();
+			$data['id'] = $data['id'] ?? $row->getUuid();
+		}
+
+		return $data;
+	}//end ticketData()
 
 	/**
 	 * Save a ticket with a new assignee.
 	 *
-	 * @param array<string, mixed> $ticket The ticket's data.
+	 * @param array<string, mixed> $ticket The ticket's data, carrying its new `assignee`.
 	 * @param string               $id     The ticket id.
-	 * @param string               $uid    The new assignee.
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, or 403 when the write is refused.
 	 */
-	private function assign(array $ticket, string $id, string $uid): JSONResponse {
+	private function assign(array $ticket, string $id): JSONResponse {
 		unset($ticket['@self']);
-		$ticket['assignee'] = $uid;
 
 		try {
 			$this->tickets->getObjectService()->saveObject(
@@ -193,6 +232,6 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'You cannot change this ticket'], Http::STATUS_FORBIDDEN);
 		}
 
-		return new JSONResponse(['id' => $id, 'assignee' => $uid]);
+		return new JSONResponse(['id' => $id, 'assignee' => $ticket['assignee']]);
 	}//end assign()
 }//end class

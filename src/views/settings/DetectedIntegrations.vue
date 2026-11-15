@@ -61,7 +61,7 @@ export default {
 		/**
 		 * The XWiki line, by the route the server found.
 		 *
-		 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+		 * @spec openspec/specs/first-time-setup/spec.md
 		 * @return {string} The sentence to show.
 		 */
 		xwikiText() {

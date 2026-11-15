@@ -288,6 +288,72 @@ class TicketServiceTest extends TestCase {
 	}//end testLogContactmomentWritesTicketAndReturnsUuid()
 
 	/**
+	 * logContactmoment() names each missing or invalid argument, in argument
+	 * order, trims what it is given and writes nothing on a refusal.
+	 *
+	 * @return void
+	 */
+	public function testLogContactmomentRefusalMessagesInArgumentOrder(): void {
+		$objectService = $this->mockObjectService();
+		$objectService->expects($this->never())->method('saveObject');
+		$service = $this->buildService();
+
+		$cases = [
+			[['  ', 'telefoon', 'T', 'inbound'], 'Required argument client is missing.'],
+			[[self::NIL_UUID, ' ', '', ''], 'Required argument channel is missing.'],
+			[[self::NIL_UUID, 'telefoon', "\t", ''], 'Required argument title is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', ''], 'Required argument direction is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', '  '], 'Required argument direction is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', 'sideways'], 'Argument direction must be one of ' . implode(', ', TicketService::DIRECTIONS) . '.'],
+			[[self::NIL_UUID, 'telefoon', 'T', 'Inbound'], 'Argument direction must be one of ' . implode(', ', TicketService::DIRECTIONS) . '.'],
+		];
+		foreach ($cases as [[$client, $channel, $title, $direction], $message]) {
+			$result = $service->logContactmoment(client: $client, channel: $channel, title: $title, direction: $direction);
+			$this->assertSame(['error' => ['code' => 'invalid_arguments', 'message' => $message]], $result, $message);
+		}
+	}//end testLogContactmomentRefusalMessagesInArgumentOrder()
+
+	/**
+	 * logContactmoment() trims client, channel, title and direction, leaves
+	 * empty optional fields out and stamps occurredAt.
+	 *
+	 * @return void
+	 */
+	public function testLogContactmomentTrimsAndOmitsEmptyOptionals(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$objectService = $this->mockObjectService();
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$captured): ObjectEntityInterface {
+				$captured = $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject($object);
+				return $entity;
+			}
+		);
+
+		$result = $this->buildService()->logContactmoment(
+			client: ' ' . self::NIL_UUID . ' ',
+			channel: ' email ',
+			title: ' Vraag ',
+			direction: ' outbound ',
+			outcome: '',
+			notes: ''
+		);
+
+		$this->assertSame(['ticketId' => self::NIL_UUID], $result);
+		$this->assertSame(self::NIL_UUID, $captured['client']);
+		$this->assertSame('email', $captured['channel']);
+		$this->assertSame('Vraag', $captured['title']);
+		$this->assertSame('outbound', $captured['direction']);
+		$this->assertArrayNotHasKey('outcome', $captured);
+		$this->assertArrayNotHasKey('description', $captured);
+		$this->assertNotFalse(\DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $captured['occurredAt']));
+	}//end testLogContactmomentTrimsAndOmitsEmptyOptionals()
+
+	/**
 	 * logContactmoment() denied by RBAC maps to a forbidden envelope, not a success.
 	 *
 	 * @return void
