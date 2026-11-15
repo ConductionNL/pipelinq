@@ -191,7 +191,7 @@ class BrokerCredentialReader {
 			return null;
 		}
 
-		return $this->latestOf(rows: $found[0], provider: $provider, ownerUid: $ownerUid);
+		return $this->latestOf(rows: $found[0], asked: ['provider' => $provider, 'owner' => $ownerUid]);
 	}//end findLatest()
 
 	/**
@@ -221,18 +221,17 @@ class BrokerCredentialReader {
 	 * The most recently connected credential of the owner among the rows.
 	 *
 	 * @param mixed $rows The credential rows.
-	 * @param string $provider The catalogue provider identifier.
-	 * @param string $ownerUid The user who connected.
+	 * @param array{provider: string, owner: string} $asked The catalogue provider identifier and the user who connected.
 	 *
 	 * @return array<string, mixed>|null The readable metadata, or null.
 	 *
 	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 	 */
-	private function latestOf($rows, string $provider, string $ownerUid): array|null {
+	private function latestOf($rows, array $asked): array|null {
 		$best = null;
 		foreach (($rows ?? []) as $row) {
 			$readable = $this->readable(entity: $row);
-			if ($this->belongsTo(row: $readable, provider: $provider, ownerUid: $ownerUid) === false) {
+			if ($this->belongsTo(row: $readable, asked: $asked) === false) {
 				continue;
 			}
 
@@ -252,17 +251,16 @@ class BrokerCredentialReader {
 	 * asked for while looking exactly like a correct answer.
 	 *
 	 * @param array<string, mixed> $row The credential metadata.
-	 * @param string $provider The provider that was asked for.
-	 * @param string $ownerUid The owner that was asked for.
+	 * @param array{provider: string, owner: string} $asked The provider and the owner that were asked for.
 	 *
 	 * @return bool True when both match.
 	 */
-	private function belongsTo(array $row, string $provider, string $ownerUid): bool {
-		if ($row === [] || (string)($row['provider'] ?? '') !== $provider) {
+	private function belongsTo(array $row, array $asked): bool {
+		if ($row === [] || (string)($row['provider'] ?? '') !== $asked['provider']) {
 			return false;
 		}
 
-		return ((string)($row['owner'] ?? '') === $ownerUid);
+		return ((string)($row['owner'] ?? '') === $asked['owner']);
 	}//end belongsTo()
 
 	/**
