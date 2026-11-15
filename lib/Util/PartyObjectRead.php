@@ -36,6 +36,7 @@ use Throwable;
  * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
  */
 trait PartyObjectRead {
+	use SerialisedEntity;
 
 	/**
 	 * Read one object, logging a failed read.
@@ -59,27 +60,4 @@ trait PartyObjectRead {
 
 		return $this->serialisedEntity(entity: $entity);
 	}//end readLogged()
-
-	/**
-	 * An entity's serialised data, or null when there is none.
-	 *
-	 * @param mixed $entity The entity, or null.
-	 *
-	 * @return array<string, mixed>|null The data, or null.
-	 *
-	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
-	 */
-	private function serialisedEntity(mixed $entity): ?array {
-		if ($entity === null) {
-			return null;
-		}
-
-		$data = $entity->jsonSerialize();
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
-	}//end serialisedEntity()
 }//end trait

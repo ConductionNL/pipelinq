@@ -36,7 +36,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammeEstimationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
-use OCA\Pipelinq\Util\PartyObjectRead;
+use OCA\Pipelinq\Util\SerialisedEntity;
 use OCA\Pipelinq\Util\ServiceResultResponse;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -52,7 +52,7 @@ use Throwable;
  */
 class ProgrammeController extends Controller {
 	use ServiceResultResponse;
-	use PartyObjectRead;
+	use SerialisedEntity;
 
 	/**
 	 * Constructor.
