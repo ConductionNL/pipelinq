@@ -43,6 +43,7 @@ use OCA\Pipelinq\Util\ChannelAdapterLookups;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -74,7 +75,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           The 2026-07 phpmd
  *  cleanup extracted several private single-purpose helpers
  *  (resolveSendContext, resolveTemplateForSend, attemptProviderSend,
- *  templateIdForSend, latestInboundTimestamp, firstScalarId)
+ *  templateIdForSend, latestInboundTimestamp)
  *  specifically to bring per-method complexity under threshold; further
  *  splitting the class would scatter one channel-adapter concern without
  *  reducing real coupling.
@@ -87,6 +88,7 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use ChannelAdapterLookups;
+	use SavedPayloadId;
 
 	/**
 	 * OpenRegister access scope for the webhook's LOOKUPS (contact,
@@ -1602,47 +1604,6 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 
 		return $this->toArray(value: $entity);
 	}//end loadTemplate()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$id = $this->firstScalarId(source: $payload);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarId(source: $payload['@self']);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * First non-empty scalar value among `uuid` / `id` / `slug` keys.
-	 *
-	 * Extracted from {@see extractId()} so both the top-level and `@self`
-	 * lookups share one implementation; behaviour is unchanged.
-	 *
-	 * @param array<string, mixed> $source Source array to probe.
-	 *
-	 * @return string The first matching value, or empty when none match.
-	 */
-	private function firstScalarId(array $source): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalarId()
 
 	/**
 	 * Current ISO 8601 UTC timestamp.

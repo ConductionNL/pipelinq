@@ -41,6 +41,7 @@ use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -69,6 +70,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
+	use SavedPayloadId;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -1085,7 +1087,7 @@ class ComplianceService implements ComplianceServiceInterface {
 		}
 
 		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$saved = $this->saveTemplateObject(payload: $payload, id: $this->extractTemplateId(payload: $existing));
+		$saved = $this->saveTemplateObject(payload: $payload, id: $this->extractId(payload: $existing));
 		if ($saved === null) {
 			return ['error' => 'Could not update template'];
 		}
@@ -1230,34 +1232,6 @@ class ComplianceService implements ComplianceServiceInterface {
 
 		return $this->toArray(value: $saved);
 	}//end saveTemplateObject()
-
-	/**
-	 * Extract a template's id from a payload (uuid > id > slug).
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty string.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback lookup (uuid > id > slug); extraction adds no clarity.
-	 */
-	private function extractTemplateId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractTemplateId()
 
 	/**
 	 * Resolve the CampaignTemplate schema slug from app config.

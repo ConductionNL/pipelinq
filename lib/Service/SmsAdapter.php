@@ -41,6 +41,7 @@ use OCA\Pipelinq\Util\ChannelAdapterLookups;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -70,6 +71,7 @@ class SmsAdapter implements SmsAdapterInterface {
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
 	use ChannelAdapterLookups;
+	use SavedPayloadId;
 
 	/**
 	 * Scope for the webhook's LOOKUPS only: reads without RBAC. Writes run as the messaging account.
@@ -887,45 +889,6 @@ class SmsAdapter implements SmsAdapterInterface {
 		parse_str($trimmed, $parsed);
 		return $parsed;
 	}//end decodeBody()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Return the first non-empty scalar value found under any of the given keys.
-	 *
-	 * @param array<string, mixed> $source Source array.
-	 * @param array<int, string> $keys Keys to try, in order.
-	 *
-	 * @return string The first matching value cast to string, or empty.
-	 */
-	private function firstScalarValue(array $source, array $keys): string {
-		foreach ($keys as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalarValue()
 
 	/**
 	 * Current ISO 8601 UTC timestamp.

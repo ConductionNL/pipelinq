@@ -34,6 +34,7 @@ use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -53,6 +54,7 @@ class WebhookProcessorJob extends TimedJob {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
+	use SavedPayloadId;
 
 	/**
 	 * Default register slug.
@@ -244,46 +246,6 @@ class WebhookProcessorJob extends TimedJob {
 
 		return ['status' => 'unknownChannel'];
 	}//end dispatchChannel()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$keys = ['uuid', 'id', 'slug'];
-		$direct = $this->firstScalar(source: $payload, keys: $keys);
-		if ($direct !== '') {
-			return $direct;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalar(source: $payload['@self'], keys: $keys);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Return the first non-empty scalar value among the given keys.
-	 *
-	 * @param array<string, mixed> $source Source array.
-	 * @param array<int, string> $keys Candidate keys, in priority order.
-	 *
-	 * @return string First matching value cast to string, or empty.
-	 */
-	private function firstScalar(array $source, array $keys): string {
-		foreach ($keys as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalar()
 
 	/**
 	 * Schema slug.

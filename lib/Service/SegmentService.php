@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -75,6 +76,7 @@ class SegmentService implements SegmentServiceInterface {
 	use PayloadToArray;
 	use ConfiguredRegisterSlug;
 	use ContainerObjectService;
+	use SavedPayloadId;
 
 	/**
 	 * Default estimateSize cache TTL in seconds when the
@@ -692,7 +694,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		$estimated = 0;
-		$idForSize = $this->extractSegmentId(payload: $saved);
+		$idForSize = $this->extractId(payload: $saved);
 		if ($idForSize !== '') {
 			$estimated = $this->estimateSize(segmentId: $idForSize);
 			$saved['estimatedSize'] = $estimated;
@@ -771,7 +773,7 @@ class SegmentService implements SegmentServiceInterface {
 		// controller answer honestly; the caller can retry.
 		$saved = $this->saveSegmentObject(
 			payload: $payload,
-			id: $this->extractSegmentId(payload: $segment)
+			id: $this->extractId(payload: $segment)
 		);
 		if ($saved === null) {
 			throw new RuntimeException('Pipelinq: the refreshed segment size could not be persisted.');
@@ -893,31 +895,9 @@ class SegmentService implements SegmentServiceInterface {
 	}//end findEntities()
 
 	/**
-	 * Extract the id from a Segment payload (uuid > id > slug).
-	 *
-	 * @param array<string, mixed> $payload Segment payload.
-	 *
-	 * @return string Id or empty string.
-	 */
-	private function extractSegmentId(array $payload): string {
-		$id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
-		}
-
-		return '';
-	}//end extractSegmentId()
-
-	/**
 	 * First non-empty scalar value among the given keys.
 	 *
-	 * Extracted so {@see extractSegmentId()} (and other id-resolution
-	 * helpers) share one implementation; behaviour is unchanged: a
-	 * missing key or a non-scalar / empty-string value is skipped.
+	 * A missing key or a non-scalar / empty-string value is skipped.
 	 *
 	 * @param array<string, mixed> $source Source array to probe.
 	 * @param array<int, string> $keys Keys to check, in priority order.

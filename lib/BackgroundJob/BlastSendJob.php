@@ -37,6 +37,7 @@ use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -56,6 +57,7 @@ use Throwable;
 class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	use PayloadToArray;
 	use ContainerObjectService;
+	use SavedPayloadId;
 
 	/**
 	 * Interval in seconds (5 minutes).
@@ -360,34 +362,6 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @return string Identifier or empty.
 	 */
 	private function extractBlastId(array $blast): string {
-		$identity = $this->firstIdentity(source: $blast);
-		if ($identity !== '') {
-			return $identity;
-		}
-
-		$self = ($blast['@self'] ?? null);
-		if (is_array($self) === true) {
-			return $this->firstIdentity(source: $self);
-		}
-
-		return '';
+		return $this->extractId(payload: $blast);
 	}//end extractBlastId()
-
-	/**
-	 * The first non-empty scalar of `uuid`, `id` and `slug`.
-	 *
-	 * @param array<string, mixed> $source The row or its `@self`.
-	 *
-	 * @return string The identity, or ''.
-	 */
-	private function firstIdentity(array $source): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstIdentity()
 }//end class
