@@ -264,8 +264,6 @@ class MessagingController extends Controller {
 			return $refusal;
 		}
 
-		$uid = $this->privilege->actingUserId();
-
 		$change = new ConsentChange(
 			contactId: $contactId,
 			channel: $channel,
@@ -285,7 +283,7 @@ class MessagingController extends Controller {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
-		$this->recordConsent(change: $change->attributedTo(userId: $uid));
+		$this->recordConsent(change: $change->attributedTo(userId: $this->privilege->actingUserId()));
 
 		return new JSONResponse(['status' => 'recorded', 'state' => $this->consentService->latestState(contactId: $contactId, channel: $channel)]);
 	}//end consent()
