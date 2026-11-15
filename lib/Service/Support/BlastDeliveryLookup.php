@@ -38,6 +38,7 @@ use Throwable;
  */
 trait BlastDeliveryLookup {
 	use ObjectServiceTarget;
+	use LoggedFindAsArray;
 
 	/**
 	 * Load one BlastDelivery row by id.
@@ -57,17 +58,9 @@ trait BlastDeliveryLookup {
 
 		[$register, $schema, $objectService] = $target;
 
-		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info($notFound, ['id' => $id, 'exception' => $e->getMessage()]);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->loggedFindAsArray(
+			find: fn (): mixed => $objectService->find(id: $id, register: $register, schema: $schema),
+			onFailure: fn (Throwable $e) => $this->logger->info($notFound, ['id' => $id, 'exception' => $e->getMessage()])
+		);
 	}//end findBlastDelivery()
 }//end trait
