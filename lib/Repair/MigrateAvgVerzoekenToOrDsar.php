@@ -642,7 +642,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			$case['dueAt'] = $dueAt;
 		}
 
-		$this->applyExtension(case: $case, request: $request, dueAt: $dueAt);
+		$this->applyExtension(case: $case, request: $request);
 
 		$case = $this->copyOptionalFields(case: $case, request: $request);
 		$case = $this->applyGround(case: $case, weigering: $weigering);
@@ -787,12 +787,12 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * Apply extension fields (extendedUntil / extensionReason) to the case.
 	 *
 	 * @param array<string, mixed> $case The case payload (by reference).
-	 * @param array<string, mixed> $request The source object.
-	 * @param string $dueAt The base due date.
+	 * @param array<string, mixed> $request The source object, carrying the base due date.
 	 *
 	 * @return void
 	 */
-	private function applyExtension(array &$case, array $request, string $dueAt): void {
+	private function applyExtension(array &$case, array $request): void {
+		$dueAt = (string)($request['wettelijkeTermijnVerloopt'] ?? '');
 		$verlengdWith = (int)($request['verlengdMet'] ?? 0);
 		if ($verlengdWith <= 0) {
 			return;
