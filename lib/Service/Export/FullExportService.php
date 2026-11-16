@@ -45,6 +45,7 @@ use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Throwable;
@@ -300,14 +301,21 @@ class FullExportService implements FullExportServiceInterface {
 	/**
 	 * OpenRegister's object file reader, or null when this OpenRegister does not publish it.
 	 *
+	 * Asked with get(), not has(): an app container answers has() false for
+	 * another app's registered alias while get() resolves it.
+	 *
 	 * @return object|null The reader.
 	 */
 	private function objectFileReader(): ?object {
-		if ($this->container === null || $this->container->has(self::OBJECT_FILE_READER) === false) {
+		if ($this->container === null) {
 			return null;
 		}
 
-		return $this->container->get(self::OBJECT_FILE_READER);
+		try {
+			return $this->container->get(self::OBJECT_FILE_READER);
+		} catch (ContainerExceptionInterface) {
+			return null;
+		}
 	}//end objectFileReader()
 
 	/**
