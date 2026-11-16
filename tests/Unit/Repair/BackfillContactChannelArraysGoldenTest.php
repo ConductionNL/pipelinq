@@ -46,6 +46,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * @covers \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */

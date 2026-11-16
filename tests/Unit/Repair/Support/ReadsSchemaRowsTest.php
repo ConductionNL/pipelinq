@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
  * @uses \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
  */
 class ReadsSchemaRowsTest extends TestCase {
 
