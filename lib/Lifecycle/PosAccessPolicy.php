@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -44,7 +45,7 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
  */
-class PosAccessPolicy {
+class PosAccessPolicy implements PosAccessPolicyInterface {
 	/**
 	 * App-config key for the POS group (cashier-level access).
 	 *

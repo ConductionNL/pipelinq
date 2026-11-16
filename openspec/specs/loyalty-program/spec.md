@@ -369,7 +369,7 @@ query performance caching (which is refreshed daily).
   - 100 redemptions in the period
   - Associated sales value EUR 5000
 - WHEN cost % is calculated
-- THEN cost % MUST be (100 * 5 / 5000) * 100 = 100%
+- THEN cost % MUST be (100 * 5 / 5000) * 100 = 10%
 - AND a tooltip MUST explain the calculation
 - AND the metric MUST be configurable per redemption option (cost basis)
 

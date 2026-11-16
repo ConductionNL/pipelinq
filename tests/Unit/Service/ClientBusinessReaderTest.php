@@ -28,6 +28,7 @@ use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The client's business, as sentences for the side card.
@@ -68,6 +69,7 @@ class ClientBusinessReaderTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function find(mixed ...$args): array {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->client;
 			}
 

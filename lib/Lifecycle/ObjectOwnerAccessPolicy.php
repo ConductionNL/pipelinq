@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -100,11 +100,8 @@ class ObjectOwnerAccessPolicy {
 		}
 
 		$owner = trim((string)($object[$ownerField] ?? ''));
-		if ($owner !== '' && $owner === $uid) {
-			return true;
-		}
 
-		return $this->isPrivileged(uid: $uid);
+		return ($owner !== '' && $owner === $uid) || $this->isPrivileged(uid: $uid);
 	}//end mayAccess()
 
 	/**
@@ -128,7 +125,7 @@ class ObjectOwnerAccessPolicy {
 		}
 
 		// Deployment-configured CRM group, additive to the built-in list.
-		$configured = $this->appConfig->getValueString(Application::APP_ID, self::CRM_GROUP_KEY, '');
+		$configured = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CRM_GROUP_KEY, '');
 		if ($configured !== '' && $this->groupManager->isInGroup($uid, $configured) === true) {
 			return true;
 		}

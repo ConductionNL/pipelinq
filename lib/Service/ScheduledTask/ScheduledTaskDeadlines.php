@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\ScheduledTask;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\NotificationService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -75,7 +75,7 @@ class ScheduledTaskDeadlines {
 	 */
 	public function expiryCutMinutes(): int {
 		$seconds = $this->appConfig->getValueString(
-			app: Application::APP_ID,
+			app: AppIdentity::APP_ID,
 			key: 'task_expiry.escalation_threshold_seconds',
 			default: ''
 		);
@@ -196,7 +196,7 @@ class ScheduledTaskDeadlines {
 	 * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
 	 */
 	private function getEscalationUserIds(): array {
-		$groupId = $this->appConfig->getValueString(app: Application::APP_ID, key: 'task_expiry.escalation_group', default: '');
+		$groupId = $this->appConfig->getValueString(app: AppIdentity::APP_ID, key: 'task_expiry.escalation_group', default: '');
 		if ($groupId === '') {
 			return [];
 		}

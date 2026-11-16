@@ -35,7 +35,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -47,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
  */
-class ConnectionReportService {
+class ConnectionReportService implements ConnectionReportServiceInterface {
 
 	/**
 	 * Integriq's report event (ADR-041). Named by string so pipelinq stays
@@ -150,6 +151,19 @@ class ConnectionReportService {
 			return false;
 		}
 
+		return $this->dispatchReport(report: ['key' => $key, 'status' => $status, 'message' => $message]);
+	}//end report()
+
+	/**
+	 * Dispatch a connection report as integriq's status event; a failure is logged.
+	 *
+	 * Without the event class integriq ships nothing is sent.
+	 *
+	 * @param array{key: string, status: string, message: string} $report The connection key, status and message.
+	 *
+	 * @return bool True when the report was dispatched.
+	 */
+	private function dispatchReport(array $report): bool {
 		$eventClass = $this->resolveEventClass(eventClass: self::STATUS_EVENT);
 		if ($eventClass === null) {
 			return false;
@@ -157,10 +171,10 @@ class ConnectionReportService {
 
 		try {
 			$event = new $eventClass(
-				app: Application::APP_ID,
-				key: $key,
-				status: $status,
-				message: $message,
+				app: AppIdentity::APP_ID,
+				key: $report['key'],
+				status: $report['status'],
+				message: $report['message'],
 			);
 			if ($event instanceof Event === false) {
 				return false;
@@ -171,11 +185,11 @@ class ConnectionReportService {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: could not send a connection report to integriq',
-				['key' => $key, 'exception' => $e->getMessage()]
+				['key' => $report['key'], 'exception' => $e->getMessage()]
 			);
 			return false;
 		}//end try
-	}//end report()
+	}//end dispatchReport()
 
 	/**
 	 * Whether the key or the status is outside the contract; the refusal is logged.

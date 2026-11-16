@@ -44,11 +44,12 @@ paths = [
 ]
 
 [[allowlists]]
-description = "Unit test fixtures: made-up passwords, a sequential example UUID, placeholder payment intent ids and fixed signing secrets that exist only inside the tests."
+description = "Unit test fixtures: made-up passwords, a sequential example UUID, a sequential minimum-length secret, placeholder payment intent ids and fixed signing secrets that exist only inside the tests."
 targetRules = ["generic-api-key"]
 paths = [
   '''(^|/)tests/Unit/Controller/PortalPasswordResetFlowTest\.php$''',
   '''(^|/)tests/Unit/Controller/PortalQuestionControllerTest\.php$''',
+  '''(^|/)tests/Unit/Portal/PortalAssertionVerifierBoundaryTest\.php$''',
   '''(^|/)tests/Unit/Portal/PortalAssertionVerifierTest\.php$''',
   '''(^|/)tests/Unit/Service/Payment/StripeAdapterTest\.php$''',
   '''(^|/)tests/Unit/Service/Portal/DocumentSigningServiceTest\.php$''',

@@ -146,24 +146,35 @@ class BrokerHttpTransport implements HttpTransport {
 			return self::NO_RESPONSE;
 		}
 
+		return $this->sent(call: ['method' => $method, 'url' => $url, 'headers' => $headers, 'body' => $body]);
+	}//end request()
+
+	/**
+	 * Send one call through the broker; a failure is logged and answers no response.
+	 *
+	 * @param array{method: string, url: string, headers: array<string, string>, body: string|null} $call The call.
+	 *
+	 * @return array{status: int, body: array<string, mixed>, raw: string}
+	 */
+	private function sent(array $call): array {
 		try {
 			$broker = $this->container->get(self::BROKER_CLASS);
 			$response = $broker->request(
 				$this->credentialId,
 				self::APP_ID,
-				$method,
-				$this->toPath(url: $url),
-				$this->stripBrokerOwnedHeaders(headers: $headers),
-				$body,
+				$call['method'],
+				$this->toPath(url: $call['url']),
+				$this->stripBrokerOwnedHeaders(headers: $call['headers']),
+				$call['body'],
 				$this->actingUserId
 			);
 		} catch (Throwable $e) {
-			$this->logFailedCall(method: $method, url: $url);
+			$this->logFailedCall(method: $call['method'], url: $call['url']);
 			return self::NO_RESPONSE;
 		}
 
 		return $this->toReply(response: $response);
-	}//end request()
+	}//end sent()
 
 	/**
 	 * Log a failed broker call.

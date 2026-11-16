@@ -98,6 +98,7 @@ function shillinqLabel(resolved) {
 const RATE_SOURCE_LABELS = new Map([
 	['override', () => t('pipelinq', 'Set by an administrator')],
 	['shillinq', shillinqLabel],
+	['ecb', () => t('pipelinq', 'ECB daily rate')],
 	['manual', () => t('pipelinq', 'Typed in Forecast settings')],
 	['none', () => t('pipelinq', 'No rate, counted at face value')],
 ])

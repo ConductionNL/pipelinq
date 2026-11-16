@@ -1,0 +1,33 @@
+{
+  "_note": "reports-compare-periods-and-scheduled-delivery. An export destination of type mail sends the formatted report as an attachment to Nextcloud users and groups (ReportMailDelivery); it needs no connector source or path, so those are required by ExportDestinationService for the other types only. Version 1.1.0 adds the type and the optional recipients.",
+  "components": {
+    "schemas": {
+      "exportDestination": {
+        "slug": "exportDestination",
+        "version": "1.1.0",
+        "required": ["name", "type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Destination type.",
+            "enum": ["s3", "azure_data_lake", "gcs", "bigquery", "snowflake", "sftp", "postgres", "mail"],
+            "title": "Type"
+          },
+          "recipients": {
+            "type": "array",
+            "title": "Recipients",
+            "description": "The Nextcloud users and groups a mailed report goes to.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string", "enum": ["user", "group"]},
+                "id": {"type": "string", "maxLength": 255}
+              },
+              "required": ["type", "id"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -33,6 +33,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * @covers \OCA\Pipelinq\Service\Demo\DemoRegisterImporter
@@ -135,7 +136,10 @@ class DemoRegisterImporterTest extends TestCase {
 			fn (array $config): array => $this->storedFor((string)$config['filters']['schema'])
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register = null, $schemaId = null): bool {
+			function (ObjectDeletion $deletion): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schemaId = $deletion->target->schema;
 				$this->record(['deleteObject', $uuid, (string)$register, (string)$schemaId]);
 				return true;
 			}

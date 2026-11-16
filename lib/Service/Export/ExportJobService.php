@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service\Export;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -46,13 +48,41 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class ExportJobService extends AbstractExportService {
+class ExportJobService extends AbstractExportService implements ExportJobServiceInterface {
 	/**
 	 * The exportJob schema config key.
 	 *
 	 * @var string
 	 */
 	private const SCHEMA_KEY = 'exportJob_schema';
+
+	/**
+	 * The app config key of the failed runs in a row that switch a job off.
+	 *
+	 * @var string
+	 */
+	public const FAILURE_THRESHOLD_KEY = 'export_failure_threshold';
+
+	/**
+	 * The default number of failed runs in a row that switch a job off.
+	 *
+	 * @var int
+	 */
+	public const DEFAULT_FAILURE_THRESHOLD = 3;
+
+	/**
+	 * The lowest threshold an administrator may set.
+	 *
+	 * @var int
+	 */
+	public const MIN_FAILURE_THRESHOLD = 1;
+
+	/**
+	 * The highest threshold an administrator may set.
+	 *
+	 * @var int
+	 */
+	public const MAX_FAILURE_THRESHOLD = 10;
 
 	/**
 	 * Constructor.
@@ -65,6 +95,7 @@ class ExportJobService extends AbstractExportService {
 	 * @param CronExpressionHelper $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ExportRunSummary $summary A job's last and next run.
+	 * @param ExportJobSwitchOffNotifier|null $switchOffNotifier Tells the administrators a job was switched off.
 	 */
 	public function __construct(
 		ContainerInterface $container,
@@ -75,6 +106,7 @@ class ExportJobService extends AbstractExportService {
 		private CronExpressionHelper $cron,
 		private LoggerInterface $logger,
 		private ExportRunSummary $summary,
+		private ?ExportJobSwitchOffNotifier $switchOffNotifier=null,
 	) {
 		parent::__construct(
 			container: $container,
@@ -202,6 +234,10 @@ class ExportJobService extends AbstractExportService {
 
 		$job['enabled'] = true;
 		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
+		// Switching on starts the count again and clears an automatic switch-off.
+		$job['consecutiveFailures'] = 0;
+		$job['pausedReason'] = null;
+		$job['pausedAt'] = null;
 
 		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $id);
 	}//end enableJob()
@@ -233,14 +269,104 @@ class ExportJobService extends AbstractExportService {
 	 * @return array<string, mixed> The updated job.
 	 *
 	 * @throws OCSNotFoundException When the job is absent.
+	 * A succeeded run sets the job's failed runs in a row back to 0, a failed
+	 * run adds one and any other outcome leaves the count. An enabled job that
+	 * reaches the threshold is switched off in the same save, with the reason
+	 * and the time, and the administrators are told once.
+	 *
 	 * @spec openspec/specs/bi-export-board/spec.md#requirement-a-job-shows-its-last-run-and-its-next-run
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-export-job-switches-off-after-repeated-failed-runs-req-efs-001
 	 */
 	public function recordRun(string $jobId, array $run): array {
 		$job = array_merge($this->getJob(id: $jobId), $this->summary->lastRunSummary(run: $run));
-		$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
+		$failures = $this->failuresAfter(job: $job, status: (string)($run['status'] ?? ''));
+		$job['consecutiveFailures'] = $failures;
 
-		return $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $jobId);
+		$switchOff = (($job['enabled'] ?? false) === true
+			&& ($run['status'] ?? '') === 'failed'
+			&& $failures >= $this->failureThreshold());
+		if ($switchOff === true) {
+			$job['enabled'] = false;
+			$job['nextRunAt'] = null;
+			$job['pausedReason'] = sprintf('Switched off after %d failed runs in a row', $failures);
+			$job['pausedAt'] = $this->now();
+		} else {
+			$job['nextRunAt'] = $this->summary->nextRunAt(job: $job, now: new DateTimeImmutable());
+		}
+
+		$saved = $this->saveObjectData(schemaKey: self::SCHEMA_KEY, data: $job, id: $jobId);
+		if ($switchOff === true) {
+			$this->switchOffNotifier?->notifySwitchedOff(
+				job: array_merge($job, $saved),
+				failures: $failures,
+				lastError: (string)($run['errorMessage'] ?? '')
+			);
+		}
+
+		return $saved;
 	}//end recordRun()
+
+	/**
+	 * The failed runs in a row once a run with this status has finished.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 * @param string $status The finished run's status.
+	 *
+	 * @return int The new count.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-export-job-switches-off-after-repeated-failed-runs-req-efs-001
+	 */
+	private function failuresAfter(array $job, string $status): int {
+		$count = max(0, (int)($job['consecutiveFailures'] ?? 0));
+
+		return match ($status) {
+			'succeeded' => 0,
+			'failed' => $count + 1,
+			default => $count,
+		};
+	}//end failuresAfter()
+
+	/**
+	 * The failed runs in a row that switch a job off: the app config value,
+	 * kept within 1 to 10, else 3.
+	 *
+	 * @return int The threshold.
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	public function failureThreshold(): int {
+		$value = trim(
+			$this->appConfig->getValueString(
+				AppIdentity::APP_ID,
+				self::FAILURE_THRESHOLD_KEY,
+				(string)self::DEFAULT_FAILURE_THRESHOLD
+			)
+		);
+		if (self::isValidThreshold(value: $value) === false) {
+			return self::DEFAULT_FAILURE_THRESHOLD;
+		}
+
+		return (int)$value;
+	}//end failureThreshold()
+
+	/**
+	 * Whether a value is a whole number from 1 to 10.
+	 *
+	 * @param string $value The value as entered or stored.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-an-administrator-sets-the-threshold-req-efs-004
+	 */
+	public static function isValidThreshold(string $value): bool {
+		if (preg_match('/^[0-9]+$/', $value) !== 1) {
+			return false;
+		}
+
+		$number = (int)$value;
+
+		return $number >= self::MIN_FAILURE_THRESHOLD && $number <= self::MAX_FAILURE_THRESHOLD;
+	}//end isValidThreshold()
 
 	/**
 	 * Run a non-destructive test of a job: extract <=100 rows per schema and

@@ -33,7 +33,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -47,6 +48,7 @@ use Psr\Log\LoggerInterface;
  */
 class CampaignSiteTraffic {
 	use PayloadToArray;
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * Portaliq's register slug (contract section 3).
@@ -109,7 +111,7 @@ class CampaignSiteTraffic {
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function portal(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
 	}//end portal()
 
 	/**
@@ -349,14 +351,6 @@ class CampaignSiteTraffic {
 	 * @return object|null ObjectService or null when OR is unavailable.
 	 */
 	private function objectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'CampaignPerformanceService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'CampaignPerformanceService: OpenRegister unavailable', errorKey: 'exception');
 	}//end objectService()
 }//end class

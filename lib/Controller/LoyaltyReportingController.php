@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyReportingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\LoyaltyReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -49,15 +49,15 @@ class LoyaltyReportingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param LoyaltyReportingService $reportingService The reporting service.
+	 * @param LoyaltyReportingServiceInterface $reportingService The reporting service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 */
 	public function __construct(
 		IRequest $request,
-		private LoyaltyReportingService $reportingService,
+		private LoyaltyReportingServiceInterface $reportingService,
 		private CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -83,16 +83,39 @@ class LoyaltyReportingController extends Controller {
 	): JSONResponse|DataDownloadResponse {
 		// Loyalty reporting is a CRM capability, not an any-authenticated-user
 		// one. Admins bypass; see ObjectOwnerAccessPolicy.
-		$refusal = $this->privilege->refusal();
-		if ($refusal !== null) {
-			return $refusal;
-		}
+		return $this->privilege->refusal() ?? $this->kpisResponse(
+			query: ['programmeId' => $programmeId] + $this->reportingWindow(window: ['from' => $from, 'to' => $to], days: $days),
+			format: $format
+		);
+	}//end kpis()
 
-		if (($from === null || $from === '') && $days !== null && $days > 0) {
+	/**
+	 * The requested window, or the last `days` days when no start is given.
+	 *
+	 * @param array{from: string|null, to: string|null} $window The requested window start and end.
+	 * @param int|null $days The number of trailing days.
+	 *
+	 * @return array{from: string|null, to: string|null} The window start and end.
+	 */
+	private function reportingWindow(array $window, int|null $days): array {
+		if (($window['from'] === null || $window['from'] === '') && $days !== null && $days > 0) {
 			['from' => $from, 'to' => $to] = $this->reportingService->lastDaysWindow(days: $days);
+			return ['from' => $from, 'to' => $to];
 		}
 
-		$kpis = $this->reportingService->getKpis(programmeId: $programmeId, from: $from, to: $to);
+		return $window;
+	}//end reportingWindow()
+
+	/**
+	 * The KPIs as JSON, or as a CSV download.
+	 *
+	 * @param array{programmeId: string, from: string|null, to: string|null} $query The loyalty programme id and window.
+	 * @param string $format `json` or `csv`.
+	 *
+	 * @return JSONResponse|DataDownloadResponse The KPIs.
+	 */
+	private function kpisResponse(array $query, string $format): JSONResponse|DataDownloadResponse {
+		$kpis = $this->reportingService->getKpis(programmeId: $query['programmeId'], from: $query['from'], to: $query['to']);
 		if (strtolower($format) === 'csv') {
 			return new DataDownloadResponse(
 				data: $this->reportingService->kpisToCsv(kpis: $kpis),
@@ -102,7 +125,7 @@ class LoyaltyReportingController extends Controller {
 		}
 
 		return new JSONResponse($kpis);
-	}//end kpis()
+	}//end kpisResponse()
 
 	/**
 	 * GET liability snapshot (IFRS 15 / RJ 270).

@@ -30,8 +30,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\Service\Portal\QuestionAnsweredNotice;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\QuestionAnsweredNoticeInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -49,13 +49,13 @@ class QuestionAnsweredListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService       $schemaMap Tells a ticket from any other object.
-	 * @param QuestionAnsweredNotice $notice    Writes the resident's message.
+	 * @param SchemaMapServiceInterface       $schemaMap Tells a ticket from any other object.
+	 * @param QuestionAnsweredNoticeInterface $notice    Writes the resident's message.
 	 * @param LoggerInterface        $logger    Records a notice that failed.
 	 */
 	public function __construct(
-		private readonly SchemaMapService $schemaMap,
-		private readonly QuestionAnsweredNotice $notice,
+		private readonly SchemaMapServiceInterface $schemaMap,
+		private readonly QuestionAnsweredNoticeInterface $notice,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

@@ -1,0 +1,245 @@
+{
+    "$comment": "contact-moments-call-review (design D3): a scorecard an administrator keeps, and the review a member of the call review group writes against it. A review is read by the call review group, its reviewer and the agent whose call it is; another agent never sees it. The weighted total and the agreed status are set on save by CallReviewSaveListener.",
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "callScorecard",
+                    "callReview"
+                ]
+            }
+        },
+        "schemas": {
+            "callScorecard": {
+                "slug": "callScorecard",
+                "title": "Call scorecard",
+                "version": "1.0.0",
+                "description": "The criteria a recorded call is scored on, each with a weight and a scale of 1 to 5.",
+                "type": "object",
+                "required": [
+                    "title",
+                    "criteria"
+                ],
+                "authorization": {
+                    "read": [
+                        "admin",
+                        "pipelinq-call-review"
+                    ],
+                    "create": [
+                        "admin"
+                    ],
+                    "update": [
+                        "admin"
+                    ],
+                    "delete": [
+                        "admin"
+                    ]
+                },
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "maxLength": 255
+                    },
+                    "criteria": {
+                        "type": "array",
+                        "title": "Criteria",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "label"
+                            ],
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "title": "Key"
+                                },
+                                "label": {
+                                    "type": "string",
+                                    "title": "Label"
+                                },
+                                "weight": {
+                                    "type": "number",
+                                    "title": "Weight",
+                                    "minimum": 0,
+                                    "default": 1
+                                },
+                                "scale": {
+                                    "type": "integer",
+                                    "title": "Scale",
+                                    "minimum": 1,
+                                    "maximum": 5,
+                                    "default": 5
+                                }
+                            }
+                        }
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "title": "Active",
+                        "default": true,
+                        "facetable": true
+                    }
+                }
+            },
+            "callReview": {
+                "slug": "callReview",
+                "title": "Call review",
+                "version": "1.0.0",
+                "description": "A review of one recorded call: scores per criterion, remarks and coaching points the agent agrees.",
+                "type": "object",
+                "required": [
+                    "contactMoment",
+                    "scorecard",
+                    "agent"
+                ],
+                "authorization": {
+                    "read": [
+                        "pipelinq-call-review",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "reviewer": "$userId"
+                            }
+                        },
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "agent": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "pipelinq-call-review"
+                    ],
+                    "update": [
+                        "pipelinq-call-review",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "agent": "$userId"
+                            }
+                        }
+                    ],
+                    "delete": [
+                        "pipelinq-call-review"
+                    ]
+                },
+                "properties": {
+                    "contactMoment": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Contact moment",
+                        "$ref": "ticket",
+                        "authorization": {
+                            "update": [
+                                "pipelinq-call-review"
+                            ]
+                        }
+                    },
+                    "scorecard": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Scorecard",
+                        "$ref": "callScorecard",
+                        "authorization": {
+                            "update": [
+                                "pipelinq-call-review"
+                            ]
+                        }
+                    },
+                    "agent": {
+                        "type": "string",
+                        "title": "Agent",
+                        "facetable": true,
+                        "authorization": {
+                            "update": [
+                                "pipelinq-call-review"
+                            ]
+                        }
+                    },
+                    "reviewer": {
+                        "type": "string",
+                        "title": "Reviewer",
+                        "facetable": true,
+                        "authorization": {
+                            "update": [
+                                "pipelinq-call-review"
+                            ]
+                        }
+                    },
+                    "scores": {
+                        "type": "array",
+                        "title": "Scores",
+                        "authorization": {
+                            "update": [
+                                "pipelinq-call-review"
+                            ]
+                        },
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "score"
+                            ],
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "title": "Key"
+                                },
+                                "score": {
+                                    "type": "integer",
+                                    "title": "Score",
+                                    "minimum": 1,
+                                    "maximum": 5
+                                },
+                                "remark": {
+                                    "type": "string",
+                                    "title": "Remark"
+                                }
+                            }
+                        }
+                    },
+                    "total": {
+                        "type": "number",
+                        "title": "Total",
+                        "readOnly": true
+                    },
+                    "coachingPoints": {
+                        "type": "array",
+                        "title": "Coaching points",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "text"
+                            ],
+                            "properties": {
+                                "text": {
+                                    "type": "string",
+                                    "title": "Coaching point"
+                                },
+                                "agreedAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "title": "Agreed at"
+                                }
+                            }
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "enum": [
+                            "draft",
+                            "shared",
+                            "agreed"
+                        ],
+                        "default": "draft",
+                        "facetable": true
+                    }
+                }
+            }
+        }
+    }
+}

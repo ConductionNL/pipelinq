@@ -28,14 +28,16 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Tier classification and benefits service.
@@ -45,8 +47,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) tier evaluation walks rules, upgrade/downgrade policy, and event emission in one cohesive service
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrates DI container, config, loyalty accounts, events and logging by design
  */
-class TierService {
+class TierService implements TierServiceInterface {
 	use PayloadToArray;
+	use LoggedRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -351,13 +355,25 @@ class TierService {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function emitTierChangedEvent(string $accountId, ?string $fromTierId, array $toTier): void {
+		$this->dispatchTierChanged(from: ['accountId' => $accountId, 'fromTierId' => $fromTierId], toTier: $toTier);
+	}//end emitTierChangedEvent()
+
+	/**
+	 * Dispatch the tier-changed event, logging a failure.
+	 *
+	 * @param array{accountId: string, fromTierId: string|null} $from   The account UUID and the previous tier.
+	 * @param array<string, mixed>                              $toTier The new tier.
+	 *
+	 * @return void
+	 */
+	private function dispatchTierChanged(array $from, array $toTier): void {
 		try {
 			$event = new GenericEvent(
 				null,
 				[
 					'type' => 'loyalty.tier.changed',
-					'accountId' => $accountId,
-					'fromTierId' => $fromTierId,
+					'accountId' => $from['accountId'],
+					'fromTierId' => $from['fromTierId'],
 					'toTierId' => $this->extractUuid(object: $toTier),
 					'toTierNaam' => (string)($toTier['name'] ?? ''),
 					'benefits' => $toTier['benefits'] ?? [],
@@ -367,7 +383,7 @@ class TierService {
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: tier-changed event dispatch failed', ['exception' => $e->getMessage()]);
 		}
-	}//end emitTierChangedEvent()
+	}//end dispatchTierChanged()
 
 	/**
 	 * Whether $newTierId is higher than the account's current tier (by sequence).
@@ -468,43 +484,4 @@ class TierService {
 
 		return $object['tierId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Resolve register + a schema id by appconfig key.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @param string $schemaKey The schema config key (e.g. 'tierRule_schema').
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] ids, each ''
-	 *                                     when unconfigured.
-	 */
-	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
-				['schemaKey' => $schemaKey]
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ApSyncNotifierInterface;
+use OCA\Pipelinq\Service\Support\AdminNotice;
 use OCP\IGroupManager;
 
 /**
@@ -36,7 +38,9 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
-class ApSyncNotifier {
+class ApSyncNotifier implements ApSyncNotifierInterface {
+	use AdminNotice;
+
 	/**
 	 * Constructor.
 	 *
@@ -60,22 +64,10 @@ class ApSyncNotifier {
 	 * @spec openspec/changes/archive/2026-06-14-pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
 	 */
 	public function notifyFailure(string $expenseTitle, string $uuid): void {
-		$adminGroup = $this->groupManager->get('admin');
-		if ($adminGroup === null) {
-			return;
-		}
-
-		foreach ($adminGroup->getUsers() as $user) {
-			$this->notificationService->sendNotification(
-				userId: $user->getUID(),
-				subject: 'ap_sync_failed',
-				parameters: [
-					'expenseTitle' => $expenseTitle,
-					'id' => $uuid,
-				],
-				objectType: 'expense',
-				objectId: $uuid
-			);
-		}
+		$this->notifyAdmins(
+			subject: 'ap_sync_failed',
+			parameters: ['expenseTitle' => $expenseTitle, 'id' => $uuid],
+			about: new NoticedObject(objectType: 'expense', objectId: $uuid)
+		);
 	}//end notifyFailure()
 }//end class

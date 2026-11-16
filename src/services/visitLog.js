@@ -127,7 +127,11 @@ function linkTask(task, input) {
 		task.createdBy = input.userId
 	}
 	if (input.clientId) task.clientId = input.clientId
-	if (input.leadId) task.lead = input.leadId
+	if (input.leadId) {
+		// leadId is the schema's FK (calendar-deepening); lead stays for existing readers.
+		task.lead = input.leadId
+		task.leadId = input.leadId
+	}
 }
 
 /**

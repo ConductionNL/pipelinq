@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use RuntimeException;
@@ -244,7 +244,7 @@ class KassakoppelingSignatureService {
 	 * @spec openspec/specs/pos-kassakoppeling-audit/spec.md
 	 */
 	public function getSecretKey(): string {
-		$configured = trim($this->appConfig->getValueString(Application::APP_ID, self::SECRET_KEY, ''));
+		$configured = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::SECRET_KEY, ''));
 		if ($configured !== '') {
 			return $configured;
 		}

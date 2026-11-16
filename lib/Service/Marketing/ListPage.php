@@ -112,6 +112,19 @@ final class ListPage {
 	}//end envelope()
 
 	/**
+	 * The envelope of this page cut from all rows.
+	 *
+	 * @param array<int, array<string, mixed>> $rows Every row over all pages.
+	 *
+	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
+	 */
+	public function slice(array $rows): array {
+		return $this->envelope(data: array_slice($rows, $this->window()['offset'], $this->limit), total: count($rows));
+	}//end slice()
+
+	/**
 	 * Compute the page-count from a total and this page size.
 	 *
 	 * @param int $total Total rows.

@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCA\Pipelinq\Service\Competitor\FediverseWatchReader;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -58,7 +59,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  this class exists to prevent, because a network that will not answer
  *  would then be recorded as a no.
  */
-class ConnectionAuditService {
+class ConnectionAuditService implements ConnectionAuditServiceInterface {
 
 	/**
 	 * The `socialConnection` schema slug.
@@ -177,25 +178,47 @@ class ConnectionAuditService {
 	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
 	 */
 	public function audit(array $account, array $client, array $profile): array {
-		$network = $profile['network'];
-		$row = [
-			'accountId' => $this->store->idOf(payload: $account),
-			'network' => $network,
-			'clientId' => $this->store->idOf(payload: $client),
-			'counterpartHandle' => $profile['handle'],
-			'counterpartUrl' => $profile['url'],
-			'weFollowThem' => 'unknown',
-			'theyFollowUs' => 'unknown',
-			'reason' => (self::UNANSWERABLE[$network] ?? 'This network does not publish a follower list.'),
-			'seenAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
-		];
-
-		if (in_array($network, self::ANSWERABLE, true) === false) {
+		$row = $this->unansweredRow(pair: ['account' => $account, 'client' => $client], profile: $profile);
+		if (in_array($profile['network'], self::ANSWERABLE, true) === false) {
 			return $row;
 		}
 
 		return $this->withFollowVerdicts(row: $row, account: $account);
 	}//end audit()
+
+	/**
+	 * The row of a pair before any network answered: both follow verdicts unknown.
+	 *
+	 * @param array{account: array<string, mixed>, client: array<string, mixed>} $pair    Our connected account and the client.
+	 * @param array{network: string, handle: string, url: string}               $profile Their profile.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function unansweredRow(array $pair, array $profile): array {
+		return [
+			'accountId' => $this->store->idOf(payload: $pair['account']),
+			'network' => $profile['network'],
+			'clientId' => $this->store->idOf(payload: $pair['client']),
+		] + $this->unknownVerdicts(profile: $profile);
+	}//end unansweredRow()
+
+	/**
+	 * The counterpart of a pair with both follow verdicts unknown, and why, seen now.
+	 *
+	 * @param array{network: string, handle: string, url: string} $profile Their profile.
+	 *
+	 * @return array<string, string> The row's counterpart and verdict fields.
+	 */
+	private function unknownVerdicts(array $profile): array {
+		return [
+			'counterpartHandle' => $profile['handle'],
+			'counterpartUrl' => $profile['url'],
+			'weFollowThem' => 'unknown',
+			'theyFollowUs' => 'unknown',
+			'reason' => (self::UNANSWERABLE[$profile['network']] ?? 'This network does not publish a follower list.'),
+			'seenAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
+		];
+	}//end unknownVerdicts()
 
 	/**
 	 * The row with both follow verdicts from our account's graph, and the

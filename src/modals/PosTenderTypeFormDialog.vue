@@ -183,13 +183,11 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .pos-tender-type-form {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	padding: 8px 0;
-	min-width: 360px;
+	@include dialog-form-body;
 }
 
 .pos-tender-type-form__error {

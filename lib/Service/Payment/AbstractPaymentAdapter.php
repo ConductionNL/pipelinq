@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
+use OCA\Pipelinq\Service\Support\CentsAsDecimal;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -39,6 +40,10 @@ use Throwable;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 abstract class AbstractPaymentAdapter implements PaymentProviderInterface {
+	use CentsAsDecimal {
+		centsToDecimal as protected;
+	}
+
 	/**
 	 * Placeholder standing in for a PSP key the adapter is not allowed to know.
 	 *
@@ -116,26 +121,6 @@ abstract class AbstractPaymentAdapter implements PaymentProviderInterface {
 	protected function toCents(float $amount): int {
 		return (int)round(($amount * 100));
 	}//end toCents()
-
-	/**
-	 * Render a `nn.nn` decimal string from an integer-cent amount.
-	 *
-	 * @param int $cents The integer-cent amount.
-	 *
-	 * @return string The decimal string.
-	 */
-	protected function centsToDecimal(int $cents): string {
-		$sign = '';
-		$absolute = $cents;
-		if ($cents < 0) {
-			$sign = '-';
-			$absolute = -$cents;
-		}
-
-		$major = intdiv($absolute, 100);
-		$minor = ($absolute % 100);
-		return sprintf('%s%d.%02d', $sign, $major, $minor);
-	}//end centsToDecimal()
 
 	/**
 	 * Constant-time hex-signature compare.

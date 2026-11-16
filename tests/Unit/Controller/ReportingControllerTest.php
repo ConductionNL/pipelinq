@@ -35,6 +35,7 @@ use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\ReportingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -533,10 +534,12 @@ class ReportingControllerTest extends TestCase {
 	}//end testExportCsvRequiresAuthentication()
 
 	/**
-	 * GET /api/rapportage/export must return a CSV download whose cells are
-	 * neutralised against formula injection and correctly quoted.
+	 * GET /api/rapportage/export returns the dashboard's figures as a CSV download,
+	 * with an agent name that starts a formula neutralised.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/wire-rapportage-csv-export/tasks.md#4-verify
 	 */
 	public function testExportCsvReturnsANeutralisedCsvDownload(): void {
 		$this->signIn();
@@ -557,21 +560,44 @@ class ReportingControllerTest extends TestCase {
 
 		$response = $this->buildController()->exportCsv();
 
-		if ($response instanceof JSONResponse && $response->getStatus() === Http::STATUS_NOT_IMPLEMENTED) {
-			$this->markTestSkipped(
-				'BUG: ReportingController::exportCsv() (lib/Controller/ReportingController.php:260-273) '
-				. 'is a stub — it returns 501 "Export not yet implemented" for every authenticated '
-				. 'caller, while its docblock claims @spec ...#requirement-export-and-bi-integration '
-				. 'and ReportingService::generateCsv()/neutralizeCsvCell() already exist unused by '
-				. 'this route. The CSV escaping contract cannot be exercised through the endpoint. '
-				. 'See coordinator report.'
-			);
-		}
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		// The response's own headers; getHeaders() would also reach for the server container.
+		$headers = (new \ReflectionProperty(\OCP\AppFramework\Http\Response::class, 'headers'))->getValue($response);
+		$this->assertSame('text/csv; charset=UTF-8', $headers['Content-Type']);
+		$this->assertSame('attachment; filename=rapportage-2026-06-01-2026-06-30.csv', $headers['Content-Disposition']);
 
 		$body = $response->render();
-		$this->assertStringContainsString("\"'=cmd|calc!A1\"", $body);
-		$this->assertStringContainsString('"Klant zei ""prima"", en vertrok"', $body);
+		$this->assertStringStartsWith("\xEF\xBB\xBF\"Section\";\"Item\";\"Metric\";\"Value\"\n", $body);
+		$this->assertStringContainsString("\"kpi\";\"\";\"total\";\"4\"\n", $body);
+		$this->assertStringContainsString("\"channel\";\"telefoon\";\"count\";\"3\"\n", $body);
+		$this->assertStringContainsString("\"channel\";\"email\";\"count\";\"1\"\n", $body);
+		$this->assertStringContainsString("\"agent\";\"alice\";\"count\";\"2\"\n", $body);
+		$this->assertStringContainsString("\"agent\";\"'=cmd|calc!A1\";\"count\";\"1\"\n", $body);
+		$this->assertSame(16, substr_count($body, "\n"), 'the header and one row per figure');
 	}//end testExportCsvReturnsANeutralisedCsvDownload()
+
+	/**
+	 * The export refuses a malformed or missing period with 400, as the dashboard endpoints do.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/wire-rapportage-csv-export/tasks.md#4-verify
+	 */
+	public function testExportCsvRejectsABadPeriod(): void {
+		$this->signIn();
+
+		$this->withParams(['from' => 'yesterday-ish', 'to' => '2026-06-30']);
+		$malformed = $this->buildController()->exportCsv();
+		$this->withParams([]);
+		$missing = $this->buildController()->exportCsv();
+
+		$this->assertInstanceOf(JSONResponse::class, $malformed);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $malformed->getStatus());
+		$this->assertSame(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], $malformed->getData());
+		$this->assertInstanceOf(JSONResponse::class, $missing);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $missing->getStatus());
+	}//end testExportCsvRejectsABadPeriod()
 
 	/**
 	 * The CSV writer that the export endpoint is meant to use neutralises

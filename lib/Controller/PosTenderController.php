@@ -8,7 +8,7 @@
  *
  *   1. Tender types (`/api/pos/tender-types*`) — admin-only configuration
  *      of available payment methods + their GL accounts. Restricted via
- *      `#[AuthorizedAdminSetting(Application::APP_ID)]` per ADR-005.
+ *      `#[AuthorizedAdminSetting(AppIdentity::APP_ID)]` per ADR-005.
  *   2. Per-transaction tenders (`/api/pos-transactions/{id}/tenders*`) — the
  *      cashier-facing add / list / remove surface. Restricted to authenticated
  *      users via `#[NoAdminRequired]`; the underlying service enforces the
@@ -43,9 +43,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCA\Pipelinq\Service\InvalidTenderException;
-use OCA\Pipelinq\Service\PosTenderService;
 use OCA\Pipelinq\Service\TenderTypeNotFoundException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -80,17 +80,17 @@ class PosTenderController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosTenderService $service The tender service.
+	 * @param PosTenderServiceInterface $service The tender service.
 	 * @param IUserSession $session The user session.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosTenderService $service,
+		private PosTenderServiceInterface $service,
 		private IUserSession $session,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	// ---------------------------------------------------------------------
@@ -163,7 +163,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function createType(): JSONResponse {
 		$payload = $this->bodyPayload();
 
@@ -195,7 +195,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function updateType(string $id): JSONResponse {
 		$payload = $this->bodyPayload();
 
@@ -228,7 +228,7 @@ class PosTenderController extends Controller {
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-001
 	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
+	#[AuthorizedAdminSetting(AppIdentity::APP_ID)]
 	public function destroyType(string $id): JSONResponse {
 		try {
 			$this->service->deleteTenderType(id: $id);

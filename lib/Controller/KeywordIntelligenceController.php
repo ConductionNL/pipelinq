@@ -37,10 +37,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KeywordProposalsInterface;
+use OCA\Pipelinq\Kernel\Contracts\KeywordTargetServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Search\KeywordProposals;
-use OCA\Pipelinq\Service\Search\KeywordTargetService;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -63,7 +63,7 @@ class KeywordIntelligenceController extends Controller {
 	 *
 	 * @var string
 	 */
-	public const FLOOR_KEY = KeywordProposals::FLOOR_KEY;
+	public const FLOOR_KEY = KeywordProposalsInterface::FLOOR_KEY;
 
 	/**
 	 * The request parameters of a proposals read.
@@ -95,19 +95,19 @@ class KeywordIntelligenceController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param KeywordProposals $proposals The derivations for a window.
-	 * @param KeywordTargetService $targets The single write path.
+	 * @param KeywordProposalsInterface $proposals The derivations for a window.
+	 * @param KeywordTargetServiceInterface $targets The single write path.
 	 * @param CrmPrivilegeCheck $privilege The session user and their CRM privilege.
 	 *
 	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly KeywordProposals $proposals,
-		private readonly KeywordTargetService $targets,
+		private readonly KeywordProposalsInterface $proposals,
+		private readonly KeywordTargetServiceInterface $targets,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -122,14 +122,9 @@ class KeywordIntelligenceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function proposals(): Response {
-		$window = $this->typedRequestParameters(spec: self::WINDOW_PARAMETERS);
-		if ($window === null) {
-			return new Response(Http::STATUS_BAD_REQUEST);
-		}
-
-		$refusal = $this->privilege->refusal();
-		if ($refusal !== null) {
-			return $refusal;
+		$window = $this->permittedParameters(spec: self::WINDOW_PARAMETERS);
+		if ($window instanceof Response) {
+			return $window;
 		}
 
 		$body = $this->proposals->forWindow(window: $window);
@@ -167,14 +162,9 @@ class KeywordIntelligenceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function confirm(): Response {
-		$payload = $this->typedRequestParameters(spec: self::CONFIRM_PARAMETERS);
-		if ($payload === null) {
-			return new Response(Http::STATUS_BAD_REQUEST);
-		}
-
-		$refusal = $this->privilege->refusal();
-		if ($refusal !== null) {
-			return $refusal;
+		$payload = $this->permittedParameters(spec: self::CONFIRM_PARAMETERS);
+		if ($payload instanceof Response) {
+			return $payload;
 		}
 
 		try {
@@ -189,4 +179,26 @@ class KeywordIntelligenceController extends Controller {
 
 		return new JSONResponse($saved, Http::STATUS_CREATED);
 	}//end confirm()
+
+	/**
+	 * The typed request parameters for a CRM user, or the bare 400 for a
+	 * non-string value, or the refusal.
+	 *
+	 * @param array<string, array{0: string, 1: mixed}> $spec Name => [type, default].
+	 *
+	 * @return array<string, mixed>|Response
+	 */
+	private function permittedParameters(array $spec): array|Response {
+		$parameters = $this->typedRequestParameters(spec: $spec);
+		if ($parameters === null) {
+			return new Response(Http::STATUS_BAD_REQUEST);
+		}
+
+		$refusal = $this->privilege->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $parameters;
+	}//end permittedParameters()
 }//end class

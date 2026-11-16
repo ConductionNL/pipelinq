@@ -29,7 +29,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Lead;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LeadRelatedSummaryInterface;
 use OCP\IAppConfig;
 use OCP\IL10N;
 
@@ -38,7 +39,7 @@ use OCP\IL10N;
  *
  * @spec openspec/specs/lead-management/spec.md#requirement-the-related-card-names-earlier-deals-and-hours
  */
-class LeadRelatedSummary {
+class LeadRelatedSummary implements LeadRelatedSummaryInterface {
 
 	/**
 	 * How many rows a summary reads at most.
@@ -194,8 +195,8 @@ class LeadRelatedSummary {
 	 * @return array<int, array<string, mixed>> The objects.
 	 */
 	private function find(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

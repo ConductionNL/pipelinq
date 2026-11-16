@@ -207,25 +207,48 @@ final class LeadStagePlacer {
 			$patch['pipeline'] = (string)$pipeline['id'];
 		}
 
-		$stageName = trim((string)($lead['stage'] ?? ''));
-		if ($stageName === '') {
-			$first = $this->firstOpenStage(pipeline: $pipeline);
-			if ($first === null) {
-				return $patch;
-			}
+		if (trim((string)($lead['stage'] ?? '')) === '') {
+			return $this->withFirstOpenStage(patch: $patch, pipeline: $pipeline);
+		}
 
-			$patch['stage'] = $first['name'];
-			$patch['stageOrder'] = $first['order'];
+		return array_merge($patch, $this->missingStageOrder(lead: $lead, pipeline: $pipeline));
+	}//end stagePatch()
+
+	/**
+	 * Place a stageless lead on the pipeline's first open stage, when it has one.
+	 *
+	 * @param array<string, mixed> $patch The patch so far.
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 *
+	 * @return array<string, mixed> The patch.
+	 */
+	private function withFirstOpenStage(array $patch, array $pipeline): array {
+		$first = $this->firstOpenStage(pipeline: $pipeline);
+		if ($first === null) {
 			return $patch;
 		}
 
-		$order = $this->stageOrder(pipeline: $pipeline, stageName: $stageName);
+		$patch['stage'] = $first['name'];
+		$patch['stageOrder'] = $first['order'];
+		return $patch;
+	}//end withFirstOpenStage()
+
+	/**
+	 * The stage order of a lead whose stage is known but whose order is blank.
+	 *
+	 * @param array<string, mixed> $lead The lead, with a stage.
+	 * @param array<string, mixed> $pipeline The pipeline.
+	 *
+	 * @return array<string, mixed> `stageOrder`, or nothing when it is set or unknown.
+	 */
+	private function missingStageOrder(array $lead, array $pipeline): array {
+		$order = $this->stageOrder(pipeline: $pipeline, stageName: trim((string)($lead['stage'] ?? '')));
 		if ($order !== null && $this->isBlank(value: $lead['stageOrder'] ?? null) === true) {
-			$patch['stageOrder'] = $order;
+			return ['stageOrder' => $order];
 		}
 
-		return $patch;
-	}//end stagePatch()
+		return [];
+	}//end missingStageOrder()
 
 	/**
 	 * An ISO 8601 moment: the given one, or now.

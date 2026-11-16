@@ -63,7 +63,7 @@ class WeeklyReviewNumbers {
 	public function mail(string $from, string $to): array {
 		$sent = 0;
 		foreach ($this->store->findAll(schemaSlug: $this->store->schemaSlug('blast_schema', 'blast')) as $blast) {
-			if ($this->inWeek(value: ($blast['sentAt'] ?? ''), from: $from, to: $to) === true) {
+			if ($this->inWeek(value: ($blast['sentAt'] ?? ''), week: [$from, $to]) === true) {
 				$sent++;
 			}
 		}
@@ -71,7 +71,7 @@ class WeeklyReviewNumbers {
 		$clicks = 0;
 		foreach ($this->store->findAll(schemaSlug: $this->store->schemaSlug('touchpoint_schema', 'touchpoint')) as $touchpoint) {
 			$isClick = ((string)($touchpoint['kind'] ?? '') === 'click');
-			if ($isClick === true && $this->inWeek(value: ($touchpoint['occurredAt'] ?? ''), from: $from, to: $to) === true) {
+			if ($isClick === true && $this->inWeek(value: ($touchpoint['occurredAt'] ?? ''), week: [$from, $to]) === true) {
 				$clicks++;
 			}
 		}
@@ -99,7 +99,7 @@ class WeeklyReviewNumbers {
 		$views = 0;
 		$schema = $this->store->schemaSlug('socialPublication_schema', 'socialPublication');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $publication) {
-			if ($this->inWeek(value: ($publication['publishedAt'] ?? ''), from: $from, to: $to) === false) {
+			if ($this->inWeek(value: ($publication['publishedAt'] ?? ''), week: [$from, $to]) === false) {
 				continue;
 			}
 
@@ -131,7 +131,7 @@ class WeeklyReviewNumbers {
 		$tally = ['clicks' => 0, 'impressions' => 0, 'byQuery' => []];
 		$schema = $this->store->schemaSlug('searchQueryDaily_schema', 'searchQueryDaily');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $row) {
-			if ($this->inWeek(value: ($row['date'] ?? ''), from: $from, to: $to) === true) {
+			if ($this->inWeek(value: ($row['date'] ?? ''), week: [$from, $to]) === true) {
 				$tally = $this->withSearchRow(tally: $tally, row: $row);
 			}
 		}
@@ -199,7 +199,7 @@ class WeeklyReviewNumbers {
 		$byTitle = [];
 		$schema = $this->store->schemaSlug('watchEvent_schema', 'watchEvent');
 		foreach ($this->store->findAll(schemaSlug: $schema) as $event) {
-			if ($this->inWeek(value: ($event['seenAt'] ?? ''), from: $from, to: $to) === false) {
+			if ($this->inWeek(value: ($event['seenAt'] ?? ''), week: [$from, $to]) === false) {
 				continue;
 			}
 
@@ -237,12 +237,12 @@ class WeeklyReviewNumbers {
 	 * Whether a date-ish value falls inside the week.
 	 *
 	 * @param mixed $value A date or date-time string.
-	 * @param string $from Week start, inclusive.
-	 * @param string $to Week end, inclusive.
+	 * @param array{0: string, 1: string} $week Week start and end, both inclusive.
 	 *
 	 * @return bool True when it counts.
 	 */
-	private function inWeek(mixed $value, string $from, string $to): bool {
+	private function inWeek(mixed $value, array $week): bool {
+		[$from, $to] = $week;
 		if (is_string($value) === false || trim($value) === '') {
 			return false;
 		}

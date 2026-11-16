@@ -28,8 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosCustomerLinkService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,23 +55,25 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
 class PosCustomerController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosCustomerLinkService $service The POS customer-link service.
+	 * @param PosCustomerLinkServiceInterface $service The POS customer-link service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosCustomerLinkService $service,
+		private PosCustomerLinkServiceInterface $service,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -92,7 +95,7 @@ class PosCustomerController extends Controller {
 		}
 
 		$query = (string)$this->request->getParam('query', '');
-		$limit = (int)$this->request->getParam('limit', (string)PosCustomerLinkService::DEFAULT_SEARCH_LIMIT);
+		$limit = (int)$this->request->getParam('limit', (string)PosCustomerLinkServiceInterface::DEFAULT_SEARCH_LIMIT);
 
 		return $this->run(
 			action: fn (): array => $this->service->searchCustomers(query: $query, limit: $limit),
@@ -196,15 +199,6 @@ class PosCustomerController extends Controller {
 	}//end history()
 
 	/**
-	 * Require an authenticated user; return the UID or a 401 response.
-	 *
-	 * @return string|JSONResponse The user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
 	 * Parse a request param into a strict bool (false on null / empty).
 	 *
 	 * @param mixed $value The raw param value.
@@ -238,13 +232,4 @@ class PosCustomerController extends Controller {
 			logLabel: 'PosCustomerController::' . $label
 		);
 	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

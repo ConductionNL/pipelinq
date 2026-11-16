@@ -24,11 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Controller\Support\OcsErrorResponse;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -40,6 +38,8 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 final class ExportActionResponse {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -65,14 +65,8 @@ final class ExportActionResponse {
 	public function respond(callable $action, string $label): JSONResponse {
 		try {
 			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (Throwable $e) {
-			return $this->unexpectedFailure(failure: $e, label: $label);
+			return ($this->ocsErrorResponse(failure: $e) ?? $this->unexpectedFailure(failure: $e, label: $label));
 		}
 	}//end respond()
 

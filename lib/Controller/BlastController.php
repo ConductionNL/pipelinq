@@ -27,11 +27,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AttributionServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CampaignPerformanceServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\AttributionService;
-use OCA\Pipelinq\Service\BlastService;
-use OCA\Pipelinq\Service\CampaignPerformanceService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,21 +53,21 @@ class BlastController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param BlastService $blastService Blast orchestration service.
-	 * @param AttributionService $attributionService Attribution roll-up service (member 04).
+	 * @param BlastServiceInterface $blastService Blast orchestration service.
+	 * @param AttributionServiceInterface $attributionService Attribution roll-up service (member 04).
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
-	 * @param CampaignPerformanceService $performanceService Mailbox plus site numbers per blast (marketing-campaign-attribution).
+	 * @param CampaignPerformanceServiceInterface $performanceService Mailbox plus site numbers per blast (marketing-campaign-attribution).
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly BlastService $blastService,
-		private readonly AttributionService $attributionService,
+		private readonly BlastServiceInterface $blastService,
+		private readonly AttributionServiceInterface $attributionService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly CampaignPerformanceService $performanceService,
+		private readonly CampaignPerformanceServiceInterface $performanceService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

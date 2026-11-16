@@ -1,23 +1,18 @@
 <?php
 
 /**
- * Unit tests for the Pipelinq admin settings section.
- *
- * The section is what Nextcloud lists in the admin sidebar: its id must match
- * the admin settings page, its name is translated, it sits at a fixed place
- * in the list, and its icon is the app's dark icon.
+ * Tests for the Pipelinq admin settings section.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Settings
  *
- * @author    Conduction Development Team <info@conduction.nl>
+ * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * @version GIT: <git-id>
  *
- * @link https://conduction.nl
+ * @link https://pipelinq.nl
  */
 
 declare(strict_types=1);
@@ -27,78 +22,105 @@ namespace OCA\Pipelinq\Tests\Unit\Settings;
 use OCA\Pipelinq\Sections\SettingsSection;
 use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\Settings\IIconSection;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The admin settings section.
+ * The section the admin settings of Pipelinq sit in: its id, translated
+ * name, place in the list and icon.
  *
  * @covers \OCA\Pipelinq\Sections\SettingsSection
  */
 class SettingsSectionTest extends TestCase {
 
 	/**
+	 * The localisation mock.
+	 *
 	 * @var IL10N&MockObject
 	 */
 	private IL10N $l10n;
 
 	/**
+	 * The URL generator mock.
+	 *
 	 * @var IURLGenerator&MockObject
 	 */
 	private IURLGenerator $urlGenerator;
 
+	/**
+	 * The section under test.
+	 *
+	 * @var SettingsSection
+	 */
 	private SettingsSection $section;
 
 	/**
-	 * Build the section over its two collaborators.
+	 * Build the section over mocked collaborators.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->l10n = $this->createMock(IL10N::class);
+		parent::setUp();
+		$this->l10n         = $this->createMock(IL10N::class);
 		$this->urlGenerator = $this->createMock(IURLGenerator::class);
-		$this->section = new SettingsSection($this->l10n, $this->urlGenerator);
+		$this->section      = new SettingsSection($this->l10n, $this->urlGenerator);
 	}//end setUp()
 
 	/**
-	 * The id is the app id, which the admin settings page names as its section.
+	 * It is an icon section, so the admin menu can show its icon.
 	 *
 	 * @return void
 	 */
-	public function testGetIdReturnsPipelinq(): void {
+	public function testItIsAnIconSection(): void {
+		$this->assertInstanceOf(IIconSection::class, $this->section);
+	}//end testItIsAnIconSection()
+
+	/**
+	 * The id is the app id, which the admin settings register under.
+	 *
+	 * @return void
+	 */
+	public function testTheIdIsTheAppId(): void {
+		$this->l10n->expects($this->never())->method('t');
+
 		$this->assertSame('pipelinq', $this->section->getID());
-	}//end testGetIdReturnsPipelinq()
+	}//end testTheIdIsTheAppId()
 
 	/**
-	 * The name is the translated app name.
+	 * The name is the translation of "Pipelinq".
 	 *
 	 * @return void
 	 */
-	public function testTheNameIsTheTranslatedAppName(): void {
-		$this->l10n->expects($this->once())->method('t')->with('Pipelinq')->willReturn('Pipelinq (nl)');
+	public function testTheNameIsTranslated(): void {
+		$this->l10n->expects($this->once())
+			->method('t')
+			->with('Pipelinq')
+			->willReturn('Pipelinq (vertaald)');
 
-		$this->assertSame('Pipelinq (nl)', $this->section->getName());
-	}//end testTheNameIsTheTranslatedAppName()
+		$this->assertSame('Pipelinq (vertaald)', $this->section->getName());
+	}//end testTheNameIsTranslated()
 
 	/**
-	 * The section keeps its fixed place in the admin list.
+	 * The section sits at priority 76 in the admin list.
 	 *
 	 * @return void
 	 */
-	public function testThePriorityIsFixed(): void {
+	public function testThePriorityIs76(): void {
 		$this->assertSame(76, $this->section->getPriority());
-	}//end testThePriorityIsFixed()
+	}//end testThePriorityIs76()
 
 	/**
-	 * The icon is the app's dark icon, resolved through the URL generator.
+	 * The icon is the app's dark icon, as the URL generator resolves it.
 	 *
 	 * @return void
 	 */
-	public function testTheIconIsTheAppsDarkIcon(): void {
-		$this->urlGenerator->expects($this->once())->method('imagePath')
+	public function testTheIconIsTheDarkAppIcon(): void {
+		$this->urlGenerator->expects($this->once())
+			->method('imagePath')
 			->with('pipelinq', 'app-dark.svg')
-			->willReturn('/apps/pipelinq/img/app-dark.svg');
+			->willReturn('/custom_apps/pipelinq/img/app-dark.svg');
 
-		$this->assertSame('/apps/pipelinq/img/app-dark.svg', $this->section->getIcon());
-	}//end testTheIconIsTheAppsDarkIcon()
+		$this->assertSame('/custom_apps/pipelinq/img/app-dark.svg', $this->section->getIcon());
+	}//end testTheIconIsTheDarkAppIcon()
 }//end class

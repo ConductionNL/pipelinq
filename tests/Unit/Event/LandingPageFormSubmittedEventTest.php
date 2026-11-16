@@ -102,5 +102,6 @@ class LandingPageFormSubmittedEventTest extends TestCase {
 		$this->assertSame(['utm_source' => 'news'], $event->getUtmFirstTouch());
 		$this->assertSame(['utm_source' => 'ads'], $event->getUtmLastTouch());
 		$this->assertSame('n-1', $event->getNonce());
+		$this->assertSame('portaliq', $event->getSourceApp());
 	}//end testOutcomeDoesNotTouchTheSubmission()
 }//end class

@@ -37,12 +37,15 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for TimeApprovalListener.
  *
  * @covers \OCA\Pipelinq\Listener\TimeApprovalListener
- * @uses   \OCA\Pipelinq\Event\TimeEntryApprovedEvent
+ * @covers \OCA\Pipelinq\Event\TimeEntryApprovedEvent
+ * @uses \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class TimeApprovalListenerTest extends TestCase {
 
@@ -126,7 +129,11 @@ class TimeApprovalListenerTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->onSave !== null) {
 					throw $this->onSave;

@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -74,7 +74,7 @@ class DemoSeedContext {
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function resolve(array $schemaKeys): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schemaIds  = null;
 		if ($registerId !== '') {
 			$schemaIds = $this->schemaIds(schemaKeys: $schemaKeys);
@@ -119,7 +119,7 @@ class DemoSeedContext {
 	private function schemaIds(array $schemaKeys): ?array {
 		$schemaIds = [];
 		foreach ($schemaKeys as $schemaKey) {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+			$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 			if ($schemaKey === self::TICKET_SCHEMA_KEY) {
 				// The ticket schema has one resolution point (TicketService).
 				$schemaId = $this->ticketService->getSchemaId();

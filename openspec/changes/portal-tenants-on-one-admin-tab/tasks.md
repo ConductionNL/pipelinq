@@ -9,4 +9,5 @@
   - vitest `portalTenantManager.spec.js`, `portalAdminSettings.spec.js`
 - [ ] **T5**: Seed the board's three portals in the example set (DQ-DATA) and re-measure PqBeheerPortaal
 - [x] **T6**: `PortalTenantService::resolveTenantId()` resolves the tenant from custom domain, subdomain, then widget header, never from the body or query
-- [ ] **T7**: PHPUnit `PortalTenantServiceTest` for the resolution order and the ignored query-string tenant id
+- [x] **T7**: PHPUnit `PortalTenantServiceTest` for the resolution order and the ignored query-string tenant id
+  - Resolution order: `PortalTenantServiceTest` (custom domain, subdomain, widget header, default). Ignored query/body tenant id: `PortalRequestGuardTest::testATenantIdInTheQueryOrBodyIsIgnored`, at the guard every portal endpoint resolves its tenant through.
