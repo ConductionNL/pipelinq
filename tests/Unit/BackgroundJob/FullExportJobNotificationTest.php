@@ -31,6 +31,7 @@ use RuntimeException;
  * Tests for the notification failure of FullExportJob.
  *
  * @covers \OCA\Pipelinq\BackgroundJob\FullExportJob
+ * @uses   \OCA\Pipelinq\Service\UserNotice
  */
 class FullExportJobNotificationTest extends TestCase {
 
