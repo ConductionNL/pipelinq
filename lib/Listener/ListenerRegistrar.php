@@ -130,6 +130,12 @@ class ListenerRegistrar {
 		if (class_exists(FormsSubmissionListener::EVENT) === true) {
 			$context->registerEventListener(event: FormsSubmissionListener::EVENT, listener: FormsSubmissionListener::class);
 		}
+		// A call that integriq's telephony adapter reports is mirrored (kcc-agent-panel).
+		// Integriq is optional; the guard keeps an instance without it from
+		// registering anything.
+		if (class_exists(CallEventListener::EVENT) === true) {
+			$context->registerEventListener(event: CallEventListener::EVENT, listener: CallEventListener::class);
+		}
 		// A new task records who created it (round3-review-points).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TaskCreatedByCreatingListener::class);
 		// A call review carries its weighted total and, once every coaching

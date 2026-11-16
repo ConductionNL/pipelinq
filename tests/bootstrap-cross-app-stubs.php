@@ -31,7 +31,10 @@ if (class_exists('\\OCA\\Integriq\\Event\\ConnectionStatusReportedEvent') === fa
 }
 
 // Integriq's opt-out authority (opt-out-before-send), sent by IntegriqConsentClient.
-foreach (['OutboundSendDecisionRequestedEvent', 'OptOutChangeRequestedEvent'] as $pipelinqIntegriqEvent) {
+// CallEvent (kcc-agent-panel) is in the same list for the same reason:
+// CallEventListener names it as a string, and the shared PHPUnit job installs
+// integriq, where declaring it a second time is a fatal error.
+foreach (['OutboundSendDecisionRequestedEvent', 'OptOutChangeRequestedEvent', 'CallEvent'] as $pipelinqIntegriqEvent) {
 	if (class_exists('\\OCA\\Integriq\\Event\\' . $pipelinqIntegriqEvent) === false) {
 		require_once __DIR__ . '/Stubs/Integriq/Event/' . $pipelinqIntegriqEvent . '.php';
 	}
