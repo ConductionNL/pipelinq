@@ -839,10 +839,7 @@ class BookingService implements BookingServiceInterface {
 		$booking['status'] = 'no-show';
 		$booking['statusHistory'] = $this->appendHistoryWithActor(
 			history: ($booking['statusHistory'] ?? []),
-			status: 'no-show',
-			changedAt: $nowIso,
-			changedBy: $actor,
-			reason: 'No-show marked by staff'
+			entry: ['status' => 'no-show', 'changedAt' => $nowIso, 'changedBy' => $actor, 'reason' => 'No-show marked by staff']
 		);
 
 		$this->saveBooking(payload: $this->stripSelf(payload: $booking), uuid: $bookingId);
@@ -1087,49 +1084,32 @@ class BookingService implements BookingServiceInterface {
 	private function appendHistory(array $history, string $status, string $changedAt, string $reason): array {
 		return $this->appendHistoryWithActor(
 			history: $history,
-			status: $status,
-			changedAt: $changedAt,
-			changedBy: $this->actorUid(),
-			reason: $reason
+			entry: ['status' => $status, 'changedAt' => $changedAt, 'changedBy' => $this->actorUid(), 'reason' => $reason]
 		);
 	}//end appendHistory()
 
 	/**
 	 * Append a statusHistory entry with an explicit `changedBy`.
 	 *
-	 * @param array<int, mixed> $history Existing history.
-	 * @param string $status New status.
-	 * @param string $changedAt ISO timestamp.
-	 * @param string $changedBy Actor id (UID, customer id, or 'system').
-	 * @param string $reason Human-readable reason.
+	 * @param array<int, mixed>     $history Existing history.
+	 * @param array<string, string> $entry   The new entry: status, changedAt, changedBy (UID, customer id, or 'system') and reason.
 	 *
 	 * @return array<int, array<string, string>>
 	 */
-	private function appendHistoryWithActor(
-		array $history,
-		string $status,
-		string $changedAt,
-		string $changedBy,
-		string $reason,
-	): array {
+	private function appendHistoryWithActor(array $history, array $entry): array {
 		$entries = [];
-		foreach ($history as $entry) {
-			if (is_array($entry) === true) {
+		foreach ($history as $previous) {
+			if (is_array($previous) === true) {
 				$entries[] = [
-					'status' => (string)($entry['status'] ?? ''),
-					'changedAt' => (string)($entry['changedAt'] ?? ''),
-					'changedBy' => (string)($entry['changedBy'] ?? ''),
-					'reason' => (string)($entry['reason'] ?? ''),
+					'status' => (string)($previous['status'] ?? ''),
+					'changedAt' => (string)($previous['changedAt'] ?? ''),
+					'changedBy' => (string)($previous['changedBy'] ?? ''),
+					'reason' => (string)($previous['reason'] ?? ''),
 				];
 			}
 		}
 
-		$entries[] = [
-			'status' => $status,
-			'changedAt' => $changedAt,
-			'changedBy' => $changedBy,
-			'reason' => $reason,
-		];
+		$entries[] = $entry;
 		return $entries;
 	}//end appendHistoryWithActor()
 

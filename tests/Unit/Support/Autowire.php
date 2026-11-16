@@ -101,24 +101,38 @@ class Autowire {
 		if (self::$bindings === null) {
 			self::$bindings = [];
 			$lib = dirname(__DIR__, 3).'/lib/';
-			$source = '';
 			foreach (array_merge([$lib.'Service/ContractBindings.php'], glob($lib.'*/*Registrar.php') ?: []) as $file) {
-				$source .= (string)file_get_contents($file)."\n";
-			}
-			$uses = [];
-			preg_match_all('/^use ([\\w\\\\]+);/m', $source, $useMatches);
-			foreach ($useMatches[1] as $fqcn) {
-				$uses[substr((string)strrchr('\\'.$fqcn, '\\'), 1)] = $fqcn;
-			}
-
-			preg_match_all('/registerServiceAlias\((\w+)::class, (\w+)::class\)/', $source, $pairs, PREG_SET_ORDER);
-			foreach ($pairs as $pair) {
-				self::$bindings[$uses[$pair[1]] ?? ''] = $uses[$pair[2]] ?? 'OCA\\Pipelinq\\Service\\'.$pair[2];
+				self::$bindings += self::bindingsIn(source: (string)file_get_contents($file));
 			}
 		}
 
 		return self::$bindings[$contract] ?? null;
 	}//end boundImplementation()
+
+	/**
+	 * The contract => implementation aliases one bindings file registers. A name
+	 * without a use statement is in the file's own namespace.
+	 *
+	 * @param string $source The file's source.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function bindingsIn(string $source): array {
+		$namespace = preg_match('/^namespace ([\\w\\\\]+);/m', $source, $match) === 1 ? $match[1] : 'OCA\\Pipelinq\\Service';
+		$uses = [];
+		preg_match_all('/^use ([\\w\\\\]+);/m', $source, $useMatches);
+		foreach ($useMatches[1] as $fqcn) {
+			$uses[substr((string)strrchr('\\'.$fqcn, '\\'), 1)] = $fqcn;
+		}
+
+		$bindings = [];
+		preg_match_all('/registerServiceAlias\((\w+)::class, (\w+)::class\)/', $source, $pairs, PREG_SET_ORDER);
+		foreach ($pairs as $pair) {
+			$bindings[$uses[$pair[1]] ?? $namespace.'\\'.$pair[1]] = $uses[$pair[2]] ?? $namespace.'\\'.$pair[2];
+		}
+
+		return $bindings;
+	}//end bindingsIn()
 
 	private static function implementationKey(string $typeName, array $doubles): ?string {
 		if ($typeName === '' || interface_exists($typeName) === false) {

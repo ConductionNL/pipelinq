@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\PosCart;
 
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IUserSession;
@@ -45,13 +45,13 @@ class PosCartAccess {
 	/**
 	 * Constructor.
 	 *
-	 * @param PosAccessPolicy $policy      Who may change a sale.
-	 * @param IUserSession    $userSession The signed-in user.
+	 * @param PosAccessPolicyInterface $policy      Who may change a sale.
+	 * @param IUserSession             $userSession The signed-in user.
 	 *
 	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	public function __construct(
-		private readonly PosAccessPolicy $policy,
+		private readonly PosAccessPolicyInterface $policy,
 		private readonly IUserSession $userSession,
 	) {
 	}//end __construct()

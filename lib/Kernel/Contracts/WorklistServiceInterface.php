@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Kernel\Contracts;
 
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -102,4 +103,19 @@ interface WorklistServiceInterface {
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
 	public function summary(string $userId): string;
+
+	/**
+	 * The figures of My work's "Your week so far" tiles for the user's own
+	 * tickets over the current calendar week; only the `mine` scope exists.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 * @param string $scope  The scope; only `mine`.
+	 *
+	 * @return array<string, mixed> The figures and the scope.
+	 *
+	 * @throws InvalidArgumentException For a scope other than `mine`.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 */
+	public function getWeekStats(string $userId, string $scope='mine'): array;
 }//end interface

@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\BillingHandoffAccessPolicyInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -39,7 +40,7 @@ use OCP\IGroupManager;
  *
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
-class BillingHandoffAccessPolicy {
+class BillingHandoffAccessPolicy implements BillingHandoffAccessPolicyInterface {
 	/**
 	 * App-config key for the billing-handoff manager group.
 	 *
