@@ -1490,7 +1490,7 @@ class ComplianceService implements ComplianceServiceInterface {
 
 		try {
 			if ($id !== null && $id !== '') {
-				$objectService->updateObject(id: $id, object: $payload, register: $register, schema: $schema);
+				$objectService->updateObject(objectId: $id, data: $payload);
 				return;
 			}
 

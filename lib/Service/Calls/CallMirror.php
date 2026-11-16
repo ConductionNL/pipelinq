@@ -23,6 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Calls;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BackgroundServiceAccount;
 use OCA\Pipelinq\Service\ServiceAccountUnavailableException;
@@ -118,9 +121,7 @@ class CallMirror {
 
 					$saved = $objects->saveObject(
 						object: $this->payload(call: $call, now: ($now ?? time())),
-						extend: [],
-						register: $register,
-						schema: $schema,
+						options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), extend: []),
 						_rbac: true,
 						_multitenancy: false,
 					);
@@ -228,7 +229,7 @@ class CallMirror {
 							continue;
 						}
 
-						if ($objects->deleteObject(uuid: $id, register: $register, schema: $schema, _rbac: true, _multitenancy: false, permanent: true) === true) {
+						if ($objects->deleteObject(deletion: new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema), permanent: true), _rbac: true, _multitenancy: false) === true) {
 							$removed++;
 						}
 					}
