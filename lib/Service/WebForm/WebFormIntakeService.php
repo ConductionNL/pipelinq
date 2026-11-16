@@ -93,6 +93,20 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	private const SUBMIT_SERVICE = 'OCA\OpenRegister\Service\Form\FormSubmitService';
 
 	/**
+	 * OpenRegister's submission value: the writes, the answers and who submits.
+	 *
+	 * @var string
+	 */
+	private const SUBMISSION = 'OCA\OpenRegister\Service\Form\FormSubmission';
+
+	/**
+	 * OpenRegister's submitter value: the subject and the idempotency scope.
+	 *
+	 * @var string
+	 */
+	private const SUBMITTER = 'OCA\OpenRegister\Service\Form\FormSubmitter';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param WebFormFinder                $finder    Finds the published form for a key.
@@ -200,13 +214,17 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 	 * @throws WebFormSubmitException 422 payload refused, 503 try again later.
 	 */
 	private function stored(array $form, array $submission): mixed {
+		$submissionClass = self::SUBMISSION;
+		$submitterClass  = self::SUBMITTER;
 		try {
-			return $this->container->get(self::SUBMIT_SERVICE)->submitAll(
-				writes: $submission['writes'],
-				payload: $submission['payload'],
+			$submitter = new $submitterClass(
 				subject: $this->account->account(),
-				idempotencyKey: $submission['idempotencyKey'],
 				scope: 'pipelinq-web-form:' . (string)($form['id'] ?? ''),
+			);
+
+			return $this->container->get(self::SUBMIT_SERVICE)->submit(
+				submission: new $submissionClass(writes: $submission['writes'], payload: $submission['payload'], submitter: $submitter),
+				idempotencyKey: $submission['idempotencyKey'],
 			);
 		} catch (Throwable $e) {
 			throw $this->refusalFor(exception: $e, form: $form);
