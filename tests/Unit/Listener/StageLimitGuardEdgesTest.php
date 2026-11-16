@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Pipelinq\Listener\StageLimitGuard
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Listener\PipelineStageEntry
+ * @uses   \OCA\Pipelinq\Listener\StagedItemWrite
  */
 class StageLimitGuardEdgesTest extends TestCase {
 	/**

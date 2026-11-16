@@ -41,6 +41,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
  * @covers \OCA\Pipelinq\Listener\ClientMergeReferenceListener
  * @covers \OCA\Pipelinq\Service\Merge\PartyReferenceMover
  * @covers \OCA\Pipelinq\Service\Merge\PartyReferences
+ * @uses   \OCA\Pipelinq\Listener\MergeMove
  */
 class ClientMergeReferenceListenerTest extends TestCase {
 
