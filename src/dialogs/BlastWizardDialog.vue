@@ -428,8 +428,8 @@ import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
-import { previewTemplate } from '../services/templatePreviewApi.js'
 import { mailPreviewDocument } from '../services/mailPreview.js'
+import { previewTemplate } from '../services/templatePreviewApi.js'
 
 const STEPS = [
 	{ key: 'basics', label: 'Basics' },

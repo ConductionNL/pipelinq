@@ -326,8 +326,8 @@ import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import MailBlockEditor from '../components/templates/MailBlockEditor.vue'
 import { starterBlocks, withFooterLast } from '../services/mailBlocks.js'
-import { fetchPortaliqArticles, portaliqArticleUrl } from '../services/portaliqArticles.js'
 import { mailPreviewDocument } from '../services/mailPreview.js'
+import { fetchPortaliqArticles, portaliqArticleUrl } from '../services/portaliqArticles.js'
 import {
 	articleId,
 	orderedArticleIds,
