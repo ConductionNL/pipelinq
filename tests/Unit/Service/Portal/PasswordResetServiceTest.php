@@ -44,6 +44,13 @@ class PasswordResetServiceTest extends TestCase {
 	private FakePortalObjectRepository $repository;
 
 	/**
+	 * Token mails sent: [recipient, route, token, subject, intro].
+	 *
+	 * @var list<array<int, string>>
+	 */
+	private array $mails = [];
+
+	/**
 	 * The service over the fake repository and recording doubles.
 	 *
 	 * @return PasswordResetService
@@ -52,7 +59,9 @@ class PasswordResetServiceTest extends TestCase {
 		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturnCallback(static fn (): DateTime => new DateTime('2026-05-01T12:00:00+00:00'));
-		$tokens = new PortalTokenService($this->createMock(ISecureRandom::class), $time);
+		$random = $this->createMock(ISecureRandom::class);
+		$random->method('generate')->willReturn('secret');
+		$tokens = new PortalTokenService($random, $time);
 		$hasher = $this->createMock(IHasher::class);
 		$hasher->method('hash')->willReturnCallback(static fn (string $plain): string => 'H(' . $plain . ')');
 		$sessions = $this->createMock(PortalSessionManager::class);
@@ -69,7 +78,17 @@ class PasswordResetServiceTest extends TestCase {
 			}
 		);
 
-		return new PasswordResetService($this->repository, $tokens, $hasher, $this->createMock(PortalMailService::class), $sessions, $audit, $this->createMock(IL10N::class));
+		$mail = $this->createMock(PortalMailService::class);
+		$mail->method('sendTokenLink')->willReturnCallback(
+			function (string ...$args): bool {
+				$this->mails[] = $args;
+				return true;
+			}
+		);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => $text);
+
+		return new PasswordResetService($this->repository, $tokens, $hasher, $mail, $sessions, $audit, $l10n);
 	}//end service()
 
 	/**
@@ -138,4 +157,55 @@ class PasswordResetServiceTest extends TestCase {
 			$this->assertSame([], $this->calls);
 		}
 	}//end testEveryRefusal()
+
+	/**
+	 * A reset asked for an active account of the tenant stores the token's
+	 * hash and expiry, then mails the plaintext link; the address is matched
+	 * trimmed and lower-cased.
+	 *
+	 * @return void
+	 */
+	public function testARequestedResetStoresTheTokenAndMailsTheLink(): void {
+		$service = $this->service();
+		$this->mails = [];
+		$this->repository->seed('crmPortalAccount', 'acc-1', ['tenantId' => 't-1', 'email' => 'anna@example.org']);
+		$plain = rtrim(strtr(base64_encode('secret'), '+/', '-_'), '=');
+
+		$service->requestReset(email: '  Anna@Example.org ', tenantId: 't-1');
+
+		$stored = $this->repository->find('crmPortalAccount', 'acc-1');
+		$this->assertSame(hash('sha256', $plain), $stored['passwordResetTokenHash']);
+		$this->assertSame('2026-05-01T12:30:00+00:00', $stored['passwordResetExpiresAt']);
+		$this->assertSame(
+			[[
+				'anna@example.org',
+				'/index.php/apps/pipelinq/portal/password-reset',
+				$plain,
+				'Reset your portal password',
+				'Click the link below to choose a new password. This link expires in 30 minutes.',
+			]],
+			$this->mails
+		);
+	}//end testARequestedResetStoresTheTokenAndMailsTheLink()
+
+	/**
+	 * An unknown address, another tenant's account and a closed account
+	 * answer silently: nothing is stored and no mail is sent.
+	 *
+	 * @return void
+	 */
+	public function testAResetForNoActiveAccountDoesNothing(): void {
+		$service = $this->service();
+		$this->mails = [];
+		$closed = $this->repository->seed('crmPortalAccount', 'acc-1', ['tenantId' => 't-1', 'email' => 'closed@example.org', 'status' => 'closed']);
+		$other = $this->repository->seed('crmPortalAccount', 'acc-2', ['tenantId' => 't-2', 'email' => 'anna@example.org']);
+
+		$service->requestReset(email: 'nobody@example.org', tenantId: 't-1');
+		$service->requestReset(email: 'anna@example.org', tenantId: 't-1');
+		$service->requestReset(email: 'closed@example.org', tenantId: 't-1');
+
+		$this->assertSame($closed, $this->repository->find('crmPortalAccount', 'acc-1'));
+		$this->assertSame($other, $this->repository->find('crmPortalAccount', 'acc-2'));
+		$this->assertSame([], $this->mails);
+	}//end testAResetForNoActiveAccountDoesNothing()
 }//end class

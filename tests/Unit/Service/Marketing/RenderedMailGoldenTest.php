@@ -51,6 +51,7 @@ use ReflectionMethod;
  * @uses   \OCA\Pipelinq\Service\Marketing\ListObjectStore
  * @uses   \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer
  * @uses   \OCA\Pipelinq\Service\Marketing\RecipientNameReader
+ * @uses   \OCA\Pipelinq\Service\Marketing\PortaliqArticleStore
  * @uses \OCA\Pipelinq\Util\EntityPayload
  * @uses \OCA\Pipelinq\Util\PayloadToArray
  * @uses \OCA\Pipelinq\Util\SerialisedPayload

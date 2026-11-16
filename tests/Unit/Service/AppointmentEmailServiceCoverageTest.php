@@ -45,6 +45,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * @uses   \OCA\Pipelinq\Util\NullablePayloadToArray
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\Util\ObjectToPlainArray
+ * @uses   \OCA\Pipelinq\Service\AppointmentMail
  */
 class AppointmentEmailServiceCoverageTest extends TestCase {
 

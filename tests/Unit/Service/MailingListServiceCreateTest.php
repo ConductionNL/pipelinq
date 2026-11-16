@@ -27,8 +27,9 @@ use PHPUnit\Framework\TestCase;
  * The paged list, the create path, the public-signup gate and the public projection.
  *
  * @covers \OCA\Pipelinq\Service\MailingListService
- * @uses   \OCA\Pipelinq\Util\PageCount
+ * @uses   \OCA\Pipelinq\Service\Support\PageCount
  * @uses   \OCA\Pipelinq\Service\Marketing\ListObjectStore
+ * @uses   \OCA\Pipelinq\Service\Marketing\ListPage
  */
 class MailingListServiceCreateTest extends TestCase {
 

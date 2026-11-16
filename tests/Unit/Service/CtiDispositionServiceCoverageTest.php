@@ -37,6 +37,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  *
  * @covers \OCA\Pipelinq\Service\CtiDispositionService
  * @uses   \OCA\Pipelinq\Service\Cti\EscalationQueues
+ * @uses   \OCA\Pipelinq\Service\CallDisposition
  */
 class CtiDispositionServiceCoverageTest extends TestCase {
 

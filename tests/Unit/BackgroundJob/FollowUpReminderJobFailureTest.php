@@ -39,6 +39,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses   \OCA\Pipelinq\BackgroundJob\FollowUpSweep
  */
 class FollowUpReminderJobFailureTest extends TestCase {
 
