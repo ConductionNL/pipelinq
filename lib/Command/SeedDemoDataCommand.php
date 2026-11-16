@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
-use OCA\Pipelinq\Service\DemoSeedService;
+use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
+use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Symfony\Component\Console\Command\Command;
@@ -49,16 +49,16 @@ class SeedDemoDataCommand extends Command {
 	/**
 	 * Wire the command against the demo seed service and user/group managers.
 	 *
-	 * @param DemoSeedService $demoSeedService Demo dataset seeder.
+	 * @param DemoSeedServiceInterface $demoSeedService Demo dataset seeder.
 	 * @param IUserSession $userSession Session used to impersonate an admin.
 	 * @param IGroupManager $groupManager Resolves an admin to impersonate.
-	 * @param DemoRegisterImporter $registerImporter The example records descriptor.
+	 * @param DemoRegisterImporterInterface $registerImporter The example records descriptor.
 	 */
 	public function __construct(
-		private readonly DemoSeedService $demoSeedService,
+		private readonly DemoSeedServiceInterface $demoSeedService,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
-		private readonly DemoRegisterImporter $registerImporter,
+		private readonly DemoRegisterImporterInterface $registerImporter,
 	) {
 		parent::__construct();
 	}//end __construct()

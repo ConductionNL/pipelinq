@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalExportServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IL10N;
 
@@ -42,7 +43,7 @@ use OCP\IL10N;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalExportService {
+class PortalExportService implements PortalExportServiceInterface {
 	/**
 	 * Export download-link validity in minutes (30 days).
 	 *

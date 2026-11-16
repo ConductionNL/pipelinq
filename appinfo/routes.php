@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-return [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
+        // The OpenAPI document of pipelinq's own API, public, served under /api/v1/ too.
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         // Canonical ADR-066 write verb (OpenRegister AppHost dialect). POST above
@@ -48,9 +51,15 @@ return [
         // Organisation enrichment from the KvK (organisation-enrichment).
         ['name' => 'organisationEnrichment#propose', 'url' => '/api/organisations/enrich/proposals', 'verb' => 'POST'],
         ['name' => 'organisationEnrichment#apply', 'url' => '/api/organisations/enrich/apply', 'verb' => 'POST'],
+        // KVK single search for the new request dialog's KVK pill (request-dialog-client-lookups).
+        ['name' => 'kvkSearch#search', 'url' => '/api/kvk/search', 'verb' => 'GET'],
         // Contact-FIRST create — provisions the NC contact and saves the object
         // with the required contactsUid (client-contact unification).
         ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
+        // Paste a signature or send a card photo, get proposed contact fields; reads and stores nothing
+        // (clients-contact-capture REQ-CCC-001, REQ-CCC-002). Status says whether photos can be read here.
+        ['name' => 'contactCapture#parse', 'url' => '/api/contact-capture/parse', 'verb' => 'POST'],
+        ['name' => 'contactCapture#status', 'url' => '/api/contact-capture/status', 'verb' => 'GET'],
         // A mail client's side pane (contact-moments-mail-add-in): sender lookup,
         // add as contact, log this mail. Called with an app password.
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
@@ -108,6 +117,7 @@ return [
         ['name' => 'worklist#items', 'url' => '/api/worklist/items', 'verb' => 'GET'],
         ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
         ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
+        ['name' => 'myWork#weekStats', 'url' => '/api/my-work/week-stats', 'verb' => 'GET'],
         ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
@@ -129,9 +139,15 @@ return [
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
         ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
+        ['name' => 'clientHistorySummary#show', 'url' => '/api/clients/{id}/history-summary', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
         ['name' => 'eventReminder#send', 'url' => '/api/campaign-events/{id}/reminder', 'verb' => 'POST'],
+        // Registrations for a campaign event: add by hand, record who came, and the public cancel page (marketing-events).
+        ['name' => 'eventAttendance#add', 'url' => '/api/campaign-events/{id}/registrations', 'verb' => 'POST'],
+        ['name' => 'eventAttendance#attendance', 'url' => '/api/event-registrations/{id}/attendance', 'verb' => 'POST'],
+        ['name' => 'eventCancel#show', 'url' => '/events/cancel', 'verb' => 'GET'],
+        ['name' => 'eventCancel#cancel', 'url' => '/events/cancel', 'verb' => 'POST'],
         ['name' => 'letter#templates', 'url' => '/api/letters/templates', 'verb' => 'GET'],
         ['name' => 'record_document#template', 'url' => '/api/records/{schema}/document-template', 'verb' => 'GET'],
         ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
@@ -218,6 +234,7 @@ return [
         ['name' => 'callback#claim', 'url' => '/api/callbacks/{id}/claim', 'verb' => 'POST'],
         ['name' => 'callback#complete', 'url' => '/api/callbacks/{id}/complete', 'verb' => 'POST'],
         ['name' => 'callback#reassign', 'url' => '/api/callbacks/{id}/reassign', 'verb' => 'POST'],
+        ['name' => 'callReview#agree', 'url' => '/api/call-reviews/{id}/coaching-points/{index}/agree', 'verb' => 'POST'],
 
         // Prometheus metrics endpoint.
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
@@ -472,12 +489,16 @@ return [
         // history-filter and retry actions the generic API cannot express (REQ-BIE-001/002/003/011).
         // Static collection + action routes are declared before the {id} member routes so the
         // router never mistakes "test-run" or "destinations" for an {id} (ADR-016).
+        // Export all data in one archive (data-portability-full-export REQ-DPE-002), administrators only.
+        ['name' => 'fullExport#start',          'url' => '/api/export/full',                  'verb' => 'POST'],
+        ['name' => 'fullExport#status',         'url' => '/api/export/full',                  'verb' => 'GET'],
         ['name' => 'exportJob#listDestinations',  'url' => '/api/export/destinations',          'verb' => 'GET'],
         ['name' => 'exportJob#createDestination', 'url' => '/api/export/destinations',          'verb' => 'POST'],
         ['name' => 'exportJob#updateDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'PUT'],
         ['name' => 'exportJob#deleteDestination', 'url' => '/api/export/destinations/{id}',      'verb' => 'DELETE'],
         ['name' => 'exportJob#testDestination',   'url' => '/api/export/destinations/{id}/test', 'verb' => 'POST'],
 
+        ['name' => 'exportJob#describeSchedule', 'url' => '/api/export/schedule/describe', 'verb' => 'GET'],
         ['name' => 'exportJob#listJobs',   'url' => '/api/export/jobs',              'verb' => 'GET'],
         ['name' => 'exportJob#createJob',  'url' => '/api/export/jobs',              'verb' => 'POST'],
         ['name' => 'exportJob#showJob',    'url' => '/api/export/jobs/{id}',         'verb' => 'GET'],
@@ -500,6 +521,14 @@ return [
         ['name' => 'bookingAdmin#markNoShow',     'url' => '/api/bookings/{id}/no-show',        'verb' => 'POST'],
         ['name' => 'bookingAdmin#sendReminder',   'url' => '/api/bookings/{id}/send-reminder',  'verb' => 'POST'],
         ['name' => 'bookingAdmin#confirmDeposit', 'url' => '/api/bookings/{id}/confirm-deposit', 'verb' => 'POST'],
+
+        // Which active, bookable resources match a service (REQ-SRG-002): one
+        // service, and the count per service for the services list.
+        ['name' => 'appointmentEligibility#eligibleResourceCounts', 'url' => '/api/appointment-services/eligible-resources', 'verb' => 'GET'],
+        ['name' => 'appointmentEligibility#eligibleResources',      'url' => '/api/appointment-services/{id}/eligible-resources', 'verb' => 'GET'],
+        // How busy a service or resource is (REQ-SRG-003, REQ-SRG-004): one call per page.
+        ['name' => 'appointmentFigures#serviceFigures',  'url' => '/api/appointment-services/{id}/figures',  'verb' => 'GET'],
+        ['name' => 'appointmentFigures#resourceFigures', 'url' => '/api/appointment-resources/{id}/figures', 'verb' => 'GET'],
 
         // Loyalty program (loyalty-program — REQ-LOY-001..010).
         ['name' => 'loyalty#getAccount',         'url' => '/api/loyalty/accounts/{accountId}',          'verb' => 'GET'],
@@ -590,6 +619,9 @@ return [
         // The account the SMS and WhatsApp webhooks write as (admin only).
         ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
         ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
+        // The account background work (the call mirror) writes as (admin only).
+        ['name' => 'backgroundServiceAccount#show', 'url' => '/api/background/service-account', 'verb' => 'GET'],
+        ['name' => 'backgroundServiceAccount#save', 'url' => '/api/background/service-account', 'verb' => 'PUT'],
         // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
         // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
         // OpenRegister's handoff engine; actions hide when no app implements the kind.
@@ -607,6 +639,8 @@ return [
         ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
         ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
         // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        // The phone search over tickets (contact-moments-phone-lookup).
+        ['name' => 'ticketPhone#byPhone',             'url' => '/api/tickets/by-phone',                     'verb' => 'GET'],
         ['name' => 'ticketAssign#assignOldest',       'url' => '/api/tickets/assign-oldest',                 'verb' => 'POST'],
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
@@ -659,25 +693,14 @@ return [
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         // The Blocks editor's preview of unsaved blocks (marketing-block-editor).
         ['name' => 'template#render',  'url' => '/api/templates/render',   'verb' => 'POST'],
+        ['name' => 'template#articles', 'url' => '/api/templates/articles', 'verb' => 'GET'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
         ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 
-        // Marketing — Articles (marketing-article-hub). Articles are the
-        // content hub for both mailings and posts. Literal-suffixed routes
-        // (publish, archive, transition, usages) precede the bare {id}
-        // routes (ADR-016), matching the Blast block below.
-        ['name' => 'article#index',      'url' => '/api/articles',                'verb' => 'GET'],
-        ['name' => 'article#create',     'url' => '/api/articles',                'verb' => 'POST'],
-        ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
-        ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
-        ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
         // Shared label list: a rename also rewrites the items that carry the label.
         ['name' => 'label#rename', 'url' => '/api/labels/{id}/rename', 'verb' => 'POST'],
-        ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
-        ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
-        ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
         // Marketing — Social publishing (social-publishing, phase 3). Three
         // objects, three controllers. Literal-suffixed routes (connect,
@@ -773,7 +796,6 @@ return [
         ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
         ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
         ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],
-        ['name' => 'brp#monitor',          'url' => '/api/brp/monitor',                   'verb' => 'GET'],
         ['name' => 'brpAdmin#get',                 'url' => '/api/brp/settings',                  'verb' => 'GET'],
         ['name' => 'brpAdmin#save',                'url' => '/api/brp/settings',                  'verb' => 'POST'],
         ['name' => 'brpAdmin#rotateWebhookSecret', 'url' => '/api/brp/settings/webhook-secret',   'verb' => 'POST'],
@@ -831,4 +853,4 @@ return [
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
-];
+]);

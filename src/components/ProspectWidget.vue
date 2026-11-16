@@ -1,14 +1,6 @@
 <template>
 	<div class="prospect-widget">
-		<div
-			class="prospect-widget__header"
-			role="button"
-			tabindex="0"
-			:aria-expanded="expanded"
-			:aria-label="t('pipelinq', 'Toggle prospect discovery')"
-			@click="expanded = !expanded"
-			@keydown.enter.prevent="expanded = !expanded"
-			@keydown.space.prevent="expanded = !expanded">
+		<div class="prospect-widget__header">
 			<div class="prospect-widget__title">
 				<h3>{{ t('pipelinq', 'Prospect Discovery') }}</h3>
 				<span v-if="prospectStore.total > 0" class="prospect-count">
@@ -21,14 +13,21 @@
 					variant="tertiary"
 					:disabled="prospectStore.loading"
 					:aria-label="t('pipelinq', 'Refresh prospects')"
-					@click.stop="refresh">
+					@click="refresh">
 					<template #icon>
 						<Refresh
 							:size="20"
 							:class="{ 'icon-spinning': prospectStore.loading }" />
 					</template>
 				</NcButton>
-				<span class="expand-icon">{{ expanded ? '\u25B2' : '\u25BC' }}</span>
+				<button
+					type="button"
+					class="prospect-widget__expand-toggle"
+					:aria-expanded="expanded"
+					:aria-label="t('pipelinq', 'Toggle prospect discovery')"
+					@click="expanded = !expanded">
+					<span class="expand-icon" aria-hidden="true">{{ expanded ? '\u25B2' : '\u25BC' }}</span>
+				</button>
 			</div>
 		</div>
 
@@ -186,13 +185,7 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	padding: 12px 16px;
-	cursor: pointer;
 	user-select: none;
-}
-
-.prospect-widget__header:hover {
-	background: var(--color-background-hover);
-	border-radius: var(--border-radius-large);
 }
 
 .prospect-widget__title {
@@ -215,6 +208,28 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 4px;
+}
+
+.prospect-widget__expand-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	margin: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	border-radius: var(--border-radius);
+	color: var(--color-text-maxcontrast);
+}
+
+.prospect-widget__expand-toggle:hover {
+	background: var(--color-background-hover);
+}
+
+.prospect-widget__expand-toggle:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 1px;
 }
 
 .expand-icon {

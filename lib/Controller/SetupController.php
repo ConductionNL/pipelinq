@@ -29,10 +29,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
-use OCA\Pipelinq\Service\DemoSeedService;
-use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
+use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -97,21 +97,21 @@ class SetupController extends Controller {
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig App-config reader/writer.
-	 * @param SettingsService $settingsService Register/schema + default-data provisioning.
-	 * @param DemoSeedService $demoSeedService Optional demo-data seeding (same write path as occ).
+	 * @param SettingsServiceInterface $settingsService Register/schema + default-data provisioning.
+	 * @param DemoSeedServiceInterface $demoSeedService Optional demo-data seeding (same write path as occ).
 	 * @param IAppManager $appManager App installed/enabled lookup for integration detection.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DemoRegisterImporter $registerImporter The example records descriptor, imported with the seed.
+	 * @param DemoRegisterImporterInterface $registerImporter The example records descriptor, imported with the seed.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly IAppConfig $appConfig,
-		private readonly SettingsService $settingsService,
-		private readonly DemoSeedService $demoSeedService,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly DemoSeedServiceInterface $demoSeedService,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
-		private readonly DemoRegisterImporter $registerImporter,
+		private readonly DemoRegisterImporterInterface $registerImporter,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -177,7 +177,7 @@ class SetupController extends Controller {
 		$integrationsDone = $this->anyConfigured(keys: ['billing_handoff_manager_group']);
 
 		if ($currencyDone === true) {
-			$this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
 		}
 
 		return new DataResponse(
@@ -238,8 +238,8 @@ class SetupController extends Controller {
 	private function skipDemoData(): DataResponse {
 		// Skipping IS choosing "None", so both keys are written: an older
 		// runbook may read either one.
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
-		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::NONE_DATASET);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 		return new DataResponse(
 			['success' => true, 'message' => 'Demo data skipped. You can seed it later with `occ pipelinq:demo:seed`.']
@@ -275,7 +275,7 @@ class SetupController extends Controller {
 				$stored = (string)$value;
 			}
 
-			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, (string)$key, $stored);
 		}
 
 		return new DataResponse(['success' => true]);
@@ -434,9 +434,9 @@ class SetupController extends Controller {
 			return new DataResponse(['success' => false, 'message' => 'Pick a dataset first.']);
 		}
 
-		if ($picked === DemoSeedService::NONE_DATASET) {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+		if ($picked === DemoSeedServiceInterface::NONE_DATASET) {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::NONE_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 			return new DataResponse(['success' => true, 'message' => 'No example data was seeded.']);
 		}
@@ -465,8 +465,8 @@ class SetupController extends Controller {
 			// DEMO_DATA_DECIDED_KEY — an optional step the server can never
 			// report done covers the whole app with the setup wizard.
 			// Seeding IS choosing the set, so the pick is written too.
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoSeedServiceInterface::DEMO_DATASET);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
 			// The example records that used to ship inside the register descriptor.
 			$example = $this->registerImporter->import();
@@ -503,7 +503,7 @@ class SetupController extends Controller {
 	 */
 	private function dismissSetup(): DataResponse {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::DISMISSED_VERSION_KEY,
 			(string)self::SETUP_VERSION
 		);
@@ -535,6 +535,6 @@ class SetupController extends Controller {
 	 * @return string The value, or '' when unset.
 	 */
 	private function config(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end config()
 }//end class

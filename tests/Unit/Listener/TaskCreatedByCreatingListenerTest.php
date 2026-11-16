@@ -127,7 +127,7 @@ class TaskCreatedByCreatingListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheApplicationRegistersTheListener(): void {
-		$source = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		$source = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Listener/ListenerRegistrar.php');
 		$this->assertMatchesRegularExpression(
 			'/event:\s*ObjectCreatingEvent::class,\s*listener:\s*TaskCreatedByCreatingListener::class/',
 			$source

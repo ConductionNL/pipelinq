@@ -33,6 +33,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every write disables or schedules the job as its transition requires and
@@ -105,7 +108,11 @@ class ExportJobServiceTest extends TestCase {
 	protected function setUp(): void {
 		$this->objects = $this->createMock(ObjectServiceInterface::class);
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], ?string $register = null, ?string $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $this->entity(payload: $object);
 			}
@@ -203,7 +210,11 @@ class ExportJobServiceTest extends TestCase {
 	 */
 	public function testDeleteJob(): void {
 		$this->stored(job: self::VALID);
-		$this->objects->expects($this->once())->method('deleteObject')->with('j1', 'reg', 'jobs');
+		$this->objects->expects($this->once())->method('deleteObject')->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'j1',
+				'register' => 'reg',
+				'schema' => 'jobs',
+			]));
 
 		$this->service->deleteJob(id: 'j1');
 	}//end testDeleteJob()
@@ -389,7 +400,7 @@ class ExportJobServiceTest extends TestCase {
 	 */
 	private function stored(array $job): void {
 		$this->objects->method('find')->willReturnCallback(
-			fn (string $id, ?array $extend = [], bool $files = false, ?string $register = null, ?string $schema = null): ?ObjectEntityInterface => ($id === 'j1' && $schema === 'jobs') ? $this->entity(payload: $job + ['id' => 'j1']) : null
+			fn (string $id, ?ObjectFindOptions $options = null): ?ObjectEntityInterface => ($id === 'j1' && ($options?->schema) === 'jobs') ? $this->entity(payload: $job + ['id' => 'j1']) : null
 		);
 	}//end stored()
 

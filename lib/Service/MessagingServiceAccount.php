@@ -30,7 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+
 
 /**
  * Resolves the messaging service account and runs webhook writes as it.
@@ -86,7 +87,7 @@ class MessagingServiceAccount extends ServiceAccount {
 	protected function refuse(string $userId, string $reason): never {
 		$this->logger->error(
 			'Pipelinq messaging: no usable messaging service account, the SMS and WhatsApp webhooks write nothing',
-			['app' => Application::APP_ID, 'userId' => $userId, 'reason' => $reason]
+			['app' => AppIdentity::APP_ID, 'userId' => $userId, 'reason' => $reason]
 		);
 		throw new ServiceAccountUnavailableException('No usable messaging service account.');
 	}//end refuse()

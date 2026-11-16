@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -55,7 +56,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
  */
-class JourneyStepRunner {
+class JourneyStepRunner implements JourneyStepRunnerInterface {
 
 	/**
 	 * The channel a journey mailing uses.
@@ -113,26 +114,39 @@ class JourneyStepRunner {
 		}
 
 		$step = new JourneyStep(journeyId: $journeyId, journey: $journey);
+
+		return $this->runStep(step: $step, trigger: ['subject' => $subject, 'flowRunUuid' => $flowRunUuid]);
+	}//end run()
+
+	/**
+	 * Act for every contact of a journey step and record each outcome.
+	 *
+	 * @param JourneyStep $step The journey's step.
+	 * @param array{subject: array<string, mixed>, flowRunUuid: string} $trigger The triggering object and the flow run.
+	 *
+	 * @return array<int, array{contactId: string, state: string, reason: string}> One entry per contact.
+	 */
+	private function runStep(JourneyStep $step, array $trigger): array {
 		$action = $step->action();
 		$outcomes = [];
-		foreach ($this->contactsFor(journey: $journey, subject: $subject) as $contactId) {
+		foreach ($this->contactsFor(journey: $step->journey, subject: $trigger['subject']) as $contactId) {
 			$outcome = $this->act(step: $step, contactId: $contactId);
 			$outcome['contactId'] = $contactId;
 			$outcomes[] = $outcome;
 
 			$this->journeys->recordRun(run: [
-				'journeyId' => $journeyId,
+				'journeyId' => $step->journeyId,
 				'contactId' => $contactId,
 				'clientId' => $this->clientOf(contactId: $contactId),
 				'state' => $outcome['state'],
 				'reason' => $outcome['reason'],
 				'actionKind' => (string)($action['kind'] ?? ''),
-				'flowRunUuid' => $flowRunUuid,
+				'flowRunUuid' => $trigger['flowRunUuid'],
 			]);
 		}
 
 		return $outcomes;
-	}//end run()
+	}//end runStep()
 
 	/**
 	 * Perform one action for one contact, gate first.

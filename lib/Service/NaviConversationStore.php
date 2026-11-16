@@ -55,7 +55,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
@@ -131,7 +131,7 @@ class NaviConversationStore {
 		}
 
 		$record = $this->storedRecord(userId: $userId);
-		if ($record === null || $this->isUsable(record: $record, userId: $userId, conversationId: $conversationId) === false) {
+		if ($record === null || $this->isUsable(record: $record, asked: ['owner' => $userId, 'conversationId' => $conversationId]) === false) {
 			return [];
 		}
 
@@ -147,7 +147,7 @@ class NaviConversationStore {
 	 * @return array<string, mixed>|null
 	 */
 	private function storedRecord(string $userId): ?array {
-		$raw = $this->config->getUserValue(userId: $userId, appName: Application::APP_ID, key: self::PREFERENCE_KEY, default: '');
+		$raw = $this->config->getUserValue(userId: $userId, appName: AppIdentity::APP_ID, key: self::PREFERENCE_KEY, default: '');
 		if ($raw === '') {
 			return null;
 		}
@@ -191,15 +191,25 @@ class NaviConversationStore {
 			return;
 		}
 
-		$record = [
-			'owner' => $userId,
-			'conversationId' => $conversationId,
+		$this->store(owner: ['owner' => $userId, 'conversationId' => $conversationId], turns: ['history' => $history, 'turn' => $turn]);
+	}//end append()
+
+	/**
+	 * Store the user's single record: owner, conversation, time and the recent turns.
+	 *
+	 * @param array{owner: string, conversationId: string}                         $owner The user id and conversation identifier.
+	 * @param array{history: array<int, array<string, mixed>>, turn: array<string, mixed>} $turns The retained turns and the turn to append.
+	 *
+	 * @return void
+	 */
+	private function store(array $owner, array $turns): void {
+		$record = $owner + [
 			'updatedAt' => $this->timeFactory->getTime(),
-			'turns' => $this->recentTurns(history: $history, turn: $turn),
+			'turns' => $this->recentTurns(history: $turns['history'], turn: $turns['turn']),
 		];
 
-		$this->config->setUserValue(userId: $userId, appName: Application::APP_ID, key: self::PREFERENCE_KEY, value: (string)json_encode($record));
-	}//end append()
+		$this->config->setUserValue(userId: $owner['owner'], appName: AppIdentity::APP_ID, key: self::PREFERENCE_KEY, value: (string)json_encode($record));
+	}//end store()
 
 	/**
 	 * The last turns with the new one, at most the bound, compacted.
@@ -265,22 +275,21 @@ class NaviConversationStore {
 	/**
 	 * Whether a decoded record may answer for this user and conversation.
 	 *
-	 * @param array<string, mixed> $record Decoded record.
-	 * @param string $userId Authenticated user id.
-	 * @param string $conversationId Conversation being asked about.
+	 * @param array<string, mixed>                          $record Decoded record.
+	 * @param array{owner: string, conversationId: string} $asked  Authenticated user id and the conversation being asked about.
 	 *
 	 * @return bool
 	 */
-	private function isUsable(array $record, string $userId, string $conversationId): bool {
-		if (($record['owner'] ?? null) !== $userId) {
+	private function isUsable(array $record, array $asked): bool {
+		if (($record['owner'] ?? null) !== $asked['owner']) {
 			$this->logger->warning(
 				message: '[NaviConversationStore] record owner mismatch, ignored',
-				context: ['userId' => $userId]
+				context: ['userId' => $asked['owner']]
 			);
 			return false;
 		}
 
-		if (($record['conversationId'] ?? null) !== $conversationId) {
+		if (($record['conversationId'] ?? null) !== $asked['conversationId']) {
 			return false;
 		}
 

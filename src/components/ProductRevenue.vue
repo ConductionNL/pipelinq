@@ -221,6 +221,6 @@ export default {
 .product-revenue__value {
 	font-weight: 700;
 	font-size: 15px;
-	color: #46ba61;
+	color: var(--color-success, #46ba61);
 }
 </style>

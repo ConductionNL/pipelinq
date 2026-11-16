@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Lifecycle;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -84,6 +84,20 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
+		return ($this->refusal(object: $object, userId: $userId) ?? GuardResult::allow());
+	}//end check()
+
+	/**
+	 * Why the user may not confirm the transaction, or null when they may.
+	 *
+	 * @param array<string, mixed> $object The posTransaction payload.
+	 * @param string               $userId The acting user UID.
+	 *
+	 * @return GuardResult|null The denial, or null.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) GuardResult exposes only the static deny() factory.
+	 */
+	private function refusal(array $object, string $userId): ?GuardResult {
 		if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {
 			return GuardResult::deny(
 				'U mag deze transactie niet bevestigen. Alleen de eigen kassamedewerker, '
@@ -96,8 +110,8 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			return GuardResult::deny('Voeg minimaal één artikel toe.');
 		}
 
-		return GuardResult::allow();
-	}//end check()
+		return null;
+	}//end refusal()
 
 	/**
 	 * Whether the transaction has no persisted line items.
@@ -117,7 +131,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 			return true;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->lineSchema();
 		if ($register === '' || $schema === '') {
 			return true;
@@ -146,7 +160,7 @@ class PosTransactionConfirmGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.3
 	 */
 	private function lineSchema(): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransactionLine_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransactionLine_schema', '');
 		// Fall back to the numeric schema id resolved from the canonical slug
 		// when the deployed app-config leaves posTransactionLine_schema blank.
 		// findAll()'s `@self.schema` filter requires a numeric id (a slug

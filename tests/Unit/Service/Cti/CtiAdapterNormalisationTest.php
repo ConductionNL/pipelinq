@@ -447,6 +447,38 @@ class CtiAdapterNormalisationTest extends TestCase {
 	}//end testCallVoipOriginatePostsAndReadsCallId()
 
 	/**
+	 * A JSON answer that carries none of the call-id keys gives no id.
+	 *
+	 * @return void
+	 */
+	public function testCallVoipJsonWithoutACallIdGivesNoId(): void {
+		$this->config = ['cti_callvoip_api_base_url' => 'https://cv/', 'cti_callvoip_api_key' => 'k'];
+		$this->client->method('post')->willReturn($this->response('{"status":"queued"}'));
+
+		$this->assertCall([true, null, null, 'callvoip'], $this->callVoip()->originateCall('101', '+3161', '+3100'));
+	}//end testCallVoipJsonWithoutACallIdGivesNoId()
+
+	/**
+	 * One adapter dials at most 100 calls a second; the next is refused without a request.
+	 *
+	 * @return void
+	 */
+	public function testCallVoipRefusesBeyondTheRateLimit(): void {
+		$this->config = ['cti_callvoip_api_base_url' => 'https://cv/', 'cti_callvoip_api_key' => 'k'];
+		$this->client->expects($this->exactly(100))->method('post')->willReturn($this->response('{"callId":"cv-1"}'));
+		$adapter = $this->callVoip();
+
+		for ($i = 0; $i < 100; $i++) {
+			$this->assertTrue($adapter->originateCall('101', '+3161', '+3100')->success);
+		}
+
+		$this->assertCall(
+			[false, null, 'CallVoip rate limit exceeded (100/sec).', 'callvoip'],
+			$adapter->originateCall('101', '+3161', '+3100')
+		);
+	}//end testCallVoipRefusesBeyondTheRateLimit()
+
+	/**
 	 * RingCentral posts the ring-out request and reads its id.
 	 *
 	 * @return void

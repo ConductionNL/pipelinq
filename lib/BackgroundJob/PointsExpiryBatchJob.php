@@ -28,10 +28,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\LoyaltyAccountService;
-use OCA\Pipelinq\Service\NotificationService;
-use OCA\Pipelinq\Service\PointsLedgerService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PointsLedgerServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -60,24 +60,24 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ContainerInterface $container The DI container.
-	 * @param LoyaltyAccountService $loyaltyService The account service.
-	 * @param PointsLedgerService $ledgerService The ledger service.
-	 * @param NotificationService $notificationService The notification service.
+	 * @param LoyaltyAccountServiceInterface $loyaltyService The account service.
+	 * @param PointsLedgerServiceInterface $ledgerService The ledger service.
+	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
 		private ContainerInterface $container,
-		private LoyaltyAccountService $loyaltyService,
-		private PointsLedgerService $ledgerService,
-		private NotificationService $notificationService,
+		private LoyaltyAccountServiceInterface $loyaltyService,
+		private PointsLedgerServiceInterface $ledgerService,
+		private NotificationServiceInterface $notificationService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(
 			seconds: $this->appConfig->getValueInt(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'loyalty.expiry.poll_interval_seconds',
 				self::DEFAULT_INTERVAL
 			)
@@ -153,12 +153,40 @@ class PointsExpiryBatchJob extends TimedJob {
 			return;
 		}
 
-		$lastActivity = (string)($account['lastActivityDate'] ?? '');
-		$balance = (int)($account['currentBalance'] ?? 0);
-		if ($balance <= 0 || $lastActivity === '') {
+		if ($this->expiringBalance(account: $account) === null) {
 			return;
 		}
 
+		$this->expireOrWarn(account: $account, window: $window);
+	}//end processAccount()
+
+	/**
+	 * An account's last activity and balance, or null when it has no balance or no activity.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return array{0: string, 1: int}|null
+	 */
+	private function expiringBalance(array $account): array|null {
+		$lastActivity = (string)($account['lastActivityDate'] ?? '');
+		$balance = (int)($account['currentBalance'] ?? 0);
+		if ($balance <= 0 || $lastActivity === '') {
+			return null;
+		}
+
+		return [$lastActivity, $balance];
+	}//end expiringBalance()
+
+	/**
+	 * Expire an account's points past the cutoff, or warn its holder past the notice cutoff.
+	 *
+	 * @param array<string, mixed> $account The account, already known to have an id, a balance and a last activity.
+	 * @param ExpiryWindow         $window  The programme's cutoffs for this run.
+	 *
+	 * @return void
+	 */
+	private function expireOrWarn(array $account, ExpiryWindow $window): void {
+		[$lastActivity, $balance] = $this->expiringBalance(account: $account);
 		if ($lastActivity < $window->cutoff->format('c')) {
 			$this->expire(account: $account, window: $window);
 			return;
@@ -170,11 +198,11 @@ class PointsExpiryBatchJob extends TimedJob {
 				parameters: [
 					'points' => $balance,
 					'noticeDays' => $window->notice,
-					'accountId' => $accountId,
+					'accountId' => (string)$this->extractUuid(object: $account),
 				]
 			);
 		}
-	}//end processAccount()
+	}//end expireOrWarn()
 
 	/**
 	 * Expire the whole balance of an inactive account.

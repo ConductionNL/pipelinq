@@ -20,7 +20,7 @@
 
 namespace OCA\Pipelinq\Dashboard;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Dashboard\IWidget;
 use OCP\Util;
 
@@ -69,9 +69,9 @@ abstract class AbstractPipelinqWidget implements IWidget {
 		// Shared vendor chunks emitted by webpack splitChunks. Util::addScript
 		// dedupes by (app, file), so the order across widgets settles on:
 		// vendor → nc-vue → widget JS, which is the dependency order.
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-' . $this->scriptEntry());
-		Util::addStyle(Application::APP_ID, 'dashboardWidgets');
+		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-shared-vendor');
+		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-shared-nc-vue');
+		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-' . $this->scriptEntry());
+		Util::addStyle(AppIdentity::APP_ID, 'dashboardWidgets');
 	}//end load()
 }//end class

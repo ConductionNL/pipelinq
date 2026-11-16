@@ -57,13 +57,13 @@ describe('ResourceDetail', () => {
 		expect(ResourceDetail.computed.objectStore.call({})).toBe(objectStore.store)
 	})
 
-	it('reads the resource, then its week bookings and staff line, on mount', async () => {
+	it('reads the resource, then its week figures and staff line, on mount', async () => {
 		const order = []
 		const ctx = {
 			isNew: false,
 			resourceId: 'r-1',
 			objectStore: { fetchObject: vi.fn(async () => order.push('resource')) },
-			fetchWeekBookings: vi.fn(async () => order.push('week')),
+			fetchWeekFigures: vi.fn(async () => order.push('week')),
 			fetchStaffLine: vi.fn(async () => order.push('staff')),
 		}
 
@@ -75,9 +75,9 @@ describe('ResourceDetail', () => {
 	})
 
 	it('reads nothing for a new resource', async () => {
-		const ctx = { isNew: true, objectStore: { fetchObject: vi.fn() }, fetchWeekBookings: vi.fn(), fetchStaffLine: vi.fn() }
+		const ctx = { isNew: true, objectStore: { fetchObject: vi.fn() }, fetchWeekFigures: vi.fn(), fetchStaffLine: vi.fn() }
 		await ResourceDetail.mounted.call(ctx)
 		expect(ctx.objectStore.fetchObject).not.toHaveBeenCalled()
-		expect(ctx.fetchWeekBookings).not.toHaveBeenCalled()
+		expect(ctx.fetchWeekFigures).not.toHaveBeenCalled()
 	})
 })

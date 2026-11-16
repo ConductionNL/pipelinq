@@ -27,12 +27,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\TicketReferenceSequenceInterface;
+
 /**
  * Race-safe ticket reference allocator.
  *
  * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
-class TicketReferenceSequence extends InvoiceSequenceService {
+class TicketReferenceSequence extends InvoiceSequenceService implements TicketReferenceSequenceInterface {
 	/**
 	 * App-config key holding the last allocated ticket counter value for the year.
 	 *

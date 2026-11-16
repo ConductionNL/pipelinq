@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -75,7 +75,7 @@ class OpenCorporatesApiClient {
 	private function getApiBase(): string {
 		return rtrim(
 			$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'opencorporates.api_base_url',
 				self::DEFAULT_API_BASE
 			),

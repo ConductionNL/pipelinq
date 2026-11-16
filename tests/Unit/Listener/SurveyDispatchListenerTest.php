@@ -43,6 +43,8 @@ use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 require_once __DIR__ . '/RecordingDeferralService.php';
 require_once __DIR__ . '/DeferredJobDrain.php';
@@ -412,7 +414,11 @@ class SurveyDispatchListenerTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntity {
+			function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntity {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if (isset($this->stored[(string)$id]) === false) {
 					return null;
 				}
@@ -444,7 +450,11 @@ class SurveyDispatchListenerTest extends TestCase {
 			}
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array|object $object, ?array $_extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array|object $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$_extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->written[] = ['object' => (array)$object, 'schema' => $schema];
 
 				return new ObjectEntity();

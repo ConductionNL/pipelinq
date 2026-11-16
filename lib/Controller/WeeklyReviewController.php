@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\Pipelinq\Kernel\Contracts\WeeklyReviewServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Marketing\WeeklyReviewService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,7 +45,7 @@ class WeeklyReviewController extends Controller {
 	 *
 	 * @param string $appName App id.
 	 * @param IRequest $request The request.
-	 * @param WeeklyReviewService $reviews The review composer.
+	 * @param WeeklyReviewServiceInterface $reviews The review composer.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
@@ -53,7 +53,7 @@ class WeeklyReviewController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly WeeklyReviewService $reviews,
+		private readonly WeeklyReviewServiceInterface $reviews,
 		private readonly CrmPrivilegeCheck $privilege,
 	) {
 		parent::__construct(appName: $appName, request: $request);

@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
+use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -41,11 +41,11 @@ final class ExportAdminGate {
 	 * Constructor.
 	 *
 	 * @param IUserSession       $userSession The user session.
-	 * @param ExportAccessPolicy $policy      The export access policy.
+	 * @param ExportAccessPolicyInterface $policy      The export access policy.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
-		private readonly ExportAccessPolicy $policy,
+		private readonly ExportAccessPolicyInterface $policy,
 	) {
 	}//end __construct()
 

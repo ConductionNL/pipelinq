@@ -338,8 +338,10 @@ import {
 	defaultLanguage,
 	emptyClientForm,
 	INDUSTRY_SECTORS,
+	prefilledClientFields,
 } from '../../utils/clientFormFields.js'
 import { CLIENT_TYPE_LABELS, enumOptions } from '../../utils/enumLabels.js'
+import { populateFormWatcher } from '../../utils/formFields.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
@@ -460,6 +462,15 @@ export default {
 			default: '',
 		},
 
+		/**
+		 * Values to start a new client with, e.g. the fields Paste or scan
+		 * proposed. Only the form's own fields are taken.
+		 */
+		initialValues: {
+			type: Object,
+			default: null,
+		},
+
 		showActions: {
 			type: Boolean,
 			// eslint-disable-next-line vue/no-boolean-default
@@ -484,6 +495,7 @@ export default {
 				...emptyClientForm(),
 				name: this.initialName || '',
 				accountOwner: currentUser()?.uid || null,
+				...prefilledClientFields(this.initialValues),
 			},
 
 			typeOptions: enumOptions(CLIENT_TYPE_LABELS, (text) =>
@@ -579,18 +591,8 @@ export default {
 			},
 		},
 
-		client: {
-			immediate: true,
-			/**
-			 * @param {object} val The incoming value.
-			 * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
-			 */
-			handler(val) {
-				if (val && Object.keys(val).length > 0) {
-					this.populateForm(val)
-				}
-			},
-		},
+		/** @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-clients-ui/tasks.md#task-26 */
+		client: populateFormWatcher(),
 	},
 
 	mounted() {
@@ -708,7 +710,9 @@ export default {
 
 <style scoped src="../fieldGroupLayout.css"></style>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .client-form {
 	max-width: 800px;
 }
@@ -809,11 +813,7 @@ export default {
 }
 
 .form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
+	@include textarea-field;
 }
 
 .field-error {

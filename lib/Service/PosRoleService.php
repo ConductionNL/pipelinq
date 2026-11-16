@@ -25,14 +25,21 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\PosObjectUpsert;
+use OCA\Pipelinq\Service\Support\PosRegisterSchemaIds;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for POS role business operations.
@@ -44,8 +51,12 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2
  */
-class PosRoleService {
+class PosRoleService implements PosRoleServiceInterface {
 	use CastingPayloadToArray;
+	use RandomUuid;
+	use PosRegisterSchemaIds;
+	use InjectedObjectService;
+	use PosObjectUpsert;
 
 	/**
 	 * Constructor.
@@ -104,7 +115,7 @@ class PosRoleService {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -152,22 +163,7 @@ class PosRoleService {
 			'canNoSale' => (bool)($data['canNoSale'] ?? false),
 		];
 
-		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
-
-		$uuid = $id;
-		if ($uuid === '') {
-			$uuid = $this->uuid();
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(object: $saved);
+		return $this->upsertObject(schemaKey: 'posRole_schema', id: $id, payload: $payload);
 	}//end saveRole()
 
 	/**
@@ -202,7 +198,9 @@ class PosRoleService {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to delete posRole', ['exception' => $e->getMessage()]);
 			throw new OCSNotFoundException('POS-rol kon niet worden verwijderd.');
@@ -256,52 +254,4 @@ class PosRoleService {
 
 		return $count;
 	}//end countActiveStaffForRole()
-
-	/**
-	 * Resolve the register + a schema config key into their stored IDs.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] IDs.
-	 *
-	 * @throws OCSNotFoundException If the register or schema is not configured.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
-	 */
-	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-
-		if ($register === '' || $schema === '') {
-			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
-		}
-
-		return [$register, $schema];
-	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#2.1
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
-
-	/**
-	 * Generate a v4 UUID.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$data = random_bytes(16);
-		$data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
-		$data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
-
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end uuid()
 }//end class

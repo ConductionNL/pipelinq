@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -125,8 +126,7 @@ class BrokerCredentialReader {
 			$service = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$entity = $service->find(
 				id: $credentialRef,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable $failure) {
 			$this->logger->info(
@@ -186,30 +186,52 @@ class BrokerCredentialReader {
 			return null;
 		}
 
+		$found = $this->providerRows(provider: $provider);
+		if ($found === []) {
+			return null;
+		}
+
+		return $this->latestOf(rows: $found[0], asked: ['provider' => $provider, 'owner' => $ownerUid]);
+	}//end findLatest()
+
+	/**
+	 * The credential rows of a provider.
+	 *
+	 * @param string $provider The catalogue provider identifier.
+	 *
+	 * @return array<int, mixed> The findAll result as a one-element list, or an empty list when it could not be read.
+	 *
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 */
+	private function providerRows(string $provider): array {
 		try {
 			$service = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$rows = $service->findAll(
-				config: [
-					'filters' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-						'provider' => $provider,
-					],
-				],
-			);
+			return [$service->findAll(config: ['filters' => ['register' => self::REGISTER, 'schema' => self::SCHEMA, 'provider' => $provider]])];
 		} catch (Throwable $failure) {
 			$this->logger->info(
 				'BrokerCredentialReader.findLatest: the credential list could not be read',
 				['provider' => $provider, 'exception' => $failure->getMessage()]
 			);
 
-			return null;
+			return [];
 		}
+	}//end providerRows()
 
+	/**
+	 * The most recently connected credential of the owner among the rows.
+	 *
+	 * @param mixed $rows The credential rows.
+	 * @param array{provider: string, owner: string} $asked The catalogue provider identifier and the user who connected.
+	 *
+	 * @return array<string, mixed>|null The readable metadata, or null.
+	 *
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
+	 */
+	private function latestOf($rows, array $asked): array|null {
 		$best = null;
 		foreach (($rows ?? []) as $row) {
 			$readable = $this->readable(entity: $row);
-			if ($this->belongsTo(row: $readable, provider: $provider, ownerUid: $ownerUid) === false) {
+			if ($this->belongsTo(row: $readable, asked: $asked) === false) {
 				continue;
 			}
 
@@ -219,7 +241,7 @@ class BrokerCredentialReader {
 		}
 
 		return $best;
-	}//end findLatest()
+	}//end latestOf()
 
 	/**
 	 * Whether a credential row really is this provider's and this owner's.
@@ -229,17 +251,16 @@ class BrokerCredentialReader {
 	 * asked for while looking exactly like a correct answer.
 	 *
 	 * @param array<string, mixed> $row The credential metadata.
-	 * @param string $provider The provider that was asked for.
-	 * @param string $ownerUid The owner that was asked for.
+	 * @param array{provider: string, owner: string} $asked The provider and the owner that were asked for.
 	 *
 	 * @return bool True when both match.
 	 */
-	private function belongsTo(array $row, string $provider, string $ownerUid): bool {
-		if ($row === [] || (string)($row['provider'] ?? '') !== $provider) {
+	private function belongsTo(array $row, array $asked): bool {
+		if ($row === [] || (string)($row['provider'] ?? '') !== $asked['provider']) {
 			return false;
 		}
 
-		return ((string)($row['owner'] ?? '') === $ownerUid);
+		return ((string)($row['owner'] ?? '') === $asked['owner']);
 	}//end belongsTo()
 
 	/**

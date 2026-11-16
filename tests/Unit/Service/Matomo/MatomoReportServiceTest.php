@@ -51,6 +51,7 @@ class MatomoReportServiceTest extends TestCase {
 	 * @param string $credentialStatus What the broker says about it.
 	 * @param array<int, array<string, mixed>> $campaigns Our own campaigns.
 	 * @param string $body What Matomo answers.
+	 * @param string $siteId The configured site id setting.
 	 *
 	 * @return MatomoReportService
 	 */
@@ -60,6 +61,7 @@ class MatomoReportServiceTest extends TestCase {
 		string $credentialStatus,
 		array $campaigns = [],
 		string $body = '[]',
+		string $siteId = '7',
 	): MatomoReportService {
 		$egress = $this->createMock(ConnectorEgress::class);
 		$egress->method('isConfigured')->willReturn($sourceConfigured);
@@ -79,13 +81,13 @@ class MatomoReportServiceTest extends TestCase {
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = '') use ($credentialRef): string {
+			static function (string $app, string $key, string $default = '') use ($credentialRef, $siteId): string {
 				if ($key === MatomoReportService::CREDENTIAL_KEY) {
 					return $credentialRef;
 				}
 
 				if ($key === MatomoReportService::SITE_KEY) {
-					return '7';
+					return $siteId;
 				}
 
 				return $default;
@@ -192,6 +194,55 @@ class MatomoReportServiceTest extends TestCase {
 		$this->assertSame('7', $query['idSite']);
 		$this->assertSame('2026-08-01,2026-08-31', $query['date']);
 	}//end testRequestsCarryFormatJsonAndTheConfiguredSite()
+
+	/**
+	 * Without a configured site (or only whitespace) the first site, `1`, is read.
+	 *
+	 * @return void
+	 */
+	public function testRequestsDefaultToSiteOneWhenNoSiteIsConfigured(): void {
+		foreach (['', '   '] as $siteId) {
+			$this->requests = [];
+			$this->service(sourceConfigured: true, credentialRef: 'c-1', credentialStatus: 'active', siteId: $siteId)
+				->report(from: '2026-08-01', to: '2026-08-31');
+
+			$this->assertCount(3, $this->requests);
+			foreach ($this->requests as $request) {
+				$this->assertSame('1', $request['config']['query']['idSite'], 'site setting ' . var_export($siteId, true));
+			}
+		}
+	}//end testRequestsDefaultToSiteOneWhenNoSiteIsConfigured()
+
+	/**
+	 * A body that is not a JSON array leaves every report empty rather than failing.
+	 *
+	 * @return void
+	 */
+	public function testANonJsonAnswerGivesEmptyReports(): void {
+		foreach (['not json', '"text"', ''] as $body) {
+			$report = $this->service(
+				sourceConfigured: true,
+				credentialRef: 'c-1',
+				credentialStatus: 'active',
+				campaigns: [['id' => 'camp-1', 'name' => 'Webinar', 'utmCampaign' => 'webinar-ai']],
+				body: $body
+			)->report(from: '2026-08-01', to: '2026-08-31');
+
+			$this->assertSame(
+				[
+					'connected' => true,
+					'reason' => '',
+					'from' => '2026-08-01',
+					'to' => '2026-08-31',
+					'campaigns' => [],
+					'referrerTypes' => [],
+					'goals' => [],
+				],
+				$report,
+				'body ' . var_export($body, true)
+			);
+		}
+	}//end testANonJsonAnswerGivesEmptyReports()
 
 	/**
 	 * A campaign row whose label equals one of our `utmCampaign` values is
@@ -325,4 +376,125 @@ class MatomoReportServiceTest extends TestCase {
 			$report['campaigns']
 		);
 	}//end testEveryMatchingRule()
+	/**
+	 * A refused report carries the refusal, the window and three empty reports, in that order.
+	 *
+	 * @return void
+	 */
+	public function testARefusedReportHasTheFullShape(): void {
+		$report = $this->service(sourceConfigured: true, credentialRef: 'c-1', credentialStatus: 'revoked')
+			->report(from: '2026-08-01', to: '2026-08-31');
+
+		$this->assertSame(
+			[
+				'connected' => false,
+				'failure' => 'relink_needed',
+				'reason' => 'The Matomo credential is revoked. Reconnect it in the credential broker.',
+				'from' => '2026-08-01',
+				'to' => '2026-08-31',
+				'campaigns' => [],
+				'referrerTypes' => [],
+				'goals' => [],
+			],
+			$report
+		);
+	}//end testARefusedReportHasTheFullShape()
+
+	/**
+	 * Each report holds the answer to its own method; referrer types and goals
+	 * pass through untouched, and every request reads a 100-row range.
+	 *
+	 * @return void
+	 */
+	public function testEachReportHoldsTheAnswerToItsOwnMethod(): void {
+		$bodies = [
+			'Referrers.getCampaigns' => '[{"label":"webinar-ai","nb_visits":3,"nb_actions":9}]',
+			'Referrers.getReferrerType' => '[{"label":"Search Engines","nb_visits":40}]',
+			'Goals.get' => '{"nb_conversions":4,"revenue":120.5}',
+		];
+		$queries = [];
+
+		$egress = $this->createMock(ConnectorEgress::class);
+		$egress->method('isConfigured')->willReturn(true);
+		$egress->method('read')->willReturnCallback(
+			static function (string $configKey, string $endpoint, array $config = []) use ($bodies, &$queries): EgressResult {
+				$queries[] = $config['query'];
+
+				return EgressResult::success(body: $bodies[$config['query']['method']]);
+			}
+		);
+
+		$credentials = $this->createMock(BrokerCredentialReader::class);
+		$credentials->expects($this->once())->method('status')->with('c-1')->willReturn('active');
+
+		$campaignService = $this->createMock(CampaignService::class);
+		$campaignService->method('all')->willReturn([['id' => 'camp-1', 'name' => 'Webinar', 'utmCampaign' => 'webinar-ai']]);
+
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				MatomoReportService::CREDENTIAL_KEY => '  c-1  ',
+				MatomoReportService::SITE_KEY => ' 12 ',
+				default => $default,
+			}
+		);
+
+		$service = new MatomoReportService(
+			egress: $egress,
+			credentials: $credentials,
+			campaigns: $campaignService,
+			appConfig: $appConfig
+		);
+
+		$this->assertSame('c-1', $service->credentialRef());
+
+		$report = $service->report(from: '2026-08-01', to: '2026-08-31');
+
+		$this->assertTrue($report['connected']);
+		$this->assertSame(
+			[['campaign' => 'webinar-ai', 'visits' => 3, 'actions' => 9, 'matched' => true, 'campaignId' => 'camp-1', 'campaignName' => 'Webinar']],
+			$report['campaigns']
+		);
+		$this->assertSame([['label' => 'Search Engines', 'nb_visits' => 40]], $report['referrerTypes']);
+		$this->assertSame(['nb_conversions' => 4, 'revenue' => 120.5], $report['goals']);
+
+		$this->assertCount(3, $queries);
+		foreach ($queries as $query) {
+			$this->assertSame('range', $query['period']);
+			$this->assertSame('100', $query['filter_limit']);
+			$this->assertSame('12', $query['idSite']);
+		}
+	}//end testEachReportHoldsTheAnswerToItsOwnMethod()
+
+	/**
+	 * A failed call leaves its report empty instead of failing the whole read.
+	 *
+	 * @return void
+	 */
+	public function testAFailedCallGivesAnEmptyReport(): void {
+		$egress = $this->createMock(ConnectorEgress::class);
+		$egress->method('isConfigured')->willReturn(true);
+		$egress->method('read')->willReturn(EgressResult::failed(failure: EgressResult::NOT_CONFIGURED, reason: 'gone'));
+
+		$credentials = $this->createMock(BrokerCredentialReader::class);
+		$credentials->method('status')->willReturn('active');
+
+		$campaignService = $this->createMock(CampaignService::class);
+		$campaignService->method('all')->willReturn([]);
+
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('c-1');
+
+		$report = (new MatomoReportService(
+			egress: $egress,
+			credentials: $credentials,
+			campaigns: $campaignService,
+			appConfig: $appConfig
+		))->report(from: '2026-08-01', to: '2026-08-31');
+
+		$this->assertTrue($report['connected']);
+		$this->assertSame([], $report['campaigns']);
+		$this->assertSame([], $report['referrerTypes']);
+		$this->assertSame([], $report['goals']);
+	}//end testAFailedCallGivesAnEmptyReport()
 }//end class

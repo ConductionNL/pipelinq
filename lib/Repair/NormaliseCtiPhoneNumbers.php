@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\CtiContactMatcher;
+use OCA\Pipelinq\Kernel\Contracts\CtiContactMatcherInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -45,12 +45,12 @@ class NormaliseCtiPhoneNumbers implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppManager $appManager The app manager.
-	 * @param CtiContactMatcher $contactMatcher The CTI contact matcher.
+	 * @param CtiContactMatcherInterface $contactMatcher The CTI contact matcher.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly CtiContactMatcher $contactMatcher,
+		private readonly CtiContactMatcherInterface $contactMatcher,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

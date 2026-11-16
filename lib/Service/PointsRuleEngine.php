@@ -29,7 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -45,6 +46,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class PointsRuleEngine {
 	use PayloadToArray;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -72,8 +74,20 @@ class PointsRuleEngine {
 	 */
 	public function evaluateRules(string $programmeId, string $trigger, array $context): array {
 		$rules = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
-		$matches = [];
 
+		return $this->matchingByPriority(rules: $rules, context: $context);
+	}//end evaluateRules()
+
+	/**
+	 * The rules valid and met in the context, highest priority first.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The programme's rules for the trigger.
+	 * @param array<string, mixed> $context The evaluation context.
+	 *
+	 * @return array<int, array<string, mixed>> Matching rules, highest prioriteit first.
+	 */
+	private function matchingByPriority(array $rules, array $context): array {
+		$matches = [];
 		foreach ($rules as $rule) {
 			if ($this->isWithinValidity(rule: $rule, context: $context) === false) {
 				continue;
@@ -95,7 +109,7 @@ class PointsRuleEngine {
 		);
 
 		return $matches;
-	}//end evaluateRules()
+	}//end matchingByPriority()
 
 	/**
 	 * Return the single highest-priority rule (or null if no matches).
@@ -485,19 +499,8 @@ class PointsRuleEngine {
 	 */
 	private function config(): array {
 		return [
-			$this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'pointsRule_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'pointsRule_schema', ''),
 		];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

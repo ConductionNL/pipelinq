@@ -34,19 +34,25 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
-use OCA\Pipelinq\Service\Payment\PaymentRefund;
-use OCA\Pipelinq\Service\Payment\PaymentStart;
 use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
+use OCA\Pipelinq\Service\Payment\PaymentRefund;
+use OCA\Pipelinq\Service\Payment\PaymentStart;
+use OCA\Pipelinq\Service\Payment\PaymentWebhook;
+use OCA\Pipelinq\Service\Payment\PosTransactionStore;
 use OCA\Pipelinq\Service\Payment\SettlementUpdate;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
-use OCA\Pipelinq\Service\Payment\PaymentWebhook;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -88,15 +94,9 @@ use Throwable;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
  */
-class PosPaymentService {
+class PosPaymentService implements PosPaymentServiceInterface {
 	use NullablePayloadToArray;
-
-	/**
-	 * IAppConfig key prefix for stored credentials.
-	 *
-	 * @var string
-	 */
-	public const CONFIG_PREFIX = 'payment_provider.';
+	use RandomUuid;
 
 	/**
 	 * CloudEvent type emitted on settlement.
@@ -120,13 +120,6 @@ class PosPaymentService {
 	private const EVENT_SOURCE = '/apps/pipelinq/pos/payment';
 
 	/**
-	 * Provider names supported by this app.
-	 *
-	 * @var array<int, string>
-	 */
-	public const PROVIDERS = ['mollie', 'ccv', 'adyen', 'stripe'];
-
-	/**
 	 * Sensitive credential field names (encrypted at rest, masked in responses).
 	 *
 	 * `apiKey` and `apiSecret` are GONE from this list. They used to be encrypted here
@@ -144,16 +137,6 @@ class PosPaymentService {
 	 * @var array<int, string>
 	 */
 	public const SENSITIVE_FIELDS = ['webhookSecret'];
-
-	/**
-	 * Credential-field names that used to be stored here and no longer may be.
-	 *
-	 * Kept only so the repair step and the update path can recognise — and refuse —
-	 * them. Nothing reads their values.
-	 *
-	 * @var array<int, string>
-	 */
-	public const RETIRED_SECRET_FIELDS = ['apiKey', 'apiSecret'];
 
 	/**
 	 * The payment methods a provider offers at the till when its config names none.
@@ -388,6 +371,19 @@ class PosPaymentService {
 	private function writeSensitiveFields(string $name, array $data): void {
 		// Refuse the retired fields outright. A client that still POSTs an apiKey must
 		// not have it quietly persisted — that is precisely the custody we just removed.
+		$this->logRetiredFields(name: $name, data: $data);
+		$this->storeSensitiveFields(name: $name, data: $data);
+	}//end writeSensitiveFields()
+
+	/**
+	 * Log every retired credential field the payload still carries; none is stored.
+	 *
+	 * @param string               $name The provider name.
+	 * @param array<string, mixed> $data The form payload.
+	 *
+	 * @return void
+	 */
+	private function logRetiredFields(string $name, array $data): void {
 		foreach (self::RETIRED_SECRET_FIELDS as $retired) {
 			if (array_key_exists($retired, $data) === true) {
 				$this->logger->warning(
@@ -400,7 +396,17 @@ class PosPaymentService {
 				);
 			}
 		}
+	}//end logRetiredFields()
 
+	/**
+	 * Encrypt and store each sensitive field that carries a new value.
+	 *
+	 * @param string               $name The provider name.
+	 * @param array<string, mixed> $data The form payload.
+	 *
+	 * @return void
+	 */
+	private function storeSensitiveFields(string $name, array $data): void {
 		foreach (self::SENSITIVE_FIELDS as $field) {
 			if (array_key_exists($field, $data) === false) {
 				continue;
@@ -417,7 +423,7 @@ class PosPaymentService {
 			// Discard plaintext immediately (best-effort).
 			unset($raw);
 		}
-	}//end writeSensitiveFields()
+	}//end storeSensitiveFields()
 
 	/**
 	 * Resolve an active provider adapter by name.
@@ -919,19 +925,31 @@ class PosPaymentService {
 			return $this->unmatchedSettlement(providerName: $providerName, sessionId: $sessionId);
 		}
 
+		$update = new SettlementUpdate(
+			paymentStatus: $paymentStatus,
+			previousStatus: (string)($transaction['paymentStatus'] ?? ''),
+			eventId: $eventId
+		);
+		return $this->settle(transaction: $transaction, update: $update);
+	}//end handleSettlement()
+
+	/**
+	 * Apply a settlement update to its transaction once per provider event.
+	 *
+	 * @param array<string, mixed> $transaction The matched transaction.
+	 * @param SettlementUpdate     $update      The settlement update.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function settle(array $transaction, SettlementUpdate $update): array {
 		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
-		if ($this->isProcessedEvent(transaction: $transaction, eventId: $eventId) === true) {
+		if ($this->isProcessedEvent(transaction: $transaction, eventId: $update->eventId) === true) {
 			return [
 				'status' => 'duplicate',
 				'transactionId' => $id,
 			];
 		}
 
-		$update = new SettlementUpdate(
-			paymentStatus: $paymentStatus,
-			previousStatus: (string)($transaction['paymentStatus'] ?? ''),
-			eventId: $eventId
-		);
 		$updated = $this->saveTransaction(id: $id, patch: $this->buildSettlementPatch(update: $update));
 		$this->emitSettlementEvents(update: $update, transaction: $updated);
 
@@ -939,7 +957,7 @@ class PosPaymentService {
 			'status' => 'ok',
 			'transactionId' => $id,
 		];
-	}//end handleSettlement()
+	}//end settle()
 
 	/**
 	 * Answer a settlement for a session this instance cannot match.
@@ -1079,7 +1097,7 @@ class PosPaymentService {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-011
 	 */
 	public function emitRefundedEvent(array $transaction, string $refundId, string $reason): void {
-		$payload = $this->buildRefundedPayload(transaction: $transaction, refundId: $refundId, reason: $reason);
+		$payload = $this->buildRefundedPayload(transaction: $transaction, refund: ['refundId' => $refundId, 'refundReason' => $reason]);
 		$this->dispatch(eventName: self::EVENT_REFUNDED, payload: $payload);
 	}//end emitRefundedEvent()
 
@@ -1225,7 +1243,7 @@ class PosPaymentService {
 	 */
 	private function readString(string $setting, string $default = ''): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$default
 		);
@@ -1243,7 +1261,7 @@ class PosPaymentService {
 	 */
 	private function readBool(string $setting, bool $default = false): bool {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			''
 		);
@@ -1264,7 +1282,7 @@ class PosPaymentService {
 	 */
 	private function readObject(string $name, string $key): array {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->settingKey(name: $name, key: $key),
 			''
 		);
@@ -1290,7 +1308,7 @@ class PosPaymentService {
 	 */
 	private function writeString(string $setting, string $value): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$value
 		);
@@ -1311,7 +1329,7 @@ class PosPaymentService {
 		}
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$encoded
 		);
@@ -1332,7 +1350,7 @@ class PosPaymentService {
 		}
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$setting,
 			$encoded
 		);
@@ -1362,6 +1380,18 @@ class PosPaymentService {
 			throw new OCSNotFoundException('Transaction not found');
 		}
 
+		$store = new PosTransactionStore(objectService: $this->transactionObjectService(), register: $register, schema: $schema);
+		return $this->findTransactionData(store: $store, id: $id);
+	}//end loadTransaction()
+
+	/**
+	 * Resolve OpenRegister's ObjectService for a transaction load.
+	 *
+	 * @return mixed
+	 *
+	 * @throws OCSNotFoundException When OpenRegister is unavailable.
+	 */
+	private function transactionObjectService(): mixed {
 		// Availability established before the reach (ADR-083) — the lookup names
 		// OpenRegister only as a string, so without this the dependency is
 		// declared nowhere a reader or a gate can see it. Converting to a typed
@@ -1371,17 +1401,25 @@ class PosPaymentService {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (Throwable $e) {
 			throw new OCSNotFoundException('Transaction storage unavailable');
 		}
+	}//end transactionObjectService()
 
+	/**
+	 * Find one transaction and return it as an array.
+	 *
+	 * @param PosTransactionStore $store Where transactions are read.
+	 * @param string              $id    The id.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws OCSNotFoundException When the transaction cannot be found.
+	 */
+	private function findTransactionData(PosTransactionStore $store, string $id): array {
 		try {
-			$found = $objectService->find(
-				id: $id,
-				register: $register,
-				schema: $schema
-			);
+			$found = $store->objectService->find(id: $id, options: new ObjectFindOptions(register: $store->register, schema: $store->schema));
 		} catch (Throwable $e) {
 			throw new OCSNotFoundException('Transaction not found');
 		}
@@ -1392,7 +1430,7 @@ class PosPaymentService {
 		}
 
 		return $data;
-	}//end loadTransaction()
+	}//end findTransactionData()
 
 	/**
 	 * Find a transaction by paymentSessionId.
@@ -1419,66 +1457,95 @@ class PosPaymentService {
 			return null;
 		}
 
+		$rows = $this->sessionTransactionRows(sessionId: $sessionId);
+		if ($rows === []) {
+			return null;
+		}
+
+		if (count($rows) > 1) {
+			$this->logDuplicateSession(sessionId: $sessionId, rows: $rows);
+		}
+
+		return $rows[0];
+	}//end findTransactionBySessionId()
+
+	/**
+	 * The transactions carrying one payment session id, or none when the lookup cannot run.
+	 *
+	 * @param string $sessionId The session id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function sessionTransactionRows(string $sessionId): array {
 		$register = $this->registerId();
 		$schema = $this->posTransactionSchema();
 		if ($register === '' || $schema === '') {
-			return null;
+			return [];
 		}
 
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (Throwable $e) {
-			return null;
+			return [];
 		}
 
+		$store = new PosTransactionStore(objectService: $objectService, register: $register, schema: $schema);
+		return $this->findBySessionId(store: $store, sessionId: $sessionId);
+	}//end sessionTransactionRows()
+
+	/**
+	 * Run the paymentSessionId lookup, logging a failed one.
+	 *
+	 * @param PosTransactionStore $store     Where transactions are read.
+	 * @param string              $sessionId The session id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function findBySessionId(PosTransactionStore $store, string $sessionId): array {
 		try {
-			$result = $objectService->findAll(
+			$result = $store->objectService->findAll(
 				config: [
-					'filters' => [
-						'paymentSessionId' => $sessionId,
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => ['paymentSessionId' => $sessionId, 'register' => $store->register, 'schema' => $store->schema],
 					'limit' => 2,
 				]
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'Pipelinq POS payment: transaction lookup by session id failed',
-				[
-					'session' => $sessionId,
-					'class' => get_class($e),
-					'exception' => $e->getMessage(),
-				]
+				['session' => $sessionId, 'class' => get_class($e), 'exception' => $e->getMessage()]
 			);
-			return null;
+			return [];
 		}//end try
 
-		$rows = $this->resultToArray(result: $result);
-		if ($rows === []) {
-			return null;
-		}
+		return $this->resultToArray(result: $result);
+	}//end findBySessionId()
 
-		if (count($rows) > 1) {
-			// Two transactions carrying one provider session id is data
-			// corruption on the money path: the settlement would land on
-			// whichever row the store happened to return first. Surface it.
-			$this->logger->error(
-				'Pipelinq POS payment: paymentSessionId is not unique; settling the first match',
-				[
-					'session' => $sessionId,
-					'matches' => array_map(
-						static function (array $row): string {
-							return (string)($row['@self']['id'] ?? ($row['id'] ?? ''));
-						},
-						$rows
-					),
-				]
-			);
-		}
-
-		return $rows[0];
-	}//end findTransactionBySessionId()
+	/**
+	 * Log two transactions carrying one provider session id.
+	 *
+	 * Two transactions carrying one provider session id is data corruption on
+	 * the money path: the settlement would land on whichever row the store
+	 * happened to return first. Surface it.
+	 *
+	 * @param string                           $sessionId The session id.
+	 * @param array<int, array<string, mixed>> $rows      The matching transactions.
+	 *
+	 * @return void
+	 */
+	private function logDuplicateSession(string $sessionId, array $rows): void {
+		$this->logger->error(
+			'Pipelinq POS payment: paymentSessionId is not unique; settling the first match',
+			[
+				'session' => $sessionId,
+				'matches' => array_map(
+					static function (array $row): string {
+						return (string)($row['@self']['id'] ?? ($row['id'] ?? ''));
+					},
+					$rows
+				),
+			]
+		);
+	}//end logDuplicateSession()
 
 	/**
 	 * Save a patch onto a posTransaction.
@@ -1522,10 +1589,10 @@ class PosPaymentService {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$saved = $objectService->saveObject(
 				object: $current,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1551,7 +1618,7 @@ class PosPaymentService {
 	 * @return string The configured register id, or '' when unconfigured.
 	 */
 	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq POS payment: app-config "register" is not configured; transaction storage is refused, not run unscoped'
@@ -1574,7 +1641,7 @@ class PosPaymentService {
 	 * @return string The configured schema id, or '' when unconfigured.
 	 */
 	private function posTransactionSchema(): string {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 		if ($schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq POS payment: app-config "posTransaction_schema" is not configured; storage is refused, not run unscoped'
@@ -1597,7 +1664,7 @@ class PosPaymentService {
 		}
 
 		$managersGroup = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'pos_managers_group',
 			'pos_managers'
 		);
@@ -1680,12 +1747,11 @@ class PosPaymentService {
 	 * Build the CloudEvent payload for a refunded transaction.
 	 *
 	 * @param array<string, mixed> $transaction The transaction.
-	 * @param string $refundId The refund id.
-	 * @param string $reason The reason.
+	 * @param array<string, string> $refund The `refundId` and `refundReason`.
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function buildRefundedPayload(array $transaction, string $refundId, string $reason): array {
+	private function buildRefundedPayload(array $transaction, array $refund): array {
 		$id = (string)($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
 
 		return [
@@ -1701,10 +1767,7 @@ class PosPaymentService {
 				'paymentProvider' => (string)($transaction['paymentProvider'] ?? ''),
 				'paymentSessionId' => (string)($transaction['paymentSessionId'] ?? ''),
 				'total' => (float)($transaction['total'] ?? 0),
-				'refundId' => $refundId,
-				'refundReason' => $reason,
-				'refundedAt' => (string)($transaction['refundedAt'] ?? $this->nowIso()),
-			],
+			] + $refund + ['refundedAt' => (string)($transaction['refundedAt'] ?? $this->nowIso())],
 		];
 	}//end buildRefundedPayload()
 
@@ -1732,18 +1795,6 @@ class PosPaymentService {
 			);
 		}//end try
 	}//end dispatch()
-
-	/**
-	 * Generate a v4-ish UUID string.
-	 *
-	 * @return string
-	 */
-	private function uuid(): string {
-		$bytes = random_bytes(16);
-		$bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-		$bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-	}//end uuid()
 
 	/**
 	 * Now in ISO-8601 UTC.

@@ -63,15 +63,8 @@ final class OrphanedLeadPlacer {
 	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function forOrphanedLead(array $lead, array $pipelines, ?string $now = null): array {
-		$pipelineId = trim((string)($lead['pipeline'] ?? ''));
-		if ($pipelineId === '') {
+		if (self::isOrphaned(pipelineId: trim((string)($lead['pipeline'] ?? '')), pipelines: $pipelines) === false) {
 			return [];
-		}
-
-		foreach ($pipelines as $pipeline) {
-			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
-				return [];
-			}
 		}
 
 		$target = $this->placer->defaultPipeline(pipelines: $pipelines);
@@ -79,18 +72,52 @@ final class OrphanedLeadPlacer {
 			return [];
 		}
 
-		$stage = $this->closedStageFor(pipeline: $target, status: (string)($lead['status'] ?? ''));
+		return $this->movedTo(target: $target, move: ['status' => (string)($lead['status'] ?? ''), 'now' => $now]);
+	}//end forOrphanedLead()
+
+	/**
+	 * The fields that put a lead on the target pipeline, in the stage its status belongs in.
+	 *
+	 * @param array<string, mixed>                $target The default lead pipeline.
+	 * @param array{status: string, now: ?string} $move   The lead status and the ISO 8601 entry time (null means now).
+	 *
+	 * @return array<string, mixed> The fields to merge into the lead.
+	 */
+	private function movedTo(array $target, array $move): array {
+		$stage = $this->closedStageFor(pipeline: $target, status: $move['status']);
 		$stage ??= $this->placer->firstOpenStage(pipeline: $target);
 
 		$patch = ['pipeline' => (string)$target['id']];
 		if ($stage !== null) {
 			$patch['stage'] = $stage['name'];
 			$patch['stageOrder'] = $stage['order'];
-			$patch['stageEnteredAt'] = $this->placer->entryMoment(iso: $now);
+			$patch['stageEnteredAt'] = $this->placer->entryMoment(iso: $move['now']);
 		}
 
 		return $patch;
-	}//end forOrphanedLead()
+	}//end movedTo()
+
+	/**
+	 * Whether a lead's pipeline id names a pipeline that is not stored; a lead without one is not orphaned.
+	 *
+	 * @param string                           $pipelineId The lead's trimmed pipeline id.
+	 * @param array<int, array<string, mixed>> $pipelines  Stored pipelines.
+	 *
+	 * @return bool
+	 */
+	private static function isOrphaned(string $pipelineId, array $pipelines): bool {
+		if ($pipelineId === '') {
+			return false;
+		}
+
+		foreach ($pipelines as $pipeline) {
+			if ((string)($pipeline['id'] ?? '') === $pipelineId) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isOrphaned()
 
 	/**
 	 * The closed stage a won or lost lead belongs in, by stage order.

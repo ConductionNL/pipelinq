@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -73,7 +73,7 @@ class TaskCreatedByCreatingListener implements IEventListener {
 			return;
 		}
 
-		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		$entity = $event->getObject();
 		if ($taskSchema === '' || (string)$entity->getSchema() !== $taskSchema) {
 			return;

@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\ReminderDispatchJob;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -218,7 +219,7 @@ class ReminderDispatchJobTest extends TestCase {
 
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) use ($emailService): object {
-				if ($id === AppointmentEmailService::class) {
+				if ($id === AppointmentEmailServiceInterface::class) {
 					return $emailService;
 				}
 
@@ -268,7 +269,7 @@ class ReminderDispatchJobTest extends TestCase {
 
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) use ($emailService): object {
-				if ($id === AppointmentEmailService::class) {
+				if ($id === AppointmentEmailServiceInterface::class) {
 					return $emailService;
 				}
 

@@ -10,7 +10,8 @@
 		{ "id": "workflowengine", "required": false, "name": "Workflow engine" },
 		{ "id": "timemanager", "required": false, "name": "Time manager" },
 		{ "id": "forms", "required": false, "name": "Forms" },
-		{ "id": "mail", "required": false, "name": "Mail" }
+		{ "id": "mail", "required": false, "name": "Mail" },
+		{ "id": "portaliq", "required": false, "name": "PortaliQ" }
 	],
 	"setup": {
 		"enabled": true,
@@ -736,6 +737,7 @@
 							"valueField": "revenue",
 							"previousField": "previousPeriod.revenue",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "till and won deals"
 						}
 					},
@@ -763,6 +765,7 @@
 							"valueField": "wonValue",
 							"previousField": "previousPeriod.wonValue",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "{wonCount} won"
 						}
 					},
@@ -789,6 +792,7 @@
 							"valueField": "winRate",
 							"previousField": "previousPeriod.winRate",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "{wonCount} won, {lostCount} lost"
 						}
 					},
@@ -815,6 +819,7 @@
 							"valueField": "avgDealSize",
 							"previousField": "previousPeriod.avgDealSize",
 							"goodDirection": "up",
+							"noPreviousText": "No earlier period to compare with",
 							"caption": "{wonCount} won"
 						}
 					},
@@ -1951,10 +1956,22 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"selectable": true,
 				"pagination": { "limit": 8 },
 				"sortKey": "name",
 				"sortOrder": "asc",
 				"createModal": "ClientCreateDialog",
+				"_headerActionsNote": "Paste or scan (clients-contact-capture REQ-CCC-001/002): pasted text or a business card photo becomes proposed fields, and Use these fields opens ClientCreateDialog prefilled. Nothing is saved before Save.",
+				"headerActions": [
+					{
+						"id": "paste-or-scan",
+						"label": "Paste or scan",
+						"icon": "CardAccountDetailsOutline",
+						"type": "open-modal",
+						"target": "ContactCaptureModal",
+						"props": { "schema": "client", "createModal": "ClientCreateDialog" }
+					}
+				],
 				"fieldOverrides": {
 					"industry": {
 						"widget": "multiselect",
@@ -2007,6 +2024,10 @@
 						"route": "ClientDetail"
 					}
 				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "At risk", "filter": { "churnRisk.level": ["high", "medium"] }, "sort": { "key": "churnRisk.score", "order": "desc" } }
+				],
 				"columns": [
 					"name",
 					"type",
@@ -2029,6 +2050,12 @@
 							}
 						},
 						"widget": "badge"
+					},
+					{
+						"key": "churnRisk.level",
+						"label": "Risk",
+						"widget": "badge",
+						"widgetProps": { "colorMap": { "high": "error", "medium": "warning", "low": "success" } }
 					}
 				],
 				"sidebar": {
@@ -2045,6 +2072,14 @@
 						"icon": "DatabaseSearchOutline",
 						"handler": "open-modal",
 						"target": "OrganisationEnrichDialog"
+					},
+					{
+						"id": "change-field",
+						"label": "Change a field",
+						"icon": "PencilOutline",
+						"handler": "open-modal",
+						"target": "BulkChangeFieldModal",
+						"props": { "register": "pipelinq", "schema": "client" }
 					}
 				]
 			}
@@ -2059,6 +2094,7 @@
 				"recordLastChange": true,
 				"register": "pipelinq",
 				"schema": "client",
+				"_linkedTypesNote": "Every entry of the client schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Mounted as leaves: email, talk. Mounted another way: `xwiki` is the Knowledge base sidebar tab and `planninq-projects` is the client-projects list in the Sales tab. Not mounted on purpose: `flow` and `time-tracker` (as on every CRM page), `calendar` (the client page's calendar belongs to calendar-deepening) and `forms` (intake forms belong to the deal and are a tab of LeadDetail).",
 				"readOnlyWhen": { "field": "mergedInto", "op": "notEmpty" },
 				"fieldOverrides": {
 					"industry": {
@@ -2146,12 +2182,63 @@
 							"op": "eq",
 							"value": true
 						}
+					},
+					{
+						"id": "lock-record",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/client/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this client?",
+						"confirmMessage": "Nobody can change this client while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Client locked.",
+						"errorMessage": "Could not lock this client.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "empty"
+						}
+					},
+					{
+						"id": "unlock-record",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/client/@objectId/freeze",
+						"successMessage": "Client unlocked.",
+						"errorMessage": "Could not unlock this client.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"quickActions": ["log-contact", "new-request"],
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
+					{
+						"id": "client-locked",
+						"type": "banner",
+						"title": "Locked",
+						"showTitle": false,
+						"_note": "platform-record-lock REQ-PRL-001: names who locked the record and when, read from OpenRegister's @self.frozen marker.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						},
+						"content": {
+							"variant": "info",
+							"icon": "LockOutline",
+							"text": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
+							"visibleWhen": {
+								"field": "@self.frozen",
+								"op": "notEmpty"
+							}
+						}
+					},
 					{
 						"id": "client-merged-away",
 						"type": "banner",
@@ -2587,6 +2674,13 @@
 						"icon": "Email"
 					},
 					{
+						"id": "client-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
+					},
+					{
 						"id": "client-notes",
 						"type": "integration",
 						"integrationId": "notes",
@@ -2602,6 +2696,13 @@
 						"integrationId": "files",
 						"title": "Files",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "client-talk",
+						"type": "integration",
+						"integrationId": "talk",
+						"title": "Client room",
+						"icon": "Forum"
 					},
 					{
 						"id": "client-person-card",
@@ -3454,6 +3555,105 @@
 						}
 					},
 					{
+						"id": "client-found-us",
+						"type": "facts",
+						"title": "How they found us",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-001): the first and last touch TouchpointService::recordSubmission() writes from a landing page or website form submission. Read only; the values are visitor-supplied text and render as text, never as links.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "firstTouch.campaign",
+									"label": "First campaign"
+								},
+								{
+									"path": "firstTouch.source",
+									"label": "First source"
+								},
+								{
+									"path": "firstTouch.medium",
+									"label": "First medium"
+								},
+								{
+									"path": "firstTouch.landingPage",
+									"label": "First landing page"
+								},
+								{
+									"path": "firstTouch.at",
+									"label": "First submitted on",
+									"format": "longdate"
+								},
+								{
+									"path": "lastTouch.campaign",
+									"label": "Latest campaign"
+								},
+								{
+									"path": "lastTouch.source",
+									"label": "Latest source"
+								},
+								{
+									"path": "lastTouch.medium",
+									"label": "Latest medium"
+								},
+								{
+									"path": "lastTouch.landingPage",
+									"label": "Latest landing page"
+								},
+								{
+									"path": "lastTouch.at",
+									"label": "Latest submitted on",
+									"format": "longdate"
+								}
+							],
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
+						"id": "client-touchpoints",
+						"type": "object-list",
+						"title": "Web form submissions",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-002): every touchpoint naming this record in clientId, newest first, read only (no create, no row route).",
+						"content": {
+							"register": "pipelinq",
+							"schema": "touchpoint",
+							"filter": {
+								"clientId": "@objectId"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "occurredAt",
+									"label": "Submitted on"
+								},
+								{
+									"key": "utm.campaign",
+									"label": "Campaign"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "utm.source",
+									"label": "Source"
+								},
+								{
+									"key": "utm.medium",
+									"label": "Campaign medium"
+								},
+								{
+									"key": "landingPage",
+									"label": "Landing page"
+								}
+							],
+							"limit": 25,
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
 						"id": "client-panels",
 						"type": "tabs",
 						"title": "Client",
@@ -3469,6 +3669,8 @@
 										"client-cases",
 										"client-tickets",
 										"client-latest-moments",
+										"client-found-us",
+										"client-touchpoints",
 										"client-activity"
 									],
 									"label": "Overview"
@@ -3522,6 +3724,11 @@
 									"label": "Documents"
 								},
 								{
+									"widgetId": "client-talk",
+									"label": "Client room",
+									"countFrom": "widget"
+								},
+								{
 									"widgetId": "client-history",
 									"label": "History"
 								}
@@ -3535,6 +3742,7 @@
 				"band": [
 					{ "widgetId": "client-contact-strip", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-merged-away", "span": 12, "chrome": "bare" },
+					{ "widgetId": "client-locked", "span": 12, "chrome": "bare" },
 					{ "widgetId": "client-summary-open-tickets", "span": 2 },
 					{ "widgetId": "client-summary-new-requests", "span": 2 },
 					{ "widgetId": "client-summary-sla-breached", "span": 2 },
@@ -3579,6 +3787,28 @@
 						"card": true
 					},
 					{
+						"id": "client-risk",
+						"component": "ClientRiskSection",
+						"title": "Risk",
+						"placement": "end",
+						"props": {
+							"risk": "@object.churnRisk"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "client-history-summary",
+						"component": "ClientHistorySummarySection",
+						"title": "History summary",
+						"placement": "end",
+						"props": {
+							"clientId": "@objectId"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
 						"id": "satisfaction",
 						"component": "ClientSatisfactionSection",
 						"title": "Satisfaction",
@@ -3605,6 +3835,19 @@
 						"placement": "end",
 						"props": {
 							"clientId": "@objectId"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "merges",
+						"component": "RecordMergesSection",
+						"title": "Merges",
+						"placement": "end",
+						"_note": "clients-reversible-merge REQ-CRM-002/003: the merges this record survived, with Undo inside the thirty day reversal window (x-openregister-merge.reversalWindowDays) and the date the merge became final after it.",
+						"props": {
+							"recordId": "@objectId",
+							"reversalWindowDays": 30
 						},
 						"colSpan": 6,
 						"card": true
@@ -3636,7 +3879,7 @@
 						}
 					]
 				},
-				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails and Notes stay under them until the Activity card carries mail and notes.",
+				"_sideColumnNote": "The side column in the boards' order with the cards dossiq's DqContact and DqOrganisatie draw: a resident reads Reachable via, Identity and Home address, an organisation KvK and address and Open tickets; both then Contact channels, Relations and Record history. Related, Emails, Meetings (the calendar leaf, calendar-deepening) and Notes stay under them until the Activity card carries mail and notes.",
 				"sideColumn": [
 					{
 						"id": "side-reach",
@@ -4070,6 +4313,7 @@
 						}
 					},
 					"client-email",
+					"client-calendar",
 					"client-notes",
 					{
 						"id": "side-knowledge",
@@ -4163,6 +4407,7 @@
 				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3). The Unassigned lens sorts longest wait first, as PqTickets draws it (decision 321); the other lenses keep newest first.",
 				"sortKey": "occurredAt",
 				"sortOrder": "desc",
+				"searchHandler": "ticketPhoneSearch",
 				"showViewAction": false,
 				"_bulkActionsNote": "Board PqTicketsSelectie: \"Toewijzen aan\" hands the selected tickets to one handler. The library's CnAssignDialog starts OpenRegister's openregister:assign job on `assignee`: OpenRegister checks each ticket's update rule for the user before it writes, refuses the rest and keeps the reason on every ticket. No pipelinq endpoint or loop.",
 				"bulkActions": [
@@ -4193,6 +4438,16 @@
 					"hint": "One column per value of the property. Drag a card to change its status.",
 					"moveHandler": "moveTicketStatus",
 					"moveTargetsHandler": "ticketStatusTargets",
+					"states": [
+						{ "key": "new", "label": "New" },
+						{ "key": "in_progress", "label": "In progress" },
+						{ "key": "awaiting_customer", "label": "Waiting for customer" },
+						{ "key": "completed", "label": "Completed" },
+						{ "key": "converted", "label": "Converted", "closed": true },
+						{ "key": "rejected", "label": "Rejected", "closed": true },
+						{ "key": "resolved", "label": "Resolved", "hidden": true },
+						{ "key": "closed", "label": "Closed", "hidden": true }
+					],
 					"card": { "title": "title", "sub": ["channel"], "pill": "ticketType", "due": "slaDeadline", "owner": "assignee" },
 					"columnFields": [
 						{ "field": "status", "label": "status" },
@@ -4253,6 +4508,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "ticket",
+				"_linkedTypesNote": "Every entry of the ticket schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Deferred until the ticket board workflow is settled: `deck` and `forms`, and the comms leaves `email` and `calendar`, which this page does not mount either. Not mounted on purpose: `flow` and `time-tracker` (as on every CRM page) and `xwiki` (the knowledge base is mounted app-level on xwiki-knowledge).",
 				"headerActions": [
 					{
 						"id": "link-to-client",
@@ -4285,12 +4541,100 @@
 						"method": "POST",
 						"successMessage": "Assigned to you. It is on your My Work now.",
 						"errorMessage": "Could not assign this ticket to you."
+					},
+					{
+						"id": "review-call",
+						"label": "Review this call",
+						"icon": "AccountStarOutline",
+						"type": "open-form",
+						"register": "pipelinq",
+						"schema": "callReview",
+						"formTitle": "Review this call",
+						"includeFields": [
+							"scorecard",
+							"scores",
+							"coachingPoints"
+						],
+						"props": {
+							"contactMoment": "@objectId",
+							"agent": "@object.assignee",
+							"reviewer": "@me",
+							"status": "draft"
+						},
+						"successMessage": "Review saved as a draft. Share it with the agent from Call reviews.",
+						"visibleWhen": {
+							"readerGroups": [
+								"pipelinq-call-review"
+							],
+							"field": "recording_url",
+							"op": "notEmpty"
+						}
+					},
+					{
+						"id": "lock-record",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this ticket?",
+						"confirmMessage": "Nobody can change this ticket while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Ticket locked.",
+						"errorMessage": "Could not lock this ticket.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"id": "unlock-record",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"successMessage": "Ticket unlocked.",
+						"errorMessage": "Could not unlock this ticket.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"hideEmpty": true,
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) so the page can place them. `content.hideEmpty` keeps the data widget type-aware: the page-level `hideEmpty` above only reaches the auto-body, which a declared widgets[] replaces. The decisions (decidiq's decidesk-decisions leaf, the `decisions` property on the schema) sit in the Decisions tab of `ticket-panels`.",
 				"widgets": [
+					{
+						"id": "ticket-locked",
+						"type": "banner",
+						"title": "Locked",
+						"showTitle": false,
+						"_note": "platform-record-lock REQ-PRL-001: names who locked the record and when, read from OpenRegister's @self.frozen marker.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						},
+						"content": {
+							"variant": "info",
+							"icon": "LockOutline",
+							"text": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
+							"visibleWhen": {
+								"field": "@self.frozen",
+								"op": "notEmpty"
+							}
+						}
+					},
 					{
 						"id": "ticket-data",
 						"type": "data",
@@ -4371,6 +4715,130 @@
 						}
 					},
 					{
+						"id": "ticket-history",
+						"type": "audit-trail",
+						"title": "History",
+						"icon": "History",
+						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {changed.assignee} by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
+					},
+					{
+						"id": "ticket-call-summary",
+						"type": "record-notes",
+						"title": "Call summary",
+						"icon": "TextBoxOutline",
+						"_note": "contact-moments-call-review D2: the summary hermiq wrote from the transcript, which the agent corrects in place. A write is a PATCH of callSummary only.",
+						"content": {
+							"field": "callSummary",
+							"label": "Call summary",
+							"hideLabel": true,
+							"rows": 4,
+							"placeholder": "No summary yet. Write what the call was about."
+						}
+					},
+					{
+						"id": "ticket-call-transcript",
+						"type": "facts",
+						"title": "Transcript",
+						"icon": "Headset",
+						"_note": "contact-moments-call-review D1 and REQ-CRV-004: the transcript is read only and follows the contact moment's retention; the recording stays on the telephony platform and is linked while it is kept.",
+						"content": {
+							"columns": 1,
+							"fields": [
+								{
+									"as": "pill",
+									"path": "transcriptStatus",
+									"map": {
+										"pending": "Transcribing",
+										"done": "Transcribed",
+										"failed": "Transcription failed",
+										"unavailable": "No speech to text available",
+										"expired": "Recording no longer kept"
+									}
+								},
+								{
+									"path": "recording_retention_expires_at",
+									"label": "Recording kept until",
+									"format": "date"
+								},
+								{
+									"path": "transcript",
+									"label": "Transcript"
+								}
+							],
+							"link": {
+								"label": "Listen to the recording",
+								"href": "{recording_url}",
+								"target": "_blank"
+							},
+							"emptyText": "No transcript yet."
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -4393,6 +4861,21 @@
 									"visibleWhen": {
 										"appInstalled": "decidiq"
 									}
+								},
+								{
+									"widgetIds": [
+										"ticket-call-summary",
+										"ticket-call-transcript"
+									],
+									"label": "Call",
+									"visibleWhen": {
+										"field": "recording_url",
+										"op": "notEmpty"
+									}
+								},
+								{
+									"widgetId": "ticket-history",
+									"label": "History"
 								}
 							]
 						}
@@ -4402,10 +4885,20 @@
 				"gridFloat": false,
 				"layout": [
 					{
+						"id": "lock",
+						"widgetId": "ticket-locked",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"sizeToContent": true,
+						"showTitle": false
+					},
+					{
 						"id": "1",
 						"widgetId": "ticket-panels",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 8,
 						"gridHeight": 6,
 						"sizeToContent": true
@@ -4414,7 +4907,7 @@
 						"id": "2",
 						"widgetId": "ticket-related",
 						"gridX": 8,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 4,
 						"gridHeight": 6,
 						"sizeToContent": true
@@ -4485,8 +4978,30 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"selectable": true,
+				"bulkActions": [
+					{
+						"id": "change-field",
+						"label": "Change a field",
+						"icon": "PencilOutline",
+						"handler": "open-modal",
+						"target": "BulkChangeFieldModal",
+						"props": { "register": "pipelinq", "schema": "contact" }
+					}
+				],
 				"pagination": { "limit": 5 },
 				"createOverride": "createContactContactAware",
+				"_headerActionsNote": "Paste or scan (clients-contact-capture REQ-CCC-001/002): pasted text or a business card photo becomes proposed fields, and Use these fields opens ContactCreateDialog prefilled; it saves through the same contact-first create as Add. Nothing is saved before Save.",
+				"headerActions": [
+					{
+						"id": "paste-or-scan",
+						"label": "Paste or scan",
+						"icon": "CardAccountDetailsOutline",
+						"type": "open-modal",
+						"target": "ContactCaptureModal",
+						"props": { "schema": "contact", "createModal": "ContactCreateDialog" }
+					}
+				],
 				"fieldOverrides": {
 					"name": {
 						"readOnly": false
@@ -4678,6 +5193,14 @@
 											"compact": true
 										}
 									}
+								},
+								{
+									"widgetId": "contact-found-us",
+									"title": "How they found us"
+								},
+								{
+									"widgetId": "contact-touchpoints",
+									"title": "Web form submissions"
 								}
 							]
 						}
@@ -5019,6 +5542,105 @@
 						}
 					},
 					{
+						"id": "contact-found-us",
+						"type": "facts",
+						"title": "How they found us",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-001): the first and last touch TouchpointService::recordSubmission() writes from a landing page or website form submission. Read only; the values are visitor-supplied text and render as text, never as links.",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{
+									"path": "firstTouch.campaign",
+									"label": "First campaign"
+								},
+								{
+									"path": "firstTouch.source",
+									"label": "First source"
+								},
+								{
+									"path": "firstTouch.medium",
+									"label": "First medium"
+								},
+								{
+									"path": "firstTouch.landingPage",
+									"label": "First landing page"
+								},
+								{
+									"path": "firstTouch.at",
+									"label": "First submitted on",
+									"format": "longdate"
+								},
+								{
+									"path": "lastTouch.campaign",
+									"label": "Latest campaign"
+								},
+								{
+									"path": "lastTouch.source",
+									"label": "Latest source"
+								},
+								{
+									"path": "lastTouch.medium",
+									"label": "Latest medium"
+								},
+								{
+									"path": "lastTouch.landingPage",
+									"label": "Latest landing page"
+								},
+								{
+									"path": "lastTouch.at",
+									"label": "Latest submitted on",
+									"format": "longdate"
+								}
+							],
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
+						"id": "contact-touchpoints",
+						"type": "object-list",
+						"title": "Web form submissions",
+						"_note": "marketing-campaign-on-client D4 (REQ-MOC-002): every touchpoint naming this record in contactId, newest first, read only (no create, no row route).",
+						"content": {
+							"register": "pipelinq",
+							"schema": "touchpoint",
+							"filter": {
+								"contactId": "@objectId"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "occurredAt",
+									"label": "Submitted on"
+								},
+								{
+									"key": "utm.campaign",
+									"label": "Campaign"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "utm.source",
+									"label": "Source"
+								},
+								{
+									"key": "utm.medium",
+									"label": "Campaign medium"
+								},
+								{
+									"key": "landingPage",
+									"label": "Landing page"
+								}
+							],
+							"limit": 25,
+							"emptyText": "No web form submissions yet."
+						}
+					},
+					{
 						"id": "contact-sync",
 						"type": "ContactsSyncWidget",
 						"title": "Nextcloud Contacts",
@@ -5053,6 +5675,19 @@
 							"framed": true,
 							"partyKind": "contact"
 						}
+					},
+					{
+						"id": "merges",
+						"component": "RecordMergesSection",
+						"title": "Merges",
+						"placement": "end",
+						"_note": "clients-reversible-merge REQ-CRM-002/003: the merges this record survived, with Undo inside the thirty day reversal window (x-openregister-merge.reversalWindowDays) and the date the merge became final after it.",
+						"props": {
+							"recordId": "@objectId",
+							"reversalWindowDays": 30
+						},
+						"colSpan": 6,
+						"card": true
 					}
 				],
 				"sidebar": {
@@ -5174,8 +5809,9 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"_linkedTypesNote": "Every entry of the lead schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Mounted as tabs: email, calendar, deck, talk, forms. Not mounted on purpose: `flow` (the flow runs show in the Overview list, not as a leaf), `time-tracker` (no time registration on a deal) and `xwiki` (the knowledge base is mounted app-level on the knowledge page, xwiki-knowledge).",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
+				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). The sidebar stays audit-only: the Talk, Deck and Forms leaves are tabs of the body strip (Deal room, Board, Intake forms; leaf-integration-broadening), and the leaves this page does not mount are named in _linkedTypesNote. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -5193,6 +5829,26 @@
 					]
 				},
 				"widgets": [
+					{
+						"id": "lead-locked",
+						"type": "banner",
+						"title": "Locked",
+						"showTitle": false,
+						"_note": "platform-record-lock REQ-PRL-001: names who locked the record and when, read from OpenRegister's @self.frozen marker.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						},
+						"content": {
+							"variant": "info",
+							"icon": "LockOutline",
+							"text": "Locked by {subject.@self.frozen.by} on {subject.@self.frozen.at|date}. Unlock it to make a change.",
+							"visibleWhen": {
+								"field": "@self.frozen",
+								"op": "notEmpty"
+							}
+						}
+					},
 					{
 						"id": "lead-panels",
 						"type": "tabs",
@@ -5283,6 +5939,21 @@
 											"lead": "@objectId"
 										}
 									}
+								},
+								{
+									"label": "Deal room",
+									"widgetId": "lead-talk",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Board",
+									"widgetId": "lead-deck",
+									"countFrom": "widget"
+								},
+								{
+									"label": "Intake forms",
+									"widgetId": "lead-forms",
+									"countFrom": "widget"
 								},
 								{
 									"label": "History",
@@ -5602,7 +6273,7 @@
 							"register": "pipelinq",
 							"schema": "crmTask",
 							"filter": {
-								"lead": "@objectId"
+								"leadId": "@objectId"
 							},
 							"sort": {
 								"field": "deadline",
@@ -5667,6 +6338,27 @@
 						"integrationId": "decidesk-decisions",
 						"title": "Besluitvorming",
 						"icon": "Gavel"
+					},
+					{
+						"id": "lead-talk",
+						"type": "integration",
+						"integrationId": "talk",
+						"title": "Deal room",
+						"icon": "Forum"
+					},
+					{
+						"id": "lead-deck",
+						"type": "integration",
+						"integrationId": "deck",
+						"title": "Board",
+						"icon": "BulletinBoard"
+					},
+					{
+						"id": "lead-forms",
+						"type": "integration",
+						"integrationId": "forms",
+						"title": "Intake forms",
+						"icon": "FormSelect"
 					},
 					{
 						"id": "lead-history",
@@ -5736,6 +6428,19 @@
 								}
 							},
 							"emptyText": "No client linked to this lead yet"
+						}
+					},
+					{
+						"id": "side-assignment",
+						"type": "facts",
+						"title": "Why this owner",
+						"icon": "AccountArrowRight",
+						"_note": "pipeline-lead-rotation (REQ-LRT-001/002): why lead rotation gave this lead its owner, or that it found nobody eligible. Only shown when rotation wrote a reason; the suggested colleagues below it help to pick someone by hand.",
+						"visibleWhen": { "field": "assignmentReason", "op": "notEmpty" },
+						"content": {
+							"fields": [
+								{ "as": "line", "template": "{assignmentReason}" }
+							]
 						}
 					},
 					{
@@ -5827,10 +6532,20 @@
 				"gridFloat": false,
 				"layout": [
 					{
+						"id": "lock",
+						"widgetId": "lead-locked",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"sizeToContent": true,
+						"showTitle": false
+					},
+					{
 						"id": "1",
 						"widgetId": "lead-panels",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 18,
 						"sizeToContent": true,
@@ -5839,6 +6554,7 @@
 				],
 				"sideColumn": [
 					"side-client",
+					"side-assignment",
 					"side-suggested",
 					"side-win-chance",
 					"side-next-step",
@@ -5956,6 +6672,46 @@
 							"field": "status",
 							"op": "eq",
 							"value": "open"
+						}
+					},
+					{
+						"id": "lock-record",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/lead/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this lead?",
+						"confirmMessage": "Nobody can change this lead while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Lead locked.",
+						"errorMessage": "Could not lock this lead.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"id": "unlock-record",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/lead/@objectId/freeze",
+						"successMessage": "Lead unlocked.",
+						"errorMessage": "Could not unlock this lead.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
 						}
 					}
 				],
@@ -6678,6 +7434,12 @@
 						}
 					},
 					{
+						"key": "publishFrom",
+						"label": "Published from",
+						"formatter": "date",
+						"_note": "product-service-catalogue-public task 3.2 (PqProducten): the day a service enters the public catalogue; empty for goods and unpublished services."
+					},
+					{
 						"key": "onDeals",
 						"label": "On deals",
 						"sortable": false,
@@ -6789,6 +7551,7 @@
 										"product-tariffs",
 										"product-variants",
 										"product-publication",
+										"product-catalogue",
 										"product-lines",
 										"product-files"
 									],
@@ -6907,6 +7670,41 @@
 									"formatter": "languageCodes"
 								},
 								"audience": {
+									"formatter": "labelList"
+								}
+							},
+							"hideEmpty": false
+						}
+					},
+					{
+						"id": "product-catalogue",
+						"type": "data",
+						"title": "Catalogue",
+						"icon": "BookOpenPageVariant",
+						"_note": "product-service-catalogue-public task 3.1 (PqProduct): what the public catalogue shows of a service, only for a product of type service. The publication window is what the public read rule will read once task 2.2's access decision is made; until then the card is staff-only like the rest of the page. The tariff table and the audience stay in the cards above, as for every product.",
+						"visibleWhen": {
+							"field": "type",
+							"op": "eq",
+							"value": "service"
+						},
+						"content": {
+							"columns": 3,
+							"include": [
+								"summary",
+								"uplReference",
+								"publishFrom",
+								"publishUntil",
+								"applyUrl",
+								"channels"
+							],
+							"overrides": {
+								"publishFrom": {
+									"formatter": "longDate"
+								},
+								"publishUntil": {
+									"formatter": "longDate"
+								},
+								"channels": {
 									"formatter": "labelList"
 								}
 							},
@@ -9795,7 +10593,7 @@
 			"route": "/my-work",
 			"type": "dashboard",
 			"title": "My work",
-			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. Not here, each named in the pull request: the share answered within the deadline (needs a ticket.answeredInTime flag), the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
+			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. The \"Your week so far\" tiles read GET /api/my-work/week-stats (REQ-MW-090). Not here: the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
 				"showWidgetActions": false,
@@ -10026,40 +10824,36 @@
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
-						"visibleWhen": {
-							"workspace": "lens",
-							"op": "in",
-							"value": [
-								"all",
-								"tickets"
-							]
-						},
+						"_note": "REQ-MW-090: the four figures of the user's own tickets this calendar week, computed server side (GET /api/my-work/week-stats). No visibleWhen: a lens describes the list, not the week, so the tiles stay when the list narrows. A figure without data reads as a dash, never 0. The team figure under Within the deadline comes with the team scope (REQ-MW-180).",
 						"content": {
 							"layout": "grid",
 							"columns": 2,
 							"stats": [
 								{
 									"label": "Answered",
-									"caption": "this week",
+									"caption": "{answeredToday} today",
 									"format": {
 										"style": "number",
 										"decimals": 0
 									},
-									"source": {
-										"register": "pipelinq",
-										"schema": "ticket",
-										"metric": "count",
-										"filter": {
-											"assignee": "@me",
-											"status": {
-												"in": [
-													"resolved",
-													"completed"
-												]
-											},
-											"resolvedAt[gte]": "@today-7d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "answered"
+								},
+								{
+									"label": "Within the deadline",
+									"caption": "of the answered tickets with a deadline",
+									"format": {
+										"style": "number",
+										"decimals": 0,
+										"suffix": "%"
+									},
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "withinDeadline",
+									"emptyText": "–"
 								},
 								{
 									"label": "Average answer time",
@@ -10069,42 +10863,23 @@
 										"decimals": 1,
 										"suffix": " days"
 									},
-									"source": {
-										"kind": "elapsed",
-										"register": "pipelinq",
-										"schema": "ticket",
-										"from": "occurredAt",
-										"to": "resolvedAt",
-										"unit": "days",
-										"filter": {
-											"assignee": "@me",
-											"status": {
-												"in": [
-													"resolved",
-													"completed"
-												]
-											},
-											"resolvedAt[gte]": "@today-30d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "averageAnswerDays",
+									"emptyText": "–"
 								},
 								{
-									"label": "Turned into a case",
-									"caption": "converted in 7 days",
+									"label": "Converted to a case",
+									"caption": "this week",
 									"format": {
 										"style": "number",
 										"decimals": 0
 									},
-									"source": {
-										"register": "pipelinq",
-										"schema": "ticket",
-										"metric": "count",
-										"filter": {
-											"assignee": "@me",
-											"status": "converted",
-											"resolvedAt[gte]": "@today-7d"
-										}
-									}
+									"endpointSource": {
+										"url": "/apps/pipelinq/api/my-work/week-stats"
+									},
+									"valueField": "converted"
 								}
 							]
 						}
@@ -10417,6 +11192,36 @@
 						}
 					},
 					{
+						"id": "my-call-reviews",
+						"viewport": "wide",
+						"titleTone": "side",
+						"type": "record-list",
+						"title": "Reviews of your calls",
+						"_note": "contact-moments-call-review task 2.4: the reviews a team lead shared with this agent. The agent opens one and agrees each coaching point there; OpenRegister's authorization block keeps another agent's reviews out of this list.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "callReview",
+							"filter": {
+								"agent": "@me",
+								"status": [
+									"shared",
+									"agreed"
+								]
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{reviewer|user}",
+							"meta": {
+								"parts": [
+									"{status}",
+									"{total}"
+								]
+							},
+							"rowRoute": "CallReviewDetail",
+							"emptyText": "No reviews of your calls yet."
+						}
+					},
+					{
 						"id": "my-saved-views",
 						"viewport": "wide",
 						"titleTone": "side",
@@ -10692,6 +11497,16 @@
 						"gridY": 12,
 						"gridWidth": 6,
 						"gridHeight": 4,
+						"sizeToContent": true
+					},
+					{
+						"id": "9",
+						"widgetId": "my-call-reviews",
+						"gridX": 8,
+						"gridY": 9,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					}
 				]

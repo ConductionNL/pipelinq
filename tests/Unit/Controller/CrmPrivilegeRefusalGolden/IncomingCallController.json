@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "IncomingCallFinder::forAgent": [
+                "IncomingCallFinderInterface::forAgent": [
                     "crm-user"
                 ]
             }

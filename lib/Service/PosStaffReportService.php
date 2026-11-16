@@ -26,14 +26,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
-use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\PosRegisterSchemaIds;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service that aggregates posTransaction objects per staff member.
@@ -46,8 +47,10 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#10.2
  */
-class PosStaffReportService {
+class PosStaffReportService implements PosStaffReportServiceInterface {
 	use CastingPayloadToArray;
+	use PosRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * The fiscally-final statuses that count toward the report.
@@ -341,37 +344,6 @@ class PosStaffReportService {
 
 		return $out;
 	}//end finalOnly()
-
-	/**
-	 * Resolve the register + schema config key into stored IDs.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] IDs.
-	 *
-	 * @throws OCSNotFoundException If the register or schema is not configured.
-	 */
-	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-
-		if ($register === '' || $schema === '') {
-			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
-		}
-
-		return [$register, $schema];
-	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.

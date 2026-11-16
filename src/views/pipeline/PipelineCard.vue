@@ -891,13 +891,13 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1d4ed8);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
+	background: var(--color-warning-light, #ffedd5);
+	color: var(--color-warning-text, #c2410c);
 }
 
 .pipeline-card__title {
@@ -954,13 +954,13 @@ export default {
 }
 
 .aging-badge.aging-warning {
-	color: #92400e;
-	background: #fef3c7;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning-light, #fef3c7);
 }
 
 .aging-badge.aging-alert {
-	color: #991b1b;
-	background: #fee2e2;
+	color: var(--color-error-text, #991b1b);
+	background: var(--color-error-light, #fee2e2);
 }
 
 .card-date {

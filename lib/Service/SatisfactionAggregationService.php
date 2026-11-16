@@ -38,7 +38,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SatisfactionAggregationServiceInterface;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -48,7 +50,9 @@ use Throwable;
  *
  * @spec openspec/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
  */
-class SatisfactionAggregationService {
+class SatisfactionAggregationService implements SatisfactionAggregationServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The window each half of the trend covers, in days.
 	 *
@@ -397,34 +401,12 @@ class SatisfactionAggregationService {
 	 * @return array<string, string>
 	 */
 	private function clientFilters(string $clientId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyResponse_schema', '');
 		if ($clientId === '' || $register === '' || $schema === '') {
 			return [];
 		}
 
 		return ['register' => $register, 'schema' => $schema, 'clientRef' => $clientId];
 	}//end clientFilters()
-
-	/**
-	 * Keep array rows and the array form of serialisable rows; drop the rest.
-	 *
-	 * @param array<int, mixed> $rows The findAll() rows.
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function plainRows(array $rows): array {
-		$out = [];
-		foreach ($rows as $row) {
-			if (($row instanceof \JsonSerializable) === true) {
-				$row = $row->jsonSerialize();
-			}
-
-			if (is_array($row) === true) {
-				$out[] = $row;
-			}
-		}
-
-		return $out;
-	}//end plainRows()
 }//end class

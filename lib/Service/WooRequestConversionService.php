@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\WooRequestConversionServiceInterface;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
  */
-class WooRequestConversionService {
+class WooRequestConversionService implements WooRequestConversionServiceInterface {
 	/**
 	 * dossiq's one Woo request creation path (C5).
 	 *

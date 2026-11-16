@@ -28,7 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\XWikiServiceInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -46,8 +47,10 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) thin proxy over the xWiki REST
  *  API with discovery, caching, XML parsing and sanitisation kept together as one
  *  cohesive read path
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class XWikiService {
+class XWikiService implements XWikiServiceInterface {
 	/**
 	 * Default cache TTL (seconds) when admin has not configured a value.
 	 *
@@ -274,9 +277,30 @@ class XWikiService {
 		$params = http_build_query(['q' => $request['query'], 'limit' => $request['limit'], 'offset' => $request['offset']]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/xwiki/search?' . $params);
 
+		$response = $this->fetchOpenRegisterSearch(url: $url);
+		if ($response === null || $this->isOkSearchResponse(response: $response) === false) {
+			return null;
+		}
+
+		$results = $this->searchResults(response: $response);
+		if ($results === null) {
+			return null;
+		}
+
+		return $this->mapOpenRegisterRows(rows: $results);
+	}//end searchViaOpenRegister()
+
+	/**
+	 * Ask OpenRegister's xWiki search, or null when it cannot be reached.
+	 *
+	 * @param string $url The absolute search URL.
+	 *
+	 * @return \OCP\Http\Client\IResponse|null
+	 */
+	private function fetchOpenRegisterSearch(string $url): \OCP\Http\Client\IResponse|null {
 		try {
 			$client = $this->clientService->newClient();
-			$response = $client->get(
+			return $client->get(
 				$url,
 				[
 					'timeout' => 10,
@@ -291,20 +315,40 @@ class XWikiService {
 			$this->logger->debug('xWiki OR search unavailable, falling back to direct path', ['exception' => $e]);
 			return null;
 		}
+	}//end fetchOpenRegisterSearch()
 
+	/**
+	 * Whether the search answered 200, logging when it did not.
+	 *
+	 * @param \OCP\Http\Client\IResponse $response The search response.
+	 *
+	 * @return bool
+	 */
+	private function isOkSearchResponse(\OCP\Http\Client\IResponse $response): bool {
 		$status = $response->getStatusCode();
 		if ($status !== 200) {
 			$this->logger->debug('xWiki OR search returned non-200, falling back', ['status' => $status]);
-			return null;
+			return false;
 		}
 
+		return true;
+	}//end isOkSearchResponse()
+
+	/**
+	 * The `results` list of a search response body, or null when it has none.
+	 *
+	 * @param \OCP\Http\Client\IResponse $response The search response.
+	 *
+	 * @return array<int|string, mixed>|null
+	 */
+	private function searchResults(\OCP\Http\Client\IResponse $response): array|null {
 		$decoded = json_decode((string)$response->getBody(), true);
 		if (is_array($decoded) === false || isset($decoded['results']) === false || is_array($decoded['results']) === false) {
 			return null;
 		}
 
-		return $this->mapOpenRegisterRows(rows: $decoded['results']);
-	}//end searchViaOpenRegister()
+		return $decoded['results'];
+	}//end searchResults()
 
 	/**
 	 * Map raw OpenRegister search result rows to the widget row shape.
@@ -359,25 +403,39 @@ class XWikiService {
 			return $cached;
 		}
 
+		return $this->fetchedPages(space: $space, query: ['limit' => $limit, 'offset' => $offset, 'cacheKey' => $cacheKey]);
+	}//end getPages()
+
+	/**
+	 * Fetch one window of a space's pages from xWiki and cache it; an empty
+	 * result, uncached, when xWiki or the space is not set.
+	 *
+	 * @param string                                          $space The xWiki space name.
+	 * @param array{limit: int, offset: int, cacheKey: string} $query The clamped window and its cache key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function fetchedPages(string $space, array $query): array {
 		$base = $this->getBaseUrl();
+		$payload = $this->emptyResult(limit: $query['limit'], offset: $query['offset']);
 		if ($base === '' || $space === '') {
-			return $this->emptyResult(limit: $limit, offset: $offset);
+			return $payload;
 		}
 
 		$wiki = 'xwiki';
-		$url = sprintf('%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d', $base, $wiki, rawurlencode($space), $limit, $offset);
-		$xml = $this->fetchXml(url: $url);
-		$results = $this->parsePageSummaries(xml: $xml, space: $space);
-
-		$payload = [
-			'results' => $results,
-			'total' => count($results),
-			'limit' => $limit,
-			'offset' => $offset,
-		];
-		$this->toCache(key: $cacheKey, value: $payload);
+		$url = sprintf(
+			'%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d',
+			$base,
+			$wiki,
+			rawurlencode($space),
+			$query['limit'],
+			$query['offset']
+		);
+		$payload['results'] = $this->parsePageSummaries(xml: $this->fetchXml(url: $url), space: $space);
+		$payload['total'] = count($payload['results']);
+		$this->toCache(key: $query['cacheKey'], value: $payload);
 		return $payload;
-	}//end getPages()
+	}//end fetchedPages()
 
 	/**
 	 * Fetch rendered HTML for a single page.
@@ -566,7 +624,7 @@ class XWikiService {
 	 * @return int
 	 */
 	private function getCacheTtl(): int {
-		$raw = (int)$this->appConfig->getValueString(Application::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
+		$raw = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
 		if ($raw > 0) {
 			return $raw;
 		}

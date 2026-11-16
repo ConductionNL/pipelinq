@@ -249,7 +249,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .pos-refund-items {
 	height: 100%;
 	display: flex;
@@ -262,11 +264,7 @@ export default {
 }
 
 .pos-refund-items__table th {
-	text-align: start;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	padding: 6px 8px;
-	border-bottom: 1px solid var(--color-border);
+	@include table-head-cell;
 }
 
 .pos-refund-items__table td {

@@ -30,7 +30,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -53,6 +54,12 @@ class ActivityTimelineReader {
 	 * by name, so an OpenRegister without it leaves the mail kind empty.
 	 */
 	private const EMAIL_LINK_READER = 'OCA\\OpenRegister\\Contract\\EmailLinkReaderInterface';
+
+	/**
+	 * OpenRegister's calendar leaf read service. Looked up by name, so an
+	 * OpenRegister without it leaves the leaf's meetings off the timeline.
+	 */
+	private const CALENDAR_LEAF = 'OCA\\OpenRegister\\Service\\CalendarLinkService';
 
 	/**
 	 * Constructor.
@@ -84,19 +91,28 @@ class ActivityTimelineReader {
 	 * @spec openspec/changes/archive/retrofit-2026-05-24-activity-timeline/tasks.md#task-3
 	 */
 	public function query(string $registerId, string $schemaId, array $filters): array {
-		try {
-			$params = [
-				'filters' => array_merge(
-					[
-						'register' => $registerId,
-						'schema' => $schemaId,
-					],
-					$filters
-				),
-				'limit' => self::PER_SCHEMA_CEILING,
-			];
+		$filters = array_merge(
+			[
+				'register' => $registerId,
+				'schema' => $schemaId,
+			],
+			$filters
+		);
 
-			$results = $this->objectService->findAll($params);
+		return $this->findLogged(filters: $filters, schemaId: $schemaId);
+	}//end query()
+
+	/**
+	 * The objects matching the filters, none (logged) when the read fails.
+	 *
+	 * @param array<string,mixed> $filters  The register, schema and field equality filters.
+	 * @param string              $schemaId The schema ID, for the log.
+	 *
+	 * @return array<int,array<string,mixed>> The raw object arrays.
+	 */
+	private function findLogged(array $filters, string $schemaId): array {
+		try {
+			$results = $this->objectService->findAll(['filters' => $filters, 'limit' => self::PER_SCHEMA_CEILING]);
 
 			return $this->normaliseResultset(results: $results);
 		} catch (\Throwable $e) {
@@ -109,7 +125,7 @@ class ActivityTimelineReader {
 			);
 			return [];
 		}//end try
-	}//end query()
+	}//end findLogged()
 
 	/**
 	 * Normalise an OpenRegister findAll result into an array of plain arrays.
@@ -202,19 +218,9 @@ class ActivityTimelineReader {
 			return [];
 		}
 
-		$contactIds = [];
-		if ($entityType === 'contact') {
-			$contactIds = [$entityId];
-		}
-
-		$contactSchema = $this->schemaId(key: 'contact_schema');
-		if ($entityType === 'client' && $contactSchema !== '') {
-			$contacts = $this->query(registerId: $registerId, schemaId: $contactSchema, filters: ['client' => $entityId]);
-			$contactIds = array_filter(array_map(static fn (array $contact): string => (string)($contact['id'] ?? ''), $contacts));
-		}
-
+		$origin = new ActivityOrigin(entityType: $entityType, entityId: $entityId);
 		$messages = [];
-		foreach ($contactIds as $contactId) {
+		foreach ($this->contactIdsOf(origin: $origin, registerId: $registerId) as $contactId) {
 			$messages = array_merge(
 				$messages,
 				$this->query(registerId: $registerId, schemaId: $messageSchema, filters: ['contactId' => $contactId])
@@ -223,6 +229,29 @@ class ActivityTimelineReader {
 
 		return $messages;
 	}//end messages()
+
+	/**
+	 * The contact persons whose messages belong to an entity: a contact itself, a client's contacts.
+	 *
+	 * @param ActivityOrigin $origin     The entity type (client|contact) and UUID.
+	 * @param string         $registerId The register ID.
+	 *
+	 * @return array<int|string,string> The contact ids.
+	 */
+	private function contactIdsOf(ActivityOrigin $origin, string $registerId): array {
+		$contactIds = [];
+		if ($origin->entityType === 'contact') {
+			$contactIds = [$origin->entityId];
+		}
+
+		$contactSchema = $this->schemaId(key: 'contact_schema');
+		if ($origin->entityType === 'client' && $contactSchema !== '') {
+			$contacts = $this->query(registerId: $registerId, schemaId: $contactSchema, filters: ['client' => $origin->entityId]);
+			$contactIds = array_filter(array_map(static fn (array $contact): string => (string)($contact['id'] ?? ''), $contacts));
+		}
+
+		return $contactIds;
+	}//end contactIdsOf()
 
 	/**
 	 * A client's appointment bookings, each with its service's name as
@@ -243,19 +272,32 @@ class ActivityTimelineReader {
 		}
 
 		$bookings = $this->query(registerId: $registerId, schemaId: $bookingSchema, filters: ['customerId' => $entityId]);
+		return $this->withServiceNames(bookings: $bookings, registerId: $registerId);
+	}//end bookings()
+
+	/**
+	 * The bookings, each with its service's name as `serviceName`.
+	 *
+	 * @param array<int,array<string,mixed>> $bookings   The raw booking objects.
+	 * @param string                         $registerId The register ID.
+	 *
+	 * @return array<int,array<string,mixed>> The bookings with their service names.
+	 */
+	private function withServiceNames(array $bookings, string $registerId): array {
 		$serviceSchema = $this->schemaId(key: 'service_schema');
+		$services = new RegisterSchema(register: $registerId, schema: $serviceSchema);
 		$names = [];
 		foreach ($bookings as $index => $booking) {
 			$serviceId = (string)($booking['serviceId'] ?? '');
 			if ($serviceId !== '' && $serviceSchema !== '' && array_key_exists($serviceId, $names) === false) {
-				$names[$serviceId] = $this->serviceName(serviceId: $serviceId, registerId: $registerId, schemaId: $serviceSchema);
+				$names[$serviceId] = $this->serviceName(serviceId: $serviceId, services: $services);
 			}
 
 			$bookings[$index]['serviceName'] = $names[$serviceId] ?? null;
 		}
 
 		return $bookings;
-	}//end bookings()
+	}//end withServiceNames()
 
 	/**
 	 * The emails linked to a record, through OpenRegister's published reader.
@@ -283,17 +325,54 @@ class ActivityTimelineReader {
 	}//end linkedEmails()
 
 	/**
+	 * The calendar events linked to a record, read live through OpenRegister's
+	 * calendar leaf. Never stored: the leaf's link table is the record. An
+	 * OpenRegister without the leaf, or a failing read, gives none.
+	 *
+	 * @param string $entityId The record's uuid.
+	 *
+	 * @return array<int,array<string,mixed>> The leaf's event rows.
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 */
+	public function linkedEvents(string $entityId): array {
+		try {
+			if ($this->container->has(self::CALENDAR_LEAF) === false) {
+				return [];
+			}
+
+			$leaf = $this->container->get(self::CALENDAR_LEAF);
+			if (is_object($leaf) === false || method_exists($leaf, 'getLinkedEvents') === false) {
+				return [];
+			}
+
+			$events = $leaf->getLinkedEvents(objectUuid: $entityId);
+		} catch (Throwable $e) {
+			$this->logger->error('ActivityTimelineReader: failed to read linked calendar events', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		if (is_array($events) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($events, 'is_array'));
+	}//end linkedEvents()
+
+	/**
 	 * The name of an appointment service, or null when it cannot be read.
 	 *
-	 * @param string $serviceId The service UUID.
-	 * @param string $registerId The register ID.
-	 * @param string $schemaId The service schema ID.
+	 * @param string         $serviceId The service UUID.
+	 * @param RegisterSchema $services  The register and service schema IDs.
 	 *
 	 * @return string|null The name.
 	 */
-	private function serviceName(string $serviceId, string $registerId, string $schemaId): ?string {
+	private function serviceName(string $serviceId, RegisterSchema $services): ?string {
 		try {
-			$service = $this->objectService->find(id: $serviceId, register: $registerId, schema: $schemaId);
+			$service = $this->objectService->find(
+				id: $serviceId,
+				options: new ObjectFindOptions(register: $services->register, schema: $services->schema)
+			);
 		} catch (Throwable) {
 			return null;
 		}
@@ -314,6 +393,6 @@ class ActivityTimelineReader {
 	 * @return string The id, or '' when not configured.
 	 */
 	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaId()
 }//end class

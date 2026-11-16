@@ -30,14 +30,15 @@ namespace OCA\Pipelinq\Service\Store;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\StoreInstallLedgerInterface;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 
 /**
  * The installed store items and the last registry check.
  */
-class StoreInstallLedger {
+class StoreInstallLedger implements StoreInstallLedgerInterface {
 
 	/**
 	 * App config key of the installed items.
@@ -94,7 +95,7 @@ class StoreInstallLedger {
 			'installedAt' => (new DateTimeImmutable())->format(format: DateTimeInterface::ATOM),
 		];
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::INSTALLED_KEY,
 			(string) json_encode(value: $installed)
 		);
@@ -141,7 +142,7 @@ class StoreInstallLedger {
 	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function markChecked(DateTimeInterface $when): void {
-		$this->appConfig->setValueString(Application::APP_ID, self::CHECKED_KEY, $when->format(format: DateTimeInterface::ATOM));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::CHECKED_KEY, $when->format(format: DateTimeInterface::ATOM));
 	}//end markChecked()
 
 	/**
@@ -152,7 +153,7 @@ class StoreInstallLedger {
 	 * @spec openspec/specs/pipelinq-store-surface/spec.md
 	 */
 	public function checkedAt(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, self::CHECKED_KEY, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, self::CHECKED_KEY, '');
 	}//end checkedAt()
 
 	/**
@@ -162,7 +163,7 @@ class StoreInstallLedger {
 	 */
 	private function installed(): array {
 		$decoded = json_decode(
-			json: $this->appConfig->getValueString(Application::APP_ID, self::INSTALLED_KEY, '{}'),
+			json: $this->appConfig->getValueString(AppIdentity::APP_ID, self::INSTALLED_KEY, '{}'),
 			associative: true
 		);
 		if (is_array($decoded) === false) {

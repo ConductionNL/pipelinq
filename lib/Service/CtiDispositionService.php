@@ -24,7 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Cti\EscalationQueues;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
@@ -114,37 +116,34 @@ class CtiDispositionService {
 			$groupId = $this->escalationGroup(queue: $queue);
 		}
 
-		$this->updateContactmoment(
-			id: $interactionId,
-			subject: $subject,
-			outcome: $outcome,
-			notes: $notes,
-		);
-
-		$taskId = null;
-		if ($outcome === 'callback') {
-			$taskId = $this->createTask(
-				type: 'callbackRequest',
-				subject: $subject,
-				notes: $notes,
-				interactionId: $interactionId,
-			);
-		} elseif ($outcome === 'escalated') {
-			$taskId = $this->createTask(
-				type: 'followUpTask',
-				subject: $subject,
-				notes: $notes,
-				interactionId: $interactionId,
-				groupId: $groupId,
-			);
-		}
+		$disposition = new CallDisposition(interactionId: $interactionId, subject: $subject, outcome: $outcome, notes: $notes, groupId: $groupId);
+		$this->updateContactmoment(disposition: $disposition);
 
 		return [
 			'outcome' => $outcome,
 			'interactionId' => $interactionId,
-			'taskId' => $taskId,
+			'taskId' => $this->followUpTask(disposition: $disposition),
 		];
 	}//end processDisposition()
+
+	/**
+	 * Create the follow-up task the outcome asks for: a callback request or an escalation task.
+	 *
+	 * @param CallDisposition $disposition The disposition.
+	 *
+	 * @return string|null The created task UUID, or null when none was created.
+	 */
+	private function followUpTask(CallDisposition $disposition): ?string {
+		if ($disposition->outcome === 'callback') {
+			return $this->createTask(type: 'callbackRequest', disposition: $disposition);
+		}
+
+		if ($disposition->outcome === 'escalated') {
+			return $this->createTask(type: 'followUpTask', disposition: $disposition);
+		}
+
+		return null;
+	}//end followUpTask()
 
 	/**
 	 * The escalation queues by id and label, for the wrap-up dialog.
@@ -193,16 +192,13 @@ class CtiDispositionService {
 	/**
 	 * Write the disposition back onto the contactmoment ticket.
 	 *
-	 * @param string $id Contactmoment ticket UUID.
-	 * @param string $subject Disposition subject.
-	 * @param string $outcome Outcome enum value.
-	 * @param string $notes Free-text notes.
+	 * @param CallDisposition $disposition The disposition.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	private function updateContactmoment(string $id, string $subject, string $outcome, string $notes): void {
+	private function updateContactmoment(CallDisposition $disposition): void {
 		if ($this->ticketService->isConfigured() === false) {
 			$this->logger->warning('CTI disposition: ticket register/schema not configured.');
 			return;
@@ -212,16 +208,16 @@ class CtiDispositionService {
 			$this->ticketService->save(
 				ticketType: TicketService::TYPE_CONTACTMOMENT,
 				payload: [
-					'disposition_subject' => $subject,
-					'disposition_outcome' => $outcome,
-					'disposition_notes' => $notes,
+					'disposition_subject' => $disposition->subject,
+					'disposition_outcome' => $disposition->outcome,
+					'disposition_notes' => $disposition->notes,
 				],
-				uuid: $id,
+				uuid: $disposition->interactionId,
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI disposition: contactmoment save failed',
-				['exception' => $e->getMessage(), 'id' => $id]
+				['exception' => $e->getMessage(), 'id' => $disposition->interactionId]
 			);
 		}
 	}//end updateContactmoment()
@@ -229,28 +225,44 @@ class CtiDispositionService {
 	/**
 	 * Create the follow-up task in the task schema.
 	 *
-	 * @param string $type Task type (terugbelverzoek|opvolgtaak).
-	 * @param string $subject Task subject.
-	 * @param string $notes Task notes.
-	 * @param string $interactionId Linked contactmoment UUID.
-	 * @param string|null $groupId The group the task is assigned to (escalation).
+	 * @param string          $type        Task type (terugbelverzoek|opvolgtaak).
+	 * @param CallDisposition $disposition The disposition the task follows up.
 	 *
 	 * @return string|null The created task UUID or null when creation failed.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Measured 10, threshold 10.
-	 *  Each branch is one optional field on the task payload (queue, notes,
-	 *  linked interaction, due date). Extracting them would scatter the payload
-	 *  shape across helpers without removing a single decision.
 	 */
-	private function createTask(
-		string $type,
-		string $subject,
-		string $notes,
-		string $interactionId,
-		?string $groupId = null,
-	): ?string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+	private function createTask(string $type, CallDisposition $disposition): ?string {
+		$target = $this->taskTarget();
+		if ($target === null) {
+			return null;
+		}
+
+		[$register, $taskSchema] = $target;
+
+		try {
+			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+			$saved = $objectService->saveObject(
+				$this->taskPayload(type: $type, disposition: $disposition),
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $taskSchema))
+			);
+
+			return $this->savedTaskId(saved: $saved);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'CTI disposition: task save failed',
+				['exception' => $e->getMessage(), 'interactionId' => $disposition->interactionId]
+			);
+			return null;
+		}//end try
+	}//end createTask()
+
+	/**
+	 * The register and task schema to create tasks in, or null when tasks cannot be created.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function taskTarget(): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$taskSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 		if ($register === '' || $taskSchema === '') {
 			$this->logger->warning('CTI disposition: task register/schema not configured -- skipping task creation.');
 			return null;
@@ -266,50 +278,56 @@ class CtiDispositionService {
 			return null;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$saved = $objectService->saveObject(
-				array_filter(
-					[
-						'type' => $type,
-						'subject' => $subject,
-						'description' => $notes,
-						'status' => 'open',
-						'assigneeGroupId' => $groupId,
-						'interaction' => $interactionId,
-					],
-					static fn ($value): bool => ($value !== null && $value !== '')
-				),
-				[],
-				$register,
-				$taskSchema,
-				null
-			);
+		return [$register, $taskSchema];
+	}//end taskTarget()
 
-			$id = null;
-			if (is_array($saved) === true) {
-				$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
-			} elseif (is_object($saved) === true) {
-				// SaveObject() returns an ObjectEntity whose getUuid() is served by
-				// Entity::__call — method_exists() is FALSE for it, so the follow-up
-				// task was written and its id thrown away (pipelinq#807).
-				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
-				if ($uuid !== '') {
-					$id = $uuid;
-				}
+	/**
+	 * The task payload; fields without a value (no group, empty notes) are left out.
+	 *
+	 * @param string          $type        Task type.
+	 * @param CallDisposition $disposition The disposition the task follows up.
+	 *
+	 * @return array<string, string> The payload.
+	 */
+	private function taskPayload(string $type, CallDisposition $disposition): array {
+		return array_filter(
+			[
+				'type' => $type,
+				'subject' => $disposition->subject,
+				'description' => $disposition->notes,
+				'status' => 'open',
+				'assigneeGroupId' => $disposition->groupId,
+				'interaction' => $disposition->interactionId,
+			],
+			static fn ($value): bool => ($value !== null && $value !== '')
+		);
+	}//end taskPayload()
+
+	/**
+	 * The id of a saved task, read from an array or an entity.
+	 *
+	 * @param mixed $saved What saveObject() returned.
+	 *
+	 * @return string|null The task id, or null when none can be read.
+	 */
+	private function savedTaskId(mixed $saved): ?string {
+		$id = null;
+		if (is_array($saved) === true) {
+			$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
+		} elseif (is_object($saved) === true) {
+			// SaveObject() returns an ObjectEntity whose getUuid() is served by
+			// Entity::__call — method_exists() is FALSE for it, so the follow-up
+			// task was written and its id thrown away (pipelinq#807).
+			$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+			if ($uuid !== '') {
+				$id = $uuid;
 			}
+		}
 
-			if ($id !== null) {
-				return (string)$id;
-			}
+		if ($id !== null) {
+			return (string)$id;
+		}
 
-			return null;
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'CTI disposition: task save failed',
-				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
-			);
-			return null;
-		}//end try
-	}//end createTask()
+		return null;
+	}//end savedTaskId()
 }//end class

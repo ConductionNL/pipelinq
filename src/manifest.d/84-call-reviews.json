@@ -1,0 +1,271 @@
+{
+	"pages": [
+		{
+			"id": "CallReviews",
+			"_note": "contact-moments-call-review D4 and task 2.3: the reviews of recorded calls. OpenRegister's authorization block on callReview decides what each reader gets: the call review group sees every review, an agent only the reviews of their own calls. A review starts from the call (Review this call on TicketDetail), so this list has no Add.",
+			"route": "/call-reviews",
+			"type": "index",
+			"title": "Call reviews",
+			"config": {
+				"pageTabs": [
+					{ "label": "Reviews", "route": "CallReviews" },
+					{ "label": "Recorded calls", "route": "RecordedCalls" }
+				],
+				"register": "pipelinq",
+				"schema": "callReview",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showCopyAction": false,
+				"showMassImport": false,
+				"showMassCopy": false,
+				"rowRoute": "CallReviewDetail",
+				"quickFilters": [
+					{ "label": "Drafts", "filter": { "status": "draft" }, "showCount": true },
+					{ "label": "Shared", "filter": { "status": "shared" }, "showCount": true },
+					{ "label": "Agreed", "filter": { "status": "agreed" }, "showCount": true },
+					{ "label": "Written by me", "filter": { "reviewer": "@me" }, "showCount": true },
+					{ "label": "All", "filter": {}, "default": true, "showCount": true }
+				],
+				"columns": [
+					{ "key": "agent", "label": "Agent", "formatter": "userDisplayName" },
+					{ "key": "reviewer", "label": "Reviewer", "formatter": "userDisplayName" },
+					{ "key": "total", "label": "Total" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "draft": "default", "shared": "warning", "agreed": "success" } } }
+				]
+			}
+		},
+		{
+			"id": "RecordedCalls",
+			"_note": "contact-moments-call-review D4: the contact moments with a recording, newest first, filtered by agent and date through the filter menu. A reviewer opens one and presses Review this call.",
+			"route": "/call-reviews/calls",
+			"type": "index",
+			"title": "Recorded calls",
+			"config": {
+				"pageTabs": [
+					{ "label": "Reviews", "route": "CallReviews" },
+					{ "label": "Recorded calls", "route": "RecordedCalls" }
+				],
+				"register": "pipelinq",
+				"schema": "ticket",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"filter": { "recording_url": "IS NOT NULL" },
+				"sortKey": "occurredAt",
+				"sortOrder": "desc",
+				"showAdd": false,
+				"showViewAction": false,
+				"filterMenu": true,
+				"rowRoute": "TicketDetail",
+				"quickFilters": [
+					{ "label": "Transcribed", "filter": { "transcriptStatus": "done" }, "showCount": true },
+					{ "label": "All", "filter": {}, "default": true, "showCount": true }
+				],
+				"columns": [
+					{ "key": "occurredAt", "label": "Call" },
+					{ "key": "title", "label": "Title" },
+					{ "key": "assignee", "label": "Agent", "formatter": "userDisplayName" },
+					{ "key": "transcriptStatus", "label": "Transcript" }
+				]
+			}
+		},
+		{
+			"id": "CallReviewDetail",
+			"_note": "contact-moments-call-review tasks 2.3 and 2.4: one review. The reviewer scores each criterion of the scorecard, writes coaching points and shares the review; the agent whose call it is reads the scores and agrees each coaching point. Every write goes through OpenRegister as the reader, so the review's authorization block refuses what the reader may not change; the total and the agreed status are set on save by CallReviewSaveListener.",
+			"route": "/call-reviews/:id",
+			"type": "detail",
+			"title": "Call review",
+			"config": {
+				"register": "pipelinq",
+				"schema": "callReview",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"headerActions": [
+					{
+						"id": "share-review",
+						"type": "api-call",
+						"label": "Share with agent",
+						"icon": "AccountArrowRightOutline",
+						"method": "PATCH",
+						"url": "/apps/openregister/api/objects/pipelinq/callReview/@objectId",
+						"payload": { "status": "shared" },
+						"confirm": true,
+						"confirmTitle": "Share this review?",
+						"confirmMessage": "The agent sees the scores and the coaching points in My Work and can agree each point.",
+						"successMessage": "Review shared with the agent.",
+						"errorMessage": "Could not share this review.",
+						"visibleWhen": {
+							"readerGroups": ["pipelinq-call-review"],
+							"field": "status",
+							"op": "eq",
+							"value": "draft"
+						}
+					},
+					{
+						"id": "open-call",
+						"type": "navigate",
+						"label": "Open the call",
+						"icon": "Headset",
+						"target": "/tickets/@object.contactMoment",
+						"visibleWhen": { "field": "contactMoment", "op": "notEmpty" }
+					}
+				],
+				"widgets": [
+					{
+						"id": "review-facts",
+						"type": "facts",
+						"title": "Review",
+						"icon": "AccountStarOutline",
+						"content": {
+							"columns": 2,
+							"fields": [
+								{ "as": "pill", "path": "status", "map": { "draft": "Draft", "shared": "Shared with the agent", "agreed": "Agreed" } },
+								{ "path": "agent", "label": "Agent", "format": "user" },
+								{ "path": "reviewer", "label": "Reviewer", "format": "user" },
+								{ "path": "total", "label": "Weighted total" }
+							]
+						}
+					},
+					{
+						"id": "review-scores-edit",
+						"type": "field-list",
+						"title": "Scores",
+						"icon": "FormatListChecks",
+						"visibleWhen": {
+							"all": [
+								{ "readerGroups": ["pipelinq-call-review"] },
+								{ "field": "agent", "op": "neq", "value": "@me" }
+							]
+						},
+						"content": {
+							"field": "scores",
+							"key": "key",
+							"variant": "table",
+							"columns": [
+								{ "header": "Criterion", "path": "key" },
+								{ "header": "Score", "path": "score", "strong": true },
+								{ "header": "Remark", "path": "remark" }
+							],
+							"add": {
+								"label": "Score a criterion",
+								"trigger": "button",
+								"placement": "title",
+								"fields": [
+									{
+										"key": "key",
+										"label": "Criterion",
+										"type": "select",
+										"required": true,
+										"optionsSource": { "url": "/apps/openregister/api/objects/pipelinq/callScorecard/@object.scorecard", "path": "criteria", "valuePath": "key", "labelPath": "label" }
+									},
+									{
+										"key": "score",
+										"label": "Score",
+										"type": "select",
+										"required": true,
+										"options": [
+											{ "value": 1, "label": "1" },
+											{ "value": 2, "label": "2" },
+											{ "value": 3, "label": "3" },
+											{ "value": 4, "label": "4" },
+											{ "value": 5, "label": "5" }
+										]
+									},
+									{ "key": "remark", "label": "Remark" }
+								]
+							},
+							"edit": true,
+							"remove": { "label": "Remove score" },
+							"emptyText": "No criterion scored yet."
+						}
+					},
+					{
+						"id": "review-scores",
+						"type": "field-list",
+						"title": "Scores",
+						"icon": "FormatListChecks",
+						"visibleWhen": { "field": "agent", "op": "eq", "value": "@me" },
+						"content": {
+							"field": "scores",
+							"key": "key",
+							"variant": "table",
+							"readOnly": true,
+							"columns": [
+								{ "header": "Criterion", "path": "key" },
+								{ "header": "Score", "path": "score", "strong": true },
+								{ "header": "Remark", "path": "remark" }
+							],
+							"emptyText": "No criterion scored yet."
+						}
+					},
+					{
+						"id": "review-coaching-edit",
+						"type": "field-list",
+						"title": "Coaching points",
+						"icon": "MessageTextOutline",
+						"visibleWhen": {
+							"all": [
+								{ "readerGroups": ["pipelinq-call-review"] },
+								{ "field": "agent", "op": "neq", "value": "@me" }
+							]
+						},
+						"content": {
+							"field": "coachingPoints",
+							"key": "text",
+							"row": {
+								"title": "text",
+								"aside": { "path": "agreedAt", "format": "date", "fallback": "Not agreed yet" }
+							},
+							"add": {
+								"label": "Add a coaching point",
+								"fields": [
+									{ "key": "text", "label": "Coaching point", "required": true }
+								]
+							},
+							"remove": { "label": "Remove coaching point" },
+							"emptyText": "No coaching points yet."
+						}
+					},
+					{
+						"id": "review-coaching-agree",
+						"type": "field-list",
+						"title": "Coaching points",
+						"icon": "MessageTextOutline",
+						"visibleWhen": { "field": "agent", "op": "eq", "value": "@me" },
+						"content": {
+							"field": "coachingPoints",
+							"key": "text",
+							"row": {
+								"title": "text",
+								"aside": { "path": "agreedAt", "format": "date", "fallback": "Not agreed yet" }
+							},
+							"rowActions": [
+								{
+									"id": "agree",
+									"label": "Agree",
+									"placement": "inline",
+									"when": { "agreedAt": { "set": false } },
+									"request": { "method": "POST", "url": "/apps/pipelinq/api/call-reviews/@objectId/coaching-points/@index/agree" }
+								}
+							],
+							"emptyText": "No coaching points yet."
+						}
+					}
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "review-facts", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 2, "sizeToContent": true },
+					{ "id": "2", "widgetId": "review-scores-edit", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "sizeToContent": true },
+					{ "id": "3", "widgetId": "review-scores", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "sizeToContent": true },
+					{ "id": "4", "widgetId": "review-coaching-edit", "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "sizeToContent": true },
+					{ "id": "5", "widgetId": "review-coaching-agree", "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "sizeToContent": true }
+				]
+			}
+		}
+	],
+	"menu": [
+		{
+			"id": "CallReviews",
+			"label": "Call reviews",
+			"icon": "AccountStarOutline",
+			"route": "CallReviews",
+			"order": 19
+		}
+	]
+}

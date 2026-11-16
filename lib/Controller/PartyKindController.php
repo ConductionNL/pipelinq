@@ -30,9 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
-use OCA\Pipelinq\Service\PartyLinkService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyLinkServiceInterface;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -44,19 +45,21 @@ use OCP\IRequest;
  * @spec openspec/specs/party-kind-registry/spec.md#requirement-a-consuming-app-shall-declare-which-kinds-a-record-type-accepts-req-pkr-002
  */
 class PartyKindController extends Controller {
+	use ServiceResultResponse;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PartyKindRegistryService $registry The vocabulary and the rule.
-	 * @param PartyLinkService $linkService The one write path for a link.
+	 * @param PartyKindRegistryServiceInterface $registry The vocabulary and the rule.
+	 * @param PartyLinkServiceInterface $linkService The one write path for a link.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PartyKindRegistryService $registry,
-		private readonly PartyLinkService $linkService,
+		private readonly PartyKindRegistryServiceInterface $registry,
+		private readonly PartyLinkServiceInterface $linkService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -102,14 +105,7 @@ class PartyKindController extends Controller {
 		string $party = '',
 		string $kind = '',
 	): JSONResponse {
-		return $this->respond(
-			result: $this->linkService->link(
-				recordType: $recordType,
-				recordId: $recordId,
-				party: $party,
-				kind: $kind,
-			)
-		);
+		return $this->respond(result: $this->linkService->link(recordType: $recordType, recordId: $recordId, party: $party, kind: $kind));
 	}//end link()
 
 	/**
@@ -125,13 +121,7 @@ class PartyKindController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function import(string $recordType = '', string $recordId = '', array $rows = []): JSONResponse {
-		return $this->respond(
-			result: $this->linkService->import(
-				recordType: $recordType,
-				recordId: $recordId,
-				rows: $rows,
-			)
-		);
+		return $this->respond(result: $this->linkService->import(recordType: $recordType, recordId: $recordId, rows: $rows));
 	}//end import()
 
 	/**
@@ -147,18 +137,4 @@ class PartyKindController extends Controller {
 	public function endLink(string $linkId): JSONResponse {
 		return $this->respond(result: $this->linkService->end(linkId: $linkId));
 	}//end endLink()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

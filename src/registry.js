@@ -34,6 +34,8 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
+import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
@@ -58,16 +60,6 @@ import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LeadContactRoles from './components/LeadContactRoles.vue'
 import LeadExchangeRate from './components/leads/LeadExchangeRate.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
-// --- Articles — the content hub for a mailing and a post (marketing-article-hub).
-//     ArticleDetail is a declarative type:"detail" page; the rendered body, the
-//     hero image, the agent-authored mark, the Edit action and the lifecycle
-//     moves live in ArticleContentSection (no declarative widget resolves
-//     @object.<field> the way a bodyWidget prop does — see that file's header),
-//     and ArticleUsageSection answers where the article has been used, joined
-//     server-side from two schemas no single-schema object-list widget can
-//     express. ---
-import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
-import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
 import ListSignupFormSection from './components/marketing/ListSignupFormSection.vue'
@@ -84,6 +76,7 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import RecordMergesSection from './components/merge/RecordMergesSection.vue'
 import PartyContactStrip from './components/PartyContactStrip.vue'
 import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
@@ -160,14 +153,14 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     `config.createOverride` string to one of these and forwards it to
 //     CnIndexPage's createOverride prop, so the GENERIC Add button on the
 //     declarative Clients/Contacts index pages is contact-aware too. ---
-// --- Form-dialog slot replacements (page.slots): the ArticleDetail edit
-//     form, the new-blast wizard, and segment / template create and edit
+// --- Form-dialog slot replacements (page.slots): the new-blast wizard,
+//     and segment / template create and edit
 //     (marketing-segments-ui-repair) on their index pages. ---
-import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import BrpClientCheckDialog from './dialogs/BrpClientCheckDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from './dialogs/ContactCreateDialog.vue'
 import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
@@ -178,8 +171,12 @@ import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
+import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
+// Paste or scan (clients-contact-capture): the header action on the Clients and
+//     Contacts index pages opens ContactCaptureModal. ---
+import ContactCaptureModal from './modals/ContactCaptureModal.vue'
 import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
@@ -199,6 +196,7 @@ import ResourceDetailView from './views/bookings/ResourceDetail.vue'
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import BulkChangesView from './views/bulk/BulkChanges.vue'
 import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
@@ -240,9 +238,6 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 //     and CSV import/export via the platform mass dialogs. ---
 import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
-// --- Articles new/edit route wrapper (marketing-article-hub): thin host for
-//     ArticleEditModal, the one editing surface the change owns. ---
-import ArticleFormView from './views/marketing/ArticleFormView.vue'
 import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
@@ -284,6 +279,7 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+import RetentionReviewView from './views/settings/RetentionReview.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
 import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
 import SocialPostFormView from './views/social/SocialPostFormView.vue'
@@ -302,6 +298,7 @@ import { sectionWidget } from './components/widgets/sectionWidget.js'
 //     agent-availability toggle. ---
 import { createWithContact } from './services/contactSyncApi.js'
 import { moveTicketStatus, ticketStatusTargets } from './utils/ticketBoardMoves.js'
+import { ticketPhoneSearch } from './utils/ticketPhoneSearch.js'
 
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
@@ -599,11 +596,6 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'A still preview of the preference centre a subscriber reaches from every message, with the published lists. Side card on MailingListDetail (PqMailinglijst).',
 	},
-	ArticleContentSection: {
-		kind: 'section',
-		component: ArticleContentSection,
-		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
-	},
 	JourneyRunsSection: {
 		kind: 'section',
 		component: JourneyRunsSection,
@@ -613,11 +605,6 @@ const registry = {
 		kind: 'section',
 		component: CampaignLandingPageSection,
 		_note: 'In-body section for the declarative type:"detail" CampaignDetail page (marketing-campaigns, placement end). Hosts the Create landing page action, which dispatches portaliq\'s LandingPageRequestedEvent through POST /api/campaigns/{id}/landing-page and shows portaliq\'s own typed error code verbatim. Not a declarative action: the grammar has no cross-app command, and a generic write dialog would collapse five distinct failure codes into one save error. Self-fetches by campaignId (@objectId).',
-	},
-	ArticleUsageSection: {
-		kind: 'section',
-		component: ArticleUsageSection,
-		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement end). Answers where the article has been used by self-fetching GET /api/articles/{id}/usages, a read-time join of TWO schemas (campaignTemplate, blast) the declarative object-list widget (one schema per instance) cannot express. Nothing is written here.',
 	},
 	SocialPostVariantsSection: {
 		kind: 'section',
@@ -918,6 +905,11 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	RecordMergesSection: {
+		kind: 'section',
+		component: RecordMergesSection,
+		_note: 'Merges section on a client or contact (clients-reversible-merge REQ-CRM-002/003): the OpenRegister mergeOperation rows this record survived, with Undo through merge#reverse while the reversal window is open and the date the merge became final after it. Kept custom because no declarative widget offers a per-row action that posts to an endpoint and the open/final state is computed from mergedAt plus the window. Self-fetches by recordId (@objectId).',
+	},
 	ClientSatisfactionSection: {
 		kind: 'section',
 		component: ClientSatisfactionSection,
@@ -928,6 +920,16 @@ const registry = {
 		component: SurveyResponseRateWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
+	},
+	ClientRiskSection: {
+		kind: 'section',
+		component: ClientRiskSection,
+		_note: 'The client\'s churn risk (clients-history-summary-and-risk, D4): the level as a badge with every reason behind it, its points and links to the records it names. Reads `churnRisk` off the client (`@object.churnRisk`); ClientRiskService writes it.',
+	},
+	ClientHistorySummarySection: {
+		kind: 'section',
+		component: ClientHistorySummarySection,
+		_note: 'History summary card (clients-history-summary-and-risk, REQ-CIN-002): Summarise asks GET /api/clients/{id}/history-summary for a few generated sentences about the last 90 days the viewer may read, with the records read and the time. Without hermiq the card says summarising is not available and has no button. Nothing is stored.',
 	},
 	ClientBillingHandoffSection: {
 		kind: 'section',
@@ -1009,6 +1011,12 @@ const registry = {
 		component: ExportJobsView,
 		_note: 'Export-job list with per-row Test-run + Enable/Disable actions calling the export controller; declarative index cannot trigger the test/enable endpoints.',
 	},
+	// --- Client retention review (platform-client-retention). ---
+	RetentionReviewView: {
+		kind: 'page',
+		component: RetentionReviewView,
+		_note: 'Destruction lists holding clients or contact persons, read from OpenRegister\'s archival API, with Approve and Reject on each list; the lists live in OpenRegister, not in a pipelinq schema, so no index page can render them.',
+	},
 	ExportJobFormView: {
 		kind: 'page',
 		component: ExportJobFormView,
@@ -1023,6 +1031,11 @@ const registry = {
 		kind: 'page',
 		component: ExportDestinationFormView,
 		_note: 'Export-destination create/edit form (type, OpenConnector source, path template, compression, encryption) with an inline Test-connection action.',
+	},
+	BulkChangesView: {
+		kind: 'page',
+		component: BulkChangesView,
+		_note: 'The bulk changes this person made to clients and contacts, with Undo through the OpenRegister reversal while its window is open (clients-bulk-edit-and-undo D4).',
 	},
 	ExportRunsView: {
 		kind: 'page',
@@ -1054,11 +1067,6 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
-	},
-	ArticleFormView: {
-		kind: 'page',
-		component: ArticleFormView,
-		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
 	},
 	SocialAccountsView: {
 		kind: 'page',
@@ -1354,6 +1362,19 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
+	ContactCreateDialog: {
+		kind: 'modal',
+		component: ContactCreateDialog,
+		propsSchema: null,
+		_note: 'New contact, contact-first via POST /api/contacts-sync/create (the same path as the Contacts index createOverride). Registered so Paste or scan can open it prefilled with `values`; then it opens the new contact after Save.',
+	},
+	ContactCaptureModal: {
+		kind: 'modal',
+		component: ContactCaptureModal,
+		propsSchema: null,
+		_note: 'Paste or scan (clients-contact-capture REQ-CCC-001/002). Target of the paste-or-scan header action on the Clients and Contacts index pages: pasted text or a card photo becomes proposed fields via POST /api/contact-capture/parse, and Use these fields opens the `createModal` (ClientCreateDialog or ContactCreateDialog) prefilled. Saves nothing itself.',
+	},
+
 	ContactImportDialog: {
 		kind: 'modal',
 		component: ContactImportDialog,
@@ -1366,6 +1387,12 @@ const registry = {
 		propsSchema: null,
 		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
 	},
+	BulkChangeFieldModal: {
+		kind: 'modal',
+		component: BulkChangeFieldModal,
+		propsSchema: null,
+		_note: 'Change one field on the selected clients or contacts through an OpenRegister bulk job (clients-bulk-edit-and-undo). Target of the Change a field bulk action on the Clients and Contacts lists; receives the selection as selectedIds and the register and schema slugs as props.',
+	},
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
 	// index or detail page mounts them for its Add and Edit.
@@ -1374,12 +1401,6 @@ const registry = {
 		component: BlastWizardDialog,
 		propsSchema: null,
 		_note: "New-blast wizard in the Blasts index page's form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast's monitor.",
-	},
-	ArticleDetailFormDialog: {
-		kind: 'modal',
-		component: ArticleDetailFormDialog,
-		propsSchema: null,
-		_note: "The ArticleDetail page's Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.",
 	},
 	SegmentFormDialog: {
 		kind: 'modal',
@@ -1430,6 +1451,11 @@ const registry = {
 		kind: 'handler',
 		handler: ticketStatusTargets,
 		_note: 'The Tickets board view\'s `board.moveTargetsHandler`: the statuses the lifecycle allows from the ticket\'s own.',
+	},
+	ticketPhoneSearch: {
+		kind: 'handler',
+		handler: ticketPhoneSearch,
+		_note: 'The Tickets list\'s `searchHandler`: a phone number is searched as a phoneE164 filter, normalised by GET /api/tickets/by-phone, with the line Searching by phone number.',
 	},
 }
 

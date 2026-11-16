@@ -44,9 +44,10 @@ namespace OCA\Pipelinq\Listener;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
-use OCA\Pipelinq\Service\Zgw\ZrcClient;
-use OCA\Pipelinq\Service\Zgw\ZtcClient;
+use OCA\Pipelinq\Kernel\Contracts\NrcNotificationListenerInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZrcClientInterface;
+use OCA\Pipelinq\Kernel\Contracts\ZtcClientInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -55,7 +56,7 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class NrcNotificationListener {
+class NrcNotificationListener implements NrcNotificationListenerInterface {
 	/**
 	 * Notifications MUST complete within this many milliseconds (REQ-ZGW-007).
 	 */
@@ -64,15 +65,15 @@ class NrcNotificationListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ZgwRegisterAccess $registers Register facade.
-	 * @param ZrcClient $zrc ZRC client (status fetches).
-	 * @param ZtcClient $ztc ZTC client (omschrijving resolution + cache invalidation).
+	 * @param ZgwRegisterAccessInterface $registers Register facade.
+	 * @param ZrcClientInterface $zrc ZRC client (status fetches).
+	 * @param ZtcClientInterface $ztc ZTC client (omschrijving resolution + cache invalidation).
 	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
-		private ZgwRegisterAccess $registers,
-		private ZrcClient $zrc,
-		private ZtcClient $ztc,
+		private ZgwRegisterAccessInterface $registers,
+		private ZrcClientInterface $zrc,
+		private ZtcClientInterface $ztc,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -111,7 +112,7 @@ class NrcNotificationListener {
 		$endpointId = (string)($abonnement['endpointId'] ?? '');
 		$endpoint = null;
 		if ($endpointId !== '') {
-			$endpoint = $this->registers->find(ZgwRegisterAccess::SCHEMA_ENDPOINT, $endpointId);
+			$endpoint = $this->registers->find(ZgwRegisterAccessInterface::SCHEMA_ENDPOINT, $endpointId);
 		}
 
 		if ($endpoint === null) {
@@ -220,7 +221,7 @@ class NrcNotificationListener {
 		}
 
 		$this->registers->save(
-			ZgwRegisterAccess::SCHEMA_ABONN,
+			ZgwRegisterAccessInterface::SCHEMA_ABONN,
 			$abonnement,
 			$saveUuid
 		);
@@ -244,7 +245,7 @@ class NrcNotificationListener {
 		}
 
 		$existing = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_MAPPING,
+			ZgwRegisterAccessInterface::SCHEMA_MAPPING,
 			['zgwUrl' => $caseUrl]
 		);
 		if ($existing !== []) {
@@ -270,7 +271,7 @@ class NrcNotificationListener {
 		}
 
 		$mappings = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_MAPPING,
+			ZgwRegisterAccessInterface::SCHEMA_MAPPING,
 			['zgwUrl' => $caseUrl]
 		);
 		if ($mappings === []) {
@@ -348,7 +349,7 @@ class NrcNotificationListener {
 		}
 
 		$existing = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_MAPPING,
+			ZgwRegisterAccessInterface::SCHEMA_MAPPING,
 			['zgwUrl' => $url]
 		);
 		if ($existing !== []) {
@@ -369,11 +370,11 @@ class NrcNotificationListener {
 	private function onCatalogiChange(array $endpoint, array $notification): void {
 		$resource = (string)($notification['resource'] ?? '*');
 		$resourceMap = [
-			'caseType' => ZtcClient::RESOURCE_ZAAKTYPE,
-			'statustype' => ZtcClient::RESOURCE_STATUSTYPE,
-			'roltype' => ZtcClient::RESOURCE_ROLTYPE,
-			'resultaattype' => ZtcClient::RESOURCE_RESULTAATTYPE,
-			'besluittype' => ZtcClient::RESOURCE_BESLUITTYPE,
+			'caseType' => ZtcClientInterface::RESOURCE_ZAAKTYPE,
+			'statustype' => ZtcClientInterface::RESOURCE_STATUSTYPE,
+			'roltype' => ZtcClientInterface::RESOURCE_ROLTYPE,
+			'resultaattype' => ZtcClientInterface::RESOURCE_RESULTAATTYPE,
+			'besluittype' => ZtcClientInterface::RESOURCE_BESLUITTYPE,
 		];
 		$bucket = $resourceMap[$resource] ?? '*';
 		$this->ztc->invalidateCache($endpoint, $bucket);
