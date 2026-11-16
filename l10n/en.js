@@ -9903,6 +9903,7 @@ OC.L10N.register(
         "%n criterion": ["%n criterion","%n criteria"],
         "%n criteria": "%n criteria",
         "Recorded calls scored on a scorecard, with coaching points the agent agrees.": "Recorded calls scored on a scorecard, with coaching points the agent agrees.",
+        "Searching by phone number": "Searching by phone number",
         "Mirrored call": "Mirrored call",
         "A call event from a telephony source, kept 30 days": "A call event from a telephony source, kept 30 days",
         "Call id": "Call id",

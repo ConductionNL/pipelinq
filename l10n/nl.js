@@ -9918,6 +9918,7 @@ OC.L10N.register(
         "%n criterion": ["%n criterium","%n criteria"],
         "%n criteria": "%n criteria",
         "Recorded calls scored on a scorecard, with coaching points the agent agrees.": "Opgenomen gesprekken gescoord op een scorekaart, met coachingspunten waarmee de medewerker akkoord gaat.",
+        "Searching by phone number": "Zoeken op telefoonnummer",
         "Mirrored call": "Gespiegeld gesprek",
         "A call event from a telephony source, kept 30 days": "Een gespreksgebeurtenis van een telefoniebron, 30 dagen bewaard",
         "Call id": "Gespreks-id",
