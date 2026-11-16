@@ -27,6 +27,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for NoteEventService.
@@ -182,7 +183,9 @@ class NoteEventServiceTest extends TestCase {
 			 *
 			 * @return array The stub object.
 			 */
-			public function find(string $id, string $register, string $schema): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->seen = [
 					'id' => $id,
 					'register' => $register,
@@ -227,7 +230,9 @@ class NoteEventServiceTest extends TestCase {
 			 *
 			 * @return object The stub entity.
 			 */
-			public function find(string $id, string $register, string $schema): object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return new class implements \JsonSerializable {
 					/**
 					 * @return array The serialised object.
@@ -264,7 +269,9 @@ class NoteEventServiceTest extends TestCase {
 			 *
 			 * @return object The stub entity with no normalisation surface.
 			 */
-			public function find(string $id, string $register, string $schema): object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): object {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return new \stdClass();
 			}
 		};

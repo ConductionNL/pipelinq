@@ -29,7 +29,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -129,8 +129,8 @@ class BusinessHoursCalculator {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function getBusinessHoursWindow(): array {
-		$start = $this->appConfig->getValueString(Application::APP_ID, 'sla_business_hours_start', '09:00');
-		$end = $this->appConfig->getValueString(Application::APP_ID, 'sla_business_hours_end', '17:00');
+		$start = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_business_hours_start', '09:00');
+		$end = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_business_hours_end', '17:00');
 		if (preg_match('/^\d{2}:\d{2}$/', $start) !== 1) {
 			$start = '09:00';
 		}
@@ -173,19 +173,32 @@ class BusinessHoursCalculator {
 			return 0;
 		}
 
-		$calendar = new BusinessCalendar(type: $calendarType, holidayCalendar: $holidayCalendar);
-		$cursor = DateTimeImmutable::createFromInterface($start);
-		$endStamp = $end->getTimestamp();
+		return $this->openMinutesIn(
+			calendar: new BusinessCalendar(type: $calendarType, holidayCalendar: $holidayCalendar),
+			span: new DaySpan(from: DateTimeImmutable::createFromInterface($start), untilStamp: $end->getTimestamp())
+		);
+	}//end elapsedBusinessMinutes()
+
+	/**
+	 * The open minutes from the span's start up to its end, day by day.
+	 *
+	 * @param BusinessCalendar $calendar The calendar.
+	 * @param DaySpan          $span     The start instant and the end of the count.
+	 *
+	 * @return int The open minutes.
+	 */
+	private function openMinutesIn(BusinessCalendar $calendar, DaySpan $span): int {
+		$cursor = $span->from;
 		$total = 0;
 
 		// Step forward day-by-day, capping each window contribution.
-		while ($cursor->getTimestamp() < $endStamp) {
-			$total += $this->minutesOpenOn(calendar: $calendar, span: new DaySpan(from: $cursor, untilStamp: $endStamp));
+		while ($cursor->getTimestamp() < $span->untilStamp) {
+			$total += $this->minutesOpenOn(calendar: $calendar, span: new DaySpan(from: $cursor, untilStamp: $span->untilStamp));
 			$cursor = $this->nextDayStart(day: $cursor);
 		}
 
 		return $total;
-	}//end elapsedBusinessMinutes()
+	}//end openMinutesIn()
 
 	/**
 	 * The open minutes of one day within the span counted.

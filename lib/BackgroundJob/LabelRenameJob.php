@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Labels\LabelRenameService;
+use OCA\Pipelinq\Kernel\Contracts\LabelRenameServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\IUserManager;
@@ -45,7 +45,7 @@ class LabelRenameJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory       $time        The time factory (parent contract).
-	 * @param LabelRenameService $service     The rename pass.
+	 * @param LabelRenameServiceInterface $service     The rename pass.
 	 * @param IUserManager       $userManager Finds the administrator.
 	 * @param IUserSession       $userSession Carries the administrator for OpenRegister's access check.
 	 * @param LoggerInterface    $logger      The logger.
@@ -54,7 +54,7 @@ class LabelRenameJob extends QueuedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private LabelRenameService $service,
+		private LabelRenameServiceInterface $service,
 		private IUserManager $userManager,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,

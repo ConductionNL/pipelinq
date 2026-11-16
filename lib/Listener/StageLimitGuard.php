@@ -27,8 +27,9 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -60,7 +61,7 @@ class StageLimitGuard implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param SchemaMapService $schemaMap Resolves a schema id to its object type.
+	 * @param SchemaMapServiceInterface $schemaMap Resolves a schema id to its object type.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IL10N $l10n Words the refusal in the user's language.
 	 * @param LoggerInterface $logger The logger.
@@ -69,7 +70,7 @@ class StageLimitGuard implements IEventListener {
 	 */
 	public function __construct(
 		private ObjectServiceInterface $objectService,
-		private SchemaMapService $schemaMap,
+		private SchemaMapServiceInterface $schemaMap,
 		private IAppConfig $appConfig,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
@@ -89,7 +90,7 @@ class StageLimitGuard implements IEventListener {
 		if ($event instanceof ObjectCreatingEvent) {
 			$entity = $event->getObject();
 			$data = array_merge((array)$entity->getObject(), (array)$event->getModifiedData());
-			$this->judge(event: $event, schemaId: (string)$entity->getSchema(), data: $data, old: []);
+			$this->judge(event: $event, write: new StagedItemWrite(schemaId: (string)$entity->getSchema(), data: $data, old: []));
 			return;
 		}
 
@@ -97,7 +98,7 @@ class StageLimitGuard implements IEventListener {
 			$entity = $event->getNewObject();
 			$data = array_merge((array)$entity->getObject(), (array)$event->getModifiedData());
 			$old = (array)($event->getOldObject()?->getObject() ?? []);
-			$this->judge(event: $event, schemaId: (string)$entity->getSchema(), data: $data, old: $old);
+			$this->judge(event: $event, write: new StagedItemWrite(schemaId: (string)$entity->getSchema(), data: $data, old: $old));
 		}
 	}//end handle()
 
@@ -105,15 +106,13 @@ class StageLimitGuard implements IEventListener {
 	 * Refuse the write when it moves the item into a full stage.
 	 *
 	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The event to stop.
-	 * @param string $schemaId The item's schema id.
-	 * @param array<string, mixed> $data The item as it will be saved.
-	 * @param array<string, mixed> $old The item as it was (empty on create).
+	 * @param StagedItemWrite                         $write The item's schema, new and old state.
 	 *
 	 * @return void
 	 */
-	private function judge(ObjectCreatingEvent|ObjectUpdatingEvent $event, string $schemaId, array $data, array $old): void {
-		$slug = $this->logicalSlug(schemaId: $schemaId, data: $data);
-		$pipelineId = trim((string)($data['pipeline'] ?? ''));
+	private function judge(ObjectCreatingEvent|ObjectUpdatingEvent $event, StagedItemWrite $write): void {
+		$slug = $this->logicalSlug(schemaId: $write->schemaId, data: $write->data);
+		$pipelineId = $write->pipelineId();
 		if ($slug === null || $pipelineId === '') {
 			return;
 		}
@@ -124,29 +123,57 @@ class StageLimitGuard implements IEventListener {
 			return;
 		}
 
-		$stageName = (string)($data[$column] ?? '');
-		$samePipeline = (string)($old['pipeline'] ?? '') === $pipelineId;
-		if ($stageName === '' || ($samePipeline === true && (string)($old[$column] ?? '') === $stageName)) {
+		$stageName = $this->enteredStage(write: $write, column: $column);
+		$this->refuseWhenFull(
+			event: $event,
+			entry: new PipelineStageEntry(pipeline: $pipeline, pipelineId: $pipelineId, stageName: $stageName)
+		);
+	}//end judge()
+
+	/**
+	 * The stage the write moves the item into, or '' when it stays where it was.
+	 *
+	 * @param StagedItemWrite $write  The item as it will be saved and as it was.
+	 * @param string          $column The stage column.
+	 *
+	 * @return string
+	 */
+	private function enteredStage(StagedItemWrite $write, string $column): string {
+		$stageName = (string)($write->data[$column] ?? '');
+		$samePipeline = (string)($write->old['pipeline'] ?? '') === $write->pipelineId();
+		if ($stageName === '' || ($samePipeline === true && (string)($write->old[$column] ?? '') === $stageName)) {
+			return '';
+		}
+
+		return $stageName;
+	}//end enteredStage()
+
+	/**
+	 * Stop the event when the item enters a stage that already holds its limit.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The event to stop.
+	 * @param PipelineStageEntry                      $entry The pipeline, its id and the stage entered.
+	 *
+	 * @return void
+	 */
+	private function refuseWhenFull(ObjectCreatingEvent|ObjectUpdatingEvent $event, PipelineStageEntry $entry): void {
+		if ($entry->stageName === '') {
 			return;
 		}
 
-		$max = $this->limitOf(pipeline: $pipeline, stageName: $stageName);
+		$max = $this->limitOf(pipeline: $entry->pipeline, stageName: $entry->stageName);
 		if ($max === null) {
 			return;
 		}
 
-		$count = $this->countInStage(pipeline: $pipeline, pipelineId: $pipelineId, stageName: $stageName);
+		$count = $this->countInStage(entry: $entry);
 		if ($count < $max) {
 			return;
 		}
 
-		$event->setErrors(
-			[
-				'message' => $this->l10n->t('Stage %1$s is full (%2$s of %3$s)', [$stageName, (string)$count, (string)$max]),
-			]
-		);
+		$event->setErrors(['message' => $this->l10n->t('Stage %1$s is full (%2$s of %3$s)', [$entry->stageName, (string)$count, (string)$max])]);
 		$event->stopPropagation();
-	}//end judge()
+	}//end refuseWhenFull()
 
 	/**
 	 * The slug a pipeline mapping uses for this item: its object type, or the
@@ -174,14 +201,14 @@ class StageLimitGuard implements IEventListener {
 	 * @return array<string, mixed> The pipeline, or empty when it cannot be read.
 	 */
 	private function pipeline(string $pipelineId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
 		try {
-			$entity = $this->objectService->find(id: $pipelineId, register: $register, schema: $schema);
+			$entity = $this->objectService->find(id: $pipelineId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning('StageLimitGuard: pipeline not readable', ['pipeline' => $pipelineId, 'exception' => $e->getMessage()]);
 			return [];
@@ -265,26 +292,24 @@ class StageLimitGuard implements IEventListener {
 	/**
 	 * Count the pipeline's items already in a stage, across its mapped types.
 	 *
-	 * @param array<string, mixed> $pipeline The pipeline.
-	 * @param string $pipelineId The pipeline uuid.
-	 * @param string $stageName The stage.
+	 * @param PipelineStageEntry $entry The pipeline, its uuid and the stage.
 	 *
 	 * @return int The count.
 	 */
-	private function countInStage(array $pipeline, string $pipelineId, string $stageName): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+	private function countInStage(PipelineStageEntry $entry): int {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$count = 0;
-		foreach ($this->mappings(pipeline: $pipeline) as $mapping) {
+		foreach ($this->mappings(pipeline: $entry->pipeline) as $mapping) {
 			$filters = $this->filtersFor(slug: $mapping['schemaSlug']);
 			if ($filters === null) {
 				continue;
 			}
 
-			$filters += ['register' => $register, 'pipeline' => $pipelineId, $mapping['columnProperty'] => $stageName];
+			$filters += ['register' => $register, 'pipeline' => $entry->pipelineId, $mapping['columnProperty'] => $entry->stageName];
 			try {
 				$count += $this->objectService->count(['filters' => $filters]);
 			} catch (Throwable $e) {
-				$this->logger->warning('StageLimitGuard: counting a stage failed', ['stage' => $stageName, 'exception' => $e->getMessage()]);
+				$this->logger->warning('StageLimitGuard: counting a stage failed', ['stage' => $entry->stageName, 'exception' => $e->getMessage()]);
 			}
 		}
 
@@ -306,7 +331,7 @@ class StageLimitGuard implements IEventListener {
 			$filters['ticketType'] = $slug;
 		}
 
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $type.'_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $type.'_schema', '');
 		if ($schema === '') {
 			return null;
 		}

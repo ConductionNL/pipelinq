@@ -29,12 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Portal\PortalAuditService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
-use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -66,9 +66,9 @@ class PortalAdminController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalTenantService $tenant The tenant service.
-	 * @param PortalAuditService $audit The audit service.
-	 * @param PortalObjectRepository $repository The portal object repository.
+	 * @param PortalTenantServiceInterface $tenant The tenant service.
+	 * @param PortalAuditServiceInterface $audit The audit service.
+	 * @param PortalObjectRepositoryInterface $repository The portal object repository.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
@@ -76,15 +76,15 @@ class PortalAdminController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private PortalTenantService $tenant,
-		private PortalAuditService $audit,
-		private PortalObjectRepository $repository,
+		private PortalTenantServiceInterface $tenant,
+		private PortalAuditServiceInterface $audit,
+		private PortalObjectRepositoryInterface $repository,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 		private PortalServiceAccount $serviceAccount,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -209,12 +209,12 @@ class PortalAdminController extends Controller {
 	 * @return string The tenant id.
 	 */
 	private function tenantId(): string {
-		$value = $this->request->getParam('tenantId', PortalTenantService::DEFAULT_TENANT);
+		$value = $this->request->getParam('tenantId', PortalTenantServiceInterface::DEFAULT_TENANT);
 		if (is_string($value) === true && trim($value) !== '') {
 			return trim($value);
 		}
 
-		return PortalTenantService::DEFAULT_TENANT;
+		return PortalTenantServiceInterface::DEFAULT_TENANT;
 	}//end tenantId()
 
 	/**

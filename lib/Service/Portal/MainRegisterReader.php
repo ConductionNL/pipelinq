@@ -28,13 +28,17 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MainRegisterReaderInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Reads objects from the main pipelinq register.
@@ -47,7 +51,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class MainRegisterReader {
+class MainRegisterReader implements MainRegisterReaderInterface {
 	use CastingPayloadToArray;
 
 	/**
@@ -76,7 +80,7 @@ class MainRegisterReader {
 	 *   audit are all unspecified
 	 */
 	public function hasSchema(string $schemaKey): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		return $register !== '' && $schema !== '';
 	}//end hasSchema()
@@ -147,7 +151,12 @@ class MainRegisterReader {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+			$object = $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -178,7 +187,7 @@ class MainRegisterReader {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -218,10 +227,10 @@ class MainRegisterReader {
 			// The register and schema stay pinned above.
 			$saved = $this->objectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -246,7 +255,7 @@ class MainRegisterReader {
 	 * @throws RuntimeException When unconfigured.
 	 */
 	private function config(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
@@ -265,7 +274,7 @@ class MainRegisterReader {
 	 */
 	private function schemaIdFor(string $schemaKey): string {
 		return $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaKey] ?? $schemaKey . '_schema'),
 			''
 		);

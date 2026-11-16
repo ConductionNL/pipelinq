@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -50,14 +50,14 @@ class SearchConsoleImportJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param SearchConsoleImportService $importer The importer.
+	 * @param SearchConsoleImportServiceInterface $importer The importer.
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private SearchConsoleImportService $importer,
+		private SearchConsoleImportServiceInterface $importer,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

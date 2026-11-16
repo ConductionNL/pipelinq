@@ -2119,7 +2119,7 @@
 		{
 			"id": "forecast-category",
 			"area": "pipeline",
-			"name": "Mark a lead as commit or best case, and say why when it slips",
+			"name": "Mark a lead as commit or best case, and say why when a large deal is committed",
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "unknown",
@@ -2150,7 +2150,43 @@
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
-			}
+			},
+			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is a separate row, forecast-slip-reason, not built."
+		},
+		{
+			"id": "forecast-slip-reason",
+			"area": "pipeline",
+			"name": "Say why when a committed or best-case deal slips out of its forecast period",
+			"pipelinq": "no",
+			"hubspot-crm": "no",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "looked in lib/Service/ForecastDealService.php validateTransition(): it checks closed-deal locks and the commit justification, nothing on a moved close date; grep -i slip over lib and src finds nothing",
+			"feature": "commercial-dashboard",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "Not built: moving a deal's expectedCloseDate past its forecast period asks for nothing and stores no reason (ForecastDealService::validateTransition() has no close-date rule; grep -i slip over lib and src: no hits). Planned in openspec/changes/forecast-slip-reason (decision 411, 13 Nov 2026).",
+				"owner": "ConductionNL/pipelinq",
+				"change": "forecast-slip-reason",
+				"plan": "openspec/changes/forecast-slip-reason",
+				"requirement": "openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\")",
+				"espocrm": "Opportunity field list in application/Espo/Modules/Crm/Resources/metadata/entityDefs/Opportunity.json has stage, probability, closeDate, leadSource but no forecast category and no slip reason; search for \"forecast\" across application/ and client/ returned nothing",
+				"pipedrive": "not checked: the forecast articles (https://support.pipedrive.com/en/article/the-forecast-view-revenue-projection, https://support.pipedrive.com/en/article/insights-reports-revenue-forecast) describe stage and deal probability only; no commit or best case category and no slip reason is named (read 2026-09-26). Note: Was no without a source. Read from the web.archive.org copy (the-forecast-view-revenue-projection 2026-08-24; insights-reports-revenue-forecast 2026-06-07) because the live knowledge base answered 429.",
+				"odoo-crm": "addons/crm/models/crm_lead.py:127 priority stars and :222 probability are the only confidence fields; searched addons/crm/models for forecast_category, best_case and commit: no field, and the lost reason (:234) applies only to lost leads, not to a slipped date."
+			},
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqLead"
+			},
+			"note": "Split from forecast-category by decision 411 (13 Nov 2026): the slip reason is specified, not built."
 		},
 		{
 			"id": "forecast-trend",

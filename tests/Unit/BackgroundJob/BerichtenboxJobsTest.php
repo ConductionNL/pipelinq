@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob;
 use OCA\Pipelinq\BackgroundJob\FallbackEmailJob;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -81,7 +82,7 @@ class BerichtenboxJobsTest extends TestCase {
 		if ($service === null) {
 			$container->method('get')->willThrowException(new RuntimeException('no service'));
 		} else {
-			$container->method('get')->with(BerichtenboxService::class)->willReturn($service);
+			$container->method('get')->with(BerichtenboxServiceInterface::class)->willReturn($service);
 		}
 
 		$job = new $class($this->createMock(ITimeFactory::class), $container, $this->recordingLogger());

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti\Adapter;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\PresenceSubscribingInterface;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
@@ -157,8 +157,8 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-1.3
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
-		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');
-		$authToken = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_access_token', '');
+		$baseUrl = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_ringcentral_api_base_url', '');
+		$authToken = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_ringcentral_access_token', '');
 		if ($baseUrl === '') {
 			return $this->platform()->refused(error: 'RingCentral API base URL not configured.');
 		}
@@ -219,8 +219,8 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function subscribeToPresence(string $userId, string $extension): void {
-		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');
-		$authToken = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_access_token', '');
+		$baseUrl = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_ringcentral_api_base_url', '');
+		$authToken = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_ringcentral_access_token', '');
 		if ($baseUrl === '' || $authToken === '') {
 			return;
 		}
@@ -269,7 +269,7 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
-		$expected = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_webhook_token', '');
+		$expected = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_ringcentral_webhook_token', '');
 		if ($expected === '' || $signature === '') {
 			return false;
 		}

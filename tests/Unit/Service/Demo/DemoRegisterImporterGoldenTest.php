@@ -38,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * Runs import() or remove() against a scripted descriptor and scripted
@@ -321,7 +322,10 @@ class DemoRegisterImporterGoldenTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register=null, $schemaId=null): bool {
+			function (ObjectDeletion $deletion): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schemaId = $deletion->target->schema;
 				$this->recordCall(call: 'deleteObject', args: ['uuid' => $uuid, 'register' => $register, 'schema' => $schemaId]);
 				if ($uuid === 'id-archived') {
 					throw new RuntimeException('SCHEMA_ARCHIVAL_IMMUTABLE: append-only');

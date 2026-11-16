@@ -147,6 +147,7 @@ describe('the visit payloads', () => {
 			status: 'open',
 			clientId: CLIENT,
 			lead: LEAD,
+			leadId: LEAD,
 		})
 		const due = new Date(task.deadline)
 		expect([due.getFullYear(), due.getMonth() + 1, due.getDate()]).toEqual([

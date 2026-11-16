@@ -124,6 +124,47 @@ export function lastRunLine(job, now = new Date(), locale = userLocale()) {
 	return detail === '' ? when : t('pipelinq', '{when} · {detail}', { when, detail })
 }
 
+/**
+ * Why a job was switched off after failing runs in a row, for under its last
+ * run. Empty while the job is on or was never switched off automatically.
+ * The count comes from the job, so the line reads in the user's language; a
+ * job without a usable count shows the reason as stored.
+ *
+ * @param {object} job The job row.
+ * @return {string} The reason, or ''.
+ * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-the-bi-export-page-shows-a-switched-off-job-and-lets-an-administrator-switch-it-back-on-req-efs-003
+ */
+export function switchedOffLine(job) {
+	const reason = typeof job?.pausedReason === 'string' ? job.pausedReason.trim() : ''
+	if (reason === '' || job.enabled === true) {
+		return ''
+	}
+	const count = Number(job.consecutiveFailures)
+	if (!Number.isInteger(count) || count < 1) {
+		return reason
+	}
+	return n('pipelinq', 'Switched off after {count} failed run in a row', 'Switched off after {count} failed runs in a row', count, { count })
+}
+
+/**
+ * The whole line under a job's last run status: what the run did, then why
+ * the job was switched off when it was.
+ *
+ * @param {object} job The job row.
+ * @param {Date} [now] The reference moment.
+ * @param {string} [locale] The locale.
+ * @return {string} The line.
+ * @spec openspec/changes/exports-switch-off-after-repeated-failure/specs/export-failure-switch-off/spec.md#requirement-the-bi-export-page-shows-a-switched-off-job-and-lets-an-administrator-switch-it-back-on-req-efs-003
+ */
+export function lastRunCell(job, now = new Date(), locale = userLocale()) {
+	const run = lastRunLine(job, now, locale)
+	const switchedOff = switchedOffLine(job)
+	if (run === '' || switchedOff === '') {
+		return run || switchedOff
+	}
+	return t('pipelinq', '{when} · {detail}', { when: run, detail: switchedOff })
+}
+
 /** The @-shortcuts as their five fields. */
 const SHORTCUTS = {
 	'@hourly': '0 * * * *',

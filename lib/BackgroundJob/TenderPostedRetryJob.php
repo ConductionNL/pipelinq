@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\PosTenderService;
+use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -58,12 +58,12 @@ class TenderPostedRetryJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param PosTenderService $service The tender service.
+	 * @param PosTenderServiceInterface $service The tender service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private PosTenderService $service,
+		private PosTenderServiceInterface $service,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

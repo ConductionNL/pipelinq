@@ -29,11 +29,16 @@ namespace OCA\Pipelinq\Service\Mdm;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MdmObjectRepositoryInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Repository helper for MDM OpenRegister objects.
@@ -50,7 +55,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
  */
-class MdmObjectRepository {
+class MdmObjectRepository implements MdmObjectRepositoryInterface {
 	/**
 	 * App-config key holding the Pipelinq register id.
 	 *
@@ -96,7 +101,7 @@ class MdmObjectRepository {
 	 * @spec openspec/changes/archive/2026-06-14-master-data-management/specs.md#REQ-MDM-001
 	 */
 	public function register(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::REGISTER_KEY, '');
 		if ($register === '') {
 			throw new RuntimeException('Pipelinq register is not configured.');
 		}
@@ -115,7 +120,7 @@ class MdmObjectRepository {
 	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function schema(string $schemaSlug): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaSlug . '_schema', '');
 		if ($schema === '') {
 			throw new RuntimeException("MDM schema '{$schemaSlug}' is not configured.");
 		}
@@ -136,8 +141,10 @@ class MdmObjectRepository {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->register(),
-				schema: $this->schema(schemaSlug: $schemaSlug)
+				options: new ObjectFindOptions(
+					register: $this->register(),
+					schema: $this->schema(schemaSlug: $schemaSlug)
+				)
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -200,10 +207,13 @@ class MdmObjectRepository {
 
 		$saved = $this->objectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $this->register(),
-			schema: $this->schema(schemaSlug: $schemaSlug),
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $this->register(),
+						schema: $this->schema(schemaSlug: $schemaSlug)
+					),
+				uuid: $uuid
+			)
 		);
 
 		return $this->toArray(object: $saved);
@@ -221,7 +231,7 @@ class MdmObjectRepository {
 	public function delete(string $schemaSlug, string $id): void {
 		// Resolve to validate the schema is configured before mutating.
 		$this->schema(schemaSlug: $schemaSlug);
-		$this->objectService()->deleteObject($id);
+		$this->objectService()->deleteObject(new ObjectDeletion(uuid: $id));
 	}//end delete()
 
 	/**

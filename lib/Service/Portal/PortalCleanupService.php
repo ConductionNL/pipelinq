@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalCleanupServiceInterface;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 
 /**
@@ -41,7 +42,7 @@ use OCA\Pipelinq\Util\NullableRowIdOf;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalCleanupService {
+class PortalCleanupService implements PortalCleanupServiceInterface {
 	use NullableRowIdOf;
 
 	/**

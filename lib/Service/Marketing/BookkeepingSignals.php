@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ShillinqInvoiceReader;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -186,9 +186,10 @@ class BookkeepingSignals {
 	 * @return array<string, mixed>
 	 */
 	private function purchasedSignals(array $invoices, array $catalogue): array {
+		$items = $this->itemsByKind(invoices: $invoices, catalogue: $catalogue);
 		return [
-			SegmentSignalService::FIELD_PRODUCTS => $this->itemsOf(invoices: $invoices, catalogue: $catalogue, wanted: 'product'),
-			SegmentSignalService::FIELD_SERVICES => $this->itemsOf(invoices: $invoices, catalogue: $catalogue, wanted: 'service'),
+			SegmentSignalService::FIELD_PRODUCTS => ($items['product'] ?? []),
+			SegmentSignalService::FIELD_SERVICES => ($items['service'] ?? []),
 		];
 	}//end purchasedSignals()
 
@@ -201,7 +202,7 @@ class BookkeepingSignals {
 	 */
 	private function revenueOf(string $customerRef): float {
 		$now = $this->time->getTime();
-		$months = max(1, $this->appConfig->getValueInt(Application::APP_ID, 'marketing.signal_window_months', self::DEFAULT_WINDOW_MONTHS));
+		$months = max(1, $this->appConfig->getValueInt(AppIdentity::APP_ID, 'marketing.signal_window_months', self::DEFAULT_WINDOW_MONTHS));
 		$from = date('Y-m-d', (int)strtotime('-' . $months . ' months', $now));
 		$to = date('Y-m-d', $now);
 
@@ -281,25 +282,30 @@ class BookkeepingSignals {
 	 *
 	 * @param array<int, array<string, mixed>> $invoices The customer's invoices.
 	 * @param array<string, string> $catalogue Lowercase product name to its kind.
-	 * @param string $wanted `product` or `service`.
 	 *
-	 * @return array<int, string> The matched catalogue names, unique and sorted.
+	 * @return array<string, array<int, string>> Per kind (`product`, `service`), the matched catalogue names, unique and sorted.
 	 */
-	private function itemsOf(array $invoices, array $catalogue, string $wanted): array {
+	private function itemsByKind(array $invoices, array $catalogue): array {
 		$found = [];
 		foreach ($invoices as $invoice) {
 			foreach ((array)($invoice['lines'] ?? []) as $line) {
 				$key = strtolower(trim((string)($line['itemName'] ?? '')));
-				if ($key !== '' && ($catalogue[$key] ?? '') === $wanted) {
-					$found[$key] = true;
+				$kind = ($catalogue[$key] ?? '');
+				if ($key !== '' && in_array($kind, ['product', 'service'], true) === true) {
+					$found[$kind][$key] = true;
 				}
 			}
 		}
 
-		$names = array_keys($found);
-		sort($names);
-		return $names;
-	}//end itemsOf()
+		$byKind = [];
+		foreach ($found as $kind => $keys) {
+			$names = array_keys($keys);
+			sort($names);
+			$byKind[$kind] = $names;
+		}
+
+		return $byKind;
+	}//end itemsByKind()
 
 	/**
 	 * Where the customer stands with the credit control.
@@ -336,7 +342,7 @@ class BookkeepingSignals {
 	 * @return float The threshold.
 	 */
 	private function threshold(string $key, float $default): float {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, $key, ''));
 		if ($raw === '' || is_numeric($raw) === false) {
 			return $default;
 		}

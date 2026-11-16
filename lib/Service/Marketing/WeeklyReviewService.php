@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\WeeklyReviewServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -45,7 +46,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
-class WeeklyReviewService {
+class WeeklyReviewService implements WeeklyReviewServiceInterface {
 
 	/**
 	 * The review schema slug.
@@ -136,7 +137,7 @@ class WeeklyReviewService {
 			'summary' => $this->summaryOf(monday: $monday, sunday: $sunday, highlights: $highlights),
 			'highlights' => $highlights,
 			'highlightDirections' => $directions,
-			'suggestions' => $this->suggestionsFor(mail: $mail, social: $social, search: $search),
+			'suggestions' => $this->suggestionsFor(numbers: ['mail' => $mail, 'social' => $social, 'search' => $search]),
 			// A competitor's headline is a better prompt than a search query,
 			// so it goes first; the queries fill the rest.
 			'topicIdeas' => array_slice(array_merge($watch['ideas'], $search['ideas']), 0, self::IDEAS),
@@ -260,13 +261,12 @@ class WeeklyReviewService {
 	/**
 	 * What to try next week.
 	 *
-	 * @param array<string, mixed> $mail Mail numbers.
-	 * @param array<string, mixed> $social Social numbers.
-	 * @param array<string, mixed> $search Search numbers.
+	 * @param array<string, array<string, mixed>> $numbers The week's mail, social and search numbers.
 	 *
 	 * @return array<int, string> The suggestions.
 	 */
-	private function suggestionsFor(array $mail, array $social, array $search): array {
+	private function suggestionsFor(array $numbers): array {
+		['mail' => $mail, 'social' => $social, 'search' => $search] = $numbers;
 		$suggestions = [];
 		if ($mail['sent'] === 0) {
 			$suggestions[] = 'No mailing went out. Send the one that is waiting in draft.';

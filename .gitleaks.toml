@@ -44,13 +44,22 @@ paths = [
 ]
 
 [[allowlists]]
-description = "Unit test fixtures: made-up passwords, a sequential example UUID, placeholder payment intent ids and fixed signing secrets that exist only inside the tests."
+description = "Unit test fixtures: made-up passwords, a sequential example UUID, a sequential minimum-length secret, placeholder payment intent ids and fixed signing secrets that exist only inside the tests."
 targetRules = ["generic-api-key"]
 paths = [
   '''(^|/)tests/Unit/Controller/PortalPasswordResetFlowTest\.php$''',
   '''(^|/)tests/Unit/Controller/PortalQuestionControllerTest\.php$''',
+  '''(^|/)tests/Unit/Portal/PortalAssertionVerifierBoundaryTest\.php$''',
   '''(^|/)tests/Unit/Portal/PortalAssertionVerifierTest\.php$''',
   '''(^|/)tests/Unit/Service/Payment/StripeAdapterTest\.php$''',
   '''(^|/)tests/Unit/Service/Portal/DocumentSigningServiceTest\.php$''',
   '''(^|/)tests/Unit/Service/SettingsServiceMatomoReferenceTest\.php$''',
 ]
+
+[[allowlists]]
+description = "MFA unit test: the published RFC 6238 SHA-1 test secret (\"12345678901234567890\" in base32), the input the TOTP test vectors require."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ$''']
+paths = ['''(^|/)tests/Unit/Service/Portal/PortalMfaServiceTest\.php$''']

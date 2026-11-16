@@ -24,10 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ContactSyncService;
-use OCA\Pipelinq\Service\ContactSyncSettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,21 +45,21 @@ class ContactSyncController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContactSyncService $contactSyncService The contact sync service.
-	 * @param ContactSyncSettingsService $syncSettings The user's write-back switch.
+	 * @param ContactSyncServiceInterface $contactSyncService The contact sync service.
+	 * @param ContactSyncSettingsServiceInterface $syncSettings The user's write-back switch.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ContactSyncService $contactSyncService,
-		private ContactSyncSettingsService $syncSettings,
+		private ContactSyncServiceInterface $contactSyncService,
+		private ContactSyncSettingsServiceInterface $syncSettings,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

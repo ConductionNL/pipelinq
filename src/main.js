@@ -43,6 +43,7 @@ import pinia from './pinia.js'
 import registry from './registry.js'
 import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
 import { loadPersistedOverrides } from './services/persistedOverrides.js'
+import { oldArticleTarget, portaliqEnabled } from './services/portaliqArticles.js'
 import { contactWriteBackPlugin } from './store/plugins/contactWriteBack.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
 import { translateIndexPageLabels } from './utils/indexPageLabels.js'
@@ -213,6 +214,24 @@ seedMenuRuntime(
 )
 
 /**
+ * Send an old pipelinq article address to the article in portaliq.
+ *
+ * A full page load, since portaliq is another app; without portaliq the
+ * visitor stays on pipelinq's dashboard.
+ *
+ * @param {object} to The route entered.
+ * @return {string} Where pipelinq's own router goes meanwhile.
+ * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#scenario-an-old-article-link-opens-the-article-in-portaliq
+ */
+function redirectOldArticle(to) {
+	const target = oldArticleTarget(to, portaliqEnabled())
+	if (target !== null) {
+		window.location.assign(target)
+	}
+	return '/'
+}
+
+/**
  * Build the vue-router config from the manifest. Each manifest page
  * becomes one route; the route's `name` IS `page.id` (per the lib's
  * manifest contract). Routes whose path declares a `:` parameter pass
@@ -252,6 +271,10 @@ function routesFromManifest(manifest) {
 	// The cash register audit log moved from /kassakoppeling/audit; old links still land.
 	routes.push({ path: '/kassakoppeling/audit', redirect: '/cash-register-audit' })
 	routes.push({ path: '/kassakoppeling/audit/:id', redirect: (to) => `/cash-register-audit/${encodeURIComponent(to.params.id)}` })
+	// Marketing articles moved to portaliq (marketing-articles-move-to-portaliq):
+	// an old article address opens the article there when portaliq is enabled,
+	// and the dashboard otherwise.
+	routes.push({ path: '/articles/:id?', redirect: (to) => redirectOldArticle(to) })
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —

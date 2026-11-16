@@ -29,9 +29,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCA\Pipelinq\Service\Portal\PortalException;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,15 +51,15 @@ abstract class PortalApiController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal auth/tenant guard.
+	 * @param PortalRequestGuardInterface $guard The portal auth/tenant guard.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		protected PortalRequestGuard $guard,
+		protected PortalRequestGuardInterface $guard,
 		protected LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

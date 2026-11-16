@@ -259,7 +259,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .cti-disposition {
 	display: flex;
 	flex-direction: column;
@@ -301,10 +303,7 @@ export default {
 }
 
 .cti-disposition__hint {
-	margin: 0;
-	font-size: 13px;
-	line-height: normal;
-	color: var(--color-text-maxcontrast);
+	@include muted-hint;
 }
 
 .cti-disposition__facts {

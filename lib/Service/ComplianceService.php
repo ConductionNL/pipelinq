@@ -30,14 +30,23 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
 use OCA\Pipelinq\Service\Consent\ConsentWithdrawal;
-use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
-use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\Consent\SegmentConsentRun;
 use OCA\Pipelinq\Service\Consent\SendPermitRequest;
+use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
+use OCA\Pipelinq\Util\ObjectServiceTarget;
+use OCA\Pipelinq\Service\Support\PageCount;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,8 +71,13 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
  */
-class ComplianceService {
+class ComplianceService implements ComplianceServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use PageCount;
+	use ObjectServiceTarget;
 
 	/**
 	 * Default register slug — matches SegmentService and the chain-root
@@ -101,7 +115,7 @@ class ComplianceService {
 	 * The token every compliant email body must embed (the renderer
 	 * substitutes the unsubscribe URL on send).
 	 */
-	private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
+	private const UNSUBSCRIBE_TOKEN = '{{'.'unsubscribe_link}}';
 
 	/**
 	 * Lawful-basis values that DO satisfy marketing consent gating.
@@ -124,13 +138,6 @@ class ComplianceService {
 	 * @var string
 	 */
 	public const LAWFUL_BASIS_SOFT_OPT_IN = 'soft-opt-in';
-
-	/**
-	 * A send that promotes something. Suppression applies.
-	 *
-	 * @var string
-	 */
-	public const INTENT_PROMOTIONAL = 'promotional';
 
 	/**
 	 * A send the contact needs whatever their invoices say.
@@ -305,7 +312,7 @@ class ComplianceService {
 			return false;
 		}
 
-		if ($this->appConfig->getValueBool(Application::APP_ID, 'marketing.suppress_late_payers', true) === false) {
+		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, 'marketing.suppress_late_payers', true) === false) {
 			return false;
 		}
 
@@ -323,7 +330,7 @@ class ComplianceService {
 	 * @return array<int, string> The configured states, or the default pair.
 	 */
 	private function suppressingStates(): array {
-		$raw = trim($this->appConfig->getValueString(Application::APP_ID, 'marketing.suppression_states', ''));
+		$raw = trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'marketing.suppression_states', ''));
 		if ($raw === '') {
 			return SegmentSignalService::SUPPRESSING_DUNNING_STATES;
 		}
@@ -635,6 +642,24 @@ class ComplianceService {
 		}
 
 		$lawfulBasis = strtolower(trim((string)($record['lawfulBasis'] ?? '')));
+		if ($this->lawfulBasisPermitsSend(lawfulBasis: $lawfulBasis, record: $record, contactId: $contactId, channel: $channel) === false) {
+			return false;
+		}
+
+		return $this->isWithdrawnRecord(record: $record) === false;
+	}//end recordPermitsSend()
+
+	/**
+	 * Whether the record's lawful basis authorises a marketing send (blocks are logged).
+	 *
+	 * @param string $lawfulBasis The normalised lawful basis.
+	 * @param array<string, mixed> $record The consent record.
+	 * @param string $contactId The contact id.
+	 * @param string $channel The channel.
+	 *
+	 * @return bool True when the basis permits the send.
+	 */
+	private function lawfulBasisPermitsSend(string $lawfulBasis, array $record, string $contactId, string $channel): bool {
 		if ($lawfulBasis === '') {
 			return false;
 		}
@@ -655,6 +680,20 @@ class ComplianceService {
 			return false;
 		}
 
+		return $this->softOptInSatisfied(lawfulBasis: $lawfulBasis, record: $record, contactId: $contactId, channel: $channel);
+	}//end lawfulBasisPermitsSend()
+
+	/**
+	 * Whether a soft opt-in has the objection recorded (always true for other bases; a block is logged).
+	 *
+	 * @param string $lawfulBasis The normalised lawful basis.
+	 * @param array<string, mixed> $record The consent record.
+	 * @param string $contactId The contact id.
+	 * @param string $channel The channel.
+	 *
+	 * @return bool True unless a soft opt-in lacks the recorded objection.
+	 */
+	private function softOptInSatisfied(string $lawfulBasis, array $record, string $contactId, string $channel): bool {
 		if ($lawfulBasis === self::LAWFUL_BASIS_SOFT_OPT_IN && $this->objectionWasOffered(record: $record) === false) {
 			// A soft opt-in stands on the objection having been offered.
 			// Without that recorded there is nothing to show a regulator,
@@ -666,13 +705,8 @@ class ComplianceService {
 			return false;
 		}
 
-		$withdrawnAt = ($record['withdrawnAt'] ?? null);
-		if (is_string($withdrawnAt) === true && trim($withdrawnAt) !== '') {
-			return false;
-		}
-
 		return true;
-	}//end recordPermitsSend()
+	}//end softOptInSatisfied()
 
 	/**
 	 * Whether a record's evidence states that an objection was offered.
@@ -724,26 +758,54 @@ class ComplianceService {
 			return;
 		}
 
-		if ($this->integriq->isActive() === true
-			&& $this->integriq->recordListConsent(
-				contactId: $contactId,
-				listId: $listId,
-				channel: $channel,
-				lawfulBasis: $lawfulBasis,
-				source: $consentSource,
-				evidence: $evidence
-			) === true
-		) {
+		$key = new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId);
+		if ($this->integriqRecordedListConsent(key: $key, lawfulBasis: $lawfulBasis, consentSource: $consentSource, evidence: $evidence) === true) {
 			// Integriq holds it now; pipelinq writes no consentRecord.
 			return;
 		}
 
+		$this->storeListConsent(key: $key, lawfulBasis: $lawfulBasis, consentSource: $consentSource, evidence: $evidence);
+	}//end recordListConsent()
+
+	/**
+	 * Hand the list consent to integriq when it is active; true when integriq took it.
+	 *
+	 * @param ConsentRecordKey $key The contact, channel and list.
+	 * @param string $lawfulBasis The lawful basis.
+	 * @param string $consentSource The consent source.
+	 * @param array<string, mixed> $evidence The consent evidence.
+	 *
+	 * @return bool True when integriq recorded the consent.
+	 */
+	private function integriqRecordedListConsent(ConsentRecordKey $key, string $lawfulBasis, string $consentSource, array $evidence): bool {
+		return $this->integriq->isActive() === true
+			&& $this->integriq->recordListConsent(
+				contactId: $key->contactId,
+				listId: (string)$key->listId,
+				channel: $key->channel,
+				lawfulBasis: $lawfulBasis,
+				source: $consentSource,
+				evidence: $evidence
+			) === true;
+	}//end integriqRecordedListConsent()
+
+	/**
+	 * Create or reopen the pipelinq consentRecord for a list.
+	 *
+	 * @param ConsentRecordKey $key The contact, channel and list.
+	 * @param string $lawfulBasis The lawful basis.
+	 * @param string $consentSource The consent source.
+	 * @param array<string, mixed> $evidence The consent evidence.
+	 *
+	 * @return void
+	 */
+	private function storeListConsent(ConsentRecordKey $key, string $lawfulBasis, string $consentSource, array $evidence): void {
 		$now = gmdate('Y-m-d\TH:i:s\Z');
-		$record = $this->findConsentRecord(key: new ConsentRecordKey(contactId: $contactId, channel: $channel, listId: $listId));
+		$record = $this->findConsentRecord(key: $key);
 		$payload = ($record ?? ['softBounceCount' => 0]);
-		$payload['contactId'] = $contactId;
-		$payload['channel'] = $channel;
-		$payload['listId'] = $listId;
+		$payload['contactId'] = $key->contactId;
+		$payload['channel'] = $key->channel;
+		$payload['listId'] = $key->listId;
 		$payload['lawfulBasis'] = $lawfulBasis;
 		$payload['consentSource'] = $consentSource;
 		$payload['consentedAt'] = $now;
@@ -755,13 +817,25 @@ class ComplianceService {
 		// and the write is lost.
 		unset($payload['withdrawnAt'], $payload['withdrawnReason']);
 
+		$this->persistReopenedConsent(payload: $payload, record: $record);
+	}//end storeListConsent()
+
+	/**
+	 * Persist a list consent, updating the existing record when there is one.
+	 *
+	 * @param array<string, mixed> $payload The consent payload.
+	 * @param array<string, mixed>|null $record The existing record, if any.
+	 *
+	 * @return void
+	 */
+	private function persistReopenedConsent(array $payload, array|null $record): void {
 		if ($record === null) {
 			$this->persistConsentObject(payload: $payload, id: null);
 			return;
 		}
 
 		$this->persistConsentObject(payload: $payload, id: $this->extractObjectId(payload: $record));
-	}//end recordListConsent()
+	}//end persistReopenedConsent()
 
 	/**
 	 * Validate a CampaignTemplate payload against the channel's rules.
@@ -846,25 +920,6 @@ class ComplianceService {
 	}//end listTemplates()
 
 	/**
-	 * Compute the page-count from a total + page-size pair.
-	 *
-	 * Centralised so the inline ternary stays out of the envelope
-	 * builders (matches the team's "no inline IF" coding style).
-	 *
-	 * @param int $total Total row count.
-	 * @param int $limit Page size.
-	 *
-	 * @return int Page count (0 when total is 0).
-	 */
-	private function computePages(int $total, int $limit): int {
-		if ($total <= 0 || $limit <= 0) {
-			return 0;
-		}
-
-		return (int)ceil($total / $limit);
-	}//end computePages()
-
-	/**
 	 * Fetch one CampaignTemplate by id.
 	 *
 	 * @param string $templateId Template UUID or slug.
@@ -878,6 +933,20 @@ class ComplianceService {
 			return null;
 		}
 
+		$store = $this->templateStore();
+		if ($store === null) {
+			return null;
+		}
+
+		return $this->findTemplate(templateId: $templateId, store: $store);
+	}//end getTemplateById()
+
+	/**
+	 * The ObjectService, register slug and campaign template schema slug, or null when any is missing.
+	 *
+	 * @return array{0: object, 1: string, 2: string}|null The template store.
+	 */
+	private function templateStore(): array|null {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getCampaignTemplateSchemaSlug();
 		$objectService = $this->getObjectService();
@@ -885,8 +954,21 @@ class ComplianceService {
 			return null;
 		}
 
+		return [$objectService, $register, $schema];
+	}//end templateStore()
+
+	/**
+	 * Find one campaign template as an array; null (logged) when it is not found.
+	 *
+	 * @param string $templateId The template id.
+	 * @param array{0: object, 1: string, 2: string} $store The ObjectService, register and schema.
+	 *
+	 * @return array<string, mixed>|null The template.
+	 */
+	private function findTemplate(string $templateId, array $store): array|null {
+		[$objectService, $register, $schema] = $store;
 		try {
-			$entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $templateId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ComplianceService.getTemplateById: not found',
@@ -900,7 +982,7 @@ class ComplianceService {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end getTemplateById()
+	}//end findTemplate()
 
 	/**
 	 * Create a CampaignTemplate after compliance validation.
@@ -984,8 +1066,33 @@ class ComplianceService {
 			return ['error' => 'Template not found'];
 		}
 
+		$payload = $this->applyTemplatePatch(payload: $existing, patch: $patch);
+
+		$channel = strtolower((string)($existing['channel'] ?? 'email'));
+		$error = $this->validateTemplate(templateData: $payload, channel: $channel);
+		if ($error !== null) {
+			return ['error' => $error];
+		}
+
+		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+		$saved = $this->saveTemplateObject(payload: $payload, id: $this->extractId(payload: $existing));
+		if ($saved === null) {
+			return ['error' => 'Could not update template'];
+		}
+
+		return ['template' => $saved];
+	}//end patchTemplate()
+
+	/**
+	 * Overlay the editable string fields, article ids and stored block fields of a patch.
+	 *
+	 * @param array<string, mixed> $payload The existing template.
+	 * @param array<string, mixed> $patch The patch.
+	 *
+	 * @return array<string, mixed> The patched template.
+	 */
+	private function applyTemplatePatch(array $payload, array $patch): array {
 		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'replyTo', 'footerOverride'];
-		$payload = $existing;
 		foreach ($editable as $field) {
 			if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {
 				$payload[$field] = $patch[$field];
@@ -996,22 +1103,8 @@ class ComplianceService {
 			$payload['articleIds'] = $this->normaliseArticleIds(value: $patch['articleIds']);
 		}
 
-		$payload = array_merge($payload, (new MailBlockRenderer())->storedFields(input: $patch));
-
-		$channel = strtolower((string)($existing['channel'] ?? 'email'));
-		$error = $this->validateTemplate(templateData: $payload, channel: $channel);
-		if ($error !== null) {
-			return ['error' => $error];
-		}
-
-		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$saved = $this->saveTemplateObject(payload: $payload, id: $this->extractTemplateId(payload: $existing));
-		if ($saved === null) {
-			return ['error' => 'Could not update template'];
-		}
-
-		return ['template' => $saved];
-	}//end patchTemplate()
+		return array_merge($payload, (new MailBlockRenderer())->storedFields(input: $patch));
+	}//end applyTemplatePatch()
 
 	/**
 	 * Normalise the embedded-article list to plain, non-empty strings.
@@ -1052,26 +1145,37 @@ class ComplianceService {
 	 * @return array<int, array<string, mixed>> Plain payloads.
 	 */
 	private function loadTemplatesRaw(): array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getCampaignTemplateSchemaSlug();
-		$objectService = $this->getObjectService();
-		if ($register === '' || $schema === '' || $objectService === null) {
+		$store = $this->templateStore();
+		if ($store === null) {
 			return [];
 		}
 
+		$rows = $this->findTemplateRows(objectService: $store[0], register: $store[1], schema: $store[2]);
+
+		$out = [];
+		foreach ($rows as $row) {
+			$out[] = $this->toArray(value: $row);
+		}
+
+		return $out;
+	}//end loadTemplatesRaw()
+
+	/**
+	 * Read the campaign template rows; none (logged) when the read fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $register The register slug.
+	 * @param string $schema The campaign template schema slug.
+	 *
+	 * @return iterable<mixed> The rows.
+	 */
+	private function findTemplateRows(object $objectService, string $register, string $schema): iterable {
 		try {
 			// OpenRegister's ObjectService::findAll() takes a single $config array;
 			// register/schema travel INSIDE $config['filters'] (see prepareFindAllConfig()).
 			// The old findAll(register:, schema:, filters:) named-argument form no longer
 			// exists and threw "Unknown named parameter $register" at runtime.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$rows = $objectService->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ComplianceService.loadTemplatesRaw: findAll failed',
@@ -1080,13 +1184,8 @@ class ComplianceService {
 			return [];
 		}
 
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
-	}//end loadTemplatesRaw()
+		return ($rows ?? []);
+	}//end findTemplateRows()
 
 	/**
 	 * Persist a CampaignTemplate via ObjectService.
@@ -1107,9 +1206,10 @@ class ComplianceService {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1123,40 +1223,12 @@ class ComplianceService {
 	}//end saveTemplateObject()
 
 	/**
-	 * Extract a template's id from a payload (uuid > id > slug).
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty string.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback lookup (uuid > id > slug); extraction adds no clarity.
-	 */
-	private function extractTemplateId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractTemplateId()
-
-	/**
 	 * Resolve the CampaignTemplate schema slug from app config.
 	 *
 	 * @return string Schema slug.
 	 */
 	private function getCampaignTemplateSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'campaignTemplate_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1391,42 +1463,45 @@ class ComplianceService {
 			return;
 		}
 
+		$this->writeConsentObject(payload: $payload, id: $id, register: $register, schema: $schema);
+	}//end persistConsentObject()
+
+	/**
+	 * Update (with an id) or create the consent object, logging a failed write.
+	 *
+	 * Update and create stay two different calls, as they were before
+	 * mailing lists existed. `saveObject(uuid:)` would serve both, but
+	 * swapping the update path onto it changes which OpenRegister code
+	 * path a withdrawal takes, and a consent withdrawal is not the place
+	 * to find out what else that changed.
+	 *
+	 * @param array<string, mixed> $payload The consent payload.
+	 * @param string|null $id The existing object id, or null to create.
+	 * @param string $register The register slug.
+	 * @param string $schema The consentRecord schema slug.
+	 *
+	 * @return void
+	 */
+	private function writeConsentObject(array $payload, string|null $id, string $register, string $schema): void {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return;
 		}
 
-		// Update and create stay two different calls, as they were before
-		// mailing lists existed. `saveObject(uuid:)` would serve both, but
-		// swapping the update path onto it changes which OpenRegister code
-		// path a withdrawal takes, and a consent withdrawal is not the place
-		// to find out what else that changed.
 		try {
 			if ($id !== null && $id !== '') {
-				$objectService->updateObject(
-					id: $id,
-					object: $payload,
-					register: $register,
-					schema: $schema,
-				);
+				$objectService->updateObject(id: $id, object: $payload, register: $register, schema: $schema);
 				return;
 			}
 
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ComplianceService.persistConsentObject: write failed',
-				[
-					'id' => $id,
-					'exception' => $e->getMessage(),
-				]
-			);
+			$this->logger->warning('ComplianceService.persistConsentObject: write failed', ['id' => $id, 'exception' => $e->getMessage()]);
 		}//end try
-	}//end persistConsentObject()
+	}//end writeConsentObject()
 
 	/**
 	 * Write a synthetic ConsentRecord at withdrawal time when none existed.
@@ -1482,9 +1557,6 @@ class ComplianceService {
 	 * @param string|null $sourceBlastId Blast UUID for audit context.
 	 *
 	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over queued rows; extraction adds no clarity.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses over queued rows; extraction adds no clarity.
 	 */
 	private function transitionQueuedDeliveries(string $contactId, ?string $sourceBlastId): void {
 		$register = $this->getRegisterSlug();
@@ -1498,6 +1570,30 @@ class ComplianceService {
 			return;
 		}
 
+		$deliveries = new BlastDeliveryCollection(objectService: $objectService, register: $register, schema: $schema);
+		$rows = $this->findContactDeliveries(deliveries: $deliveries, contactId: $contactId);
+		foreach ($rows as $row) {
+			$array = $this->toArray(value: $row);
+			if ($this->isTransitionable(delivery: $array, sourceBlastId: $sourceBlastId) === false) {
+				continue;
+			}
+
+			$this->markUnsubscribedBeforeSend(deliveries: $deliveries, delivery: $array);
+		}
+	}//end transitionQueuedDeliveries()
+
+	/**
+	 * Every BlastDelivery row of a contact, or none when the lookup fails.
+	 *
+	 * @param BlastDeliveryCollection $deliveries The BlastDelivery collection.
+	 * @param string                  $contactId  Contact UUID / slug.
+	 *
+	 * @return mixed The rows (a list from OpenRegister), or an empty array on failure.
+	 */
+	private function findContactDeliveries(BlastDeliveryCollection $deliveries, string $contactId): mixed {
+		$objectService = $deliveries->objectService;
+		$register = $deliveries->register;
+		$schema = $deliveries->schema;
 		try {
 			$rows = $objectService->findAll(
 				config: [
@@ -1516,55 +1612,81 @@ class ComplianceService {
 					'exception' => $e->getMessage(),
 				]
 			);
+			return [];
+		}
+
+		return ($rows ?? []);
+	}//end findContactDeliveries()
+
+	/**
+	 * Whether a delivery is still queued and, when a sourcing blast is
+	 * pinned, does not belong to a different blast.
+	 *
+	 * @param array<string, mixed> $delivery      The delivery payload.
+	 * @param string|null          $sourceBlastId Blast UUID that triggered the withdrawal.
+	 *
+	 * @return bool True when the delivery should move to unsubscribed-before-send.
+	 */
+	private function isTransitionable(array $delivery, ?string $sourceBlastId): bool {
+		if ($delivery === []) {
+			return false;
+		}
+
+		$status = strtolower((string)($delivery['status'] ?? ''));
+		if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
+			return false;
+		}
+
+		if ($sourceBlastId !== null && $sourceBlastId !== '') {
+			$rowBlast = (string)($delivery['blastId'] ?? '');
+			if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
+				// Sourcing blast pinned and delivery belongs to a
+				// different blast — leave it alone.
+				return false;
+			}
+		}
+
+		return true;
+	}//end isTransitionable()
+
+	/**
+	 * Move one delivery to unsubscribed-before-send; a delivery without an
+	 * id is left alone and a failed write is logged.
+	 *
+	 * @param BlastDeliveryCollection $deliveries The BlastDelivery collection.
+	 * @param array<string, mixed>    $delivery   The delivery payload.
+	 *
+	 * @return void
+	 */
+	private function markUnsubscribedBeforeSend(BlastDeliveryCollection $deliveries, array $delivery): void {
+		$id = $this->extractObjectId(payload: $delivery);
+		if ($id === '') {
 			return;
 		}
 
-		foreach (($rows ?? []) as $row) {
-			$array = $this->toArray(value: $row);
-			if ($array === []) {
-				continue;
-			}
+		$objectService = $deliveries->objectService;
+		$register = $deliveries->register;
+		$schema = $deliveries->schema;
+		$delivery['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
+		$delivery['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
 
-			$status = strtolower((string)($array['status'] ?? ''));
-			if (in_array($status, self::QUEUED_DELIVERY_STATUSES, true) === false) {
-				continue;
-			}
-
-			if ($sourceBlastId !== null && $sourceBlastId !== '') {
-				$rowBlast = (string)($array['blastId'] ?? '');
-				if ($rowBlast !== '' && $rowBlast !== $sourceBlastId) {
-					// Sourcing blast pinned and delivery belongs to a
-					// different blast — leave it alone.
-					continue;
-				}
-			}
-
-			$id = $this->extractObjectId(payload: $array);
-			if ($id === '') {
-				continue;
-			}
-
-			$array['status'] = self::STATUS_UNSUBSCRIBED_BEFORE_SEND;
-			$array['unsubscribedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-
-			try {
-				$objectService->updateObject(
-					id: $id,
-					object: $array,
-					register: $register,
-					schema: $schema,
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'ComplianceService.transitionQueuedDeliveries: updateObject failed',
-					[
-						'id' => $id,
-						'exception' => $e->getMessage(),
-					]
-				);
-			}
-		}//end foreach
-	}//end transitionQueuedDeliveries()
+		try {
+			$objectService->updateObject(
+				id: $id,
+				object: $delivery,
+				register: $register,
+				schema: $schema,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ComplianceService.transitionQueuedDeliveries: updateObject failed',
+				[
+					'id' => $id,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}
+	}//end markUnsubscribedBeforeSend()
 
 	/**
 	 * Look up a ConsentRecord by (contactId, channel, list scope).
@@ -1603,16 +1725,12 @@ class ComplianceService {
 	 * @return iterable<mixed> The candidate rows.
 	 */
 	private function consentRecordCandidates(ConsentRecordKey $key): iterable {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getConsentRecordSchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $this->getRegisterSlug(), schema: $this->getConsentRecordSchemaSlug());
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
 		return $this->queryConsentRows(objectService: $objectService, filters: $key->filters(register: $register, schema: $schema));
 	}//end consentRecordCandidates()
@@ -1656,26 +1774,12 @@ class ComplianceService {
 	}//end logConsentLookupFailure()
 
 	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Register slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
 	 * Resolve the ConsentRecord schema slug from app config.
 	 *
 	 * @return string Schema slug.
 	 */
 	private function getConsentRecordSchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'consent_record_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'consent_record_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
@@ -1689,31 +1793,13 @@ class ComplianceService {
 	 * @return string Schema slug.
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blast_delivery_schema', '');
+		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_delivery_schema', '');
 		if ($slug !== '') {
 			return $slug;
 		}
 
 		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
 	}//end getBlastDeliverySchemaSlug()
-
-	/**
-	 * Resolve OpenRegister's ObjectService lazily.
-	 *
-	 * @return object|null ObjectService, or null when OpenRegister is
-	 *                     not loaded.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ComplianceService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Extract the canonical id from an OpenRegister entity payload.

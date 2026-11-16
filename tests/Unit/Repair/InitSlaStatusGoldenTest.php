@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Runs the repair step over configured and unconfigured surfaces, paged
@@ -320,7 +321,11 @@ trait InitSlaStatusFakeStore {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject(array $object, array $extend = [], ?string $register = null, ?string $schema = null, ?string $uuid = null): array {
+	public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->test->trace[] = ['saveObject' => [$object, $extend, $register, $schema, $uuid]];
 		if (($this->case['saveFails'] ?? false) === true) {
 			throw new RuntimeException('locked');

@@ -36,8 +36,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\Service\SurveyDispatchService;
-use OCA\Pipelinq\Service\SurveyInvitationSender;
+use OCA\Pipelinq\Kernel\Contracts\SurveyDispatchServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SurveyInvitationSenderInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -60,14 +60,14 @@ class SurveyInvitationDispatchJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param SurveyDispatchService $dispatchService Reads and writes invitations.
-	 * @param SurveyInvitationSender $sender Hands an invitation to its channel.
+	 * @param SurveyDispatchServiceInterface $dispatchService Reads and writes invitations.
+	 * @param SurveyInvitationSenderInterface $sender Hands an invitation to its channel.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SurveyDispatchService $dispatchService,
-		private readonly SurveyInvitationSender $sender,
+		private readonly SurveyDispatchServiceInterface $dispatchService,
+		private readonly SurveyInvitationSenderInterface $sender,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

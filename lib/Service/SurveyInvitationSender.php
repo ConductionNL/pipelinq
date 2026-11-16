@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\SurveyInvitationSenderInterface;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
@@ -44,7 +45,7 @@ use Throwable;
  *
  * @spec openspec/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
-class SurveyInvitationSender {
+class SurveyInvitationSender implements SurveyInvitationSenderInterface {
 	/**
 	 * Constructor.
 	 *

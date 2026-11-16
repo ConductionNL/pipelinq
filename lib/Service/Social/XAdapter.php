@@ -37,6 +37,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Service\Social\Support\PostMetricsCall;
+
 /**
  * X, with a price per post.
  *
@@ -48,6 +50,8 @@ namespace OCA\Pipelinq\Service\Social;
  *  off without splitting the interface.
  */
 class XAdapter extends AbstractSocialAdapter {
+	use PostMetricsCall;
+
 	/**
 	 * The budget provider id every X spend is charged against. It is the
 	 * broker provider name rather than a `channelProvider` UUID, because for
@@ -211,14 +215,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *  its own id.
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {
-		if (trim($externalId) === '') {
-			return null;
-		}
-
-		return new SocialAdapterCall(
-			method: 'GET',
-			path: '/2/tweets/' . rawurlencode($externalId) . '?tweet.fields=public_metrics',
-		);
+		return $this->postMetricsGet(externalId: $externalId, path: '/2/tweets/' . rawurlencode($externalId) . '?tweet.fields=public_metrics');
 	}//end metricsCall()
 
 	/**

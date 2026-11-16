@@ -28,9 +28,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Exception\NotAuthorizedException;
-use OCA\Pipelinq\AppInfo\Application;
 use DateTime;
+use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Service\Support\SerialisedCast;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -43,7 +46,8 @@ use Throwable;
  *
  * @spec openspec/specs/client-detail/spec.md#requirement-the-client-page-says-what-the-client-does-business-on
  */
-class ClientBusinessReader {
+class ClientBusinessReader implements ClientBusinessReaderInterface {
+	use SerialisedCast;
 
 	private const OBJECT_SERVICE = 'OCA\OpenRegister\Service\ObjectService';
 
@@ -84,24 +88,23 @@ class ClientBusinessReader {
 			return $client;
 		}
 
-		$register  = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register  = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$person    = (($client['type'] ?? '') === 'person');
 		$leads     = $this->rows(
-			register: $register,
-			schema: $this->schema(key: 'lead_schema', default: 'lead'),
+			location: new RegisterSchema(register: $register, schema: $this->schema(key: 'lead_schema', default: 'lead')),
 			filters: ['client' => $clientId, 'status' => 'open']
 		);
 		$contracts = $this->rows(
-			register: $register,
-			schema: $this->schema(key: 'contract_schema', default: 'salesContract'),
+			location: new RegisterSchema(register: $register, schema: $this->schema(key: 'contract_schema', default: 'salesContract')),
 			filters: ['clientRef' => $clientId]
 		);
+		$projects  = $this->rows(location: new RegisterSchema(register: 'planninq', schema: 'project'), filters: ['client' => $clientId]);
 
 		return [
 			'status'        => 200,
 			'leadsLine'     => $this->leadsLine(leads: $leads),
 			'contractsLine' => $this->contractsLine(contracts: $contracts),
-			'projectsLine'  => $this->projectsLine(projects: $this->rows(register: 'planninq', schema: 'project', filters: ['client' => $clientId])),
+			'projectsLine'  => $this->projectsLine(projects: $projects),
 			'invoicesLine'  => $this->invoicesLine(customerRef: (string)($client['shillinqOrganisationRef'] ?? ''), person: $person),
 			'shillinqUrl'   => $this->shillinqUrl(),
 		];
@@ -264,7 +267,7 @@ class ClientBusinessReader {
 	 * @return string The schema.
 	 */
 	private function schema(string $key, string $default): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($schema === '') {
 			return $default;
 		}
@@ -275,23 +278,25 @@ class ClientBusinessReader {
 	/**
 	 * The rows of a schema that match the filters, as the reader may see them.
 	 *
-	 * @param string               $register The register.
-	 * @param string               $schema   The schema.
+	 * @param RegisterSchema       $location The register and schema.
 	 * @param array<string, mixed> $filters  The filters.
 	 *
 	 * @return array<int, array<string, mixed>> The rows; [] when the read fails.
 	 */
-	private function rows(string $register, string $schema, array $filters): array {
-		if ($register === '') {
+	private function rows(RegisterSchema $location, array $filters): array {
+		if ($location->register === '') {
 			return [];
 		}
 
 		try {
 			$found = $this->container->get(self::OBJECT_SERVICE)->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters), 'limit' => 50]
+				config: [
+					'filters' => array_merge(['register' => $location->register, 'schema' => $location->schema], $filters),
+					'limit' => 50,
+				]
 			);
 		} catch (Throwable $e) {
-			$this->logger->info('ClientBusinessReader: no rows', ['schema' => $schema, 'exception' => $e->getMessage()]);
+			$this->logger->info('ClientBusinessReader: no rows', ['schema' => $location->schema, 'exception' => $e->getMessage()]);
 			return [];
 		}
 
@@ -306,19 +311,28 @@ class ClientBusinessReader {
 	 * @return array<string, mixed> The client, or `status` and `message`.
 	 */
 	private function client(string $clientId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($clientId === '' || $register === '' || $schema === '') {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
+		return $this->readClient(clientId: $clientId, location: new RegisterSchema(register: $register, schema: $schema));
+	}//end client()
+
+	/**
+	 * Read the client under the caller's access, or the refusal.
+	 *
+	 * @param string         $clientId The client UUID.
+	 * @param RegisterSchema $location The register and client schema ids.
+	 *
+	 * @return array<string, mixed> The client, or `status` and `message`.
+	 */
+	private function readClient(string $clientId, RegisterSchema $location): array {
 		try {
 			$object = $this->container->get(self::OBJECT_SERVICE)->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
-				_rbac: true,
-				_multitenancy: true,
+				options: new ObjectFindOptions(register: $location->register, schema: $location->schema)
 			);
 		} catch (NotAuthorizedException $e) {
 			return ['status' => 403, 'message' => 'Forbidden'];
@@ -332,20 +346,5 @@ class ClientBusinessReader {
 		}
 
 		return $this->asArray(object: $object);
-	}//end client()
-
-	/**
-	 * An object as an array.
-	 *
-	 * @param mixed $object The object.
-	 *
-	 * @return array<string, mixed> The array.
-	 */
-	private function asArray(mixed $object): array {
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return (array)$object->jsonSerialize();
-		}
-
-		return (array)$object;
-	}//end asArray()
+	}//end readClient()
 }//end class

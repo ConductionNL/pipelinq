@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
+use OCA\Pipelinq\Service\Payment\Support\PspReplies;
 
 /**
  * Adyen payment adapter.
@@ -36,6 +37,8 @@ namespace OCA\Pipelinq\Service\Payment;
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
 class AdyenAdapter extends AbstractPaymentAdapter {
+	use PspReplies;
+
 	/**
 	 * Adyen Checkout API base (live).
 	 *
@@ -98,7 +101,21 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 			return $this->failedInitiate(message: 'Adyen API key or merchantAccount not configured');
 		}
 
-		$payment = new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount));
+		return $this->submitPayment(
+			payment: new PspPayment(transactionData: $transactionData, cents: $this->toCents(amount: $amount)),
+			paymentMethod: $paymentMethod
+		);
+	}//end initiate()
+
+	/**
+	 * Send a payment to Adyen's /payments; an amount of zero or less is refused first.
+	 *
+	 * @param PspPayment $payment       The payment.
+	 * @param string     $paymentMethod The method (card).
+	 *
+	 * @return array{sessionId: string, redirectUrl: string|null, status: string, error?: string}
+	 */
+	private function submitPayment(PspPayment $payment, string $paymentMethod): array {
 		if ($payment->cents <= 0) {
 			return $this->failedInitiate(message: 'Invalid amount');
 		}
@@ -111,7 +128,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 		}
 
 		return $this->pending(sessionId: (string)($response['body']['pspReference'] ?? ''), redirectUrl: null);
-	}//end initiate()
+	}//end submitPayment()
 
 	/**
 	 * The Adyen /payments request body; a transaction without a reference gets a generated one.
@@ -205,11 +222,7 @@ class AdyenAdapter extends AbstractPaymentAdapter {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	public function validateWebhook(string $rawPayload, string $signature): bool {
-		if ($rawPayload === '' || $signature === '') {
-			return false;
-		}
-
-		$secret = $this->credential(key: 'webhookSecret');
+		$secret = $this->webhookSecret(rawPayload: $rawPayload, signature: $signature);
 		if ($secret === '') {
 			return false;
 		}

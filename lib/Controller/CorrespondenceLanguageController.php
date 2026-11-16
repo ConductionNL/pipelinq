@@ -30,8 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\CorrespondenceLanguageService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CorrespondenceLanguageServiceInterface;
+use OCA\Pipelinq\Controller\Support\ServiceResultResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -43,17 +44,19 @@ use OCP\IRequest;
  * @spec openspec/specs/parties/spec.md#requirement-the-language-to-write-in-resolves-with-its-reason-req-pcl-003
  */
 class CorrespondenceLanguageController extends Controller {
+	use ServiceResultResponse;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CorrespondenceLanguageService $service The resolver.
+	 * @param CorrespondenceLanguageServiceInterface $service The resolver.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly CorrespondenceLanguageService $service,
+		private readonly CorrespondenceLanguageServiceInterface $service,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -104,18 +107,4 @@ class CorrespondenceLanguageController extends Controller {
 			result: $this->service->setPreference(partyId: $partyId, tag: $language)
 		);
 	}//end setPreference()
-
-	/**
-	 * Turn a service result into a JSON response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function respond(array $result): JSONResponse {
-		$status = (int)($result['status'] ?? 200);
-		unset($result['status']);
-
-		return new JSONResponse($result, $status);
-	}//end respond()
 }//end class

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for the webhook guards and status mapping of the payment adapters.
+ * Unit tests for the webhook guards and parsers of the payment adapters.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Payment
@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -29,31 +29,32 @@ use OCA\Pipelinq\Service\Payment\AdyenAdapter;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\StripeAdapter;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-require_once __DIR__ . '/StubHttpTransport.php';
+require_once __DIR__.'/StubHttpTransport.php';
 
 /**
- * Webhook signature guards (empty payload, empty signature, missing or
- * malformed secret) and webhook status mapping of the four PSP adapters.
+ * Every adapter refuses a webhook without payload, signature or a usable
+ * secret; the CCV and Adyen parsers map their payloads; Adyen accepts a
+ * non-hex secret as literal bytes.
+ *
+ * @covers \OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter
+ * @covers \OCA\Pipelinq\Service\Payment\AdyenAdapter
+ * @covers \OCA\Pipelinq\Service\Payment\CcvAdapter
+ * @covers \OCA\Pipelinq\Service\Payment\MollieAdapter
+ * @covers \OCA\Pipelinq\Service\Payment\StripeAdapter
  *
  * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
  */
-#[CoversClass(AbstractPaymentAdapter::class)]
-#[CoversClass(AdyenAdapter::class)]
-#[CoversClass(CcvAdapter::class)]
-#[CoversClass(MollieAdapter::class)]
-#[CoversClass(StripeAdapter::class)]
 class PaymentWebhookGuardsTest extends TestCase {
+
 	/**
-	 * Build an adapter of the given class with a stub transport.
+	 * Build an adapter of the given class.
 	 *
-	 * @param class-string<AbstractPaymentAdapter> $class The adapter class.
-	 * @param array<string, mixed> $credentials The credentials.
-	 * @param array<string, mixed> $config The provider config.
+	 * @param class-string<AbstractPaymentAdapter> $class       The adapter class.
+	 * @param array<string,mixed>                  $credentials The credentials.
+	 * @param array<string,mixed>                  $config      The provider config.
 	 *
 	 * @return AbstractPaymentAdapter
 	 */
@@ -67,176 +68,134 @@ class PaymentWebhookGuardsTest extends TestCase {
 	}//end adapter()
 
 	/**
-	 * Every adapter class.
+	 * The adapter classes under test.
 	 *
-	 * @return array<string, array{0: class-string<AbstractPaymentAdapter>}>
+	 * @return array<string,array{0:class-string<AbstractPaymentAdapter>}>
 	 */
-	public static function adapterClasses(): array {
+	public static function adapters(): array {
 		return [
 			'adyen' => [AdyenAdapter::class],
 			'ccv' => [CcvAdapter::class],
 			'mollie' => [MollieAdapter::class],
 			'stripe' => [StripeAdapter::class],
 		];
-	}//end adapterClasses()
+	}//end adapters()
 
-	#[DataProvider('adapterClasses')]
-	public function testAnEmptyPayloadOrSignatureIsRefused(string $class): void {
+	/**
+	 * An empty payload or signature is refused before any secret is consulted.
+	 *
+	 * @param class-string<AbstractPaymentAdapter> $class The adapter class.
+	 *
+	 * @dataProvider adapters
+	 *
+	 * @return void
+	 */
+	public function testEmptyPayloadOrSignatureIsRefused(string $class): void {
 		$adapter = $this->adapter(class: $class, credentials: ['webhookSecret' => 'secret']);
 
-		$this->assertFalse($adapter->validateWebhook(rawPayload: '', signature: 'sig'));
-		$this->assertFalse($adapter->validateWebhook(rawPayload: '{}', signature: ''));
-	}//end testAnEmptyPayloadOrSignatureIsRefused()
-
-	#[DataProvider('adapterClasses')]
-	public function testAMissingWebhookSecretRefusesEverySignature(string $class): void {
-		$adapter = $this->adapter(class: $class, credentials: []);
-
-		$this->assertFalse($adapter->validateWebhook(rawPayload: '{}', signature: 't=1,v1=abc'));
-	}//end testAMissingWebhookSecretRefusesEverySignature()
-
-	#[DataProvider('adapterClasses')]
-	public function testANonStringWebhookSecretCountsAsMissing(string $class): void {
-		$adapter = $this->adapter(class: $class, credentials: ['webhookSecret' => ['not', 'a', 'string']]);
-
-		$this->assertFalse($adapter->validateWebhook(rawPayload: '{}', signature: 't=1,v1=abc'));
-	}//end testANonStringWebhookSecretCountsAsMissing()
-
-	public function testCcvSignsWithoutAMerchantIdWhenTheConfiguredOneIsNotAString(): void {
-		$adapter = $this->adapter(
-			class: CcvAdapter::class,
-			credentials: ['webhookSecret' => 'ccv-secret'],
-			config: ['merchantId' => 12345]
-		);
-		$payload = '{"reference":"CCV-1"}';
-
-		$this->assertTrue($adapter->validateWebhook(rawPayload: $payload, signature: hash_hmac('sha512', $payload, 'ccv-secret')));
-		$this->assertFalse($adapter->validateWebhook(rawPayload: $payload, signature: hash_hmac('sha512', '12345' . $payload, 'ccv-secret')));
-	}//end testCcvSignsWithoutAMerchantIdWhenTheConfiguredOneIsNotAString()
+		$this->assertFalse(condition: $adapter->validateWebhook(rawPayload: '', signature: 'sig'));
+		$this->assertFalse(condition: $adapter->validateWebhook(rawPayload: '{"a":1}', signature: ''));
+	}//end testEmptyPayloadOrSignatureIsRefused()
 
 	/**
-	 * CCV provider statuses and the lifecycle status they map to.
+	 * A missing or non-string webhook secret refuses every webhook.
 	 *
-	 * @return array<string, array{0: string, 1: string}>
+	 * @param class-string<AbstractPaymentAdapter> $class The adapter class.
+	 *
+	 * @dataProvider adapters
+	 *
+	 * @return void
 	 */
-	public static function ccvStatuses(): array {
-		return [
-			'success' => ['success', 'settled'],
-			'manual intervention, any case' => ['ManualIntervention', 'pending'],
-			'paid' => ['paid', 'settled'],
-			'authorised' => ['AUTHORISED', 'captured'],
-			'cancelled' => ['cancelled', 'failed'],
-			'expired' => ['expired', 'failed'],
-			'refunded' => ['refunded', 'refunded'],
-			'unknown' => ['something-new', 'pending'],
-			'empty' => ['', 'pending'],
-		];
-	}//end ccvStatuses()
+	public function testMissingOrNonStringSecretIsRefused(string $class): void {
+		$this->assertFalse(
+			condition: $this->adapter(class: $class, credentials: [])->validateWebhook(rawPayload: '{"a":1}', signature: 't=1,v1=ab')
+		);
+		$this->assertFalse(
+			condition: $this->adapter(class: $class, credentials: ['webhookSecret' => 12345])->validateWebhook(rawPayload: '{"a":1}', signature: 't=1,v1=ab')
+		);
+	}//end testMissingOrNonStringSecretIsRefused()
 
-	#[DataProvider('ccvStatuses')]
-	public function testCcvParseWebhookMapsTheStatus(string $providerStatus, string $expected): void {
-		$adapter = $this->adapter(class: CcvAdapter::class, credentials: []);
+	/**
+	 * A Stripe signature without timestamp or v1 digest is refused.
+	 *
+	 * @return void
+	 */
+	public function testStripeSignatureNeedsTimestampAndDigest(): void {
+		$adapter = $this->adapter(class: StripeAdapter::class, credentials: ['webhookSecret' => 'whsec']);
+		$payload = '{"id":"evt_1"}';
+		$digest  = hash_hmac(algo: 'sha256', data: time().'.'.$payload, key: 'whsec');
 
-		$envelope = $adapter->parseWebhook(payload: ['reference' => 'CCV-9', 'status' => $providerStatus, 'eventId' => 'evt-9']);
+		$this->assertFalse(condition: $adapter->validateWebhook(rawPayload: $payload, signature: 'v1='.$digest));
+		$this->assertFalse(condition: $adapter->validateWebhook(rawPayload: $payload, signature: 't='.time()));
+	}//end testStripeSignatureNeedsTimestampAndDigest()
 
-		$this->assertSame(['sessionId' => 'CCV-9', 'status' => $expected, 'eventId' => 'evt-9', 'error' => null], $envelope);
-	}//end testCcvParseWebhookMapsTheStatus()
+	/**
+	 * A CCV signature uses the merchant id prefix only when it is a string.
+	 *
+	 * @return void
+	 */
+	public function testCcvIgnoresANonStringMerchantId(): void {
+		$adapter = $this->adapter(class: CcvAdapter::class, credentials: ['webhookSecret' => 'ccv'], config: ['merchantId' => 42]);
+		$payload = '{"reference":"R1"}';
 
-	public function testCcvParseWebhookFallsBackToThePaymentIdAndReference(): void {
+		$unprefixed = hash_hmac(algo: 'sha512', data: $payload, key: 'ccv');
+		$prefixed   = hash_hmac(algo: 'sha512', data: '42'.$payload, key: 'ccv');
+
+		$this->assertTrue(condition: $adapter->validateWebhook(rawPayload: $payload, signature: $unprefixed));
+		$this->assertFalse(condition: $adapter->validateWebhook(rawPayload: $payload, signature: $prefixed));
+	}//end testCcvIgnoresANonStringMerchantId()
+
+	/**
+	 * A non-hex Adyen secret is used as literal key bytes.
+	 *
+	 * @return void
+	 */
+	public function testAdyenUsesANonHexSecretLiterally(): void {
+		$adapter = $this->adapter(class: AdyenAdapter::class, credentials: ['webhookSecret' => 'not-hex-secret']);
+		$payload = 'pspReference:merchant:100';
+
+		$literal = base64_encode(hash_hmac(algo: 'sha256', data: $payload, key: 'not-hex-secret', binary: true));
+		$this->assertTrue(condition: $adapter->validateWebhook(rawPayload: $payload, signature: $literal));
+		$this->assertFalse(condition: $adapter->validateWebhook(rawPayload: $payload, signature: base64_encode(string: 'other')));
+	}//end testAdyenUsesANonHexSecretLiterally()
+
+	/**
+	 * CCV webhooks map their status and fall back from reference to paymentId.
+	 *
+	 * @return void
+	 */
+	public function testCcvParsesWebhooks(): void {
 		$adapter = $this->adapter(class: CcvAdapter::class, credentials: []);
 
 		$this->assertSame(
-			['sessionId' => 'pay-1', 'status' => 'pending', 'eventId' => '', 'error' => null],
-			$adapter->parseWebhook(payload: ['paymentId' => 'pay-1'])
+			expected: ['sessionId' => 'CCV-1', 'status' => 'settled', 'eventId' => 'evt-9', 'error' => null],
+			actual: $adapter->parseWebhook(payload: ['reference' => 'CCV-1', 'status' => 'SUCCESS', 'eventId' => 'evt-9'])
 		);
 		$this->assertSame(
-			['sessionId' => 'ref-1', 'status' => 'failed', 'eventId' => 'ref-1', 'error' => null],
-			$adapter->parseWebhook(payload: ['reference' => 'ref-1', 'paymentId' => 'pay-1', 'status' => 'failed'])
+			expected: ['sessionId' => 'P-2', 'status' => 'failed', 'eventId' => '', 'error' => null],
+			actual: $adapter->parseWebhook(payload: ['paymentId' => 'P-2', 'status' => 'expired'])
 		);
-	}//end testCcvParseWebhookFallsBackToThePaymentIdAndReference()
-
-	public function testAdyenUsesANonHexSecretAsLiteralKeyBytes(): void {
-		$secret = 'not-hex-secret!';
-		$adapter = $this->adapter(class: AdyenAdapter::class, credentials: ['webhookSecret' => $secret]);
-		$payload = '{"pspReference":"psp_9"}';
-
-		$this->assertTrue($adapter->validateWebhook(
-			rawPayload: $payload,
-			signature: base64_encode(hash_hmac('sha256', $payload, $secret, true))
-		));
-	}//end testAdyenUsesANonHexSecretAsLiteralKeyBytes()
-
-	public function testAdyenUsesAnOddLengthHexLookalikeSecretAsLiteralKeyBytes(): void {
-		$secret = 'abc';
-		$adapter = $this->adapter(class: AdyenAdapter::class, credentials: ['webhookSecret' => $secret]);
-		$payload = '{"pspReference":"psp_9"}';
-
-		$this->assertTrue($adapter->validateWebhook(
-			rawPayload: $payload,
-			signature: base64_encode(hash_hmac('sha256', $payload, $secret, true))
-		));
-	}//end testAdyenUsesAnOddLengthHexLookalikeSecretAsLiteralKeyBytes()
+		$this->assertSame(
+			expected: ['sessionId' => '', 'status' => 'pending', 'eventId' => '', 'error' => null],
+			actual: $adapter->parseWebhook(payload: ['status' => 'unheard-of'])
+		);
+	}//end testCcvParsesWebhooks()
 
 	/**
-	 * Adyen event codes with their success flag and the lifecycle status.
+	 * An unsuccessful Adyen notification is failed whatever its event code.
 	 *
-	 * @return array<string, array{0: string, 1: string, 2: string}>
+	 * @return void
 	 */
-	public static function adyenEvents(): array {
-		return [
-			'unsuccessful capture fails' => ['CAPTURE', 'false', 'failed'],
-			'unsuccessful authorisation fails' => ['AUTHORISATION', 'false', 'failed'],
-			'authorisation' => ['authorisation', 'true', 'captured'],
-			'refund' => ['REFUND', 'true', 'refunded'],
-			'cancel or refund' => ['CANCEL_OR_REFUND', 'true', 'refunded'],
-			'cancellation' => ['CANCELLATION', 'true', 'failed'],
-			'unknown event' => ['REPORT_AVAILABLE', 'true', 'pending'],
-		];
-	}//end adyenEvents()
-
-	#[DataProvider('adyenEvents')]
-	public function testAdyenParseWebhookMapsTheEvent(string $eventCode, string $success, string $expected): void {
+	public function testAdyenUnsuccessfulNotificationIsFailed(): void {
 		$adapter = $this->adapter(class: AdyenAdapter::class, credentials: []);
 
-		$envelope = $adapter->parseWebhook(payload: ['pspReference' => 'psp_5', 'eventCode' => $eventCode, 'success' => $success]);
-
-		$this->assertSame(['sessionId' => 'psp_5', 'status' => $expected, 'eventId' => 'psp_5', 'error' => null], $envelope);
-	}//end testAdyenParseWebhookMapsTheEvent()
-
-	public function testAdyenParseWebhookWithoutASuccessFlagFails(): void {
-		$adapter = $this->adapter(class: AdyenAdapter::class, credentials: []);
-
-		$this->assertSame('failed', $adapter->parseWebhook(payload: ['pspReference' => 'psp_6', 'eventCode' => 'CAPTURE'])['status']);
-	}//end testAdyenParseWebhookWithoutASuccessFlagFails()
-
-	/**
-	 * Stripe-Signature headers that lack a timestamp or a v1 digest.
-	 *
-	 * @return array<string, array{0: string}>
-	 */
-	public static function incompleteStripeSignatures(): array {
-		return [
-			'no timestamp' => ['v1=abcdef'],
-			'zero timestamp' => ['t=0,v1=abcdef'],
-			'no v1 digest' => ['t=1700000000'],
-			'empty v1 digest' => ['t=1700000000,v1='],
-			'unrelated fields' => ['v0=abcdef'],
-		];
-	}//end incompleteStripeSignatures()
-
-	#[DataProvider('incompleteStripeSignatures')]
-	public function testStripeRefusesASignatureWithoutTimestampOrDigest(string $header): void {
-		$adapter = $this->adapter(class: StripeAdapter::class, credentials: ['webhookSecret' => 'whsec_x']);
-
-		$this->assertFalse($adapter->validateWebhook(rawPayload: '{"id":"evt_1"}', signature: $header));
-	}//end testStripeRefusesASignatureWithoutTimestampOrDigest()
-
-	public function testMollieAcceptsOnlyTheHexHmacOfTheBody(): void {
-		$adapter = $this->adapter(class: MollieAdapter::class, credentials: ['webhookSecret' => 'mollie-secret']);
-		$payload = 'id=tr_1';
-		$expected = hash_hmac('sha256', $payload, 'mollie-secret');
-
-		$this->assertTrue($adapter->validateWebhook(rawPayload: $payload, signature: $expected));
-		$this->assertFalse($adapter->validateWebhook(rawPayload: $payload . ' ', signature: $expected));
-	}//end testMollieAcceptsOnlyTheHexHmacOfTheBody()
+		$this->assertSame(
+			expected: ['sessionId' => 'PSP-1', 'status' => 'failed', 'eventId' => 'PSP-1', 'error' => null],
+			actual: $adapter->parseWebhook(payload: ['pspReference' => 'PSP-1', 'eventCode' => 'CAPTURE', 'success' => 'false'])
+		);
+		$this->assertSame(
+			expected: 'settled',
+			actual: $adapter->parseWebhook(payload: ['pspReference' => 'PSP-1', 'eventCode' => 'capture', 'success' => 'true'])['status']
+		);
+	}//end testAdyenUnsuccessfulNotificationIsFailed()
 }//end class

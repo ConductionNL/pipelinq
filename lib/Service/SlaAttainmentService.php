@@ -29,7 +29,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaAttainmentServiceInterface;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,7 +51,9 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attainment aggregation is inherently branchy; split into small focused methods
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
-class SlaAttainmentService {
+class SlaAttainmentService implements SlaAttainmentServiceInterface {
+	use ContainerObjectServiceLookup;
+
 	public const VALID_BUCKETS = ['day', 'week', 'month', 'quarter'];
 
 	public const VALID_GROUPS = ['policy', 'customer', 'tier', 'team', 'target'];
@@ -326,8 +330,8 @@ class SlaAttainmentService {
 	 * @return array<int, array<string, mixed>> Events.
 	 */
 	private function loadBreachEventsInRange(array $range): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_breach_event_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_breach_event_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
@@ -354,15 +358,7 @@ class SlaAttainmentService {
 	 * @return object|null
 	 */
 	private function breachObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaAttainmentService: ObjectService not available',
-				['error' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'SlaAttainmentService: ObjectService not available', errorKey: 'error');
 	}//end breachObjectService()
 
 	/**
@@ -531,8 +527,8 @@ class SlaAttainmentService {
 	 * @return array<int, mixed> Rows ([] when unconfigured/unavailable).
 	 */
 	private function findConfiguredObjects(string $registerKey, string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, $registerKey, '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, $registerKey, '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schemaId === '') {
 			return [];
 		}
@@ -615,26 +611,52 @@ class SlaAttainmentService {
 				continue;
 			}
 
-			$withAt = $target['withAt'] ?? '';
-			if ($withAt === '') {
-				continue;
-			}
-
-			try {
-				$withInstant = new DateTimeImmutable((string)$withAt);
-			} catch (Throwable $e) {
-				continue;
-			}
-
-			if ($withInstant >= $context['start'] && $withInstant < $context['end']) {
+			if ($this->metWithinRange(target: $target, context: $context) === true) {
 				$touchedKey = true;
-				$kind = (string)($target['kind'] ?? 'resolution');
-				$byTarget[$kind] = ($byTarget[$kind] ?? 0) + 1;
+				$byTarget = $this->countMet(byTarget: $byTarget, target: $target);
 			}
-		}//end foreach
+		}
 
 		return ['allMet' => $allWith, 'touchedKey' => $touchedKey, 'byTarget' => $byTarget];
 	}//end evaluateSlaTargets()
+
+	/**
+	 * Whether a met target was met inside the run's range.
+	 *
+	 * @param array<string, mixed> $target  The SLA target.
+	 * @param array<string, mixed> $context Run context; its start and end bound the range.
+	 *
+	 * @return bool
+	 */
+	private function metWithinRange(array $target, array $context): bool {
+		$withAt = $target['withAt'] ?? '';
+		if ($withAt === '') {
+			return false;
+		}
+
+		try {
+			$withInstant = new DateTimeImmutable((string)$withAt);
+		} catch (Throwable $e) {
+			return false;
+		}
+
+		return $withInstant >= $context['start'] && $withInstant < $context['end'];
+	}//end metWithinRange()
+
+	/**
+	 * Count one more met target of its kind.
+	 *
+	 * @param array<string, int>   $byTarget Met targets by kind.
+	 * @param array<string, mixed> $target   The SLA target.
+	 *
+	 * @return array<string, int>
+	 */
+	private function countMet(array $byTarget, array $target): array {
+		$kind = (string)($target['kind'] ?? 'resolution');
+		$byTarget[$kind] = ($byTarget[$kind] ?? 0) + 1;
+
+		return $byTarget;
+	}//end countMet()
 
 	/**
 	 * Normalise OR row/entity to a plain associative array.

@@ -42,9 +42,10 @@ namespace OCA\Pipelinq\Integration;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
-use OCA\Pipelinq\Service\ContactMomentFilingService;
-use OCA\Pipelinq\Service\PartyIndicatorService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactMomentLeafProviderInterface;
+use OCA\Pipelinq\Kernel\Contracts\PartyIndicatorServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -54,7 +55,7 @@ use Throwable;
  *
  * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
  */
-class ContactMomentLeafProvider {
+class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	/**
 	 * The leaf id a host declares in its schema's `linkedTypes`.
 	 *
@@ -70,13 +71,6 @@ class ContactMomentLeafProvider {
 	public const PANEL_ID = 'pipelinq-contact-moments-panel';
 
 	/**
-	 * Default page size for a host's contact moments.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_LIMIT = 50;
-
-	/**
 	 * Hard ceiling on a page, per ADR-058: a leaf never scans a whole schema.
 	 *
 	 * @var int
@@ -86,16 +80,16 @@ class ContactMomentLeafProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
-	 * @param ContactMomentFilingService $filingService The case set a contact moment is filed on.
-	 * @param PartyIndicatorService $indicatorService The party's standing indicators.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
+	 * @param ContactMomentFilingServiceInterface $filingService The case set a contact moment is filed on.
+	 * @param PartyIndicatorServiceInterface $indicatorService The party's standing indicators.
 	 * @param IUserSession $userSession The acting user, stamped as the agent.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private readonly TicketService $ticketService,
-		private readonly ContactMomentFilingService $filingService,
-		private readonly PartyIndicatorService $indicatorService,
+		private readonly TicketServiceInterface $ticketService,
+		private readonly ContactMomentFilingServiceInterface $filingService,
+		private readonly PartyIndicatorServiceInterface $indicatorService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -114,21 +108,67 @@ class ContactMomentLeafProvider {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
-		$hostId = trim($hostId);
+		return $this->listed(hostId: trim($hostId), page: ['limit' => max(1, min($limit, self::MAX_LIMIT)), 'partyId' => $partyId]);
+	}//end list()
+
+	/**
+	 * The newest contact moments on a host, with the party's indicators.
+	 *
+	 * @param string                              $hostId The trimmed host id.
+	 * @param array{limit: int, partyId: string} $page   The capped page size and the party whose indicators to add.
+	 *
+	 * @return array<string, mixed> `status` plus either the moments and indicators, or `error`.
+	 */
+	private function listed(string $hostId, array $page): array {
 		$refusal = $this->hostRefusal(hostId: $hostId);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$limit = max(1, min($limit, self::MAX_LIMIT));
+		$moments = $this->newestMoments(hostId: $hostId, limit: $page['limit']);
 
+		return [
+			'status' => 200,
+			'contactMoments' => $moments,
+			'indicators' => $this->indicatorsOf(partyId: $page['partyId']),
+		];
+	}//end listed()
+
+	/**
+	 * The party's standing indicators; none when no party is named.
+	 *
+	 * The party's indicators travel with the panel, resolved live, so a KCC
+	 * agent taking a call reads "agressie-registratie" BEFORE they speak.
+	 * Nothing is copied onto a contact moment: this is a read.
+	 *
+	 * @param string $partyId The party, or an empty string.
+	 *
+	 * @return array<mixed> The indicators.
+	 */
+	private function indicatorsOf(string $partyId): array {
+		if ($partyId === '') {
+			return [];
+		}
+
+		return $this->indicatorService->resolve(partyId: trim($partyId));
+	}//end indicatorsOf()
+
+	/**
+	 * The contact moments filed on a host, newest first, at most the limit.
+	 *
+	 * @param string $hostId The trimmed host object uuid.
+	 * @param int    $limit  The capped page size.
+	 *
+	 * @return array<int, array<string, mixed>> The presented moments.
+	 */
+	private function newestMoments(string $hostId, int $limit): array {
 		// MEMBERSHIP, not equality: one contact moment filed on three cases is
 		// one record, and each of the three has to see it. Filtering on the
 		// single `caseReference` would show it only on the primary, and an
 		// absent row on the other two looks exactly like a case with no
 		// contact moments. Still bounded by `limit` per ADR-058.
 		$rows = $this->ticketService->findByType(
-			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT,
 			extraFilters: ['caseReferences' => $hostId],
 			limit: $limit,
 		);
@@ -143,20 +183,8 @@ class ContactMomentLeafProvider {
 			static fn (array $a, array $b): int => strcmp((string)$b['occurredAt'], (string)$a['occurredAt'])
 		);
 
-		// The party's indicators travel with the panel, resolved live, so a KCC
-		// agent taking a call reads "agressie-registratie" BEFORE they speak.
-		// Nothing is copied onto a contact moment: this is a read.
-		$indicators = [];
-		if ($partyId !== '') {
-			$indicators = $this->indicatorService->resolve(partyId: trim($partyId));
-		}
-
-		return [
-			'status' => 200,
-			'contactMoments' => $moments,
-			'indicators' => $indicators,
-		];
-	}//end list()
+		return $moments;
+	}//end newestMoments()
 
 	/**
 	 * Append one contact moment to a host object.
@@ -179,14 +207,12 @@ class ContactMomentLeafProvider {
 			return $refusal;
 		}
 
-		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
-
-		$refusal = $this->outboundRefusal(partyId: $partyId, payload: $payload);
+		$refusal = $this->outboundRefusal(partyId: self::partyOf(payload: $payload), payload: $payload);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload, partyId: $partyId);
+		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload);
 
 		if ($ticket['title'] === '') {
 			return ['status' => 400, 'error' => 'A contact moment requires a subject.'];
@@ -229,7 +255,7 @@ class ContactMomentLeafProvider {
 	private function appended(string $hostId, array $ticket): array {
 		try {
 			$saved = $this->ticketService->save(
-				ticketType: TicketService::TYPE_CONTACTMOMENT,
+				ticketType: TicketServiceInterface::TYPE_CONTACTMOMENT,
 				payload: $ticket,
 			);
 		} catch (InvalidArgumentException $e) {
@@ -286,13 +312,13 @@ class ContactMomentLeafProvider {
 	 *
 	 * @param string $hostId The host object's uuid.
 	 * @param array<string, mixed> $payload The append payload.
-	 * @param string $partyId The party the moment names, or an empty string.
 	 *
 	 * @return array<string, mixed> The ticket, ready for TicketService::save().
 	 *
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
-	private function ticketFrom(string $hostId, array $payload, string $partyId): array {
+	private function ticketFrom(string $hostId, array $payload): array {
+		$partyId = self::partyOf(payload: $payload);
 		$ticket = [
 			'title' => trim((string)($payload['title'] ?? $payload['subject'] ?? '')),
 			'channel' => trim((string)($payload['channel'] ?? '')),
@@ -302,14 +328,7 @@ class ContactMomentLeafProvider {
 			'primaryCaseReference' => $hostId,
 			'assignee' => $this->actingUserId(),
 			'occurredAt' => $this->occurredAt(payload: $payload),
-		];
-
-		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
-			$value = trim((string)($payload[$from] ?? ''));
-			if ($value !== '') {
-				$ticket[$to] = $value;
-			}
-		}
+		] + self::describedFields(payload: $payload);
 
 		if ($partyId !== '') {
 			// Only when named: an empty string on a uuid property fails the
@@ -319,6 +338,36 @@ class ContactMomentLeafProvider {
 
 		return $ticket;
 	}//end ticketFrom()
+
+	/**
+	 * The party an append payload names, or an empty string.
+	 *
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return string The party's uuid.
+	 */
+	private static function partyOf(array $payload): string {
+		return trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
+	}//end partyOf()
+
+	/**
+	 * The outcome and description an append payload names; a later non-empty source wins the description.
+	 *
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return array<string, string> The trimmed, non-empty fields.
+	 */
+	private static function describedFields(array $payload): array {
+		$fields = [];
+		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
+			$value = trim((string)($payload[$from] ?? ''));
+			if ($value !== '') {
+				$fields[$to] = $value;
+			}
+		}
+
+		return $fields;
+	}//end describedFields()
 
 	/**
 	 * Whether the acting user may read the host object.

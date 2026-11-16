@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
+use OCA\Pipelinq\Kernel\Contracts\CallbackServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IGroupManager;
 use OCP\IUserSession;
@@ -38,7 +39,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
  * @spec openspec/specs/callback-management/spec.md#requirement-callback-service
  */
-class CallbackService {
+class CallbackService implements CallbackServiceInterface {
 	/**
 	 * Maximum unsuccessful attempts before suggesting closure.
 	 *
@@ -129,24 +130,34 @@ class CallbackService {
 	 */
 	public function addAttempt(array $taskData, string $result, string $notes = ''): array {
 		$attempts = $taskData['attempts'] ?? [];
+		$attempts[] = $this->attempt(result: $result, notes: $notes);
+		$taskData['attempts'] = $attempts;
 
+		return $taskData;
+	}//end addAttempt()
+
+	/**
+	 * One callback attempt, made now by the current user ('system' without one).
+	 *
+	 * @param string $result The attempt result.
+	 * @param string $notes  The attempt notes.
+	 *
+	 * @return array{timestamp: string, result: string, notes: string, agentUserId: string} The attempt.
+	 */
+	private function attempt(string $result, string $notes): array {
 		$user = $this->userSession->getUser();
 		$agentUserId = 'system';
 		if ($user !== null) {
 			$agentUserId = $user->getUID();
 		}
 
-		$attempts[] = [
+		return [
 			'timestamp' => (new DateTime())->format(DateTime::ATOM),
 			'result' => $result,
 			'notes' => $notes,
 			'agentUserId' => $agentUserId,
 		];
-
-		$taskData['attempts'] = $attempts;
-
-		return $taskData;
-	}//end addAttempt()
+	}//end attempt()
 
 	/**
 	 * Check if the attempt threshold has been reached for a task.
@@ -297,16 +308,22 @@ class CallbackService {
 	 * @spec openspec/changes/archive/2026-05-31-callback-management/tasks.md#task-1.1
 	 */
 	public function applyReassignment(array $taskData, string $assignee, string $assigneeType): array {
-		if ($assigneeType === 'user') {
-			$taskData['assigneeUserId'] = $assignee;
-			$taskData['assigneeGroupId'] = null;
+		return array_replace($taskData, self::assigneeFields(assignee: $assignee, assigneeType: $assigneeType));
+	}//end applyReassignment()
 
-			return $taskData;
+	/**
+	 * The assignee fields of a reassignment: the new assignee set, the other kind cleared.
+	 *
+	 * @param string $assignee     The new assignee ID.
+	 * @param string $assigneeType The assignee type (user or group).
+	 *
+	 * @return array<string, string|null> The fields, in the order they are written.
+	 */
+	private static function assigneeFields(string $assignee, string $assigneeType): array {
+		if ($assigneeType === 'user') {
+			return ['assigneeUserId' => $assignee, 'assigneeGroupId' => null];
 		}
 
-		$taskData['assigneeGroupId'] = $assignee;
-		$taskData['assigneeUserId'] = null;
-
-		return $taskData;
-	}//end applyReassignment()
+		return ['assigneeGroupId' => $assignee, 'assigneeUserId' => null];
+	}//end assigneeFields()
 }//end class

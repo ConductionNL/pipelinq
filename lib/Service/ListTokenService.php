@@ -40,7 +40,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\Base64UrlDecode;
+use OCA\Pipelinq\Service\Support\ConfiguredSigningKey;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -52,6 +54,9 @@ use OCP\Security\ISecureRandom;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-confirmation-token-is-verified-before-a-subscription-is-confirmed
  */
 class ListTokenService {
+	use Base64UrlDecode;
+	use ConfiguredSigningKey;
+
 	/**
 	 * Purpose of a confirmation link.
 	 *
@@ -193,7 +198,6 @@ class ListTokenService {
 		return $this->sign(
 			purpose: self::PURPOSE_CONFIRM,
 			claims: ['s' => $subscriptionId, 'n' => $nonce],
-			ttlSeconds: $this->ttlSeconds(key: self::CONFIRM_TTL_CONFIG_KEY, default: self::DEFAULT_CONFIRM_TTL_DAYS),
 		);
 	}//end signConfirmToken()
 
@@ -212,7 +216,6 @@ class ListTokenService {
 		return $this->sign(
 			purpose: self::PURPOSE_UNSUBSCRIBE,
 			claims: ['s' => $subscriptionId, 'c' => $contactId],
-			ttlSeconds: $this->ttlSeconds(key: self::LINK_TTL_CONFIG_KEY, default: self::DEFAULT_LINK_TTL_DAYS),
 		);
 	}//end signUnsubscribeToken()
 
@@ -229,7 +232,6 @@ class ListTokenService {
 		return $this->sign(
 			purpose: self::PURPOSE_PREFERENCES,
 			claims: ['c' => $contactId],
-			ttlSeconds: $this->ttlSeconds(key: self::LINK_TTL_CONFIG_KEY, default: self::DEFAULT_LINK_TTL_DAYS),
 		);
 	}//end signPreferencesToken()
 
@@ -369,15 +371,15 @@ class ListTokenService {
 	}//end preferencesUrl()
 
 	/**
-	 * Sign a payload for a purpose.
+	 * Sign a payload for a purpose, valid for that purpose's lifetime.
 	 *
 	 * @param string $purpose One of the `PURPOSE_*` constants.
 	 * @param array<string, mixed> $claims Purpose-specific claims.
-	 * @param int $ttlSeconds Lifetime in seconds.
 	 *
 	 * @return string The dotted token.
 	 */
-	private function sign(string $purpose, array $claims, int $ttlSeconds): string {
+	private function sign(string $purpose, array $claims): string {
+		$ttlSeconds = $this->ttlFor(purpose: $purpose);
 		$issuedAt = $this->time->getTime();
 		$full = array_merge(
 			['p' => $purpose],
@@ -391,19 +393,20 @@ class ListTokenService {
 	}//end sign()
 
 	/**
-	 * Resolve, or lazily mint, the per-instance HMAC signing key.
+	 * The lifetime in seconds of a purpose's tokens: the confirm TTL for a
+	 * confirmation, the link TTL for every other purpose.
 	 *
-	 * @return string The signing key.
+	 * @param string $purpose One of the `PURPOSE_*` constants.
+	 *
+	 * @return int Lifetime in seconds.
 	 */
-	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, '');
-		if ($key === '') {
-			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
+	private function ttlFor(string $purpose): int {
+		if ($purpose === self::PURPOSE_CONFIRM) {
+			return $this->ttlSeconds(key: self::CONFIRM_TTL_CONFIG_KEY, default: self::DEFAULT_CONFIRM_TTL_DAYS);
 		}
 
-		return $key;
-	}//end signingKey()
+		return $this->ttlSeconds(key: self::LINK_TTL_CONFIG_KEY, default: self::DEFAULT_LINK_TTL_DAYS);
+	}//end ttlFor()
 
 	/**
 	 * Resolve a TTL in seconds from app config, falling back to a default.
@@ -414,7 +417,7 @@ class ListTokenService {
 	 * @return int Lifetime in seconds.
 	 */
 	private function ttlSeconds(string $key, int $default): int {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, (string)$default);
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, (string)$default);
 		if (is_numeric($raw) === false) {
 			return ($default * 86400);
 		}
@@ -437,20 +440,4 @@ class ListTokenService {
 	private function base64UrlEncode(string $data): string {
 		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}//end base64UrlEncode()
-
-	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data, empty on failure.
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
 }//end class

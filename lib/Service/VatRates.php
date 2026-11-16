@@ -28,7 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\VatRatesInterface;
 use OCP\IAppConfig;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/product-catalog/spec.md
  */
-class VatRates {
+class VatRates implements VatRatesInterface {
 	/**
 	 * The app-config key holding the JSON map.
 	 *
@@ -103,6 +104,6 @@ class VatRates {
 	 * @spec openspec/specs/product-catalog/spec.md
 	 */
 	public function rates(): array {
-		return self::parse(stored: $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''));
+		return self::parse(stored: $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''));
 	}//end rates()
 }//end class

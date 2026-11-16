@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\QuoteNumberSequence;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\QuoteNumberSequenceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -44,12 +44,12 @@ class QuoteNumberCreatingListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig          $appConfig App config, source of the quote schema id.
-	 * @param QuoteNumberSequence $sequence  Allocates the number; it logs every failed attempt.
+	 * @param IAppConfig                   $appConfig App config, source of the quote schema id.
+	 * @param QuoteNumberSequenceInterface $sequence  Allocates the number; it logs every failed attempt.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly QuoteNumberSequence $sequence,
+		private readonly QuoteNumberSequenceInterface $sequence,
 	) {
 	}//end __construct()
 
@@ -83,7 +83,7 @@ class QuoteNumberCreatingListener implements IEventListener {
 	 * @return bool True when the quote needs a number.
 	 */
 	private function needsNumber(ObjectCreatingEvent $event): bool {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'salesQuote_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'salesQuote_schema', '');
 		$entity = $event->getObject();
 		if ($schema === '' || (string)$entity->getSchema() !== $schema) {
 			return false;

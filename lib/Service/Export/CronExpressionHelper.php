@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use DateTimeImmutable;
+use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
 
 /**
  * Validates and describes 5-field UNIX cron expressions and @-shortcuts.
@@ -44,7 +45,7 @@ use DateTimeImmutable;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
  */
-class CronExpressionHelper {
+class CronExpressionHelper implements CronExpressionHelperInterface {
 	/**
 	 * Supported @-shortcuts mapped to their 5-field equivalents.
 	 *
@@ -215,8 +216,8 @@ class CronExpressionHelper {
 		}
 
 		return ($this->dayMatches(fields: $fields, when: $when) === true
-			&& $this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === true
-			&& $this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true);
+			&& $this->fieldMatches(field: $fields[1], candidate: [(int)$when->format('G'), self::BOUNDS[1]]) === true
+			&& $this->fieldMatches(field: $fields[0], candidate: [(int)$when->format('i'), self::BOUNDS[0]]) === true);
 	}//end isDue()
 
 	/**
@@ -240,7 +241,19 @@ class CronExpressionHelper {
 			return null;
 		}
 
-		[$when, $limit] = $this->searchWindow(from: $from, horizonDays: $horizonDays);
+		return $this->firstFiring(fields: $fields, window: $this->searchWindow(from: $from, horizonDays: $horizonDays));
+	}//end nextRunAfter()
+
+	/**
+	 * The first minute in a search window at which the cron fields fire.
+	 *
+	 * @param array<int, string>                                $fields The five cron fields.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window Where the search starts and gives up.
+	 *
+	 * @return DateTimeImmutable|null The firing minute, or null when none is in the window.
+	 */
+	private function firstFiring(array $fields, array $window): ?DateTimeImmutable {
+		[$when, $limit] = $window;
 		while ($when <= $limit) {
 			$next = $this->nextCandidate(fields: $fields, when: $when);
 			if ($next === null) {
@@ -251,7 +264,7 @@ class CronExpressionHelper {
 		}
 
 		return null;
-	}//end nextRunAfter()
+	}//end firstFiring()
 
 	/**
 	 * Where the search starts (the next whole minute after the start, in its
@@ -285,11 +298,11 @@ class CronExpressionHelper {
 			return $when->modify('+1 day')->setTime(0, 0);
 		}
 
-		if ($this->fieldMatches(field: $fields[1], value: (int)$when->format('G'), bounds: self::BOUNDS[1]) === false) {
+		if ($this->fieldMatches(field: $fields[1], candidate: [(int)$when->format('G'), self::BOUNDS[1]]) === false) {
 			return $when->setTime((int)$when->format('G'), 0)->modify('+1 hour');
 		}
 
-		if ($this->fieldMatches(field: $fields[0], value: (int)$when->format('i'), bounds: self::BOUNDS[0]) === true) {
+		if ($this->fieldMatches(field: $fields[0], candidate: [(int)$when->format('i'), self::BOUNDS[0]]) === true) {
 			return null;
 		}
 
@@ -330,11 +343,11 @@ class CronExpressionHelper {
 	private function dayMatches(array $fields, \DateTimeInterface $when): bool {
 		[, , $dom, $month, $dow] = $fields;
 
-		if ($this->fieldMatches(field: $month, value: (int)$when->format('n'), bounds: self::BOUNDS[3]) === false) {
+		if ($this->fieldMatches(field: $month, candidate: [(int)$when->format('n'), self::BOUNDS[3]]) === false) {
 			return false;
 		}
 
-		$domOk = $this->fieldMatches(field: $dom, value: (int)$when->format('j'), bounds: self::BOUNDS[2]);
+		$domOk = $this->fieldMatches(field: $dom, candidate: [(int)$when->format('j'), self::BOUNDS[2]]);
 		$dowOk = $this->dowMatches(field: $dow, value: (int)$when->format('w'));
 
 		if ($dom !== '*' && $dow !== '*') {
@@ -347,19 +360,18 @@ class CronExpressionHelper {
 	/**
 	 * Whether a single value matches a cron field.
 	 *
-	 * @param string $field The field text.
-	 * @param int $value The value to test.
-	 * @param array{0: int, 1: int} $bounds The inclusive bounds.
+	 * @param string                                $field     The field text.
+	 * @param array{0: int, 1: array{0: int, 1: int}} $candidate The value to test and the field's inclusive bounds.
 	 *
 	 * @return bool True when the value matches.
 	 */
-	private function fieldMatches(string $field, int $value, array $bounds): bool {
+	private function fieldMatches(string $field, array $candidate): bool {
 		if ($field === '*') {
 			return true;
 		}
 
 		foreach (explode(',', $field) as $part) {
-			if ($this->partMatches(part: $part, value: $value, bounds: $bounds) === true) {
+			if ($this->partMatches(part: $part, candidate: $candidate) === true) {
 				return true;
 			}
 		}
@@ -376,13 +388,13 @@ class CronExpressionHelper {
 	 * @return bool True when the day matches.
 	 */
 	private function dowMatches(string $field, int $value): bool {
-		if ($this->fieldMatches(field: $field, value: $value, bounds: self::BOUNDS[4]) === true) {
+		if ($this->fieldMatches(field: $field, candidate: [$value, self::BOUNDS[4]]) === true) {
 			return true;
 		}
 
 		// Sunday is both 0 and 7 in cron.
 		if ($value === 0) {
-			return $this->fieldMatches(field: $field, value: 7, bounds: self::BOUNDS[4]);
+			return $this->fieldMatches(field: $field, candidate: [7, self::BOUNDS[4]]);
 		}
 
 		return false;
@@ -391,13 +403,13 @@ class CronExpressionHelper {
 	/**
 	 * Whether a value matches a single field part (handles * /step, ranges).
 	 *
-	 * @param string $part The field part.
-	 * @param int $value The value to test.
-	 * @param array{0: int, 1: int} $bounds The inclusive bounds.
+	 * @param string                                $part      The field part.
+	 * @param array{0: int, 1: array{0: int, 1: int}} $candidate The value to test and the field's inclusive bounds.
 	 *
 	 * @return bool True when the value matches.
 	 */
-	private function partMatches(string $part, int $value, array $bounds): bool {
+	private function partMatches(string $part, array $candidate): bool {
+		[$value, $bounds] = $candidate;
 		$split = $this->splitStep(part: $part);
 		if ($split === null) {
 			return false;

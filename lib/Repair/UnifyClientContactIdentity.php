@@ -50,10 +50,14 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ContactVcardService;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
+use OCA\Pipelinq\Repair\Support\SystemRunner;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -71,9 +75,13 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/unify-client-contact/spec.md
  * @spec openspec/specs/unify-client-contact/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class UnifyClientContactIdentity implements IRepairStep {
 	use CastingPayloadToArray;
+	use ContainerObjectServiceLookup;
+	use SystemRunner;
 
 	/**
 	 * Source-system tag written on every MDM sourceRecord this repair creates.
@@ -87,17 +95,17 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 *
 	 * @param IAppManager $appManager The app manager.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContactVcardService $contactVcardService The existing vCard sync service (reused, no new engine).
+	 * @param ContactVcardServiceInterface $contactVcardService The existing vCard sync service (reused, no new engine).
 	 * @param ContainerInterface $container The DI container (OR ObjectService + Contacts IManager).
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
-		private readonly ContactVcardService $contactVcardService,
+		private readonly ContactVcardServiceInterface $contactVcardService,
 		private readonly ContainerInterface $container,
-		private readonly TicketService $ticketService,
+		private readonly TicketServiceInterface $ticketService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -133,7 +141,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			$output->warning('Pipelinq register not configured — skipping client/contact identity unification.');
 			return;
@@ -177,8 +185,8 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function migrate(object $objectService, string $register): array {
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
+		$contactSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', '');
 
 		// Contactmomenten live in the unified `ticket` schema and are narrowed by
 		// the `ticketType` discriminator (unify-ticket-supertype).
@@ -299,14 +307,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return ['status' => 'unresolved', 'contactsUid' => null];
 		}
 
-		$this->writeSourceRecord(
-			objectService: $pass->collection->objectService,
-			register: $pass->collection->register,
-			entityType: $pass->kind->entityType,
-			nativeId: $this->objectIdOf(object: $object),
-			currentMasterEntity: $contactsUid,
-			object: $object
-		);
+		$this->writeSourceRecord(pass: $pass, object: $object, currentMasterEntity: $contactsUid);
 
 		return ['status' => 'linked', 'contactsUid' => $contactsUid];
 	}//end linkObject()
@@ -324,13 +325,9 @@ class UnifyClientContactIdentity implements IRepairStep {
 		// 1) Try to match an EXISTING NC contact (email first, then KvK/ORG).
 		$contactsUid = $this->matchExistingContact(object: $object);
 		if ($contactsUid !== null) {
-			$this->persistContactsUid(
-				objectService: $pass->collection->objectService,
-				register: $pass->collection->register,
-				schema: $pass->collection->schema,
-				object: $object,
-				contactsUid: $contactsUid
-			);
+			$linked = $object;
+			$linked['contactsUid'] = $contactsUid;
+			$this->persistContactsUid(collection: $pass->collection, object: $linked);
 			return $contactsUid;
 		}
 
@@ -372,6 +369,20 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 *   search/hit loops inflate the theoretical path count.
 	 */
 	private function matchExistingContact(array $object): ?string {
+		$contactsManager = $this->enabledContactsManager();
+		if ($contactsManager === null) {
+			return null;
+		}
+
+		return $this->firstMatchingUid(contactsManager: $contactsManager, searchTerms: $this->contactSearchTerms(object: $object));
+	}//end matchExistingContact()
+
+	/**
+	 * Resolve the Contacts manager, or null (logged when unresolvable) when it is unavailable or disabled.
+	 *
+	 * @return mixed The Contacts manager, or null.
+	 */
+	private function enabledContactsManager(): mixed {
 		try {
 			$contactsManager = $this->container->get('OCP\Contacts\IManager');
 		} catch (\Throwable $e) {
@@ -386,8 +397,20 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return null;
 		}
 
-		// Match priority: email, then ORG name for organisations (KvK is carried
-		// as the ORG/X-KVK vCard property by the property builder).
+		return $contactsManager;
+	}//end enabledContactsManager()
+
+	/**
+	 * The contact searches for an object, in match priority.
+	 *
+	 * Match priority: email, then ORG name for organisations (KvK is carried
+	 * as the ORG/X-KVK vCard property by the property builder).
+	 *
+	 * @param array<string, mixed> $object The client or contact object.
+	 *
+	 * @return array<int, array{term: string, props: array<int, string>}> The searches.
+	 */
+	private function contactSearchTerms(array $object): array {
 		$searchTerms = [];
 		$email = (string)($object['email'] ?? '');
 		if ($email !== '') {
@@ -401,28 +424,66 @@ class UnifyClientContactIdentity implements IRepairStep {
 			}
 		}
 
-		foreach ($searchTerms as $search) {
-			try {
-				// Positional args — IManager::search($pattern, $searchProperties, $options).
-				$results = $contactsManager->search($search['term'], $search['props'], []);
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Identity unify: contact search failed',
-					['term' => $search['term'], 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
+		return $searchTerms;
+	}//end contactSearchTerms()
 
-			foreach (($results ?? []) as $hit) {
-				$uid = (string)($hit['UID'] ?? '');
-				if ($uid !== '') {
-					return $uid;
-				}
+	/**
+	 * The UID of the first hit across the searches, or null when nothing matches.
+	 *
+	 * @param mixed $contactsManager The Contacts manager.
+	 * @param array<int, array{term: string, props: array<int, string>}> $searchTerms The searches.
+	 *
+	 * @return string|null The matched UID.
+	 */
+	private function firstMatchingUid(mixed $contactsManager, array $searchTerms): string|null {
+		foreach ($searchTerms as $search) {
+			$uid = $this->firstHitUid(results: $this->searchContacts(contactsManager: $contactsManager, search: $search));
+			if ($uid !== null) {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end matchExistingContact()
+	}//end firstMatchingUid()
+
+	/**
+	 * Run one contact search, returning no results (logged) when it fails.
+	 *
+	 * @param mixed $contactsManager The Contacts manager.
+	 * @param array{term: string, props: array<int, string>} $search The search.
+	 *
+	 * @return mixed The search results.
+	 */
+	private function searchContacts(mixed $contactsManager, array $search): mixed {
+		try {
+			// Positional args — IManager::search($pattern, $searchProperties, $options).
+			return $contactsManager->search($search['term'], $search['props'], []);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Identity unify: contact search failed',
+				['term' => $search['term'], 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end searchContacts()
+
+	/**
+	 * The first non-empty UID among the search hits.
+	 *
+	 * @param mixed $results The search results.
+	 *
+	 * @return string|null The UID, or null when no hit has one.
+	 */
+	private function firstHitUid(mixed $results): string|null {
+		foreach (($results ?? []) as $hit) {
+			$uid = (string)($hit['UID'] ?? '');
+			if ($uid !== '') {
+				return $uid;
+			}
+		}
+
+		return null;
+	}//end firstHitUid()
 
 	/**
 	 * Create a Nextcloud Contact from the object's existing identity fields by
@@ -453,51 +514,20 @@ class UnifyClientContactIdentity implements IRepairStep {
 	}//end createContactViaSync()
 
 	/**
-	 * Execute an OpenRegister write under the scoped system-operation context.
-	 *
-	 * Repair steps run without a user session (web-triggered upgrades, webcron),
-	 * so OpenRegister RBAC denies every write as 'Anonymous'
-	 * (NotAuthorizedException). ObjectService::runAsSystem scopes trusted-system
-	 * elevation to the callable; older OpenRegister versions without it fall
-	 * back to the direct call.
-	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param callable $operation The write operation to execute.
-	 *
-	 * @return mixed Whatever the operation returns.
-	 *
-	 * @spec exclude system-context adoption — back-compat elevation shim around OR writes, no behavioural spec surface.
-	 */
-	private function execAsSystem(object $objectService, callable $operation): mixed {
-		if (method_exists($objectService, 'runAsSystem') === true) {
-			return $objectService->runAsSystem($operation);
-		}
-
-		return $operation();
-	}//end execAsSystem()
-
-	/**
 	 * Persist a matched contactsUid back on the object, keeping every existing
 	 * identity field in place as the mirror (non-destructive).
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param string $register The register id/slug.
-	 * @param string $schema The schema id/slug.
-	 * @param array<string,mixed> $object The pipelinq object.
-	 * @param string $contactsUid The resolved contactsUid.
+	 * @param IdentityCollection  $collection The collection the object belongs to.
+	 * @param array<string,mixed> $object     The pipelinq object carrying its resolved contactsUid.
 	 *
 	 * @return void
 	 */
-	private function persistContactsUid(
-		object $objectService,
-		string $register,
-		string $schema,
-		array $object,
-		string $contactsUid,
-	): void {
+	private function persistContactsUid(IdentityCollection $collection, array $object): void {
+		$objectService = $collection->objectService;
+		$register = $collection->register;
+		$schema = $collection->schema;
 		$objectId = (string)($object['id'] ?? $object['uuid'] ?? '');
 		$payload = $object;
-		$payload['contactsUid'] = $contactsUid;
 		unset($payload['@self']);
 
 		try {
@@ -508,10 +538,10 @@ class UnifyClientContactIdentity implements IRepairStep {
 					->setSchema($schema)
 					->saveObject(
 						object: $payload,
-						extend: [],
-						register: $register,
-						schema: $schema,
-						uuid: $objectId
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $register, schema: $schema),
+							uuid: $objectId
+						)
 					)
 			);
 		} catch (\Throwable $e) {
@@ -545,123 +575,163 @@ class UnifyClientContactIdentity implements IRepairStep {
 		string $schema,
 		array $clientUidByRef,
 	): int {
-		$moments = $this->readAll(
-			objectService: $objectService,
-			register: $register,
-			schema: $schema,
-			ticketType: TicketService::TYPE_CONTACTMOMENT
-		);
+		$type = TicketServiceInterface::TYPE_CONTACTMOMENT;
+		$moments = $this->readAll(objectService: $objectService, register: $register, schema: $schema, ticketType: $type);
 
 		$rekeyed = 0;
 		foreach ($moments as $moment) {
-			if ((string)($moment['contactsUid'] ?? '') !== '') {
-				// Already re-keyed on a prior run — no-op.
-				continue;
-			}
-
-			$clientRef = (string)($moment['client'] ?? '');
-			if ($clientRef === '' || isset($clientUidByRef[$clientRef]) === false) {
-				continue;
-			}
-
-			$momentId = (string)($moment['id'] ?? $moment['uuid'] ?? '');
-			$payload = $moment;
-			$payload['contactsUid'] = $clientUidByRef[$clientRef];
-			unset($payload['@self']);
-
-			try {
-				$this->execAsSystem(
-					objectService: $objectService,
-					operation: static fn () => $objectService
-						->setRegister($register)
-						->setSchema($schema)
-						->saveObject(
-							object: $payload,
-							extend: [],
-							register: $register,
-							schema: $schema,
-							uuid: $momentId
-						)
-				);
-				$rekeyed++;
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Identity unify: failed to re-key contactmoment',
-					['momentId' => $momentId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+			$payload = $this->rekeyedPayload(moment: $moment, clientUidByRef: $clientUidByRef);
+			$rekeyed += $this->saveRekeyed(objectService: $objectService, register: $register, schema: $schema, payload: $payload);
+		}
 
 		return $rekeyed;
 	}//end rekeyContactmomenten()
+
+	/**
+	 * The contactmoment re-keyed to its client's contactsUid, or null when it needs no re-key.
+	 *
+	 * @param array<string, mixed> $moment The contactmoment.
+	 * @param array<string, string> $clientUidByRef Client ref to contactsUid.
+	 *
+	 * @return array<string, mixed>|null The payload to save, or null.
+	 */
+	private function rekeyedPayload(array $moment, array $clientUidByRef): array|null {
+		if ((string)($moment['contactsUid'] ?? '') !== '') {
+			// Already re-keyed on a prior run — no-op.
+			return null;
+		}
+
+		$clientRef = (string)($moment['client'] ?? '');
+		if ($clientRef === '' || isset($clientUidByRef[$clientRef]) === false) {
+			return null;
+		}
+
+		$payload = $moment;
+		$payload['contactsUid'] = $clientUidByRef[$clientRef];
+		unset($payload['@self']);
+		return $payload;
+	}//end rekeyedPayload()
+
+	/**
+	 * Save a re-keyed contactmoment as system; 1 when saved, 0 when skipped or failed (logged).
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param string $register The register id/slug.
+	 * @param string $schema The ticket schema id/slug.
+	 * @param array<string, mixed>|null $payload The re-keyed payload, or null to skip.
+	 *
+	 * @return int The number of contactmoments saved.
+	 */
+	private function saveRekeyed(object $objectService, string $register, string $schema, array|null $payload): int {
+		if ($payload === null) {
+			return 0;
+		}
+
+		$momentId = (string)($payload['id'] ?? $payload['uuid'] ?? '');
+		try {
+			$this->execAsSystem(
+				objectService: $objectService,
+				operation: static fn () => $objectService
+					->setRegister($register)
+					->setSchema($schema)
+					->saveObject(object: $payload, options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $momentId
+					))
+			);
+			return 1;
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Identity unify: failed to re-key contactmoment',
+				['momentId' => $momentId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
+			);
+			return 0;
+		}//end try
+	}//end saveRekeyed()
 
 	/**
 	 * Write one MDM sourceRecord (sourceSystem pipelinq-identity-unify) for a
 	 * resolved object so the golden-record layer can collapse duplicate
 	 * identities. Provenance write failure is non-fatal.
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param string $register The register id/slug.
-	 * @param string $entityType MDM entityType ('account'|'contact').
-	 * @param string $nativeId The pipelinq object id/uuid.
-	 * @param string $currentMasterEntity The resolved contactsUid.
-	 * @param array<string,mixed> $object The raw object (provenance rawAttributes).
+	 * @param IdentityPass        $pass                The collection and the kind of identity.
+	 * @param array<string,mixed> $object              The raw object (provenance rawAttributes).
+	 * @param string              $currentMasterEntity The resolved contactsUid.
 	 *
 	 * @return void
 	 */
-	private function writeSourceRecord(
-		object $objectService,
-		string $register,
-		string $entityType,
-		string $nativeId,
-		string $currentMasterEntity,
-		array $object,
-	): void {
-		$sourceRecordSchema = $this->appConfig->getValueString(Application::APP_ID, 'sourceRecord_schema', '');
+	private function writeSourceRecord(IdentityPass $pass, array $object, string $currentMasterEntity): void {
+		$nativeId = $this->objectIdOf(object: $object);
+		$sourceRecordSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sourceRecord_schema', '');
 		if ($sourceRecordSchema === '') {
 			// MDM source-record schema not configured; provenance is best-effort.
 			return;
 		}
 
+		$entityType = $pass->kind->entityType;
+		$record = $this->sourceRecordObject(entityType: $entityType, nativeId: $nativeId, currentMasterEntity: $currentMasterEntity, object: $object);
+		$collection = $pass->collection;
+		$this->saveSourceRecord(objectService: $collection->objectService, register: $collection->register, schema: $sourceRecordSchema, record: $record);
+	}//end writeSourceRecord()
+
+	/**
+	 * The MDM sourceRecord for a resolved object.
+	 *
+	 * @param string $entityType MDM entityType ('account'|'contact').
+	 * @param string $nativeId The pipelinq object id/uuid.
+	 * @param string $currentMasterEntity The resolved contactsUid.
+	 * @param array<string,mixed> $object The raw object (provenance rawAttributes).
+	 *
+	 * @return array<string, mixed> The sourceRecord object.
+	 */
+	private function sourceRecordObject(string $entityType, string $nativeId, string $currentMasterEntity, array $object): array {
 		$raw = $object;
 		unset($raw['@self']);
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
+		return [
+			'sourceRecordId' => self::SOURCE_SYSTEM . ':' . $nativeId,
+			'sourceSystem' => self::SOURCE_SYSTEM,
+			'nativeId' => $nativeId,
+			'entityType' => $entityType,
+			'currentMasterEntity' => $currentMasterEntity,
+			'rawAttributes' => $raw,
+			'mappedAttributes' => ['contactsUid' => $currentMasterEntity],
+			'firstSeen' => $now,
+			'lastSeen' => $now,
+			'lastChange' => $now,
+			'linkageMethod' => 'system-auto-merge',
+			'linkageConfidence' => 1.0,
+			'confidence' => 1.0,
+		];
+	}//end sourceRecordObject()
+
+	/**
+	 * Save a sourceRecord as system; a failure is logged, never thrown.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 * @param string $register The register id/slug.
+	 * @param string $schema The sourceRecord schema id/slug.
+	 * @param array<string, mixed> $record The sourceRecord object.
+	 *
+	 * @return void
+	 */
+	private function saveSourceRecord(object $objectService, string $register, string $schema, array $record): void {
 		try {
 			$this->execAsSystem(
 				objectService: $objectService,
 				operation: static fn () => $objectService
 					->setRegister($register)
-					->setSchema($sourceRecordSchema)
-					->saveObject(
-						object: [
-							'sourceRecordId' => self::SOURCE_SYSTEM . ':' . $nativeId,
-							'sourceSystem' => self::SOURCE_SYSTEM,
-							'nativeId' => $nativeId,
-							'entityType' => $entityType,
-							'currentMasterEntity' => $currentMasterEntity,
-							'rawAttributes' => $raw,
-							'mappedAttributes' => ['contactsUid' => $currentMasterEntity],
-							'firstSeen' => $now,
-							'lastSeen' => $now,
-							'lastChange' => $now,
-							'linkageMethod' => 'system-auto-merge',
-							'linkageConfidence' => 1.0,
-							'confidence' => 1.0,
-						],
-						extend: [],
-						register: $register,
-						schema: $sourceRecordSchema,
-						uuid: null
-					)
+					->setSchema($schema)
+					->saveObject(object: $record, options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Identity unify: sourceRecord provenance write failed',
-				['nativeId' => $nativeId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
+				['nativeId' => $record['nativeId'], 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
 			);
 		}//end try
-	}//end writeSourceRecord()
+	}//end saveSourceRecord()
 
 	/**
 	 * Read every object of a schema in the register (setRegister->setSchema->findAll).
@@ -735,14 +805,6 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * @return object|null The object service, or null.
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Identity unify: OpenRegister ObjectService not resolvable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'Identity unify: OpenRegister ObjectService not resolvable', errorKey: 'exception');
 	}//end resolveObjectService()
 }//end class

@@ -205,7 +205,9 @@ export default {
 
 <style scoped src="./inlineEditRows.css"></style>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .skill-settings {
 	display: flex;
 	flex-direction: column;
@@ -239,10 +241,7 @@ export default {
 }
 
 .skill-meta {
-	display: block;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	margin-top: 2px;
+	@include meta-line;
 }
 
 .skill-item__actions {
