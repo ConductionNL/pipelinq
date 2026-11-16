@@ -38,6 +38,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A succeeded run resets the count, a failed run adds one, a partial run
@@ -110,7 +111,11 @@ class ExportJobSwitchOffTest extends TestCase {
 			fn (int|string $id): ?ObjectEntity => (isset($this->jobs[$id]) === true ? self::entity((string)$id, $this->jobs[$id]) : null)
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = $object;
 				$this->jobs[(string)$uuid] = $object;
 				return self::entity((string)$uuid, $object);

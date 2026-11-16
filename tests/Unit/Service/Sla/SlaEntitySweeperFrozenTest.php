@@ -30,6 +30,7 @@ use OCA\Pipelinq\Service\SlaEngineService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A locked record is skipped: not escalated, not written, and the run goes on.
@@ -89,7 +90,11 @@ class SlaEntitySweeperFrozenTest extends TestCase {
 				return $config['offset'] === 0 ? $this->rows : [];
 			}
 
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if (str_starts_with($uuid, 'refused') === true) {
 					throw new RuntimeException('This object is frozen.');
 				}

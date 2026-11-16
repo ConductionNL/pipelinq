@@ -114,17 +114,35 @@ class SubmissionTouchRecorder {
 	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md#requirement-the-website-enquiry-form-keeps-campaign-values-req-moc-003
 	 */
 	public function record(array $form, array $payload, ?string $idempotencyKey = null): ?array {
+		return $this->recordLogged(payload: $payload, submit: ['form' => $form, 'idempotencyKey' => $idempotencyKey]);
+
+	}//end record()
+
+	/**
+	 * Record one submit; a failure is logged and records nothing.
+	 *
+	 * @param array<string, mixed>                                      $payload The raw submitted fields.
+	 * @param array{form: array<string, mixed>, idempotencyKey: ?string} $submit  The published form and the submit's
+	 *                                                                           Idempotency-Key.
+	 *
+	 * @return array<string, mixed>|null The saved touchpoint, or null when nothing was recorded.
+	 */
+	private function recordLogged(array $payload, array $submit): ?array {
 		try {
-			return $this->recordOrThrow(form: $form, payload: $payload, idempotencyKey: $idempotencyKey);
+			$formId = trim((string)($submit['form']['id'] ?? ''));
+			return $this->recordOrThrow(
+				payload: $payload,
+				submit: ['formId' => $formId, 'nonce' => self::nonceFor(formId: $formId, idempotencyKey: $submit['idempotencyKey'])]
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: website form submit stored, its campaign touch was not recorded.',
-				['form' => (string)($form['id'] ?? ''), 'reason' => $e->getMessage()]
+				['form' => (string)($submit['form']['id'] ?? ''), 'reason' => $e->getMessage()]
 			);
 			return null;
 		}
 
-	}//end record()
+	}//end recordLogged()
 
 	/**
 	 * The campaign values of a submit: the five keys a touchpoint's `utm` holds, trimmed and capped.
@@ -157,20 +175,19 @@ class SubmissionTouchRecorder {
 	/**
 	 * Record, letting a failure reach record()'s catch.
 	 *
-	 * @param array<string, mixed> $form           The published form.
-	 * @param array<string, mixed> $payload        The raw submitted fields.
-	 * @param string|null          $idempotencyKey The submit's Idempotency-Key.
+	 * @param array<string, mixed>                $payload The raw submitted fields.
+	 * @param array{formId: string, nonce: string} $submit  The published form's trimmed id and the submit's
+	 *                                                      nonce ('' without an Idempotency-Key).
 	 *
 	 * @return array<string, mixed>|null The saved touchpoint, or null.
 	 */
-	private function recordOrThrow(array $form, array $payload, ?string $idempotencyKey): ?array {
-		$formId = trim((string)($form['id'] ?? ''));
-		$nonce = self::nonceFor(formId: $formId, idempotencyKey: $idempotencyKey);
+	private function recordOrThrow(array $payload, array $submit): ?array {
+		$nonce = $submit['nonce'];
 		if ($nonce !== '' && $this->touchpoints->existsForNonce(nonce: $nonce) === true) {
 			return null;
 		}
 
-		$row = $this->submitRow(payload: $payload, formId: $formId);
+		$row = $this->submitRow(payload: $payload, formId: $submit['formId']);
 		if ($nonce !== '') {
 			$row['nonce'] = $nonce;
 		}

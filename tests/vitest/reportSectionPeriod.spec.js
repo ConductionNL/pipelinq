@@ -104,8 +104,8 @@ describe('the report sections', () => {
 
 	it('colour each channel, and an unknown one grey', async () => {
 		http.get.mockResolvedValue({ data: { distribution: { telefoon: 3, email: 1, fax: 0 } } })
-		const ctx = { effectivePeriod: 'today', loading: false, channelData: [] }
-		await sections.distribution.methods.fetchData.call(ctx)
+		const ctx = { effectivePeriod: 'today', loading: false, channelData: [], ...optionOf(sections.distribution, 'methods') }
+		await ctx.fetchData()
 		expect(ctx.channelData).toEqual([
 			{ name: 'telefoon', count: 3, percentage: 75, color: '#4c84db' },
 			{ name: 'email', count: 1, percentage: 25, color: '#f5a623' },

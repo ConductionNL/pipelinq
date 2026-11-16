@@ -137,6 +137,7 @@
 				class="cn-settings-section--wide" />
 
 			<MessagingSettings v-if="isAdmin && isConfigured" />
+			<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />
 
 			<!-- xWiki Integration (xwiki-integration) -->
 			<NcSettingsSection
@@ -377,6 +378,7 @@ import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import PosCustomerSettings from '../admin/PosCustomerSettings.vue'
+import BackgroundServiceAccountSettings from './BackgroundServiceAccountSettings.vue'
 import CtiEventLog from './CtiEventLog.vue'
 import CtiSettings from './CtiSettings.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
@@ -502,6 +504,7 @@ export default {
 	components: {
 		CnConnectionsPanel,
 		MessagingSettings,
+		BackgroundServiceAccountSettings,
 		DeliverabilitySettings,
 		CtiEventLog,
 		CtiSettings,

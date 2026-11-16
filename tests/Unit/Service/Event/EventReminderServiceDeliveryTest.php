@@ -26,6 +26,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Locks the reminder's wording and the skip paths.
@@ -172,16 +173,16 @@ class EventReminderServiceDeliveryTest extends TestCase
     {
         $objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
         $cause   = new \Exception('locked');
-        $objects->expects($this->once())->method('saveObject')->with(
-            $this->callback(
+        $objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+        		'object' => $this->callback(
                 callback: static fn(array $object): bool => $object['title'] === 'x'
                     && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $object['reminderSentAt']) === 1
             ),
-            $this->anything(),
-            '7',
-            '21',
-            'e1'
-        )->willThrowException($cause);
+        		'extend' => $this->anything(),
+        		'register' => '7',
+        		'schema' => '21',
+        		'uuid' => 'e1',
+        	]))->willThrowException($cause);
 
         try {
             $this->service(event: ['title' => 'x'], objects: $objects, mailer: $this->createMock(originalClassName: IMailer::class))

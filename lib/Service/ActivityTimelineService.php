@@ -660,18 +660,30 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 			throw new RuntimeException('Contactmoment register or schema not configured.');
 		}
 
-		$payload = $this->linkedWorklog(payload: $this->worklogPayload(data: $data), origin: [$entityType, $entityId]);
-		$saved = $this->ticketService->save(TicketService::TYPE_CONTACTMOMENT, $payload);
+		$origin = [$entityType, $entityId];
+		$payload = $this->linkedWorklog(payload: $this->worklogPayload(data: $data), origin: $origin);
 
+		return $this->worklogItem(saved: $this->ticketService->save(TicketService::TYPE_CONTACTMOMENT, $payload), origin: $origin);
+	}//end createWorklog()
+
+	/**
+	 * The saved worklog as a timeline item of the entity it was logged on.
+	 *
+	 * @param mixed                       $saved  The saved contactmoment.
+	 * @param array{0: string, 1: string} $origin The entity type (client|request) and UUID.
+	 *
+	 * @return array<string,mixed> The normalised item, or none.
+	 */
+	private function worklogItem(mixed $saved, array $origin): array {
 		$normalized = $this->normalizeActivity(
 			sourceType: 'interaction',
 			object: $this->extractObjectArray(saved: $saved),
-			entityType: $entityType,
-			entityId: $entityId
+			entityType: $origin[0],
+			entityId: $origin[1]
 		);
 
 		return $normalized ?? [];
-	}//end createWorklog()
+	}//end worklogItem()
 
 	/**
 	 * The worklog payload linked to its client, or to its parent request.

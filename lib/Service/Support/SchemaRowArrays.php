@@ -49,12 +49,26 @@ trait SchemaRowArrays {
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
 	private function schemaRowArrays(array $filters, string $failure, array $context): array {
+		return $this->rowArraysOrLog(filters: $filters, log: ['failure' => $failure, 'context' => $context]);
+	}//end schemaRowArrays()
+
+	/**
+	 * Rows of the host's schema matching the filters, as arrays; none when OpenRegister is unavailable.
+	 *
+	 * @param array<string, mixed>                                $filters Filters ahead of the register and schema.
+	 * @param array{failure: string, context: array<string, mixed>} $log     The warning logged when the read fails, and its context.
+	 *
+	 * @return array<int, array<string, mixed>> Rows.
+	 *
+	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
+	 */
+	private function rowArraysOrLog(array $filters, array $log): array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return [];
 		}
 
-		$rows = $this->findSchemaRows(objectService: $objectService, filters: $filters, failure: $failure, context: $context);
+		$rows = $this->readSchemaRowsOrLog(read: ['objectService' => $objectService, 'filters' => $filters], log: $log);
 
 		$out = [];
 		foreach (($rows ?? []) as $row) {
@@ -62,5 +76,5 @@ trait SchemaRowArrays {
 		}
 
 		return $out;
-	}//end schemaRowArrays()
+	}//end rowArraysOrLog()
 }//end trait

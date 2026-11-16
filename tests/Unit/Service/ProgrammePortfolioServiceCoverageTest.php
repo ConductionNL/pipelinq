@@ -30,6 +30,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Exercises the mode resolution, link rules, progress modes and the
@@ -552,7 +553,13 @@ class ProgrammePortfolioServiceCoverageTest extends TestCase {
 	public function testWriteSavesObject(): void {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['a' => 1], [], 'reg-1', 'sch-task', 'uuid-5');
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['a' => 1],
+					'extend' => [],
+					'register' => 'reg-1',
+					'schema' => 'sch-task',
+					'uuid' => 'uuid-5',
+				]));
 
 		$this->assertTrue(condition: $this->service()->write(schemaKey: 'programmeTask_schema', object: ['a' => 1], uuid: 'uuid-5'));
 	}//end testWriteSavesObject()
@@ -613,7 +620,13 @@ class ProgrammePortfolioServiceCoverageTest extends TestCase {
 		];
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with($expected, [], 'reg-1', 'sch-workitem', null);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $expected,
+					'extend' => [],
+					'register' => 'reg-1',
+					'schema' => 'sch-workitem',
+					'uuid' => null,
+				]));
 
 		$result = $this->service()->linkWork(' prog-1 ', ' procest:case ', ' uuid-1 ', ' My case ');
 

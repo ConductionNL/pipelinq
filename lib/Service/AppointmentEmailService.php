@@ -33,6 +33,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
@@ -668,7 +671,7 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	private function loadForStamp(array $scope, string $bookingId): array|null {
 		[$register, $schema] = $scope;
 		try {
-			$found = $this->getObjectService()->find(id: $bookingId, register: $register, schema: $schema);
+			$found = $this->getObjectService()->find(id: $bookingId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq appointment email: stamp lookup failed', ['booking' => $bookingId]);
 			return null;
@@ -712,7 +715,10 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	private function saveStamped(array $scope, array $data, string $bookingId, string $field): void {
 		[$register, $schema] = $scope;
 		try {
-			$this->getObjectService()->saveObject(object: $data, extend: [], register: $register, schema: $schema, uuid: $bookingId);
+			$this->getObjectService()->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $bookingId)
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq appointment email: stamp save failed',
@@ -897,8 +903,7 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $id,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return null;

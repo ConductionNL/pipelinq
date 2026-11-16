@@ -92,12 +92,7 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function index(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['staff' => $this->service->listStaff()],
 			label: 'index'
 		);
@@ -117,15 +112,10 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function show(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
+		$forbidden = $this->refuseStaffAccess(staffId: $id);
 		if ($forbidden instanceof JSONResponse) {
 			return $forbidden;
 		}
-
-		$uid = $this->userSession->getUser()?->getUID() ?? '';
-
-		// Per-object schema-scope check (ADR-005 Rule 3).
-		$this->service->authorizeStaff(staffId: $id, userId: $uid);
 
 		return $this->run(
 			action: fn (): array => ['staff' => $this->service->getStaff(id: $id)],
@@ -143,12 +133,7 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function create(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['staff' => $this->service->saveStaff(data: $this->payload())],
 			label: 'create'
 		);
@@ -168,15 +153,10 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function update(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
+		$forbidden = $this->refuseStaffAccess(staffId: $id);
 		if ($forbidden instanceof JSONResponse) {
 			return $forbidden;
 		}
-
-		$uid = $this->userSession->getUser()?->getUID() ?? '';
-
-		// Per-object schema-scope check (ADR-005 Rule 3).
-		$this->service->authorizeStaff(staffId: $id, userId: $uid);
 
 		return $this->run(
 			action: fn (): array => ['staff' => $this->service->saveStaff(data: $this->payload(), id: $id)],
@@ -198,15 +178,10 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function destroy(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
+		$forbidden = $this->refuseStaffAccess(staffId: $id);
 		if ($forbidden instanceof JSONResponse) {
 			return $forbidden;
 		}
-
-		$uid = $this->userSession->getUser()?->getUID() ?? '';
-
-		// Per-object schema-scope check (ADR-005 Rule 3).
-		$this->service->authorizeStaff(staffId: $id, userId: $uid);
 
 		return $this->run(
 			action: function () use ($id): array {
@@ -251,6 +226,26 @@ class PosStaffController extends Controller {
 			label: 'authenticate'
 		);
 	}//end authenticate()
+
+	/**
+	 * The 401/403 for a non-admin caller, after the per-object schema-scope
+	 * check (ADR-005 Rule 3) of the staff record; null when allowed.
+	 *
+	 * @param string $staffId The staff UUID.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function refuseStaffAccess(string $staffId): ?JSONResponse {
+		$forbidden = $this->requireAdmin();
+		if ($forbidden instanceof JSONResponse) {
+			return $forbidden;
+		}
+
+		$uid = $this->userSession->getUser()?->getUID() ?? '';
+		$this->service->authorizeStaff(staffId: $staffId, userId: $uid);
+
+		return null;
+	}//end refuseStaffAccess()
 
 	/**
 	 * Read the staff payload from the request body.

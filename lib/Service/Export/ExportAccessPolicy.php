@@ -28,8 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
+use OCA\Pipelinq\Lifecycle\ConfiguredGroup;
+use OCA\Pipelinq\Lifecycle\ConfiguredGroupGate;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -78,19 +79,9 @@ class ExportAccessPolicy implements ExportAccessPolicyInterface {
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	public function isExportAdmin(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
-
-		$group = $this->appConfig->getValueString(AppIdentity::APP_ID, self::ANALYST_GROUP_KEY, '');
-		if ($group === '') {
-			return false;
-		}
-
-		return $this->groupManager->isInGroup($userId, $group);
+		return (new ConfiguredGroupGate(appConfig: $this->appConfig, groupManager: $this->groupManager))->admits(
+			userId: $userId,
+			group: new ConfiguredGroup(key: self::ANALYST_GROUP_KEY)
+		);
 	}//end isExportAdmin()
 }//end class

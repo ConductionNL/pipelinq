@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
@@ -366,7 +368,10 @@ class ContractService implements ContractServiceInterface {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$saved = $objectService->saveObject($data, [], $registerId, $schemaId, $uuid);
+			$saved = $objectService->saveObject(
+				$data,
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId), uuid: $uuid)
+			);
 			if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
 				return $saved->jsonSerialize();
 			}

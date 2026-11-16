@@ -77,7 +77,12 @@ class RemoveMockPipelinesCommand extends Command {
 			return Command::FAILURE;
 		}
 
-		$this->printRemovals(report: $report, dryRun: $dryRun, output: $output);
+		$verb = 'Removed';
+		if ($dryRun === true) {
+			$verb = 'Would remove';
+		}
+
+		$output->writeln($this->removalLines(report: $report, verb: $verb));
 		$this->printDefaults(report: $report, output: $output);
 
 		$counts = [count($report['removed']), count($report['kept']), count($report['failed'])];
@@ -91,33 +96,30 @@ class RemoveMockPipelinesCommand extends Command {
 	}//end execute()
 
 	/**
-	 * Print each removed, kept and refused pipeline.
+	 * A line for each removed, kept and refused pipeline.
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $report The cleanup report.
-	 * @param bool                                             $dryRun Whether nothing was removed.
-	 * @param OutputInterface                                  $output The console output.
+	 * @param string                                           $verb   How a removal is reported.
 	 *
-	 * @return void
+	 * @return list<string>
 	 */
-	private function printRemovals(array $report, bool $dryRun, OutputInterface $output): void {
-		$verb = 'Removed';
-		if ($dryRun === true) {
-			$verb = 'Would remove';
-		}
-
+	private function removalLines(array $report, string $verb): array {
+		$lines = [];
 		foreach ($report['removed'] as $pipeline) {
-			$output->writeln(sprintf('%s "%s" (%s)', $verb, $pipeline['title'], $pipeline['id']));
+			$lines[] = sprintf('%s "%s" (%s)', $verb, $pipeline['title'], $pipeline['id']);
 		}
 
 		foreach ($report['kept'] as $pipeline) {
 			$usedBy = implode(' and ', $pipeline['usedBy']);
-			$output->writeln(sprintf('<comment>Kept "%s" (%s): %s objects are on it</comment>', $pipeline['title'], $pipeline['id'], $usedBy));
+			$lines[] = sprintf('<comment>Kept "%s" (%s): %s objects are on it</comment>', $pipeline['title'], $pipeline['id'], $usedBy);
 		}
 
 		foreach ($report['failed'] as $pipeline) {
-			$output->writeln(sprintf('<error>OpenRegister refused to remove "%s" (%s)</error>', $pipeline['title'], $pipeline['id']));
+			$lines[] = sprintf('<error>OpenRegister refused to remove "%s" (%s)</error>', $pipeline['title'], $pipeline['id']);
 		}
-	}//end printRemovals()
+
+		return $lines;
+	}//end removalLines()
 
 	/**
 	 * Warn when more than one pipeline is marked as default.

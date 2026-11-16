@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 /**
  * Resolves a destination's connector source and collects its legacy secret
  * fields and configured authentication block. The host class provides
@@ -110,11 +112,11 @@ trait ExportSourceCredentials {
 		try {
 			$source = $this->getObjectService()->find(
 				id: $sourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
-				_rbac: true,
-				_multitenancy: true,
-				_render: false,
+				options: new ObjectFindOptions(
+					register: $registerSlug,
+					schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+					render: false
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

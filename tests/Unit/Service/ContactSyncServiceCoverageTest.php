@@ -35,6 +35,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Contact sync over mocked Contacts, register and collaborator services.
@@ -213,7 +214,13 @@ class ContactSyncServiceCoverageTest extends TestCase {
 			->willReturn($this->provision());
 		$expected = ['name' => 'Acme B.V.', 'type' => 'organization', 'email' => 'info@acme.nl', 'phone' => '+31 20 123', 'contactsUid' => 'card-1'];
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with($expected, [], 'reg-1', 's-client', null)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $expected,
+				'extend' => [],
+				'register' => 'reg-1',
+				'schema' => 's-client',
+				'uuid' => null,
+			]))
 			->willReturnCallback(fn (array $object): ObjectEntity => $this->stored(payload: $object));
 
 		$created = $this->service->createWithContact(objectType: 'client', form: $form);
@@ -233,13 +240,13 @@ class ContactSyncServiceCoverageTest extends TestCase {
 	public function testCreateKeepsFormEmailAndPhoneWhenTheContactHasNone(): void {
 		$this->vcards->method('provisionContactFromForm')->willReturn($this->provision(email: '', phone: ''));
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(
-				['name' => 'Acme B.V.', 'email' => 'form@acme.nl', 'phone' => '06', 'contactsUid' => 'card-1'],
-				[],
-				'reg-1',
-				's-contact',
-				null
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['name' => 'Acme B.V.', 'email' => 'form@acme.nl', 'phone' => '06', 'contactsUid' => 'card-1'],
+				'extend' => [],
+				'register' => 'reg-1',
+				'schema' => 's-contact',
+				'uuid' => null,
+			]))
 			->willReturnCallback(fn (array $object): ObjectEntity => $this->stored(payload: $object));
 
 		$created = $this->service->createWithContact(objectType: 'contact', form: ['name' => 'Acme', 'email' => 'form@acme.nl', 'phone' => '06']);
@@ -256,7 +263,13 @@ class ContactSyncServiceCoverageTest extends TestCase {
 	public function testCreateAddsNoEmptyEmailOrPhone(): void {
 		$this->vcards->method('provisionContactFromForm')->willReturn($this->provision(email: '', phone: ''));
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['name' => 'Acme B.V.', 'contactsUid' => 'card-1'], [], 'reg-1', 's-client', null)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['name' => 'Acme B.V.', 'contactsUid' => 'card-1'],
+				'extend' => [],
+				'register' => 'reg-1',
+				'schema' => 's-client',
+				'uuid' => null,
+			]))
 			->willReturnCallback(fn (array $object): ObjectEntity => $this->stored(payload: $object));
 
 		$created = $this->service->createWithContact(objectType: 'client', form: ['name' => 'Acme']);

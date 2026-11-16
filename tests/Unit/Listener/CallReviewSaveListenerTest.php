@@ -32,6 +32,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * A call review gets its total and status on every save; other objects are left alone.
@@ -72,7 +73,11 @@ class CallReviewSaveListenerTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null) use ($scorecard, $scorecardReadable): ?ObjectEntity {
+			function (int|string $id, ?ObjectFindOptions $options = null) use ($scorecard, $scorecardReadable): ?ObjectEntity {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = [$id, $register, $schema];
 				if ($scorecardReadable === false) {
 					throw new RuntimeException('register down');

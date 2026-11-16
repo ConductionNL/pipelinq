@@ -27,6 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SegmentServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListQueryWhereCapability;
@@ -798,7 +801,10 @@ class SegmentService implements SegmentServiceInterface {
 	private function persistSegmentObject(array $target, array $payload, string|null $id): array|null {
 		[$register, $schema, $objectService] = $target;
 		try {
-			$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schema, uuid: $id);
+			$saved = $objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SegmentService.saveSegmentObject: save failed',
@@ -2393,7 +2399,7 @@ class SegmentService implements SegmentServiceInterface {
 	private function findSegment(array $target, string $segmentId): array|null {
 		[$register, $schema, $objectService] = $target;
 		try {
-			$entity = $objectService->find(id: $segmentId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $segmentId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info('SegmentService.loadSegment: not found', ['segmentId' => $segmentId, 'exception' => $e->getMessage()]);
 			return null;

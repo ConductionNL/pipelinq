@@ -34,6 +34,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Support\CentsAsDecimal;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
@@ -431,7 +434,7 @@ class AppointmentPaymentProvider {
 		}
 
 		try {
-			$found = $store['service']->find(id: $bookingId, register: $store['register'], schema: $store['schema']);
+			$found = $store['service']->find(id: $bookingId, options: new ObjectFindOptions(register: $store['register'], schema: $store['schema']));
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: booking lookup failed during fee charge', ['booking' => $bookingId]);
 			return null;
@@ -473,7 +476,7 @@ class AppointmentPaymentProvider {
 	 */
 	private function findRecord(array $store, string $objectId): array|null {
 		try {
-			$found = $store['service']->find(id: $objectId, register: $store['register'], schema: $store['schema']);
+			$found = $store['service']->find(id: $objectId, options: new ObjectFindOptions(register: $store['register'], schema: $store['schema']));
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -554,10 +557,10 @@ class AppointmentPaymentProvider {
 		try {
 			$store['service']->saveObject(
 				object: $data,
-				extend: [],
-				register: $store['register'],
-				schema: $store['schema'],
-				uuid: $bookingId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $store['register'], schema: $store['schema']),
+					uuid: $bookingId
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: booking stamp save failed', ['booking' => $bookingId, 'field' => $field]);

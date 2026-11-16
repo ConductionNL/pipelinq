@@ -81,15 +81,12 @@ class PosStaffReportController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function staffSales(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$uid = (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->userSession->getUser());
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
-		if ($this->policy->isManager(userId: $user->getUID()) === false) {
+		if ($this->policy->isManager(userId: $uid) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Manager privileges required')],
 				Http::STATUS_FORBIDDEN

@@ -33,6 +33,7 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Leads on a deleted pipeline move to the default pipeline, as the system
@@ -79,6 +80,7 @@ class OrphanedLeadRepairServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (...$args) use (&$writes, &$active, &$actor): ObjectEntity {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$writes[] = $args;
 				$actor ??= $active;
 				return new ObjectEntity();

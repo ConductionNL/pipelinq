@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
 use Throwable;
 
@@ -58,7 +59,7 @@ trait BlastDeliveryLookup {
 		[$register, $schema, $objectService] = $target;
 
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info($notFound, ['id' => $id, 'exception' => $e->getMessage()]);
 			return null;

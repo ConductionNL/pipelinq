@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCA\Pipelinq\Service\Support\SerialisedCast;
@@ -154,10 +155,7 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $clientId,
-				register: $location->register,
-				schema: $location->schema,
-				_rbac: true,
-				_multitenancy: true,
+				options: new ObjectFindOptions(register: $location->register, schema: $location->schema)
 			);
 		} catch (NotAuthorizedException $e) {
 			return ['status' => 403, 'message' => 'Forbidden'];

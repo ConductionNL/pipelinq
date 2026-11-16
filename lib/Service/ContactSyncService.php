@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
 use OCA\Pipelinq\Service\Support\FirstValue;
@@ -176,10 +178,7 @@ class ContactSyncService implements ContactSyncServiceInterface {
 
 		return $this->getObjectService()->saveObject(
 			$payload,
-			[],
-			$registerId,
-			$schemaId,
-			null
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId))
 		);
 	}//end saveCreated()
 

@@ -25,11 +25,13 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 use OCA\Pipelinq\Service\Support\BlastDeliveryLookup;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * A delivery is read from the configured schema; gaps and misses are null.
  *
  * @covers \OCA\Pipelinq\Service\Support\BlastDeliveryLookup
+ * @uses \OCA\Pipelinq\Util\ObjectServiceTarget
  */
 class BlastDeliveryLookupTest extends TestCase {
 
@@ -91,7 +93,9 @@ class BlastDeliveryLookupTest extends TestCase {
 					 * @param string $schema   Schema.
 					 * @return array<string, string>|null
 					 */
-					public function find(string $id, string $register, string $schema): ?array {
+					public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+						$register = $options?->register;
+						$schema = $options?->schema;
 						if ($id === 'boom') {
 							throw new \RuntimeException('down');
 						}

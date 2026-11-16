@@ -28,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WhatsAppAdapterInterface;
 use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
@@ -1465,7 +1468,10 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	 */
 	private function openConversation(object $objectService, array $conversation, string $schema): string {
 		try {
-			$saved = $objectService->saveObject(object: $conversation, register: $this->getRegisterSlug(), schema: $schema, uuid: null);
+			$saved = $objectService->saveObject(
+				object: $conversation,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema))
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'WhatsAppAdapter.findOrOpenConversation: open failed',
@@ -1538,10 +1544,9 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 		try {
 			$existing = $objectService->find(
 				id: $conversationId,
-				register: $this->getRegisterSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->getRegisterSlug(), schema: $schema),
 				_rbac: self::LOOKUP_SCOPE['_rbac'],
-				_multitenancy: self::LOOKUP_SCOPE['_multitenancy'],
+				_multitenancy: self::LOOKUP_SCOPE['_multitenancy']
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -1566,7 +1571,13 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 	 */
 	private function saveConversationWindow(object $objectService, array $payload, string $conversationId, string $schema): void {
 		try {
-			$objectService->saveObject(object: $payload, register: $this->getRegisterSlug(), schema: $schema, uuid: $conversationId);
+			$objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema),
+					uuid: $conversationId
+				)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'WhatsAppAdapter.touchConversationWindow: save failed',
@@ -1591,8 +1602,10 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG),
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->resolveSchemaSlug(key: 'messageTemplate_schema', default: self::DEFAULT_TEMPLATE_SCHEMA_SLUG)
+				)
 			);
 		} catch (Throwable $e) {
 			return null;

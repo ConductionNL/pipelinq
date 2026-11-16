@@ -45,6 +45,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
@@ -172,8 +175,10 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
+				options: new ObjectFindOptions(
+					register: $this->registerId(),
+					schema: $this->schemaId(schemaSlug: $schemaSlug)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -274,10 +279,10 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 		$saved = $this->savedAsServiceAccount(
 			save: fn (): mixed => $this->objectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			),
 			schemaSlug: $schemaSlug
 		);

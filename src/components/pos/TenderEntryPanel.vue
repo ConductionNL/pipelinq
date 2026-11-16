@@ -399,7 +399,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .tender-panel {
 	display: flex;
 	flex-direction: column;
@@ -412,11 +414,7 @@ export default {
 }
 
 .tender-panel__table th {
-	text-align: start;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	padding: 6px 8px;
-	border-bottom: 1px solid var(--color-border);
+	@include table-head-cell;
 }
 
 .tender-panel__table td {

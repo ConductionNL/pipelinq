@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\EntityActivityServiceInterface;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -520,7 +521,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 	private function findObject(EntityActivityQuery $query, string $schemaId): ?array {
 		try {
 			$objectService = $this->getObjectService();
-			$entity = $objectService->find(id: $query->entityId, register: $query->registerId, schema: $schemaId);
+			$entity = $objectService->find(id: $query->entityId, options: new ObjectFindOptions(register: $query->registerId, schema: $schemaId));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'EntityActivityService: failed to load entity for notes',

@@ -30,6 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentRecordKey;
@@ -965,7 +968,7 @@ class ComplianceService implements ComplianceServiceInterface {
 	private function findTemplate(string $templateId, array $store): array|null {
 		[$objectService, $register, $schema] = $store;
 		try {
-			$entity = $objectService->find(id: $templateId, register: $register, schema: $schema);
+			$entity = $objectService->find(id: $templateId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'ComplianceService.getTemplateById: not found',
@@ -1203,9 +1206,10 @@ class ComplianceService implements ComplianceServiceInterface {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1490,7 +1494,10 @@ class ComplianceService implements ComplianceServiceInterface {
 				return;
 			}
 
-			$objectService->saveObject(object: $payload, register: $register, schema: $schema);
+			$objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning('ComplianceService.persistConsentObject: write failed', ['id' => $id, 'exception' => $e->getMessage()]);
 		}//end try

@@ -118,6 +118,20 @@ class UplImportCommand extends Command {
 			return self::fileContents(file: $file);
 		}
 
+		return $this->downloaded(url: $url, output: $output);
+	}//end csv()
+
+	/**
+	 * Download the list from a URL, or from the configured source when none is given.
+	 *
+	 * @param string          $url    A URL to download from, or empty for the configured source.
+	 * @param OutputInterface $output Where progress goes.
+	 *
+	 * @return string The CSV.
+	 *
+	 * @throws RuntimeException When the download fails.
+	 */
+	private function downloaded(string $url, OutputInterface $output): string {
 		if ($url === '') {
 			$url = $this->importer->sourceUrl();
 		}
@@ -125,7 +139,7 @@ class UplImportCommand extends Command {
 		$output->writeln('Downloading the UPL list from ' . $url);
 
 		return $this->importer->download(url: $url);
-	}//end csv()
+	}//end downloaded()
 
 	/**
 	 * The contents of a local CSV.

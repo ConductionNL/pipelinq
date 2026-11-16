@@ -47,6 +47,8 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
@@ -319,9 +321,10 @@ class TicketService implements TicketServiceInterface {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			register: $this->getRegisterId(),
-			schema: $this->getSchemaId(),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->getRegisterId(), schema: $this->getSchemaId()),
+				uuid: $uuid
+			)
 		);
 	}//end save()
 

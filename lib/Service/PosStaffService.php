@@ -28,6 +28,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -309,7 +312,9 @@ class PosStaffService implements PosStaffServiceInterface {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 
 		try {
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to delete posStaff', ['exception' => $e->getMessage()]);
 			throw new OCSNotFoundException('Medewerker kon niet worden verwijderd.');
@@ -632,10 +637,10 @@ class PosStaffService implements PosStaffServiceInterface {
 			[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 			$this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to update posStaff', ['exception' => $e->getMessage()]);

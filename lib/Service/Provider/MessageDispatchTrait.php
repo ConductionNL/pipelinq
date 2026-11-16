@@ -75,17 +75,40 @@ trait MessageDispatchTrait {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
 	 */
 	private function dispatchViaLeaf(string $source, array $body, string $path, array $headers = []): array {
+		return $this->leafDispatched(source: $source, request: ['body' => $body, 'path' => $path, 'headers' => $headers]);
+	}//end dispatchViaLeaf()
+
+	/**
+	 * Dispatch one vendor request through the OR messaging leaf and return the raw provider response.
+	 *
+	 * @param string                                                                    $source  OpenConnector source slug.
+	 * @param array{body: array<string, mixed>, path: string, headers: array<string, string>} $request The vendor payload, send
+	 *                                                                                           path and extra headers.
+	 *
+	 * @return array<string, mixed> The raw upstream provider response.
+	 *
+	 * @throws TransientSmsProviderException On a transient degrade (failover-eligible).
+	 * @throws PermanentSmsProviderException On a permanent degrade / missing leaf (no failover).
+	 *
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#3.1
+	 */
+	private function leafDispatched(string $source, array $request): array {
 		if ($source === '') {
 			throw new PermanentSmsProviderException('messaging source slug not configured');
 		}
 
 		$provider = $this->resolveDispatchProvider();
 		$result = $this->callLeaf(
-			call: static fn () => $provider->dispatch(source: $source, body: $body, path: $path, headers: $headers)
+			call: static fn () => $provider->dispatch(
+				source: $source,
+				body: $request['body'],
+				path: $request['path'],
+				headers: $request['headers']
+			)
 		);
 
 		return $this->leafDispatchResponse(result: $result);
-	}//end dispatchViaLeaf()
+	}//end leafDispatched()
 
 	/**
 	 * Call the OR messaging leaf, treating any unexpected throwable as transient.

@@ -32,6 +32,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for DeliveryAuditLogger.
@@ -54,6 +55,7 @@ class DeliveryAuditLoggerTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				foreach ($args as $arg) {
 					if (is_array($arg) === true && isset($arg['event']) === true) {
 						$this->captured[] = $arg;

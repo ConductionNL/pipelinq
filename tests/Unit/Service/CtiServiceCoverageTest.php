@@ -34,6 +34,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * Coverage tests for CtiService: webhook dispatch per event type, screen-pop,
@@ -159,6 +161,7 @@ class CtiServiceCoverageTest extends TestCase {
 			}
 
 			public function saveObject(...$args): mixed {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args, trim: true);
 				if ($this->saveThrows === true) {
 					throw new RuntimeException('save failed');
 				}
@@ -167,7 +170,10 @@ class CtiServiceCoverageTest extends TestCase {
 				return ($this->saveReturn ?? $args[0]);
 			}
 
-			public function deleteObject(string $register, string $schema, string $uuid): bool {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
+				$uuid = $deletion->uuid;
 				if ($uuid === 'boom') {
 					throw new RuntimeException('cannot delete');
 				}

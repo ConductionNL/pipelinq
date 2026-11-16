@@ -46,6 +46,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * What BsnAuditService::recordLookup() stores and logs for every field
@@ -427,6 +428,7 @@ class BsnAuditTraceTest extends TestCase {
 	private function auditStore(string $save): ObjectServiceInterface {
 		$store = $this->createMock(ObjectServiceInterface::class);
 		$store->method('saveObject')->willReturnCallback(function (...$args) use ($save): ObjectEntityInterface {
+			$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 			$this->calls[] = ['saveObject' => ['object' => $args[0], 'extend' => $args[1], 'register' => $args[2], 'schema' => $args[3]]];
 			if ($save === 'throw') {
 				throw new RuntimeException('store down');

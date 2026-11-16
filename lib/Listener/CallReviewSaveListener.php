@@ -29,6 +29,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\CallReview\CallReviewTotal;
 use OCP\EventDispatcher\Event;
@@ -140,7 +141,7 @@ class CallReviewSaveListener implements IEventListener {
 		}
 
 		try {
-			$scorecard = $this->objectService->find(id: $scorecardId, register: $register, schema: $schema);
+			$scorecard = $this->objectService->find(id: $scorecardId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: the scorecard of a call review could not be read', ['exception' => $e->getMessage()]);
 			return [];

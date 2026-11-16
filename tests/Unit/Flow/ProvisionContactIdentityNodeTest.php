@@ -29,6 +29,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use UnexpectedValueException;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 
 /**
  * This node exists because `contactsUid` is REQUIRED on client and contact and
@@ -100,11 +101,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			->method('provisionContactFromForm')
 			->willReturn(['contactsUid' => 'uid-123', 'name' => 'Acme BV', 'email' => '', 'phone' => '']);
 
-		$out = $this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'clientContactsUid'],
-			[]
-		);
+		$out = $this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV']), config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'clientContactsUid'], context: []));
 
 		$this->assertSame('uid-123', $out[0]['json']['clientContactsUid']);
 		$this->assertSame('Acme BV', $out[0]['json']['organisation'], 'the incoming record survives');
@@ -125,11 +122,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 				return ['contactsUid' => 'uid-1', 'name' => '', 'email' => '', 'phone' => ''];
 			});
 
-		$this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
-		);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV']), config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'], context: []));
 
 		$this->assertSame('organization', $seen['form']['type']);
 		$this->assertSame('client', $seen['type']);
@@ -149,16 +142,12 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 				return ['contactsUid' => 'uid-2', 'name' => '', 'email' => '', 'phone' => ''];
 			});
 
-		$this->node->execute(
-			$this->items(['contactName' => 'Jane Doe', 'contactEmail' => 'jane@x.test']),
-			[
+		$this->node->execute(new FlowNodeCall(items: $this->items(['contactName' => 'Jane Doe', 'contactEmail' => 'jane@x.test']), config: [
 				'objectType' => 'contact',
 				'nameFrom' => 'contactName',
 				'emailFrom' => 'contactEmail',
 				'output' => 'u',
-			],
-			[]
-		);
+			], context: []));
 
 		$this->assertSame('person', $seen['form']['type']);
 		$this->assertSame('jane@x.test', $seen['form']['email']);
@@ -182,12 +171,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 				return ['contactsUid' => 'uid-3', 'name' => '', 'email' => '', 'phone' => ''];
 			});
 
-		$this->node->execute(
-			// The record HOLDS an email; the config does not name it.
-			$this->items(['organisation' => 'Acme BV', 'contactEmail' => 'jane@x.test']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
-		);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV', 'contactEmail' => 'jane@x.test']), config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'], context: []));
 
 		$this->assertSame('', $seen['email'], 'an unnamed field must not reach the matcher');
 		$this->assertSame('Acme BV', $seen['name']);
@@ -204,11 +188,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 		$this->vcards->method('provisionContactFromForm')->willReturn(null);
 
 		$this->expectException(RuntimeException::class);
-		$this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
-		);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV']), config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'], context: []));
 	}//end testThrowsWhenTheIdentityCannotBeProvisioned()
 
 	/**
@@ -222,11 +202,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 			->willReturn(['contactsUid' => '  ', 'name' => '', 'email' => '', 'phone' => '']);
 
 		$this->expectException(RuntimeException::class);
-		$this->node->execute(
-			$this->items(['organisation' => 'Acme BV']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
-		);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV']), config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'], context: []));
 	}//end testThrowsOnAnEmptyUid()
 
 	/**
@@ -238,11 +214,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 		$this->vcards->expects($this->never())->method('provisionContactFromForm');
 
 		$this->expectException(RuntimeException::class);
-		$this->node->execute(
-			$this->items(['message' => 'hello']),
-			['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'],
-			[]
-		);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['message' => 'hello']), config: ['objectType' => 'client', 'nameFrom' => 'organisation', 'output' => 'u'], context: []));
 	}//end testRefusesAnItemWithNoNameAndNoEmail()
 
 	/**
@@ -277,7 +249,7 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 		$this->vcards->expects($this->never())->method('provisionContactFromForm');
 
 		$this->expectException(UnexpectedValueException::class);
-		$this->node->execute($this->items(['organisation' => 'Acme BV']), ['objectType' => 'nonsense'], []);
+		$this->node->execute(new FlowNodeCall(items: $this->items(['organisation' => 'Acme BV']), config: ['objectType' => 'nonsense'], context: []));
 	}//end testExecuteRevalidatesTheConfig()
 
 	/**
@@ -329,16 +301,12 @@ class ProvisionContactIdentityNodeTest extends TestCase {
 				return ['contactsUid' => 'uid-9'];
 			});
 
-		$this->node->execute(
-			$this->items(['person' => ['name' => '  Jan Jansen ', 'email' => ['work' => 'jan@example.org']]]),
-			[
+		$this->node->execute(new FlowNodeCall(items: $this->items(['person' => ['name' => '  Jan Jansen ', 'email' => ['work' => 'jan@example.org']]]), config: [
 				'objectType' => 'contact',
 				'nameFrom' => 'person.name',
 				'emailFrom' => 'person.email',
 				'output' => 'uid',
-			],
-			[]
-		);
+			], context: []));
 
 		$this->assertSame('Jan Jansen', $seen['name']);
 		$this->assertSame('', $seen['email']);

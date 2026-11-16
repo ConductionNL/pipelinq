@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\OrganisationEnrichmentService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Enrichment proposes KvK values for empty fields and writes the accepted ones.
@@ -60,7 +61,11 @@ class OrganisationEnrichmentServiceTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = [$object, $uuid];
 				return $this->createMock(ObjectEntityInterface::class);
 			}

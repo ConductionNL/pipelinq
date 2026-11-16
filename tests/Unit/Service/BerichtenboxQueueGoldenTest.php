@@ -46,6 +46,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every row queueOutboundMessage() saves, every collaborator call it makes
@@ -242,6 +243,7 @@ class BerichtenboxQueueGoldenTest extends TestCase {
 				$named[$param->getName()] = $args[$i];
 			}
 
+			$named = LegacyObjectArgs::flatten(args: $named);
 			$this->calls[] = ['call' => $target[1], 'args' => array_map(static fn (mixed $v): mixed => ($v instanceof DateTimeImmutable ? $v->format(DATE_ATOM) : $v), $named)];
 			return $answer($named);
 		};

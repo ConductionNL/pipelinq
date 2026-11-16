@@ -37,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Calls every public method of ScheduledTaskService over configured and
@@ -358,6 +359,7 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 		);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) use ($fail): ?ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['find' => array_slice($args, 0, 5)];
 				if ($fail === 'find') {
 					throw new RuntimeException('find down');
@@ -384,6 +386,7 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($fail): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$this->trace[] = ['saveObject' => array_slice($args, 0, 5)];
 				if ($fail === 'save') {
 					throw new RuntimeException('locked');
@@ -394,6 +397,7 @@ class ScheduledTaskServiceGoldenTest extends TestCase {
 		);
 		$objects->method('deleteObject')->willReturnCallback(
 			function (...$args) use ($fail): bool {
+				$args = LegacyObjectArgs::positional(method: 'deleteObject', args: $args);
 				$this->trace[] = ['deleteObject' => array_slice($args, 0, 3)];
 				return $fail !== 'delete';
 			}

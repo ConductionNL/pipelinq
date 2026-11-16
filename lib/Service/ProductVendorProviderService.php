@@ -117,15 +117,30 @@ class ProductVendorProviderService {
 			match: new FieldMatch(field: 'productId', value: $productId),
 		);
 
-		if ($productData === null) {
-			return $this->productNotFound(productId: $productId, consumerAppSlug: $consumerAppSlug);
+		return $this->productViewFor(
+			product: $productData,
+			consumer: ['productId' => $productId, 'consumerAppSlug' => $consumerAppSlug, 'authorised' => $authorisedConsumer]
+		);
+	}//end getProduct()
+
+	/**
+	 * The product projected for the consumer, or null (logged) when it was not found.
+	 *
+	 * @param array<string,mixed>|null                                            $product  The product data, or null.
+	 * @param array{productId: string, consumerAppSlug: string, authorised: bool} $consumer The productId, consumer app, authorised.
+	 *
+	 * @return array<string,mixed>|null The projected product array, or null on failure.
+	 */
+	private function productViewFor(?array $product, array $consumer): ?array {
+		if ($product === null) {
+			return $this->productNotFound(productId: $consumer['productId'], consumerAppSlug: $consumer['consumerAppSlug']);
 		}
 
 		return $this->projectProductView(
-			product: $productData,
-			authorised: $authorisedConsumer || $this->isAuthorisedForPrivateFields(consumerAppSlug: $consumerAppSlug),
+			product: $product,
+			authorised: $consumer['authorised'] || $this->isAuthorisedForPrivateFields(consumerAppSlug: $consumer['consumerAppSlug']),
 		);
-	}//end getProduct()
+	}//end productViewFor()
 
 	/**
 	 * Log a product that could not be found; there is nothing to project.

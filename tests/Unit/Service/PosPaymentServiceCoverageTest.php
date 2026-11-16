@@ -40,6 +40,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Fake OR ObjectService for the payment coverage tests.
@@ -92,7 +94,9 @@ class PayCovObjectService {
 	 *
 	 * @return mixed The configured answer.
 	 */
-	public function find(string $id, ?string $register = null, ?string $schema = null): mixed {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+		$register = $options?->register;
+		$schema = $options?->schema;
 		if ($this->found instanceof Throwable) {
 			throw $this->found;
 		}
@@ -129,11 +133,14 @@ class PayCovObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		?string $register = null,
-		?string $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		if ($this->saveThrows !== null) {
 			throw $this->saveThrows;
 		}

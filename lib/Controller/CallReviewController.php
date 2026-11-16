@@ -28,6 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\CallReview\CoachingPointAgreement;
 use OCP\AppFramework\Controller;
@@ -115,7 +118,10 @@ class CallReviewController extends Controller {
 		unset($review['@self']);
 
 		try {
-			$saved = $this->objectService->saveObject(object: $review, register: $register, schema: $schema, uuid: $id);
+			$saved = $this->objectService->saveObject(
+				object: $review,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: a coaching point could not be agreed', ['reviewId' => $id, 'exception' => $e->getMessage()]);
 			return new JSONResponse(['message' => $this->l10n->t('The coaching point could not be agreed.')], Http::STATUS_FORBIDDEN);
@@ -138,7 +144,7 @@ class CallReviewController extends Controller {
 		}
 
 		try {
-			$found = $this->objectService->find(id: $id, register: $where['register'], schema: $where['schema']);
+			$found = $this->objectService->find(id: $id, options: new ObjectFindOptions(register: $where['register'], schema: $where['schema']));
 		} catch (Throwable $e) {
 			$found = null;
 		}

@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\Event\PortalRequestSubmittedEvent;
 use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
+use OCA\Pipelinq\Service\Portal\Support\NestedIdValue;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -55,6 +56,7 @@ use Psr\Log\LoggerInterface;
  *   audit are all unspecified
  */
 class PortalRequestService implements PortalRequestServiceInterface {
+	use NestedIdValue;
 	use NullableRowIdOf;
 
 	/**
@@ -745,30 +747,6 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	private function isRequest(array $ticket): bool {
 		return ($ticket['ticketType'] ?? null) === self::TICKET_TYPE;
 	}//end isRequest()
-
-	/**
-	 * Read a possibly-nested id value into a string, or null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The id.
-	 */
-	private function readId(mixed $value): ?string {
-		if ($value === null || $value === '') {
-			return null;
-		}
-
-		if (is_array($value) === true) {
-			$id = ($value['id'] ?? $value['uuid'] ?? null);
-			if ($id === null) {
-				return null;
-			}
-
-			return (string)$id;
-		}
-
-		return (string)$value;
-	}//end readId()
 
 	/**
 	 * Read the first id from a scalar or list id value.

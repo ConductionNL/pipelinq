@@ -31,6 +31,9 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * RedemptionService reserves a reward against the points ledger and validates its code.
@@ -118,7 +121,11 @@ class RedemptionServiceTest extends TestCase {
 		);
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturnCallback(function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null): ?ObjectEntity {
+		$objects->method('find')->willReturnCallback(function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntity {
+			$_extend = $options?->extend ?? [];
+			$files = $options?->files ?? false;
+			$register = $options?->register;
+			$schema = $options?->schema;
 			$store = ($schema === 'redemptionOption_schema-id' ? $this->options : $this->redemptions);
 			return isset($store[$id]) === true ? self::entity(uuid: (string)$id, payload: $store[$id]) : null;
 		});
@@ -140,13 +147,18 @@ class RedemptionServiceTest extends TestCase {
 
 			return $found;
 		});
-		$objects->method('saveObject')->willReturnCallback(function (array $object, ?array $extend=[], string|int|null $register=null, string|int|null $schema=null, ?string $uuid=null): ObjectEntity {
+		$objects->method('saveObject')->willReturnCallback(function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+			$extend = $options->extend ?? [];
+			$register = $options->target->register;
+			$schema = $options->target->schema;
+			$uuid = $options->uuid;
 			$uuid = ($uuid ?? 'red-' . (count($this->redemptions) + 1));
 			unset($object['@self'], $object['id']);
 			$this->redemptions[$uuid] = $object;
 			return self::entity(uuid: $uuid, payload: $object);
 		});
-		$objects->method('deleteObject')->willReturnCallback(function (string $uuid): bool {
+		$objects->method('deleteObject')->willReturnCallback(function (ObjectDeletion $deletion): bool {
+			$uuid = $deletion->uuid;
 			$this->deleted[] = $uuid;
 			unset($this->redemptions[$uuid]);
 			return true;

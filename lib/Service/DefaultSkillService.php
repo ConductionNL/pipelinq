@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
@@ -143,7 +145,10 @@ class DefaultSkillService {
 	 */
 	private function saveDefaultSkills(object $objectService, string $registerId, string $skillSchemaId): void {
 		foreach (self::DEFAULT_SKILLS as $skillData) {
-			$objectService->saveObject($skillData, [], $registerId, $skillSchemaId, null);
+			$objectService->saveObject(
+				$skillData,
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $skillSchemaId))
+			);
 			$this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
 		}
 	}//end saveDefaultSkills()

@@ -43,6 +43,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Service\Social\Support\PostMetricsCall;
+
 /**
  * An Instagram business account, published in two steps.
  *
@@ -55,6 +57,8 @@ namespace OCA\Pipelinq\Service\Social;
  *  into every adapter, would add a collaborator that constructs a struct.
  */
 class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesThroughContainer {
+	use PostMetricsCall;
+
 	/**
 	 * The network name, matching the schema enum.
 	 *
@@ -164,14 +168,10 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	 *  by its own id.
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {
-		if (trim($externalId) === '') {
-			return null;
-		}
-
-		return new SocialAdapterCall(
-			method: 'GET',
+		return $this->postMetricsGet(
+			externalId: $externalId,
 			path: '/' . self::GRAPH_VERSION . '/' . rawurlencode($externalId)
-				. '/insights?metric=views,likes,comments,shares',
+				. '/insights?metric=views,likes,comments,shares'
 		);
 	}//end metricsCall()
 

@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\FirstTicketServiceInterface;
 use OCA\Pipelinq\Util\SerialisedToArray;
@@ -221,7 +222,7 @@ class FirstTicketService implements FirstTicketServiceInterface {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		try {
-			$client = $this->objectService->find(id: $clientId, register: $register, schema: $schema);
+			$client = $this->objectService->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: client not read for the first ticket', ['exception' => $e->getMessage()]);
 			return '';

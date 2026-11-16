@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
@@ -587,8 +588,10 @@ class MailTransportService {
 		try {
 			$found = $objectService->find(
 				id: $id,
-				register: $this->getRegisterSlug(),
-				schema: $this->getMailTransportSchemaSlug(),
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->getMailTransportSchemaSlug()
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info('MailTransportService.loadOne: not found', ['id' => $id, 'exception' => $e->getMessage()]);
@@ -765,8 +768,7 @@ class MailTransportService {
 		try {
 			return $objectService->find(
 				id: $connectorSourceId,
-				register: $registerSlug,
-				schema: ConnectorSourceRegister::SOURCE_SCHEMA
+				options: new ObjectFindOptions(register: $registerSlug, schema: ConnectorSourceRegister::SOURCE_SCHEMA)
 			);
 		} catch (Throwable $e) {
 			return null;

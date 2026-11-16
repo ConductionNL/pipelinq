@@ -39,6 +39,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Hierarchy resolution, deal fetching, persistence, admin notification and
@@ -203,7 +204,11 @@ class SnapshotGenerationServiceCoverageTest extends TestCase {
 	private function &captureSaves(): array {
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$saved): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->assertSame(expected: [], actual: $extend);
 				$this->assertSame(expected: 'reg-1', actual: $register);
 				$this->assertSame(expected: 'snap-schema', actual: $schema);

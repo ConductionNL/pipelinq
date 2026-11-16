@@ -31,6 +31,8 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\MergedAwayStampInterface;
 use OCP\IAppConfig;
@@ -76,7 +78,7 @@ class MergedAwayStamp implements MergedAwayStampInterface {
 			$fields = $this->stampFor(survivorUuid: $event->getSurvivorUuid());
 		}
 
-		$this->objects->patchObject(objectId: $uuid, data: $fields, _rbac: false, _multitenancy: false);
+		$this->objects->patchObject(new ObjectPatch(objectId: $uuid, data: $fields), _rbac: false, _multitenancy: false);
 	}//end apply()
 
 	/**
@@ -124,6 +126,6 @@ class MergedAwayStamp implements MergedAwayStampInterface {
 	 * @return ObjectEntityInterface|null The record.
 	 */
 	private function load(string $uuid): ?ObjectEntityInterface {
-		return $this->objects->find(id: $uuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		return $this->objects->find(id: $uuid, options: new ObjectFindOptions(render: false, audit: false), _rbac: false, _multitenancy: false);
 	}//end load()
 }//end class
