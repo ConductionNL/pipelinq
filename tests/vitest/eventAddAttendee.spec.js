@@ -20,7 +20,7 @@ import { h } from 'vue'
 const post = vi.fn()
 const showSuccess = vi.fn()
 const emitted = vi.fn()
-vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), post, put: vi.fn(), patch: vi.fn(), delete: vi.fn() } }))
+vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), post, put: vi.fn(), patch: vi.fn(), delete: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } } }))
 vi.mock('@nextcloud/dialogs', async (importOriginal) => ({ ...(await importOriginal()), showSuccess, showError: vi.fn() }))
 vi.mock('@nextcloud/event-bus', async (importOriginal) => ({ ...(await importOriginal()), emit: emitted }))
 vi.mock('@nextcloud/router', async (importOriginal) => ({ ...(await importOriginal()), generateUrl: (path) => path }))
