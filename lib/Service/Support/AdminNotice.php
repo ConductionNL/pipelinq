@@ -72,7 +72,7 @@ trait AdminNotice {
 	/**
 	 * Send one notification to each user.
 	 *
-	 * @param array<int, \OCP\IUser>                                                       $users  The users.
+	 * @param array<\OCP\IUser>                                                            $users  The users.
 	 * @param array{subject: string, parameters: array<string, mixed>, about: NoticedObject} $notice The subject, its parameters and
 	 *   the object the notice is about.
 	 *
