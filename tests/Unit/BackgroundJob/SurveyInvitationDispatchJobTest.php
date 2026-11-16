@@ -123,6 +123,22 @@ class SurveyInvitationDispatchJobTest extends TestCase {
 	}//end testAnExpiredInvitationIsMarkedExpired()
 
 	/**
+	 * An invitation that is no longer scheduled is neither sent nor expired,
+	 * even when its expiry has passed.
+	 *
+	 * @return void
+	 */
+	public function testAnInvitationThatIsNoLongerScheduledIsLeftAlone(): void {
+		$this->runJob([
+			['id' => 'done', 'status' => 'sent', 'expiresAt' => '2000-01-01T00:00:00+00:00'],
+			['id' => 'none', 'scheduledFor' => '2000-01-01T00:00:00+00:00'],
+		]);
+
+		$this->assertSame([], $this->sent);
+		$this->assertSame([], $this->written);
+	}//end testAnInvitationThatIsNoLongerScheduledIsLeftAlone()
+
+	/**
 	 * A sent invitation is written back as sent with the moment it went out.
 	 *
 	 * @return void
