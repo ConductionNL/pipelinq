@@ -20,6 +20,10 @@ The number is normalised with the organisation's default country, the same way t
 
 When an incoming call matches no contact or client, the intake dialog (*New contact from incoming call*) lists **Earlier contacts from this number**: the earlier contact moments and tickets you may read, newest first, each with its date, type and handler and a link to the ticket. A first-time caller shows *There are no earlier contacts from this number.*
 
+### Searching the Tickets list by phone number
+
+Type a phone number in the search box of the Tickets list, in any form (`06 1234 5678`, `+31 6 12345678`, `06-12345678`), and the list shows the tickets stored with that number. The page says *Searching by phone number* while it does. Other text is searched as usual. This needs a version of the shared list page that supports a search handler; until then the list searches the number as typed.
+
 ### How a number is matched
 
 A search is normalised first, so `06 1234 5678`, `06-12345678`, `+31 6 1234 5678` and `0031612345678` all find a ticket stored as `+31612345678`.

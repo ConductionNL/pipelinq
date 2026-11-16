@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,7 +59,7 @@ class OpenApiController extends Controller {
 		IRequest $request,
 		private readonly IAppManager $appManager,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -86,7 +86,7 @@ class OpenApiController extends Controller {
 			statusCode: Http::STATUS_NOT_FOUND
 		);
 		if ($document !== null) {
-			$document->info->version = $this->appManager->getAppVersion(appId: Application::APP_ID);
+			$document->info->version = $this->appManager->getAppVersion(appId: AppIdentity::APP_ID);
 			$response = new JSONResponse(data: $document);
 		}
 
@@ -103,7 +103,7 @@ class OpenApiController extends Controller {
 	 * @spec openspec/specs/api-contract/spec.md
 	 */
 	private function document(): ?stdClass {
-		$path = $this->appManager->getAppPath(appId: Application::APP_ID).'/openapi.json';
+		$path = $this->appManager->getAppPath(appId: AppIdentity::APP_ID).'/openapi.json';
 		if (is_readable($path) === false) {
 			return null;
 		}

@@ -36,8 +36,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -87,7 +87,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 	 * @param InvoiceSequenceService $invoiceSequence The invoice number allocator.
 	 * @param IMailer $mailer The Nextcloud mailer.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
@@ -97,7 +97,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		private InvoiceSequenceService $invoiceSequence,
 		private IMailer $mailer,
 		private IAppConfig $appConfig,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,

@@ -35,6 +35,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
+use OCA\OpenRegister\Service\Integration\Providers\OutboundMessage;
 use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
 use OCA\Pipelinq\Service\Messaging\MessageRoute;
@@ -505,7 +506,7 @@ class MessagingService implements MessagingServiceInterface {
 		$body = ['validate' => true, 'recipients' => ['+31600000000'], 'body' => 'pipelinq connectivity test'];
 
 		try {
-			$result = $leaf->dispatch(source: $source, body: $body, path: $path, headers: []);
+			$result = $leaf->dispatch(source: $source, message: new OutboundMessage(path: $path, body: $body));
 		} catch (Throwable $e) {
 			$this->logger->warning('MessagingService.runProviderTest: dispatch threw', ['source' => $source, 'error' => $e->getMessage()]);
 			return ['reachable' => false, 'cause' => 'dispatch-error'];

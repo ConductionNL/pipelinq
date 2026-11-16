@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\FullExportStateInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 
@@ -35,7 +36,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
  */
-class FullExportState {
+class FullExportState implements FullExportStateInterface {
 
 	/**
 	 * The app config key of the record.

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\Service\Calls\CallMirror;
+use OCA\Pipelinq\Kernel\Contracts\CallMirrorInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -56,13 +56,13 @@ class CallEventListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param CallMirror $mirror The call mirror.
+	 * @param CallMirrorInterface $mirror The call mirror.
 	 * @param LoggerInterface $logger Logger. A caller's number MUST NOT be written here.
 	 *
 	 * @spec exclude constructor wiring only; it makes no decision a requirement can describe
 	 */
 	public function __construct(
-		private readonly CallMirror $mirror,
+		private readonly CallMirrorInterface $mirror,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

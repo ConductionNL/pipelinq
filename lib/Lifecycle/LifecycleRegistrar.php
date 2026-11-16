@@ -48,6 +48,9 @@ class LifecycleRegistrar {
 	 * transition that references an unregistered guard tag cannot proceed, so
 	 * these registrations are load-bearing for the POS lifecycle.
 	 *
+	 * It also aliases the Kernel contracts of the lifecycle classes other
+	 * components call to their implementations.
+	 *
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
@@ -102,5 +105,7 @@ class LifecycleRegistrar {
 				);
 			}
 		);
+
+		(new LifecycleContractRegistrar())->register(context: $context);
 	}//end register()
 }//end class

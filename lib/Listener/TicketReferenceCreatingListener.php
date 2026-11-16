@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TicketLeafProviderInterface;
-use OCA\Pipelinq\Service\TicketReferenceSequence;
+use OCA\Pipelinq\Kernel\Contracts\TicketReferenceSequenceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -48,13 +48,13 @@ class TicketReferenceCreatingListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig              $appConfig App config, source of the ticket schema id.
-	 * @param TicketReferenceSequence $sequence  Allocates the number.
-	 * @param LoggerInterface         $logger    PSR logger.
+	 * @param IAppConfig                       $appConfig App config, source of the ticket schema id.
+	 * @param TicketReferenceSequenceInterface $sequence  Allocates the number.
+	 * @param LoggerInterface                  $logger    PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly TicketReferenceSequence $sequence,
+		private readonly TicketReferenceSequenceInterface $sequence,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

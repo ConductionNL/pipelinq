@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosStaffReportServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,7 +52,7 @@ class PosStaffReportController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param PosStaffReportServiceInterface $service The report service.
-	 * @param PosAccessPolicy $policy The POS access policy (manager predicate).
+	 * @param PosAccessPolicyInterface $policy The POS access policy (manager predicate).
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
@@ -60,7 +60,7 @@ class PosStaffReportController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private PosStaffReportServiceInterface $service,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,

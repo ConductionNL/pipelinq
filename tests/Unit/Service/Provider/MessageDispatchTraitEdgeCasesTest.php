@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Provider;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
+use OCA\OpenRegister\Service\Integration\Providers\OutboundMessage;
 use OCA\Pipelinq\Service\Provider\CmComSmsClient;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
@@ -122,14 +123,12 @@ class MessageDispatchTraitEdgeCasesTest extends TestCase {
 			/**
 			 * Answer with a scalar.
 			 *
-			 * @param string $source  Source slug.
-			 * @param array  $body    Body.
-			 * @param string $path    Path.
-			 * @param array  $headers Headers.
+			 * @param string          $source  Source slug.
+			 * @param OutboundMessage $message The message.
 			 *
 			 * @return string
 			 */
-			public function dispatch(string $source, array $body, string $path, array $headers = []): string {
+			public function dispatch(string $source, OutboundMessage $message): string {
 				return 'ok';
 			}
 		};
@@ -233,14 +232,12 @@ class MessageDispatchTraitEdgeCasesTest extends TestCase {
 			/**
 			 * Throw the configured error.
 			 *
-			 * @param string $source  Source slug.
-			 * @param array  $body    Body.
-			 * @param string $path    Path.
-			 * @param array  $headers Headers.
+			 * @param string          $source  Source slug.
+			 * @param OutboundMessage $message The message.
 			 *
 			 * @return array
 			 */
-			public function dispatch(string $source, array $body, string $path, array $headers = []): array {
+			public function dispatch(string $source, OutboundMessage $message): array {
 				throw $this->error;
 			}
 		};

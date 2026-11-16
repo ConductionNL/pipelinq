@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -47,18 +47,18 @@ class MyWorkController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest        $request         The HTTP request.
-	 * @param WorklistService $worklistService The worklist service.
-	 * @param IUserSession    $userSession     The session.
-	 * @param LoggerInterface $logger          The logger.
+	 * @param IRequest                 $request         The HTTP request.
+	 * @param WorklistServiceInterface $worklistService The worklist service.
+	 * @param IUserSession             $userSession     The session.
+	 * @param LoggerInterface          $logger          The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly WorklistService $worklistService,
+		private readonly WorklistServiceInterface $worklistService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
