@@ -23,6 +23,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Pipelinq\Service\ClientCaseReader
+ * @uses   \OCA\Pipelinq\Service\RegisterSchema
  */
 class ClientCaseReaderTest extends TestCase {
 
