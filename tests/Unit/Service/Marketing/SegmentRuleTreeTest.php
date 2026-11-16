@@ -106,4 +106,24 @@ class SegmentRuleTreeTest extends TestCase {
 			$tree->pathPastDepth(node: ['type' => 'or', 'children' => [$leaf, $five, ['type' => 'AND', 'children' => [$five]]]])
 		);
 	}//end testThePathPastTheCapNamesTheSixthGroup()
+
+	/**
+	 * A stray scalar among a group's children is skipped, and the path still
+	 * counts the children as stored.
+	 *
+	 * @return void
+	 */
+	public function testAStrayScalarChildIsSkippedButKeepsTheIndexes(): void {
+		$tree = new SegmentRuleTree();
+		$six = ['field' => 'a', 'operator' => 'equals', 'value' => 1];
+		for ($level = 0; $level < 5; $level++) {
+			$six = ['type' => 'AND', 'children' => [$six]];
+		}
+
+		self::assertNull($tree->pathPastDepth(node: ['type' => 'AND', 'children' => ['junk', 7]]));
+		self::assertSame(
+			'$.children[2].children[0].children[0].children[0].children[0]',
+			$tree->pathPastDepth(node: ['type' => 'AND', 'children' => ['junk', null, $six]])
+		);
+	}//end testAStrayScalarChildIsSkippedButKeepsTheIndexes()
 }//end class
