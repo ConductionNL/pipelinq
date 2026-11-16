@@ -62,14 +62,27 @@ class LoyaltyPaymentService implements LoyaltyPaymentServiceInterface {
 	 * @spec openspec/specs/pos-transactions/spec.md#requirement-loyalty-points-can-pay-part-of-a-sale
 	 */
 	public function payWithPoints(string $accountId, int $points, string $posTransactionId): array {
-		if ($points <= 0 || $posTransactionId === '') {
+		return $this->payFor(spend: ['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId]);
+	}//end payWithPoints()
+
+	/**
+	 * Check a spend, then debit it from an account that holds enough points.
+	 *
+	 * @param array{accountId: string, points: int, posTransactionId: string} $spend The account, the points and the sale.
+	 *
+	 * @return array{points: int, amount: float, currentBalance: int} What was spent and what is left.
+	 *
+	 * @throws RuntimeException When the spend is incomplete, or the account, the point value or the balance does not allow it.
+	 */
+	private function payFor(array $spend): array {
+		if ($spend['points'] <= 0 || $spend['posTransactionId'] === '') {
 			throw new RuntimeException('Give the points to spend and the sale they pay for.');
 		}
 
-		$balance = $this->spendableBalance(accountId: $accountId, points: $points);
+		$balance = $this->spendableBalance(accountId: $spend['accountId'], points: $spend['points']);
 
-		return $this->spend(spend: ['accountId' => $accountId, 'points' => $points, 'posTransactionId' => $posTransactionId], balance: $balance);
-	}//end payWithPoints()
+		return $this->spend(spend: $spend, balance: $balance);
+	}//end payFor()
 
 	/**
 	 * Debit the points against the sale and answer with what was spent and what is left.

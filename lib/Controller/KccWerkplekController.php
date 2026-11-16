@@ -82,12 +82,9 @@ class KccWerkplekController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function stateAction(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['message' => 'Authentication required'],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$user = $this->sessionUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		try {
@@ -95,15 +92,8 @@ class KccWerkplekController extends Controller {
 			$payload['availabilityLine'] = $this->availabilityLine(available: (bool) ($payload['agentProfile']['isAvailable'] ?? false));
 			return new JSONResponse($payload);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				message: '[KccWerkplekController] state failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return $this->operationFailed(action: 'state', error: $e);
+		}
 	}//end stateAction()
 
 	/**
@@ -144,12 +134,9 @@ class KccWerkplekController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function setAvailabilityAction(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['message' => 'Authentication required'],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$user = $this->sessionUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		$available = $this->requestedAvailability();
@@ -161,16 +148,45 @@ class KccWerkplekController extends Controller {
 			$result = $this->werkplekService->setAvailability($user->getUID(), $available);
 			return new JSONResponse($result);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				message: '[KccWerkplekController] setAvailability failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return $this->operationFailed(action: 'setAvailability', error: $e);
+		}
 	}//end setAvailabilityAction()
+
+	/**
+	 * The session user, or the 401 without one.
+	 *
+	 * @return \OCP\IUser|JSONResponse
+	 */
+	private function sessionUser(): \OCP\IUser|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(
+				['message' => 'Authentication required'],
+				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		return $user;
+	}//end sessionUser()
+
+	/**
+	 * Log a failed action and answer with the generic 500.
+	 *
+	 * @param string     $action The failed action, for the log.
+	 * @param \Throwable $error  The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function operationFailed(string $action, \Throwable $error): JSONResponse {
+		$this->logger->error(
+			message: '[KccWerkplekController] ' . $action . ' failed',
+			context: ['error' => $error->getMessage()]
+		);
+		return new JSONResponse(
+			['message' => 'Operation failed'],
+			Http::STATUS_INTERNAL_SERVER_ERROR
+		);
+	}//end operationFailed()
 
 	/**
 	 * The availability the request asks for, or the 400 that refuses it.

@@ -31,6 +31,9 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
@@ -577,8 +580,7 @@ class SemanticHandoffController extends Controller {
 		try {
 			$entity = $objectService->find(
 				id: $id,
-				register: $this->registerSlug(),
-				schema: $schema,
+				options: new ObjectFindOptions(register: $this->registerSlug(), schema: $schema)
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -676,9 +678,10 @@ class SemanticHandoffController extends Controller {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $this->registerSlug(),
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerSlug(), schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

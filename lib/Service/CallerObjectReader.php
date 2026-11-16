@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
 use OCP\IAppConfig;
@@ -107,7 +108,7 @@ class CallerObjectReader implements CallerObjectReaderInterface
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $object        = $objectService->find(id: $id, register: $register, schema: $schema, _rbac: true);
+            $object        = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
         } catch (Throwable $e) {
             $this->logger->warning(
                 'Pipelinq: a read-guard refused an object',

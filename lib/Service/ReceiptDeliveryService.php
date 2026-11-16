@@ -32,6 +32,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -496,7 +499,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'client_schema');
-			$client = $this->getObjectService()->find(id: $clientId, register: $register, schema: $schema);
+			$client = $this->getObjectService()->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			$client = $this->toArray(object: $client);
 
 			return (string)($client['email'] ?? $client['emailAddress'] ?? '');
@@ -549,10 +552,10 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			unset($persist['lines'], $persist['@self']);
 			$this->getObjectService()->saveObject(
 				object: $persist,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to persist invoice number', ['exception' => $e->getMessage()]);
@@ -639,9 +642,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
 			$saved = $this->getObjectService()->saveObject(
 				object: $log,
-				extend: [],
-				register: $register,
-				schema: $schema
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			$saved = $this->toArray(object: $saved);
 
@@ -666,7 +667,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 		[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -753,7 +754,7 @@ class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptTemplate_schema');
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 
 			return $this->toArray(object: $object);
 		} catch (\Throwable $e) {

@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -427,7 +428,7 @@ class BookingFiguresService {
 		}
 
 		try {
-			$row = $this->objectService->find(id: $resourceId, register: $register, schema: $schema);
+			$row = $this->objectService->find(id: $resourceId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: resource load failed for booking figures', ['resource' => $resourceId]);
 			return null;

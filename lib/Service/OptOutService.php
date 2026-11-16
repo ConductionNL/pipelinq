@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
 use OCA\Pipelinq\Service\Support\BsnHashRows;
@@ -151,9 +153,7 @@ class OptOutService implements OptOutServiceInterface {
 			];
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return true;
 		} catch (Throwable $e) {
@@ -197,9 +197,7 @@ class OptOutService implements OptOutServiceInterface {
 			$object = array_filter($object, static fn ($v) => $v !== null);
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return true;
 		} catch (Throwable $e) {

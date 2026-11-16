@@ -38,6 +38,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\FirstAdminUser;
 use OCA\Pipelinq\Util\SerialisedRows;
@@ -262,13 +265,13 @@ class NormalisePartyFormFields implements IRepairStep {
 		try {
 			$objectService->saveObject(
 				object: array_merge($row, $patch),
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid,
+					actor: new SaveActor(currentUser: $actingAdmin)
+				),
 				_rbac: false,
-				_multitenancy: false,
-				currentUser: $actingAdmin,
+				_multitenancy: false
 			);
 
 			return 'fixed';

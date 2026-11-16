@@ -80,18 +80,25 @@ class LetterLog implements LetterLogInterface
      */
     public function log(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string
     {
-        $letter  = new LoggedLetter(
-            clientId: $clientId,
-            contactId: $contactId,
-            ticketId: $ticketId,
-            templateName: $templateName,
-            path: $path,
-        );
-        $payload = self::contactMomentPayload(letter: $letter, occurredAt: new DateTimeImmutable());
-
-        return $this->saveContactMoment(payload: $payload, clientId: $clientId);
+        $letter = new LoggedLetter(clientId: $clientId, contactId: $contactId, ticketId: $ticketId, templateName: $templateName, path: $path);
+        return $this->logLetter(letter: $letter);
 
     }//end log()
+
+    /**
+     * Save the letter's contact moment, stamped now.
+     *
+     * @param LoggedLetter $letter The letter.
+     *
+     * @return string|null The contact moment id, or null when it could not be saved.
+     */
+    private function logLetter(LoggedLetter $letter): ?string
+    {
+        $payload = self::contactMomentPayload(letter: $letter, occurredAt: new DateTimeImmutable());
+
+        return $this->saveContactMoment(payload: $payload, clientId: $letter->clientId);
+
+    }//end logLetter()
 
     /**
      * Save the letter's contact moment.

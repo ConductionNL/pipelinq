@@ -186,7 +186,7 @@ class CallbackController extends Controller {
 		$resultText = $this->request->getParam('resultText', '');
 
 		try {
-			return $this->completeTask(id: $id, user: $user, resultText: $resultText);
+			return $this->completeTask(completion: ['id' => $id, 'user' => $user, 'resultText' => $resultText]);
 		} catch (\Exception $e) {
 			$this->logFailure(action: 'complete', error: $e);
 			return $this->serverError(message: $this->l10n->t('Failed to complete task'));
@@ -196,16 +196,16 @@ class CallbackController extends Controller {
 	/**
 	 * Complete an authorised task and notify its creator.
 	 *
-	 * @param string $id The task id.
-	 * @param IUser $user The acting user.
-	 * @param mixed $resultText The completion result text.
+	 * @param array{id: string, user: IUser, resultText: mixed} $completion The task id, the acting user and the
+	 *                                                                 completion result text.
 	 *
 	 * @return JSONResponse The completed task, or a refusal.
 	 *
 	 * @throws \Exception When the task cannot be loaded or saved.
 	 */
-	private function completeTask(string $id, IUser $user, $resultText): JSONResponse {
-		$taskData = $this->authorizedTask(id: $id, userId: $user->getUID());
+	private function completeTask(array $completion): JSONResponse {
+		$id = $completion['id'];
+		$taskData = $this->authorizedTask(id: $id, userId: $completion['user']->getUID());
 		if ($taskData instanceof JSONResponse) {
 			return $taskData;
 		}
@@ -215,10 +215,10 @@ class CallbackController extends Controller {
 			return $refusal;
 		}
 
-		$taskData = $this->callbackService->applyCompletion($taskData, $resultText);
+		$taskData = $this->callbackService->applyCompletion($taskData, $completion['resultText']);
 		$taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
 
-		$this->notifyCreator(taskData: $taskData, resultText: $resultText, id: $id, user: $user);
+		$this->notifyCreator(taskData: $taskData, completion: $completion);
 
 		return new JSONResponse(['task' => $taskData]);
 	}//end completeTask()
@@ -226,23 +226,22 @@ class CallbackController extends Controller {
 	/**
 	 * Notify the creating agent about completion.
 	 *
-	 * @param array<string, mixed> $taskData The completed task.
-	 * @param mixed $resultText The completion result text.
-	 * @param string $id The task id.
-	 * @param IUser $user The acting user.
+	 * @param array<string, mixed>                              $taskData   The completed task.
+	 * @param array{id: string, user: IUser, resultText: mixed} $completion The task id, the acting user and the
+	 *                                                                      completion result text.
 	 *
 	 * @return void
 	 */
-	private function notifyCreator(array $taskData, $resultText, string $id, IUser $user): void {
+	private function notifyCreator(array $taskData, array $completion): void {
 		$createdBy = $taskData['createdBy'] ?? '';
 		if (empty($createdBy) === false) {
-			$author = $user->getUID();
+			$author = $completion['user']->getUID();
 
 			$this->notificationService->notifyTaskCompleted(
 				$taskData['subject'] ?? '',
-				$resultText,
+				$completion['resultText'],
 				$createdBy,
-				$id,
+				$completion['id'],
 				$author
 			);
 		}
@@ -275,7 +274,9 @@ class CallbackController extends Controller {
 		}
 
 		try {
-			return $this->reassignTask(id: $id, user: $user, assignee: $assignee, assigneeType: $assigneeType);
+			return $this->reassignTask(
+				reassignment: ['id' => $id, 'user' => $user, 'assignee' => $assignee, 'assigneeType' => $assigneeType]
+			);
 		} catch (\Exception $e) {
 			$this->logFailure(action: 'reassign', error: $e);
 			return $this->serverError(message: $this->l10n->t('Failed to reassign task'));
@@ -285,16 +286,15 @@ class CallbackController extends Controller {
 	/**
 	 * Reassign a task, log the attempt and notify a user assignee.
 	 *
-	 * @param string $id The task id.
-	 * @param IUser $user The acting user.
-	 * @param mixed $assignee The new assignee.
-	 * @param mixed $assigneeType The assignee type.
+	 * @param array{id: string, user: IUser, assignee: mixed, assigneeType: mixed} $reassignment The task id, the acting
+	 *                                                                                   user, the new assignee and its type.
 	 *
 	 * @return JSONResponse The reassigned task, or not-found.
 	 *
 	 * @throws \Exception When the task cannot be loaded or saved.
 	 */
-	private function reassignTask(string $id, IUser $user, $assignee, $assigneeType): JSONResponse {
+	private function reassignTask(array $reassignment): JSONResponse {
+		['id' => $id, 'user' => $user, 'assignee' => $assignee, 'assigneeType' => $assigneeType] = $reassignment;
 		$taskData = $this->taskOrNotFound(id: $id);
 		if ($taskData instanceof JSONResponse) {
 			return $taskData;

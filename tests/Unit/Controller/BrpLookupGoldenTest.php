@@ -46,6 +46,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * What a BRP lookup and an address reveal answer, which collaborators they
@@ -369,9 +370,10 @@ class BrpLookupGoldenTest extends TestCase {
 				continue;
 			}
 
-			$named[$param->getName()] = $this->plain(value: $args[$i]);
+			$named[$param->getName()] = ($args[$i] instanceof \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions || $args[$i] instanceof \OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions) ? $args[$i] : $this->plain(value: $args[$i]);
 		}
 
+		$named = LegacyObjectArgs::flatten(args: $named);
 		$this->calls[] = [$this->shortName(name: $name) => $named];
 	}//end record()
 
@@ -448,7 +450,7 @@ class BrpLookupGoldenTest extends TestCase {
 			case 'OptOutService::recordFromBrpResponse':
 				return true;
 			case 'ObjectServiceInterface::saveObject':
-				return $this->saved(object: $args[0], schema: (string)$args[3]);
+				return $this->saved(object: $args[0], schema: (string)$args[1]->target->schema);
 			case 'ObjectServiceInterface::find':
 				return $this->found();
 			case 'ObjectServiceInterface::findAll':

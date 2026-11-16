@@ -27,6 +27,10 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -212,7 +216,7 @@ class BrpRetentionJob extends TimedJob {
 		try {
 			$sweep->objects->setRegister($sweep->register)
 				->setSchema($sweep->personSchema)
-				->deleteObject(uuid: $uuid);
+				->deleteObject(new ObjectDeletion(uuid: $uuid));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'BRP retention: delete failed',
@@ -240,8 +244,7 @@ class BrpRetentionJob extends TimedJob {
 		try {
 			$existing = $sweep->objects->find(
 				id: $contactId,
-				register: $sweep->register,
-				schema: $sweep->contactSchema,
+				options: new ObjectFindOptions(register: $sweep->register, schema: $sweep->contactSchema)
 			);
 			$existingArr = $this->recordToArray(rec: $existing);
 
@@ -257,10 +260,10 @@ class BrpRetentionJob extends TimedJob {
 			// Per spec REQ-BSN-008-01: brpPersoonId stays (dangling pointer to deleted record).
 			$sweep->objects->saveObject(
 				object: $existingArr,
-				extend: [],
-				register: $sweep->register,
-				schema: $sweep->contactSchema,
-				uuid: $contactId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $sweep->register, schema: $sweep->contactSchema),
+					uuid: $contactId
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

@@ -32,6 +32,7 @@ use RuntimeException;
  * The container's ObjectService is returned; a failure logs and yields null.
  *
  * @covers \OCA\Pipelinq\Util\ContainerObjectService
+ * @uses \OCA\Pipelinq\Util\ContainerObjectServiceLookup
  */
 class ContainerObjectServiceTest extends TestCase {
 

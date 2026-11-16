@@ -44,6 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use Closure;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
 use OCA\Pipelinq\Service\Support\BlastDeliveryLookup;
@@ -922,7 +924,10 @@ class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	private function writeDelivery(array $target, array $payload, string $id): void {
 		[$register, $schema, $objectService] = $target;
 		try {
-			$objectService->saveObject(object: $payload, register: $register, schema: $schema, uuid: $id);
+			$objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'WebhookProcessorService.saveDelivery: save failed',

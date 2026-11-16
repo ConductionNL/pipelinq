@@ -625,7 +625,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .letter-modal {
 	display: flex;
 	flex-direction: column;
@@ -660,10 +662,7 @@ export default {
 }
 
 .letter-modal__hint {
-	margin: 0;
-	font-size: 13px;
-	line-height: normal;
-	color: var(--color-text-maxcontrast);
+	@include muted-hint;
 }
 
 /* The letter beside what was filled in, as PqBriefOpstellen draws it. */

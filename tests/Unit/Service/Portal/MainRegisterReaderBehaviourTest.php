@@ -28,6 +28,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * An unconfigured register or schema answers empty on reads and refuses on
@@ -199,7 +201,11 @@ class MainRegisterReaderBehaviourTest extends TestCase {
 		$this->objectService->expects($this->exactly(3))
 			->method('find')
 			->willReturnCallback(
-				static function (string $id, ?array $extend, bool $files, string $register, string $schema) use ($entity): ?ObjectEntityInterface {
+				static function (string $id, ?ObjectFindOptions $options = null) use ($entity): ?ObjectEntityInterface {
+					$extend = $options?->extend;
+					$files = $options?->files;
+					$register = $options?->register;
+					$schema = $options?->schema;
 					if ($id === 'boom') {
 						throw new RuntimeException('forbidden');
 					}
@@ -239,7 +245,15 @@ class MainRegisterReaderBehaviourTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['title' => 'Nieuw'], [], '7', '42', 't-1', false, false)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'Nieuw'],
+					'extend' => [],
+					'register' => '7',
+					'schema' => '42',
+					'uuid' => 't-1',
+					'_rbac' => false,
+					'_multitenancy' => false,
+				]))
 			->willReturn($entity);
 
 		$this->assertSame(

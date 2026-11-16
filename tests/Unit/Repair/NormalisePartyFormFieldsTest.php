@@ -33,6 +33,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for NormalisePartyFormFields.
@@ -119,6 +120,7 @@ class NormalisePartyFormFieldsTest extends TestCase {
 			 * @return void
 			 */
 			public function saveObject(array $object, mixed ...$rest): void {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				$this->saved[] = $object;
 			}//end saveObject()
 		};
@@ -180,6 +182,7 @@ class NormalisePartyFormFieldsTest extends TestCase {
 			 * @return void
 			 */
 			public function saveObject(array $object, mixed ...$rest): void {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				if (in_array($object['id'], $this->failIds, true) === true) {
 					throw new RuntimeException('validation failed');
 				}

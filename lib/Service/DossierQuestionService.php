@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -384,8 +385,7 @@ class DossierQuestionService implements DossierQuestionServiceInterface {
 		try {
 			$entity = $this->objectService->find(
 				id: $id,
-				register: self::DOSSIER_REGISTER,
-				schema: $schema,
+				options: new ObjectFindOptions(register: self::DOSSIER_REGISTER, schema: $schema),
 				_rbac: false,
 				_multitenancy: false
 			);

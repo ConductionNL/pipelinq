@@ -32,6 +32,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Validation, creation, lookup and deletion of forecast overrides.
@@ -309,7 +311,11 @@ class ForecastOverrideServiceCoverageTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(
-				function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$captured) {
+				function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured) {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
+					$uuid = $options->uuid;
 					$this->assertSame(expected: [], actual: $extend);
 					$this->assertSame(expected: 'reg-1', actual: $register);
 					$this->assertSame(expected: 'schema-1', actual: $schema);
@@ -460,7 +466,13 @@ class ForecastOverrideServiceCoverageTest extends TestCase {
 		$this->logger->expects($this->never())->method('warning');
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('ov-1', [], false, 'reg-1', 'schema-1')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'ov-1',
+					'_extend' => [],
+					'files' => false,
+					'register' => 'reg-1',
+					'schema' => 'schema-1',
+				]))
 			->willReturn($this->entity(data: ['id' => 'ov-1', 'override_amount' => 5.0]));
 
 		$this->assertSame(expected: ['id' => 'ov-1', 'override_amount' => 5.0], actual: $this->service->getOverride('ov-1'));
@@ -537,7 +549,11 @@ class ForecastOverrideServiceCoverageTest extends TestCase {
 		$this->configure(register: 'reg-1', schema: 'schema-1');
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('ov-1', 'reg-1', 'schema-1')
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => 'ov-1',
+					'register' => 'reg-1',
+					'schema' => 'schema-1',
+				]))
 			->willReturn(true);
 		$this->logger->expects($this->never())->method('error');
 

@@ -145,9 +145,24 @@ class PasswordResetService implements PasswordResetServiceInterface {
 	 *   audit are all unspecified
 	 */
 	public function resetPassword(string $token, string $newPassword, string $tenantId): void {
+		$this->reset(reset: ['token' => $token, 'tenantId' => $tenantId], newPassword: $newPassword);
+	}//end resetPassword()
+
+	/**
+	 * Store a policy-compliant new password on the account a valid token names, then end its sessions.
+	 *
+	 * @param array{token: string, tenantId: string} $reset       The plaintext reset token and the tenant id.
+	 * @param string                                 $newPassword The new plaintext password.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException On an invalid/expired token or a weak password.
+	 */
+	private function reset(array $reset, string $newPassword): void {
+		$tenantId = $reset['tenantId'];
 		$this->repository->requireWritable();
 		$this->requireStrong(password: $newPassword);
-		$account = $this->accountForResetToken(token: $token, tenantId: $tenantId);
+		$account = $this->accountForResetToken(token: $reset['token'], tenantId: $tenantId);
 
 		$accountId = (string)$this->repository->idOf(object: $account);
 		$this->repository->save(self::SCHEMA, $this->withPassword(account: $account, password: $newPassword), $accountId);
@@ -155,7 +170,7 @@ class PasswordResetService implements PasswordResetServiceInterface {
 		// A password reset invalidates every existing session.
 		$this->sessions->revokeAllForAccount(accountId: $accountId, reason: 'password-reset');
 		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'password-reset', outcome: 'success');
-	}//end resetPassword()
+	}//end reset()
 
 	/**
 	 * Refuse a password shorter than the minimum.

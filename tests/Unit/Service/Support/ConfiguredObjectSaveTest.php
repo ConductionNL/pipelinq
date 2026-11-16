@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A configured target saves and answers the row; a gap refuses by name.
@@ -72,8 +73,12 @@ class ConfiguredObjectSaveTest extends TestCase {
 					 * @param string|null          $uuid     Uuid.
 					 * @return array<string, mixed>
 					 */
-					public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): array {
-						$this->host->saved = func_get_args();
+					public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+						$extend = $options->extend;
+						$register = $options->target->register;
+						$schema = $options->target->schema;
+						$uuid = $options->uuid;
+						$this->host->saved = [$object, $extend, $register, $schema, $uuid];
 						return $object + ['id' => ($uuid ?? 'new')];
 					}
 				};

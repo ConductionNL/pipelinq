@@ -165,7 +165,7 @@ class MailBlockRenderer {
 		$text  = [];
 
 		foreach ($this->normalise(blocks: $blocks) as $block) {
-			[$row, $plain] = $this->renderBlock(type: $block['type'], props: $block['props'], color: $color);
+			[$row, $plain] = $this->renderBlock(block: $block, color: $color);
 			if ($row === '') {
 				continue;
 			}
@@ -189,14 +189,14 @@ class MailBlockRenderer {
 	/**
 	 * Render one block.
 	 *
-	 * @param string               $type  The block type.
-	 * @param array<string, mixed> $props The block's properties.
-	 * @param string               $color The default button colour.
+	 * @param array{type: string, props: array<string, mixed>} $block The block's type and properties.
+	 * @param string                                          $color The default button colour.
 	 *
 	 * @return array{0: string, 1: string} The HTML cell content and the text.
 	 */
-	private function renderBlock(string $type, array $props, string $color): array {
-		return match ($type) {
+	private function renderBlock(array $block, string $color): array {
+		$props = $block['props'];
+		return match ($block['type']) {
 			'heading'  => $this->heading(props: $props),
 			'text'     => $this->text(props: $props),
 			'image'    => $this->image(props: $props),

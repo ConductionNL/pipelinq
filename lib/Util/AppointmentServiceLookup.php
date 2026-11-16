@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Util;
 
+
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 /**
  * Reads a Service from the configured register and 'service_schema'; an
  * unconfigured register or schema or an empty id is null, a failed read logs
@@ -55,8 +57,7 @@ trait AppointmentServiceLookup {
 		try {
 			$found = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning($failure, ['service' => $serviceId]);

@@ -100,11 +100,8 @@ class ObjectOwnerAccessPolicy {
 		}
 
 		$owner = trim((string)($object[$ownerField] ?? ''));
-		if ($owner !== '' && $owner === $uid) {
-			return true;
-		}
 
-		return $this->isPrivileged(uid: $uid);
+		return ($owner !== '' && $owner === $uid) || $this->isPrivileged(uid: $uid);
 	}//end mayAccess()
 
 	/**

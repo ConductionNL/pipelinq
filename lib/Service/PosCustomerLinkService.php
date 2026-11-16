@@ -40,6 +40,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -534,10 +537,10 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $payload,
-				extend: [],
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $target['uuid']
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $target['uuid']
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: marketing-consent sync failed', ['contact' => $target['uuid'], 'exception' => $e->getMessage()]);
@@ -769,10 +772,10 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $transaction,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $id
+			)
 		);
 
 		return $this->toArray(object: $saved);
@@ -789,7 +792,7 @@ class PosCustomerLinkService implements PosCustomerLinkServiceInterface {
 	private function fetchObject(string $id, array $scope): ?array {
 		[$register, $schema] = $scope;
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable $e) {
 			return null;
 		}

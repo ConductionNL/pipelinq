@@ -200,26 +200,63 @@ class ContactDataBuilder {
 	 * @spec openspec/specs/contacts-sync/spec.md#requirement-import-maps-typed-vcard-properties-to-channel-arrays
 	 */
 	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
-		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+		$data = self::withClient(data: $this->contactPersonFields(ncContact: $ncContact, uid: $uid), clientId: $clientId);
 
-		$data = ['name' => $name]
-			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
-			+ [
-				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
-				'contactsUid' => $uid,
-			];
+		return $this->withPreferredName(data: self::filledKeepingName(data: $data), ncContact: $ncContact);
+	}//end buildContactImportData()
 
+	/**
+	 * The contact person fields linked to a client, when one is given.
+	 *
+	 * @param array<string, mixed> $data     The contact person fields.
+	 * @param string|null          $clientId The client to link, or null/'' for none.
+	 *
+	 * @return array<string, mixed> The fields.
+	 */
+	private static function withClient(array $data, ?string $clientId): array {
 		if ($clientId !== null && $clientId !== '') {
 			$data['client'] = $clientId;
 		}
+
+		return $data;
+	}//end withClient()
+
+	/**
+	 * The fields without empty strings, the name kept even when it is empty.
+	 *
+	 * @param array<string, mixed> $data The contact person fields, with a `name`.
+	 *
+	 * @return array<string, mixed> The fields.
+	 */
+	private static function filledKeepingName(array $data): array {
+		$name = $data['name'];
 
 		// Same as above: emails/phones/socialProfiles are arrays, so the
 		// `!== ''` check always keeps them.
 		$data = array_filter($data, fn ($v) => $v !== '');
 		$data['name'] = $name;
 
-		return $this->withPreferredName(data: $data, ncContact: $ncContact);
-	}//end buildContactImportData()
+		return $data;
+	}//end filledKeepingName()
+
+	/**
+	 * The name, channels (without website), role and contacts UID of a contact person.
+	 *
+	 * @param array  $ncContact The Nextcloud contact data.
+	 * @param string $uid       The contact UID.
+	 *
+	 * @return array The fields, name first.
+	 */
+	private function contactPersonFields(array $ncContact, string $uid): array {
+		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+
+		return ['name' => $name]
+			+ array_diff_key($this->clientChannels(ncContact: $ncContact), ['website' => true])
+			+ [
+				'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
+				'contactsUid' => $uid,
+			];
+	}//end contactPersonFields()
 
 	/**
 	 * Read the vCard NICKNAME as the preferred name.

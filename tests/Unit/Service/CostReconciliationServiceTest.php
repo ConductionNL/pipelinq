@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The daily sweep that converts messages whose cost waited for an exchange
@@ -42,6 +43,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Util\PayloadToArray
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
@@ -115,7 +117,11 @@ class CostReconciliationServiceTest extends TestCase {
 	private function recordSaves(): array {
 		$this->saves = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $this->createMock(ObjectEntityInterface::class);
 			}

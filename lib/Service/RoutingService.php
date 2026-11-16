@@ -148,7 +148,7 @@ class RoutingService implements RoutingServiceInterface {
 		$objectService = $this->getObjectService();
 
 		try {
-			$entity = $objectService->find($entityId, []);
+			$entity = $objectService->find($entityId);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'RoutingService: failed to load entity',

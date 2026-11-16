@@ -34,6 +34,8 @@ use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for BerichtenboxAdminController.
@@ -265,7 +267,11 @@ class BerichtenboxAdminControllerTest extends TestCase {
 	public function testRetryRequeuesTheMessage(): void {
 		$lookups = [];
 		$this->objectService->expects(self::once())->method('find')->willReturnCallback(
-			function (int|string $id, ?array $extend, bool $files, string|int|null $register, string|int|null $schema) use (&$lookups): ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null) use (&$lookups): ObjectEntityInterface {
+				$extend = $options?->extend;
+				$files = $options?->files;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$lookups[] = [$id, $register, $schema];
 
 				return $this->message(
@@ -281,7 +287,11 @@ class BerichtenboxAdminControllerTest extends TestCase {
 		);
 		$saves = [];
 		$this->objectService->expects(self::once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, string|int|null $register, string|int|null $schema, ?string $uuid) use (&$saves): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = [$object, $extend, $register, $schema, $uuid];
 
 				return $this->createMock(ObjectEntityInterface::class);
@@ -327,7 +337,11 @@ class BerichtenboxAdminControllerTest extends TestCase {
 		$this->objectService->method('find')->willReturn($this->message(['deliveryStatus' => 'failed']));
 		$saves = [];
 		$this->objectService->expects(self::once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, string|int|null $register, string|int|null $schema, ?string $uuid) use (&$saves): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = $uuid;
 
 				return $this->createMock(ObjectEntityInterface::class);

@@ -28,6 +28,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
 use OCA\Pipelinq\Service\Support\BsnHashRows;
@@ -181,9 +183,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $person,
-			extend: [],
-			register: $register,
-			schema: $schema,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 		return $this->toArray(value: $saved);
 	}//end set()
@@ -222,10 +222,10 @@ class BrpCacheService implements BrpCacheServiceInterface {
 				$arr['retentionTo'] = $expired;
 				$this->getObjectService()->saveObject(
 					object: $arr,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $uuid
+					)
 				);
 				$count++;
 			}

@@ -257,6 +257,22 @@ class MessagingController extends Controller {
 		string $evidence = '',
 		string $legalBasis = '',
 	): JSONResponse {
+		return $this->consentResponse(
+			change: new ConsentChange(
+				contactId: $contactId, channel: $channel, action: $action,
+				source: $source, evidence: $evidence, legalBasis: $legalBasis
+			)
+		);
+	}//end consent()
+
+	/**
+	 * Guard, validate and record a consent change, answering with the recorded state.
+	 *
+	 * @param ConsentChange $change The requested change.
+	 *
+	 * @return JSONResponse The recorded state, or the refusal or error response.
+	 */
+	private function consentResponse(ConsentChange $change): JSONResponse {
 		// Messaging sends on the organisation's behalf and reads contact
 		// consent state — a CRM capability, not an any-authenticated-user one.
 		$refusal = $this->privilege->refusalWith(['status' => 'unauthorized'], ['status' => 'forbidden']);
@@ -264,29 +280,23 @@ class MessagingController extends Controller {
 			return $refusal;
 		}
 
-		$change = new ConsentChange(
-			contactId: $contactId,
-			channel: $channel,
-			action: $action,
-			source: $source,
-			evidence: $evidence,
-			legalBasis: $legalBasis
-		);
 		$invalid = $this->consentRequestError(change: $change);
 		if ($invalid !== null) {
 			return $invalid;
 		}
 
 		// Per-object guard (no-admin-idor).
-		$contact = $this->messagingService->loadContact(contactId: $contactId);
+		$contact = $this->messagingService->loadContact(contactId: $change->contactId);
 		if ($contact === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
 
 		$this->recordConsent(change: $change->attributedTo(userId: $this->privilege->actingUserId()));
 
-		return new JSONResponse(['status' => 'recorded', 'state' => $this->consentService->latestState(contactId: $contactId, channel: $channel)]);
-	}//end consent()
+		$state = $this->consentService->latestState(contactId: $change->contactId, channel: $change->channel);
+
+		return new JSONResponse(['status' => 'recorded', 'state' => $state]);
+	}//end consentResponse()
 
 	/**
 	 * The 400 response for an invalid consent request, or null when it is valid.

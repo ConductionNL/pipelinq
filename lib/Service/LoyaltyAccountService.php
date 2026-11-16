@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
@@ -131,8 +132,7 @@ class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 		try {
 			$object = $this->getObjectService()->find(
 				id: $accountId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: account lookup failed', ['exception' => $e->getMessage()]);

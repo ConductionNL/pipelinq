@@ -35,6 +35,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Exercises the RedemptionService lifecycle against mocked boundaries.
@@ -170,7 +173,11 @@ class RedemptionServiceCoverageTest extends TestCase {
 	 */
 	private function stubOption(?array $option): void {
 		$this->objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null) use ($option) {
+			function (int|string $id, ?ObjectFindOptions $options = null) use ($option) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($schema === 'opt' && $option !== null) {
 					return $this->entity(payload: $option);
 				}
@@ -381,7 +388,11 @@ class RedemptionServiceCoverageTest extends TestCase {
 		$this->stubOption(option: ['costInPoints' => 150, 'programmeId' => 'prog-9']);
 		$captured = null;
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$captured): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = [$object, $extend, $register, $schema, $uuid];
 				return $this->entity(payload: array_merge($object, ['@self' => ['id' => 'R-10']]));
 			}
@@ -432,7 +443,11 @@ class RedemptionServiceCoverageTest extends TestCase {
 		);
 		$this->ledger->method('forOperation')->willReturnSelf();
 		$this->ledger->method('debitPoints')->willThrowException(new RuntimeException('ledger locked'));
-		$this->objects->expects($this->once())->method('deleteObject')->with('R-20', 'reg', 'red')->willReturn(true);
+		$this->objects->expects($this->once())->method('deleteObject')->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'R-20',
+				'register' => 'reg',
+				'schema' => 'red',
+			]))->willReturn(true);
 		$this->logger->expects($this->once())->method('warning')->with(
 			'Pipelinq: redemption debit failed; rolling back Redemption',
 			['accountId' => 'acc-1', 'optionId' => 'opt-1', 'exception' => 'ledger locked']
@@ -461,7 +476,11 @@ class RedemptionServiceCoverageTest extends TestCase {
 		);
 		$this->ledger->method('forOperation')->willReturnSelf();
 		$this->ledger->method('debitPoints')->willThrowException(new RuntimeException('nope'));
-		$this->objects->expects($this->once())->method('deleteObject')->with('R-21', 'reg', 'red')
+		$this->objects->expects($this->once())->method('deleteObject')->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'R-21',
+				'register' => 'reg',
+				'schema' => 'red',
+			]))
 			->willThrowException(new \Exception('delete failed'));
 		$messages = [];
 		$this->logger->expects($this->exactly(count: 2))->method('warning')->willReturnCallback(
@@ -577,15 +596,21 @@ class RedemptionServiceCoverageTest extends TestCase {
 	public function testValidateCodeExpiredMarksLapsed(): void {
 		$row = ['@self' => ['id' => 'R-30'], 'status' => 'reserved', 'validTo' => $this->stamp(modifier: '-1 hour')];
 		$this->objects->method('findAll')->willReturn([$row]);
-		$this->objects->expects($this->once())->method('find')->with('R-30', [], false, 'reg', 'red')
+		$this->objects->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'R-30',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'reg',
+				'schema' => 'red',
+			]))
 			->willReturn($this->entity(payload: $row));
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			array_merge($row, ['status' => 'lapsed']),
-			[],
-			'reg',
-			'red',
-			'R-30'
-		)->willReturnCallback(fn (array $object): ObjectEntityInterface => $this->entity(payload: $object));
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => array_merge($row, ['status' => 'lapsed']),
+				'extend' => [],
+				'register' => 'reg',
+				'schema' => 'red',
+				'uuid' => 'R-30',
+			]))->willReturnCallback(fn (array $object): ObjectEntityInterface => $this->entity(payload: $object));
 
 		$this->assertSame(
 			expected: ['valid' => false, 'redemption' => $row, 'reason' => 'Redemption code expired'],
@@ -647,7 +672,11 @@ class RedemptionServiceCoverageTest extends TestCase {
 		$this->objects->method('find')->willReturn($this->entity(payload: ['status' => 'reserved', 'rewardCode' => 'RDM-1']));
 		$captured = null;
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$captured): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = [$object, $uuid];
 				return $this->entity(payload: $object);
 			}
@@ -694,7 +723,13 @@ class RedemptionServiceCoverageTest extends TestCase {
 	public function testExpireReservedPersistsLapsed(): void {
 		$this->objects->method('find')->willReturn($this->entity(payload: ['status' => 'reserved']));
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['status' => 'lapsed'], [], 'reg', 'red', 'R-51')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['status' => 'lapsed'],
+				'extend' => [],
+				'register' => 'reg',
+				'schema' => 'red',
+				'uuid' => 'R-51',
+			]))
 			->willReturnCallback(fn (array $object): ObjectEntityInterface => $this->entity(payload: $object));
 		$this->assertSame(expected: ['status' => 'lapsed'], actual: $this->service()->expireRedemption(redemptionId: 'R-51'));
 	}//end testExpireReservedPersistsLapsed()

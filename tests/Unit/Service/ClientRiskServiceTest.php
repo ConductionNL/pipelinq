@@ -26,6 +26,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every client carries a risk level with its reasons (REQ-CIN-001).
@@ -125,6 +126,7 @@ class ClientRiskServiceTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($fails): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				if ($fails === true) {
 					throw new RuntimeException('down');
 				}

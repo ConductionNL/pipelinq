@@ -31,6 +31,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Error paths and fallbacks of the vCard writer.
@@ -268,7 +269,13 @@ class ContactVcardWriterServiceCoverageTest extends TestCase {
 		$book = $this->book();
 		$book->expects($this->once())->method('createOrUpdate')->with(['FN' => 'A'])->willReturn('new-uid');
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(['id' => 'o', 'contactsUid' => 'new-uid'], [], 'reg-1', 'sch-1', null);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['id' => 'o', 'contactsUid' => 'new-uid'],
+				'extend' => [],
+				'register' => 'reg-1',
+				'schema' => 'sch-1',
+				'uuid' => null,
+			]));
 
 		$this->assertSame(
 			'new-uid',

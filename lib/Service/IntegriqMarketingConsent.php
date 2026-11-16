@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
+use OCA\Pipelinq\Service\Consent\ListConsentGrant;
 
 /**
  * Marketing consent questions and writes, through integriq.
@@ -110,13 +111,26 @@ class IntegriqMarketingConsent {
 	public function decide(string $contactId, string $channel, string $category, bool $requiresConsent, ?string $listId = null): array {
 		return $this->integriq->decideOne(
 			ask: new ConsentAsk(channel: $channel, category: $category, requiresConsent: $requiresConsent),
-			recipient: [
-				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
-				'contactRef' => $this->contactRefOf(contactId: $contactId),
-				'listRef' => (string)$listId,
-			],
+			recipient: $this->recipientFor(contact: [$contactId, $channel], listId: $listId),
 		);
 	}//end decide()
+
+	/**
+	 * The recipient integriq is asked about for one contact.
+	 *
+	 * @param array{0: string, 1: string} $contact The contact UUID (or signup address) and the channel.
+	 * @param string|null                 $listId  The list, for a list send.
+	 *
+	 * @return array{address: string, contactRef: string, listRef: string}
+	 */
+	private function recipientFor(array $contact, ?string $listId): array {
+		[$contactId, $channel] = $contact;
+		return [
+			'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+			'contactRef' => $this->contactRefOf(contactId: $contactId),
+			'listRef' => (string)$listId,
+		];
+	}//end recipientFor()
 
 	/**
 	 * Ask integriq about a whole segment, one event per 500 members.
@@ -158,7 +172,7 @@ class IntegriqMarketingConsent {
 				continue;
 			}
 
-			$address = $this->memberAddress(member: $member, contactId: $contactId, channel: $channel);
+			$address = $this->memberAddress(member: $member, channel: $channel);
 			if ($address === '') {
 				continue;
 			}
@@ -173,20 +187,19 @@ class IntegriqMarketingConsent {
 	/**
 	 * The member's address on the channel: its own email first, then the address book.
 	 *
-	 * @param array<string,mixed> $member    The segment member.
-	 * @param string              $contactId Its contact id.
-	 * @param string              $channel   `email` or `sms`.
+	 * @param array<string,mixed> $member  The segment member, with its `contactId`.
+	 * @param string              $channel `email` or `sms`.
 	 *
 	 * @return string
 	 */
-	private function memberAddress(array $member, string $contactId, string $channel): string {
+	private function memberAddress(array $member, string $channel): string {
 		$address = '';
 		if ($channel === 'email') {
 			$address = trim((string)($member['email'] ?? ''));
 		}
 
 		if ($address === '') {
-			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
+			$address = $this->addresses->addressFor(contactId: (string)($member['contactId'] ?? ''), channel: $channel);
 		}
 
 		return $address;
@@ -233,21 +246,35 @@ class IntegriqMarketingConsent {
 		string $source,
 		array $evidence,
 	): bool {
+		return $this->recordGrant(grant: new ListConsentGrant(
+			contactId: $contactId, listId: $listId, channel: $channel,
+			lawfulBasis: $lawfulBasis, source: $source, evidence: $evidence
+		));
+	}//end recordListConsent()
+
+	/**
+	 * Hand integriq one list consent.
+	 *
+	 * @param ListConsentGrant $grant The list consent.
+	 *
+	 * @return bool True when integriq took it; false keeps it in pipelinq.
+	 */
+	private function recordGrant(ListConsentGrant $grant): bool {
 		return $this->integriq->record(
 			request: [
-				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
+				'address' => $this->addresses->addressFor(contactId: $grant->contactId, channel: $grant->channel),
 				'state' => 'opted-in',
 				'scope' => 'list',
-				'channel' => $channel,
-				'ref' => $listId,
-				'contactRef' => $this->contactRefOf(contactId: $contactId),
-				'lawfulBasis' => $lawfulBasis,
-				'evidence' => $evidence,
-				'source' => $source,
+				'channel' => $grant->channel,
+				'ref' => $grant->listId,
+				'contactRef' => $this->contactRefOf(contactId: $grant->contactId),
+				'lawfulBasis' => $grant->lawfulBasis,
+				'evidence' => $grant->evidence,
+				'source' => $grant->source,
 				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
 			]
 		)['recorded'];
-	}//end recordListConsent()
+	}//end recordGrant()
 
 	/**
 	 * Hand integriq a withdrawal. A bounce is not a wish and is never handed over.
@@ -266,19 +293,32 @@ class IntegriqMarketingConsent {
 			return false;
 		}
 
+		return $this->recordOptOut(contact: [$contactId, $channel], withdrawal: ['reason' => $reason, 'listId' => $listId]);
+	}//end recordWithdrawal()
+
+	/**
+	 * Hand integriq a withdrawal that is a wish.
+	 *
+	 * @param array{0: string, 1: string}                $contact    The contact UUID (or signup address) and the channel.
+	 * @param array{reason: string, listId: string|null} $withdrawal The withdrawal reason and the list, or null for the channel.
+	 *
+	 * @return bool True when integriq took it; false keeps it in pipelinq.
+	 */
+	private function recordOptOut(array $contact, array $withdrawal): bool {
+		[$contactId, $channel] = $contact;
 		return $this->integriq->record(
 			request: [
 				'address' => $this->addresses->addressFor(contactId: $contactId, channel: $channel),
 				'state' => 'opted-out',
-				'scope' => $this->withdrawalScope(listId: $listId),
+				'scope' => $this->withdrawalScope(listId: $withdrawal['listId']),
 				'channel' => $channel,
-				'ref' => (string)$listId,
+				'ref' => (string)$withdrawal['listId'],
 				'contactRef' => $this->contactRefOf(contactId: $contactId),
-				'source' => $reason,
+				'source' => $withdrawal['reason'],
 				'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
 			]
 		)['recorded'];
-	}//end recordWithdrawal()
+	}//end recordOptOut()
 
 	/**
 	 * The scope of a withdrawal: the list when one is named, else the channel.

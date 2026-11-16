@@ -108,20 +108,31 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
-		$hostId = trim($hostId);
+		return $this->listed(hostId: trim($hostId), page: ['limit' => max(1, min($limit, self::MAX_LIMIT)), 'partyId' => $partyId]);
+	}//end list()
+
+	/**
+	 * The newest contact moments on a host, with the party's indicators.
+	 *
+	 * @param string                              $hostId The trimmed host id.
+	 * @param array{limit: int, partyId: string} $page   The capped page size and the party whose indicators to add.
+	 *
+	 * @return array<string, mixed> `status` plus either the moments and indicators, or `error`.
+	 */
+	private function listed(string $hostId, array $page): array {
 		$refusal = $this->hostRefusal(hostId: $hostId);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$moments = $this->newestMoments(hostId: $hostId, limit: max(1, min($limit, self::MAX_LIMIT)));
+		$moments = $this->newestMoments(hostId: $hostId, limit: $page['limit']);
 
 		return [
 			'status' => 200,
 			'contactMoments' => $moments,
-			'indicators' => $this->indicatorsOf(partyId: $partyId),
+			'indicators' => $this->indicatorsOf(partyId: $page['partyId']),
 		];
-	}//end list()
+	}//end listed()
 
 	/**
 	 * The party's standing indicators; none when no party is named.
@@ -196,14 +207,12 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 			return $refusal;
 		}
 
-		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
-
-		$refusal = $this->outboundRefusal(partyId: $partyId, payload: $payload);
+		$refusal = $this->outboundRefusal(partyId: self::partyOf(payload: $payload), payload: $payload);
 		if ($refusal !== null) {
 			return $refusal;
 		}
 
-		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload, partyId: $partyId);
+		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload);
 
 		if ($ticket['title'] === '') {
 			return ['status' => 400, 'error' => 'A contact moment requires a subject.'];
@@ -303,13 +312,13 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 	 *
 	 * @param string $hostId The host object's uuid.
 	 * @param array<string, mixed> $payload The append payload.
-	 * @param string $partyId The party the moment names, or an empty string.
 	 *
 	 * @return array<string, mixed> The ticket, ready for TicketService::save().
 	 *
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
-	private function ticketFrom(string $hostId, array $payload, string $partyId): array {
+	private function ticketFrom(string $hostId, array $payload): array {
+		$partyId = self::partyOf(payload: $payload);
 		$ticket = [
 			'title' => trim((string)($payload['title'] ?? $payload['subject'] ?? '')),
 			'channel' => trim((string)($payload['channel'] ?? '')),
@@ -329,6 +338,17 @@ class ContactMomentLeafProvider implements ContactMomentLeafProviderInterface {
 
 		return $ticket;
 	}//end ticketFrom()
+
+	/**
+	 * The party an append payload names, or an empty string.
+	 *
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return string The party's uuid.
+	 */
+	private static function partyOf(array $payload): string {
+		return trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
+	}//end partyOf()
 
 	/**
 	 * The outcome and description an append payload names; a later non-empty source wins the description.

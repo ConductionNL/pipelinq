@@ -31,6 +31,8 @@ namespace OCA\Pipelinq\Service\Merge;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
 
 /**
@@ -73,7 +75,7 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 		foreach ($this->referencesOf(partyType: $partyType) as $reference) {
 			[$schema, $property] = $reference;
 			foreach ($this->rowsReferring(reference: $reference, uuid: $fromUuid) as $rowUuid) {
-				$this->objects->patchObject(objectId: $rowUuid, data: [$property => $intoUuid], _rbac: false, _multitenancy: false);
+				$this->objects->patchObject(new ObjectPatch(objectId: $rowUuid, data: [$property => $intoUuid]), _rbac: false, _multitenancy: false);
 				$moved[] = ['schema' => $schema, 'uuid' => $rowUuid, 'property' => $property];
 			}
 		}
@@ -107,7 +109,11 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 				continue;
 			}
 
-			$this->objects->patchObject(objectId: $entry['uuid'], data: [$entry['property'] => $fromUuid], _rbac: false, _multitenancy: false);
+			$this->objects->patchObject(
+				new ObjectPatch(objectId: $entry['uuid'], data: [$entry['property'] => $fromUuid]),
+				_rbac: false,
+				_multitenancy: false
+			);
 			$result['restored'][] = $entry;
 		}
 
@@ -153,7 +159,12 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	 * @return bool
 	 */
 	private function stillPointsAt(array $entry, string $uuid): bool {
-		$row = $this->objects->find(id: $entry['uuid'], _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$row = $this->objects->find(
+			id: $entry['uuid'],
+			options: new ObjectFindOptions(render: false, audit: false),
+			_rbac: false,
+			_multitenancy: false
+		);
 		if ($row === null) {
 			return false;
 		}

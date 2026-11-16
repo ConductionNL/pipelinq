@@ -87,11 +87,23 @@ class SearchConsoleController extends Controller {
 		}
 
 		$result = $this->report->topQueries(from: $from, to: $to, limit: $limit, property: $property);
+
+		return new JSONResponse($this->withImportState(result: $result));
+	}//end index()
+
+	/**
+	 * The report with the importer's configuration and last import added.
+	 *
+	 * @param array<string, mixed> $result The top-queries report.
+	 *
+	 * @return array<string, mixed> The report with configured, properties, serviceAccountEmail and lastImportAt.
+	 */
+	private function withImportState(array $result): array {
 		$result['configured'] = ($this->importer->hasKey() === true && $this->importer->properties() !== []);
 		$result['properties'] = $this->importer->properties();
 		$result['serviceAccountEmail'] = $this->importer->serviceAccountEmail();
 		$result['lastImportAt'] = $this->importer->lastImportAt();
 
-		return new JSONResponse($result);
-	}//end index()
+		return $result;
+	}//end withImportState()
 }//end class

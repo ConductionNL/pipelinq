@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OrphanedLeadRepairServiceInterface;
 use OCA\Pipelinq\Service\Support\JsonSerializableRows;
@@ -156,10 +158,10 @@ class OrphanedLeadRepairService implements OrphanedLeadRepairServiceInterface {
 		try {
 			$this->objectService->saveObject(
 				object: $object,
-				extend: [],
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $target['uuid'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $target['uuid']
+				)
 			);
 			return 'moved';
 		} catch (Throwable $e) {

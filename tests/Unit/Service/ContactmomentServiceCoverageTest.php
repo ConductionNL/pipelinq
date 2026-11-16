@@ -30,6 +30,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Error paths of the contact moment audit write and the permission-checked delete.
@@ -168,7 +169,13 @@ class ContactmomentServiceCoverageTest extends TestCase {
 	public function testDeletingAMissingContactmomentThrows(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('cm-404', [], false, 'reg-1', 'ticket-1')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'cm-404',
+					'_extend' => [],
+					'files' => false,
+					'register' => 'reg-1',
+					'schema' => 'ticket-1',
+				]))
 			->willReturn(null);
 		$this->objectService->expects($this->never())->method('deleteObject');
 
@@ -228,7 +235,9 @@ class ContactmomentServiceCoverageTest extends TestCase {
 			->willReturnSelf();
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with($uuid);
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => $uuid,
+				]));
 	}//end expectScopedDelete()
 
 	/**

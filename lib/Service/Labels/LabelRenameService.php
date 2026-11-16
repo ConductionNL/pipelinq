@@ -30,6 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Labels;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\LabelRenameJob;
 use OCA\Pipelinq\Kernel\Contracts\LabelRenameServiceInterface;
 use OCA\Pipelinq\Util\LockedRecord;
@@ -225,7 +228,10 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 */
 	private function saveName(object $objects, array $label, string $labelId, string $name): void {
 		$label['name'] = $name;
-		$objects->saveObject(object: $label, register: self::REGISTER, schema: self::LABEL_SCHEMA, uuid: $labelId);
+		$objects->saveObject(
+			object: $label,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::LABEL_SCHEMA), uuid: $labelId)
+		);
 	}//end saveName()
 
 	/**
@@ -402,7 +408,10 @@ class LabelRenameService implements LabelRenameServiceInterface {
 
 		$row[$field] = $names;
 		try {
-			$rename['objects']->saveObject(object: $row, register: self::REGISTER, schema: $schema, uuid: $id);
+			$rename['objects']->saveObject(
+				object: $row,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: $schema), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'LabelRenameService: an item kept the old label',
@@ -474,7 +483,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 */
 	private function findLabel(object $objects, string $labelId): mixed {
 		try {
-			return $objects->find(id: $labelId, register: self::REGISTER, schema: self::LABEL_SCHEMA);
+			return $objects->find(id: $labelId, options: new ObjectFindOptions(register: self::REGISTER, schema: self::LABEL_SCHEMA));
 		} catch (Throwable $e) {
 			return null;
 		}

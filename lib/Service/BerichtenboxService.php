@@ -38,6 +38,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
@@ -641,10 +644,10 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 		try {
 			$this->getObjectService()->saveObject(
 				object: $data,
-				extend: [],
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: ($data['uuid'] ?? null)
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $data['uuid'] ?? null
+				)
 			);
 			return true;
 		} catch (\Throwable $e) {
@@ -1006,7 +1009,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	private function findMessageByUuid(string $uuid): ?array {
 		[$register, $schema] = $this->messageConfig();
 		try {
-			$row = $this->getObjectService()->find(id: $uuid, register: $register, schema: $schema);
+			$row = $this->getObjectService()->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -1191,10 +1194,10 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 		[$register, $schema] = $this->messageConfig();
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $payload['uuid'] ?? null
+			)
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveMessage()
@@ -1219,10 +1222,10 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $payload['uuid'] ?? null
+			)
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveReply()

@@ -56,3 +56,23 @@ export function bookingCurrency(value, currency) {
 		return `${code} ${n}`
 	}
 }
+
+/**
+ * The price of a service or booking in the browser's locale.
+ *
+ * @param {?{price: (number|string), currency: (string|undefined)}} record The service or booking.
+ * @return {string} The formatted price; the amount and code when the currency is unknown.
+ * @spec exclude display formatter: amount and currency to a localised price string
+ */
+export function bookingPrice(record) {
+	const cur = currencyOr(record && record.currency)
+	const amount = Number(record ? record.price : 0)
+	try {
+		return new Intl.NumberFormat(undefined, {
+			style: 'currency',
+			currency: cur,
+		}).format(amount)
+	} catch {
+		return amount + ' ' + cur
+	}
+}
