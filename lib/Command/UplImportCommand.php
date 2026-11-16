@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\Upl\UplListImporter;
+use OCA\Pipelinq\Kernel\Contracts\UplListImporterInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -45,10 +45,10 @@ class UplImportCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param UplListImporter $importer Downloads and imports the list.
+	 * @param UplListImporterInterface $importer Downloads and imports the list.
 	 */
 	public function __construct(
-		private readonly UplListImporter $importer,
+		private readonly UplListImporterInterface $importer,
 	) {
 		parent::__construct();
 	}//end __construct()

@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
 use OCA\Pipelinq\Service\ForecastSnapshotQuery;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011
  */
-class ForecastAccess {
+class ForecastAccess implements ForecastAccessInterface {
 	/**
 	 * Constructor.
 	 *

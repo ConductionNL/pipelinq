@@ -29,7 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\NotesServiceInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-2.1
  */
-class ClientHistorySummaryService {
+class ClientHistorySummaryService implements ClientHistorySummaryServiceInterface {
 	use PayloadToArray;
 
 	/**
@@ -324,8 +325,8 @@ class ClientHistorySummaryService {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function rows(string $schemaKey, string $clientId): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

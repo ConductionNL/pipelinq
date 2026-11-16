@@ -27,9 +27,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
 use OCA\Pipelinq\Kernel\Contracts\ForecastExportServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ForecastOverrideDeskInterface;
-use OCA\Pipelinq\Lifecycle\ForecastAccess;
 use OCA\Pipelinq\Service\ForecastSnapshotQuery;
 use OCA\Pipelinq\Util\ReadsTypedRequestParameters;
 use OCP\AppFramework\Controller;
@@ -45,7 +45,7 @@ use OCP\IRequest;
  *
  * Thin: validates auth posture and delegates to the export and override
  * services. Every action requires an authenticated user; per-action scope is
- * enforced through {@see ForecastAccess} and denied requests are logged
+ * enforced through {@see ForecastAccessInterface} and denied requests are logged
  * and answered with 403 (no stack traces leak to the client).
  *
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
@@ -58,13 +58,13 @@ class ForecastController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ForecastAccess $access The acting user and their forecast scope.
+	 * @param ForecastAccessInterface $access The acting user and their forecast scope.
 	 * @param ForecastExportServiceInterface $exportService The snapshot export service.
 	 * @param ForecastOverrideDeskInterface $overrides The override requests.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ForecastAccess $access,
+		private ForecastAccessInterface $access,
 		private ForecastExportServiceInterface $exportService,
 		private ForecastOverrideDeskInterface $overrides,
 	) {

@@ -29,8 +29,8 @@ namespace OCA\Pipelinq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ClientHistorySummaryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
 use OCA\Pipelinq\Service\RegisterSchema;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -57,22 +57,22 @@ class ClientHistorySummaryController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                    $request        The request.
-	 * @param ClientHistorySummaryService $summaryService Writes the summary.
-	 * @param ObjectServiceInterface      $objectService  OpenRegister, for the read guard.
-	 * @param IUserSession                $userSession    The current user.
-	 * @param IAppConfig                  $appConfig      Register and client schema.
-	 * @param LoggerInterface             $logger         PSR logger.
+	 * @param IRequest                             $request        The request.
+	 * @param ClientHistorySummaryServiceInterface $summaryService Writes the summary.
+	 * @param ObjectServiceInterface               $objectService  OpenRegister, for the read guard.
+	 * @param IUserSession                         $userSession    The current user.
+	 * @param IAppConfig                           $appConfig      Register and client schema.
+	 * @param LoggerInterface                      $logger         PSR logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ClientHistorySummaryService $summaryService,
+		private readonly ClientHistorySummaryServiceInterface $summaryService,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IUserSession $userSession,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -122,8 +122,8 @@ class ClientHistorySummaryController extends Controller {
 	 * @return int The HTTP status the access maps to.
 	 */
 	private function clientAccess(string $clientId): int {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema   = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '' || $clientId === '') {
 			return Http::STATUS_INTERNAL_SERVER_ERROR;
 		}

@@ -32,7 +32,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\CallReview\CoachingPointAgreement;
+use OCA\Pipelinq\Kernel\Contracts\CoachingPointAgreementInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,14 +57,14 @@ class CallReviewController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest               $request       The request.
-	 * @param IUserSession           $userSession   The user session.
-	 * @param IAppConfig             $appConfig     App config (register, schema).
-	 * @param ObjectServiceInterface $objectService OpenRegister objects.
-	 * @param CoachingPointAgreement $agreement     The agreement rule.
-	 * @param ITimeFactory           $timeFactory   The clock.
-	 * @param IL10N                  $l10n          Translations.
-	 * @param LoggerInterface        $logger        The logger.
+	 * @param IRequest                        $request       The request.
+	 * @param IUserSession                    $userSession   The user session.
+	 * @param IAppConfig                      $appConfig     App config (register, schema).
+	 * @param ObjectServiceInterface          $objectService OpenRegister objects.
+	 * @param CoachingPointAgreementInterface $agreement     The agreement rule.
+	 * @param ITimeFactory                    $timeFactory   The clock.
+	 * @param IL10N                           $l10n          Translations.
+	 * @param LoggerInterface                 $logger        The logger.
 	 *
 	 * @spec openspec/changes/contact-moments-call-review/specs/call-review/spec.md#requirement-the-agent-agrees-the-coaching-points-req-crv-003
 	 */
@@ -73,7 +73,7 @@ class CallReviewController extends Controller {
 		private IUserSession $userSession,
 		private IAppConfig $appConfig,
 		private ObjectServiceInterface $objectService,
-		private CoachingPointAgreement $agreement,
+		private CoachingPointAgreementInterface $agreement,
 		private ITimeFactory $timeFactory,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
@@ -164,11 +164,11 @@ class CallReviewController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function refused(string $code): JSONResponse {
-		if ($code === CoachingPointAgreement::REFUSED_NO_SUCH_POINT) {
+		if ($code === CoachingPointAgreementInterface::REFUSED_NO_SUCH_POINT) {
 			return new JSONResponse(['message' => $this->l10n->t('This coaching point was not found.')], Http::STATUS_NOT_FOUND);
 		}
 
-		if ($code === CoachingPointAgreement::REFUSED_NOT_SHARED) {
+		if ($code === CoachingPointAgreementInterface::REFUSED_NOT_SHARED) {
 			return new JSONResponse(['message' => $this->l10n->t('This review has not been shared with you yet.')], Http::STATUS_CONFLICT);
 		}
 

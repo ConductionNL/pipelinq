@@ -30,8 +30,8 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ClientRiskService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ClientRiskServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -55,13 +55,13 @@ class ClientRiskChangeListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig        $appConfig App config: the contract and survey answer schemas.
-	 * @param ClientRiskService $risk      Scores and stores a client's risk.
-	 * @param LoggerInterface   $logger    PSR logger.
+	 * @param IAppConfig                 $appConfig App config: the contract and survey answer schemas.
+	 * @param ClientRiskServiceInterface $risk      Scores and stores a client's risk.
+	 * @param LoggerInterface            $logger    PSR logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly ClientRiskService $risk,
+		private readonly ClientRiskServiceInterface $risk,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -110,8 +110,8 @@ class ClientRiskChangeListener implements IEventListener {
 	private function clientOf(ObjectEntity $entity, array $before): string {
 		$after  = $entity->getObject();
 		$schema = (string) $entity->getSchema();
-		$contractSchema = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
-		$surveySchema   = $this->appConfig->getValueString(Application::APP_ID, 'surveyResponse_schema', '');
+		$contractSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contract_schema', '');
+		$surveySchema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'surveyResponse_schema', '');
 
 		$statusChanged = ($before['status'] ?? null) !== ($after['status'] ?? null);
 		$becameDetractor = ($after['classification'] ?? null) === 'detractor' && ($before['classification'] ?? null) !== 'detractor';

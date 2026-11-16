@@ -307,14 +307,7 @@ class UnifyClientContactIdentity implements IRepairStep {
 			return ['status' => 'unresolved', 'contactsUid' => null];
 		}
 
-		$this->writeSourceRecord(
-			objectService: $pass->collection->objectService,
-			register: $pass->collection->register,
-			entityType: $pass->kind->entityType,
-			nativeId: $this->objectIdOf(object: $object),
-			currentMasterEntity: $contactsUid,
-			object: $object
-		);
+		$this->writeSourceRecord(pass: $pass, object: $object, currentMasterEntity: $contactsUid);
 
 		return ['status' => 'linked', 'contactsUid' => $contactsUid];
 	}//end linkObject()
@@ -332,13 +325,9 @@ class UnifyClientContactIdentity implements IRepairStep {
 		// 1) Try to match an EXISTING NC contact (email first, then KvK/ORG).
 		$contactsUid = $this->matchExistingContact(object: $object);
 		if ($contactsUid !== null) {
-			$this->persistContactsUid(
-				objectService: $pass->collection->objectService,
-				register: $pass->collection->register,
-				schema: $pass->collection->schema,
-				object: $object,
-				contactsUid: $contactsUid
-			);
+			$linked = $object;
+			$linked['contactsUid'] = $contactsUid;
+			$this->persistContactsUid(collection: $pass->collection, object: $linked);
 			return $contactsUid;
 		}
 
@@ -528,24 +517,17 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * Persist a matched contactsUid back on the object, keeping every existing
 	 * identity field in place as the mirror (non-destructive).
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param string $register The register id/slug.
-	 * @param string $schema The schema id/slug.
-	 * @param array<string,mixed> $object The pipelinq object.
-	 * @param string $contactsUid The resolved contactsUid.
+	 * @param IdentityCollection  $collection The collection the object belongs to.
+	 * @param array<string,mixed> $object     The pipelinq object carrying its resolved contactsUid.
 	 *
 	 * @return void
 	 */
-	private function persistContactsUid(
-		object $objectService,
-		string $register,
-		string $schema,
-		array $object,
-		string $contactsUid,
-	): void {
+	private function persistContactsUid(IdentityCollection $collection, array $object): void {
+		$objectService = $collection->objectService;
+		$register = $collection->register;
+		$schema = $collection->schema;
 		$objectId = (string)($object['id'] ?? $object['uuid'] ?? '');
 		$payload = $object;
-		$payload['contactsUid'] = $contactsUid;
 		unset($payload['@self']);
 
 		try {
@@ -672,31 +654,24 @@ class UnifyClientContactIdentity implements IRepairStep {
 	 * resolved object so the golden-record layer can collapse duplicate
 	 * identities. Provenance write failure is non-fatal.
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param string $register The register id/slug.
-	 * @param string $entityType MDM entityType ('account'|'contact').
-	 * @param string $nativeId The pipelinq object id/uuid.
-	 * @param string $currentMasterEntity The resolved contactsUid.
-	 * @param array<string,mixed> $object The raw object (provenance rawAttributes).
+	 * @param IdentityPass        $pass                The collection and the kind of identity.
+	 * @param array<string,mixed> $object              The raw object (provenance rawAttributes).
+	 * @param string              $currentMasterEntity The resolved contactsUid.
 	 *
 	 * @return void
 	 */
-	private function writeSourceRecord(
-		object $objectService,
-		string $register,
-		string $entityType,
-		string $nativeId,
-		string $currentMasterEntity,
-		array $object,
-	): void {
+	private function writeSourceRecord(IdentityPass $pass, array $object, string $currentMasterEntity): void {
+		$nativeId = $this->objectIdOf(object: $object);
 		$sourceRecordSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sourceRecord_schema', '');
 		if ($sourceRecordSchema === '') {
 			// MDM source-record schema not configured; provenance is best-effort.
 			return;
 		}
 
+		$entityType = $pass->kind->entityType;
 		$record = $this->sourceRecordObject(entityType: $entityType, nativeId: $nativeId, currentMasterEntity: $currentMasterEntity, object: $object);
-		$this->saveSourceRecord(objectService: $objectService, register: $register, schema: $sourceRecordSchema, record: $record);
+		$collection = $pass->collection;
+		$this->saveSourceRecord(objectService: $collection->objectService, register: $collection->register, schema: $sourceRecordSchema, record: $record);
 	}//end writeSourceRecord()
 
 	/**

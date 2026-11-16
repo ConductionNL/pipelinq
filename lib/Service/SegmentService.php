@@ -522,14 +522,7 @@ class SegmentService implements SegmentServiceInterface {
 			return $fields;
 		}
 
-		return $this->persistSegmentUpdate(
-			segmentId: $segmentId,
-			existing: $existing,
-			name: $fields['name'],
-			description: $fields['description'],
-			rules: $fields['rules'],
-			entityType: $fields['entityType'],
-		);
+		return $this->persistSegmentUpdate(segmentId: $segmentId, existing: $existing, fields: $fields);
 	}//end applySegmentUpdate()
 
 	/**
@@ -602,25 +595,17 @@ class SegmentService implements SegmentServiceInterface {
 	 * Extracted from {@see updateSegment()} so it stays within the
 	 * complexity budget.
 	 *
-	 * @param string $segmentId Existing Segment UUID or slug.
-	 * @param array<string, mixed> $existing The Segment row before the edit.
-	 * @param string $name Validated name.
-	 * @param string $description Description (may be unchanged).
-	 * @param array<string, mixed> $rules Validated rule tree.
-	 * @param string $entityType "contact" or "customer".
+	 * @param string               $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $existing  The Segment row before the edit.
+	 * @param array<string, mixed> $fields    Validated name, description, rules and entityType ("contact" or "customer").
 	 *
 	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
 	 *
 	 * @spec openspec/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
 	 */
-	private function persistSegmentUpdate(
-		string $segmentId,
-		array $existing,
-		string $name,
-		string $description,
-		array $rules,
-		string $entityType,
-	): array {
+	private function persistSegmentUpdate(string $segmentId, array $existing, array $fields): array {
+		$rules = $fields['rules'];
+		$entityType = $fields['entityType'];
 		// Computed from the (validated) NEW $rules/$entityType being saved,
 		// not via recomputeSize(segmentId) after the fact — that would
 		// re-read whatever is currently stored, which at this point is
@@ -631,8 +616,8 @@ class SegmentService implements SegmentServiceInterface {
 		$estimated = $this->countMatchingEntities(rules: $rules, entityType: $entityType);
 
 		$object = $existing;
-		$object['name'] = $name;
-		$object['description'] = $description;
+		$object['name'] = $fields['name'];
+		$object['description'] = $fields['description'];
 		$object['rules'] = $rules;
 		$object['entityType'] = $entityType;
 		$object['estimatedSize'] = $estimated;
@@ -1265,7 +1250,7 @@ class SegmentService implements SegmentServiceInterface {
 		}
 
 		if ($this->signals->isSignalField(field: $field) === true) {
-			return $this->evaluateSignalLeaf(field: $field, operator: $operator, handler: $handler, value: $value, entity: $entity);
+			return $this->evaluateSignalLeaf(leaf: $leaf, entity: $entity);
 		}
 
 		if (str_contains($field, '.') === true) {
@@ -1289,23 +1274,21 @@ class SegmentService implements SegmentServiceInterface {
 	 * exception, because "this customer has no bookkeeping" is a question a
 	 * marketer may legitimately ask.
 	 *
-	 * @param string $field The signal field.
-	 * @param string $operator The rule operator, as written.
-	 * @param callable(mixed, mixed): bool $handler Operator handler.
-	 * @param mixed $value Rule value.
+	 * @param array<string, mixed> $leaf   Leaf predicate on a signal field, with a known operator.
 	 * @param array<string, mixed> $entity Entity payload.
 	 *
 	 * @return bool Whether the entity matches.
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
 	 */
-	private function evaluateSignalLeaf(string $field, string $operator, callable $handler, mixed $value, array $entity): bool {
-		$actual = $this->signals->valueFor(field: $field, entity: $entity);
+	private function evaluateSignalLeaf(array $leaf, array $entity): bool {
+		$operator = (string)($leaf['operator'] ?? 'equals');
+		$actual = $this->signals->valueFor(field: (string)$leaf['field'], entity: $entity);
 		if ($actual === null) {
 			return ($operator === 'isNull');
 		}
 
-		return $handler($actual, $value);
+		return $this->operatorHandlers()[$operator]($actual, ($leaf['value'] ?? null));
 	}//end evaluateSignalLeaf()
 
 	/**
