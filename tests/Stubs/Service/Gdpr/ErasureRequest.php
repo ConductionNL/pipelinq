@@ -23,7 +23,7 @@ namespace OCA\OpenRegister\Service\Gdpr;
 /**
  * Whose data is erased, filtered how, in which mode, and whether anything is written.
  *
- * @spec openspec/specs/gdpr-data-subject-rights/spec.md#requirement-erasure-honours-legal-hold-and-is-mode-parameterised
+ * Test stub mirroring openregister main's class of the same name.
  */
 final class ErasureRequest {
 	/**
@@ -31,10 +31,8 @@ final class ErasureRequest {
 	 *
 	 * @param string      $subjectId Subject value.
 	 * @param string|null $type      GdprEntity type filter.
-	 * @param string      $eraseMode Erase mode (one of the ERASE_MODE_* constants).
+	 * @param string      $eraseMode Erase mode (pseudonymise or another mode openregister accepts).
 	 * @param bool        $dryRun    Whether nothing is written.
-	 *
-	 * @spec openspec/specs/gdpr-data-subject-rights/spec.md#requirement-erasure-honours-legal-hold-and-is-mode-parameterised
 	 */
 	public function __construct(
 		public readonly string $subjectId,
