@@ -34,8 +34,9 @@
 - [x] 4.1 Add/update a PHPUnit test for `ReportingController::exportCsv()` asserting: 401 with no
       session, 400 on invalid dates, and a 200 `DataDownloadResponse` with `text/csv` content
       type and a UTF-8 BOM (`\xEF\xBB\xBF`) prefix on the happy path.
-- [ ] 4.2 Manually click "Exporteer als CSV" in `ChannelDistributionSection.vue` against a local
+- [x] 4.2 Manually click "Exporteer als CSV" in `ChannelDistributionSection.vue` against a local
       instance and confirm the browser downloads a real `.csv` file (opens correctly in Excel:
       semicolon-separated, Dutch characters intact) instead of hitting a JSON 501 page.
+  - Live pass 16 Nov 2026: the button navigated to the route without a request token and landed on "CSRF check failed", and it sent no period (400). Fixed: the section fetches the export with axios for its period and hands the blob to the browser (`downloadBlob`). Re-run: `rapportage-<from>-<to>.csv` downloads, BOM + semicolons.
 - [x] 4.3 Fix any pre-existing lint/test warnings encountered in
       `ReportingController.php`/`ReportingService.php` while touching them (CLAUDE.md rule).

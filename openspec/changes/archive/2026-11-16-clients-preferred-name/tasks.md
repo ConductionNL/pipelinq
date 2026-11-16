@@ -9,7 +9,8 @@
 - [x] 1.3 ClientDetail and ContactDetail header show the preferred name
   - Built as manifest config: `headerFields: ["preferredName"]` on both pages (a chip under the full name, none when the value is empty), and `preferredName` in ClientDetail's `client-identity` field list so it can be filled in. ContactDetail's `contact-data` lists every field. Test: `tests/vitest/preferredName.spec.js`.
   - An organisation client shows no Preferred name row: `client-identity` in `src/manifest.json` sets `content.overrides.preferredName.visibleWhen` (`type` is `person`), read by nextcloud-vue's `CnObjectDataWidget` (nextcloud-vue PR build/dep-pipelinq-field-visible-when; needs a release with it and a lock bump to take effect). Test: `tests/vitest/preferredName.spec.js`.
-- [ ] 1.3b Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail (live pass, decision 139: written, not run)
+- [x] 1.3b Playwright `tests/e2e/preferred-name.spec.ts` sets Jan on contact Johannes Jansen and sees it on ContactDetail (live pass, decision 139: written, not run)
+  - Live pass 16 Nov 2026 on a clean NC 34 + OpenRegister main install: `preferred-name.spec.ts` 2 passed, after giving its seeded contacts the required `contactsUid`.
 - [x] 1.4 CTI screen pop shows the preferred name first for a matched caller
   - Verify: Vitest on the screen pop component with and without a preferred name
   - Built: `ScreenPopModal` shows the preferred name in bold with the full name under it; a caller without one shows the full name only. Test: `tests/vitest/preferredName.spec.js`. The matcher returns whole records, so `preferredName` reaches the modal without a server change.

@@ -17,5 +17,6 @@
 - [x] 2.5 `docs/Integrations/cti-adapter-setup.md`: what the agent sees
 
 ## 3. Live
-- [ ] 3.1 (live pass, decision 139) `tests/e2e/incoming-call-card.spec.ts`: an install without a telephony platform shows no card and the endpoint answers `enabled: false` (written, not run)
+- [x] 3.1 (live pass, decision 139) `tests/e2e/incoming-call-card.spec.ts`: an install without a telephony platform shows no card and the endpoint answers `enabled: false` (written, not run)
+  - Live pass 16 Nov 2026: `incoming-call-card.spec.ts` passed on a clean install without telephony.
 - [ ] 3.2 (live pass, decision 139) With a platform configured: post a signed `ringing` webhook for an agent's extension, see the card within 15 seconds, open the match, see `client` on the contact moment; post `ended`, see the card go

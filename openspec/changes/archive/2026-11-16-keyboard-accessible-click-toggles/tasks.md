@@ -41,9 +41,10 @@
 
 ## 5. Verify
 
-- [ ] 5.1 Tab through the dashboard (Prospect widget, Complaints widget, Find Client widget) and
+- [x] 5.1 Tab through the dashboard (Prospect widget, Complaints widget, Find Client widget) and
       the Project detail WBS tree using keyboard only; confirm each control receives visible focus
       and Enter/Space activates it identically to a mouse click.
+  - Live pass 16 Nov 2026: Find Client widget on the Nextcloud dashboard: Tab from the search field reaches the result row (`role=button`, visible focus outline), Enter and Space each open the client. ProspectWidget is mounted on no page any more (its toggle is a native button), and the complaints widget and WBS tree are gone (2.1, 3.1).
 - [x] 5.2 Run `npm run lint` (the `@nextcloud/eslint-config` `vuejs-accessibility` rules should now
       pass clean on these four files) and fix any newly-surfaced pre-existing lint issues in the
       touched files per CLAUDE.md.

@@ -11,9 +11,10 @@
 - [x] 1.3 Confirm `tally()`'s `unread` semantics (`deliveryStatus in ('queued','sent') and read !=
       true` or equivalent — read the current helper body first) are preserved exactly by the
       paginated/aggregated path.
-- [ ] 1.4 Verify manually against a seeded `berichtenboxMessage` register with > `limit` rows that
+- [x] 1.4 Verify manually against a seeded `berichtenboxMessage` register with > `limit` rows that
       the returned counters match a one-shot unbounded query (temporary local comparison, not
       shipped).
+  - Live pass 16 Nov 2026: 620 seeded messages (page size 500); stats returned queued 104, sent 104, read 103, fallback-emailed 103, failed 103, opted-out 103, unread 52, exactly the seeded counts.
 
 ## 2. Test coverage for BerichtenboxAdminController
 
@@ -37,5 +38,6 @@
 
 - [x] 3.1 Run `composer check:strict` (PHPCS, PHPMD, Psalm, PHPStan) and fix any pre-existing
       issues surfaced in the touched file per CLAUDE.md.
-- [ ] 3.2 Manually hit `GET /apps/pipelinq/api/admin/berichtenbox/stats` as an admin against a
+- [x] 3.2 Manually hit `GET /apps/pipelinq/api/admin/berichtenbox/stats` as an admin against a
       seeded register and confirm the response shape is unchanged from before this change.
+  - Live pass 16 Nov 2026: 200 for admin with `{counters: {...6 statuses}, unread}`, 403 for a non-admin.

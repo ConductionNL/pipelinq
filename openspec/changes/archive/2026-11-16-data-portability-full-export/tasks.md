@@ -17,4 +17,5 @@
 - [x] 3.1 A section "Take your data with you" on the BI export page with the Export all data button and the state of the last export, shown to administrators only (Enterprise)
   - Built: `FullExportSection.vue` on `ExportJobs.vue`; the state comes from `GET /api/export/full` (`FullExportState`, written by the controller and the job), which only administrators get an answer to, so the section stays hidden for anyone else.
 - [x] 3.2 l10n nl and en (Enterprise)
-- [ ] 3.3 (live pass) Run it on :8080 against the seed data and open the archive (Enterprise)
+- [x] 3.3 (live pass) Run it on :8080 against the seed data and open the archive (Enterprise)
+  - Live pass 16 Nov 2026 on a clean install with the demo set, not on :8080: `POST /api/export/full` 202, the queued job wrote `pipelinq-export-<date>.zip` to the admin's Files; the archive holds `data/<schema>.jsonl` and `.csv` for all 145 schemas, `schemas/` and `manifest.json`. The first run said `attachedFilesIncluded: false` on an OpenRegister that publishes the reader: pipelinq asked its own app container `has()`, which is false for another app's alias. Fixed to resolve it with `get()`; the re-run says `attachedFilesIncluded: true`.
