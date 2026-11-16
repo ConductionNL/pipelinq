@@ -325,6 +325,25 @@ class BrpRetentionJobTest extends TestCase {
 	}//end testLeavesAContactPointingElsewhereAlone()
 
 	/**
+	 * A contact that reads back as an empty record is left alone, even when the
+	 * deleted person carried no id (so an empty brpPersonId would otherwise
+	 * match it): the person is deleted, nothing is written back for the contact.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyContactRecordIsNotWrittenBack(): void {
+		$objects = $this->objects(
+			[['retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1']],
+			['c-1' => []]
+		);
+
+		$this->sweep();
+
+		$this->assertSame([''], $objects->deleted);
+		$this->assertSame([], $objects->saved);
+	}//end testAnEmptyContactRecordIsNotWrittenBack()
+
+	/**
 	 * Without a contact schema the contact is not touched.
 	 *
 	 * @return void
