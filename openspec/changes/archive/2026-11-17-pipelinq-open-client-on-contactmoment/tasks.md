@@ -14,7 +14,8 @@
 
 - [x] Verify each rule against the `notification-actions-and-web-push` contract: `web-push` channel valid, `object-detail` relation target shape exact, at most 2 `actions`, i18n labels present.
 - [x] Verify `lib/Settings/pipelinq_register.json` parses as valid JSON after the edit.
-- [ ] Smoke-test the rule fires: create a `contactmoment` with `channel: "telefoon"`, a populated `client`, and an `agent`, and confirm the agent receives the notification with the "Open client" action resolving to the related Client. (Requires the engine merged + VAPID configured + a browser subscription — verify in the dev environment.)
+- [x] Smoke-test the rule fires: create a `contactmoment` with `channel: "telefoon"`, a populated `client`, and an `agent`, and confirm the agent receives the notification with the "Open client" action resolving to the related Client. (Requires the engine merged + VAPID configured + a browser subscription — verify in the dev environment.)
+  - Live pass 17 Nov 2026: an interaction ticket with channel telefoon, a client and assignee u_kcc, created as admin; after the dispatch job u_kcc has "Inkomende oproep van [Demo] Bakkerij De Gouden Korst" whose primary action "Open client" links to `/apps/pipelinq/clients/<that client>`. In-app notification only; the web-push leg needs VAPID and a browser subscription and was not run.
 
 ## Acceptance Criteria
 
