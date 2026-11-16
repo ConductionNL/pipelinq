@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\ArticleMoveServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-existing-pipelinq-articles-move-to-portaliq-once
  */
-class ArticleMoveService {
+class ArticleMoveService implements ArticleMoveServiceInterface {
 
 	/**
 	 * The prefix of a moved article's legacyRef.

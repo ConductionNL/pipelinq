@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\Marketing\ArticleMoveService;
+use OCA\Pipelinq\Kernel\Contracts\ArticleMoveServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -46,13 +46,13 @@ class MoveMarketingArticlesToPortaliq implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param ArticleMoveService $move   The move.
+	 * @param ArticleMoveServiceInterface $move   The move.
 	 * @param LoggerInterface    $logger The logger.
 	 *
 	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-existing-pipelinq-articles-move-to-portaliq-once
 	 */
 	public function __construct(
-		private readonly ArticleMoveService $move,
+		private readonly ArticleMoveServiceInterface $move,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
