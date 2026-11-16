@@ -42,6 +42,7 @@ require_once __DIR__ . '/FakeObjectStore.php';
  * @uses   \OCA\Pipelinq\Service\ServiceAccount
  * @uses   \OCA\Pipelinq\Service\ServiceAccountUnavailableException
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses   \OCA\Pipelinq\Service\ConfigFragmentValue
  *
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
  */

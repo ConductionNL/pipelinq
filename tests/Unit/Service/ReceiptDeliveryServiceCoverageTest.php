@@ -58,6 +58,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Service\ReceiptAction
+ * @uses   \OCA\Pipelinq\Service\ReceiptLayout
  */
 class ReceiptDeliveryServiceCoverageTest extends TestCase {
 

@@ -84,6 +84,7 @@ if (class_exists('OCA\\Integriq\\Event\\ConsentDecisionGoldenNotAnEvent') === fa
  * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
  * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
  * @uses   \OCA\Pipelinq\Util\SchemaRowQuery
+ * @uses   \OCA\Pipelinq\Service\Messaging\ConsentChange
  */
 class ConsentDecisionGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/ConsentDecisionGolden.json';
