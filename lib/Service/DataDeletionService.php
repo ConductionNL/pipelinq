@@ -38,6 +38,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Service\Gdpr\ErasureRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -161,10 +162,12 @@ class DataDeletionService {
 
 		try {
 			return $service->erase(
-				subjectId: $subjectId,
-				type: null,
-				eraseMode: self::ERASE_MODE_PSEUDONYMISE,
-				dryRun: $dryRun
+				request: new ErasureRequest(
+					subjectId: $subjectId,
+					type: null,
+					eraseMode: self::ERASE_MODE_PSEUDONYMISE,
+					dryRun: $dryRun
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

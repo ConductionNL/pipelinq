@@ -14,6 +14,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Calls;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+
 class FakeObjectStore {
 	/**
 	 * Rows, keyed by id. Each row carries `_schema`.
@@ -131,13 +134,10 @@ class FakeObjectStore {
 	}//end findAll()
 
 	/**
-	 * Save a row.
+	 * Save a row, through main's save options.
 	 *
 	 * @param array<string, mixed> $object The row.
-	 * @param array<int, string>|null $extend Unused.
-	 * @param string|null $register The register.
-	 * @param string|null $schema The schema.
-	 * @param string|null $uuid The id, or null to create.
+	 * @param ObjectSaveOptions $options The target register and schema, and the id or null to create.
 	 * @param bool $_rbac Whether access rules apply.
 	 * @param bool $_multitenancy Whether tenancy applies.
 	 *
@@ -145,45 +145,39 @@ class FakeObjectStore {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		?string $register = null,
-		?string $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	): array {
+		$schema = $options->target->schema;
 		$this->record(op: 'saveObject', schema: (string)$schema, rbac: $_rbac, multitenancy: $_multitenancy);
 
-		$id = ($uuid ?? ('row-' . (count($this->rows) + 1)));
+		$id = ($options->uuid ?? ('row-' . (count($this->rows) + 1)));
 		$this->rows[$id] = array_merge($object, ['id' => $id, '_schema' => $schema]);
 
 		return $this->rows[$id];
 	}//end saveObject()
 
 	/**
-	 * Remove a row.
+	 * Remove a row, through main's deletion value.
 	 *
-	 * @param string $uuid The id.
-	 * @param string|null $register The register.
-	 * @param string|null $schema The schema.
+	 * @param ObjectDeletion $deletion The id, the target register and schema, and whether the row is gone for good.
 	 * @param bool $_rbac Whether access rules apply.
 	 * @param bool $_multitenancy Whether tenancy applies.
-	 * @param bool $permanent Whether the row is gone for good.
+	 * @param bool $_retentionSweep Unused.
 	 *
 	 * @return bool True when removed.
 	 */
 	public function deleteObject(
-		string $uuid,
-		?string $register = null,
-		?string $schema = null,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $permanent = false,
+		bool $_retentionSweep = false,
 	): bool {
-		$this->record(op: 'deleteObject', schema: (string)$schema, rbac: $_rbac, multitenancy: $_multitenancy);
+		$this->record(op: 'deleteObject', schema: (string)$deletion->target->schema, rbac: $_rbac, multitenancy: $_multitenancy);
 
-		unset($this->rows[$uuid]);
-		$this->deleted[$uuid] = $permanent;
+		unset($this->rows[$deletion->uuid]);
+		$this->deleted[$deletion->uuid] = $deletion->permanent;
 
 		return true;
 	}//end deleteObject()
