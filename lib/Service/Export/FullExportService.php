@@ -45,7 +45,6 @@ use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Throwable;
@@ -313,7 +312,7 @@ class FullExportService implements FullExportServiceInterface {
 
 		try {
 			return $this->container->get(self::OBJECT_FILE_READER);
-		} catch (ContainerExceptionInterface) {
+		} catch (Throwable) {
 			return null;
 		}
 	}//end objectFileReader()

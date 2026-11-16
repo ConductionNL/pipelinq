@@ -100,9 +100,12 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * nothing else, so permissions still apply. Named by string because
 	 * pipelinq does not hard-depend on a given OpenRegister build.
 	 *
+	 * Held in a property rather than a constant so static analysis, which
+	 * resolves the test stub, does not read the scope as always present.
+	 *
 	 * @var string
 	 */
-	private const KEEP_STATES_SCOPE = 'OCA\OpenRegister\Service\Lifecycle\KeepLifecycleStatesScope';
+	private string $keepStatesScope = 'OCA\OpenRegister\Service\Lifecycle\KeepLifecycleStatesScope';
 
 	/**
 	 * Entity sections in seed order: section => [schemaConfigKey, lookupField, ticketType].
@@ -283,7 +286,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 			];
 		}
 
-		$scope = [self::KEEP_STATES_SCOPE, 'run'];
+		$scope = [$this->keepStatesScope, 'run'];
 		if (is_callable($scope) === true) {
 			return call_user_func($scope, fn (): array => $this->seedWith(context: $context));
 		}
@@ -295,7 +298,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	 * Seed every section and the marketing set into the provisioned register.
 	 *
 	 * @param array{0: object, 1: string, 2: array<string, string>, 3: array<string, mixed>} $context The object service, register,
-	 *                                                                                                 schema ids and seed definitions.
+	 *                                                                                                schema ids and seed definitions.
 	 *
 	 * @return array<string, mixed> The seed answer.
 	 *
