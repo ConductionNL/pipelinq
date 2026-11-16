@@ -20,4 +20,5 @@
 
 ## Phase 3: Verify
 
-- [ ] (live pass, decision 139) Live: fresh enable → CnAppRoot gates on `currency`; pick a currency → app usable + dashboard formats amounts in that currency; both modals open from the admin page.
+- [x] (live pass, decision 139) Live: fresh enable → CnAppRoot gates on `currency`; pick a currency → app usable + dashboard formats amounts in that currency; both modals open from the admin page.
+  - Live pass 16 Nov 2026 on a clean install: the shell is replaced by the wizard with only Reporting currency required (Close disabled); choosing USD completes setup, the commercial dashboard shows $ amounts; Run setup wizard on the admin page opens the wizard dialog. `spec-coverage/first-time-setup.spec.ts` 4 passed after adding the `pos` and `integrations` steps it now reports.

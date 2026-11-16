@@ -84,6 +84,7 @@
         "Immutable, cryptographically signed record of every register action for tax authority audits.": "Onveranderlijk, cryptografisch ondertekend overzicht van elke kassahandeling voor controles door de Belastingdienst.",
         "Select the period and export format for the cash register audit package for the tax authority. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.": "Kies de periode en het exportformaat voor het kassa-auditpakket voor de Belastingdienst. Alle auditregels in de periode worden geëxporteerd; de integriteit van de hashketen staat automatisch in de exportgegevens.",
         "Tax authority export failed.": "Export voor de Belastingdienst mislukt.",
+        "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
         "Fill in both dates (the tax authority requires them).": "Vul beide datums in (de Belastingdienst vraagt erom).",
         "XML (the tax authority format)": "XML (het formaat van de Belastingdienst)",
         "Tax authority export downloaded.": "Export voor de Belastingdienst gedownload.",

@@ -96,6 +96,7 @@ OC.L10N.register(
         "Immutable, cryptographically signed record of every register action for tax authority audits.": "Immutable, cryptographically signed record of every register action for tax authority audits.",
         "Select the period and export format for the cash register audit package for the tax authority. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.": "Select the period and export format for the cash register audit package for the tax authority. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.",
         "Tax authority export failed.": "Tax authority export failed.",
+        "The report could not be exported.": "The report could not be exported.",
         "Fill in both dates (the tax authority requires them).": "Fill in both dates (the tax authority requires them).",
         "View all {total} tickets": "View all {total} tickets",
         "View history": "View history",

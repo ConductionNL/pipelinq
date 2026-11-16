@@ -6,4 +6,5 @@
   - unit: `RegisterAccessSyncTest`, `SettingsServiceRegisterAccessTest`
 - [x] 1.3 `crm_read_group`: read and export on client, contact, ticket and partyIndicatorValue, never a write; applied groups recorded so a replaced group is taken out; `SyncRegisterAccessJob`; the Zuiddrecht example set sets `dossiq-medewerkers`.
   - unit: `RegisterAccessSyncTest`, `SettingsServiceRegisterAccessTest`, `RegisterAccessDeclaredTest`
-- [ ] 2.1 (live pass, after merge and re-import) The probe in the PR body returns 0 tickets and clients for an account in no group and for a member of `inwoners`, a member of the CRM group still works the KCC queue, and a member of `dossiq-medewerkers` reads a client and cannot update it.
+- [x] 2.1 (live pass, after merge and re-import) The probe in the PR body returns 0 tickets and clients for an account in no group and for a member of `inwoners`, a member of the CRM group still works the KCC queue, and a member of `dossiq-medewerkers` reads a client and cannot update it.
+  - Live pass 16 Nov 2026 (crm_group kcc, crm_read_group dossiq-medewerkers): no group 0 tickets/0 clients, inwoners 0/0, kcc 42/17 and PATCH on a ticket and a client 200, dossiq-medewerkers reads a client (200) and gets 403 on PATCH of a client and a ticket.

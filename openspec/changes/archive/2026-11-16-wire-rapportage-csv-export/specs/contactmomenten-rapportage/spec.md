@@ -3,7 +3,7 @@
 **Spec refs**: `contactmomenten-rapportage`
 **Standards**: Dutch Excel CSV conventions (semicolon separator, UTF-8 BOM)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: CSV export
 
