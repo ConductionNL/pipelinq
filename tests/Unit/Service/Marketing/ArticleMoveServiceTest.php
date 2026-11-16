@@ -169,6 +169,58 @@ class ArticleMoveServiceTest extends TestCase {
 	}//end testARefusedCopyIsCountedAndLeavesTheReferences()
 
 	/**
+	 * An article without an id is not moved or counted, and an article whose
+	 * `@self` is not a block is still moved under its own identities.
+	 *
+	 * @return void
+	 */
+	public function testAnArticleWithoutAnIdIsSkippedAndABrokenSelfIsIgnored(): void {
+		$this->pipelinq->rows['article']['no-id'] = ['title' => 'Winter', 'slug' => 'winter'];
+		$this->pipelinq->rows['article']['old-1']['@self'] = 'not-a-block';
+
+		$result = $this->move(installed: true)->run();
+
+		$this->assertSame([3, 0, 2], [$result['moved'], $result['failed'], $result['references']]);
+		$this->assertSame(['lente', 'zomer', 'herfst'], array_column($this->portaliq->rowsOf(register: 'portaliq', schema: 'article'), 'slug'));
+		$moved = $this->pipelinq->find(schemaSlug: 'article', id: 'old-1');
+		$this->assertArrayNotHasKey('@self', $moved);
+		$this->assertSame($moved['migratedTo'], $this->pipelinq->find(schemaSlug: 'campaignTemplate', id: 't1')['articleIds'][0]);
+	}//end testAnArticleWithoutAnIdIsSkippedAndABrokenSelfIsIgnored()
+
+	/**
+	 * A reference the store refuses to rewrite is not counted and stays as it was.
+	 *
+	 * @return void
+	 */
+	public function testARefusedReferenceRewriteIsNotCounted(): void {
+		$refusing = new class extends InMemoryListObjectStore {
+			/**
+			 * Refuse every template write; keep the rest.
+			 *
+			 * @param string               $schemaSlug The schema.
+			 * @param array<string, mixed> $payload    The row.
+			 * @param string|null          $id         The id when updating.
+			 *
+			 * @return array<string, mixed>|null
+			 */
+			public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
+				if ($schemaSlug === 'campaignTemplate') {
+					return null;
+				}
+
+				return parent::save(schemaSlug: $schemaSlug, payload: $payload, id: $id);
+			}//end save()
+		};
+		$refusing->rows = $this->pipelinq->rows;
+		$this->pipelinq = $refusing;
+
+		$result = $this->move(installed: true)->run();
+
+		$this->assertSame(['done', 3, 1], [$result['status'], $result['moved'], $result['references']]);
+		$this->assertSame(['lente', 'unknown'], $this->pipelinq->find(schemaSlug: 'campaignTemplate', id: 't1')['articleIds']);
+	}//end testARefusedReferenceRewriteIsNotCounted()
+
+	/**
 	 * The move over the two registers.
 	 *
 	 * @param bool $installed Whether portaliq is installed.

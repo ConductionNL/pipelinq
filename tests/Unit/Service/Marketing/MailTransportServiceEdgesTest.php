@@ -155,9 +155,11 @@ class MailTransportServiceEdgesTest extends TestCase {
 	/**
 	 * The service under test.
 	 *
+	 * @param ArticleService|null $articles The article service, a bare mock when null.
+	 *
 	 * @return MailTransportService
 	 */
-	private function service(): MailTransportService {
+	private function service(?ArticleService $articles = null): MailTransportService {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => ($this->config[$key] ?? $default)
@@ -184,7 +186,7 @@ class MailTransportServiceEdgesTest extends TestCase {
 			$container,
 			$appConfig,
 			$this->mailer,
-			$this->createMock(ArticleService::class),
+			($articles ?? $this->createMock(ArticleService::class)),
 			$this->connectorRegister,
 			$this->logger,
 			$addresses,
@@ -483,6 +485,31 @@ class MailTransportServiceEdgesTest extends TestCase {
 		$this->assertSame(['t-1', 3], [$save[1][4], $save[1][1]['sentToday']]);
 		$this->assertSame('mailTransport', $save[1][3]);
 	}//end testTrackingRewritesTheHtmlThatIsSent()
+
+	/**
+	 * A template whose article list is not a list embeds no articles: the
+	 * article service is asked once, for none, and both bodies are expanded.
+	 *
+	 * @return void
+	 */
+	public function testAnArticleListThatIsNotAListEmbedsNoArticles(): void {
+		$articles = $this->createMock(ArticleService::class);
+		$articles->expects($this->once())->method('loadArticlesByIds')->with([])->willReturn([]);
+		$articles->expects($this->exactly(2))->method('expandArticlesMarker')->willReturnCallback(
+			static fn (string $body, array $articles, string $format): string => str_replace(ArticleService::ARTICLES_MARKER, '['.$format.':'.count($articles).']', $body)
+		);
+		$html = [];
+		$this->acceptingMailer($html);
+
+		$sent = $this->service(articles: $articles)->sendOneDelivery(
+			delivery: ['uuid' => 'd-2', 'email' => 'a@example.org'],
+			template: ['bodyHtml' => '<p>{{articles}}</p>', 'bodyText' => '{{articles}}', 'articleIds' => 'art-1', 'senderEmail' => 'news@example.org'],
+			transport: ['uuid' => 't-1', 'kind' => 'instance', 'sentToday' => 0, 'dailyLimitResetAt' => gmdate('Y-m-d') . 'T00:00:00Z'],
+		);
+
+		$this->assertTrue($sent);
+		$this->assertSame(['<p>['.ArticleService::FORMAT_HTML.':0]</p>'], $html);
+	}//end testAnArticleListThatIsNotAListEmbedsNoArticles()
 
 	/**
 	 * A failing tracking service leaves the HTML as rendered; a missing one

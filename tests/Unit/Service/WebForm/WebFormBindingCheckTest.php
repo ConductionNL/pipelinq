@@ -273,6 +273,54 @@ class WebFormBindingCheckTest extends TestCase {
 	}//end testFormsBindingTakesTypesFromTheQuestions()
 
 	/**
+	 * A mapping entry that is not a field setting is dropped before the
+	 * validator judges the Forms binding, and produces no finding of its own.
+	 *
+	 * @return void
+	 */
+	public function testFormsBindingDropsMappingEntriesThatAreNotFields(): void {
+		$questions = new class {
+			/**
+			 * The form's questions.
+			 *
+			 * @param int $formId The form.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findByForm(int $formId): array {
+				return [['id' => 11, 'type' => 'short', 'text' => 'Name', 'isRequired' => true, 'extraSettings' => []]];
+			}
+		};
+		$options = new class {
+			/**
+			 * The question's options.
+			 *
+			 * @param int $questionId The question.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findByQuestion(int $questionId): array {
+				return [];
+			}
+		};
+		$check = $this->check(forms: [FormsQuestionReader::QUESTION_MAPPER => $questions, FormsQuestionReader::OPTION_MAPPER => $options]);
+
+		$findings = $check->findings(
+			form: $this->form(
+				[
+					'formsFormId' => 5,
+					'mapping' => ['fields' => ['junk', ['field' => '11', 'property' => 'title', 'type' => 'text']]],
+				]
+			)
+		);
+
+		$this->assertSame([], $findings);
+		$judged = $this->validator->calls[0]['mapping']['fields'];
+		$this->assertCount(1, $judged);
+		$this->assertSame('title', $judged[0]['property']);
+	}//end testFormsBindingDropsMappingEntriesThatAreNotFields()
+
+	/**
 	 * A binding to Nextcloud Forms on an instance without Forms is refused.
 	 *
 	 * @return void
