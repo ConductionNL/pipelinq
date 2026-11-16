@@ -13068,8 +13068,8 @@
         "/rapportage/export": {
             "get": {
                 "operationId": "reporting-export-csv",
-                "summary": "Export reporting data as CSV",
-                "description": "Export reporting data as CSV. Needs a signed-in Nextcloud user.",
+                "summary": "Export reporting data as CSV, Excel or PDF",
+                "description": "Export reporting data as CSV, or the contact report as an Excel workbook or a PDF document. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "reporting"
                 ],
@@ -13098,6 +13098,112 @@
                     },
                     "501": {
                         "$ref": "#/components/responses/Problem501"
+                    },
+                    "400": {
+                        "description": "The period or the format is missing or invalid."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": false,
+                        "description": "csv (default), xlsx or pdf; any other value is refused with a 400.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "xlsx",
+                                "pdf"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/rapportage/forecast": {
+            "get": {
+                "operationId": "contact-report-forecast",
+                "summary": "Expected contacts for the next seven days",
+                "description": "The expected contact moments for each of the next seven days from the daily average of past weeks, closed days at zero, with the total beside that of a normal week; with too little history it holds no figures. Needs a signed-in Nextcloud user with the CRM privilege.",
+                "tags": [
+                    "reporting"
+                ],
+                "parameters": [
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The signed-in user lacks the CRM privilege."
                     }
                 }
             }
@@ -13126,6 +13232,87 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/rapportage/occupancy": {
+            "get": {
+                "operationId": "contact-report-occupancy",
+                "summary": "Occupancy per employee and hour",
+                "description": "Per employee and working hour, the share of that hour spent on contact moments in a period; an hour without contact moments reads 0. Needs a signed-in Nextcloud user with the CRM privilege.",
+                "tags": [
+                    "reporting"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "description": "First day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "description": "Last day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "400": {
+                        "description": "The period or a parameter is missing or invalid."
+                    },
+                    "403": {
+                        "description": "The signed-in user lacks the CRM privilege."
                     }
                 }
             }
@@ -13236,6 +13423,87 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/rapportage/top-subjects": {
+            "get": {
+                "operationId": "contact-report-top-subjects",
+                "summary": "The ten subjects with the most contact moments",
+                "description": "The ten subjects with the most contact moments in a period, most first, each with its count. Needs a signed-in Nextcloud user with the CRM privilege.",
+                "tags": [
+                    "reporting"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "description": "First day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "description": "Last day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "400": {
+                        "description": "The period or a parameter is missing or invalid."
+                    },
+                    "403": {
+                        "description": "The signed-in user lacks the CRM privilege."
                     }
                 }
             }

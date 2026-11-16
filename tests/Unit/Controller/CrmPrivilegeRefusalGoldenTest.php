@@ -110,6 +110,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 		'ProspectController' => ['index'],
 		'RapportageController' => ['getPipelineStats'],
 		'ReportingController' => ['getKpis', 'getChannels', 'getAgents', 'getSla', 'exportCsv'],
+		'ContactReportController' => ['topSubjects', 'occupancy', 'forecast'],
 		'RoutingController' => ['getSuggestions'],
 		'SearchConsoleController' => ['index'],
 		'SemanticHandoffController' => ['requestAvailability', 'convertRequestToCase'],
