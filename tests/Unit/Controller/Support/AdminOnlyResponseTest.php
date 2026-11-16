@@ -23,12 +23,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller\Support;
 
 use OCA\Pipelinq\Controller\Support\AdminOnlyResponse;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * No user is 401, a non-admin is 403, an admin passes.
@@ -53,18 +55,21 @@ class AdminOnlyResponseTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		return new class($session, $groups, $l10n) {
+		return new class($session, $groups, $l10n, $this->createMock(LoggerInterface::class)) {
 			use AdminOnlyResponse;
+			use PosControllerResponses;
 
 			/**
 			 * @param IUserSession  $userSession  The session.
 			 * @param IGroupManager $groupManager The groups.
-			 * @param IL10N         $l10n         The translator.
+			 * @param IL10N           $l10n         The translator.
+			 * @param LoggerInterface $logger       The logger.
 			 */
 			public function __construct(
 				private IUserSession $userSession,
 				private IGroupManager $groupManager,
 				private IL10N $l10n,
+				private LoggerInterface $logger,
 			) {
 			}
 
@@ -73,6 +78,23 @@ class AdminOnlyResponseTest extends TestCase {
 			 */
 			public function gate(): ?JSONResponse {
 				return $this->requireAdmin();
+			}
+
+			/**
+			 * @param callable $action The action.
+			 * @param string   $label  The label.
+			 *
+			 * @return JSONResponse
+			 */
+			private function run(callable $action, string $label): JSONResponse {
+				return new JSONResponse(['label' => $label, 'data' => $action()]);
+			}
+
+			/**
+			 * @return JSONResponse
+			 */
+			public function adminRun(): JSONResponse {
+				return $this->runAsAdmin(action: fn (): array => ['ok' => true], label: 'probe');
 			}
 		};
 	}//end host()
@@ -94,4 +116,19 @@ class AdminOnlyResponseTest extends TestCase {
 
 		$this->assertNull($this->host($user, true)->gate());
 	}//end testGate()
+
+	/**
+	 * @return void
+	 */
+	public function testRunAsAdminRefusesBeforeRunning(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('u1');
+
+		$this->assertSame(401, $this->host(null, false)->adminRun()->getStatus());
+		$this->assertSame(403, $this->host($user, false)->adminRun()->getStatus());
+		$this->assertSame(
+			['label' => 'probe', 'data' => ['ok' => true]],
+			$this->host($user, true)->adminRun()->getData()
+		);
+	}//end testRunAsAdminRefusesBeforeRunning()
 }//end class

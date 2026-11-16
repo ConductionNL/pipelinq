@@ -419,10 +419,7 @@ class ReportingService implements ReportingServiceInterface {
 		int $withinSla,
 	): array {
 		$target = $this->getSlaTarget(channel: $channel);
-		$compliance = 0.0;
-		if ($totalContacts > 0) {
-			$compliance = round(($withinSla / $totalContacts) * 100, 1);
-		}
+		$compliance = self::percentOf(part: $withinSla, total: $totalContacts);
 
 		return [
 			'compliance' => $compliance,
@@ -430,6 +427,22 @@ class ReportingService implements ReportingServiceInterface {
 			'status' => self::slaStatus(compliance: $compliance, target: $target),
 		];
 	}//end calculateSlaCompliance()
+
+	/**
+	 * A part of a total as a percentage with one decimal; 0.0 for no total.
+	 *
+	 * @param int $part  The part.
+	 * @param int $total The total.
+	 *
+	 * @return float The percentage.
+	 */
+	private static function percentOf(int $part, int $total): float {
+		if ($total > 0) {
+			return round(($part / $total) * 100, 1);
+		}
+
+		return 0.0;
+	}//end percentOf()
 
 	/**
 	 * The traffic-light status of a compliance against its target.

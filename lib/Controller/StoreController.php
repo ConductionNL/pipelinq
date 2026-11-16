@@ -52,6 +52,8 @@ use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\AppHost\Service\StoreDescriptor;
 use OCA\OpenRegister\AppHost\Store\StoreActionAuthorizer;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RegisterResolverServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SchemaSlugMapInterface;
@@ -564,7 +566,10 @@ class StoreController extends Controller {
 	 */
 	private function writeComponent(array $object, array $target): array {
 		try {
-			$this->objectService->saveObject($this->asNewObject(object: $object), [], $target['register'], $target['schema'], null);
+			$this->objectService->saveObject(
+				$this->asNewObject(object: $object),
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']))
+			);
 			return ['schema' => $target['slug'], 'status' => 'installed', 'message' => ''];
 		} catch (Throwable $e) {
 			$this->logger->error('Pipelinq store: installing {schema} failed: {error}', ['schema' => $target['slug'], 'error' => $e->getMessage()]);

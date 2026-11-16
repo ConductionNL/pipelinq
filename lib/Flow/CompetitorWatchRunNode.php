@@ -43,6 +43,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
 use OCP\IL10N;
@@ -59,7 +61,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
-class CompetitorWatchRunNode implements IFlowNode {
+class CompetitorWatchRunNode implements ICallFlowNode {
 
 	/**
 	 * The node type, as the shipped flow names it.
@@ -183,15 +185,16 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 * to go and find what to work on. It answers with one item carrying the
 	 * run summary, so a later node can branch on what was found.
 	 *
-	 * @param array $items The input items, empty on a schedule.
-	 * @param array $config The step configuration.
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The items, the step config and the run context.
 	 *
 	 * @return array One item carrying the summary.
 	 *
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
 		$this->validateConfig(config: $config);
 		$summary = $this->watches->runDue(limit: self::limitOf(config: $config), actingUserId: $this->actingUser(context: $context));
 

@@ -1053,8 +1053,8 @@ class AnalyticsService implements AnalyticsServiceInterface {
 		$bucketSize = $this->bucketSizeForPeriod(period: $period);
 		$window = [$startTs, $nowTs, $bucketSize];
 
-		$buckets = $this->addPosRevenue(buckets: [], pos: $pos, window: $window);
-		$buckets = $this->addWonLeadRevenue(buckets: $buckets, leads: $leads, window: $window);
+		$buckets = $this->addPosRevenue(buckets: [], source: ['rows' => $pos, 'window' => $window]);
+		$buckets = $this->addWonLeadRevenue(buckets: $buckets, source: ['rows' => $leads, 'window' => $window]);
 
 		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
 	}//end buildRevenueSeries()
@@ -1063,13 +1063,14 @@ class AnalyticsService implements AnalyticsServiceInterface {
 	 * Add each revenue POS transaction's total to its time bucket.
 	 *
 	 * @param array<string, float> $buckets The buckets so far.
-	 * @param array<int, array<string, mixed>> $pos The POS transactions.
-	 * @param array{0: int, 1: int, 2: int} $window The start timestamp, now timestamp and bucket size.
+	 * @param array{rows: array<int, array<string, mixed>>, window: array{0: int, 1: int, 2: int}} $source The POS
+	 *   transactions, and the start timestamp, now timestamp and bucket size.
 	 *
 	 * @return array<string, float> The buckets.
 	 */
-	private function addPosRevenue(array $buckets, array $pos, array $window): array {
-		foreach ($pos as $txn) {
+	private function addPosRevenue(array $buckets, array $source): array {
+		$window = $source['window'];
+		foreach ($source['rows'] as $txn) {
 			if ($this->isRevenueTransaction(txn: $txn) === false) {
 				continue;
 			}
@@ -1087,13 +1088,14 @@ class AnalyticsService implements AnalyticsServiceInterface {
 	 * Add each won lead's value to the bucket of its close date.
 	 *
 	 * @param array<string, float> $buckets The buckets so far.
-	 * @param array<int, array<string, mixed>> $leads The leads.
-	 * @param array{0: int, 1: int, 2: int} $window The start timestamp, now timestamp and bucket size.
+	 * @param array{rows: array<int, array<string, mixed>>, window: array{0: int, 1: int, 2: int}} $source The leads,
+	 *   and the start timestamp, now timestamp and bucket size.
 	 *
 	 * @return array<string, float> The buckets.
 	 */
-	private function addWonLeadRevenue(array $buckets, array $leads, array $window): array {
-		foreach ($leads as $lead) {
+	private function addWonLeadRevenue(array $buckets, array $source): array {
+		$window = $source['window'];
+		foreach ($source['rows'] as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'won') {
 				continue;
 			}

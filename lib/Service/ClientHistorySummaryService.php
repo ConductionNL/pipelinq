@@ -127,15 +127,30 @@ class ClientHistorySummaryService {
 			return ['available' => false, 'summary' => null, 'recordsRead' => 0, 'generatedAt' => null];
 		}
 
-		$now     = ($now ?? new DateTimeImmutable('now'));
-		$records = $this->records(clientId: $clientId, now: $now);
+		return $this->summaryBy(
+			factory: $factory,
+			subject: ['clientId' => $clientId, 'viewer' => $viewer, 'now' => ($now ?? new DateTimeImmutable('now'))]
+		);
+	}//end summarise()
+
+	/**
+	 * The summary hermiq writes of the client's records, read up to the moment.
+	 *
+	 * @param object                                                           $factory The text provider.
+	 * @param array{clientId: string, viewer: string, now: DateTimeImmutable} $subject The client, the viewer and the moment.
+	 *
+	 * @return array{available:bool, summary:string|null, recordsRead:int, generatedAt:string|null}
+	 */
+	private function summaryBy(object $factory, array $subject): array {
+		$now     = $subject['now'];
+		$records = $this->records(clientId: $subject['clientId'], now: $now);
 		$result  = ['available' => true, 'summary' => null, 'recordsRead' => count($records), 'generatedAt' => $now->format(DATE_ATOM)];
 		if ($records === []) {
 			return $result;
 		}
 
-		return $this->withSummary(result: $result, request: ['factory' => $factory, 'records' => $records, 'viewer' => $viewer]);
-	}//end summarise()
+		return $this->withSummary(result: $result, request: ['factory' => $factory, 'records' => $records, 'viewer' => $subject['viewer']]);
+	}//end summaryBy()
 
 	/**
 	 * The result with hermiq's summary of the records, unchanged when hermiq gives no answer.

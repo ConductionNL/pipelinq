@@ -87,8 +87,6 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { reportSectionMixin } from './reportSection.js'
 
@@ -150,17 +148,11 @@ export default {
 			}
 		},
 
-		async fetchData() {
-			this.loading = true
-			try {
-				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/rapportage/agents'),
-					{
-						params: { period: this.effectivePeriod },
-					},
-				)
+		fetchData() {
+			return this.loadInto('agents', async () => {
+				const data = await this.reportData('agents')
 				const agentMap = data.agents ?? {}
-				this.agents = Object.entries(agentMap)
+				return Object.entries(agentMap)
 					.filter(([, metrics]) => (metrics.count ?? 0) >= 1)
 					.map(([id, metrics]) => ({
 						id,
@@ -168,11 +160,7 @@ export default {
 						fcrRate: metrics.fcrRate ?? 0,
 						avgHandlingTime: metrics.avgHandlingTime ?? '0:00',
 					}))
-			} catch {
-				this.agents = []
-			} finally {
-				this.loading = false
-			}
+			})
 		},
 	},
 }

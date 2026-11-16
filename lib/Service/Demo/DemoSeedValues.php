@@ -126,13 +126,8 @@ class DemoSeedValues {
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function linkReference(array $data, array $definition, array $uuids, string $keyName, string $section, string $field): array {
-		if (isset($definition[$keyName]) === false) {
-			return $data;
-		}
-
-		$uuid = ($uuids[$section . ':' . $definition[$keyName]] ?? null);
-		if ($uuid !== null) {
-			$data[$field] = $uuid;
+		if (isset($definition[$keyName]) === true && isset($uuids[$section . ':' . $definition[$keyName]]) === true) {
+			$data[$field] = $uuids[$section . ':' . $definition[$keyName]];
 		}
 
 		return $data;
@@ -155,12 +150,40 @@ class DemoSeedValues {
 	 * @spec openspec/changes/services-and-resources-at-a-glance/tasks.md#4-example-data
 	 */
 	public function linkListReferences(array $data, string $listField, array $uuids, array $link): array {
-		if (is_array($data[$listField] ?? null) === false) {
+		return $this->withLinkedList(data: $data, list: ['field' => $listField, 'link' => [...$link, $uuids]]);
+	}//end linkListReferences()
+
+	/**
+	 * The data with each entry of its list field linked, when that field is a list.
+	 *
+	 * @param array<string, mixed>                                                                   $data Definition data.
+	 * @param array{field: string, link: array{0: string, 1: string, 2: string, 3: array<string, string>}} $list The list field and the link.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withLinkedList(array $data, array $list): array {
+		$field = $list['field'];
+		if (is_array($data[$field] ?? null) === false) {
 			return $data;
 		}
 
-		[$keyName, $section, $field] = $link;
-		foreach ($data[$listField] as $i => $entry) {
+		$data[$field] = $this->linkedEntries(entries: $data[$field], link: $list['link']);
+
+		return $data;
+	}//end withLinkedList()
+
+	/**
+	 * The list entries with their relation field set from the seeded uuid map
+	 * and their seed-file key removed.
+	 *
+	 * @param array<mixed>                                                 $entries The list entries.
+	 * @param array{0: string, 1: string, 2: string, 3: array<string, string>} $link    Key name, uuid-map section, field, uuid map.
+	 *
+	 * @return array<mixed> The entries.
+	 */
+	private function linkedEntries(array $entries, array $link): array {
+		[$keyName, $section, $field, $uuids] = $link;
+		foreach ($entries as $i => $entry) {
 			if (is_array($entry) === false || isset($entry[$keyName]) === false) {
 				continue;
 			}
@@ -171,9 +194,9 @@ class DemoSeedValues {
 				$entry[$field] = $uuid;
 			}
 
-			$data[$listField][$i] = $entry;
+			$entries[$i] = $entry;
 		}
 
-		return $data;
-	}//end linkListReferences()
+		return $entries;
+	}//end linkedEntries()
 }//end class

@@ -29,6 +29,7 @@ use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for ConnectorSourceTransport — per-provider request shaping and the
@@ -87,7 +88,9 @@ class ConnectorSourceTransportTest extends TestCase {
 		string $callServiceId = 'OCA\\Integriq\\Service\\CallService',
 	): ContainerInterface {
 		$objectService = new class {
-			public function find(string $id, $register = null, $schema = null): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ['uuid' => $id];
 			}//end find()
 		};
@@ -312,7 +315,9 @@ class ConnectorSourceTransportTest extends TestCase {
 	 */
 	public function testSendFailsClosedWhenSourceNotFound(): void {
 		$objectService = new class {
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return null;
 			}//end find()
 		};

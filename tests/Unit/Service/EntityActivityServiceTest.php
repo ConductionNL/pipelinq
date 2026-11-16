@@ -36,6 +36,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for the entity activity feed.
@@ -342,7 +343,11 @@ class EntityActivityServiceTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function ($id, $extend = [], $files = false, $register = null, $schema = null): ?ObjectEntityInterface {
+			function ($id, ?ObjectFindOptions $options = null): ?ObjectEntityInterface {
+				$extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = [$id, $register, $schema];
 				if ($this->findFails === true) {
 					throw new RuntimeException('load down');

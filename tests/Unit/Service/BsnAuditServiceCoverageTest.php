@@ -33,6 +33,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use stdClass;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Coverage tests for BsnAuditService record writing and RTBF pseudonymisation.
@@ -141,7 +143,10 @@ class BsnAuditServiceCoverageTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(
-				function (array $object, ?array $extend, $register, $schema) use (&$captured) {
+				function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured) {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
 					$captured = [$object, $extend, $register, $schema];
 					return $this->entity(uuid: 'audit-uuid');
 				}
@@ -201,8 +206,8 @@ class BsnAuditServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(
 					static function (array $record): bool {
 						return $record['bsnHash'] === 'precomputed-hash'
 							&& $record['ipAddress'] === ''
@@ -211,8 +216,8 @@ class BsnAuditServiceCoverageTest extends TestCase {
 							&& $record['haalcentraalCorrelationId'] === 'corr-1'
 							&& $record['action'] === 'brp-address-revealed';
 					}
-				)
-			)
+				),
+				]))
 			->willReturn($this->entity(uuid: null));
 
 		$uuid = $this->service()->recordLookup(
@@ -319,7 +324,11 @@ class BsnAuditServiceCoverageTest extends TestCase {
 		$this->objectService->expects($this->exactly(3))
 			->method('saveObject')
 			->willReturnCallback(
-				function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$saves) {
+				function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves) {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
+					$uuid = $options->uuid;
 					$saves[] = [$uuid, $register, $schema, $object];
 					return $this->entity();
 				}

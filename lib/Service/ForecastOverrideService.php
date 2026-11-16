@@ -26,6 +26,9 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
 use OCA\Pipelinq\Util\InjectedObjectService;
@@ -188,7 +191,9 @@ class ForecastOverrideService {
 		}
 
 		try {
-			return (bool)$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			return (bool)$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to delete forecast override', ['exception' => $e->getMessage(), 'id' => $id]);
 			return false;
@@ -210,10 +215,7 @@ class ForecastOverrideService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $override,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: null
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 
 		return $this->toArray(value: $saved);

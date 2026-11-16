@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for AppointmentPaymentProvider.
@@ -201,13 +202,11 @@ class AppointmentPaymentProviderTest extends TestCase {
 		);
 
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				if (is_array($payload) === true) {
 					return self::entity($payload);
@@ -284,13 +283,11 @@ class AppointmentPaymentProviderTest extends TestCase {
 		);
 
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				if (is_array($payload) === true) {
 					return self::entity($payload);

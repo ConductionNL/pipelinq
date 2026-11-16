@@ -30,6 +30,7 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * Tests for MockPipelineCleanupService.
@@ -214,7 +215,8 @@ class MockPipelineCleanupServiceTest extends TestCase {
 			}
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid) use ($deleteResult): bool {
+			function (ObjectDeletion $deletion) use ($deleteResult): bool {
+				$uuid = $deletion->uuid;
 				$this->deleted[] = $uuid;
 				return $deleteResult;
 			}

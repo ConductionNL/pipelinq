@@ -322,7 +322,7 @@ class ZgwApiClient implements ZgwApiClientInterface {
 			['method' => $method, 'url' => $url, 'status' => $status, 'msg' => $message]
 		);
 
-		$this->throwIfClockSkew(status: $status, body: $body, message: $message, url: $url);
+		$this->throwIfClockSkew(status: $status, context: ['body' => $body, 'message' => $message, 'url' => $url]);
 
 		if ($status === 404) {
 			throw new ZgwResourceNotFoundException($url);
@@ -348,20 +348,19 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	/**
 	 * Throw a ClockSkewException for a 401/403 whose body or message reads as a JWT clock-skew rejection.
 	 *
-	 * @param int $status The HTTP status.
-	 * @param string $body The response body.
-	 * @param string $message The transport error message.
-	 * @param string $url The request URL.
+	 * @param int                                               $status  The HTTP status.
+	 * @param array{body: string, message: string, url: string} $context The response body, the transport error message
+	 *   and the request URL.
 	 *
 	 * @return void
 	 *
 	 * @throws ClockSkewException On a clock-skew rejection.
 	 */
-	private function throwIfClockSkew(int $status, string $body, string $message, string $url): void {
+	private function throwIfClockSkew(int $status, array $context): void {
 		if ($status === 401 || $status === 403) {
-			if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
+			if (self::looksLikeClockSkew(text: $context['body']) === true || self::looksLikeClockSkew(text: $context['message']) === true) {
 				throw new ClockSkewException(
-					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
+					sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $context['url'], $status),
 					observedTime: time()
 				);
 			}
@@ -455,14 +454,23 @@ class ZgwApiClient implements ZgwApiClientInterface {
 	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public static function encodeJwt(array $header, array $payload, string $secret): string {
-		$segments = [];
-		$segments[] = self::base64UrlEncode(input: (string)json_encode($header, JSON_UNESCAPED_SLASHES));
-		$segments[] = self::base64UrlEncode(input: (string)json_encode($payload, JSON_UNESCAPED_SLASHES));
-		$signing = implode('.', $segments);
-		$signature = hash_hmac('sha256', $signing, $secret, true);
-		$segments[] = self::base64UrlEncode(input: $signature);
-		return implode('.', $segments);
+		$signing = self::base64UrlEncode(input: (string)json_encode($header, JSON_UNESCAPED_SLASHES))
+			. '.' . self::base64UrlEncode(input: (string)json_encode($payload, JSON_UNESCAPED_SLASHES));
+		return self::signedJwt(signing: $signing, secret: $secret);
 	}//end encodeJwt()
+
+	/**
+	 * The signing input with its HS256 signature appended.
+	 *
+	 * @param string $signing The encoded header and payload, dot-separated.
+	 * @param string $secret  HS256 secret.
+	 *
+	 * @return string Compact JWT.
+	 */
+	private static function signedJwt(string $signing, string $secret): string {
+		$signature = hash_hmac('sha256', $signing, $secret, true);
+		return $signing . '.' . self::base64UrlEncode(input: $signature);
+	}//end signedJwt()
 
 	/**
 	 * Decode a JWT segment (header or payload only).

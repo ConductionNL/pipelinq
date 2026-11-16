@@ -59,6 +59,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for ExportJobController.
@@ -890,6 +891,7 @@ class ExportJobControllerTest extends TestCase {
 			->method('saveObject')
 			->willReturnCallback(
 				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
+					$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 					$persisted = $object;
 					return self::entity($object);
 				}
@@ -925,6 +927,7 @@ class ExportJobControllerTest extends TestCase {
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$writes[] = $object;
 				return self::entity($object);
 			}
@@ -958,6 +961,7 @@ class ExportJobControllerTest extends TestCase {
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$writes[] = $object;
 				return self::entity(array_merge($object, ['id' => 'dest-1']));
 			}
@@ -1005,6 +1009,7 @@ class ExportJobControllerTest extends TestCase {
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$writes[] = $object;
 				return self::entity(array_merge($object, ['id' => 'dest-1']));
 			}
@@ -1046,6 +1051,7 @@ class ExportJobControllerTest extends TestCase {
 			->method('deleteObject')
 			->willReturnCallback(
 				static function (...$args) use (&$live): bool {
+					$args = LegacyObjectArgs::positional(method: 'deleteObject', args: $args);
 					// Model the store's own behaviour: a tombstoned row is
 					// excluded from subsequent reads.
 					$live = [];

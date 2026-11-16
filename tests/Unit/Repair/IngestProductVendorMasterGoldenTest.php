@@ -31,6 +31,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every ingest path: what is looked up, what is saved (in the argument order
@@ -262,6 +263,7 @@ class IngestProductVendorMasterGoldenTest extends TestCase {
 			 * @return ObjectEntity The saved object, as OpenRegister returns it.
 			 */
 			public function saveObject(mixed ...$args): ObjectEntity {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				$this->test->trace[] = ['saveObject' => $args];
 				$schema = ($args['schema'] ?? $args[1] ?? null);
 				if (($this->scenario['throwOn'] ?? null) === $schema) {

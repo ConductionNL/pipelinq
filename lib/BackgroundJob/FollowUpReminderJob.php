@@ -201,17 +201,29 @@ class FollowUpReminderJob extends TimedJob {
 	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
 	 */
 	public function inWindow(mixed $moment, int $now, int $windowEnd): bool {
+		$timestamp = self::timestampOf(moment: $moment);
+		return ($timestamp !== null && $timestamp >= $now && $timestamp <= $windowEnd);
+	}//end inWindow()
+
+	/**
+	 * The Unix timestamp of a moment, or null when it is not a parsable string.
+	 *
+	 * @param mixed $moment The stored moment.
+	 *
+	 * @return int|null
+	 */
+	private static function timestampOf(mixed $moment): ?int {
 		if (is_string($moment) === false || $moment === '') {
-			return false;
+			return null;
 		}
 
 		$timestamp = strtotime($moment);
 		if ($timestamp === false) {
-			return false;
+			return null;
 		}
 
-		return ($timestamp >= $now && $timestamp <= $windowEnd);
-	}//end inWindow()
+		return $timestamp;
+	}//end timestampOf()
 
 	/**
 	 * Whether an occurrence was already reminded.

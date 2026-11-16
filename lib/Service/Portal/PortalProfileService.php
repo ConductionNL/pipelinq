@@ -119,7 +119,24 @@ class PortalProfileService implements PortalProfileServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-007
 	 */
 	public function update(array $account, string $tenantId, array $changes): array {
-		$accountId = (string)$this->repository->idOf(object: $account);
+		$edit = ['accountId' => (string)$this->repository->idOf(object: $account), 'tenantId' => $tenantId, 'changes' => $changes];
+		$account = $this->withChanges(account: $account, edit: $edit);
+
+		$saved = $this->repository->save(self::SCHEMA, $account, $edit['accountId']);
+		return $this->present(account: $saved);
+	}//end update()
+
+	/**
+	 * The account with the changes applied, each changed field audited, and an email change staged.
+	 *
+	 * @param array<string, mixed>                                                   $account The account record.
+	 * @param array{accountId: string, tenantId: string, changes: array<string, mixed>} $edit    The account id, the tenant id
+	 *   and the requested changes.
+	 *
+	 * @return array<string, mixed> The account record to save.
+	 */
+	private function withChanges(array $account, array $edit): array {
+		['accountId' => $accountId, 'tenantId' => $tenantId, 'changes' => $changes] = $edit;
 		foreach ($this->changedFields(account: $account, changes: $changes) as $field => [$old, $new]) {
 			$account[$field] = $new;
 			$details = ['fieldName' => $field, 'previousValue' => $old, 'newValue' => $new];
@@ -127,12 +144,11 @@ class PortalProfileService implements PortalProfileServiceInterface {
 		}
 
 		if (array_key_exists('email', $changes) === true) {
-			$this->startEmailChange(account: $account, accountId: $accountId, tenantId: $tenantId, newEmail: (string)$changes['email']);
+			$this->startEmailChange(account: $account, edit: ['accountId' => $accountId, 'tenantId' => $tenantId, 'newEmail' => (string)$changes['email']]);
 		}
 
-		$saved = $this->repository->save(self::SCHEMA, $account, $accountId);
-		return $this->present(account: $saved);
-	}//end update()
+		return $account;
+	}//end withChanges()
 
 	/**
 	 * The editable fields the changes actually change, in field order, each
@@ -227,15 +243,15 @@ class PortalProfileService implements PortalProfileServiceInterface {
 	 * Stage an email change: store the pending email + token and send the link.
 	 * The login email is left untouched until verification.
 	 *
-	 * @param array<string, mixed> $account The account record (by reference via return).
-	 * @param string $accountId The account id.
-	 * @param string $tenantId The tenant id.
-	 * @param string $newEmail The requested new email.
+	 * @param array<string, mixed>                                      $account The account record (by reference via return).
+	 * @param array{accountId: string, tenantId: string, newEmail: string} $edit    The account id, the tenant id and the
+	 *   requested new email.
 	 *
 	 * @return void
 	 */
-	private function startEmailChange(array &$account, string $accountId, string $tenantId, string $newEmail): void {
-		$newEmail = strtolower(trim($newEmail));
+	private function startEmailChange(array &$account, array $edit): void {
+		['accountId' => $accountId, 'tenantId' => $tenantId] = $edit;
+		$newEmail = strtolower(trim($edit['newEmail']));
 		if ($newEmail === '' || $newEmail === strtolower((string)($account['email'] ?? ''))) {
 			return;
 		}

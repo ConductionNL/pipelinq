@@ -44,6 +44,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyOrganisationTreeServiceInterface;
 use OCA\Pipelinq\Util\JsonSerializableToArray;
@@ -476,9 +478,13 @@ class PartyOrganisationTreeService implements PartyOrganisationTreeServiceInterf
 		try {
 			$this->objectService->saveObject(
 				object: $object,
-				register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
-				schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
+							schema: $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '')
+						),
+					uuid: $uuid
+				)
 			);
 
 			return true;

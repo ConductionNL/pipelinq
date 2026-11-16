@@ -55,6 +55,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PosCustomerController.
@@ -520,17 +522,13 @@ class PosCustomerControllerTest extends TestCase {
 		// `[]` to `string $register` and raised inside the double.
 		$objectService->method('find')
 			->willReturnCallback(
-				static function (
-					int|string $id,
-					?array $_extend = [],
-					bool $files = false,
-					string|int|null $register = null,
-					string|int|null $schema = null,
-					bool $_rbac = true,
-					bool $_multitenancy = true,
-					bool $_render = true,
-					bool $_audit = true,
-				) use ($contact, $transaction): ?ObjectEntityInterface {
+				static function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use ($contact, $transaction): ?ObjectEntityInterface {
+					$_extend = $options?->extend ?? [];
+					$files = $options?->files ?? false;
+					$register = $options?->register;
+					$schema = $options?->schema;
+					$_render = $options?->render ?? true;
+					$_audit = $options?->audit ?? true;
 					$row = null;
 					if ((string)$schema === 'contact-schema') {
 						$row = ((string)$id === (string)$contact['id']) ? $contact : null;
@@ -553,20 +551,16 @@ class PosCustomerControllerTest extends TestCase {
 			);
 		$objectService->method('saveObject')
 			->willReturnCallback(
-				function (
-					array $object,
-					?array $extend = [],
-					string|int|null $register = null,
-					string|int|null $schema = null,
-					?string $uuid = null,
-					bool $_rbac = true,
-					bool $_multitenancy = true,
-					bool $silent = false,
-					bool $_validation = true,
-					?array $uploadedFiles = null,
-					?IUser $currentUser = null,
-					bool $failIfExists = false,
-				): ObjectEntityInterface {
+				function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+					$extend = $options->extend ?? [];
+					$register = $options->target->register;
+					$schema = $options->target->schema;
+					$uuid = $options->uuid;
+					$silent = $options->policy->silent ?? false;
+					$_validation = $options->policy->validation ?? true;
+					$uploadedFiles = $options->uploadedFiles;
+					$currentUser = $options->actor->currentUser;
+					$failIfExists = $options->policy->failIfExists ?? false;
 					$this->saves[] = [(string)$schema, (string)$uuid, $object];
 
 					$entity = new ObjectEntity();

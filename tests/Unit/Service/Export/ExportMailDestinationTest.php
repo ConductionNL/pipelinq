@@ -37,6 +37,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A mail destination needs recipients that exist, no connector source or
@@ -84,7 +85,11 @@ class ExportMailDestinationTest extends TestCase {
 			fn (int|string $id): ?ObjectEntity => (isset($this->stored[$id]) === true ? self::entity((string)$id, $this->stored[$id]) : null)
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$uuid = ($uuid ?? 'dest-1');
 				$this->stored[$uuid] = $object;
 				return self::entity($uuid, $object);

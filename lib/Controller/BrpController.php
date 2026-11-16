@@ -28,6 +28,9 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
@@ -936,9 +939,7 @@ class BrpController extends Controller {
 		try {
 			$saved = $this->getObjectService()->saveObject(
 				object: $request,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return $this->savedOrFallback(saved: $saved, fallback: $request);
 		} catch (Throwable $e) {
@@ -965,10 +966,10 @@ class BrpController extends Controller {
 		try {
 			$saved = $this->getObjectService()->saveObject(
 				object: $person,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuidRef,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuidRef
+				)
 			);
 			return $this->savedOrFallback(saved: $saved, fallback: $person);
 		} catch (Throwable $e) {
@@ -1036,7 +1037,7 @@ class BrpController extends Controller {
 		}
 
 		try {
-			$existing = $this->getObjectService()->find(id: $clientId, register: $register, schema: $schema);
+			$existing = $this->getObjectService()->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			$client = $this->clientAsArray(existing: $existing);
 
 			if ($client === []) {
@@ -1045,7 +1046,10 @@ class BrpController extends Controller {
 
 			$client = $this->withIdentityStamp(client: $client, verifiedAt: $verifiedAt, identityCheck: $identityCheck);
 
-			$this->getObjectService()->saveObject(object: $client, extend: [], register: $register, schema: $schema, uuid: $clientId);
+			$this->getObjectService()->saveObject(
+				object: $client,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $clientId)
+			);
 		} catch (Throwable $e) {
 			$this->logger->error('client identity stamp failed', ['clientId' => $clientId, 'error' => $e->getMessage()]);
 		}//end try
@@ -1125,7 +1129,10 @@ class BrpController extends Controller {
 	 */
 	private function stampContact(array $target, array $stamp): void {
 		try {
-			$existing = $this->getObjectService()->find(id: $target['id'], register: $target['register'], schema: $target['schema']);
+			$existing = $this->getObjectService()->find(
+				id: $target['id'],
+				options: new ObjectFindOptions(register: $target['register'], schema: $target['schema'])
+			);
 			$existingArr = $this->savedOrFallback(saved: $existing, fallback: []);
 
 			if (empty($existingArr) === true) {
@@ -1134,10 +1141,10 @@ class BrpController extends Controller {
 
 			$this->getObjectService()->saveObject(
 				object: array_replace($existingArr, $stamp),
-				extend: [],
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $target['id'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $target['id']
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error('contact stamp with verifiedBSN failed', ['contactId' => $target['id'], 'error' => $e->getMessage()]);

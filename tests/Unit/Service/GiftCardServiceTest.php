@@ -32,6 +32,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * GiftCardService over an in-memory OpenRegister: issue, activate, redeem,
@@ -90,7 +91,11 @@ class GiftCardServiceTest extends TestCase {
 		);
 		$objects->method('findAll')->willReturnCallback(fn (array $config=[]): array => $this->search(filters: $config['filters']));
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend=[], string|int|null $register=null, string|int|null $schema=null, ?string $uuid=null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($schema === 'giftCardTransaction_schema-id') {
 					$this->ledger[] = $object;
 					return self::entity(uuid: 'tx-' . count($this->ledger), payload: $object);

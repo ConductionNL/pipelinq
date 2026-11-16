@@ -31,6 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
 use OCA\Pipelinq\Kernel\Contracts\MessagingServiceInterface;
 use OCA\Pipelinq\Service\Messaging\MessageContent;
@@ -146,7 +149,7 @@ class MessagingService implements MessagingServiceInterface {
 	private function findInSchemas(object $objectService, string $contactId, array $target): array|null {
 		foreach ($target['schemas'] as $schema) {
 			try {
-				$entity = $objectService->find(id: $contactId, register: $target['register'], schema: $schema);
+				$entity = $objectService->find(id: $contactId, options: new ObjectFindOptions(register: $target['register'], schema: $schema));
 			} catch (Throwable $e) {
 				$entity = null;
 			}
@@ -257,8 +260,7 @@ class MessagingService implements MessagingServiceInterface {
 		try {
 			$entity = $objectService->find(
 				id: $messageId,
-				register: $this->registerSlug(),
-				schema: $this->messageSchema()
+				options: new ObjectFindOptions(register: $this->registerSlug(), schema: $this->messageSchema())
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -414,9 +416,10 @@ class MessagingService implements MessagingServiceInterface {
 		try {
 			$objectService->saveObject(
 				object: $row,
-				register: $this->registerSlug(),
-				schema: $this->messageSchema(),
-				uuid: $rowId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $this->registerSlug(), schema: $this->messageSchema()),
+					uuid: $rowId
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

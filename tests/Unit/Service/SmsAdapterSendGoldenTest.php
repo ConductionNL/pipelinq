@@ -40,6 +40,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 use TypeError;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every provider outcome of send(), with and without a provider hint: the
@@ -265,7 +266,10 @@ class SmsAdapterSendGoldenTest extends TestCase {
 			public function __construct(private SmsAdapterSendGoldenTest $test, private bool $saveFails) {
 			}
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->note(['saveObject' => compact('object', 'register', 'schema', 'uuid', '_rbac', '_multitenancy')]);
 				if ($this->saveFails === true && ($object['direction'] ?? '') === 'outbound') {
 					throw new RuntimeException('save down');

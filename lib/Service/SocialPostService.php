@@ -60,6 +60,7 @@ use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Service\Social\SocialPublishOutcome;
 use OCA\Pipelinq\Service\Social\SocialPublishRequest;
 use OCA\Pipelinq\Service\Support\ClientWritableFields;
+use OCA\Pipelinq\Service\Support\SocialPostRecord;
 use OCA\Pipelinq\Util\ConfiguredTenantId;
 use OCA\Pipelinq\Service\Support\SocialSpendBudget;
 use OCP\IAppConfig;
@@ -271,22 +272,14 @@ class SocialPostService implements SocialPostServiceInterface {
 			return ['error' => 'A post needs something to say.'];
 		}
 
-		$post = $this->clientFields(payload: $payload);
-		$post['status'] = self::STATUS_DRAFT;
-		$post['approvals'] = [];
-		$post['createdBy'] = $uid;
+		$post = SocialPostRecord::drafted(post: $this->clientFields(payload: $payload), uid: $uid);
 		// The mark comes from the write path, never from the request. A client
 		// claiming a person wrote what an agent wrote is the exact case ADR-088
 		// exists to prevent.
 		$post['agentAuthored'] = ($agent !== '');
 		$post['agentAuthoredBy'] = $agent;
 
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post);
-		if ($saved === null) {
-			return ['error' => 'The post could not be saved.'];
-		}
-
-		return ['post' => $saved];
+		return SocialPostRecord::savedAnswer(saved: $this->store->save(schemaSlug: $this->schema(), payload: $post));
 	}//end createPost()
 
 	/**
@@ -311,20 +304,9 @@ class SocialPostService implements SocialPostServiceInterface {
 			return ['error' => 'Only a draft can be edited. Return this post to draft first.'];
 		}
 
-		$update = array_merge($post, $this->clientFields(payload: $payload));
-		if ((bool)($post['agentAuthored'] ?? false) === true) {
-			// A person editing an agent's draft takes authorship of it.
-			$update['agentAuthored'] = false;
-			$update['agentAuthoredBy'] = '';
-			$update['createdBy'] = $uid;
-		}
+		$update = SocialPostRecord::takenOver(update: array_merge($post, $this->clientFields(payload: $payload)), uid: $uid);
 
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $update, id: $postId);
-		if ($saved === null) {
-			return ['error' => 'The post could not be saved.'];
-		}
-
-		return ['post' => $saved];
+		return SocialPostRecord::savedAnswer(saved: $this->store->save(schemaSlug: $this->schema(), payload: $update, id: $postId));
 	}//end updatePost()
 
 	/**
@@ -425,12 +407,8 @@ class SocialPostService implements SocialPostServiceInterface {
 		}
 
 		$post['status'] = self::STATUS_APPROVAL;
-		$saved = $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId);
-		if ($saved === null) {
-			return ['error' => 'The post could not be saved.'];
-		}
 
-		return ['post' => $saved];
+		return SocialPostRecord::savedAnswer(saved: $this->store->save(schemaSlug: $this->schema(), payload: $post, id: $postId));
 	}//end submitForApproval()
 
 	/**
@@ -653,7 +631,8 @@ class SocialPostService implements SocialPostServiceInterface {
 
 		$outcome = $attempt->adapter->publish(request: $attempt->request);
 		$recorded = $this->publications->record(publication: $run->publication, outcome: $outcome);
-		$this->afterAttempt(accountId: $run->account->id, adapter: $attempt->adapter, outcome: $outcome);
+		$this->chargeBudget(adapter: $attempt->adapter, outcome: $outcome);
+		$this->relinkIfGone(accountId: $run->account->id, outcome: $outcome);
 
 		return $recorded;
 	}//end publishThrough()
@@ -703,7 +682,7 @@ class SocialPostService implements SocialPostServiceInterface {
 		return new SocialPublishRequest(
 			network: $network,
 			body: $resolved['body'],
-			link: $this->decoratedLink(post: $post, network: $network, link: $resolved['link']),
+			link: $this->decoratedLink(post: $post, target: ['network' => $network, 'link' => $resolved['link']]),
 			media: $resolved['media'],
 			credentialRef: (string)($account['credentialRef'] ?? ''),
 			externalAccountId: (string)($account['externalAccountId'] ?? ''),
@@ -719,18 +698,38 @@ class SocialPostService implements SocialPostServiceInterface {
 	 * The STORED link is never touched, so moving a post to another campaign
 	 * does not mean unpicking a query string.
 	 *
-	 * @param array<string, mixed> $post The post.
-	 * @param string $network The network, which becomes the medium.
-	 * @param string $link The resolved link.
+	 * @param array<string, mixed>                $post   The post.
+	 * @param array{network: string, link: string} $target The network, which becomes the medium, and the resolved link.
 	 *
 	 * @return string The link to publish.
 	 *
 	 * @spec openspec/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
-	private function decoratedLink(array $post, string $network, string $link): string {
+	private function decoratedLink(array $post, array $target): string {
+		$link = $target['link'];
+		$utm = $this->campaignUtm(post: $post, link: $link);
+		if ($utm === null) {
+			return $link;
+		}
+
+		$utm['utm_medium'] = $target['network'];
+
+		return ($this->links->decorateUrl(url: $link, utm: $utm) ?? $link);
+	}//end decoratedLink()
+
+	/**
+	 * The campaign parameters of a post's link, the medium still empty; null
+	 * when the link stays as it is.
+	 *
+	 * @param array<string, mixed> $post The post.
+	 * @param string $link The resolved link.
+	 *
+	 * @return array<string, string>|null The parameters, or null.
+	 */
+	private function campaignUtm(array $post, string $link): ?array {
 		$campaignId = trim((string)($post['campaignId'] ?? ''));
 		if ($link === '' || $campaignId === '' || $this->links->isEnabled() === false) {
-			return $link;
+			return null;
 		}
 
 		// The campaign OWNS its utm value: CampaignService mints it once and
@@ -743,21 +742,16 @@ class SocialPostService implements SocialPostServiceInterface {
 			value: (string)($this->campaigns->find(id: $campaignId)['utmCampaign'] ?? $campaignId),
 		);
 		if ($campaign === '') {
-			return $link;
+			return null;
 		}
 
-		$decorated = $this->links->decorateUrl(
-			url: $link,
-			utm: [
-				'utm_source' => 'social',
-				'utm_medium' => $network,
-				'utm_campaign' => $campaign,
-				'utm_content' => $this->store->idOf(payload: $post),
-			],
-		);
-
-		return ($decorated ?? $link);
-	}//end decoratedLink()
+		return [
+			'utm_source' => 'social',
+			'utm_medium' => '',
+			'utm_campaign' => $campaign,
+			'utm_content' => $this->store->idOf(payload: $post),
+		];
+	}//end campaignUtm()
 
 	/**
 	 * The spend refusal for a network that charges, or null when it may go.
@@ -780,10 +774,8 @@ class SocialPostService implements SocialPostServiceInterface {
 	}//end budgetRefusal()
 
 	/**
-	 * What follows an attempt: charge the budget when it went, and mark the
-	 * account for a reconnect when the grant is gone.
+	 * Charge the spend budget for an attempt that went out at a cost.
 	 *
-	 * @param string $accountId The account.
 	 * @param SocialNetworkAdapter $adapter The adapter.
 	 * @param SocialPublishOutcome $outcome What happened.
 	 *
@@ -791,7 +783,7 @@ class SocialPostService implements SocialPostServiceInterface {
 	 *
 	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
-	private function afterAttempt(string $accountId, SocialNetworkAdapter $adapter, SocialPublishOutcome $outcome): void {
+	private function chargeBudget(SocialNetworkAdapter $adapter, SocialPublishOutcome $outcome): void {
 		if ($outcome->accepted === true && $outcome->cost > 0.0) {
 			$this->budget->recordSend(
 				tenantId: $this->getTenantId(),
@@ -799,11 +791,23 @@ class SocialPostService implements SocialPostServiceInterface {
 				costEur: $outcome->cost,
 			);
 		}
+	}//end chargeBudget()
 
+	/**
+	 * Mark the account for a reconnect when the attempt found its grant gone.
+	 *
+	 * @param string $accountId The account.
+	 * @param SocialPublishOutcome $outcome What happened.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 */
+	private function relinkIfGone(string $accountId, SocialPublishOutcome $outcome): void {
 		if ($outcome->failureCode === SocialGatewayResult::RELINK_NEEDED) {
 			$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $outcome->failureReason);
 		}
-	}//end afterAttempt()
+	}//end relinkIfGone()
 
 	/**
 	 * Derive the post's status from its publications and store it.

@@ -145,12 +145,24 @@ class ZrcClient implements ZrcClientInterface {
 	 * @spec openspec/specs/zgw-api-bridge/spec.md#REQ-ZGW-002
 	 */
 	public function addStatus(array $endpoint, array $caseMap, array $statusData): string {
+		return $this->postedStatus(endpoint: $endpoint, status: ['caseMap' => $caseMap, 'data' => $statusData]);
+	}//end addStatus()
+
+	/**
+	 * POST a status for a zaak to the ZRC.
+	 *
+	 * @param array<string, mixed>                                            $endpoint ZgwEndpoint payload.
+	 * @param array{caseMap: array<string, mixed>, data: array<string, mixed>} $status   The parent zaak's mapping and the status body.
+	 *
+	 * @return string URL of the created status.
+	 */
+	private function postedStatus(array $endpoint, array $status): string {
 		$client = $this->requireClient(endpoint: $endpoint);
 		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
 
 		$body = array_merge(
-			['zaak' => (string)($caseMap['zgwUrl'] ?? '')],
-			$statusData
+			['zaak' => (string)($status['caseMap']['zgwUrl'] ?? '')],
+			$status['data']
 		);
 
 		$response = $this->api->callComponent(
@@ -162,7 +174,7 @@ class ZrcClient implements ZrcClientInterface {
 		);
 
 		return (string)($response['headers']['location'] ?? $response['body']['url'] ?? '');
-	}//end addStatus()
+	}//end postedStatus()
 
 	/**
 	 * GET a status by URL (used by NRC dispatcher).

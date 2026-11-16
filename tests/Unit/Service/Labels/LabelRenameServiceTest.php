@@ -34,6 +34,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Pipelinq\Service\Labels\LabelRenameService
@@ -140,6 +141,7 @@ class LabelRenameServiceTest extends TestCase {
 			 * @return array<string, mixed>|null
 			 */
 			public function find(string $id, mixed ...$args): ?array {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->test->storeFind(schema: (string)$args['schema'], id: $id);
 			}
 
@@ -158,6 +160,7 @@ class LabelRenameServiceTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, mixed ...$args): array {
+				$args = LegacyObjectArgs::flatten(args: $args);
 				return $this->test->storeSave(schema: (string)$args['schema'], id: (string)$args['uuid'], payload: $object, rbac: (bool)($args['_rbac'] ?? true));
 			}
 		};

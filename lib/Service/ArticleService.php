@@ -147,16 +147,28 @@ class ArticleService implements ArticleServiceInterface {
 	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	public function expandArticlesMarker(string $body, array $articles, string $format): string {
+		return $this->expanded(body: $body, render: ['articles' => $articles, 'format' => $format]);
+	}//end expandArticlesMarker()
+
+	/**
+	 * The body with its `{{articles}}` marker replaced; the body itself when it has none.
+	 *
+	 * @param string                                                       $body   The template body.
+	 * @param array{articles: array<int, array<string, mixed>>, format: string} $render The articles and the format.
+	 *
+	 * @return string The body with the marker expanded.
+	 */
+	private function expanded(string $body, array $render): string {
 		if (str_contains($body, self::ARTICLES_MARKER) === false) {
 			return $body;
 		}
 
 		return str_replace(
 			self::ARTICLES_MARKER,
-			$this->renderArticlesBlock(articles: $articles, format: $format),
+			$this->renderArticlesBlock(articles: $render['articles'], format: $render['format']),
 			$body,
 		);
-	}//end expandArticlesMarker()
+	}//end expanded()
 
 	/**
 	 * Render articles as an HTML or plain-text block.

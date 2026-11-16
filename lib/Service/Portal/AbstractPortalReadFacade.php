@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Service\Portal\Support\NestedIdValue;
 use OCA\Pipelinq\Util\RowIdentity;
 
 /**
@@ -40,6 +41,9 @@ use OCA\Pipelinq\Util\RowIdentity;
  *   audit are all unspecified
  */
 abstract class AbstractPortalReadFacade {
+	use NestedIdValue {
+		readId as protected;
+	}
 	use RowIdentity;
 
 	/**
@@ -173,30 +177,6 @@ abstract class AbstractPortalReadFacade {
 
 		return $this->present(object: $object, delegatedFrom: $classification);
 	}//end getOneForAccount()
-
-	/**
-	 * Read a possibly-nested id value (string or {id|uuid}) into a string.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The id, or null.
-	 */
-	protected function readId(mixed $value): ?string {
-		if ($value === null || $value === '') {
-			return null;
-		}
-
-		if (is_array($value) === true) {
-			$id = ($value['id'] ?? $value['uuid'] ?? null);
-			if ($id === null) {
-				return null;
-			}
-
-			return (string)$id;
-		}
-
-		return (string)$value;
-	}//end readId()
 
 	/**
 	 * Extract the stable id from a raw object's `@self` envelope or top level.

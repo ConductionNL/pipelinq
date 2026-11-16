@@ -38,6 +38,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
 use OCP\IAppConfig;
@@ -482,7 +485,11 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 		}
 
 		try {
-			$entity = $this->objectService->find(id: $uuid, register: $register, schema: $schema, _multitenancy: false);
+			$entity = $this->objectService->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_multitenancy: false
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SurveyResponseService: an object on the public path could not be read',
@@ -557,10 +564,9 @@ class SurveyResponseService implements SurveyResponseServiceInterface {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $response,
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 				_rbac: false,
-				_multitenancy: false,
+				_multitenancy: false
 			);
 
 			return (string)($saved->getUuid() ?? '');

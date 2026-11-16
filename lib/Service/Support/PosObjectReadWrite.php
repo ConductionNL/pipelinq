@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Util\PosObjectFetch;
 
 /**
@@ -54,10 +56,10 @@ trait PosObjectReadWrite {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $id
+			)
 		);
 
 		return $this->toArray(object: $saved);

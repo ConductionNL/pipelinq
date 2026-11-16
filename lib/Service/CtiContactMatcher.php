@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CtiContactMatcherInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
@@ -371,7 +373,10 @@ class CtiContactMatcher implements CtiContactMatcherInterface {
 			return 'skipped';
 		}
 
-		$operation = static fn () => $objectService->saveObject(['phoneE164' => $e164], [], $register, $schema, $id);
+		$operation = static fn () => $objectService->saveObject(
+			['phoneE164' => $e164],
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
+		);
 		try {
 			$this->execAsSystem(objectService: $objectService, operation: $operation);
 			return 'updated';

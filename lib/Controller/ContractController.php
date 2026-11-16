@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ContractFiguresServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContractServiceInterface;
@@ -338,7 +339,7 @@ class ContractController extends Controller {
 			// positional form passed the register id into $_extend and raised a
 			// TypeError that the catch below swallowed into a 404 — for the owner
 			// as well as for a stranger. See #801.
-			$object = $objectService->find(id: $id, register: $registerId, schema: $schemaId);
+			$object = $objectService->find(id: $id, options: new ObjectFindOptions(register: $registerId, schema: $schemaId));
 			return $this->contractPayload(object: $object);
 		} catch (Throwable $e) {
 			$this->logger->warning('ContractController: loadContract failed', ['error' => $e->getMessage()]);

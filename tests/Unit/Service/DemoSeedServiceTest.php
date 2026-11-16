@@ -49,6 +49,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for DemoSeedService.
@@ -462,7 +465,10 @@ class DemoSeedServiceTest extends TestCase {
 		$sequence = 0;
 		$this->objectService->method('saveObject')
 			->willReturnCallback(
-				function (array $data, array $extend, string $register, string $schema) use (&$savedPayloads, &$sequence): object {
+				function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$savedPayloads, &$sequence): object {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
 					$sequence++;
 					$uuid = 'uuid-' . $schema . '-' . $sequence;
 					$savedPayloads[] = ['schema' => $schema, 'data' => $data, 'uuid' => $uuid];
@@ -682,6 +688,7 @@ class DemoSeedServiceTest extends TestCase {
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$saved): ObjectEntity {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$saved[] = ['object' => $object, 'schema' => $rest[2] ?? null, 'uuid' => $rest[3] ?? null];
 				return self::savedEntity((string)($rest[3] ?? 'new'));
 			}
@@ -719,7 +726,8 @@ class DemoSeedServiceTest extends TestCase {
 		$deleted = [];
 		$this->objectService->method('deleteObject')
 			->willReturnCallback(
-				static function (string $uuid) use (&$deleted, &$store): bool {
+				static function (ObjectDeletion $deletion) use (&$deleted, &$store): bool {
+					$uuid = $deletion->uuid;
 					$deleted[] = $uuid;
 					// Drop the row from the store so the removal loop terminates.
 					foreach ($store as $schemaId => $rows) {
@@ -767,7 +775,10 @@ class DemoSeedServiceTest extends TestCase {
 
 		$this->objectService->method('deleteObject')
 			->willReturnCallback(
-				static function (string $uuid, string|int|null $register = null, string|int|null $schema = null) use (&$store): bool {
+				static function (ObjectDeletion $deletion) use (&$store): bool {
+					$uuid = $deletion->uuid;
+					$register = $deletion->target->register;
+					$schema = $deletion->target->schema;
 					if ((string)$schema === self::TICKET_SCHEMA_ID) {
 						throw new \Exception('SCHEMA_ARCHIVAL_IMMUTABLE: schema declares x-openregister-archival');
 					}
@@ -864,7 +875,10 @@ class DemoSeedServiceTest extends TestCase {
 		$sequence = 0;
 		$this->objectService->method('saveObject')
 			->willReturnCallback(
-				static function (array $data, array $extend, string $register, string $schema) use (&$sequence): object {
+				static function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$sequence): object {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
 					$sequence++;
 					return self::savedEntity('uuid-' . $schema . '-' . $sequence);
 				}

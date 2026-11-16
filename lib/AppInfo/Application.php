@@ -152,6 +152,7 @@ class Application extends App implements IBootstrap {
 		(new NotificationRegistrar())->register(context: $context);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\BackgroundServiceAccountCheck::class);
 
 		(new ListenerRegistrar())->register(context: $context);
 
@@ -509,7 +510,7 @@ class Application extends App implements IBootstrap {
 
 		$dependencyStatus = [];
 		foreach ($dependencies as $depId) {
-			$dependencyStatus[$depId] = $this->dependencyStatus(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
+			$dependencyStatus[$depId] = $this->dependencyStatus(appManager: $appManager, dependency: ['id' => $depId, 'appStoreLookup' => $appStoreLookup]);
 		}
 
 		// 5 minutes: an app being installed or enabled is a rare, operator-driven
@@ -523,14 +524,15 @@ class Application extends App implements IBootstrap {
 	/**
 	 * Whether a dependency is installed and enabled, and its category.
 	 *
-	 * @param IAppManager $appManager The app manager.
-	 * @param string $depId The dependency app id.
-	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
+	 * @param IAppManager                                           $appManager The app manager.
+	 * @param array{id: string, appStoreLookup: array<string, mixed>} $dependency The dependency app id and the app store categories by app id.
 	 *
 	 * @return array{installed: bool, enabled: bool, category: string} The dependency status.
 	 */
-	private function dependencyStatus(IAppManager $appManager, string $depId, array $appStoreLookup): array {
-		[$onDisk, $category] = $this->dependencyPresence(appManager: $appManager, depId: $depId, appStoreLookup: $appStoreLookup);
+	private function dependencyStatus(IAppManager $appManager, array $dependency): array {
+		$depId = $dependency['id'];
+		[$onDisk, $category] = $this->dependencyPresence(appManager: $appManager, depId: $depId);
+		$category ??= self::storeCategory(depId: $depId, appStoreLookup: $dependency['appStoreLookup']);
 
 		return [
 			'installed' => $onDisk,
@@ -540,17 +542,15 @@ class Application extends App implements IBootstrap {
 	}//end dependencyStatus()
 
 	/**
-	 * Whether the dependency is on disk, and its category from its info.xml or else the app store.
+	 * Whether the dependency is on disk, and its category from its info.xml.
 	 *
 	 * @param IAppManager $appManager The app manager.
 	 * @param string $depId The dependency app id.
-	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
 	 *
-	 * @return array{0: bool, 1: string} On disk, and the category.
+	 * @return array{0: bool, 1: string|null} On disk, and the category; null when the app store has to tell.
 	 */
-	private function dependencyPresence(IAppManager $appManager, string $depId, array $appStoreLookup): array {
+	private function dependencyPresence(IAppManager $appManager, string $depId): array {
 		$onDisk = false;
-		$category = 'organization';
 		try {
 			$appManager->getAppPath($depId);
 			$onDisk = true;
@@ -559,15 +559,29 @@ class Application extends App implements IBootstrap {
 			// through to the app-store lookup below.
 			$appInfo = $appManager->getAppInfo($depId);
 			if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
-				$category = (string)((array)$appInfo['category'])[0];
+				return [$onDisk, (string)((array)$appInfo['category'])[0]];
 			}
 		} catch (\Throwable) {
-			if (empty($appStoreLookup[$depId][0]) === false) {
-				$category = (string)$appStoreLookup[$depId][0];
-			}
+			return [$onDisk, null];
 		}
 
-		return [$onDisk, $category];
+		return [$onDisk, 'organization'];
 	}//end dependencyPresence()
+
+	/**
+	 * A dependency's category in the app store, 'organization' when it has none.
+	 *
+	 * @param string $depId The dependency app id.
+	 * @param array<string, mixed> $appStoreLookup App store categories by app id.
+	 *
+	 * @return string The category.
+	 */
+	private static function storeCategory(string $depId, array $appStoreLookup): string {
+		if (empty($appStoreLookup[$depId][0]) === false) {
+			return (string)$appStoreLookup[$depId][0];
+		}
+
+		return 'organization';
+	}//end storeCategory()
 
 }//end class

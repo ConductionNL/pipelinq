@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Upl;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\Http\Client\IClientService;
@@ -233,9 +235,10 @@ class UplListImporter {
 		try {
 			$objectService->saveObject(
 				object: $row,
-				register: $register,
-				schema: $schema,
-				uuid: ($existing['id'] ?? null),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $existing['id'] ?? null
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

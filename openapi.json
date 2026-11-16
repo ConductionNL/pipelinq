@@ -514,6 +514,10 @@
         {
             "name": "callReview",
             "description": "The agent agrees the coaching points of a review of their call."
+        },
+        {
+            "name": "background-service-account",
+            "description": "Reads and picks the background service account."
         }
     ],
     "paths": {
@@ -17968,6 +17972,85 @@
                     },
                     "409": {
                         "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            }
+        },
+        "/background/service-account": {
+            "get": {
+                "operationId": "background-service-account-show",
+                "summary": "Which account background work writes as, and whether it can be used",
+                "description": "Which account background work writes as, and whether it can be used. Needs a Nextcloud administrator.",
+                "tags": [
+                    "background-service-account"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "background-service-account-save",
+                "summary": "Pick the account background work writes as. It must exist and be enabled; it joins the background service group",
+                "description": "Pick the account background work writes as. It must exist and be enabled; it joins the background service group. Needs a Nextcloud administrator.",
+                "tags": [
+                    "background-service-account"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userId": {
+                                        "description": "The user id."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 }
             }

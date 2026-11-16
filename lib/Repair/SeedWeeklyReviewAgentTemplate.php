@@ -40,6 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -207,10 +209,7 @@ class SeedWeeklyReviewAgentTemplate implements IRepairStep {
 	private function saveTemplate($objectService): void {
 		$objectService->saveObject(
 			object: $this->template(),
-			extend: [],
-			register: self::HERMIQ_REGISTER,
-			schema: self::TEMPLATE_SCHEMA,
-			uuid: null,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::HERMIQ_REGISTER, schema: self::TEMPLATE_SCHEMA)),
 			_rbac: false,
 			_multitenancy: false
 		);

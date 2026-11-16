@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Service\Support\WritableAddressBook;
@@ -358,10 +360,7 @@ class ContactVcardWriterService {
 
 			$objectService->saveObject(
 				$updateData,
-				[],
-				$registerId,
-				$schemaId,
-				null
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId))
 			);
 		} catch (\Exception $e) {
 			$this->logger->warning(

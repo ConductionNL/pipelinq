@@ -28,6 +28,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The budget gate fails open on a missing budget and closed on a spent hard cap.
@@ -36,6 +37,8 @@ use RuntimeException;
  * @uses \OCA\Pipelinq\Util\PayloadToArray
  * @uses \OCA\Pipelinq\Util\EntityPayload
  * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses \OCA\Pipelinq\Util\SchemaRowQuery
  */
 class BudgetServiceEdgesTest extends TestCase {
 
@@ -122,7 +125,10 @@ class BudgetServiceEdgesTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->failSave === true) {
 					throw new RuntimeException('refused');

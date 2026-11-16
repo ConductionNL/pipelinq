@@ -40,6 +40,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -101,7 +104,7 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 		}
 
 		try {
-			$result = $objectService->find(id: $id, register: self::REGISTER, schema: $schema);
+			$result = $objectService->find(id: $id, options: new ObjectFindOptions(register: self::REGISTER, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info('ZGW: find failed', ['schema' => $schema, 'id' => $id, 'err' => $e->getMessage()]);
 			return null;
@@ -219,7 +222,10 @@ class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 	 */
 	private function saveFlat(object $objectService, string $schema, array $data, string|null $uuid): array|null {
 		try {
-			$saved = $objectService->saveObject(object: $data, extend: [], register: self::REGISTER, schema: $schema, uuid: $uuid);
+			$saved = $objectService->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: $schema), uuid: $uuid)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ZGW: saveObject failed',

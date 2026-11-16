@@ -108,18 +108,33 @@ class PageWatchReader {
 		array $lineFingerprints,
 		string $sourceId = '',
 	): WatchOutcome {
-		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
+		return $this->outcomeOf(
+			page: ['url' => $url, 'selector' => $selector, 'sourceId' => $sourceId],
+			previous: ['fingerprint' => $fingerprint, 'lineFingerprints' => $lineFingerprints]
+		);
+	}//end read()
+
+	/**
+	 * Read the page's fragment and compare it against the fingerprints as last seen.
+	 *
+	 * @param array{url: string, selector: string, sourceId: string}            $page     The page URL, fragment selector and source.
+	 * @param array{fingerprint: string, lineFingerprints: array<int, string>} $previous The fingerprints as last seen.
+	 *
+	 * @return WatchOutcome One item when the fragment changed, none when it did not.
+	 */
+	private function outcomeOf(array $page, array $previous): WatchOutcome {
+		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $page['url'], sourceId: $page['sourceId']);
 		if ($result->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$result->failure, reason: $result->reason);
 		}
 
-		$fragment = $this->extractor->fragment(html: $result->body, selector: $selector);
+		$fragment = $this->extractor->fragment(html: $result->body, selector: $page['selector']);
 		if ($fragment === null) {
-			return self::unmatched(selector: $selector, url: $url);
+			return self::unmatched(selector: $page['selector'], url: $page['url']);
 		}
 
-		return self::seen(url: $url, diff: $this->diff(fingerprint: $fingerprint, lineFingerprints: $lineFingerprints, fragment: $fragment));
-	}//end read()
+		return self::seen(url: $page['url'], diff: $this->diffAgainst(previous: $previous, fragment: $fragment));
+	}//end outcomeOf()
 
 	/**
 	 * The failure of a selector that matched nothing on the page.
@@ -182,18 +197,29 @@ class PageWatchReader {
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function diff(string $fingerprint, array $lineFingerprints, string $fragment): array {
+		return $this->diffAgainst(previous: ['fingerprint' => $fingerprint, 'lineFingerprints' => $lineFingerprints], fragment: $fragment);
+	}//end diff()
+
+	/**
+	 * Compare a fresh fragment against the fingerprints as last seen.
+	 *
+	 * @param array{fingerprint: string, lineFingerprints: array<int, string>} $previous The fingerprints as last seen.
+	 * @param string                                                          $fragment The fragment as read now.
+	 *
+	 * @return array{changed: bool, fingerprint: string, lineFingerprints: array<int, string>, summary: string, added: array<int, string>, removed: int}
+	 */
+	private function diffAgainst(array $previous, string $fragment): array {
 		$current = $this->currentLines(fragment: $fragment);
 		$seen = [
 			'fingerprint' => $this->hash(value: $fragment),
 			'lineFingerprints' => array_slice(array_keys($current), 0, self::MAX_LINES),
 		];
-		if ($fingerprint !== '' && $fingerprint === $seen['fingerprint']) {
+		if ($previous['fingerprint'] !== '' && $previous['fingerprint'] === $seen['fingerprint']) {
 			return ['changed' => false] + $seen + ['summary' => '', 'added' => [], 'removed' => 0];
 		}
 
-		$previous = ['fingerprint' => $fingerprint, 'lineFingerprints' => $lineFingerprints];
 		return ['changed' => true] + $seen + $this->changes(current: $current, previous: $previous);
-	}//end diff()
+	}//end diffAgainst()
 
 	/**
 	 * The fresh fragment's lines by fingerprint.

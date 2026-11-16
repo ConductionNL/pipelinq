@@ -39,6 +39,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Sender lookup, add as contact and log this mail, as the signed-in colleague.
@@ -102,7 +104,9 @@ class OpenMailServiceTest extends TestCase {
 			public function __construct(private array &$rows) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null, bool $_rbac = false): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($_rbac !== true) {
 					throw new \LogicException('The reader must read as the caller.');
 				}
@@ -115,7 +119,10 @@ class OpenMailServiceTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema];
 				$entity = $this->createMock(ObjectEntityInterface::class);
 				$entity->method('getUuid')->willReturn('cm-1');

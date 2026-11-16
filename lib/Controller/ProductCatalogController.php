@@ -232,15 +232,11 @@ class ProductCatalogController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$uid = $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
-		$uid = $user->getUID();
 		if ($this->policy->isPosUser(userId: $uid) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('POS access is required for the product catalogue')],

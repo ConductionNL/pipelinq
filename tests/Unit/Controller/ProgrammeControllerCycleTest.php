@@ -33,6 +33,7 @@ use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Pipelinq\Controller\ProgrammeController
@@ -108,7 +109,9 @@ class ProgrammeControllerCycleTest extends TestCase {
 	 * @return void
 	 */
 	public function testCloseCycleClosesTheCycleWithItsTasks(): void {
-		$this->objects->expects($this->once())->method('find')->with(id: 'cy-1')->willReturn($this->entity(['id' => 'cy-1', 'name' => 'Sprint 4']));
+		$this->objects->expects($this->once())->method('find')->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'cy-1',
+			]))->willReturn($this->entity(['id' => 'cy-1', 'name' => 'Sprint 4']));
 		$this->portfolio->expects($this->once())->method('read')->with(schemaKey: 'programmeTask_schema', filters: ['cycle' => 'cy-1'])->willReturn([['id' => 't-1']]);
 		$this->estimation->expects($this->once())->method('closeCycle')
 			->with(cycle: ['id' => 'cy-1', 'name' => 'Sprint 4'], tasks: [['id' => 't-1']])

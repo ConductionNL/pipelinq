@@ -37,6 +37,8 @@ use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for starting and refunding a POS payment.
@@ -219,7 +221,11 @@ class PosPaymentInitiateRefundTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?array {
+			public function find(int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->test->transactions[(string)$id] ?? null);
 			}
 
@@ -234,7 +240,11 @@ class PosPaymentInitiateRefundTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, array $extend = [], $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->saved[] = $object;
 				$this->test->transactions[(string)$uuid] = $object;
 				return $object;

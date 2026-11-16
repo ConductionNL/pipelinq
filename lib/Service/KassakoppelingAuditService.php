@@ -42,6 +42,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KassakoppelingAuditServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
@@ -242,7 +245,7 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 		[$register, $schema] = $this->config();
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -736,10 +739,10 @@ class KassakoppelingAuditService implements KassakoppelingAuditServiceInterface 
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $id
+			)
 		);
 
 		return $this->toArray(object: $saved);

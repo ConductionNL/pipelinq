@@ -181,6 +181,19 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 			return ['status' => 404, 'error' => 'That contact moment could not be read.'];
 		}
 
+		return $this->unfile(moment: $moment, request: ['caseId' => $caseId, 'newPrimary' => trim((string)$newPrimary)]);
+	}//end unfileFromCase()
+
+	/**
+	 * Take a read contact moment off one case.
+	 *
+	 * @param array<string, mixed>                       $moment  The contact moment.
+	 * @param array{caseId: string, newPrimary: string} $request The case to take it off and the next primary ('' when none).
+	 *
+	 * @return array<string, mixed> `status` plus either `contactMoment` or `error`.
+	 */
+	private function unfile(array $moment, array $request): array {
+		$caseId = $request['caseId'];
 		$set = $this->caseSetOf(moment: $moment);
 		$refusal = self::unfilingRefusal(set: $set, caseId: $caseId);
 		if ($refusal !== null) {
@@ -188,7 +201,11 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 		}
 
 		$remaining = array_values(array_filter($set, static fn (string $r): bool => $r !== $caseId));
-		$primary = $this->primaryAfterUnfiling(moment: $moment, caseId: $caseId, newPrimary: trim((string)$newPrimary), remaining: $remaining);
+		$primary = $this->primaryOf(moment: $moment);
+		if ($primary === $caseId) {
+			$primary = self::nextPrimary(newPrimary: $request['newPrimary'], remaining: $remaining);
+		}
+
 		if (is_array($primary) === true) {
 			return $primary;
 		}
@@ -197,32 +214,19 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 			moment: $this->withCases(moment: $moment, cases: new ContactMomentCases(set: $remaining, primary: $primary)),
 			trail: ['case' => $caseId, 'act' => 'unfiled'],
 		);
-	}//end unfileFromCase()
+	}//end unfile()
 
 	/**
-	 * The primary case once a case is taken off: unchanged, or the new primary when the primary itself goes.
+	 * The primary that follows a removed primary, or the refusal when it cannot.
 	 *
-	 * @param array<string, mixed> $moment     The contact moment.
-	 * @param string               $caseId     The case being taken off.
-	 * @param string               $newPrimary The requested next primary ('' when none).
-	 * @param array<int, string>   $remaining  The cases that stay.
+	 * @param string             $newPrimary The requested next primary ('' when none).
+	 * @param array<int, string> $remaining  The cases that stay.
 	 *
-	 * @return string|array<string, mixed> The primary, or the refusal.
+	 * @return string|array<string, mixed> The new primary, or the refusal.
 	 */
-	private function primaryAfterUnfiling(array $moment, string $caseId, string $newPrimary, array $remaining): string|array {
-		$primary = $this->primaryOf(moment: $moment);
-
-		if ($primary === $caseId) {
-			$refusal = self::newPrimaryRefusal(newPrimary: $newPrimary, remaining: $remaining);
-			if ($refusal !== null) {
-				return $refusal;
-			}
-
-			$primary = $newPrimary;
-		}
-
-		return $primary;
-	}//end primaryAfterUnfiling()
+	private static function nextPrimary(string $newPrimary, array $remaining): string|array {
+		return self::newPrimaryRefusal(newPrimary: $newPrimary, remaining: $remaining) ?? $newPrimary;
+	}//end nextPrimary()
 
 	/**
 	 * The refusal to take a moment off a case it is not on (404) or off its last case (409), or null.
@@ -290,31 +294,32 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-a-shared-contact-moment-says-so-before-it-is-edited-req-cms-005
 	 */
 	public function sharedMarker(array $moment, string $hostId, callable $mayRead): array {
-		$others = array_values(
-			array_filter(
-				$this->caseSetOf(moment: $moment),
-				static fn (string $reference): bool => $reference !== $hostId
-			)
-		);
+		$others = self::othersThan(set: $this->caseSetOf(moment: $moment), hostId: $hostId);
 
-		[$visible, $hidden] = self::visibleAndHidden(others: $others, mayRead: $mayRead);
-
-		return [
-			'shared' => ($others !== []),
-			'alsoOnCases' => $visible,
-			'hiddenCount' => $hidden,
-		];
+		return self::markerOf(others: $others, mayRead: $mayRead);
 	}//end sharedMarker()
 
 	/**
-	 * The other cases the reader may see, and how many they may not.
+	 * The cases of a set other than the host case.
+	 *
+	 * @param array<int, string> $set    The case set.
+	 * @param string             $hostId The case the reader is looking from.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function othersThan(array $set, string $hostId): array {
+		return array_values(array_filter($set, static fn (string $reference): bool => $reference !== $hostId));
+	}//end othersThan()
+
+	/**
+	 * The marker of the other cases: the ones the reader may see, and how many they may not.
 	 *
 	 * @param array<int, string>     $others  The other cases the moment is on.
 	 * @param callable(string): bool $mayRead Answers whether the reader may see a case.
 	 *
-	 * @return array{0: array<int, string>, 1: int} The visible cases and the hidden count.
+	 * @return array{shared: bool, alsoOnCases: array<int, string>, hiddenCount: int} The marker.
 	 */
-	private static function visibleAndHidden(array $others, callable $mayRead): array {
+	private static function markerOf(array $others, callable $mayRead): array {
 		$visible = [];
 		$hidden = 0;
 		foreach ($others as $reference) {
@@ -328,8 +333,12 @@ class ContactMomentFilingService implements ContactMomentFilingServiceInterface 
 			$hidden++;
 		}
 
-		return [$visible, $hidden];
-	}//end visibleAndHidden()
+		return [
+			'shared' => ($others !== []),
+			'alsoOnCases' => $visible,
+			'hiddenCount' => $hidden,
+		];
+	}//end markerOf()
 
 	/**
 	 * Read one contact moment as a plain array.
