@@ -274,6 +274,53 @@ class PortalRequestServiceTest extends TestCase {
 	}//end testReplyUnpausesAndKeepsInternalNotes()
 
 	/**
+	 * A reply that is empty after trimming is refused with 400 and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testBlankReplyIsRefused(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->reader->seed('ticket', 'r1', ['ticketType' => 'request', 'contact' => 'contact-a', 'status' => 'awaiting_customer']);
+
+		try {
+			$this->service->addReply($account, 'tenant-a', 'r1', "  \n ");
+			$this->fail('Expected a refused blank reply');
+		} catch (PortalException $e) {
+			$this->assertSame(Http::STATUS_BAD_REQUEST, $e->getStatus());
+			$this->assertSame('missingFields', $e->getErrorCode());
+		}
+
+		$stored = $this->reader->find('ticket', 'r1');
+		$this->assertSame('awaiting_customer', $stored['status']);
+		$this->assertArrayNotHasKey('portalReplies', $stored);
+	}//end testBlankReplyIsRefused()
+
+	/**
+	 * Replying to another customer's request, to a ticket that is not a request,
+	 * or to an unknown id answers 404 and leaves the ticket untouched.
+	 *
+	 * @return void
+	 */
+	public function testReplyToARequestTheAccountMayNotSeeIsNotFound(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->reader->seed('ticket', 'r-x', ['ticketType' => 'request', 'contact' => 'contact-x', 'status' => 'awaiting_customer']);
+		$this->reader->seed('ticket', 'c1', ['ticketType' => 'complaint', 'contact' => 'contact-a', 'status' => 'awaiting_customer']);
+
+		foreach (['r-x', 'c1', 'missing'] as $requestId) {
+			try {
+				$this->service->addReply($account, 'tenant-a', $requestId, 'reply');
+				$this->fail("Expected 404 for {$requestId}");
+			} catch (PortalException $e) {
+				$this->assertSame(Http::STATUS_NOT_FOUND, $e->getStatus(), $requestId);
+				$this->assertSame('notFound', $e->getErrorCode(), $requestId);
+			}
+		}
+
+		$this->assertArrayNotHasKey('portalReplies', $this->reader->find('ticket', 'r-x'));
+		$this->assertArrayNotHasKey('portalReplies', $this->reader->find('ticket', 'c1'));
+	}//end testReplyToARequestTheAccountMayNotSeeIsNotFound()
+
+	/**
 	 * Every field the portal writes, and every status it writes or waits on,
 	 * is declared on the ticket schema the install imports. A write outside
 	 * the schema is dropped or refused by OpenRegister (pipelinq#2038).
