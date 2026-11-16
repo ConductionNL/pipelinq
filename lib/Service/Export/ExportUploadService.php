@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Kernel\Contracts\ExportSinkRegistryInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\IAppConfig;
@@ -91,7 +91,7 @@ class ExportUploadService extends AbstractExportService {
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
-	 * @param ExportSinkRegistry $sinks The sink adapter registry.
+	 * @param ExportSinkRegistryInterface $sinks The sink adapter registry.
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -99,7 +99,7 @@ class ExportUploadService extends AbstractExportService {
 		ContainerInterface $container,
 		IAppConfig $appConfig,
 		ObjectServiceInterface $objectService,
-		private ExportSinkRegistry $sinks,
+		private ExportSinkRegistryInterface $sinks,
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 	) {

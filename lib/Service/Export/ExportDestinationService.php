@@ -31,8 +31,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportSinkRegistryInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -117,7 +117,7 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
-	 * @param ExportSinkRegistry $sinks The sink adapter registry.
+	 * @param ExportSinkRegistryInterface $sinks The sink adapter registry.
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger The logger.
 	 * @param IUserManager|null $userManager Checks that a mail recipient user exists.
@@ -127,7 +127,7 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 		ContainerInterface $container,
 		IAppConfig $appConfig,
 		ObjectServiceInterface $objectService,
-		private ExportSinkRegistry $sinks,
+		private ExportSinkRegistryInterface $sinks,
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 		private ?IUserManager $userManager=null,
