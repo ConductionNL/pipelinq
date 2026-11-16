@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Gdpr\ErasureRequest;
 use OCA\Pipelinq\Service\DataDeletionService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -72,15 +73,15 @@ class FakeBookingErase {
 	/**
 	 * Legal-hold-aware field-level pseudonymise erasure (row retained).
 	 *
-	 * @param string $subjectId The subject identifier value.
-	 * @param string|null $type Optional type filter.
-	 * @param string $eraseMode The erase mode.
-	 * @param bool $dryRun Whether this is a dry run.
+	 * @param ErasureRequest $request The subject, type filter, erase mode and dry-run flag.
 	 *
 	 * @return array<string, mixed> OR's erase summary.
 	 */
-	public function erase(string $subjectId, ?string $type = null, string $eraseMode = 'pseudonymise', bool $dryRun = false): array {
-		$this->lastErase = ['subjectId' => $subjectId, 'type' => $type, 'eraseMode' => $eraseMode, 'dryRun' => $dryRun];
+	public function erase(ErasureRequest $request): array {
+		$subjectId = $request->subjectId;
+		$eraseMode = $request->eraseMode;
+		$dryRun = $request->dryRun;
+		$this->lastErase = ['subjectId' => $subjectId, 'type' => $request->type, 'eraseMode' => $eraseMode, 'dryRun' => $dryRun];
 
 		$erased = [];
 		$held = [];
