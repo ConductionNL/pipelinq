@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Adapter;
 
+use OCA\Pipelinq\Kernel\Contracts\ExportSinkRegistryInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -63,5 +64,6 @@ class AdapterRegistrar {
 				);
 			}
 		);
+		$context->registerServiceAlias(ExportSinkRegistryInterface::class, ExportSinkRegistry::class);
 	}//end register()
 }//end class

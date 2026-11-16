@@ -27,6 +27,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\CallMirrorInterface;
 use OCA\Pipelinq\Service\BackgroundServiceAccount;
 use OCA\Pipelinq\Service\ServiceAccountUnavailableException;
 use OCP\IAppConfig;
@@ -55,7 +56,7 @@ use Throwable;
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-the-mirror-writes-as-the-background-service-account
  */
-class CallMirror {
+class CallMirror implements CallMirrorInterface {
 	/**
 	 * What can happen to a call.
 	 */
