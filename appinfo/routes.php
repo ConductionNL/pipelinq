@@ -131,6 +131,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'reporting#getSla',      'url' => '/api/rapportage/sla',      'verb' => 'GET'],
         ['name' => 'reporting#updateSla',   'url' => '/api/rapportage/sla',      'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
+        ['name' => 'contactReport#topSubjects', 'url' => '/api/rapportage/top-subjects', 'verb' => 'GET'],
+        ['name' => 'contactReport#occupancy',   'url' => '/api/rapportage/occupancy',    'verb' => 'GET'],
+        ['name' => 'contactReport#forecast',    'url' => '/api/rapportage/forecast',     'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status

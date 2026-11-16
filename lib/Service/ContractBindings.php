@@ -64,6 +64,7 @@ use OCA\Pipelinq\Kernel\Contracts\ContactCaptureServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactPhotoReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactMomentFilingServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ContactReportServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactSyncSettingsServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
@@ -565,6 +566,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(RegisterResolverServiceInterface::class, RegisterResolverService::class);
 		$context->registerServiceAlias(RenewalEngineServiceInterface::class, RenewalEngineService::class);
 		$context->registerServiceAlias(ReportingServiceInterface::class, ReportingService::class);
+		$context->registerServiceAlias(ContactReportServiceInterface::class, ContactReportService::class);
 		$context->registerServiceAlias(RetentionMetadataBackfillServiceInterface::class, RetentionMetadataBackfillService::class);
 		$context->registerServiceAlias(RoadmapFeatureCatalogInterface::class, RoadmapFeatureCatalog::class);
 		$context->registerServiceAlias(RoutingServiceInterface::class, RoutingService::class);

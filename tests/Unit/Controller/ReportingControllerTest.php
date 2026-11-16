@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ReportingController;
+use OCA\Pipelinq\Kernel\Contracts\ContactReportServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Mcp\McpAnswer;
@@ -244,6 +245,7 @@ class ReportingControllerTest extends TestCase {
 			request: $this->request,
 			reportingService: $this->reporting,
 			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
+			contactReport: $this->createMock(ContactReportServiceInterface::class),
 		);
 	}//end buildController()
 
