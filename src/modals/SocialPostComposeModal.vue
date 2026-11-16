@@ -312,6 +312,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the connected accounts and portaliq's published articles for the pickers.
+	 *
+	 * @spec openspec/specs/marketing-ui/spec.md#requirement-a-marketer-composes-one-post-for-several-networks
+	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+	 */
 	mounted() {
 		this.loadAccounts()
 		this.loadArticles()

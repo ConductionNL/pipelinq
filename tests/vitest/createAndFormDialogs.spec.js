@@ -6,9 +6,8 @@
  *
  * The create and form dialogs, mounted: the lead and request saves (payload,
  * created event, navigation or toast, error text, saving state), the contact
- * create with its seed and error paths, the add-contact-role form guard, and
- * and the log-visit
- * form guard.
+ * create with its seed and error paths, the add-contact-role form guard and
+ * the log-visit form guard.
  *
  * @spec openspec/specs/fe-dialogs/spec.md
  */
