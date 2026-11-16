@@ -51,8 +51,10 @@ require_once __DIR__.'/RecordingDeferralService.php';
  *
  * @covers \OCA\Pipelinq\Listener\DealUpdatedListener
  * @uses   \OCA\Pipelinq\Listener\DeferredWorkGuard
- * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectRead
- * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead
+ * @uses   \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectFind
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class DealUpdatedListenerTest extends TestCase {
 

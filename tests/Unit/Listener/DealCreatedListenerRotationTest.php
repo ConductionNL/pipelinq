@@ -45,8 +45,10 @@ require_once __DIR__.'/RecordingDeferralService.php';
  * with an assignee keeps it.
  *
  * @covers \OCA\Pipelinq\Listener\DealCreatedListener
- * @uses \OCA\Pipelinq\Util\ConfiguredSchemaObjectRead
- * @uses \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
+ * @uses \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead
+ * @uses \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectFind
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class DealCreatedListenerRotationTest extends TestCase {
 
