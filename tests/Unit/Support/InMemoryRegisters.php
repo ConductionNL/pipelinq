@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Support;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 
 /**
@@ -95,19 +97,20 @@ class InMemoryRegisters {
 	}//end rowsOf()
 
 	/**
-	 * ObjectService::find.
+	 * ObjectService::find, with openregister main's signature.
 	 *
-	 * @param string $id            The uuid.
-	 * @param mixed  $register      The register.
-	 * @param mixed  $schema        The schema.
-	 * @param bool   $_rbac         Ignored.
-	 * @param bool   $_multitenancy Ignored.
+	 * @param string                 $id            The uuid.
+	 * @param ObjectFindOptions|null $options       The register and schema.
+	 * @param bool                   $_rbac         Ignored.
+	 * @param bool                   $_multitenancy Ignored.
 	 *
 	 * @return array<string, mixed>|null The row.
 	 */
-	public function find(string $id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
-		$this->guard(register: (string)$register);
-		return ($this->rows[(string)$register][(string)$schema][$id] ?? null);
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+		$register = (string)($options?->register ?? '');
+		$schema   = (string)($options?->schema ?? '');
+		$this->guard(register: $register);
+		return ($this->rows[$register][$schema][$id] ?? null);
 	}//end find()
 
 	/**
@@ -141,21 +144,27 @@ class InMemoryRegisters {
 	}//end findAll()
 
 	/**
-	 * ObjectService::saveObject.
+	 * ObjectService::saveObject, with openregister main's signature.
 	 *
 	 * @param array<string, mixed> $object        The object.
-	 * @param mixed                $register      The register.
-	 * @param mixed                $schema        The schema.
-	 * @param string|null          $uuid          An existing uuid.
+	 * @param ObjectSaveOptions    $options       The target register, schema and uuid.
 	 * @param bool                 $_rbac         Ignored.
 	 * @param bool                 $_multitenancy Ignored.
 	 *
 	 * @return array<string, mixed> The stored row.
 	 */
-	public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
-		$this->guard(register: (string)$register);
-		$this->saves[] = ['register' => (string)$register, 'schema' => (string)$schema, 'uuid' => $uuid];
-		if (in_array((string)$register, $this->failingSaves, true) === true) {
+	public function saveObject(
+		array $object,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+	): array {
+		$register = (string)($options->target->register ?? '');
+		$schema   = (string)($options->target->schema ?? '');
+		$uuid     = $options->uuid;
+		$this->guard(register: $register);
+		$this->saves[] = ['register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+		if (in_array($register, $this->failingSaves, true) === true) {
 			throw new RuntimeException('save refused');
 		}
 
@@ -163,7 +172,7 @@ class InMemoryRegisters {
 			$object['uuid'] = $uuid;
 		}
 
-		return $this->put(register: (string)$register, schema: (string)$schema, row: $object);
+		return $this->put(register: $register, schema: $schema, row: $object);
 	}//end saveObject()
 
 	/**

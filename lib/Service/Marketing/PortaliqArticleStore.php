@@ -30,6 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\App\IAppManager;
@@ -147,8 +150,7 @@ class PortaliqArticleStore {
 		try {
 			$entity = $service->find(
 				id: $identity,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 				_rbac: false,
 				_multitenancy: false,
 			);
@@ -259,8 +261,9 @@ class PortaliqArticleStore {
 		try {
 			$saved = $service->saveObject(
 				object: $payload,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false,
 				_multitenancy: false,
 			);
