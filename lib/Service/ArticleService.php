@@ -121,15 +121,8 @@ class ArticleService implements ArticleServiceInterface {
 			return [];
 		}
 
-		$out = [];
-		foreach ($ids as $id) {
-			$article = $this->articles->find(identity: (string)$id);
-			if ($article !== null) {
-				$out[] = $article;
-			}
-		}
-
-		return $out;
+		$found = array_map(fn (mixed $id): ?array => $this->articles->find(identity: (string)$id), $ids);
+		return array_values(array_filter($found, static fn (?array $article): bool => $article !== null));
 	}//end loadArticlesByIds()
 
 	/**

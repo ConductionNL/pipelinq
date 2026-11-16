@@ -92,21 +92,30 @@ class MoveMarketingArticlesToPortaliq implements IRepairStep {
 			return;
 		}
 
+		$output->info($this->summary(counts: $counts));
+	}//end run()
+
+	/**
+	 * The one-line report of a finished move.
+	 *
+	 * @param array<string, mixed> $counts The move's result: status, moved, alreadyMoved, failed, references, renamedSlugs.
+	 *
+	 * @return string The line.
+	 */
+	private function summary(array $counts): string {
 		$renamed = '';
 		if ($counts['renamedSlugs'] !== []) {
 			$renamed = '; slugs renamed with -pipelinq: '.implode(', ', $counts['renamedSlugs']);
 		}
 
-		$output->info(
-			sprintf(
-				'Article move %s: %d moved, %d already moved, %d failed, %d references rewritten%s',
-				$counts['status'],
-				$counts['moved'],
-				$counts['alreadyMoved'],
-				$counts['failed'],
-				$counts['references'],
-				$renamed
-			)
+		return sprintf(
+			'Article move %s: %d moved, %d already moved, %d failed, %d references rewritten%s',
+			$counts['status'],
+			$counts['moved'],
+			$counts['alreadyMoved'],
+			$counts['failed'],
+			$counts['references'],
+			$renamed
 		);
-	}//end run()
+	}//end summary()
 }//end class

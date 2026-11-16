@@ -85,10 +85,7 @@ class ArticleUsageListener implements IEventListener {
 	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-tells-portaliq-where-an-article-is-used
 	 */
 	public function handle(Event $event): void {
-		if (in_array(self::EVENT, array_merge([$event::class], array_values(class_parents($event))), true) === false
-			|| method_exists($event, 'addUsage') === false
-			|| method_exists($event, 'getArticleId') === false
-		) {
+		if ($this->isUsageQuestion(event: $event) === false) {
 			return;
 		}
 
@@ -97,6 +94,18 @@ class ArticleUsageListener implements IEventListener {
 			return;
 		}
 
+		$this->answer(event: $event, names: $names);
+	}//end handle()
+
+	/**
+	 * Add every usage to the question; a failure is logged, never thrown into portaliq.
+	 *
+	 * @param object             $event The usage question.
+	 * @param array<int, string> $names The article's identities.
+	 *
+	 * @return void
+	 */
+	private function answer(object $event, array $names): void {
 		try {
 			foreach ($this->usages(names: $names) as $usage) {
 				$event->addUsage($usage['id'], $usage['title'], $usage['kind'], AppIdentity::APP_ID, $usage['url']);
@@ -104,7 +113,20 @@ class ArticleUsageListener implements IEventListener {
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: article usages could not be listed', ['reason' => $e->getMessage()]);
 		}
-	}//end handle()
+	}//end answer()
+
+	/**
+	 * Whether the event is portaliq's usage question, with the methods it is answered through.
+	 *
+	 * @param Event $event The dispatched event.
+	 *
+	 * @return bool True when the event can be answered.
+	 */
+	private function isUsageQuestion(Event $event): bool {
+		return in_array(self::EVENT, array_merge([$event::class], array_values(class_parents($event))), true) === true
+			&& method_exists($event, 'addUsage') === true
+			&& method_exists($event, 'getArticleId') === true;
+	}//end isUsageQuestion()
 
 	/**
 	 * Every usage of an article named by any of the given identities.
@@ -116,55 +138,69 @@ class ArticleUsageListener implements IEventListener {
 	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-tells-portaliq-where-an-article-is-used
 	 */
 	public function usages(array $names): array {
-		$usages      = [];
-		$templateIds = [];
-		foreach ($this->store->findAll(schemaSlug: $this->slug(configKey: 'campaignTemplate_schema', default: 'campaignTemplate')) as $template) {
-			if ($this->namesAny(values: ($template['articleIds'] ?? []), names: $names) === false) {
-				continue;
-			}
+		$templates = array_values(
+			array_filter(
+				$this->store->findAll(schemaSlug: $this->slug(configKey: 'campaignTemplate_schema', default: 'campaignTemplate')),
+				fn (array $template): bool => $this->namesAny(values: ($template['articleIds'] ?? []), names: $names)
+			)
+		);
 
-			$id = $this->store->idOf(payload: $template);
-			$templateIds = array_merge($templateIds, $this->identitiesOf(object: $template));
-			$usages[]    = [
-				'id' => $id,
-				'title' => $this->titleOf(object: $template, fallback: $id),
-				'kind' => 'campaignTemplate',
-				'url' => $this->link(path: '/templates'),
-			];
-		}
-
-		if ($templateIds !== []) {
-			foreach ($this->store->findAll(schemaSlug: $this->slug(configKey: 'blast_schema', default: 'blast')) as $blast) {
-				if (in_array((string)($blast['templateId'] ?? ''), $templateIds, true) === false) {
-					continue;
-				}
-
-				$id       = $this->store->idOf(payload: $blast);
-				$usages[] = [
-					'id' => $id,
-					'title' => $this->titleOf(object: $blast, fallback: $id),
-					'kind' => 'blast',
-					'url' => $this->link(path: '/blasts/'.rawurlencode($id).'/monitor'),
-				];
-			}
-		}
-
+		$usages = array_map(fn (array $template): array => $this->usage(object: $template, kind: 'campaignTemplate', route: '/templates'), $templates);
+		$usages = array_merge($usages, $this->blastUsages(templates: $templates));
 		foreach ($this->store->findAll(schemaSlug: $this->slug(configKey: 'social_post_schema', default: 'socialPost')) as $post) {
-			if ($this->namesAny(values: [($post['articleId'] ?? null)], names: $names) === false) {
-				continue;
+			if ($this->namesAny(values: [($post['articleId'] ?? null)], names: $names) === true) {
+				$usages[] = $this->usage(object: $post, kind: 'socialPost', route: '/social-posts/{id}');
 			}
-
-			$id       = $this->store->idOf(payload: $post);
-			$usages[] = [
-				'id' => $id,
-				'title' => $this->titleOf(object: $post, fallback: $id),
-				'kind' => 'socialPost',
-				'url' => $this->link(path: '/social-posts/'.rawurlencode($id)),
-			];
 		}
 
 		return $usages;
 	}//end usages()
+
+	/**
+	 * The usages of every blast built on one of the given templates.
+	 *
+	 * @param array<int, array<string, mixed>> $templates The templates that name the article.
+	 *
+	 * @return array<int, array{id: string, title: string, kind: string, url: string}> The usages.
+	 */
+	private function blastUsages(array $templates): array {
+		$templateIds = [];
+		foreach ($templates as $template) {
+			$templateIds = array_merge($templateIds, $this->identitiesOf(object: $template));
+		}
+
+		if ($templateIds === []) {
+			return [];
+		}
+
+		$usages = [];
+		foreach ($this->store->findAll(schemaSlug: $this->slug(configKey: 'blast_schema', default: 'blast')) as $blast) {
+			if (in_array((string)($blast['templateId'] ?? ''), $templateIds, true) === true) {
+				$usages[] = $this->usage(object: $blast, kind: 'blast', route: '/blasts/{id}/monitor');
+			}
+		}
+
+		return $usages;
+	}//end blastUsages()
+
+	/**
+	 * One usage row for a pipelinq object.
+	 *
+	 * @param array<string, mixed> $object The object.
+	 * @param string               $kind   Its kind.
+	 * @param string               $route  Its page's route, `{id}` standing for its encoded id.
+	 *
+	 * @return array{id: string, title: string, kind: string, url: string} The usage.
+	 */
+	private function usage(array $object, string $kind, string $route): array {
+		$id = $this->store->idOf(payload: $object);
+		return [
+			'id' => $id,
+			'title' => $this->titleOf(object: $object, fallback: $id),
+			'kind' => $kind,
+			'url' => $this->link(path: str_replace('{id}', rawurlencode($id), $route)),
+		];
+	}//end usage()
 
 	/**
 	 * The identities the article may be named by in pipelinq.
@@ -223,14 +259,10 @@ class ArticleUsageListener implements IEventListener {
 	 * @return array<int, string> Non-empty identities.
 	 */
 	private function identitiesOf(array $object): array {
-		$out  = [];
-		$self = ($object['@self'] ?? []);
-		if (is_array($self) === false) {
-			$self = [];
-		}
-
+		$sources = [$object, $this->selfOf(object: $object)];
+		$out     = [];
 		foreach (['uuid', 'id', 'slug'] as $key) {
-			foreach ([$object, $self] as $source) {
+			foreach ($sources as $source) {
 				$value = ($source[$key] ?? null);
 				if (is_scalar($value) === true && (string)$value !== '') {
 					$out[] = (string)$value;
@@ -240,6 +272,22 @@ class ArticleUsageListener implements IEventListener {
 
 		return array_values(array_unique($out));
 	}//end identitiesOf()
+
+	/**
+	 * An object's `@self` block, or an empty array when it has none.
+	 *
+	 * @param array<string, mixed> $object The object.
+	 *
+	 * @return array<string, mixed> The block.
+	 */
+	private function selfOf(array $object): array {
+		$self = ($object['@self'] ?? []);
+		if (is_array($self) === false) {
+			return [];
+		}
+
+		return $self;
+	}//end selfOf()
 
 	/**
 	 * An object's display name.

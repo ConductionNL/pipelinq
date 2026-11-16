@@ -108,6 +108,25 @@ class ArticleMoveService {
 			return $result;
 		}
 
+		$renames = $this->moveAll(result: $result);
+		$result['references'] = ($this->rewriteTemplates(renames: $renames) + $this->rewritePosts(renames: $renames));
+		$result['status']     = 'done';
+		if ($result['failed'] > 0) {
+			$result['status'] = 'failures';
+		}
+
+		$this->logger->info('Pipelinq article move into portaliq', $result);
+		return $result;
+	}//end run()
+
+	/**
+	 * Move every pipelinq article, or find it already moved.
+	 *
+	 * @param array<string, mixed> $result The report, updated.
+	 *
+	 * @return array<string, string> Old identity => portaliq id, for every article that is in portaliq.
+	 */
+	private function moveAll(array &$result): array {
 		$byLegacy = [];
 		$slugs    = [];
 		foreach ($this->portaliq->findAll() as $article) {
@@ -118,22 +137,13 @@ class ArticleMoveService {
 		$renames = [];
 		foreach ($this->store->findAll(schemaSlug: $this->articleSchema()) as $article) {
 			$newId = $this->moveOne(article: $article, byLegacy: $byLegacy, slugs: $slugs, result: $result);
-			foreach ($this->identitiesOf(object: $article) as $identity) {
-				if ($newId !== '') {
-					$renames[$identity] = $newId;
-				}
+			if ($newId !== '') {
+				$renames = (array_fill_keys($this->identitiesOf(object: $article), $newId) + $renames);
 			}
 		}
 
-		$result['references'] = ($this->rewriteTemplates(renames: $renames) + $this->rewritePosts(renames: $renames));
-		$result['status']     = 'done';
-		if ($result['failed'] > 0) {
-			$result['status'] = 'failures';
-		}
-
-		$this->logger->info('Pipelinq article move into portaliq', $result);
-		return $result;
-	}//end run()
+		return $renames;
+	}//end moveAll()
 
 	/**
 	 * Move one article, or find it already moved, and mark it.
@@ -151,12 +161,12 @@ class ArticleMoveService {
 			return '';
 		}
 
-		$legacy = self::LEGACY_PREFIX.$oldId;
-		$target = ($byLegacy[$legacy] ?? null);
+		$legacy  = self::LEGACY_PREFIX.$oldId;
 		$outcome = 'alreadyMoved';
+		$target  = ($byLegacy[$legacy] ?? null);
 		if ($target === null) {
-			$target  = $this->copy(article: $article, legacyRef: $legacy, slugs: $slugs, result: $result);
 			$outcome = 'moved';
+			$target  = $this->copy(article: $article, legacyRef: $legacy, slugs: $slugs, result: $result);
 		}
 
 		if ($target === null) {
@@ -181,15 +191,8 @@ class ArticleMoveService {
 	 * @return array<string, mixed>|null The portaliq article, or null on failure.
 	 */
 	private function copy(array $article, string $legacyRef, array &$slugs, array &$result): ?array {
-		$payload = [];
-		foreach (self::COPIED as $key) {
-			if (array_key_exists($key, $article) === true && $article[$key] !== null) {
-				$payload[$key] = $article[$key];
-			}
-		}
-
-		$payload['legacyRef'] = $legacyRef;
-		$slug = (string)($payload['slug'] ?? '');
+		$payload = $this->copiedPayload(article: $article, legacyRef: $legacyRef);
+		$slug    = (string)($payload['slug'] ?? '');
 		if ($slug !== '' && isset($slugs[$slug]) === true) {
 			$payload['slug']          = $slug.self::SLUG_SUFFIX;
 			$result['renamedSlugs'][] = $slug;
@@ -204,6 +207,26 @@ class ArticleMoveService {
 		$slugs[(string)($payload['slug'] ?? '')] = true;
 		return $saved;
 	}//end copy()
+
+	/**
+	 * The portaliq payload of a pipelinq article: its non-null copied properties and its legacyRef.
+	 *
+	 * @param array<string, mixed> $article   The pipelinq article.
+	 * @param string               $legacyRef Its legacy reference.
+	 *
+	 * @return array<string, mixed> The payload.
+	 */
+	private function copiedPayload(array $article, string $legacyRef): array {
+		$payload = [];
+		foreach (self::COPIED as $key) {
+			if (array_key_exists($key, $article) === true && $article[$key] !== null) {
+				$payload[$key] = $article[$key];
+			}
+		}
+
+		$payload['legacyRef'] = $legacyRef;
+		return $payload;
+	}//end copiedPayload()
 
 	/**
 	 * Mark a pipelinq article with the id it moved to, once.
@@ -316,14 +339,10 @@ class ArticleMoveService {
 	 * @return array<int, string> Non-empty identities.
 	 */
 	private function identitiesOf(array $object): array {
-		$out  = [];
-		$self = ($object['@self'] ?? []);
-		if (is_array($self) === false) {
-			$self = [];
-		}
-
+		$sources = [$object, $this->selfOf(object: $object)];
+		$out     = [];
 		foreach (['uuid', 'id', 'slug'] as $key) {
-			foreach ([$object, $self] as $source) {
+			foreach ($sources as $source) {
 				$value = ($source[$key] ?? null);
 				if (is_scalar($value) === true && (string)$value !== '') {
 					$out[] = (string)$value;
@@ -333,6 +352,22 @@ class ArticleMoveService {
 
 		return array_values(array_unique($out));
 	}//end identitiesOf()
+
+	/**
+	 * An object's `@self` block, or an empty array when it has none.
+	 *
+	 * @param array<string, mixed> $object The object.
+	 *
+	 * @return array<string, mixed> The block.
+	 */
+	private function selfOf(array $object): array {
+		$self = ($object['@self'] ?? []);
+		if (is_array($self) === false) {
+			return [];
+		}
+
+		return $self;
+	}//end selfOf()
 
 	/**
 	 * pipelinq's article schema slug.

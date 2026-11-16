@@ -108,23 +108,7 @@ class PortaliqArticleStore {
 	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-existing-pipelinq-articles-move-to-portaliq-once
 	 */
 	public function isReady(): bool {
-		$service = $this->objectService();
-		if ($service === null) {
-			return false;
-		}
-
-		try {
-			$service->findAll(
-				config: ['limit' => 1, 'filters' => ['register' => self::REGISTER, 'schema' => self::SCHEMA]],
-				_rbac: false,
-				_multitenancy: false,
-			);
-		} catch (Throwable $e) {
-			$this->logger->info('Pipelinq: portaliq article schema is not available', ['reason' => $e->getMessage()]);
-			return false;
-		}
-
-		return true;
+		return $this->query(config: ['limit' => 1], level: 'info', message: 'Pipelinq: portaliq article schema is not available') !== null;
 	}//end isReady()
 
 	/**
@@ -142,23 +126,13 @@ class PortaliqArticleStore {
 	 */
 	public function find(string $identity): ?array {
 		$identity = trim($identity);
-		$service  = $this->objectService();
-		if ($identity === '' || $service === null) {
+		if ($identity === '') {
 			return null;
 		}
 
-		try {
-			$entity = $service->find(
-				id: $identity,
-				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
-				_rbac: false,
-				_multitenancy: false,
-			);
-			if ($entity !== null) {
-				return $this->toArray(value: $entity);
-			}
-		} catch (Throwable $e) {
-			// Not an id: fall through to the slug and legacyRef lookup.
+		$byId = $this->findById(identity: $identity);
+		if ($byId !== null) {
+			return $byId;
 		}
 
 		foreach ($this->findAll() as $article) {
@@ -169,6 +143,34 @@ class PortaliqArticleStore {
 
 		return null;
 	}//end find()
+
+	/**
+	 * One article by its id.
+	 *
+	 * @param string $identity The article's id, or another identity that is not an id.
+	 *
+	 * @return array<string, mixed>|null The article, or null.
+	 */
+	private function findById(string $identity): ?array {
+		$service = $this->objectService();
+		if ($service === null) {
+			return null;
+		}
+
+		$options = new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA);
+		try {
+			$entity = $service->find(id: $identity, options: $options, _rbac: false, _multitenancy: false);
+		} catch (Throwable $e) {
+			// Not an id: the caller falls through to the slug and legacyRef lookup.
+			return null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end findById()
 
 	/**
 	 * The names an article answers to besides its id: its slug, its object
@@ -203,34 +205,43 @@ class PortaliqArticleStore {
 	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-reads-marketing-articles-from-portaliq
 	 */
 	public function findAll(array $filters = []): array {
-		$service = $this->objectService();
-		if ($service === null) {
-			return [];
-		}
-
-		try {
-			$rows = $service->findAll(
-				config: ['filters' => array_merge($filters, ['register' => self::REGISTER, 'schema' => self::SCHEMA])],
-				_rbac: false,
-				_multitenancy: false,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: portaliq articles could not be read', ['reason' => $e->getMessage()]);
-			return [];
-		}
-
-		$out = [];
-		foreach ((array)($rows ?? []) as $row) {
+		$rows = $this->query(config: ['filters' => $filters], level: 'warning', message: 'Pipelinq: portaliq articles could not be read');
+		$out  = [];
+		foreach (($rows ?? []) as $row) {
 			$payload = $this->toArray(value: $row);
-			if ($payload === [] || $this->matches(payload: $payload, filters: $filters) === false) {
-				continue;
+			if ($payload !== [] && $this->matches(payload: $payload, filters: $filters) === true) {
+				$out[] = $payload;
 			}
-
-			$out[] = $payload;
 		}
 
 		return $out;
 	}//end findAll()
+
+	/**
+	 * Query portaliq's article schema, logging and swallowing a failure.
+	 *
+	 * @param array<string, mixed> $config  The query config; register and schema are added to its filters.
+	 * @param string               $level   The log level of a failure.
+	 * @param string               $message The log message of a failure.
+	 *
+	 * @return array<int, mixed>|null The rows, or null when portaliq is missing or the query failed.
+	 */
+	private function query(array $config, string $level, string $message): ?array {
+		$service = $this->objectService();
+		if ($service === null) {
+			return null;
+		}
+
+		$config['filters'] = array_merge(($config['filters'] ?? []), ['register' => self::REGISTER, 'schema' => self::SCHEMA]);
+		try {
+			$rows = $service->findAll(config: $config, _rbac: false, _multitenancy: false);
+		} catch (Throwable $e) {
+			$this->logger->log($level, $message, ['reason' => $e->getMessage()]);
+			return null;
+		}
+
+		return (array)($rows ?? []);
+	}//end query()
 
 	/**
 	 * The published articles, for a picker.
@@ -258,15 +269,9 @@ class PortaliqArticleStore {
 			return null;
 		}
 
+		$target = new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA);
 		try {
-			$saved = $service->saveObject(
-				object: $payload,
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
-				),
-				_rbac: false,
-				_multitenancy: false,
-			);
+			$saved = $service->saveObject(object: $payload, options: new ObjectSaveOptions(target: $target), _rbac: false, _multitenancy: false);
 		} catch (Throwable $e) {
 			$this->logger->warning('Pipelinq: an article could not be written to portaliq', ['reason' => $e->getMessage()]);
 			return null;
