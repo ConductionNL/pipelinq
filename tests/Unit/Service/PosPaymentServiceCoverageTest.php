@@ -201,6 +201,7 @@ class PayCovWebhooks {
  * @uses \OCA\Pipelinq\Util\NullablePayloadToArray
  * @uses \OCA\Pipelinq\Util\ObjectToPlainArray
  * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Service\Payment\PosTransactionStore
  */
 class PosPaymentServiceCoverageTest extends TestCase {
 

@@ -24,9 +24,11 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\BrpRetentionJob;
+use OCA\Pipelinq\BackgroundJob\BrpRetentionSweep;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -40,6 +42,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  * outcome does not depend on the clock.
  */
 #[CoversClass(BrpRetentionJob::class)]
+#[UsesClass(BrpRetentionSweep::class)]
 class BrpRetentionJobTest extends TestCase {
 
 	private const PAST = '2001-01-01T00:00:00Z';

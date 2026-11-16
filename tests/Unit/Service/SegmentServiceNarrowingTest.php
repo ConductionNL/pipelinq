@@ -85,6 +85,7 @@ class NarrowingSignals extends SegmentSignalService {
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\Service\Marketing\SegmentSignalService
  * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses   \OCA\Pipelinq\Service\Marketing\SegmentProperty
  */
 class SegmentServiceNarrowingTest extends TestCase {
 

@@ -42,6 +42,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  * @uses   \OCA\Pipelinq\Service\Demo\DemoUserFields
  * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
+ * @uses   \OCA\Pipelinq\Service\Demo\ExampleUserAccounts
  */
 class DemoRegisterImporterTest extends TestCase {
 	/**

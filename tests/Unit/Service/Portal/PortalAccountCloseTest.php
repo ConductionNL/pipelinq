@@ -52,12 +52,20 @@ class PortalAccountCloseTest extends TestCase {
 		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturnCallback(static fn (): DateTime => new DateTime('2026-05-01T12:00:00+00:00'));
-		$tokens = new PortalTokenService($this->createMock(ISecureRandom::class), $time);
+		$random = $this->createMock(ISecureRandom::class);
+		$random->method('generate')->willReturn('secret');
+		$tokens = new PortalTokenService($random, $time);
 
 		$mail = $this->createMock(PortalMailService::class);
 		$mail->method('send')->willReturnCallback(
 			function (string $recipient, string $subject, string $body): bool {
 				$this->calls[] = ['mail', $recipient, $subject, $body];
+				return true;
+			}
+		);
+		$mail->method('sendTokenLink')->willReturnCallback(
+			function (string ...$args): bool {
+				$this->calls[] = ['link', ...$args];
 				return true;
 			}
 		);
@@ -134,4 +142,38 @@ class PortalAccountCloseTest extends TestCase {
 			$this->assertSame([], $this->calls);
 		}
 	}//end testEveryInvalidTokenIsRefusedAlike()
+
+	/**
+	 * Requesting closure stores the token's hash and expiry on the account,
+	 * mails the plaintext confirmation link and audits a pending verification,
+	 * in that order.
+	 *
+	 * @return void
+	 */
+	public function testRequestingClosureStoresTheTokenMailsAndAudits(): void {
+		$service = $this->service();
+		$account = $this->repository->seed('crmPortalAccount', 'acc-1', ['email' => 'jan@example.test', 'tenantId' => 't-1', 'status' => 'active']);
+		$plain = rtrim(strtr(base64_encode('secret'), '+/', '-_'), '=');
+
+		$service->requestClosure(account: $account, tenantId: 't-1');
+
+		$stored = $this->repository->find('crmPortalAccount', 'acc-1');
+		$this->assertSame('active', $stored['status']);
+		$this->assertSame(hash('sha256', $plain), $stored['closeTokenHash']);
+		$this->assertSame('2026-05-01T13:00:00+00:00', $stored['closeExpiresAt']);
+		$this->assertSame(
+			[
+				[
+					'link',
+					'jan@example.test',
+					'/index.php/apps/pipelinq/portal/account-close',
+					$plain,
+					'T:Confirm closing your portal account',
+					'T:Click the link below to confirm that you want to close your portal account. This cannot be undone.',
+				],
+				['audit', ['acc-1', 't-1', 'account-close', 'pending-verification', []]],
+			],
+			$this->calls
+		);
+	}//end testRequestingClosureStoresTheTokenMailsAndAudits()
 }//end class
