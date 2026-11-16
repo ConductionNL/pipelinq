@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler
  * @uses   \OCA\Pipelinq\Service\Marketing\SegmentRuleTree
+ * @uses   \OCA\Pipelinq\Service\Marketing\SegmentProperty
  */
 class SegmentQueryCompilerTest extends TestCase {
 

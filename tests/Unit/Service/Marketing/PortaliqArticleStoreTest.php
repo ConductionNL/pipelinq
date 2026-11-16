@@ -26,6 +26,8 @@ use OCA\Pipelinq\Service\Marketing\PortaliqArticleStore;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryRegisters;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 
@@ -141,6 +143,123 @@ class PortaliqArticleStoreTest extends TestCase {
 		$this->assertNull($store->create(payload: ['title' => 'Geweigerd']));
 		$this->assertCount(1, $this->objects->rowsOf(register: 'portaliq', schema: 'article'));
 	}//end testCreateWritesToPortaliqAndAnswersNullOnARefusal()
+
+	/**
+	 * An app manager that throws reads as portaliq not being installed.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingAppManagerReadsAsNotAvailable(): void {
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willThrowException(new RuntimeException('app store down'));
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+
+		$store = new PortaliqArticleStore($container, $apps, new NullLogger());
+
+		$this->assertFalse($store->isAvailable());
+		$this->assertSame([], $store->findAll());
+	}//end testAThrowingAppManagerReadsAsNotAvailable()
+
+	/**
+	 * Without OpenRegister nothing is read or written, and each attempt is logged as a warning.
+	 *
+	 * @return void
+	 */
+	public function testAnUnavailableOpenRegisterReadsAndWritesNothing(): void {
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturn(true);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new RuntimeException('no openregister'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->exactly(3))->method('warning')->with(
+			'Pipelinq: OpenRegister is unavailable for portaliq articles',
+			['reason' => 'no openregister']
+		);
+
+		$store = new PortaliqArticleStore($container, $apps, $logger);
+
+		$this->assertTrue($store->isAvailable());
+		$this->assertSame([], $store->findAll());
+		$this->assertNull($store->create(payload: ['title' => 'X']));
+		$this->assertNull($store->find(identity: ''));
+		$this->assertSame([], $store->published());
+	}//end testAnUnavailableOpenRegisterReadsAndWritesNothing()
+
+	/**
+	 * idOf() reads uuid before id, at the top level before `@self`, and answers '' otherwise.
+	 *
+	 * @return void
+	 */
+	public function testIdOfReadsUuidOrIdAtTheTopOrUnderSelf(): void {
+		$store = $this->store(installed: true);
+
+		$this->assertSame('u1', $store->idOf(payload: ['uuid' => 'u1', 'id' => 7]));
+		$this->assertSame('7', $store->idOf(payload: ['uuid' => '', 'id' => 7]));
+		$this->assertSame('s1', $store->idOf(payload: ['@self' => ['id' => 's1']]));
+		$this->assertSame('top', $store->idOf(payload: ['id' => 'top', '@self' => ['uuid' => 'self']]));
+		$this->assertSame('', $store->idOf(payload: ['@self' => 'not an array', 'uuid' => ['x']]));
+		$this->assertSame('', $store->idOf(payload: null));
+	}//end testIdOfReadsUuidOrIdAtTheTopOrUnderSelf()
+
+	/**
+	 * Rows the service returns unfiltered are narrowed here, a non-array
+	 * `@self` is no slug, and an empty saved answer is a failed create.
+	 *
+	 * @return void
+	 */
+	public function testRowsAreNarrowedHereAndAnEmptySaveIsAFailure(): void {
+		$service = new class {
+			/**
+			 * Every row, whatever the filters.
+			 *
+			 * @param array<string, mixed> $config        Ignored.
+			 * @param bool                 $_rbac         Ignored.
+			 * @param bool                 $_multitenancy Ignored.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				return [
+					['uuid' => 'a1', 'status' => 'published', '@self' => 'broken', 'slug' => 'een'],
+					['uuid' => 'a2', 'status' => 'draft', 'legacyRef' => 'other:x'],
+				];
+			}//end findAll()
+
+			/**
+			 * No article is found by id.
+			 *
+			 * @param mixed ...$args Ignored.
+			 *
+			 * @return null
+			 */
+			public function find(mixed ...$args): mixed {
+				return null;
+			}//end find()
+
+			/**
+			 * The save answers nothing.
+			 *
+			 * @param mixed ...$args Ignored.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function saveObject(mixed ...$args): array {
+				return [];
+			}//end saveObject()
+		};
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturn(true);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($service);
+		$store = new PortaliqArticleStore($container, $apps, new NullLogger());
+
+		$this->assertSame(['a1'], array_column($store->published(), 'uuid'));
+		$this->assertSame(['a1', 'a2'], array_column($store->findAll(), 'uuid'));
+		$this->assertSame('a1', $store->find(identity: 'een')['uuid']);
+		$this->assertNull($store->find(identity: 'x'));
+		$this->assertNull($store->create(payload: ['title' => 'Leeg']));
+	}//end testRowsAreNarrowedHereAndAnEmptySaveIsAFailure()
 
 	/**
 	 * The store over the in-memory registers.
