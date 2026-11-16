@@ -8,6 +8,8 @@
 - [x] Wire the relation-resolved "Open client" primary action on both rules: `actions: [{ label: { nl: "Klant openen", en: "Open client" }, primary: true, target: { kind: "object-detail", object: { kind: "relation", field: "client" } } }]`.
 - [x] Add nl/en `subject` to both rules ("Inkomende oproep van {{client}}" / "Incoming call from {{client}}"; "Inkomende e-mail van {{client}}" / "Incoming email from {{client}}").
 
+- [x] Re-declare both rules on the `ticket` schema (`lib/Settings/register.d/99-zzzzzzzzzzzz-open-client-on-contact-moment.json`): unify-ticket-supertype folded `contactmoment` into `ticket` and dropped the block, so the rules now live on `ticket`, filtered on the contact-moment channel values, and address `assignee` (the ticket's handler field; the retired schema called it `agent`). Tested by `tests/Unit/Settings/OpenClientOnContactMomentTest.php`.
+
 ## 2. Verify against the contract and the register
 
 - [x] Verify each rule against the `notification-actions-and-web-push` contract: `web-push` channel valid, `object-detail` relation target shape exact, at most 2 `actions`, i18n labels present.
