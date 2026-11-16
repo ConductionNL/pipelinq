@@ -36,7 +36,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Kernel\Contracts\ConfiguredListObjectStoreInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IURLGenerator;
@@ -62,14 +62,14 @@ class ArticleUsageListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ListObjectStore $store  pipelinq's register.
+	 * @param ConfiguredListObjectStoreInterface $store  pipelinq's register.
 	 * @param IURLGenerator   $urls   Builds the links back into pipelinq.
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-articles/spec.md#requirement-pipelinq-tells-portaliq-where-an-article-is-used
 	 */
 	public function __construct(
-		private ListObjectStore $store,
+		private ConfiguredListObjectStoreInterface $store,
 		private IURLGenerator $urls,
 		private LoggerInterface $logger,
 	) {
