@@ -10,7 +10,8 @@
 		{ "id": "workflowengine", "required": false, "name": "Workflow engine" },
 		{ "id": "timemanager", "required": false, "name": "Time manager" },
 		{ "id": "forms", "required": false, "name": "Forms" },
-		{ "id": "mail", "required": false, "name": "Mail" }
+		{ "id": "mail", "required": false, "name": "Mail" },
+		{ "id": "portaliq", "required": false, "name": "PortaliQ" }
 	],
 	"setup": {
 		"enabled": true,

@@ -62,6 +62,8 @@ use ReflectionMethod;
  * @uses \OCA\Pipelinq\Util\SerialisedToArray
  */
 class RenderedMailGoldenTest extends TestCase {
+	use \OCA\Pipelinq\Tests\Unit\Support\PortaliqArticleFixture;
+
 
 	private const GOLDEN = __DIR__ . '/RenderedMailGolden.json';
 
@@ -104,25 +106,12 @@ class RenderedMailGoldenTest extends TestCase {
 		);
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$logger    = $this->createMock(originalClassName: LoggerInterface::class);
-		$store     = new class ($container, $appConfig, $logger) extends ListObjectStore {
-			/**
-			 * No stored articles.
-			 *
-			 * @param string                $schemaSlug The schema.
-			 * @param array<string, string> $filters    Ignored.
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function findAll(string $schemaSlug, array $filters=[]): array {
-				return [];
-			}//end findAll()
-		};
 
 		return new MailTransportService(
 			container: $container,
 			appConfig: $appConfig,
 			mailer: $this->createMock(originalClassName: IMailer::class),
-			articleService: new ArticleService(store: $store),
+			articleService: $this->portaliqArticleService(),
 			connectorRegister: FakeSlugResolver::connectorRegister(),
 			logger: $logger,
 			addressRenderer: new PhysicalAddressRenderer(),
