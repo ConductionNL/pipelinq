@@ -9964,7 +9964,23 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "{email} is not in Pipelinq yet.": "{email} is not in Pipelinq yet.",
+        "Add as contact": "Add as contact",
+        "Added as a contact.": "Added as a contact.",
+        "Finish signing in in the window that opened.": "Finish signing in in the window that opened.",
+        "Link to {organisation}": "Link to {organisation}",
+        "Log this mail": "Log this mail",
+        "Logged as a contact moment.": "Logged as a contact moment.",
+        "Looking up {email}…": "Looking up {email}…",
+        "Open in pipelinq": "Open in pipelinq",
+        "Open this page from Outlook, as the Pipelinq add-in.": "Open this page from Outlook, as the Pipelinq add-in.",
+        "Sign in with your Nextcloud account to see the sender of this mail in Pipelinq.": "Sign in with your Nextcloud account to see the sender of this mail in Pipelinq.",
+        "Sign out": "Sign out",
+        "Signing in did not finish. Try again.": "Signing in did not finish. Try again.",
+        "Something went wrong.": "Something went wrong.",
+        "This mail has no sender address.": "This mail has no sender address.",
+        "Your sign-in has ended. Sign in again.": "Your sign-in has ended. Sign in again."
     },
     "nplurals=2; plural=(n != 1);"
 )
