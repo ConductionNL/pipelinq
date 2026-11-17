@@ -56,7 +56,7 @@
     "@nextcloud/vue": "^9.14.1",
     "@vueuse/core": "^14.3.0",
     "dexie": "^4.4.6",
-    "dompurify": "^3.4.17",
+    "dompurify": "^3.4.18",
     "gridstack": "^13.3.0",
     "marked": "^18.0.13",
     "pinia": "^2.1.7",
