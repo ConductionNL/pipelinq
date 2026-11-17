@@ -33,6 +33,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Lifecycle\SessionUser;
+use OCA\Pipelinq\Lifecycle\TicketAssigneeGuard;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -51,6 +52,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard
  * @uses   \OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard
  * @uses   \OCA\Pipelinq\Lifecycle\PosRefundManagerGuard
+ * @uses   \OCA\Pipelinq\Lifecycle\TicketAssigneeGuard
  * @uses   \OCA\Pipelinq\Lifecycle\ConfiguredGroup
  * @uses   \OCA\Pipelinq\Lifecycle\ConfiguredGroupGate
  * @uses   \OCA\Pipelinq\Lifecycle\LifecycleContractRegistrar
@@ -81,7 +83,7 @@ class LifecycleRegistrarTest extends TestCase {
 
 		$this->factories = [];
 		$context         = $this->createMock(IRegistrationContext::class);
-		$context->expects($this->exactly(5))->method('registerService')->willReturnCallback(
+		$context->expects($this->exactly(6))->method('registerService')->willReturnCallback(
 			function (string $name, callable $factory): void {
 				$this->factories[$name] = $factory;
 			}
@@ -148,8 +150,8 @@ class LifecycleRegistrarTest extends TestCase {
 	}//end containerWithAdmin()
 
 	/**
-	 * Every guard tag the posTransaction / posRefund lifecycles reference is
-	 * registered, the shared policy first.
+	 * Every guard tag the posTransaction / posRefund / ticket lifecycles
+	 * reference is registered, the shared policy first.
 	 *
 	 * @return void
 	 */
@@ -161,6 +163,7 @@ class LifecycleRegistrarTest extends TestCase {
 				PosTransactionConfirmGuard::class,
 				PosTransactionRefundGuard::class,
 				PosRefundManagerGuard::class,
+				TicketAssigneeGuard::class,
 			],
 			array_keys($this->factories)
 		);
@@ -239,6 +242,21 @@ class LifecycleRegistrarTest extends TestCase {
 		$this->assertTrue($guard->check(['cashier' => 'alice'], 'refund', 'root')->isAllowed());
 		$this->assertFalse($guard->check(['cashier' => 'alice'], 'refund', 'alice')->isAllowed());
 	}//end testTheRefundGuardFactoryIsManagerOnly()
+
+	/**
+	 * The ticket guard built by its factory admits the assignee and a staff
+	 * member through the group manager the container resolves, and refuses
+	 * anyone else.
+	 *
+	 * @return void
+	 */
+	public function testTheTicketGuardFactoryUsesTheGroupManager(): void {
+		$guard = $this->factories[TicketAssigneeGuard::class]($this->containerWithAdmin());
+
+		$this->assertTrue($guard->check(['assignee' => 'alice'], 'start', 'alice')->isAllowed());
+		$this->assertTrue($guard->check(['assignee' => 'alice'], 'start', 'root')->isAllowed());
+		$this->assertFalse($guard->check(['assignee' => 'alice'], 'start', 'mallory')->isAllowed());
+	}//end testTheTicketGuardFactoryUsesTheGroupManager()
 
 	/**
 	 * The confirm and refund-manager factories resolve every collaborator

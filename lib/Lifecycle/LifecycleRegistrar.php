@@ -26,7 +26,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Registers the lifecycle guards the POS schemas name.
+ * Registers the lifecycle guards the POS and ticket schemas name.
  *
  * @category Lifecycle
  * @package  OCA\Pipelinq\Lifecycle
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  */
 class LifecycleRegistrar {
 	/**
-	 * Register the POS lifecycle guards keyed by the FQCN tag the
+	 * Register the POS and ticket lifecycle guards keyed by the FQCN tag the
 	 * posTransaction / posRefund schemas reference in their
 	 * x-openregister-lifecycle.transitions[*].requires.
 	 *
@@ -103,6 +103,13 @@ class LifecycleRegistrar {
 					appConfig: $c->get(IAppConfig::class),
 					logger: $c->get(LoggerInterface::class),
 				);
+			}
+		);
+
+		$context->registerService(
+			TicketAssigneeGuard::class,
+			static function ($c): TicketAssigneeGuard {
+				return new TicketAssigneeGuard(groupManager: $c->get(IGroupManager::class));
 			}
 		);
 
