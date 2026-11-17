@@ -117,7 +117,6 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 // What the resident reads of a request ticket (portal-resident-view-preview). ---
 import ResidentViewSection from './components/ResidentViewSection.vue'
-import WebChatSection from './components/WebChatSection.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 // Customer satisfaction, closed loop (customer-satisfaction-closed-loop): the
 //     client page's satisfaction panel and the Operational dashboard's
@@ -129,6 +128,7 @@ import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdo
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
 import TicketConversationSection from './components/TicketConversationSection.vue'
 import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
+import WebChatSection from './components/WebChatSection.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
@@ -816,6 +816,19 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
+	},
+	WebChatWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'WebChatWidget',
+			WebChatSection,
+			({ objectData }) => ({
+				channel: objectData.channel || '',
+				threadKey: objectData.inboundThreadKey || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'WebChatSection as a tab widget.',
 	},
 	ResidentViewWidget: {
 		kind: 'widget',

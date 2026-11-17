@@ -1426,6 +1426,7 @@
 							"value": "interaction"
 						}
 					},
+					"ticket-web-chat",
 					"ticket-resident-view"
 				],
 				"layout": [
@@ -1603,6 +1604,7 @@
 					"dossier-snapshot": null,
 					"woo-conversion": null,
 					"resident-view": null,
+					"web-chat": null,
 					"routing-suggestions": {
 						"title": "Suggested colleagues",
 						"visibleWhen": {
@@ -1955,6 +1957,17 @@
 							"excludeActions": [
 								"read"
 							]
+						}
+					},
+					{
+						"id": "ticket-web-chat",
+						"type": "WebChatWidget",
+						"title": "Website chat",
+						"icon": "MessageTextOutline",
+						"visibleWhen": {
+							"field": "channel",
+							"op": "eq",
+							"value": "chat"
 						}
 					},
 					{

@@ -10011,7 +10011,8 @@ OC.L10N.register(
         "Thank you. We will answer by email.": "Thank you. We will answer by email.",
         "The chat is not available right now.": "The chat is not available right now.",
         "This chat is not available.": "This chat is not available.",
-        "Switched on": "Switched on"
+        "Switched on": "Switched on",
+        "A website chat waits for a colleague": "A website chat waits for a colleague"
     },
     "nplurals=2; plural=(n != 1);"
 )
