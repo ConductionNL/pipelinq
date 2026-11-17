@@ -2,17 +2,37 @@ publiccodeYmlVersion: "0.4"
 
 name: Pipelinq
 url: "https://github.com/ConductionNL/pipelinq"
-softwareVersion: "0.2.14"
-releaseDate: "2026-05-26"
+landingURL: "https://pipelinq.conduction.nl"
+roadmap: "https://github.com/ConductionNL/pipelinq/blob/development/openspec/ROADMAP.md"
+softwareVersion: "0.5.14"
+releaseDate: "2026-10-08"
+logo: img/app-store.svg
 developmentStatus: beta
 softwareType: "standalone/other"
 
 platforms:
-  - nextcloud
+  - web
 
 categories:
   - crm
   - sales-management
+  - contact-management
+  - customer-service-and-support
+  - workflow-management
+
+dependsOn:
+  open:
+    - name: Nextcloud
+      versionMin: "32"
+      versionMax: "35"
+    - name: OpenRegister
+
+intendedAudience:
+  countries:
+    - nl
+  scope:
+    - government
+    - local-authorities
 
 description:
   en:
@@ -26,11 +46,23 @@ description:
       relationships and sales workflows suitable for both government and commercial
       organisations.
       Conduction maintains this component within the Nextcloud ISV programme.
+      Pipelinq is available in the Nextcloud App Store at
+      https://apps.nextcloud.com/apps/pipelinq.
     features:
-      - Lead and contact management
-      - Sales pipeline tracking
-      - Opportunity management
-      - Customer relationship administration
+      - Client management for persons and organisations with contact details, notes and history
+      - Contact persons linked to organisations with roles
+      - Lead pipeline on a drag-and-drop kanban board with configurable stages
+      - Request intake before requests become formal cases
+      - Contact moments for calls, emails, visits and other interactions
+      - My Work queue with assigned leads, requests and follow-ups
+      - Two-way sync with Nextcloud Contacts via CardDAV
+      - Duplicate detection through OpenRegister master data management
+      - vCard import and export plus scheduled CSV data exports
+      - Activity and notifications on assignments, stage changes and new notes
+    screenshots:
+      - img/screenshot-dashboard.png
+      - img/screenshot-pipeline.png
+      - img/screenshot-clients.png
 
   nl:
     shortDescription: >
@@ -43,11 +75,23 @@ description:
       klantrelaties en verkoopworkflows, geschikt voor zowel overheids- als
       commerciële organisaties.
       Conduction onderhoudt dit component binnen het Nextcloud ISV-programma.
+      Pipelinq is beschikbaar in de Nextcloud App Store via
+      https://apps.nextcloud.com/apps/pipelinq.
     features:
-      - Lead- en contactbeheer
-      - Verkooppipelinebewaking
-      - Kansenbeheer
-      - Klantrelatiebeheer
+      - Klantbeheer voor personen en organisaties met contactgegevens, notities en historie
+      - Contactpersonen gekoppeld aan organisaties met rollen
+      - Lead-pipeline op een drag-and-drop kanbanbord met configureerbare fases
+      - Verzoekintake voordat verzoeken formele zaken worden
+      - Contactmomenten voor telefoongesprekken, e-mails, bezoeken en andere interacties
+      - Mijn Werk met toegewezen leads, verzoeken en opvolgingen
+      - Tweerichtingssynchronisatie met Nextcloud Contacten via CardDAV
+      - Duplicaatdetectie via master-data management in OpenRegister
+      - vCard-import en -export plus geplande CSV-data-exports
+      - Activiteit en notificaties bij toewijzingen, fasewijzigingen en nieuwe notities
+    screenshots:
+      - img/screenshot-dashboard.png
+      - img/screenshot-pipeline.png
+      - img/screenshot-clients.png
 
 legal:
   license: EUPL-1.2
@@ -69,8 +113,12 @@ maintenance:
 localisation:
   localisationReady: true
   availableLanguages:
-    - nl
+    - de
     - en
+    - es
+    - fr
+    - it
+    - nl
 
 # Common Ground layer (nl.vng profile), as a standard supports entry.
 supports:
