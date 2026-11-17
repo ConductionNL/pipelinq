@@ -33,8 +33,9 @@
 
 ## 5. Routing rules
 
-- [ ] 5.1 Ship the flow "Route incoming tickets" as `x-openregister-flows` on `ticket` in the new fragment: trigger `object.created`, channel and empty-category filter, decision table (inputs channel, fromAddress, fromDomain, mailbox, clientSegment; outputs category, priority; hit policy first; `resultKey` `channelMetadata.routing`), object write update
+- [x] 5.1 Ship the flow "Route incoming tickets" as `x-openregister-flows` on `ticket` in the new fragment: trigger `object.created`, channel and empty-category filter, decision table (inputs channel, fromAddress, fromDomain, mailbox, clientSegment; outputs category, priority; hit policy first; `resultKey` `channelMetadata.routing`), object write update
   - Verify: after import the flow is listed on `/flows`, unowned; `POST /api/flow/validate` accepts it; PHPUnit on the fragment asserts the node types and keys
+  - Built in `99-inbound-ticket-intake.json`: trigger, filter, decision table, object write, end, shipped disabled and unowned. OpenRegister refuses a table without rules, so the table ships one catch-all rule `everything-else` (no category, normal priority); the Routing rules page adds rules above it. PHPUnit `tests/Unit/Settings/InboundRoutingFlowTest.php`. The import and `POST /api/flow/validate` checks need a live instance and have not run yet.
 - [ ] 5.2 Add admin page `RoutingRules` (custom page, registered in `src/registry.js`) that reads the flow, edits its table as rows, adopts it on first save, then `PUT` and `publish`; show OpenRegister's refusal text
   - Verify: Vitest `tests/vitest/routingRules.spec.js` turns rows into a table and back; Playwright `tests/e2e/mail-routing.spec.ts` adds a rule "domain kadaster.nl sets category Registratie", feeds a mail from that domain and reads the category on the ticket in the Queue
 - [x] 5.3 Add `category` to the Queue page facets in `src/manifest.json`

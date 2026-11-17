@@ -1,5 +1,5 @@
 {
-    "_note": "requests-inbound-to-queue D2 and D8. `inboundThreadKey` is written by InboundTicketService only: `conversation:<channelConversation id>` for WhatsApp and SMS, `mail:<account id>:<threadRootId>` for mail, `meta:<conversation id>` for Facebook and Instagram. A top-level property keeps the follow-up lookup a plain equality filter; the sender, domain, mailbox and source link go in `channelMetadata`. `category` becomes facetable so a team opens the Queue on its own category. Fragments are deep-merged onto pipelinq_register.json in filename order, so this one only adds these two keys to `ticket`.",
+    "_note": "requests-inbound-to-queue D2 and D8. `inboundThreadKey` is written by InboundTicketService only: `conversation:<channelConversation id>` for WhatsApp and SMS, `mail:<account id>:<threadRootId>` for mail, `meta:<conversation id>` for Facebook and Instagram. A top-level property keeps the follow-up lookup a plain equality filter; the sender, domain, mailbox and source link go in `channelMetadata`. `category` becomes facetable so a team opens the Queue on its own category. Fragments are deep-merged onto pipelinq_register.json in filename order, so this one only adds these two keys to `ticket`. The `x-openregister-flows` entry on `ticket` is D6: the routing rules are an OpenRegister flow. It arrives disabled and unowned (OpenRegister's adoption contract), with one catch-all rule that leaves the category empty and the priority normal, because OpenRegister refuses a table without rules; the Routing rules page adds rules above it, adopts the flow on the first save and publishes each change.",
     "components": {
         "schemas": {
             "ticket": {
@@ -15,6 +15,178 @@
                     "category": {
                         "facetable": true
                     }
+                },
+                "configuration": {
+                    "x-openregister-flows": [
+                        {
+                            "name": "Route incoming tickets",
+                            "app": "pipelinq",
+                            "description": "Sets the category and priority of a new inbound ticket from an ordered table of rules on channel, sender address, sender domain, mailbox and client segment (requests-inbound-to-queue D6). The first matching rule wins, and the rule that matched is recorded on the ticket under channelMetadata.routing. Off until an administrator adopts it; edit the rules on the Routing rules page.",
+                            "trigger": "object.created",
+                            "triggerRegister": "pipelinq",
+                            "enabled": false,
+                            "executionMode": "async",
+                            "limits": {
+                                "maxTransitions": 10
+                            },
+                            "nodes": [
+                                {
+                                    "id": "ticket-created",
+                                    "type": "openregister.trigger-object",
+                                    "config": {
+                                        "event": "object.created",
+                                        "register": "pipelinq",
+                                        "schema": "ticket"
+                                    }
+                                },
+                                {
+                                    "id": "inbound-without-category",
+                                    "type": "openregister.filter",
+                                    "config": {
+                                        "condition": {
+                                            "and": [
+                                                {
+                                                    "in": [
+                                                        {
+                                                            "var": "json.channel"
+                                                        },
+                                                        [
+                                                            "email",
+                                                            "whatsapp",
+                                                            "sms",
+                                                            "facebook",
+                                                            "instagram"
+                                                        ]
+                                                    ]
+                                                },
+                                                {
+                                                    "!": {
+                                                        "var": "json.category"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "routing-rules",
+                                    "type": "openregister.decision-table",
+                                    "config": {
+                                        "table": {
+                                            "hitPolicy": "FIRST",
+                                            "inputs": [
+                                                {
+                                                    "name": "channel",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "name": "fromAddress",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "name": "fromDomain",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "name": "mailbox",
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "name": "clientSegment",
+                                                    "type": "string"
+                                                }
+                                            ],
+                                            "outputs": [
+                                                {
+                                                    "name": "category"
+                                                },
+                                                {
+                                                    "name": "priority"
+                                                }
+                                            ],
+                                            "rules": [
+                                                {
+                                                    "id": "everything-else",
+                                                    "description": "Everything else: no category, normal priority.",
+                                                    "inputEntries": [
+                                                        "-",
+                                                        "-",
+                                                        "-",
+                                                        "-",
+                                                        "-"
+                                                    ],
+                                                    "outputEntries": [
+                                                        "",
+                                                        "normal"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "inputMapping": {
+                                            "channel": "channel",
+                                            "fromAddress": "channelMetadata.fromAddress",
+                                            "fromDomain": "channelMetadata.fromDomain",
+                                            "mailbox": "channelMetadata.mailbox",
+                                            "clientSegment": "channelMetadata.clientSegment"
+                                        },
+                                        "outputMapping": {
+                                            "category": "category",
+                                            "priority": "priority"
+                                        },
+                                        "defaultOutputs": {
+                                            "category": "",
+                                            "priority": "normal"
+                                        },
+                                        "resultKey": "channelMetadata.routing"
+                                    }
+                                },
+                                {
+                                    "id": "write-routing",
+                                    "type": "openregister.object-write",
+                                    "config": {
+                                        "register": "pipelinq",
+                                        "schema": "ticket",
+                                        "operation": "update",
+                                        "match": {
+                                            "uuid": "{{ id }}"
+                                        },
+                                        "fields": {
+                                            "category": "{{ category }}",
+                                            "priority": "{{ priority }}",
+                                            "channelMetadata": "{{ channelMetadata }}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "end",
+                                    "type": "openregister.end",
+                                    "config": {}
+                                }
+                            ],
+                            "edges": [
+                                {
+                                    "id": "e-created",
+                                    "from": "ticket-created",
+                                    "to": "inbound-without-category"
+                                },
+                                {
+                                    "id": "e-inbound",
+                                    "from": "inbound-without-category",
+                                    "to": "routing-rules"
+                                },
+                                {
+                                    "id": "e-decided",
+                                    "from": "routing-rules",
+                                    "to": "write-routing"
+                                },
+                                {
+                                    "id": "e-written",
+                                    "from": "write-routing",
+                                    "to": "end"
+                                }
+                            ]
+                        }
+                    ]
                 }
             }
         }
