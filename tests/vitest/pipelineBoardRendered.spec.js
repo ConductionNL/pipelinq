@@ -205,7 +205,7 @@ describe('the pipeline board as drawn', () => {
 		expect(columns.map((c) => c.find('.column-title').text())).toEqual(['New', 'Offer'])
 		expect(columns[0].findAll('.card-title').map((c) => c.text())).toEqual(['Lead a', 'Lead b'])
 		expect(columns[1].findAll('.card-title').map((c) => c.text())).toEqual(['Lead c'])
-		expect(fetchCalls).toContain('/apps/openregister/api/objects/r1/s-lead?pipeline=p1&_limit=200')
+		expect(fetchCalls).toContain('/apps/openregister/api/objects/r1/s-lead?_extend[]=calculations&pipeline=p1&_limit=200')
 	})
 
 	it('counts a limited stage against its limit and marks it full', async () => {

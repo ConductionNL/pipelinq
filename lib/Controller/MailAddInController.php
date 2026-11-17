@@ -30,12 +30,20 @@ use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OpenMailServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\MailAddIn\AddInManifest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\ContentSecurityPolicy;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OutOfBoundsException;
 use Psr\Log\LoggerInterface;
@@ -56,6 +64,9 @@ class MailAddInController extends Controller {
 	 * @param OpenMailServiceInterface $openMail Sender lookup, add as contact and mail logging.
 	 * @param ObjectOwnerAccessPolicy $policy Who may create contacts.
 	 * @param LoggerInterface $logger Logger.
+	 * @param AddInManifest $addIn The add-in manifest and the pane's URLs.
+	 * @param IInitialState $initialState Hands the pane the URLs it calls.
+	 * @param IURLGenerator $urls Builds those URLs.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -63,9 +74,78 @@ class MailAddInController extends Controller {
 		private readonly OpenMailServiceInterface $openMail,
 		private readonly ObjectOwnerAccessPolicy $policy,
 		private readonly LoggerInterface $logger,
+		private readonly AddInManifest $addIn,
+		private readonly IInitialState $initialState,
+		private readonly IURLGenerator $urls,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
+
+	/**
+	 * GET /mail-add-in/manifest.xml: the Office add-in manifest, with this
+	 * instance's URLs, for an administrator to deploy in Microsoft 365.
+	 *
+	 * Public, because the Microsoft 365 admin centre can fetch it by URL. It
+	 * holds nothing but this instance's public addresses.
+	 *
+	 * @return DataDisplayResponse The manifest XML.
+	 *
+	 * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md#requirement-pipelinq-serves-an-outlook-add-in-req-mai-001
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 30, period: 60)]
+	public function manifest(): DataDisplayResponse {
+		$response = new DataDisplayResponse(
+			$this->addIn->xml(),
+			Http::STATUS_OK,
+			['Content-Type' => 'application/xml; charset=utf-8']
+		);
+		$response->addHeader('Content-Disposition', 'inline; filename="pipelinq-outlook-add-in.xml"');
+		return $response;
+	}//end manifest()
+
+	/**
+	 * GET /mail-add-in/taskpane: the page Outlook opens beside a mail.
+	 *
+	 * Public, because Outlook frames it without a Nextcloud session; the
+	 * pane signs in through Nextcloud's login flow and sends the app password
+	 * with every call. The page may be framed by the Outlook hosts only, and
+	 * may load Office.js from Microsoft; nothing else in Nextcloud's policy
+	 * changes.
+	 *
+	 * @return TemplateResponse The pane.
+	 *
+	 * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md#requirement-pipelinq-serves-an-outlook-add-in-req-mai-001
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 120, period: 60)]
+	public function taskpane(): TemplateResponse {
+		$app = AppIdentity::APP_ID;
+		$this->initialState->provideInitialState(
+			'mail-add-in',
+			[
+				'loginFlowUrl' => $this->urls->linkToRouteAbsolute('core.ClientFlowLoginV2.init'),
+				'lookupUrl' => $this->urls->linkToRouteAbsolute($app . '.mailAddIn.lookup'),
+				'contactUrl' => $this->urls->linkToRouteAbsolute($app . '.mailAddIn.contact'),
+				'logUrl' => $this->urls->linkToRouteAbsolute($app . '.mailAddIn.log'),
+				'appUrl' => $this->urls->linkToRouteAbsolute($app . '.dashboard.page', ['path' => '']),
+			]
+		);
+
+		$response = new TemplateResponse($app, 'mail-add-in', [], TemplateResponse::RENDER_AS_BASE);
+
+		$csp = new ContentSecurityPolicy();
+		foreach (AddInManifest::FRAME_HOSTS as $host) {
+			$csp->addAllowedFrameAncestorDomain($host);
+		}
+
+		$csp->addAllowedScriptDomain(AddInManifest::OFFICE_JS_HOST);
+		$response->setContentSecurityPolicy($csp);
+
+		return $response;
+	}//end taskpane()
 
 	/**
 	 * Refuse a call that does not come from a signed-in pane.
