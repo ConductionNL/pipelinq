@@ -1,5 +1,12 @@
 {
   "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "ticket"
+        ]
+      }
+    },
     "schemas": {
       "ticket": {
         "slug": "ticket",

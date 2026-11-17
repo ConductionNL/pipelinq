@@ -2486,6 +2486,7 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "lead",
+							"extend": ["calculations"],
 							"filter": {
 								"client": "@objectId"
 							},
@@ -2507,7 +2508,7 @@
 									"label": "Value"
 								},
 								{
-									"key": "qualificationScore",
+									"key": "winProbability",
 									"label": "Win chance",
 									"widget": "lead-probability"
 								},
@@ -4765,7 +4766,8 @@
 								{
 									"action": "update",
 									"field": "assignee",
-									"label": "Passed to {changed.assignee} by {actor}"
+									"label": "Passed to {to} by {actor}",
+									"values": "user"
 								},
 								{
 									"action": "update",
@@ -5279,6 +5281,7 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "lead",
+							"extend": ["calculations"],
 							"filter": {
 								"contact": "@objectId"
 							},
@@ -5300,7 +5303,7 @@
 									"label": "Value"
 								},
 								{
-									"key": "qualificationScore",
+									"key": "winProbability",
 									"label": "Win chance",
 									"widget": "lead-probability"
 								},
@@ -5805,6 +5808,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"extend": ["client", "calculations"],
 				"showViewAction": false,
 				"actions": [
 					{
@@ -5822,8 +5826,13 @@
 					"status",
 					"priority",
 					{
-						"key": "qualificationScore",
+						"key": "winProbability",
 						"label": "Win chance",
+						"widget": "lead-probability"
+					},
+					{
+						"key": "qualificationScore",
+						"label": "Lead score",
 						"widget": "lead-score",
 						"sortable": true
 					},
@@ -5851,6 +5860,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
+				"extend": ["calculations"],
 				"_linkedTypesNote": "Every entry of the lead schema's linkedTypes is mounted on this page or named here (leaf-integration-broadening; tests/Unit/LinkedTypesConformanceTest.php reads this note). Mounted as tabs: email, calendar, deck, talk, forms. Not mounted on purpose: `flow` (the flow runs show in the Overview list, not as a leaf), `time-tracker` (no time registration on a deal) and `xwiki` (the knowledge base is mounted app-level on the knowledge page, xwiki-knowledge).",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). The sidebar stays audit-only: the Talk, Deck and Forms leaves are tabs of the body strip (Deal room, Board, Intake forms; leaf-integration-broadening), and the leaves this page does not mount are named in _linkedTypesNote. Board look (PqLead, round 12): a two-row header (Lead pill, the stage as status pill, the breadcrumb and the meta line), Log contact and the two close buttons as quick actions, the next-step card for the open stages, one tab strip as the body and a side column with the client, suggested colleagues, win chance, the next step and related records. The deal value and line-count KPIs stay declared for the dashboard catalogue but are not placed.",
@@ -6032,14 +6042,14 @@
 						"type": "data",
 						"title": "Deal",
 						"icon": "HandshakeOutline",
-						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off. Board PqLead (r33): the eight deal facts in two columns (fixedColumns, nc-vue 24t2l); the title, client, status, stage, description and notes are read and edited in the edit form and the client card.",
+						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is winProbability, the stage chance decayed by how long the lead stood still, read through the page's `extend: [\"calculations\"]` (lead-win-probability-recency); the lead score keeps its own column on the Leads list; the hidden probability field is left out. The client sits here too (decision 207): a lead can exist with no client linked, and the Related card only lists a client once there is one, so this field is where a client is read, added and taken off. Board PqLead (r33): the eight deal facts in two columns (fixedColumns, nc-vue 24t2l); the title, client, status, stage, description and notes are read and edited in the edit form and the client card.",
 						"content": {
 							"title": "Deal",
 							"columns": 2,
 							"include": [
 								"value",
 								"calculatedValue",
-								"qualificationScore",
+								"winProbability",
 								"expectedCloseDate",
 								"priority",
 								"source",
@@ -6061,9 +6071,10 @@
 									"label": "In this stage since",
 									"order": 8
 								},
-								"qualificationScore": {
+								"winProbability": {
 									"label": "Win chance",
-									"order": 2
+									"order": 2,
+									"editable": false
 								},
 								"value": {
 									"order": 1,
@@ -6505,7 +6516,7 @@
 							"fields": [
 								{
 									"as": "title",
-									"path": "qualificationScore",
+									"path": "winProbability",
 									"suffix": "%",
 									"size": 26
 								},
