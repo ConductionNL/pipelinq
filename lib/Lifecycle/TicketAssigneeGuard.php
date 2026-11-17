@@ -31,7 +31,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Lifecycle;
 
 use OCA\OpenRegister\Lifecycle\GuardResult;
-use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
+use OCA\OpenRegister\Lifecycle\LifecycleGuardContext;
+use OCA\OpenRegister\Lifecycle\LifecycleTransitionGuardInterface;
 use OCP\IGroupManager;
 
 /**
@@ -40,15 +41,17 @@ use OCP\IGroupManager;
  * A group-only `authorization` list on the transition could not express "the
  * assignee", so an assignee outside the sales group (a CRM-group handler) was
  * refused when picking up their own ticket. This guard admits the assignee as
- * well. Fails closed: an empty caller, or a ticket without an assignee,
- * admits only a sales or admin member.
+ * well. The assignee is read from the STORED ticket, never from the incoming
+ * data, so a caller cannot name themselves assignee in the same write that
+ * starts or rejects the ticket. Fails closed: an empty caller, or a ticket
+ * without a stored assignee, admits only a sales or admin member.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) GuardResult exposes only the static
  *  allow()/deny() factories mandated by OpenRegister's contract.
  *
  * @spec openspec/specs/request-management/spec.md
  */
-class TicketAssigneeGuard implements LifecycleGuardInterface {
+class TicketAssigneeGuard implements LifecycleTransitionGuardInterface {
 	/**
 	 * The group whose members may start or reject any ticket, as admins may.
 	 *
@@ -67,17 +70,48 @@ class TicketAssigneeGuard implements LifecycleGuardInterface {
 	}//end __construct()
 
 	/**
-	 * Allow the transition for the ticket's assignee or a staff member.
+	 * Allow the transition for the stored ticket's assignee or a staff member.
 	 *
-	 * @param array<string, mixed> $object The ticket payload.
-	 * @param string $action The transition action ('start'|'reject').
-	 * @param string $userId The acting user UID.
+	 * @param LifecycleGuardContext $context The incoming data, the stored ticket, the action and the caller.
 	 *
 	 * @return GuardResult Allow for the assignee or a staff member; deny otherwise.
 	 *
 	 * @spec openspec/specs/request-management/spec.md
 	 */
+	public function checkTransition(LifecycleGuardContext $context): GuardResult {
+		return $this->result(object: $context->storedData(), userId: $context->userId);
+	}//end checkTransition()
+
+	/**
+	 * Without the stored ticket only a staff member may act.
+	 *
+	 * OpenRegister calls checkTransition() on guards implementing
+	 * LifecycleTransitionGuardInterface; this stays for callers typed against
+	 * LifecycleGuardInterface. The incoming payload's assignee is not trusted.
+	 *
+	 * @param array<string, mixed> $object The incoming ticket payload (its assignee is ignored).
+	 * @param string $action The transition action ('start'|'reject').
+	 * @param string $userId The acting user UID.
+	 *
+	 * @return GuardResult Allow for a staff member; deny otherwise.
+	 *
+	 * @spec openspec/specs/request-management/spec.md
+	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
+		return $this->result(object: [], userId: $userId);
+	}//end check()
+
+	/**
+	 * Allow or deny for the given trusted ticket data and caller.
+	 *
+	 * @param array<string, mixed> $object Trusted ticket data (the stored ticket).
+	 * @param string $userId The acting user UID.
+	 *
+	 * @return GuardResult
+	 *
+	 * @spec openspec/specs/request-management/spec.md
+	 */
+	private function result(array $object, string $userId): GuardResult {
 		if ($this->mayAct(object: $object, userId: $userId) === true) {
 			return GuardResult::allow();
 		}
@@ -85,7 +119,7 @@ class TicketAssigneeGuard implements LifecycleGuardInterface {
 		return GuardResult::deny(
 			'Alleen de behandelaar van dit ticket of een lid van de verkoopgroep mag deze stap uitvoeren.'
 		);
-	}//end check()
+	}//end result()
 
 	/**
 	 * Whether the caller is the ticket's assignee or a staff member.

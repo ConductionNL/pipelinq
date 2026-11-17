@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Lifecycle;
 
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Lifecycle\LifecycleGuardContext;
 use OCA\Pipelinq\Kernel\Contracts\BillingHandoffAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
@@ -244,7 +246,7 @@ class LifecycleRegistrarTest extends TestCase {
 	}//end testTheRefundGuardFactoryIsManagerOnly()
 
 	/**
-	 * The ticket guard built by its factory admits the assignee and a staff
+	 * The ticket guard built by its factory admits the stored assignee and a staff
 	 * member through the group manager the container resolves, and refuses
 	 * anyone else.
 	 *
@@ -253,9 +255,15 @@ class LifecycleRegistrarTest extends TestCase {
 	public function testTheTicketGuardFactoryUsesTheGroupManager(): void {
 		$guard = $this->factories[TicketAssigneeGuard::class]($this->containerWithAdmin());
 
-		$this->assertTrue($guard->check(['assignee' => 'alice'], 'start', 'alice')->isAllowed());
-		$this->assertTrue($guard->check(['assignee' => 'alice'], 'start', 'root')->isAllowed());
-		$this->assertFalse($guard->check(['assignee' => 'alice'], 'start', 'mallory')->isAllowed());
+		$stored = new ObjectEntity();
+		$stored->setObject(['assignee' => 'alice']);
+		$judge = static fn (string $uid): bool => $guard->checkTransition(
+			context: new LifecycleGuardContext(object: [], stored: $stored, action: 'start', userId: $uid)
+		)->isAllowed();
+
+		$this->assertTrue($judge('alice'));
+		$this->assertTrue($judge('root'));
+		$this->assertFalse($judge('mallory'));
 	}//end testTheTicketGuardFactoryUsesTheGroupManager()
 
 	/**
