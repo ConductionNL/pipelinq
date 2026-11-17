@@ -2,7 +2,7 @@
 
 ## 1. Derived tool declarations (register)
 
-- [ ] 1.1 Add `x-openregister-mcp` blocks to `contact` and `task`
+- [x] 1.1 Add `x-openregister-mcp` blocks to `contact` and `task`
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-crm-crud-tools-are-declared-on-the-schema-not-hand-coded`
   - **files**: `lib/Settings/pipelinq_register.json`
   - **acceptance_criteria**:
@@ -10,7 +10,7 @@
     - `task`: same shape; `search` filters `type`, `status`, `clientId`; descriptions name the `type` enum (`callbackRequest`, `followUpTask`, `informationRequest`)
     - Schema `version` patch-bumped on both so the register import applies
 
-- [ ] 1.2 Add write verbs + reach to existing blocks
+- [x] 1.2 Add write verbs + reach to existing blocks
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-crm-crud-tools-are-declared-on-the-schema-not-hand-coded`, `specs/crm-mcp-tool-surface/spec.md#requirement-every-tool-declares-scope-and-reach-for-the-grant-matrix`
   - **files**: `lib/Settings/pipelinq_register.json`, `lib/Settings/register.d/99-unify-ticket-supertype.json`
   - **acceptance_criteria**:
@@ -18,8 +18,9 @@
     - `reach` key added to every existing tool entry (`client`/`lead`/`ticket`/`product`/`leadProduct` reads → `user`; `leadProduct.create` and all new writes → `instance`)
     - `lead` and `ticket` blocks still declare NO `create`/`update` verbs (curated write path preserved)
     - Affected schema/fragment versions patch-bumped
+  - **built**: in `register.d/99-zzzzzzzzzzzzz-mcp-full-action-coverage.json` (the spec's `task` is the `crmTask` schema). The `reach` key is on every curated `#[McpTool]`; on the derived entries it waits for openregister's `x-openregister-mcp` validator to accept it (5.1, design D2), since today it refuses an unknown key. `McpSurfaceConformanceTest` checks any declared reach.
 
-- [ ] 1.3 Extend fragment-merge preservation tests
+- [x] 1.3 Extend fragment-merge preservation tests
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-crm-crud-tools-are-declared-on-the-schema-not-hand-coded`
   - **files**: `tests/Unit/Service/ConfigFileLoaderServiceTest.php`, `tests/Unit/Service/RegisterFragmentMergeTest.php`
   - **acceptance_criteria**:
@@ -27,7 +28,7 @@
 
 ## 2. Curated lead tools (LeadService)
 
-- [ ] 2.1 `pipelinq.updateLead`
+- [x] 2.1 `pipelinq.updateLead`
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools`
   - **files**: `lib/Service/LeadService.php`, `tests/Unit/Service/LeadServiceTest.php`
   - **acceptance_criteria**:
@@ -36,7 +37,7 @@
     - Envelope order: validate → authorize → act; tests cover `invalid_arguments`, `not_found`, `forbidden`, and the stage invariant
     - NOTE: `reach:` on the attribute compiles only after the openregister companion `mcp-reach-annotation`; until it merges, keep the value in the block's docblock and add the parameter in the same PR that bumps the openregister dependency (design D2)
 
-- [ ] 2.2 `pipelinq.winLead` / `pipelinq.loseLead`
+- [x] 2.2 `pipelinq.winLead` / `pipelinq.loseLead`
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action`
   - **files**: `lib/Service/LeadService.php`, `tests/Unit/Service/LeadServiceTest.php`
   - **acceptance_criteria**:
@@ -45,7 +46,7 @@
 
 ## 3. Curated ticket tools (TicketService)
 
-- [ ] 3.1 `pipelinq.createTicket` / `pipelinq.updateTicket`
+- [x] 3.1 `pipelinq.createTicket` / `pipelinq.updateTicket`
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools`
   - **files**: `lib/Service/TicketService.php`, `tests/Unit/Service/TicketServiceTest.php`
   - **acceptance_criteria**:
@@ -53,14 +54,14 @@
     - `updateTicket` rejects a `status` argument (`invalid_arguments` naming the transition tools)
     - Envelope coverage: `invalid_arguments`, `not_found`, `forbidden`
 
-- [ ] 3.2 Six ticket transition tools
+- [x] 3.2 Six ticket transition tools
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action`
   - **files**: `lib/Service/TicketService.php`, `tests/Unit/Service/TicketServiceTest.php`
   - **acceptance_criteria**:
     - `startTicket`, `completeTicket`, `convertTicket`, `resolveTicket`, `rejectTicket`, `closeTicket` — one `#[McpTool]` each, scope `update`, `idempotentHint: true`, `destructiveHint: true` on final-state targets, driving the `ticket` fragment's lifecycle path with its per-transition authorization (`start`/`reject`: assignee or `sales`; `complete`/`convert`/`resolve`/`close`: assignee)
     - Wrong-state → `conflict`, unauthorized → `forbidden`; tests cover one allowed, one wrong-state, one unauthorized case per authorization class
 
-- [ ] 3.3 Reflection + registry assertions for the expanded curated set
+- [x] 3.3 Reflection + registry assertions for the expanded curated set
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-hand-written-service-tools-take-precedence-over-derived-tools`
   - **files**: `tests/Unit/Service/LeadServiceTest.php`, `tests/Unit/Service/TicketServiceTest.php`, `tests/Unit/Mcp/PipelinqScannableServicesTest.php`
   - **acceptance_criteria**:
@@ -69,14 +70,14 @@
 
 ## 4. Scope×reach conformance + exclusion boundary
 
-- [ ] 4.1 Scope/reach conformance test
+- [x] 4.1 Scope/reach conformance test
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-every-tool-declares-scope-and-reach-for-the-grant-matrix`
   - **files**: `tests/Unit/Mcp/McpSurfaceConformanceTest.php`
   - **acceptance_criteria**:
     - Enumerates every `x-openregister-mcp` tool entry (base + fragments) and every `#[McpTool]` attribute; asserts read⇒`reach: user`+`readOnlyHint: true`, write⇒`reach: instance`; no `self`/`external` anywhere
     - Prove the test can fail (temporarily mislabel one entry locally) before finalising
 
-- [ ] 4.2 Allow-list exclusion test
+- [x] 4.2 Allow-list exclusion test
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-excluded-surfaces-are-never-agent-invocable`
   - **files**: `tests/Unit/Mcp/McpSurfaceConformanceTest.php`
   - **acceptance_criteria**:
@@ -91,7 +92,7 @@
     - Proposes: `reach` parameter on `#[McpTool]` + `AttributeToolScanner` pass-through; `reach` key accepted in `x-openregister-mcp` tool entries and passed through by `SchemaDerivedToolProvider`/`McpAnnotationValidator` (descriptor-level `reach` already exists in `FlowMcpToolProvider`)
     - This change's claims about declared reach being served remain conditional until it lands (design D2)
 
-- [ ] 5.2 Manifest advisory `mcp` block
+- [x] 5.2 Manifest advisory `mcp` block
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-the-crm-core-action-surface-is-chat-commandable`
   - **files**: `src/manifest.json`
   - **acceptance_criteria**:

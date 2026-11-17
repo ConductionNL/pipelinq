@@ -478,4 +478,74 @@ class ConfigFileLoaderServiceTest extends TestCase {
 		$this->assertSame(['b' => 1, 'list' => [3], 'c' => 2], $result['nested']['inner']);
 		$this->assertSame([], $result['fresh']);
 	}//end testEmptyAndMixedShapesMerge()
+	/**
+	 * A fragment that adds verbs to a schema's tools map keeps the base's verbs
+	 * (mcp-full-action-coverage: client gains create/update, leadProduct gains
+	 * update/delete, from register.d), and a fragment that adds a whole block
+	 * to a schema that had none (contact, crmTask) lands it intact.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-crm-crud-tools-are-declared-on-the-schema-not-hand-coded
+	 */
+	public function testFragmentVerbsAreAddedToTheBaseToolsMap(): void {
+		$monolith = [
+			'info' => ['version' => '1.0.0'],
+			'components' => [
+				'schemas' => [
+					'client' => [
+						'slug' => 'client',
+						'configuration' => [
+							'x-openregister-mcp' => [
+								'enabled' => true,
+								'tools' => [
+									'search' => ['scope' => 'read', 'readOnlyHint' => true],
+									'get' => ['scope' => 'read', 'readOnlyHint' => true],
+								],
+							],
+						],
+					],
+					'contact' => ['slug' => 'contact', 'configuration' => ['x-other' => ['kept' => true]]],
+				],
+			],
+		];
+		$fragment = [
+			'components' => [
+				'schemas' => [
+					'client' => [
+						'slug' => 'client',
+						'configuration' => [
+							'x-openregister-mcp' => [
+								'tools' => [
+									'create' => ['scope' => 'create'],
+									'update' => ['scope' => 'update'],
+								],
+							],
+						],
+					],
+					'contact' => [
+						'slug' => 'contact',
+						'configuration' => [
+							'x-openregister-mcp' => [
+								'enabled' => true,
+								'tools' => ['search' => ['scope' => 'read', 'filters' => ['client']]],
+							],
+						],
+					],
+				],
+			],
+		];
+
+		$schemas = $this->serviceWithFixture($monolith, ['99-mcp.json' => $fragment])
+			->loadConfigurationFile()['components']['schemas'];
+
+		$client = $schemas['client']['configuration']['x-openregister-mcp'];
+		$this->assertTrue($client['enabled'], 'the base enabled flag survives');
+		$this->assertSame(['search', 'get', 'create', 'update'], array_keys($client['tools']));
+		$this->assertTrue($client['tools']['search']['readOnlyHint'], 'the base verb config is untouched');
+
+		$contact = $schemas['contact']['configuration'];
+		$this->assertSame(['client'], $contact['x-openregister-mcp']['tools']['search']['filters']);
+		$this->assertSame(['kept' => true], $contact['x-other'], 'the sibling configuration key survives');
+	}//end testFragmentVerbsAreAddedToTheBaseToolsMap()
 }//end class

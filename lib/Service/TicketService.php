@@ -54,6 +54,8 @@ use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Mcp\McpAnswer;
+use OCA\Pipelinq\Mcp\McpRecordUpdate;
+use OCA\Pipelinq\Mcp\McpTransition;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -62,6 +64,10 @@ use RuntimeException;
  * Resolver + read/write facade for the unified ticket schema.
  *
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Every curated ticket MCP tool is a public method here:
+ *   OpenRegister's attribute scanner reflects this class by contract (PipelinqScannableServices).
+ * @SuppressWarnings(PHPMD.TooManyMethods) The same tool surface, one method per lifecycle transition.
  */
 class TicketService implements TicketServiceInterface {
 
@@ -116,12 +122,15 @@ class TicketService implements TicketServiceInterface {
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param McpAnswer $mcp Shapes what the MCP tools on this service answer.
+	 * @param McpTransition|null $transitions Runs the ticket's declared lifecycle transitions;
+	 *                                        null answers `not_configured` from the transition tools.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly McpAnswer $mcp,
+		private readonly ?McpTransition $transitions = null,
 	) {
 	}//end __construct()
 
@@ -543,11 +552,13 @@ class TicketService implements TicketServiceInterface {
 		name: 'logContactmoment',
 		subject: 'contactMoment',
 		action: 'create',
-		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are required; outcome and notes are optional).',
+		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are '
+			. 'required; outcome and notes are optional).',
 		readOnlyHint: false,
 		destructiveHint: false,
 		idempotentHint: false,
-		scope: 'create'
+		scope: 'create',
+		reach: 'instance'
 	)]
 	/**
 	 * Log a client interaction as a contactmoment (client, channel and title
@@ -686,5 +697,372 @@ class TicketService implements TicketServiceInterface {
 
 		return $payload;
 	}//end contactmomentPayload()
+
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app; see logContactmoment(). The same holds for every tool below.
+	#[McpTool(
+		name: 'createTicket',
+		subject: 'ticket',
+		action: 'create',
+		description: 'Create a request or complaint ticket. ticketType (request or complaint) and title are '
+			. 'required; client, description, priority (low, normal, high, urgent) and assignee are '
+			. 'optional. Log a contactmoment with pipelinq_logContactmoment instead.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create',
+		reach: 'instance'
+	)]
+	/**
+	 * Create a request or complaint ticket.
+	 *
+	 * Validates the arguments first, then writes through save(), which forces
+	 * the `ticketType` discriminator and normalises date-time fields.
+	 *
+	 * @param string      $ticketType  `request` or `complaint`.
+	 * @param string      $title       A short summary.
+	 * @param string|null $client      Optional client uuid.
+	 * @param string|null $description Optional description.
+	 * @param string|null $priority    Optional priority.
+	 * @param string|null $assignee    Optional Nextcloud user id of the handler.
+	 *
+	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	public function createTicket(
+		string $ticketType,
+		string $title,
+		?string $client = null,
+		?string $description = null,
+		?string $priority = null,
+		?string $assignee = null,
+	): array {
+		$ticketType = trim($ticketType);
+		$fields = ['title' => trim($title), 'client' => $client, 'description' => $description, 'priority' => $priority, 'assignee' => $assignee];
+		$refusal = $this->createTicketRefusal(ticketType: $ticketType, title: $fields['title']);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->writeTicket(ticketType: $ticketType, payload: $this->records()->filled(fields: $fields), uuid: null);
+	}//end createTicket()
+
+	#[McpTool(
+		name: 'updateTicket',
+		subject: 'ticket',
+		action: 'update',
+		description: 'Change fields of an existing ticket by id: title, description, priority, assignee or '
+			. 'client. The status cannot be set here: use startTicket, completeTicket, convertTicket, '
+			. 'resolveTicket, rejectTicket or closeTicket.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Change fields of an existing ticket.
+	 *
+	 * Validates first (an id, at least one field, no `status`), reads the
+	 * ticket (a missing one is `not_found`), then saves the merged ticket
+	 * through save() under its own `ticketType`.
+	 *
+	 * @param string      $id          The ticket uuid.
+	 * @param string|null $title       New title.
+	 * @param string|null $description New description.
+	 * @param string|null $priority    New priority.
+	 * @param string|null $assignee    New handler.
+	 * @param string|null $client      New client uuid.
+	 * @param string|null $status      Refused: the state moves through the transition tools.
+	 *
+	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	public function updateTicket(
+		string $id,
+		?string $title = null,
+		?string $description = null,
+		?string $priority = null,
+		?string $assignee = null,
+		?string $client = null,
+		?string $status = null,
+	): array {
+		$id = trim($id);
+		$changes = $this->records()->filled(
+			fields: [
+				'title' => trim((string)$title),
+				'description' => $description,
+				'priority' => $priority,
+				'assignee' => $assignee,
+				'client' => $client,
+			]
+		);
+		$refusal = ($this->records()->refusal(
+			id: $id,
+			changes: $changes,
+			status: $status,
+			statusRefusal: 'The status of a ticket cannot be set by updateTicket: use startTicket, completeTicket, '
+				. 'convertTicket, resolveTicket, rejectTicket or closeTicket.'
+		) ?? $this->configurationRefusal());
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$stored = $this->records()->stored(
+			find: fn (): mixed => $this->getObjectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $this->getRegisterId(), schema: $this->getSchemaId())
+			),
+			subject: 'ticket'
+		);
+		if (isset($stored['error']) === true) {
+			return $stored;
+		}
+
+		return $this->writeTicket(ticketType: (string)($stored['ticketType'] ?? ''), payload: array_merge($stored, $changes), uuid: $id);
+	}//end updateTicket()
+
+	/**
+	 * The refusal for a createTicket() call, or null when it may be written.
+	 *
+	 * @param string $ticketType The trimmed subtype.
+	 * @param string $title      The trimmed title.
+	 *
+	 * @return array<string, mixed>|null The envelope, or null.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function createTicketRefusal(string $ticketType, string $title): ?array {
+		if (in_array($ticketType, [self::TYPE_REQUEST, self::TYPE_COMPLAINT], true) === false) {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Argument ticketType must be request or complaint; log a contactmoment with logContactmoment.'
+			);
+		}
+
+		if ($title === '') {
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
+		}
+
+		return $this->configurationRefusal();
+	}//end createTicketRefusal()
+
+	/**
+	 * The not_configured refusal when the ticket register or schema is missing, else null.
+	 *
+	 * @return array<string, mixed>|null The envelope, or null.
+	 */
+	private function configurationRefusal(): ?array {
+		if ($this->isConfigured() === true) {
+			return null;
+		}
+
+		return $this->mcp->error(
+			code: 'not_configured',
+			message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+		);
+	}//end configurationRefusal()
+
+	/**
+	 * Save a ticket through save() and answer with its id, or the MCP error.
+	 *
+	 * @param string               $ticketType The subtype.
+	 * @param array<string, mixed> $payload    The fields.
+	 * @param string|null          $uuid       The ticket to update, or null to create.
+	 *
+	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function writeTicket(string $ticketType, array $payload, ?string $uuid): array {
+		$operation = 'update ticket';
+		if ($uuid === null) {
+			$operation = 'create ticket';
+		}
+
+		$saved = $this->records()->saved(
+			save: fn (): mixed => $this->save(ticketType: $ticketType, payload: $payload, uuid: $uuid),
+			operation: $operation
+		);
+		if (isset($saved['error']) === true) {
+			return $saved;
+		}
+
+		return ['ticketId' => (string)($saved['id'] ?? $saved['uuid'] ?? $uuid ?? '')];
+	}//end writeTicket()
+
+	#[McpTool(
+		name: 'startTicket',
+		subject: 'ticket',
+		action: 'start',
+		description: 'Pick up a new ticket for handling (new to in_progress), by id. Allowed for the assignee or '
+			. 'a member of the sales group. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `start` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function startTicket(string $id): array {
+		return $this->transition(id: $id, action: 'start');
+	}//end startTicket()
+
+	#[McpTool(
+		name: 'completeTicket',
+		subject: 'ticket',
+		action: 'complete',
+		description: 'Resolve a request ticket successfully (in_progress to completed), by id. Allowed for the '
+			. 'assignee. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `complete` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function completeTicket(string $id): array {
+		return $this->transition(id: $id, action: 'complete');
+	}//end completeTicket()
+
+	#[McpTool(
+		name: 'convertTicket',
+		subject: 'ticket',
+		action: 'convert',
+		description: 'Convert a request ticket into a case (new, in_progress or awaiting_customer to converted), '
+			. 'by id. Allowed for the assignee. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `convert` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function convertTicket(string $id): array {
+		return $this->transition(id: $id, action: 'convert');
+	}//end convertTicket()
+
+	#[McpTool(
+		name: 'resolveTicket',
+		subject: 'ticket',
+		action: 'resolve',
+		description: 'Resolve a complaint ticket (in_progress to resolved), by id. Allowed for the assignee. A '
+			. 'ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `resolve` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function resolveTicket(string $id): array {
+		return $this->transition(id: $id, action: 'resolve');
+	}//end resolveTicket()
+
+	#[McpTool(
+		name: 'rejectTicket',
+		subject: 'ticket',
+		action: 'reject',
+		description: 'Reject a ticket as unfounded or out of scope (new or in_progress to rejected), by id. '
+			. 'Allowed for the assignee or a member of the sales group. A ticket in another state answers '
+			. 'conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `reject` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function rejectTicket(string $id): array {
+		return $this->transition(id: $id, action: 'reject');
+	}//end rejectTicket()
+
+	#[McpTool(
+		name: 'closeTicket',
+		subject: 'ticket',
+		action: 'close',
+		description: 'Close a contactmoment ticket (new or in_progress to closed), by id. Allowed for the '
+			. 'assignee. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `close` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function closeTicket(string $id): array {
+		return $this->transition(id: $id, action: 'close');
+	}//end closeTicket()
+
+	/**
+	 * The steps the ticket tools share with the other curated update tools.
+	 *
+	 * @return McpRecordUpdate
+	 */
+	private function records(): McpRecordUpdate {
+		return new McpRecordUpdate(mcp: $this->mcp);
+	}//end records()
+
+	/**
+	 * Run one of the ticket's declared transitions.
+	 *
+	 * @param string $id     The ticket uuid.
+	 * @param string $action The transition.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	private function transition(string $id, string $action): array {
+		if ($this->transitions === null) {
+			return $this->mcp->error(code: 'not_configured', message: 'Ticket transitions are not available on this instance.');
+		}
+
+		return $this->transitions->run(objectId: $id, action: $action, subject: 'ticket');
+	}//end transition()
 
 }//end class
