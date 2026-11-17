@@ -2087,6 +2087,14 @@
 						"handler": "open-modal",
 						"target": "BulkChangeFieldModal",
 						"props": { "register": "pipelinq", "schema": "client" }
+					},
+					{
+						"id": "fill-from-kvk",
+						"label": "Fill in from KvK",
+						"icon": "DatabaseSyncOutline",
+						"handler": "open-modal",
+						"target": "BulkFillFromKvkModal",
+						"props": { "register": "pipelinq", "schema": "client" }
 					}
 				]
 			}

@@ -173,6 +173,7 @@ import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
+import BulkFillFromKvkModal from './modals/BulkFillFromKvkModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 // Paste or scan (clients-contact-capture): the header action on the Clients and
@@ -1392,6 +1393,12 @@ const registry = {
 		component: OrganisationEnrichDialog,
 		propsSchema: null,
 		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
+	},
+	BulkFillFromKvkModal: {
+		kind: 'modal',
+		component: BulkFillFromKvkModal,
+		propsSchema: null,
+		_note: 'Fill in from KvK on the selected organisations (clients-registry-numbers-and-enrichment, REQ-CRN-003): a previewed OpenRegister bulk job of pipelinq:fill-from-kvk that fills empty place, legal form and industry only, undoable from Bulk changes. Target of the bulk action on the Clients list; receives the selection as selectedIds and the register and schema slugs as props.',
 	},
 	BulkChangeFieldModal: {
 		kind: 'modal',

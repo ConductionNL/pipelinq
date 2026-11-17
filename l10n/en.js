@@ -10005,7 +10005,11 @@ OC.L10N.register(
         "Remove {number}": "Remove {number}",
         "The number could not be checked.": "The number could not be checked.",
         "The number could not be saved.": "The number could not be saved.",
-        "VAT numbers are checked when shillinq is installed.": "VAT numbers are checked when shillinq is installed."
+        "VAT numbers are checked when shillinq is installed.": "VAT numbers are checked when shillinq is installed.",
+        "Fill in from KvK": "Fill in from KvK",
+        "Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.": "Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.",
+        "%n is skipped: it already has these values or has no KvK number": "%n is skipped: it already has these values or has no KvK number",
+        "%n are skipped: they already have these values or have no KvK number": "%n are skipped: they already have these values or have no KvK number"
     },
     "nplurals=2; plural=(n != 1);"
 )

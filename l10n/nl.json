@@ -10158,6 +10158,13 @@
         "Remove {number}": "{number} verwijderen",
         "The number could not be checked.": "Het nummer kon niet worden gecontroleerd.",
         "The number could not be saved.": "Het nummer kon niet worden opgeslagen.",
-        "VAT numbers are checked when shillinq is installed.": "Btw-nummers worden gecontroleerd als shillinq is geïnstalleerd."
+        "VAT numbers are checked when shillinq is installed.": "Btw-nummers worden gecontroleerd als shillinq is geïnstalleerd.",
+        "Fill in from KvK": "Aanvullen uit KvK",
+        "Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.": "Elke geselecteerde organisatie met een KvK-nummer wordt opgezocht in de KvK. Alleen lege velden worden ingevuld: plaats, rechtsvorm en branche. Een veld met een waarde wordt nooit overschreven.",
+        "%n is skipped: it already has these values or has no KvK number": [
+            "%n wordt overgeslagen: deze heeft deze waarden al of heeft geen KvK-nummer",
+            "%n worden overgeslagen: ze hebben deze waarden al of hebben geen KvK-nummer"
+        ],
+        "%n are skipped: they already have these values or have no KvK number": "%n worden overgeslagen: ze hebben deze waarden al of hebben geen KvK-nummer"
     }
 }
