@@ -401,8 +401,12 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 			return ['status' => 400, 'message' => $this->l10n->t('Only a KvK number and a VAT number can be checked against a register.')];
 		}
 
-		[$register, $schema] = $this->location();
-		$client = $this->readClient(clientId: $clientId, register: $register, schema: $schema);
+		$location = $this->location();
+		if ($location === null) {
+			return ['status' => 404, 'message' => $this->l10n->t('Client not found')];
+		}
+
+		$client = $this->readClient(clientId: $clientId, register: $location[0], schema: $location[1]);
 		if (isset($client['status']) === true) {
 			return $client;
 		}
@@ -426,7 +430,7 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 		}
 
 		$identifiers[$index] = $checked;
-		return $this->store(clientId: $clientId, location: [$register, $schema], data: $client['data'], identifiers: $identifiers, checked: $checked);
+		return $this->store(clientId: $clientId, location: $location, data: $client['data'], identifiers: $identifiers, checked: $checked);
 	}//end check()
 
 	/**
@@ -511,16 +515,39 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 	}//end readClient()
 
 	/**
-	 * The client register and schema.
+	 * The client register and schema, or null while the app is not configured.
 	 *
-	 * @return array{0: string, 1: string} The register and schema.
+	 * Fails closed: without both there is no client to read, so nothing is checked.
+	 *
+	 * @return array{0: string, 1: string}|null The register and schema.
 	 */
-	private function location(): array {
-		return [
-			$this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
-			$this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
-		];
+	private function location(): ?array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		return [$register, $schema];
 	}//end location()
+
+	/**
+	 * Whether the calling user may open the client: a read with their rights.
+	 *
+	 * @param string $clientId The client's id.
+	 *
+	 * @return bool True when the client exists and the user may read it.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.4
+	 */
+	public function canAccessClient(string $clientId): bool {
+		$location = $this->location();
+		if ($location === null) {
+			return false;
+		}
+
+		return isset($this->readClient(clientId: $clientId, register: $location[0], schema: $location[1])['data']) === true;
+	}//end canAccessClient()
 
 	/**
 	 * Why a VAT number does not match its country's format, or null.

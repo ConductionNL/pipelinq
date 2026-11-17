@@ -81,6 +81,17 @@ interface ClientIdentifierServiceInterface {
 	public function checkVat(string $value): array;
 
 	/**
+	 * Whether the calling user may open the client: a read with their rights.
+	 *
+	 * @param string $clientId The client's id.
+	 *
+	 * @return bool True when the client exists and the user may read it.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.4
+	 */
+	public function canAccessClient(string $clientId): bool;
+
+	/**
 	 * Check one identifier of a client against its register and store the outcome.
 	 *
 	 * @param string $clientId The client's id.

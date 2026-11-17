@@ -360,6 +360,17 @@ class ClientIdentifierServiceTest extends TestCase {
 	}//end testAClientTheUserMayNotReadIsRefused()
 
 	/**
+	 * canAccessClient() is a read with the caller's rights.
+	 *
+	 * @return void
+	 */
+	public function testCanAccessClientReadsWithTheCallersRights(): void {
+		$this->assertTrue($this->service(clients: ['c1' => ['name' => 'Bakkerij']])->canAccessClient(clientId: 'c1'));
+		$this->assertFalse($this->service(clients: ['c1' => ['name' => 'Bakkerij']])->canAccessClient(clientId: 'c2'));
+		$this->assertFalse($this->service(clients: ['c1' => ['name' => 'Bakkerij']], mayRead: false)->canAccessClient(clientId: 'c1'));
+	}//end testCanAccessClientReadsWithTheCallersRights()
+
+	/**
 	 * An unknown client or number answers 404; a scheme without a register answers 400.
 	 *
 	 * @return void
