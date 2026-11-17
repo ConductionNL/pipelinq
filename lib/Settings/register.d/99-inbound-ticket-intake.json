@@ -9,7 +9,8 @@
                         "type": "string",
                         "title": "Inbound thread",
                         "description": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "readOnly": true
                     },
                     "category": {
                         "facetable": true
