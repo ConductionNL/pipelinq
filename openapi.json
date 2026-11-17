@@ -9091,6 +9091,89 @@
                 }
             }
         },
+        "/admin/mail-intake/accounts": {
+            "get": {
+                "operationId": "mail-intake-admin-accounts",
+                "summary": "Every Mail account with its address and owner, and which are ticket mailboxes",
+                "description": "Every Mail account with its address and owner, and which are ticket mailboxes. Needs a Nextcloud administrator.",
+                "tags": [
+                    "mail-intake-admin"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "mail-intake-admin-save-accounts",
+                "summary": "Store which Mail accounts are ticket mailboxes",
+                "description": "Store which Mail accounts are ticket mailboxes. Ids that name no Mail account are dropped. Needs a Nextcloud administrator.",
+                "tags": [
+                    "mail-intake-admin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "accounts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "description": "The Mail account ids."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
         "/my-work/week-stats": {
             "get": {
                 "operationId": "my-work-week-stats",

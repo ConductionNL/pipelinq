@@ -146,6 +146,8 @@ class AppInfoPropertiesTest extends TestCase {
 		'posPayment#test',
 		'messagingAdmin#getServiceAccount',
 		'messagingAdmin#saveServiceAccount',
+		'mailIntakeAdmin#accounts',
+		'mailIntakeAdmin#saveAccounts',
 		'backgroundServiceAccount#show',
 		'backgroundServiceAccount#save',
 		'berichtenboxAdmin#retry',
