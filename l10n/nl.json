@@ -9506,7 +9506,6 @@
         "Figure": "Cijfer",
         "This period": "Deze periode",
         "The period before": "De periode ervoor",
-        "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
         "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in de periode ervoor",
         "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
         "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}",
@@ -10117,6 +10116,19 @@
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "Price lists": "Prijslijsten",
+        "Price from": "Prijs uit",
+        "Product price": "Productprijs",
+        "Quantity price": "Staffelprijs",
+        "Variant price": "Variantprijs",
+        "{shown} of {total} price lists": "{shown} van {total} prijslijsten",
+        "New price list": "Nieuwe prijslijst",
+        "A quote line takes its price from the client's own list, else the highest-priority active list for the client's segment, else for its country, in the lead's currency. Without a match it takes the product's own price.": "Een offerteregel krijgt de prijs uit de eigen prijslijst van de klant, anders uit de actieve lijst met de hoogste prioriteit voor het segment van de klant, anders voor het land, in de valuta van de lead. Zonder passende lijst geldt de eigen prijs van het product.",
+        "This list holds no prices yet. Add them through Edit.": "Deze lijst bevat nog geen prijzen. Voeg ze toe via Bewerken.",
+        "Variant": "Variant",
+        "Leave empty to take the price from the client's price list or the product. A price you type is kept and marked as set by hand.": "Laat leeg om de prijs uit de prijslijst van de klant of van het product te nemen. Een prijs die u typt blijft staan en wordt gemarkeerd als handmatig ingesteld.",
+        "Where the unit price came from: the client's price list, the product's base price, a quantity tier or variant, or typed by hand.": "Waar de stukprijs vandaan komt: de prijslijst van de klant, de basisprijs van het product, een staffel of variant, of met de hand getypt.",
+        "The price list that priced the line, when one did.": "De prijslijst die de regel heeft geprijsd, als dat zo is."
     }
 }

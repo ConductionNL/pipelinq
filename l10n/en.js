@@ -9964,7 +9964,20 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "Price lists": "Price lists",
+        "Price from": "Price from",
+        "Product price": "Product price",
+        "Quantity price": "Quantity price",
+        "Variant price": "Variant price",
+        "{shown} of {total} price lists": "{shown} of {total} price lists",
+        "New price list": "New price list",
+        "A quote line takes its price from the client's own list, else the highest-priority active list for the client's segment, else for its country, in the lead's currency. Without a match it takes the product's own price.": "A quote line takes its price from the client's own list, else the highest-priority active list for the client's segment, else for its country, in the lead's currency. Without a match it takes the product's own price.",
+        "This list holds no prices yet. Add them through Edit.": "This list holds no prices yet. Add them through Edit.",
+        "Variant": "Variant",
+        "Leave empty to take the price from the client's price list or the product. A price you type is kept and marked as set by hand.": "Leave empty to take the price from the client's price list or the product. A price you type is kept and marked as set by hand.",
+        "Where the unit price came from: the client's price list, the product's base price, a quantity tier or variant, or typed by hand.": "Where the unit price came from: the client's price list, the product's base price, a quantity tier or variant, or typed by hand.",
+        "The price list that priced the line, when one did.": "The price list that priced the line, when one did."
     },
     "nplurals=2; plural=(n != 1);"
 )

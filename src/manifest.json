@@ -2782,6 +2782,19 @@
 								{
 									"path": "address",
 									"label": "Address"
+								},
+								{
+									"path": "country",
+									"label": "Country"
+								},
+								{
+									"path": "priceList",
+									"label": "Price list",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "priceList",
+										"labelField": "title"
+									}
 								}
 							]
 						}
