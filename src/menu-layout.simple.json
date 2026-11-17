@@ -60,6 +60,7 @@
 	},
 	"settingsSection": [
 		"Pipelines",
+		"Municipalities",
 		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
@@ -3473,6 +3474,13 @@
 						}
 					},
 					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
+					},
+					{
 						"key": "assignee",
 						"label": "Handler",
 						"widget": "avatar",
@@ -4193,6 +4201,13 @@
 						"key": "client",
 						"label": "Client",
 						"labelField": "name"
+					},
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
 					}
 				],
 				"searchPlaceholder": "Filter by name, email or client",

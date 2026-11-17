@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.7-unstable.20261116160000</version>
+    <version>0.5.7-unstable.20261117010000</version>
     <!-- @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-001, #REQ-PLAT-002 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
@@ -216,6 +216,11 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 a task that has a name is not saved.
             -->
             <step>OCA\Pipelinq\Repair\BackfillTaskNames</step>
+            <!--
+                requests-municipality-per-contact: existing tickets take their
+                client's municipality, silently; a ticket that has one keeps it.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketMunicipality</step>
             <!--
                 After InitializeSettings, which imports the client and contact
                 `archive` blocks: OpenRegister writes retention metadata on
