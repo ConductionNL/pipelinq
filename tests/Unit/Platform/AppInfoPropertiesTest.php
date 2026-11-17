@@ -117,6 +117,8 @@ class AppInfoPropertiesTest extends TestCase {
 		'EventCancelController::show' => 'the signed per-registration cancel token (EventEmailService)',
 		'EventCancelController::cancel' => 'the signed per-registration cancel token (EventEmailService)',
 		'OpenApiController::show' => 'none: serves the static OpenAPI document, no record data',
+		'MailAddInController::manifest' => 'none: serves the Outlook add-in manifest, which holds only this instance\'s public URLs',
+		'MailAddInController::taskpane' => 'none: serves the Outlook pane\'s page shell; its calls carry an app password (MailAddInController::caller)',
 	];
 
 	/**
