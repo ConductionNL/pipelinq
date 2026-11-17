@@ -181,13 +181,14 @@ export default {
 			return this.selectedProperty ? this.selectedProperty.label : ''
 		},
 
-		/** @return {string} How the value is entered: boolean, number, enum or text. */
+		/** @return {string} How the value is entered: boolean, number, enum, list or text. */
 		valueKind() {
 			const p = this.selectedProperty
 			if (!p) return 'text'
 			if (Array.isArray(p.enum) && p.enum.length > 0) return 'enum'
 			if (p.type === 'boolean') return 'boolean'
 			if (p.type === 'number' || p.type === 'integer') return 'number'
+			if (p.type === 'array') return 'list'
 			return 'text'
 		},
 
@@ -251,14 +252,18 @@ export default {
 
 		/**
 		 * The value as the schema types it: a number for a number property, the
-		 * boolean as is, the text otherwise.
+		 * boolean as is, a list for a list property (comma separated, so
+		 * "Healthcare" becomes ["Healthcare"]), the text otherwise.
 		 *
-		 * @return {string|number|boolean} The typed value.
+		 * @return {string|number|boolean|Array<string>} The typed value.
 		 */
 		typedValue() {
 			if (this.valueKind === 'number') {
 				const asNumber = Number(this.value)
 				return Number.isFinite(asNumber) ? asNumber : this.value
+			}
+			if (this.valueKind === 'list') {
+				return String(this.value ?? '').split(',').map((part) => part.trim()).filter((part) => part !== '')
 			}
 			return this.value
 		},

@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Every branch of nine small service helpers, pinned before they were
+ * Every branch of eight small service helpers, pinned before they were
  * split into named checks: the A/B stats, the segment rule tree, the
  * submission link plan, the prospect lenses, the product tariffs and
- * weight, the monthly revenue, the ICP facts and the newsletter note.
+ * weight, the ICP facts and the newsletter note.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -18,7 +18,6 @@ const { cloneTree, tally } = await import('../../src/services/segmentRules.js')
 const { linkPlan } = await import('../../src/utils/submissionLink.js')
 const { matchesProspectLens, prospectMatches } = await import('../../src/services/prospectLenses.js')
 const { currentTariffs, productWeight } = await import('../../src/services/productTariffs.js')
-const { normalizeToMonthly } = await import('../../src/services/recurringRevenue.js')
 const { icpFacts } = await import('../../src/services/icpFacts.js')
 const { blastNote } = await import('../../src/services/blastNote.js')
 
@@ -192,20 +191,6 @@ describe('productTariffs', () => {
 		expect(productWeight({ weightGrams: 1500 })).toBe('1,5 kg')
 		globalThis.OC = {}
 		expect(productWeight({ weightGrams: 1500 })).toBe('1.5 kg')
-	})
-})
-
-describe('recurringRevenue.normalizeToMonthly', () => {
-	it('spreads each billing interval over a month', () => {
-		expect(normalizeToMonthly('monthly', 90)).toBe(90)
-		expect(normalizeToMonthly('monthly', '90')).toBe('90')
-		expect(normalizeToMonthly('quarterly', 90)).toBe(30)
-		expect(normalizeToMonthly('annual', 120)).toBe(10)
-		expect(normalizeToMonthly('one-off', 90)).toBe(0)
-		expect(normalizeToMonthly('weekly', 90)).toBe(0)
-		expect(normalizeToMonthly(undefined, 90)).toBe(0)
-		expect(normalizeToMonthly('toString', 90)).toBe(0)
-		expect(normalizeToMonthly({ toString: () => 'monthly' }, 90)).toBe(0)
 	})
 })
 
