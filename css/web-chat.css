@@ -1,0 +1,95 @@
+/*
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ *
+ * The website chat window (requests-web-chat-and-bot). Nextcloud CSS variables only.
+ */
+body#body-public,
+body {
+	background: var(--color-main-background);
+}
+
+.pipelinq-web-chat {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	height: 100vh;
+	box-sizing: border-box;
+	padding: 12px;
+	color: var(--color-main-text);
+	font-size: var(--default-font-size);
+}
+
+.pipelinq-web-chat__title {
+	margin: 0;
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+.pipelinq-web-chat__notice,
+.pipelinq-web-chat__status,
+.pipelinq-web-chat__disclosure {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
+.pipelinq-web-chat__log {
+	flex: 1;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.pipelinq-web-chat__message {
+	margin: 6px 0;
+	padding: 8px 10px;
+	border-radius: var(--border-radius-large);
+	background: var(--color-background-dark);
+}
+
+.pipelinq-web-chat__message--visitor {
+	margin-left: 24px;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
+.pipelinq-web-chat__author {
+	display: block;
+	font-weight: bold;
+	font-size: 0.85em;
+}
+
+.pipelinq-web-chat__body {
+	margin: 2px 0 0;
+	white-space: pre-wrap;
+}
+
+.pipelinq-web-chat__sources {
+	margin: 4px 0 0;
+	padding-left: 18px;
+	font-size: 0.85em;
+}
+
+.pipelinq-web-chat__source {
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
+.pipelinq-web-chat__form {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.pipelinq-web-chat__input,
+.pipelinq-web-chat__email {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.pipelinq-web-chat__send {
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}

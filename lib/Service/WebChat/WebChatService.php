@@ -213,6 +213,21 @@ class WebChatService {
 	}//end poll()
 
 	/**
+	 * Refuse unless the current colleague may read this chat: the per-object check of every colleague route.
+	 *
+	 * @param string $conversationId The chat.
+	 *
+	 * @return void
+	 *
+	 * @throws WebChatRefusal When they may not, or it is not a chat.
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 */
+	public function requireReadableChat(string $conversationId): void {
+		$this->readableOrRefuse(conversationId: $conversationId);
+	}//end requireReadableChat()
+
+	/**
 	 * A chat as the colleague on its ticket sees it.
 	 *
 	 * @param string $conversationId The chat.

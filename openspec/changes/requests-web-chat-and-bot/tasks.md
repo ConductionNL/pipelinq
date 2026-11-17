@@ -10,26 +10,32 @@
 
 ## 2. The public window
 
-- [ ] 2.1 Add `WebChatController` with `start`, `send`, `poll` (`#[PublicPage]`, `#[NoCSRFRequired]`, `#[AnonRateLimit]`, secret in the body, hashed on the conversation) and `WebChatService`
+- [x] 2.1 Add `WebChatController` with `start`, `send`, `poll` (`#[PublicPage]`, `#[NoCSRFRequired]`, `#[AnonRateLimit]`, secret in the body, hashed on the conversation) and `WebChatService`
   - Verify: PHPUnit `tests/Unit/Controller/WebChatControllerTest.php`: an inactive channel refuses; a wrong secret refuses; a start stores no IP and only the hash; hydra gates route-auth and forbidden-patterns pass
-- [ ] 2.2 Serve `GET /apps/pipelinq/chat/{channelToken}` with `frame-ancestors` from `allowedOrigins`; add `js/pipelinq-web-chat.js` (webpack entry) for the button and frame
+  - Built: `lib/Controller/WebChatController.php` (start, send, poll; `#[PublicPage]`, `#[NoCSRFRequired]`, `#[AnonRateLimit]`; the secret travels in the body), `lib/Service/WebChat/WebChatService.php`, `WebChatStore.php`, `WebChatRefusal.php`. Tests: `tests/Unit/Service/WebChat/WebChatServiceTest.php` (an inactive channel refuses; a wrong secret refuses; a start stores only the hash and no address), `WebChatStoreTest.php`, `tests/Unit/Controller/WebChatControllerTest.php`. Hydra gates route-auth and forbidden-patterns pass.
+- [x] 2.2 Serve `GET /apps/pipelinq/chat/{channelToken}` with `frame-ancestors` from `allowedOrigins`; add `js/pipelinq-web-chat.js` (webpack entry) for the button and frame
   - Verify: PHPUnit asserts the header lists exactly the channel origins; Playwright `tests/e2e/web-chat.spec.ts` loads a test page on an allowed origin and exchanges two messages
+  - Built: `GET /apps/pipelinq/chat/{channelToken}` (`WebChatController::window`, base layout, initial state `web-chat`) with a `frame-ancestors` of exactly the channel's origins, and none for an unknown or inactive channel; webpack entries `webChat` (`js/pipelinq-web-chat.js`, the embed: `<script src=".../js/pipelinq-web-chat.js?chat=<window url>" async></script>`) and `webChatWindow`, both without shared chunks. PHPUnit `WebChatControllerTest::testTheWindowMayBeFramedOnlyByTheChannelsWebsites`; Vitest `webChatEmbed.spec.js` and `webChatWindow.spec.js`. Not done: the Playwright run `tests/e2e/web-chat.spec.ts`, which needs a running instance and a test page on an allowed origin.
 
 ## 3. Handover and the colleague
 
-- [ ] 3.1 Handover: Talk to a person calls `InboundTicketService::receive()` with channel chat and the transcript
+- [x] 3.1 Handover: Talk to a person calls `InboundTicketService::receive()` with channel chat and the transcript
   - Verify: PHPUnit on `WebChatService`: one handover makes one ticket with no assignee; a second press makes none
+  - Built: `WebChatService::handOver()` calls `InboundTicketService::receive()` with channel chat, thread key `conversation:<id>`, the first question as title and the transcript; a chat that has a ticket gets no second one, and later visitor messages are added to it. Test: `WebChatServiceTest::testWithoutAnAssistantTheFirstMessageGoesToAPerson`, `testASecondHandoverMakesNoSecondTicket`.
 - [ ] 3.2 Add `src/components/WebChatSection.vue` (`kind: 'section'`), register it and mount it on TicketDetail for chat tickets: transcript, Take this chat, reply, End chat
   - Verify: Playwright in `tests/e2e/web-chat.spec.ts`: the visitor asks for a person, the ticket appears on `/queue`, an agent takes it, answers, and the visitor's window shows the answer
-- [ ] 3.3 Nobody available and wait timeout: Leave a message with an email address
+- [x] 3.3 Nobody available and wait timeout: Leave a message with an email address
   - Verify: PHPUnit with all agent profiles unavailable: start returns offline mode; Vitest on the window shows the address field
+  - Built: with agent profiles kept and none available the chat starts in offline mode; a handed-over chat nobody takes within `waitSeconds` turns offline; the address goes to the ticket's `channelMetadata.fromAddress`. Tests: `WebChatServiceTest::testNobodyAvailableAsksForAnAddress`, `testAChatWaitsOutAndThenEnds`; Vitest `webChatWindow.spec.js` (the address field, Leave a message). The chat button on the host page always reads "Chat met ons"; the window says Leave a message once it knows nobody is available.
 
 ## 4. The assistant
 
-- [ ] 4.1 Add `lib/Service/WebChat/ChatAssistant.php`: lazy resolve of hermiq's `PublicChatEntryPoint`, `ask()` with channel key `app:pipelinq:<id>`, store the answer with `metadata.author: assistant` and its sources
+- [x] 4.1 Add `lib/Service/WebChat/ChatAssistant.php`: lazy resolve of hermiq's `PublicChatEntryPoint`, `ask()` with channel key `app:pipelinq:<id>`, store the answer with `metadata.author: assistant` and its sources
   - Verify: PHPUnit: hermiq absent means no assistant and a direct handover; a faked entry point answer is stored with sources; two answers without a source trigger the handover
-- [ ] 4.2 Show hermiq's disclosure above the first assistant answer and the sources under each answer in the window
+  - Built: `lib/Service/WebChat/ChatAssistant.php`; answers are stored as outbound `channelMessage` rows with `metadata.author: assistant`, their linked sources and the disclosure; two answers in a row without a source hand over. Tests: `ChatAssistantTest`, `WebChatServiceTest::testTheAssistantAnswersFirstWithItsSources`, `testTwoUnsourcedAnswersInARowHandOver`. hermiq's `delivery-public-web-chat` is not on development yet, so the assistant half is tested against a faked entry point; until it ships every chat goes to a person.
+- [x] 4.2 Show hermiq's disclosure above the first assistant answer and the sources under each answer in the window
   - Verify: Vitest on the window with a faked assistant message
+  - Built: `src/webChat/chatWindow.js` shows hermiq's disclosure above the first assistant answer and the http(s) sources under each answer. Test: Vitest `tests/vitest/webChatWindow.spec.js`.
 
 ## 5. Text and docs
 
