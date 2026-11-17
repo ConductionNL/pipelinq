@@ -165,6 +165,10 @@ class InboundTicketService {
 	 * tickets but not list them, and a lookup it could not see through would
 	 * open a new ticket for every follow-up. The row stays in-process.
 	 *
+	 * Newest first: a thread has at most one open ticket and it is the newest
+	 * (a new one is only opened when none is open), so a thread with many
+	 * closed tickets still finds it within the page.
+	 *
 	 * @param string $threadKey The thread key.
 	 *
 	 * @return array<string, mixed>|null The ticket.
@@ -180,6 +184,7 @@ class InboundTicketService {
 						'schema'           => $this->tickets->getSchemaId(),
 						'inboundThreadKey' => $threadKey,
 					],
+					'sort'    => ['@self.created' => 'desc'],
 					'limit'   => 20,
 				],
 				_rbac: false,

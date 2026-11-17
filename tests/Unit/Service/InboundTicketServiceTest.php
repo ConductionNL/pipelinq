@@ -55,6 +55,13 @@ class InboundTicketServiceTest extends TestCase {
 	private array $lookups = [];
 
 	/**
+	 * The sort of every lookup.
+	 *
+	 * @var list<array<string, string>>
+	 */
+	private array $sorts = [];
+
+	/**
 	 * Every save: type, payload, uuid.
 	 *
 	 * @var list<array<string, mixed>>
@@ -84,10 +91,16 @@ class InboundTicketServiceTest extends TestCase {
 					throw new RuntimeException('database gone');
 				}
 
-				return array_values(array_filter(
+				$this->sorts[] = ($config['sort'] ?? []);
+				$rows = array_values(array_filter(
 					$this->store,
 					static fn (array $t): bool => ($t['inboundThreadKey'] ?? null) === $config['filters']['inboundThreadKey']
 				));
+				if (($config['sort'] ?? []) === ['@self.created' => 'desc']) {
+					$rows = array_reverse($rows);
+				}
+
+				return array_slice($rows, 0, (int) ($config['limit'] ?? count($rows)));
 			}
 		);
 		$tickets = $this->createMock(TicketService::class);
@@ -173,6 +186,26 @@ class InboundTicketServiceTest extends TestCase {
 			$this->lookups
 		);
 	}//end testANewThreadOpensOneUnassignedRequestTicket()
+
+	/**
+	 * A thread with more closed tickets than one lookup page still finds its open ticket: newest first.
+	 *
+	 * @return void
+	 */
+	public function testAThreadWithManyClosedTicketsStillFindsItsOpenTicket(): void {
+		$service = $this->service();
+		for ($i = 1; $i <= 25; $i++) {
+			$service->receive(message: ['channel' => 'sms', 'threadKey' => 'conversation:c-9', 'text' => 'Message ' . $i]);
+			$this->store['ticket-' . $i]['status'] = 'closed';
+		}
+
+		$service->receive(message: ['channel' => 'sms', 'threadKey' => 'conversation:c-9', 'text' => 'Open one']);
+		$result = $service->receive(message: ['channel' => 'sms', 'threadKey' => 'conversation:c-9', 'text' => 'Follow-up']);
+
+		$this->assertSame(['ticket' => 'ticket-26', 'created' => false, 'status' => 'new'], $result);
+		$this->assertCount(26, $this->store);
+		$this->assertSame(['@self.created' => 'desc'], end($this->sorts));
+	}//end testAThreadWithManyClosedTicketsStillFindsItsOpenTicket()
 
 	/**
 	 * The same thread twice is one ticket with both messages; a waiting ticket goes back to work.
