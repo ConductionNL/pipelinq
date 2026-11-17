@@ -85,7 +85,7 @@ describe('ticket handover history', () => {
 		const { actionLabels, changeLabels } = full.content
 		expect(actionLabels.create).toBe('Created by {actor}')
 		expect(actionLabels.update).toBe('Updated by {actor}')
-		expect(changeLabels[0]).toEqual({ action: 'update', field: 'assignee', label: 'Passed to {changed.assignee} by {actor}' })
+		expect(changeLabels[0]).toEqual({ action: 'update', field: 'assignee', label: 'Passed to {to} by {actor}', values: 'user' })
 	})
 
 	it('words every status of the ticket schema, for updates only', () => {
