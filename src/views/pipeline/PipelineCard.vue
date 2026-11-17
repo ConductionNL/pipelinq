@@ -316,13 +316,19 @@ export default {
 		},
 
 		/**
-		 * The win chance the card shows: the lead's own, else its stage's.
+		 * The win chance the card shows: the lead's `winProbability` (its
+		 * chance decayed by how long it stood still), else its own
+		 * probability, else its stage's.
 		 *
 		 * @return {number|null}
-		 * @spec openspec/specs/pipeline/spec.md
+		 * @spec openspec/changes/lead-win-probability-recency/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
 		 */
 		chance() {
 			if (this.entityType !== 'lead') return null
+			const decayed = isBlankValue(this.item.winProbability) ? null : roundedFinite(this.item.winProbability)
+			if (decayed !== null) {
+				return decayed
+			}
 			const own = isBlankValue(this.item.probability) ? null : roundedFinite(this.item.probability)
 			if (own !== null) {
 				return own
