@@ -46,6 +46,7 @@ vi.mock('../../src/views/admin/PosCustomerSettings.vue', async () => ({ default:
 vi.mock('../../src/views/settings/CtiEventLog.vue', async () => ({ default: named('CtiEventLog', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/BackgroundServiceAccountSettings.vue', async () => ({ default: named('BackgroundServiceAccountSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/TicketMailboxSettings.vue', async () => ({ default: named('TicketMailboxSettings', (await import('vue')).h) }))
+vi.mock('../../src/views/settings/RoutingRulesSettings.vue', async () => ({ default: named('RoutingRulesSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/CtiSettings.vue', async () => ({ default: named('CtiSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/DeliverabilitySettings.vue', async () => ({ default: named('DeliverabilitySettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/DetectedIntegrations.vue', async () => ({ default: named('DetectedIntegrations', (await import('vue')).h) }))

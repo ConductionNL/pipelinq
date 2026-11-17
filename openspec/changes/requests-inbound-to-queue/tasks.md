@@ -14,6 +14,7 @@
   - Built through the shared trait `OpensInboundTickets` and `InboundTicketService::tryReceive()`. A message from an unknown number has no conversation (the adapters open none for it), so it opens no ticket and still goes to the unknown-sender contact moment as before. The thread lookup reads past RBAC: the webhook writes as the messaging account, which may create and update tickets but not list them.
 - [ ] 2.2 End to end: an inbound WhatsApp from the mock provider shows in the Queue
   - Verify: Playwright `tests/e2e/inbound-to-queue.spec.ts` posts a signed mock webhook and finds the ticket on `/queue` with channel whatsapp
+  - `tests/e2e/inbound-to-queue.spec.ts` is written: it seeds a WhatsApp provider with a known secret and a contact, posts a signed delivery and a STOP, and reads the ticket through the API and on `/queue`. Not run against a live instance yet, so this stays unticked.
 
 ## 3. Ticket mailboxes
 
@@ -37,15 +38,17 @@
 - [x] 5.1 Ship the flow "Route incoming tickets" as `x-openregister-flows` on `ticket` in the new fragment: trigger `object.created`, channel and empty-category filter, decision table (inputs channel, fromAddress, fromDomain, mailbox, clientSegment; outputs category, priority; hit policy first; `resultKey` `channelMetadata.routing`), object write update
   - Verify: after import the flow is listed on `/flows`, unowned; `POST /api/flow/validate` accepts it; PHPUnit on the fragment asserts the node types and keys
   - Built in `99-inbound-ticket-intake.json`: trigger, filter, decision table, object write, end, shipped disabled and unowned. OpenRegister refuses a table without rules, so the table ships one catch-all rule `everything-else` (no category, normal priority); the Routing rules page adds rules above it. PHPUnit `tests/Unit/Settings/InboundRoutingFlowTest.php`. The import and `POST /api/flow/validate` checks need a live instance and have not run yet.
-- [ ] 5.2 Add admin page `RoutingRules` (custom page, registered in `src/registry.js`) that reads the flow, edits its table as rows, adopts it on first save, then `PUT` and `publish`; show OpenRegister's refusal text
+- [x] 5.2 Add admin page `RoutingRules` (custom page, registered in `src/registry.js`) that reads the flow, edits its table as rows, adopts it on first save, then `PUT` and `publish`; show OpenRegister's refusal text
   - Verify: Vitest `tests/vitest/routingRules.spec.js` turns rows into a table and back; Playwright `tests/e2e/mail-routing.spec.ts` adds a rule "domain kadaster.nl sets category Registratie", feeds a mail from that domain and reads the category on the ticket in the Queue
+  - Built as the admin settings section `src/views/settings/RoutingRulesSettings.vue` in `Settings.vue`, next to Ticket mailboxes, not as a router page: admin settings live on the Nextcloud admin page in this fleet, never in the vue-router. It reads the shipped flow from `GET /apps/openregister/api/flows?app=pipelinq`, edits its rules as rows (add, move up and down, remove; the catch-all stays last), refuses a row without a condition or a category, and on save adopts the flow when it is off, then `PUT /api/flows/{id}` and `POST /api/flows/{id}/publish`, showing OpenRegister's refusal text. The rows-to-table logic is `src/services/routingRules.js`. Tests: `tests/vitest/routingRules.spec.js`, `tests/vitest/routingRulesSettings.spec.js`. `tests/e2e/mail-routing.spec.ts` is written (it creates the ticket the way the mail intake writes one rather than sending real mail) but has not run against a live instance yet.
 - [x] 5.3 Add `category` to the Queue page facets in `src/manifest.json`
   - Verify: `npm run check:manifest` exit 0; the Queue sidebar lists the category facet
   - The Queue's sidebar draws its facets from the schema's facetable properties, so 1.1 (`category` facetable) already puts it there; the page now also shows `category` as a column, so a row says which team it is for.
 
 ## 6. Text and docs
 
-- [ ] 6.1 English source strings and Dutch translations, sentence case, no em-dashes
+- [x] 6.1 English source strings and Dutch translations, sentence case, no em-dashes
   - Verify: `npm run test:l10n` exit 0
+  - The Routing rules strings are in `en.json` and `nl.json` and their generated `.js`; `npm run test:l10n` and `npm run check:l10n-js` pass.
 - [ ] 6.2 Admin doc `docs/Features/inbound-to-queue.md`: name a ticket mailbox, switch on routing, write a rule, what the social half waits on
   - Verify: docs build exit 0
