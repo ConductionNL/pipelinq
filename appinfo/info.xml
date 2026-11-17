@@ -130,6 +130,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\TenderPostedRetryJob</job>
         <job>OCA\Pipelinq\BackgroundJob\EmailMatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MailIntakeJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SocialInboxJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BrpRetentionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\TemplateApprovalSyncJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BudgetPeriodResetJob</job>

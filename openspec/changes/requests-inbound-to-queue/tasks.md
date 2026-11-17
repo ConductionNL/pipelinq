@@ -26,8 +26,9 @@
 
 ## 4. Facebook and Instagram
 
-- [ ] 4.1 Add the conversations read call to `FacebookPageAdapter` and `InstagramBusinessAdapter` and `lib/BackgroundJob/SocialInboxJob.php` with a per-account cursor; store a broker or network refusal in a new `socialAccount.messagingStatus` property
+- [x] 4.1 Add the conversations read call to `FacebookPageAdapter` and `InstagramBusinessAdapter` and `lib/BackgroundJob/SocialInboxJob.php` with a per-account cursor; store a broker or network refusal in a new `socialAccount.messagingStatus` property
   - Verify: PHPUnit with a faked `SocialBrokerGateway`: a new visitor message calls `receive()` with `meta:<conversation id>`; a page message is ignored; a `rejected_by_network` lands in `messagingStatus` and leaves `status` alone
+  - Built as the trait `Social\ReadsMetaConversations` on `FacebookPageAdapter` (platform messenger; `InstagramBusinessAdapter` inherits it with platform instagram): one brokered `GET /v21.0/{page}/conversations` of 25 conversations with their 10 newest messages, and the visitor messages in the answer (the page's own are left out). `Social\SocialInboxService` reads each active Facebook and Instagram account with a credential, keeps a per-account cursor in `socialInbox.cursor.<account>`, calls `tryReceive()` with `meta:<conversation id>`, the sender's name and the account handle as `mailbox`, and stores `receiving` or the gateway's refusal in the new `socialAccount.messagingStatus` and `messagingStatusReason` through `SocialAccountService::recordMessagingStatus()`, which leaves `status` alone. `SocialInboxJob` runs it every five minutes. Tests: `SocialInboxServiceTest`, `SocialInboxJobTest`. Nothing arrives until 4.2 is done outside this repository.
 - [ ] 4.2 Ask the OpenRegister lane to admit `GET /{version}/{id}/conversations` on the `meta-graph` broker provider; record Meta App Review status for `pages_messaging` and `instagram_manage_messages`
   - Verify: the OpenRegister issue is linked in the PR body; the Social accounts page shows "Messages: waiting on Meta" until the network answers
 

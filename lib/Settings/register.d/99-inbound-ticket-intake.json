@@ -1,5 +1,5 @@
 {
-    "_note": "requests-inbound-to-queue D2 and D8. `inboundThreadKey` is written by InboundTicketService only: `conversation:<channelConversation id>` for WhatsApp and SMS, `mail:<account id>:<threadRootId>` for mail, `meta:<conversation id>` for Facebook and Instagram. A top-level property keeps the follow-up lookup a plain equality filter; the sender, domain, mailbox and source link go in `channelMetadata`. `category` becomes facetable so a team opens the Queue on its own category. Fragments are deep-merged onto pipelinq_register.json in filename order, so this one only adds these two keys to `ticket`. The `x-openregister-flows` entry on `ticket` is D6: the routing rules are an OpenRegister flow. It arrives disabled and unowned (OpenRegister's adoption contract), with one catch-all rule that leaves the category empty and the priority normal, because OpenRegister refuses a table without rules; the Routing rules page adds rules above it, adopts the flow on the first save and publishes each change.",
+    "_note": "requests-inbound-to-queue D2 and D8. `inboundThreadKey` is written by InboundTicketService only: `conversation:<channelConversation id>` for WhatsApp and SMS, `mail:<account id>:<threadRootId>` for mail, `meta:<conversation id>` for Facebook and Instagram. A top-level property keeps the follow-up lookup a plain equality filter; the sender, domain, mailbox and source link go in `channelMetadata`. `category` becomes facetable so a team opens the Queue on its own category. Fragments are deep-merged onto pipelinq_register.json in filename order, so this one only adds these two keys to `ticket`. The `x-openregister-flows` entry on `ticket` is D6: the routing rules are an OpenRegister flow. It arrives disabled and unowned (OpenRegister's adoption contract), with one catch-all rule that leaves the category empty and the priority normal, because OpenRegister refuses a table without rules; the Routing rules page adds rules above it, adopts the flow on the first save and publishes each change. `messagingStatus` and `messagingStatusReason` on `socialAccount` are D5: SocialInboxService stores whether an account's inbox can be read there, apart from the posting `status`, which it leaves alone.",
     "components": {
         "schemas": {
             "ticket": {
@@ -187,6 +187,33 @@
                             ]
                         }
                     ]
+                }
+            },
+            "socialAccount": {
+                "slug": "socialAccount",
+                "properties": {
+                    "messagingStatus": {
+                        "type": "string",
+                        "title": "Messages",
+                        "description": "Whether the account's messages can be read: receiving, or why not. Written by the social inbox job; posting has its own status.",
+                        "enum": [
+                            "receiving",
+                            "not_configured",
+                            "relink_needed",
+                            "budget_exhausted",
+                            "not_permitted",
+                            "rejected_by_network",
+                            "unavailable"
+                        ],
+                        "readOnly": true
+                    },
+                    "messagingStatusReason": {
+                        "type": "string",
+                        "title": "Messages: reason",
+                        "description": "The broker's or the network's reason when messages cannot be read.",
+                        "maxLength": 1000,
+                        "readOnly": true
+                    }
                 }
             }
         }
