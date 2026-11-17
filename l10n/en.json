@@ -10106,6 +10106,13 @@
         "Client not found": "Client not found",
         "You may not open this client.": "You may not open this client.",
         "A VAT number starts with the two letters of an EU country, such as NL or DE.": "A VAT number starts with the two letters of an EU country, such as NL or DE.",
-        "%s is not a valid VAT number for country %s.": "%s is not a valid VAT number for country %s."
+        "%s is not a valid VAT number for country %s.": "%s is not a valid VAT number for country %s.",
+        "Check {number}": "Check {number}",
+        "Checked with {source}": "Checked with {source}",
+        "No official numbers yet.": "No official numbers yet.",
+        "Remove {number}": "Remove {number}",
+        "The number could not be checked.": "The number could not be checked.",
+        "The number could not be saved.": "The number could not be saved.",
+        "VAT numbers are checked when shillinq is installed.": "VAT numbers are checked when shillinq is installed."
     }
 }

@@ -20,8 +20,9 @@
 
 ## 3. ClientDetail
 
-- [ ] 3.1 Identifiers section on ClientDetail (manifest body widget) with Add and Check
+- [x] 3.1 Identifiers section on ClientDetail (manifest body widget) with Add and Check
   - Verify: Playwright `tests/e2e/client-identifiers.spec.ts` adds a KvK number and sees status valid after Check against a mocked leaf
+  - Built: `ClientIdentifiersSection` (body widget `client-identifiers`), unit-tested in `tests/vitest/clientIdentifiersSection.spec.js`. The Playwright check needs a running instance and is not done here.
 
 ## 4. Enrichment
 

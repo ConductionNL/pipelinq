@@ -36,6 +36,7 @@ import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
 import ClientRiskSection from './components/clients/ClientRiskSection.vue'
+import ClientIdentifiersSection from './components/clients/ClientIdentifiersSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
@@ -920,6 +921,11 @@ const registry = {
 		component: SurveyResponseRateWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
+	},
+	ClientIdentifiersSection: {
+		kind: 'section',
+		component: ClientIdentifiersSection,
+		_note: 'The organisation\'s official numbers (clients-registry-numbers-and-enrichment, D5): KvK, RSIN, VAT, DUNS and OIN with the status, date and source of the last register check, an Add form and Check on a KvK or VAT number (POST /api/clients/{id}/identifiers/check). Reads `identifiers` off the client (`@object.identifiers`) and saves the list through OpenRegister, which refuses a malformed number (ClientIdentifierFormatGuard).',
 	},
 	ClientRiskSection: {
 		kind: 'section',

@@ -10013,7 +10013,14 @@ OC.L10N.register(
         "Client not found": "Klant niet gevonden",
         "You may not open this client.": "U mag deze klant niet openen.",
         "A VAT number starts with the two letters of an EU country, such as NL or DE.": "Een btw-nummer begint met de twee letters van een EU-land, zoals NL of DE.",
-        "%s is not a valid VAT number for country %s.": "%s is geen geldig btw-nummer voor land %s."
+        "%s is not a valid VAT number for country %s.": "%s is geen geldig btw-nummer voor land %s.",
+        "Check {number}": "{number} controleren",
+        "Checked with {source}": "Gecontroleerd bij {source}",
+        "No official numbers yet.": "Nog geen officiële nummers.",
+        "Remove {number}": "{number} verwijderen",
+        "The number could not be checked.": "Het nummer kon niet worden gecontroleerd.",
+        "The number could not be saved.": "Het nummer kon niet worden opgeslagen.",
+        "VAT numbers are checked when shillinq is installed.": "Btw-nummers worden gecontroleerd als shillinq is geïnstalleerd."
     },
     "nplurals=2; plural=(n != 1);"
 )

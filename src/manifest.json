@@ -3794,6 +3794,19 @@
 						"card": true
 					},
 					{
+						"id": "client-identifiers",
+						"component": "ClientIdentifiersSection",
+						"title": "Identifiers",
+						"placement": "end",
+						"_note": "clients-registry-numbers-and-enrichment REQ-CRN-001/002: the official numbers of the organisation with the status of their last register check, Add, and Check on a KvK or VAT number.",
+						"props": {
+							"clientId": "@objectId",
+							"identifiers": "@object.identifiers"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
 						"id": "client-risk",
 						"component": "ClientRiskSection",
 						"title": "Risk",
