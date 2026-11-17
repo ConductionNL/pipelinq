@@ -339,9 +339,9 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 	 *
 	 * @return array{checkStatus: string, company: array<string, mixed>|null} The outcome and the row.
 	 *
-	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.2
 	 */
-	public function kvkCompany(string $value): array {
+	private function kvkCompany(string $value): array {
 		$number = self::normalise(scheme: 'kvk', value: $value);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/company?' . http_build_query(['kvkNumber' => $number]));
 		$answer = (new CompanyRegistryHttp(clientService: $this->clientService, logger: $this->logger))->leafAnswer(url: $url);
@@ -362,6 +362,81 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 
 		return ['checkStatus' => self::STATUS_INVALID, 'company' => null];
 	}//end kvkCompany()
+
+	/**
+	 * What the KvK register says about a KvK number, as client fields.
+	 *
+	 * `place` from the visiting address, `legalForm` as the client's legal form
+	 * code, `industry` the SBI descriptions with the main activity first. A
+	 * fact the register does not give is left out.
+	 *
+	 * @param string $value The KvK number.
+	 *
+	 * @return array{checkStatus: string, facts: array<string, mixed>|null} The outcome, and the facts when found.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
+	 */
+	public function kvkFacts(string $value): array {
+		$answer = $this->kvkCompany(value: $value);
+		if ($answer['company'] === null) {
+			return ['checkStatus' => $answer['checkStatus'], 'facts' => null];
+		}
+
+		$company = $answer['company'];
+		$address = (array)($company['adres']['binnenlandsAdres'] ?? ($company['adres'] ?? []));
+		$legalForm = mb_strtolower(trim((string)($company['rechtsvorm'] ?? '')));
+		$facts = [
+			'place' => trim((string)($address['plaats'] ?? '')),
+			'legalForm' => (OrganisationEnrichmentService::LEGAL_FORMS[$legalForm] ?? ''),
+			'industry' => self::sbiDescriptions(company: $company),
+		];
+
+		return [
+			'checkStatus' => $answer['checkStatus'],
+			'facts' => array_filter($facts, static fn (mixed $fact): bool => $fact !== '' && $fact !== []),
+		];
+	}//end kvkFacts()
+
+	/**
+	 * The SBI descriptions of a KvK row, main activity first, without duplicates.
+	 *
+	 * @param array<string, mixed> $company The KvK row.
+	 *
+	 * @return array<int, string> The descriptions.
+	 */
+	private static function sbiDescriptions(array $company): array {
+		$activities = ($company['sbiActiviteiten'] ?? ($company['spiActiviteiten'] ?? []));
+		if (is_array($activities) === false) {
+			return [];
+		}
+
+		$activities = array_values(array_filter($activities, static fn (mixed $activity): bool => is_array($activity) === true));
+		usort(
+			$activities,
+			static fn (array $left, array $right): int => self::isMainActivity(activity: $right) <=> self::isMainActivity(activity: $left)
+		);
+
+		$descriptions = [];
+		foreach ($activities as $activity) {
+			$description = trim((string)($activity['sbiOmschrijving'] ?? ''));
+			if ($description !== '' && in_array($description, $descriptions, true) === false) {
+				$descriptions[] = $description;
+			}
+		}
+
+		return $descriptions;
+	}//end sbiDescriptions()
+
+	/**
+	 * Whether an SBI activity is the main one, as a sortable number.
+	 *
+	 * @param array<string, mixed> $activity The activity.
+	 *
+	 * @return int 1 for the main activity, else 0.
+	 */
+	private static function isMainActivity(array $activity): int {
+		return (int)(($activity['indHoofdactiviteit'] ?? '') === 'Ja');
+	}//end isMainActivity()
 
 	/**
 	 * Check a VAT number through shillinq's VIES service; unchecked without shillinq.

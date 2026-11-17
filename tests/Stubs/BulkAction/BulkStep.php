@@ -32,8 +32,6 @@ use OCP\IUser;
  * One step of a bulk job: the action applied to one member object, rehearsed
  * or committed, as the user who started the job (ADR-011 Rule 2 operation
  * object), the one argument of BulkActionInterface::apply().
- *
- * @spec openspec/specs/flow-engine/spec.md
  */
 final class BulkStep {
 

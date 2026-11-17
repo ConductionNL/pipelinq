@@ -26,6 +26,7 @@ use OCA\OpenRegister\Event\ObjectDeletingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\BulkAction\FillFromKvkRegistrationListener;
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;

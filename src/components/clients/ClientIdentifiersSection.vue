@@ -163,6 +163,12 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Follow the page's copy of the client when it reloads.
+		 *
+		 * @param {Array<object>} next The client's identifiers.
+		 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-3.1
+		 */
 		identifiers(next) {
 			this.rows = Array.isArray(next) ? next.map((row) => ({ ...row })) : []
 		},

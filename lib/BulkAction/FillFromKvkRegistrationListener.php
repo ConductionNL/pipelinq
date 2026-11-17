@@ -7,8 +7,8 @@
  * the apps for their bulk actions (clients-registry-numbers-and-enrichment
  * design D4).
  *
- * @category Listener
- * @package  OCA\Pipelinq\Listener
+ * @category BulkAction
+ * @package  OCA\Pipelinq\BulkAction
  *
  * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -24,10 +24,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Pipelinq\Listener;
+namespace OCA\Pipelinq\BulkAction;
 
 use OCA\OpenRegister\Event\BulkActionRegistrationEvent;
-use OCA\Pipelinq\BulkAction\FillFromKvkAction;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 

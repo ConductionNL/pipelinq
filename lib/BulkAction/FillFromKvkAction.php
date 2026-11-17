@@ -43,8 +43,6 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Kernel\Contracts\ClientIdentifierServiceInterface;
-use OCA\Pipelinq\Service\ClientIdentifierService;
-use OCA\Pipelinq\Service\OrganisationEnrichmentService;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -103,6 +101,13 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 	 * @var string
 	 */
 	public const REASON_PERSON = 'not an organisation';
+
+	/**
+	 * The client fields a fill may write, each only while it is empty.
+	 *
+	 * @var array<int, string>
+	 */
+	public const FILLED_FIELDS = ['place', 'legalForm', 'industry'];
 
 	/**
 	 * The fill each object gets, by object uuid, so the reversal plan and the
@@ -277,7 +282,7 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 	public static function kvkNumberOf(array $client): string {
 		foreach ((array)($client['identifiers'] ?? []) as $identifier) {
 			if (is_array($identifier) === true && ($identifier['scheme'] ?? null) === 'kvk') {
-				$number = ClientIdentifierService::normalise(scheme: 'kvk', value: (string)($identifier['value'] ?? ''));
+				$number = str_replace([' ', '.', '-'], '', trim((string)($identifier['value'] ?? '')));
 				if ($number !== '') {
 					return $number;
 				}
@@ -288,27 +293,20 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 	}//end kvkNumberOf()
 
 	/**
-	 * The empty fields of a client the KvK row fills.
+	 * The facts the KvK gave for the fields the client has empty.
 	 *
-	 * @param array<string, mixed> $client  The client's data.
-	 * @param array<string, mixed> $company The KvK row.
+	 * @param array<string, mixed> $client The client's data.
+	 * @param array<string, mixed> $facts  The KvK's facts, as client fields.
 	 *
 	 * @return array<string, mixed> The patch.
 	 *
 	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
 	 */
-	public static function patchFor(array $client, array $company): array {
-		$address = (array)($company['adres']['binnenlandsAdres'] ?? ($company['adres'] ?? []));
-		$legalForm = mb_strtolower(trim((string)($company['rechtsvorm'] ?? '')));
-		$found = [
-			'place' => trim((string)($address['plaats'] ?? '')),
-			'legalForm' => (OrganisationEnrichmentService::LEGAL_FORMS[$legalForm] ?? ''),
-			'industry' => self::sbiDescriptions(company: $company),
-		];
-
+	public static function patchFor(array $client, array $facts): array {
 		$patch = [];
-		foreach ($found as $field => $value) {
-			if ($value === '' || $value === [] || self::isEmpty(value: ($client[$field] ?? null)) === false) {
+		foreach (self::FILLED_FIELDS as $field) {
+			$value = ($facts[$field] ?? null);
+			if (self::isEmpty(value: $value) === true || self::isEmpty(value: ($client[$field] ?? null)) === false) {
 				continue;
 			}
 
@@ -356,63 +354,22 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 			return ['reason' => self::REASON_NO_KVK, 'patch' => []];
 		}
 
-		$answer = $this->identifiers->kvkCompany(value: $number);
-		if ($answer['checkStatus'] === ClientIdentifierService::STATUS_UNAVAILABLE) {
+		$answer = $this->identifiers->kvkFacts(value: $number);
+		if ($answer['checkStatus'] === 'unavailable') {
 			return ['reason' => self::REASON_UNAVAILABLE, 'patch' => []];
 		}
 
-		if ($answer['company'] === null) {
+		if ($answer['facts'] === null) {
 			return ['reason' => self::REASON_NOT_FOUND, 'patch' => []];
 		}
 
-		$patch = self::patchFor(client: $client, company: $answer['company']);
+		$patch = self::patchFor(client: $client, facts: $answer['facts']);
 		if ($patch === []) {
 			return ['reason' => self::REASON_ALREADY_FILLED, 'patch' => []];
 		}
 
 		return ['reason' => null, 'patch' => $patch];
 	}//end lookUp()
-
-	/**
-	 * The SBI descriptions of a KvK row, main activity first, without duplicates.
-	 *
-	 * @param array<string, mixed> $company The KvK row.
-	 *
-	 * @return array<int, string> The descriptions.
-	 */
-	private static function sbiDescriptions(array $company): array {
-		$activities = ($company['sbiActiviteiten'] ?? ($company['spiActiviteiten'] ?? []));
-		if (is_array($activities) === false) {
-			return [];
-		}
-
-		$activities = array_values(array_filter($activities, static fn (mixed $activity): bool => is_array($activity) === true));
-		usort(
-			$activities,
-			static fn (array $left, array $right): int => self::isMain(activity: $right) <=> self::isMain(activity: $left)
-		);
-
-		$descriptions = [];
-		foreach ($activities as $activity) {
-			$description = trim((string)($activity['sbiOmschrijving'] ?? ''));
-			if ($description !== '' && in_array($description, $descriptions, true) === false) {
-				$descriptions[] = $description;
-			}
-		}
-
-		return $descriptions;
-	}//end sbiDescriptions()
-
-	/**
-	 * Whether an SBI activity is the main one, as a sortable number.
-	 *
-	 * @param array<string, mixed> $activity The activity.
-	 *
-	 * @return int 1 for the main activity, else 0.
-	 */
-	private static function isMain(array $activity): int {
-		return (int)(($activity['indHoofdactiviteit'] ?? '') === 'Ja');
-	}//end isMain()
 
 	/**
 	 * Whether a field value counts as empty.

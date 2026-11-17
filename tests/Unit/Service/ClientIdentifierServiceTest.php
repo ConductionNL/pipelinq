@@ -287,6 +287,50 @@ class ClientIdentifierServiceTest extends TestCase {
 	}//end testAnUnreachableKvkRegisterIsUnavailable()
 
 	/**
+	 * The KvK row becomes client fields: place, legal form code and SBI descriptions, main activity first.
+	 *
+	 * @return void
+	 */
+	public function testKvkFactsAreClientFields(): void {
+		$row = [
+			'kvkNummer' => '12345678',
+			'rechtsvorm' => 'Besloten Vennootschap',
+			'adres' => ['binnenlandsAdres' => ['plaats' => 'Zuiddrecht']],
+			'sbiActiviteiten' => [
+				['sbiOmschrijving' => 'Winkels in brood en banket', 'indHoofdactiviteit' => 'Nee'],
+				['sbiOmschrijving' => 'Brood- en banketbakkerijen', 'indHoofdactiviteit' => 'Ja'],
+				['sbiOmschrijving' => 'Winkels in brood en banket', 'indHoofdactiviteit' => 'Nee'],
+			],
+		];
+
+		$this->assertSame(
+			[
+				'checkStatus' => 'valid',
+				'facts' => [
+					'place' => 'Zuiddrecht',
+					'legalForm' => 'bv',
+					'industry' => ['Brood- en banketbakkerijen', 'Winkels in brood en banket'],
+				],
+			],
+			$this->service(http: 200, rows: [$row])->kvkFacts(value: '12345678')
+		);
+	}//end testKvkFactsAreClientFields()
+
+	/**
+	 * A fact the KvK does not give is left out; an unknown or unreachable number has no facts.
+	 *
+	 * @return void
+	 */
+	public function testKvkFactsLeaveOutWhatTheRegisterDoesNotGive(): void {
+		$this->assertSame(
+			['checkStatus' => 'valid', 'facts' => ['place' => 'Zuiddrecht']],
+			$this->service(http: 200, rows: [['kvkNummer' => '12345678', 'rechtsvorm' => 'Onbekend', 'adres' => ['plaats' => 'Zuiddrecht']]])->kvkFacts(value: '12345678')
+		);
+		$this->assertSame(['checkStatus' => 'invalid', 'facts' => null], $this->service(http: 404)->kvkFacts(value: '12345678'));
+		$this->assertSame(['checkStatus' => 'unavailable', 'facts' => null], $this->service(http: 503)->kvkFacts(value: '12345678'));
+	}//end testKvkFactsLeaveOutWhatTheRegisterDoesNotGive()
+
+	/**
 	 * Without shillinq a VAT number stays unchecked and says why.
 	 *
 	 * @return void

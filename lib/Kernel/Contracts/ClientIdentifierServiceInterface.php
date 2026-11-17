@@ -70,15 +70,16 @@ interface ClientIdentifierServiceInterface {
 	public function checkKvk(string $value): array;
 
 	/**
-	 * Look a KvK number up through OpenRegister's KvK leaf.
+	 * What the KvK register says about a KvK number, as client fields
+	 * (`place`, `legalForm`, `industry`), and whether it was found.
 	 *
 	 * @param string $value The KvK number.
 	 *
-	 * @return array{checkStatus: string, company: array<string, mixed>|null} The outcome and the register's row.
+	 * @return array{checkStatus: string, facts: array<string, mixed>|null} The outcome, and the facts when found.
 	 *
 	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
 	 */
-	public function kvkCompany(string $value): array;
+	public function kvkFacts(string $value): array;
 
 	/**
 	 * Check a VAT number through shillinq's VIES service.

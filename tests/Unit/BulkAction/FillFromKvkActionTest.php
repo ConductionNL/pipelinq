@@ -30,12 +30,9 @@ use OCA\OpenRegister\Event\BulkActionRegistrationEvent;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\BulkAction\FillFromKvkAction;
 use OCA\Pipelinq\Kernel\Contracts\ClientIdentifierServiceInterface;
-use OCA\Pipelinq\Listener\FillFromKvkRegistrationListener;
-use OCA\Pipelinq\Service\ClientIdentifierService;
-use OCA\Pipelinq\Service\OrganisationEnrichmentService;
+use OCA\Pipelinq\BulkAction\FillFromKvkRegistrationListener;
 use OCP\IUser;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -46,24 +43,17 @@ use RuntimeException;
  */
 #[CoversClass(FillFromKvkAction::class)]
 #[CoversClass(FillFromKvkRegistrationListener::class)]
-#[UsesClass(ClientIdentifierService::class)]
-#[UsesClass(OrganisationEnrichmentService::class)]
 class FillFromKvkActionTest extends TestCase {
 
 	/**
-	 * What the KvK knows about 12345678.
+	 * What the KvK knows about 12345678, as client fields.
 	 *
 	 * @var array<string, mixed>
 	 */
-	private const COMPANY = [
-		'kvkNummer' => '12345678',
-		'naam' => 'Bakkerij de Korenschoof',
-		'rechtsvorm' => 'Besloten Vennootschap',
-		'adres' => ['binnenlandsAdres' => ['plaats' => 'Zuiddrecht', 'straatnaam' => 'Molenweg']],
-		'sbiActiviteiten' => [
-			['sbiCode' => '4724', 'sbiOmschrijving' => 'Winkels in brood en banket', 'indHoofdactiviteit' => 'Nee'],
-			['sbiCode' => '1071', 'sbiOmschrijving' => 'Brood- en banketbakkerijen', 'indHoofdactiviteit' => 'Ja'],
-		],
+	private const FACTS = [
+		'place' => 'Zuiddrecht',
+		'legalForm' => 'bv',
+		'industry' => ['Brood- en banketbakkerijen', 'Winkels in brood en banket'],
 	];
 
 	/**
@@ -83,14 +73,14 @@ class FillFromKvkActionTest extends TestCase {
 	/**
 	 * An action over the given KvK answer, and a write path that may fail.
 	 *
-	 * @param array{checkStatus: string, company: array<string, mixed>|null} $answer    What the KvK lookup answers.
+	 * @param array{checkStatus: string, facts: array<string, mixed>|null} $answer    What the KvK lookup answers.
 	 * @param bool                                                          $writeFails Whether the write throws.
 	 *
 	 * @return FillFromKvkAction The action.
 	 */
 	private function action(array $answer, bool $writeFails = false): FillFromKvkAction {
 		$identifiers = $this->createMock(ClientIdentifierServiceInterface::class);
-		$identifiers->method('kvkCompany')->willReturnCallback(
+		$identifiers->method('kvkFacts')->willReturnCallback(
 			function (string $value) use ($answer): array {
 				$this->lookedUp[] = $value;
 				return $answer;
@@ -134,7 +124,7 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testApplyRehearsesThenWritesTheEmptyFieldsOnly(): void {
-		$action = $this->action(answer: ['checkStatus' => 'valid', 'company' => self::COMPANY]);
+		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$object = $this->client(data: [
 			'name' => 'De Korenschoof',
 			'type' => 'organization',
@@ -166,7 +156,7 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheReversalPlanRecordsThePriorValues(): void {
-		$action = $this->action(answer: ['checkStatus' => 'valid', 'company' => self::COMPANY]);
+		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$object = $this->client(data: ['type' => 'organization', 'industry' => [], 'kvkNumber' => '12345678']);
 
 		$this->assertSame(
@@ -185,7 +175,7 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testAClientWithoutAKvkNumberIsSkipped(): void {
-		$action = $this->action(answer: ['checkStatus' => 'valid', 'company' => self::COMPANY]);
+		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$result = $action->apply(
 			new BulkStep(object: $this->client(data: ['type' => 'organization', 'identifiers' => [['scheme' => 'vat', 'value' => 'NL123456789B01']]]), parameters: [], commit: true, actor: null)
 		);
@@ -203,9 +193,9 @@ class FillFromKvkActionTest extends TestCase {
 	 */
 	public function testAnUnreachableOrUnknownKvkSkips(): void {
 		$client = ['type' => 'organization', 'kvkNumber' => '12345678'];
-		$unavailable = $this->action(answer: ['checkStatus' => 'unavailable', 'company' => null])
+		$unavailable = $this->action(answer: ['checkStatus' => 'unavailable', 'facts' => null])
 			->apply(new BulkStep(object: $this->client(data: $client), parameters: [], commit: true, actor: null));
-		$unknown = $this->action(answer: ['checkStatus' => 'invalid', 'company' => null])
+		$unknown = $this->action(answer: ['checkStatus' => 'invalid', 'facts' => null])
 			->apply(new BulkStep(object: $this->client(data: $client, uuid: 'c2'), parameters: [], commit: true, actor: null));
 
 		$this->assertSame('KvK unavailable', $unavailable->getReason());
@@ -219,7 +209,7 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testFilledClientsAndPersonsAreSkipped(): void {
-		$action = $this->action(answer: ['checkStatus' => 'valid', 'company' => self::COMPANY]);
+		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$filled = $action->apply(
 			new BulkStep(
 				object: $this->client(data: ['type' => 'organization', 'kvkNumber' => '12345678', 'place' => 'Dordrecht', 'legalForm' => 'nv', 'industry' => ['Retail']]),
@@ -244,7 +234,7 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testARefusedWriteFailsTheMember(): void {
-		$result = $this->action(answer: ['checkStatus' => 'valid', 'company' => self::COMPANY], writeFails: true)
+		$result = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS], writeFails: true)
 			->apply(new BulkStep(object: $this->client(data: ['type' => 'organization', 'kvkNumber' => '12345678']), parameters: [], commit: true, actor: null));
 
 		$this->assertFalse($result->isApplied());
@@ -268,7 +258,7 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheActionIsRegisteredWithOpenRegister(): void {
-		$action = $this->action(answer: ['checkStatus' => 'valid', 'company' => self::COMPANY]);
+		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$this->assertSame('pipelinq:fill-from-kvk', $action->getId());
 		$this->assertSame('Fill in from KvK', $action->getLabel());
 		$this->assertFalse($action->requiresJustification());

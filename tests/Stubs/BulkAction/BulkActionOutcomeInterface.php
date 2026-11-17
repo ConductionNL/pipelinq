@@ -27,16 +27,12 @@ namespace OCA\OpenRegister\BulkAction;
 
 /**
  * An immutable per-object outcome.
- *
- * @spec openspec/specs/bulk-action-jobs/spec.md
  */
 interface BulkActionOutcomeInterface {
 	/**
 	 * The outcome name.
 	 *
 	 * @return string One of the BulkJobMember::OUTCOME_* constants.
-	 *
-	 * @spec openspec/specs/bulk-action-jobs/spec.md
 	 */
 	public function getOutcome(): string;
 
@@ -44,8 +40,6 @@ interface BulkActionOutcomeInterface {
 	 * The reason behind the outcome.
 	 *
 	 * @return string|null The reason, or null when the outcome needs none.
-	 *
-	 * @spec openspec/specs/bulk-action-jobs/spec.md
 	 */
 	public function getReason(): ?string;
 
@@ -53,8 +47,6 @@ interface BulkActionOutcomeInterface {
 	 * Whether this outcome counts as a write.
 	 *
 	 * @return bool True when the action applied.
-	 *
-	 * @spec openspec/specs/bulk-action-jobs/spec.md
 	 */
 	public function isApplied(): bool;
 }//end interface
