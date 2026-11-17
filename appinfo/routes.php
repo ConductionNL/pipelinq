@@ -65,6 +65,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
         ['name' => 'mailAddIn#contact', 'url' => '/api/mail-add-in/contact', 'verb' => 'POST'],
         ['name' => 'mailAddIn#log', 'url' => '/api/mail-add-in/log', 'verb' => 'POST'],
+        // The Outlook add-in itself: its manifest and the pane Outlook frames.
+        ['name' => 'mailAddIn#manifest', 'url' => '/mail-add-in/manifest.xml', 'verb' => 'GET'],
+        ['name' => 'mailAddIn#taskpane', 'url' => '/mail-add-in/taskpane', 'verb' => 'GET'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.

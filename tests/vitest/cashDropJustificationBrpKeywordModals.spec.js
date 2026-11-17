@@ -207,7 +207,7 @@ describe('BrpDoelbindingModal', () => {
 			'Rechtmatig belang',
 			'Overig',
 		])
-		expect(bindings.props('options')[1].label).toBe('AVG art. 6 lid 1 sub e (publieke taak)')
+		expect(bindings.props('options')[1].label).toBe('GDPR art. 6(1)(e) (public task)')
 	})
 
 	it('adds a note of twenty characters or more to the reason, and the VOG flag', async () => {
