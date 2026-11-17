@@ -388,6 +388,31 @@ class FilinqLetterAdapterTest extends TestCase
 
 
     /**
+     * Ad-hoc data (a quote's number, totals and lines) reaches filinq as its
+     * `adHocData` option; without it the option is left out.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
+     */
+    public function testAdHocDataReachesFilinq(): void
+    {
+        $adapter = $this->adapter(
+            templates: $this->templates(rows: []),
+            documents: $this->documents(result: ['content' => '%PDF-1.7 quote', 'output' => ['mode' => 'both']])
+        );
+
+        $data = ['quote' => ['number' => 'OFF-2026-0042'], 'totals' => ['totalInclVat' => 1755.0]];
+        $adapter->render(templateId: 'tpl-q', dataRefs: [], filename: 'OFF-2026-0042', outputMode: 'both', adHocData: $data);
+        $adapter->render(templateId: 'tpl-q', dataRefs: [], filename: 'OFF-2026-0043');
+
+        $this->assertSame(expected: $data, actual: $this->calls[0][3]['adHocData']);
+        $this->assertArrayNotHasKey(key: 'adHocData', array: $this->calls[1][3]);
+
+    }//end testAdHocDataReachesFilinq()
+
+
+    /**
      * A preview hands filinq the references and passes its fields on.
      *
      * @return void

@@ -9964,7 +9964,25 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "Send quote": "Send quote",
+        "Quotes are made by filinq, and filinq is not available.": "Quotes are made by filinq, and filinq is not available.",
+        "There are no quote templates yet. An administrator adds them in filinq with the namespace pipelinq.": "There are no quote templates yet. An administrator adds them in filinq with the namespace pipelinq.",
+        "The quote goes to {name} ({email}).": "The quote goes to {name} ({email}).",
+        "This lead has no contact or client with an email address. Add one, then send the quote.": "This lead has no contact or client with an email address. Add one, then send the quote.",
+        "Quote {number} was sent to {email}.": "Quote {number} was sent to {email}.",
+        "A copy is filed at {path}.": "A copy is filed at {path}.",
+        "The quote was sent, but it could not be logged as a contact moment.": "The quote was sent, but it could not be logged as a contact moment.",
+        "Sending quote": "Sending quote",
+        "The quote could not be prepared.": "The quote could not be prepared.",
+        "The quote could not be sent.": "The quote could not be sent.",
+        "Quote %s": "Quote %s",
+        "Please find attached quote %1$s, for a total of EUR %2$s including VAT. It is valid until %3$s.": "Please find attached quote %1$s, for a total of EUR %2$s including VAT. It is valid until %3$s.",
+        "Add an email address to the contact or the client of this lead, then send the quote.": "Add an email address to the contact or the client of this lead, then send the quote.",
+        "The quote was made and filed, but the mail could not be sent.": "The quote was made and filed, but the mail could not be sent.",
+        "Quote %1$s sent to %2$s, total EUR %3$s including VAT, valid until %4$s.": "Quote %1$s sent to %2$s, total EUR %3$s including VAT, valid until %4$s.",
+        "A copy is filed at %s.": "A copy is filed at %s.",
+        "filinq could not make the quote.": "filinq could not make the quote."
     },
     "nplurals=2; plural=(n != 1);"
 )

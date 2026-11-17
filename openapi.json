@@ -518,6 +518,10 @@
         {
             "name": "background-service-account",
             "description": "Reads and picks the background service account."
+        },
+        {
+            "name": "quote",
+            "description": "Controller that sends a quote from a lead's lines: filinq renders the PDF, pipelinq mails it and logs the contact moment."
         }
     ],
     "paths": {
@@ -18319,6 +18323,127 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/leads/{id}/quotes": {
+            "post": {
+                "operationId": "quote-send",
+                "summary": "POST /api/leads/{id}/quotes: send a quote from this lead's lines",
+                "description": "POST /api/leads/{id}/quotes: send a quote from this lead's lines. Body: `templateId`, and optionally `validUntil` (Y-m-d, today or later; thirty days from today when absent). filinq renders the PDF and files a copy in the caller's Files, pipelinq mails it to the lead's contact (else the client) and logs an outbound contact moment on the lead. Refuses, in this order: no user (401), no template id or a bad date (400), no filinq (503), a lead the caller may not read (404), an unknown template (404), no recipient (422), a render or mail that failed (502). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lead id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "templateId"
+                                ],
+                                "properties": {
+                                    "templateId": {
+                                        "type": "string",
+                                        "description": "The filinq template id."
+                                    },
+                                    "validUntil": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "description": "The last day the quote holds."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/Problem502"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/leads/{id}/quotes/recipient": {
+            "get": {
+                "operationId": "quote-recipient",
+                "summary": "GET /api/leads/{id}/quotes/recipient: who a quote for this lead would go to",
+                "description": "GET /api/leads/{id}/quotes/recipient: who a quote for this lead would go to. The dialog shows it before sending. `recipient` is null when neither the contact nor the client has an email address. A lead the caller may not read answers 404. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lead id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     }
                 }
             }
