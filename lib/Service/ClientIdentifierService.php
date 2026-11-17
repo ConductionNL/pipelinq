@@ -321,27 +321,47 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.2
 	 */
 	public function checkKvk(string $value): array {
+		return [
+			'checkStatus' => $this->kvkCompany(value: $value)['checkStatus'],
+			'checkedAt' => $this->now(),
+			'checkSource' => self::SOURCE_KVK,
+		];
+	}//end checkKvk()
+
+	/**
+	 * Look a KvK number up through OpenRegister's KvK leaf.
+	 *
+	 * Found: valid, with the register's row. Not found (404, or an answer
+	 * without the number): invalid. Not reachable (a 5xx, or no answer):
+	 * unavailable.
+	 *
+	 * @param string $value The KvK number.
+	 *
+	 * @return array{checkStatus: string, company: array<string, mixed>|null} The outcome and the row.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
+	 */
+	public function kvkCompany(string $value): array {
 		$number = self::normalise(scheme: 'kvk', value: $value);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/company?' . http_build_query(['kvkNumber' => $number]));
 		$answer = (new CompanyRegistryHttp(clientService: $this->clientService, logger: $this->logger))->leafAnswer(url: $url);
 
-		$status = self::STATUS_UNAVAILABLE;
 		if ($answer['status'] === 404) {
-			$status = self::STATUS_INVALID;
+			return ['checkStatus' => self::STATUS_INVALID, 'company' => null];
 		}
 
-		if ($answer['status'] === 200) {
-			$status = self::STATUS_INVALID;
-			foreach (($answer['rows'] ?? []) as $row) {
-				if ((string)($row['kvkNummer'] ?? '') === $number) {
-					$status = self::STATUS_VALID;
-					break;
-				}
+		if ($answer['status'] !== 200) {
+			return ['checkStatus' => self::STATUS_UNAVAILABLE, 'company' => null];
+		}
+
+		foreach (($answer['rows'] ?? []) as $row) {
+			if ((string)($row['kvkNummer'] ?? '') === $number) {
+				return ['checkStatus' => self::STATUS_VALID, 'company' => $row];
 			}
 		}
 
-		return ['checkStatus' => $status, 'checkedAt' => $this->now(), 'checkSource' => self::SOURCE_KVK];
-	}//end checkKvk()
+		return ['checkStatus' => self::STATUS_INVALID, 'company' => null];
+	}//end kvkCompany()
 
 	/**
 	 * Check a VAT number through shillinq's VIES service; unchecked without shillinq.

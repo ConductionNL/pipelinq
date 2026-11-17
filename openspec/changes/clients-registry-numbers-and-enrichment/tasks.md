@@ -25,8 +25,9 @@
 
 ## 4. Enrichment
 
-- [ ] 4.1 `lib/BulkAction/FillFromKvkAction.php` implementing `ReversibleBulkActionInterface`, empty fields only, skip reasons "no KvK number" and "KvK unavailable"; register it on `BulkActionRegistrationEvent` in `lib/AppInfo/Application.php`
+- [x] 4.1 `lib/BulkAction/FillFromKvkAction.php` implementing `ReversibleBulkActionInterface`, empty fields only, skip reasons "no KvK number" and "KvK unavailable"; register it on `BulkActionRegistrationEvent` in `lib/AppInfo/Application.php`
   - Verify: PHPUnit on `apply()` with commit false and true, and on the prior values it records
+  - Built: registered through `FillFromKvkRegistrationListener` in `ListenerRegistrar` (where pipelinq registers its listeners; by class name, so pipelinq boots without OpenRegister). It fills `place`, `legalForm` and `industry`, not `address`: `address` is the read-only mirror of the linked Nextcloud contact, which OpenRegister refuses to change on update. A client's KvK identifier is used, else its older `kvkNumber` field.
 - [ ] 4.2 Clients list bulk action Fill in from KvK, using the preview dialog of `clients-bulk-edit-and-undo`
   - Verify: Playwright fills the address of two clients, then undoes it from Bulk changes
 

@@ -246,6 +246,8 @@ class ListenerRegistrar {
 		// A client's identifiers keep their schemes' formats on every write (clients-registry-numbers-and-enrichment D2).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ClientIdentifierFormatGuard::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: ClientIdentifierFormatGuard::class);
+		// The Fill in from KvK bulk action (clients-registry-numbers-and-enrichment D4); by name, so pipelinq boots without OpenRegister.
+		$context->registerEventListener(event: 'OCA\\OpenRegister\\Event\\BulkActionRegistrationEvent', listener: FillFromKvkRegistrationListener::class);
 		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
 		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);
