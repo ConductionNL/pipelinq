@@ -1,0 +1,95 @@
+/*
+ * The Outlook task pane (contact-moments-mail-add-in).
+ *
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ */
+
+.pq-mail-pane {
+	font-family: var(--font-face, system-ui, sans-serif);
+	color: var(--color-main-text, #222);
+	background: var(--color-main-background, #fff);
+	padding: 12px;
+	line-height: 1.5;
+}
+
+.pq-mail-pane__title {
+	font-size: 1.2em;
+	margin: 0 0 8px;
+}
+
+.pq-mail-pane__note--alert {
+	color: var(--color-error-text, #c9171f);
+}
+
+.pq-mail-pane__records {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.pq-mail-pane__record {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border, #ededed);
+}
+
+.pq-mail-pane__meta {
+	color: var(--color-text-maxcontrast, #6b6b6b);
+}
+
+.pq-mail-pane__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.pq-mail-pane__form {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.pq-mail-pane__check {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 4px 0;
+}
+
+.pq-mail-pane a {
+	color: var(--color-primary-element, #00679e);
+}
+
+.pq-mail-pane button {
+	min-height: 34px;
+	padding: 4px 14px;
+	border-radius: var(--border-radius-element, 8px);
+	border: 1px solid var(--color-border-dark, #949494);
+	cursor: pointer;
+}
+
+.pq-mail-pane__primary {
+	background: var(--color-primary-element, #00679e);
+	color: var(--color-primary-element-text, #fff);
+	border-color: var(--color-primary-element, #00679e);
+}
+
+.pq-mail-pane__secondary {
+	background: var(--color-main-background, #fff);
+	color: var(--color-main-text, #222);
+}
+
+.pq-mail-pane button:focus-visible,
+.pq-mail-pane a:focus-visible,
+.pq-mail-pane input:focus-visible {
+	outline: 2px solid var(--color-primary-element, #00679e);
+	outline-offset: 2px;
+}
+
+.pq-mail-pane__footer {
+	margin-top: 12px;
+}
