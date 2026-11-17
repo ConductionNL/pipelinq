@@ -25,8 +25,10 @@
 
 - [ ] 4.1 Add pages `Events` and `EventDetail` and the Events menu entry under Marketing in `src/manifest.d/78-marketing-campaigns.json`
   - Verify: `npm run check:manifest` exit 0
+  - State (17 Nov): served by `src/manifest.d/78-campaign-events.json` (campaign-events), not new pages: `CampaignEvents` (index over `campaignEvent`, reached from the campaign page's Events card and its All events link, not a menu entry because board PqEvenement keeps Marketing to campaigns and newsletters) and `CampaignEventDetail` (counts, registrations list). The schemas are `campaignEvent` / `eventRegistration`, extended by `99-zz-marketing-events.json`. Left unticked: there is no Create event on the campaign page itself yet, and the e2e below has not run live.
 - [ ] 4.2 Add `EventAttendeesSection` (Mark attended, Mark no-show, Add attendee) and `CampaignEventSection` on CampaignDetail, registered in `src/registry.js`
   - Verify: Playwright `tests/e2e/marketing-events.spec.ts`: create an event with two seats for the seed campaign, feed three sign-ups through the listener, see two registered and one waiting, cancel one, see the waiting one registered, mark one attended and read one `attend` in the campaign report
+  - State (17 Nov): Add attendee (header action), Mark attended / Mark no-show (row actions on the Registrations tab) and the campaign's Events card are declarative in the manifest, not registry sections. `tests/e2e/marketing-events.spec.ts` is written (two seats, three sign-ups through the registrations endpoint that calls the same `register()`, the duplicate, a session-less visitor refused, cancel through the mail link when `MAILPIT_URL` is set, attended counted as `attend` in the report); it is owed to the live pass.
 
 ## 5. Text and docs
 
