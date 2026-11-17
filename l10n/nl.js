@@ -9979,7 +9979,25 @@ OC.L10N.register(
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "Check status": "Controlestatus",
+        "Checked with": "Gecontroleerd bij",
+        "DUNS number": "DUNS-nummer",
+        "Identifiers": "Registratienummers",
+        "Not checked": "Niet gecontroleerd",
+        "Not valid": "Niet geldig",
+        "OIN": "OIN",
+        "RSIN": "RSIN",
+        "Register unavailable": "Register niet bereikbaar",
+        "Scheme": "Soort nummer",
+        "The number, without spaces.": "Het nummer, zonder spaties.",
+        "The official numbers of the organisation, such as its KvK, RSIN, VAT, DUNS and OIN number, each with the result of its last check.": "De officiële nummers van de organisatie, zoals het KvK-, RSIN-, btw-, DUNS- en OIN-nummer, elk met de uitkomst van de laatste controle.",
+        "The register the number belongs to.": "Het register waar het nummer bij hoort.",
+        "The register the number was checked with, or why it could not be checked.": "Het register waarbij het nummer is gecontroleerd, of waarom het niet kon worden gecontroleerd.",
+        "The result of the last register check.": "De uitkomst van de laatste controle bij het register.",
+        "Until when the register's answer may be relied on, when the register says so.": "Tot wanneer op het antwoord van het register mag worden vertrouwd, als het register dat aangeeft.",
+        "Valid": "Geldig",
+        "When the number was last checked against its register.": "Wanneer het nummer voor het laatst bij het register is gecontroleerd."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -10072,6 +10072,24 @@
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "Check status": "Check status",
+        "Checked with": "Checked with",
+        "DUNS number": "DUNS number",
+        "Identifiers": "Identifiers",
+        "Not checked": "Not checked",
+        "Not valid": "Not valid",
+        "OIN": "OIN",
+        "RSIN": "RSIN",
+        "Register unavailable": "Register unavailable",
+        "Scheme": "Scheme",
+        "The number, without spaces.": "The number, without spaces.",
+        "The official numbers of the organisation, such as its KvK, RSIN, VAT, DUNS and OIN number, each with the result of its last check.": "The official numbers of the organisation, such as its KvK, RSIN, VAT, DUNS and OIN number, each with the result of its last check.",
+        "The register the number belongs to.": "The register the number belongs to.",
+        "The register the number was checked with, or why it could not be checked.": "The register the number was checked with, or why it could not be checked.",
+        "The result of the last register check.": "The result of the last register check.",
+        "Until when the register's answer may be relied on, when the register says so.": "Until when the register's answer may be relied on, when the register says so.",
+        "Valid": "Valid",
+        "When the number was last checked against its register.": "When the number was last checked against its register."
     }
 }

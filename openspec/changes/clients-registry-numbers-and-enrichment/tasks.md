@@ -2,9 +2,9 @@
 
 ## 1. Schema
 
-- [ ] 1.1 Add `lib/Settings/register.d/19-client-identifiers.json` giving `client` an `identifiers` array (`scheme`, `value`, `checkStatus`, `checkedAt`, `checkSource`, `validUntil`) with the scheme enum and the per-scheme patterns JSON schema can hold
+- [x] 1.1 Add `lib/Settings/register.d/19-client-identifiers.json` giving `client` an `identifiers` array (`scheme`, `value`, `checkStatus`, `checkedAt`, `checkSource`, `validUntil`) with the scheme enum and the per-scheme patterns JSON schema can hold
   - Verify: `composer check:strict` exit 0; a register import on a dev instance logs no `PARTIAL IMPORT`; an OpenRegister save with KvK `1234` is refused
-- [ ] 1.2 English schema titles in `l10n/` (`check:schema-l10n`)
+- [x] 1.2 English schema titles in `l10n/` (`check:schema-l10n`)
   - Verify: `npm run check:schema-l10n` exit 0
 
 ## 2. Checks
