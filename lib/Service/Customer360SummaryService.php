@@ -39,7 +39,7 @@ use Throwable;
 
 /**
  * Aggregates a client's open tickets (all `ticketType`s), SLA status,
- * open leads, and last activity into one summary payload.
+ * open leads, last activity and the tickets waiting on the client into one summary payload.
  *
  * ADR-031 exception (2): this is a legitimate service concern, not a
  * declarative `summaryAggregates`/`stats-block` chip, because it spans
@@ -65,6 +65,25 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 	 * @var array<int, string>
 	 */
 	private const OPEN_TICKET_STATUSES = ['new', 'in_progress'];
+
+	/**
+	 * The status of a ticket that waits for the client to answer.
+	 *
+	 * @var string
+	 */
+	private const AWAITING_CUSTOMER_STATUS = 'awaiting_customer';
+
+	/**
+	 * Ticket types whose `awaiting_customer` rows are work waiting on the client.
+	 * A contact moment is a logged interaction, never something that waits.
+	 *
+	 * @var array<int, string>
+	 */
+	private const AWAITING_TICKET_TYPES = [
+		TicketService::TYPE_REQUEST,
+		TicketService::TYPE_COMPLAINT,
+		TicketService::TYPE_MELDING,
+	];
 
 	/**
 	 * SLA "at-risk" lookahead window in hours.
@@ -139,8 +158,40 @@ class Customer360SummaryService implements Customer360SummaryServiceInterface {
 			'openLeadCount' => count($openLeads),
 			'openLeadValue' => $openLeadValue,
 			'lastActivityAt' => $this->resolveLastActivity(clientId: $clientId),
+			'awaitingCustomerCount' => $this->countAwaitingCustomer(clientId: $clientId),
 		];
 	}//end getSummary()
+
+	/**
+	 * How many of the client's requests, complaints and meldingen wait for the client.
+	 *
+	 * Each row's status and client are checked again here: a store that
+	 * ignored a filter would otherwise count another client's ticket, or an
+	 * open one, as waiting.
+	 *
+	 * @param string $clientId The client UUID.
+	 *
+	 * @return int The number of tickets in status `awaiting_customer`.
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+	 */
+	private function countAwaitingCustomer(string $clientId): int {
+		$count = 0;
+		foreach (self::AWAITING_TICKET_TYPES as $ticketType) {
+			$tickets = $this->ticketService->findByType(
+				ticketType: $ticketType,
+				extraFilters: ['client' => $clientId, 'status' => self::AWAITING_CUSTOMER_STATUS]
+			);
+			foreach ($tickets as $rawTicket) {
+				$ticket = $this->toArray(object: $rawTicket);
+				if (($ticket['status'] ?? null) === self::AWAITING_CUSTOMER_STATUS && ($ticket['client'] ?? null) === $clientId) {
+					$count++;
+				}
+			}
+		}
+
+		return $count;
+	}//end countAwaitingCustomer()
 
 	/**
 	 * Read the client's open tickets across all `ticketType`s and reduce them
