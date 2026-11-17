@@ -149,7 +149,7 @@ class OpenClientOnContactMomentTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheTicketsOtherRulesAreKept(): void {
-		$this->assertEqualsCanonicalizing(['newTicket', 'ticketUpdated', 'incomingCall', 'incomingEmail'], array_keys($this->rules));
+		$this->assertEqualsCanonicalizing(['newTicket', 'ticketUpdated', 'incomingCall', 'incomingEmail', 'chatWaiting'], array_keys($this->rules));
 		$this->assertSame(['type' => 'created'], $this->rules['newTicket']['trigger']);
 	}//end testTheTicketsOtherRulesAreKept()
 }//end class

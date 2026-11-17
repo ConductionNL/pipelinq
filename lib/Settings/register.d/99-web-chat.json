@@ -128,7 +128,19 @@
                         "subject": {
                             "nl": "Een chat wacht: {{title}}",
                             "en": "A chat is waiting: {{title}}"
-                        }
+                        },
+                        "actions": [
+                            {
+                                "label": {
+                                    "en": "Open",
+                                    "nl": "Openen"
+                                },
+                                "primary": true,
+                                "target": {
+                                    "kind": "object-detail"
+                                }
+                            }
+                        ]
                     }
                 }
             },

@@ -41,6 +41,8 @@ class SettingsLoadService {
 	 */
 	private const SCHEMA_SLUGS = [
 		'client',
+		// Website chat channels (requests-web-chat-and-bot); WebChatStore reads the key.
+		'webChatChannel',
 		'contact',
 		'lead',
 		// Party fields and indicators (typed-fields-and-indicators-on-a-party).

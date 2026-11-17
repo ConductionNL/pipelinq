@@ -322,6 +322,9 @@
 			<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
 			<MailingListEmbedSettings v-if="isConfigured" />
 
+			<!-- Website chat channels (requests-web-chat-and-bot) -->
+			<WebChatSettings v-if="isAdmin && isConfigured" />
+
 			<!-- Prospect Discovery Settings -->
 			<ProspectSettings v-if="isConfigured" />
 
@@ -400,6 +403,7 @@ import ProspectSettings from './ProspectSettings.vue'
 import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
+import WebChatSettings from './WebChatSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
 import { INTEGRIQ_CONNECTIONS_PATH } from '../../services/connectionRegistry.js'
@@ -536,6 +540,7 @@ export default {
 		MenuStructureSettings,
 		DetectedIntegrations,
 		VatRatesSettings,
+		WebChatSettings,
 	},
 
 	data() {

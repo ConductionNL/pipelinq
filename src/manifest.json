@@ -4939,6 +4939,16 @@
 						}
 					},
 					{
+						"id": "web-chat",
+						"component": "WebChatSection",
+						"placement": "after-data",
+						"_note": "No title: the section draws its own heading, because it renders nothing on a ticket that is not a website chat (requests-web-chat-and-bot).",
+						"props": {
+							"channel": "@object.channel",
+							"threadKey": "@object.inboundThreadKey"
+						}
+					},
+					{
 						"id": "customer-reply",
 						"component": "CustomerReplySection",
 						"title": "Customer contact",

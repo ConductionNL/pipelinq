@@ -49,6 +49,7 @@ vi.mock('../../src/views/settings/CtiSettings.vue', async () => ({ default: name
 vi.mock('../../src/views/settings/DeliverabilitySettings.vue', async () => ({ default: named('DeliverabilitySettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/DetectedIntegrations.vue', async () => ({ default: named('DetectedIntegrations', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/MailingListEmbedSettings.vue', async () => ({ default: named('MailingListEmbedSettings', (await import('vue')).h) }))
+vi.mock('../../src/views/settings/WebChatSettings.vue', async () => ({ default: named('WebChatSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/MarketingTrafficSettings.vue', async () => ({ default: named('MarketingTrafficSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/MenuStructureSettings.vue', async () => ({ default: named('MenuStructureSettings', (await import('vue')).h) }))
 vi.mock('../../src/views/settings/MessagingSettings.vue', async () => ({ default: named('MessagingSettings', (await import('vue')).h) }))

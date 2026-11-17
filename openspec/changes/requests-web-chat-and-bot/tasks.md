@@ -5,8 +5,9 @@
 - [x] 1.1 Add fragment `lib/Settings/register.d/99-web-chat.json`: schema `webChatChannel` (slug, fields from design D2), the `chatWaiting` notification rule on `ticket`
   - Verify: import log has no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
   - Built: `webChatChannel` (off by default, written by admins only), the chat fields on `channelConversation` (channel, secret hash, ticket, handover time, last message time, assistant token, answers without a source; no address field) and `chatWaiting` on `ticket` (created with channel chat, `nc-notification` and `web-push`, the `newTicket` recipients). Test: `tests/Unit/Settings/WebChatSchemaTest.php`. Every new schema string has an en and nl key; `check:schema-l10n` still exits 1 on 13 strings that are uncovered on development already. The import log is the live check.
-- [ ] 1.2 Admin Web chat section in `src/views/settings/Settings.vue`: list, add, switch on, copy the embed line
+- [x] 1.2 Admin Web chat section in `src/views/settings/Settings.vue`: list, add, switch on, copy the embed line
   - Verify: Vitest `tests/vitest/webChatSettings.spec.js` renders the embed line with the channel token
+  - Built: `src/views/settings/WebChatSettings.vue` (admins only) over `src/services/webChatChannels.js`: lists the channels, adds one (off, with a fresh 32-character token, exact http(s) origins only), switches it on, and shows and copies the embed line. Test: `tests/vitest/webChatSettings.spec.js` (the embed line carries the channel token; a new channel is off).
 
 ## 2. The public window
 
@@ -22,8 +23,9 @@
 - [x] 3.1 Handover: Talk to a person calls `InboundTicketService::receive()` with channel chat and the transcript
   - Verify: PHPUnit on `WebChatService`: one handover makes one ticket with no assignee; a second press makes none
   - Built: `WebChatService::handOver()` calls `InboundTicketService::receive()` with channel chat, thread key `conversation:<id>`, the first question as title and the transcript; a chat that has a ticket gets no second one, and later visitor messages are added to it. Test: `WebChatServiceTest::testWithoutAnAssistantTheFirstMessageGoesToAPerson`, `testASecondHandoverMakesNoSecondTicket`.
-- [ ] 3.2 Add `src/components/WebChatSection.vue` (`kind: 'section'`), register it and mount it on TicketDetail for chat tickets: transcript, Take this chat, reply, End chat
+- [x] 3.2 Add `src/components/WebChatSection.vue` (`kind: 'section'`), register it and mount it on TicketDetail for chat tickets: transcript, Take this chat, reply, End chat
   - Verify: Playwright in `tests/e2e/web-chat.spec.ts`: the visitor asks for a person, the ticket appears on `/queue`, an agent takes it, answers, and the visitor's window shows the answer
+  - Built: `src/components/WebChatSection.vue`, registered as `WebChatSection` and mounted on TicketDetail as body widget `web-chat` (renders nothing unless the ticket's channel is chat and its thread key names a conversation); backed by `WebChatAgentController` (`GET /api/web-chat/conversations/{id}`, `POST .../take`, `.../reply`, `.../end`), each checking first that the colleague may read the chat. Taking assigns the conversation and the ticket (`in_progress`), which takes it out of the Queue. Tests: Vitest `tests/vitest/webChatSection.spec.js`, PHPUnit `WebChatAgentControllerTest`, `WebChatServiceTest::testTakingAChatAssignsItAndItsTicket`. Not done: the Playwright run in `tests/e2e/web-chat.spec.ts` (needs a running instance), and the saved-reply picker, which waits on `messaging-saved-replies-and-resend`.
 - [x] 3.3 Nobody available and wait timeout: Leave a message with an email address
   - Verify: PHPUnit with all agent profiles unavailable: start returns offline mode; Vitest on the window shows the address field
   - Built: with agent profiles kept and none available the chat starts in offline mode; a handed-over chat nobody takes within `waitSeconds` turns offline; the address goes to the ticket's `channelMetadata.fromAddress`. Tests: `WebChatServiceTest::testNobodyAvailableAsksForAnAddress`, `testAChatWaitsOutAndThenEnds`; Vitest `webChatWindow.spec.js` (the address field, Leave a message). The chat button on the host page always reads "Chat met ons"; the window says Leave a message once it knows nobody is available.
@@ -39,7 +41,9 @@
 
 ## 5. Text and docs
 
-- [ ] 5.1 English source strings and Dutch translations for the window and the section, sentence case, no em-dashes
+- [x] 5.1 English source strings and Dutch translations for the window and the section, sentence case, no em-dashes
   - Verify: `npm run test:l10n` exit 0
-- [ ] 5.2 Admin doc `docs/Features/web-chat.md`: add a channel, paste the line, switch on the assistant, what a colleague does
+  - Built: en and nl for every string of the window, the section and the admin section (`l10n/en.json`, `l10n/nl.json`, regenerated `.js`); `npm run test:l10n` passes.
+- [x] 5.2 Admin doc `docs/Features/web-chat.md`: add a channel, paste the line, switch on the assistant, what a colleague does
   - Verify: docs build exit 0
+  - Built: `docs/Features/web-chat.md`. The docs build was not run here.
