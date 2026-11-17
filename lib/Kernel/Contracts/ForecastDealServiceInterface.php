@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Kernel\Contracts;
 
+use DateTimeInterface;
+
 /**
  * Contract of ForecastDealService.
  *
@@ -103,4 +105,30 @@ interface ForecastDealServiceInterface {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 */
 	public function validateTransition(array $oldData, array $newData): ?string;
+
+	/**
+	 * Whether an update moves a commit or best-case deal's expected close date past
+	 * the end of the fiscal period its old close date was in.
+	 *
+	 * @param array<string, mixed> $oldData The deal data before the update.
+	 * @param array<string, mixed> $newData The deal data after the update.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/forecast-slip-reason/proposal.md
+	 */
+	public function slips(array $oldData, array $newData): bool;
+
+	/**
+	 * Record a valid slip on the deal: where the close date slipped from and when.
+	 *
+	 * @param array<string, mixed>        $oldData The deal data before the update.
+	 * @param array<string, mixed>        $newData The deal data after the update.
+	 * @param DateTimeInterface|null $now     The moment of the slip; now when omitted.
+	 *
+	 * @return array<string, mixed>|null The mutated data to persist, or null when no slip is to be recorded.
+	 *
+	 * @spec openspec/changes/forecast-slip-reason/proposal.md
+	 */
+	public function applySlip(array $oldData, array $newData, ?DateTimeInterface $now = null): ?array;
 }//end interface
