@@ -35,6 +35,20 @@ export async function incomingCall() {
 }
 
 /**
+ * Read the 360 summary of the client a caller matched: its open tickets, the
+ * last contact and the tickets waiting for the client. The server checks that
+ * the agent may read the client.
+ *
+ * @param {string} clientId The client's id.
+ * @return {Promise<object>} The summary from Customer360Controller.
+ * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+ */
+export async function customerSummary(clientId) {
+	const { data } = await axios.get(base('/api/customer-360/summary'), { params: { clientId } })
+	return data
+}
+
+/**
  * Ask the PBX to place a call from the agent's extension to a number.
  *
  * @param {string} targetNumber The number to dial.
@@ -157,6 +171,7 @@ export async function getEventLog(filters = {}) {
 export default {
 	screenPop,
 	incomingCall,
+	customerSummary,
 	clickToDial,
 	submitDisposition,
 	escalationQueues,
