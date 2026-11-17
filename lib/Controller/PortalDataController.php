@@ -28,16 +28,17 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\AbstractPortalReadFacade;
-use OCA\Pipelinq\Service\Portal\PortalContractService;
-use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
-use OCA\Pipelinq\Service\Portal\PortalOrderService;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
+use OCA\Pipelinq\Kernel\Contracts\PortalContractServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalInvoiceServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalOrderServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalReadFacadeInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use LogicException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -50,27 +51,28 @@ use Psr\Log\LoggerInterface;
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalDataController extends PortalApiController {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalInvoiceService $invoices The invoice facade.
-	 * @param PortalContractService $contracts The contract facade.
-	 * @param PortalOrderService $orders The order facade.
-	 * @param PortalTenantService $tenant The tenant service.
+	 * @param PortalInvoiceServiceInterface $invoices The invoice facade.
+	 * @param PortalContractServiceInterface $contracts The contract facade.
+	 * @param PortalOrderServiceInterface $orders The order facade.
+	 * @param PortalTenantServiceInterface $tenant The tenant service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private PortalInvoiceService $invoices,
-		private PortalContractService $contracts,
-		private PortalOrderService $orders,
-		private PortalTenantService $tenant,
+		private PortalInvoiceServiceInterface $invoices,
+		private PortalContractServiceInterface $contracts,
+		private PortalOrderServiceInterface $orders,
+		private PortalTenantServiceInterface $tenant,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()
@@ -110,7 +112,7 @@ class PortalDataController extends PortalApiController {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function invoice(string $id): JSONResponse {
-		return $this->requireObjectAccess(facade: $this->invoices, feature: 'invoices', id: $id);
+		return $this->requireObjectAccess(feature: 'invoices', id: $id);
 	}//end invoice()
 
 	/**
@@ -148,7 +150,7 @@ class PortalDataController extends PortalApiController {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function contract(string $id): JSONResponse {
-		return $this->requireObjectAccess(facade: $this->contracts, feature: 'contracts', id: $id);
+		return $this->requireObjectAccess(feature: 'contracts', id: $id);
 	}//end contract()
 
 	/**
@@ -186,18 +188,18 @@ class PortalDataController extends PortalApiController {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function order(string $id): JSONResponse {
-		return $this->requireObjectAccess(facade: $this->orders, feature: 'orders', id: $id);
+		return $this->requireObjectAccess(feature: 'orders', id: $id);
 	}//end order()
 
 	/**
 	 * Shared list handler: authenticate, feature-gate, paginate.
 	 *
-	 * @param AbstractPortalReadFacade $facade The read facade.
+	 * @param PortalReadFacadeInterface $facade The read facade.
 	 * @param string $feature The feature key.
 	 *
 	 * @return JSONResponse The paginated list.
 	 */
-	private function requireListAccess(AbstractPortalReadFacade $facade, string $feature): JSONResponse {
+	private function requireListAccess(PortalReadFacadeInterface $facade, string $feature): JSONResponse {
 		return $this->guarded(
 			handler: function () use ($facade, $feature): array {
 				$ctx = $this->requireSession();
@@ -215,13 +217,13 @@ class PortalDataController extends PortalApiController {
 	/**
 	 * Shared detail handler: authenticate, feature-gate, fetch-or-404.
 	 *
-	 * @param AbstractPortalReadFacade $facade The read facade.
-	 * @param string $feature The feature key.
+	 * @param string $feature The feature key, which names the read facade.
 	 * @param string $id The object id.
 	 *
 	 * @return JSONResponse The object, or 404.
 	 */
-	private function requireObjectAccess(AbstractPortalReadFacade $facade, string $feature, string $id): JSONResponse {
+	private function requireObjectAccess(string $feature, string $id): JSONResponse {
+		$facade = $this->facadeFor(feature: $feature);
 		return $this->guarded(
 			handler: function () use ($facade, $feature, $id): array {
 				$ctx = $this->requireSession();
@@ -235,4 +237,22 @@ class PortalDataController extends PortalApiController {
 			}
 		);
 	}//end requireObjectAccess()
+
+	/**
+	 * The read facade of a feature.
+	 *
+	 * @param string $feature `invoices`, `contracts` or `orders`.
+	 *
+	 * @return PortalReadFacadeInterface The facade.
+	 *
+	 * @throws LogicException For a feature without a read facade.
+	 */
+	private function facadeFor(string $feature): PortalReadFacadeInterface {
+		return match ($feature) {
+			'invoices' => $this->invoices,
+			'contracts' => $this->contracts,
+			'orders' => $this->orders,
+			default => throw new LogicException('No portal read facade for feature ' . $feature . '.'),
+		};
+	}//end facadeFor()
 }//end class

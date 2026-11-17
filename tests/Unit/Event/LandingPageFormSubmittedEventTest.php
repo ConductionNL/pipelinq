@@ -102,5 +102,63 @@ class LandingPageFormSubmittedEventTest extends TestCase {
 		$this->assertSame(['utm_source' => 'news'], $event->getUtmFirstTouch());
 		$this->assertSame(['utm_source' => 'ads'], $event->getUtmLastTouch());
 		$this->assertSame('n-1', $event->getNonce());
+		$this->assertSame('portaliq', $event->getSourceApp());
 	}//end testOutcomeDoesNotTouchTheSubmission()
+
+	/**
+	 * A positional construction maps every argument, in declared order, onto its getter.
+	 *
+	 * @return void
+	 */
+	public function testPositionalArgumentsMapOntoTheirGetters(): void {
+		$event = new LandingPageFormSubmittedEvent(
+			'websiteiq',
+			'form-2',
+			'page-2',
+			'/contact',
+			'secondary',
+			'ext-2',
+			['name' => 'Ada'],
+			['utm_medium' => 'mail'],
+			['utm_medium' => 'cpc'],
+			'https://ref.example.org',
+			'2026-11-16T08:00:00+00:00',
+			'n-2',
+			'corr-2'
+		);
+
+		$this->assertSame(
+			[
+				'websiteiq',
+				'form-2',
+				'page-2',
+				'/contact',
+				'secondary',
+				'ext-2',
+				['name' => 'Ada'],
+				['utm_medium' => 'mail'],
+				['utm_medium' => 'cpc'],
+				'https://ref.example.org',
+				'2026-11-16T08:00:00+00:00',
+				'n-2',
+				'corr-2',
+			],
+			[
+				$event->getSourceApp(),
+				$event->getFormId(),
+				$event->getPageId(),
+				$event->getPageRoute(),
+				$event->getPortal(),
+				$event->getExternalReference(),
+				$event->getValues(),
+				$event->getUtmFirstTouch(),
+				$event->getUtmLastTouch(),
+				$event->getReferrer(),
+				$event->getSubmittedAt(),
+				$event->getNonce(),
+				$event->getCorrelationId(),
+			]
+		);
+		$this->assertFalse($event->isPropagationStopped());
+	}//end testPositionalArgumentsMapOntoTheirGetters()
 }//end class

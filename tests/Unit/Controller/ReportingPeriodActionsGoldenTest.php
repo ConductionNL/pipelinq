@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ReportingController;
+use OCA\Pipelinq\Kernel\Contracts\ContactReportServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ReportingService;
@@ -153,7 +154,7 @@ final class ReportingPeriodActionsGoldenTest extends TestCase {
 			static fn (string $key, mixed $default = null): mixed => ($query[$key] ?? $default)
 		);
 
-		return new ReportingController($request, $service, new CrmPrivilegeCheck($session, $policy));
+		return new ReportingController($request, $service, new CrmPrivilegeCheck($session, $policy), $this->createMock(ContactReportServiceInterface::class));
 	}//end controller()
 
 	/**

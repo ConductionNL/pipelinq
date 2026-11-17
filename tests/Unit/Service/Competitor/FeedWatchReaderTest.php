@@ -188,4 +188,68 @@ class FeedWatchReaderTest extends TestCase {
 		$this->assertTrue($outcome->succeeded());
 		$this->assertCount(2, $outcome->items);
 	}//end testASuccessfulReadReturnsTheEntries()
+
+	/**
+	 * RSS items without a link are skipped, a missing guid falls back to the
+	 * publication date, long descriptions are shortened, and at most
+	 * MAX_ENTRIES items are kept.
+	 *
+	 * @return void
+	 */
+	public function testRssItemsAreFilteredStampedShortenedAndCapped(): void {
+		$items = '<item><title>Zonder link</title><guid>g-0</guid></item>'
+			. '<item><title>Lang</title><link>https://example.org/lang</link>'
+			. '<pubDate>Tue, 01 Sep 2026 10:00:00 +0000</pubDate>'
+			. '<description>' . str_repeat('b', 600) . '</description></item>';
+		for ($i = 1; $i <= (FeedWatchReader::MAX_ENTRIES + 5); $i++) {
+			$items .= '<item><title>Bericht ' . $i . '</title><link>https://example.org/' . $i . '</link><guid>g-' . $i . '</guid></item>';
+		}
+
+		$entries = $this->reader->parse(document: '<?xml version="1.0"?><rss version="2.0"><channel>' . $items . '</channel></rss>');
+
+		$this->assertIsArray($entries);
+		$this->assertCount(FeedWatchReader::MAX_ENTRIES, $entries);
+		$this->assertSame('https://example.org/lang', $entries[0]['url']);
+		$this->assertSame('Tue, 01 Sep 2026 10:00:00 +0000', $entries[0]['stamp']);
+		$this->assertSame(str_repeat('b', 497) . '...', $entries[0]['summary']);
+		$this->assertSame('g-1', $entries[1]['stamp']);
+		$this->assertSame('https://example.org/' . (FeedWatchReader::MAX_ENTRIES - 1), $entries[FeedWatchReader::MAX_ENTRIES - 1]['url']);
+	}//end testRssItemsAreFilteredStampedShortenedAndCapped()
+
+	/**
+	 * An RSS channel without items is not a feed this reader understands.
+	 *
+	 * @return void
+	 */
+	public function testAnRssChannelWithoutItemsIsUnparsable(): void {
+		$this->assertNull($this->reader->parse(document: '<?xml version="1.0"?><rss version="2.0"><channel><title>Leeg</title></channel></rss>'));
+	}//end testAnRssChannelWithoutItemsIsUnparsable()
+
+	/**
+	 * An Atom entry without a link uses its id, one with neither is skipped,
+	 * one without an id is stamped by its update time, and at most
+	 * MAX_ENTRIES entries are kept.
+	 *
+	 * @return void
+	 */
+	public function testAtomEntriesFallBackAndAreCapped(): void {
+		$entries = '<entry><title>Niets</title></entry>'
+			. '<entry><title>Alleen id</title><id>tag:example.org,2026:only-id</id></entry>'
+			. '<entry><title>Geen id</title><link href="https://example.org/geen-id"/><updated>2026-09-03T10:00:00Z</updated></entry>';
+		for ($i = 1; $i <= (FeedWatchReader::MAX_ENTRIES + 5); $i++) {
+			$entries .= '<entry><title>E' . $i . '</title><id>tag:e,' . $i . '</id><link href="https://example.org/e' . $i . '"/></entry>';
+		}
+
+		$parsed = $this->reader->parse(document: '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">' . $entries . '</feed>');
+
+		$this->assertIsArray($parsed);
+		$this->assertCount(FeedWatchReader::MAX_ENTRIES, $parsed);
+		$this->assertSame('tag:example.org,2026:only-id', $parsed[0]['url']);
+		$this->assertSame('tag:example.org,2026:only-id', $parsed[0]['stamp']);
+		$this->assertSame('https://example.org/geen-id', $parsed[1]['url']);
+		$this->assertSame('2026-09-03T10:00:00Z', $parsed[1]['stamp']);
+		$this->assertSame('2026-09-03T10:00:00Z', $parsed[1]['publishedAt']);
+		$this->assertSame('https://example.org/e' . (FeedWatchReader::MAX_ENTRIES - 2), $parsed[FeedWatchReader::MAX_ENTRIES - 1]['url']);
+	}//end testAtomEntriesFallBackAndAreCapped()
+
 }//end class

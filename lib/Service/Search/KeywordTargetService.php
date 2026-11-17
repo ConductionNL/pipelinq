@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Search;
 
+use OCA\Pipelinq\Kernel\Contracts\KeywordTargetServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use UnexpectedValueException;
@@ -47,7 +48,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
-class KeywordTargetService {
+class KeywordTargetService implements KeywordTargetServiceInterface {
 
 	/**
 	 * The schema slug the register fragment declares.
@@ -83,6 +84,17 @@ class KeywordTargetService {
 	 * @var array<int, string>
 	 */
 	public const INTENTS = ['informational', 'navigational', 'commercial', 'transactional'];
+
+	/**
+	 * The vocabulary of each field with one.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private const VOCABULARIES = [
+		'status' => self::STATUSES,
+		'proposalKind' => self::PROPOSAL_KINDS,
+		'intent' => self::INTENTS,
+	];
 
 	/**
 	 * Constructor.
@@ -149,8 +161,8 @@ class KeywordTargetService {
 
 		$record = [
 			'term' => $term,
-			'status' => $this->oneOf(value: (string)($payload['status'] ?? 'watch'), allowed: self::STATUSES, field: 'status'),
-			'proposalKind' => $this->oneOf(value: (string)($payload['proposalKind'] ?? 'manual'), allowed: self::PROPOSAL_KINDS, field: 'proposalKind'),
+			'status' => $this->oneOf(value: (string)($payload['status'] ?? 'watch'), field: 'status'),
+			'proposalKind' => $this->oneOf(value: (string)($payload['proposalKind'] ?? 'manual'), field: 'proposalKind'),
 			'createdBy' => $uid,
 			'createdAt' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
 		];
@@ -172,7 +184,7 @@ class KeywordTargetService {
 	private function withOptional(array $record, array $payload): array {
 		$intent = trim((string)($payload['intent'] ?? ''));
 		if ($intent !== '') {
-			$record['intent'] = $this->oneOf(value: $intent, allowed: self::INTENTS, field: 'intent');
+			$record['intent'] = $this->oneOf(value: $intent, field: 'intent');
 		}
 
 		foreach (['targetPageRef', 'property', 'notes'] as $optional) {
@@ -200,14 +212,14 @@ class KeywordTargetService {
 	 * Refuse a value the vocabulary does not admit, rather than storing it.
 	 *
 	 * @param string $value The value.
-	 * @param array<int, string> $allowed The vocabulary.
-	 * @param string $field The field name, for the message.
+	 * @param string $field The field whose vocabulary applies, also named in the message.
 	 *
 	 * @return string The value.
 	 *
 	 * @throws UnexpectedValueException When the value is unknown.
 	 */
-	private function oneOf(string $value, array $allowed, string $field): string {
+	private function oneOf(string $value, string $field): string {
+		$allowed = self::VOCABULARIES[$field];
 		$trimmed = trim($value);
 		if (in_array($trimmed, $allowed, true) === false) {
 			throw new UnexpectedValueException(

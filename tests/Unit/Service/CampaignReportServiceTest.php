@@ -182,7 +182,7 @@ class CampaignReportServiceTest extends TestCase {
 		$this->assertSame(80, $channels['email']['opened']);
 		$this->assertSame(1, $channels['email']['click']);
 
-		$this->assertSame(['click' => 1, 'visit' => 0, 'submit' => 1, 'reply' => 0], $report['engagement']);
+		$this->assertSame(['click' => 1, 'visit' => 0, 'submit' => 1, 'reply' => 0, 'attend' => 0], $report['engagement']);
 	}//end testReachComesFromTheBlastsAndEngagementFromTheTouchpoints()
 
 	/**
@@ -221,6 +221,28 @@ class CampaignReportServiceTest extends TestCase {
 		$this->assertSame(expected: 2, actual: $channels['email']['leads']);
 		$this->assertSame(expected: 1, actual: $channels['mastodon']['leads']);
 	}//end testEachChannelCountsTheLeadsItsTouchpointsCarry()
+
+	/**
+	 * An `attend` touchpoint is counted under its own kind, so the report shows how many came.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 */
+	public function testAnAttendTouchpointIsCounted(): void {
+		$rows = $this->build()->channels(
+			blasts: [],
+			touchpoints: [
+				['leadId' => 'lead-1', 'kind' => 'submit', 'channel' => 'event'],
+				['leadId' => 'lead-1', 'kind' => 'attend', 'channel' => 'event'],
+				['leadId' => 'lead-2', 'kind' => 'attend', 'channel' => 'event'],
+			]
+		);
+
+		$channels = array_column($rows, null, 'channel');
+		$this->assertSame(expected: 2, actual: $channels['event']['attend']);
+		$this->assertSame(expected: 1, actual: $channels['event']['submit']);
+	}//end testAnAttendTouchpointIsCounted()
 
 	/**
 	 * @return void
@@ -274,7 +296,7 @@ class CampaignReportServiceTest extends TestCase {
 	 */
 	public function testChannelRowsAreExact(): void {
 		$row = static fn (string $channel, ?int $reach, array $counts, int $leads): array => array_merge(
-			['channel' => $channel, 'reach' => $reach, 'sent' => 0, 'opened' => 0, 'click' => 0, 'visit' => 0, 'submit' => 0, 'reply' => 0],
+			['channel' => $channel, 'reach' => $reach, 'sent' => 0, 'opened' => 0, 'click' => 0, 'visit' => 0, 'submit' => 0, 'reply' => 0, 'attend' => 0],
 			$counts,
 			['leads' => $leads]
 		);

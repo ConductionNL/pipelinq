@@ -278,7 +278,7 @@ final class SchemaLifecycleGraph {
 				continue;
 			}
 
-			$annotation = $this->configurationFromSchemas(schemas: $schemas, schemaSlug: $schemaSlug, key: $key);
+			$annotation = $this->annotationIn(configurations: $this->configurationsOf(schemas: $schemas, schemaSlug: $schemaSlug), key: $key);
 			if ($annotation !== null) {
 				return $annotation;
 			}
@@ -288,35 +288,43 @@ final class SchemaLifecycleGraph {
 	}//end configurationFor()
 
 	/**
-	 * Scan one register file's schemas for a slug's `configuration.<key>` annotation.
+	 * The `configuration` blocks of one register file's schemas with a slug.
 	 *
 	 * Mirrors {@see configurationFor()}'s inner loop: a slug match with an invalid
-	 * `configuration` block or a non-array annotation does NOT stop the scan — it
-	 * keeps checking any remaining schemas in this file (then the caller moves on
-	 * to the next file).
+	 * `configuration` block is skipped and the remaining schemas in this file
+	 * are still checked.
 	 *
-	 * @param array<string, mixed> $schemas The decoded `components.schemas` map.
-	 * @param string $schemaSlug The schema slug to look up.
-	 * @param string $key The configuration key.
+	 * @param array<string, mixed> $schemas    The decoded `components.schemas` map.
+	 * @param string               $schemaSlug The schema slug to look up.
 	 *
-	 * @return array<string, mixed>|null The annotation, or null when not found in these schemas.
+	 * @return list<array<string, mixed>> The configuration blocks, in file order.
 	 */
-	private function configurationFromSchemas(array $schemas, string $schemaSlug, string $key): ?array {
+	private function configurationsOf(array $schemas, string $schemaSlug): array {
+		$configurations = [];
 		foreach ($schemas as $schemaKey => $schema) {
-			if (is_array($schema) === false) {
-				continue;
-			}
-
-			$slug = (string)($schema['slug'] ?? $schemaKey);
-			if ($slug !== $schemaSlug) {
+			if (is_array($schema) === false || (string)($schema['slug'] ?? $schemaKey) !== $schemaSlug) {
 				continue;
 			}
 
 			$config = ($schema['configuration'] ?? []);
-			if (is_array($config) === false) {
-				continue;
+			if (is_array($config) === true) {
+				$configurations[] = $config;
 			}
+		}
 
+		return $configurations;
+	}//end configurationsOf()
+
+	/**
+	 * The first array annotation under a key; a non-array annotation does not stop the scan.
+	 *
+	 * @param list<array<string, mixed>> $configurations The configuration blocks.
+	 * @param string                     $key            The configuration key.
+	 *
+	 * @return array<string, mixed>|null The annotation, or null when not found.
+	 */
+	private function annotationIn(array $configurations, string $key): ?array {
+		foreach ($configurations as $config) {
 			$annotation = ($config[$key] ?? null);
 			if (is_array($annotation) === true) {
 				return $annotation;
@@ -324,7 +332,7 @@ final class SchemaLifecycleGraph {
 		}
 
 		return null;
-	}//end configurationFromSchemas()
+	}//end annotationIn()
 
 	/**
 	 * Resolve the raw `x-openregister-lifecycle` annotation for a schema slug.

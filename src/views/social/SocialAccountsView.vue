@@ -381,7 +381,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .social-accounts {
 	box-sizing: border-box;
 	width: 100%;
@@ -455,15 +457,7 @@ export default {
 }
 
 .social-accounts__chip {
-	display: inline-flex;
-	align-items: center;
-	align-self: flex-start;
-	gap: 6px;
-	padding: 2px 10px;
-	border-radius: 999px;
-	background: var(--color-background-dark);
-	font-weight: 600;
-	font-size: 0.9em;
+	@include pill-chip;
 }
 
 .social-accounts__dot {

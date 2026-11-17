@@ -38,6 +38,8 @@ use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for PortalController.
@@ -126,7 +128,9 @@ class PortalControllerTest extends TestCase {
 			) {
 			}//end __construct()
 
-			public function find(string $id, string $register, string $schema): array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($schema === 'svc-schema') {
 					if ($this->serviceStub === []) {
 						throw new \RuntimeException('not found');
@@ -152,11 +156,14 @@ class PortalControllerTest extends TestCase {
 
 			public function saveObject(
 				array $object,
-				array $extend,
-				string $register,
-				string $schema,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
+				bool $_rbac = true,
+				bool $_multitenancy = true
 			): array {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saveCalls++;
 				$this->lastSaved = $object;
 				return ['@self' => ['id' => 'ct-new'], 'email' => $object['email'] ?? ''];

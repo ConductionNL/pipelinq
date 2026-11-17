@@ -33,6 +33,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Pins loadActivePolicies(), resolveCustomerContact() and normaliseObject().
@@ -136,7 +137,9 @@ class SlaEngineLoadGoldenTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				$this->calls[] = $register . ':' . $schema . '/' . $id;
 				$hit = ($this->objects[$schema . '/' . $id] ?? null);
 				if ($hit instanceof \Throwable) {

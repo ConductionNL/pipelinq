@@ -148,11 +148,11 @@ describe('buildVisitPayloads', () => {
 		})
 		expect(Object.keys(result.task)).toEqual([
 			'type', 'subject', 'description', 'status', 'priority', 'deadline', 'contactMomentSummary',
-			'assigneeUserId', 'createdBy', 'clientId', 'lead',
+			'assigneeUserId', 'createdBy', 'clientId', 'lead', 'leadId',
 		])
 		expect(result.task).toMatchObject({
 			type: 'followUpTask', subject: 'Call back', description: 'Went well', status: 'open', priority: 'normal',
-			contactMomentSummary: 'Went well', assigneeUserId: 'u1', createdBy: 'u1', clientId: 'c1', lead: 'l1',
+			contactMomentSummary: 'Went well', assigneeUserId: 'u1', createdBy: 'u1', clientId: 'c1', lead: 'l1', leadId: 'l1',
 		})
 		expect(typeof result.task.deadline).toBe('string')
 	})

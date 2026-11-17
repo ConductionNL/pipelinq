@@ -54,7 +54,7 @@ describe('the lead page (board PqLead)', () => {
 
 	it('has the board tabs, Quotes before History', () => {
 		const tabs = widget('lead-panels').content.tabs.map((tab) => tab.label)
-		expect(tabs).toEqual(['Overview', 'Contacts', 'Contact moments', 'Tasks', 'Appointments', 'Mail', 'Notes', 'Files', 'Decisions', 'Quotes', 'History'])
+		expect(tabs).toEqual(['Overview', 'Contacts', 'Contact moments', 'Tasks', 'Appointments', 'Mail', 'Notes', 'Files', 'Decisions', 'Quotes', 'Deal room', 'Board', 'Intake forms', 'History'])
 		expect(widget('lead-quotes').content).toMatchObject({ schema: 'salesQuote', filter: { lead: '@objectId' } })
 	})
 

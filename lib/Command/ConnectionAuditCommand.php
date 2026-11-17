@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\Social\ConnectionAuditService;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionAuditServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -49,10 +49,10 @@ class ConnectionAuditCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param ConnectionAuditService $audit The audit service.
+	 * @param ConnectionAuditServiceInterface $audit The audit service.
 	 */
 	public function __construct(
-		private ConnectionAuditService $audit,
+		private ConnectionAuditServiceInterface $audit,
 	) {
 		parent::__construct();
 	}//end __construct()

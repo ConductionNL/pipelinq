@@ -205,4 +205,26 @@ class MailBlockRendererTest extends TestCase {
 		);
 		$this->assertSame([['id' => 'footer', 'type' => 'footer', 'props' => []]], $renderer->normalise(blocks: []));
 	}//end testEveryTextAndNormaliseShape()
+
+	/**
+	 * The stored editor fields: only the keys the input carries, an unknown
+	 * mode is `html`, blocks become a list and a non-list is no blocks.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+	 */
+	public function testStoredFieldsKeepOnlyTheKeysTheInputCarries(): void {
+		$renderer = new MailBlockRenderer();
+
+		$this->assertSame([], $renderer->storedFields(input: ['subject' => 'x']));
+		$this->assertSame(['editorMode' => 'blocks'], $renderer->storedFields(input: ['editorMode' => 'blocks']));
+		$this->assertSame(['editorMode' => 'html'], $renderer->storedFields(input: ['editorMode' => 'wysiwyg']));
+		$this->assertSame(['editorMode' => 'html'], $renderer->storedFields(input: ['editorMode' => null]));
+		$this->assertSame(
+			['editorMode' => 'blocks', 'blocks' => [['type' => 'text'], ['type' => 'footer']]],
+			$renderer->storedFields(input: ['editorMode' => 'blocks', 'blocks' => ['a' => ['type' => 'text'], 'b' => ['type' => 'footer']]])
+		);
+		$this->assertSame(['blocks' => []], $renderer->storedFields(input: ['blocks' => 'not a list']));
+	}//end testStoredFieldsKeepOnlyTheKeysTheInputCarries()
 }//end class

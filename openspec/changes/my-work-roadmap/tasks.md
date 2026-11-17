@@ -4,9 +4,9 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 1. KPI tiles (REQ-MW-090)
 
-- [ ] 1.1 `lib/Service/WorklistService.php`: `getWeekStats(string $userId, string $scope = 'mine'): array` with answered (week and today), within-deadline percentage (user and team), average answer time, converted to a case.
-- [ ] 1.2 Route `GET /api/my-work/week-stats` on a `MyWorkController` with `#[NoAdminRequired]`, scoped to the signed-in user; unit test in `tests/Unit/Service/WorklistServiceTest.php`.
-- [ ] 1.3 `src/components/myWork/MyWeekTiles.vue`, four tiles with notes, placed as on `PqMijnWerk`; a dash, not 0, for an average with no data.
+- [x] 1.1 `lib/Service/WorklistService.php`: `getWeekStats(string $userId, string $scope = 'mine'): array` with answered (week and today), within-deadline percentage (user and team), average answer time, converted to a case.
+- [x] 1.2 Route `GET /api/my-work/week-stats` on a `MyWorkController` with `#[NoAdminRequired]`, scoped to the signed-in user; unit test in `tests/Unit/Service/WorklistServiceTest.php`.
+- [x] 1.3 `src/components/myWork/MyWeekTiles.vue`, four tiles with notes, placed as on `PqMijnWerk`; a dash, not 0, for an average with no data. Built as manifest configuration: the `my-week` stats-block reads the endpoint, no hand-built component.
 
 ## 2. Quick actions (REQ-MW-100)
 

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use RuntimeException;
 
@@ -75,7 +75,7 @@ class ConfigFileLoaderService {
 	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-10
 	 */
 	public function loadConfigurationFile(): array {
-		$appPath = $this->appManager->getAppPath(Application::APP_ID);
+		$appPath = $this->appManager->getAppPath(AppIdentity::APP_ID);
 		$data = self::readConfigurationData(absoluteFilePath: $appPath . self::REGISTER_FILE);
 
 		$data = $this->mergeRegisterFragments(data: $data, appPath: $appPath);

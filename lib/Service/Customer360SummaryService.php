@@ -29,11 +29,13 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
+use OCA\Pipelinq\Service\Support\CastingSerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates a client's open tickets (all `ticketType`s), SLA status,
@@ -53,7 +55,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
-class Customer360SummaryService {
+class Customer360SummaryService implements Customer360SummaryServiceInterface {
+	use CastingSerialisedToArray;
+
 	/**
 	 * Ticket statuses considered "open" (mirrors KccWerkplekService::OPEN_REQUEST_STATUSES
 	 * and the ticket schema's `x-openregister-lifecycle` non-final states).
@@ -155,28 +159,44 @@ class Customer360SummaryService {
 		$slaAtRisk = 0;
 
 		foreach (TicketService::TYPES as $ticketType) {
-			$tickets = $this->ticketService->findByType(
-				$ticketType,
-				['client' => $clientId, 'status' => self::OPEN_TICKET_STATUSES]
-			);
+			$tickets = $this->ticketService->findByType($ticketType, ['client' => $clientId, 'status' => self::OPEN_TICKET_STATUSES]);
 			$openTicketsByType[$ticketType] = count($tickets);
 
-			foreach ($tickets as $rawTicket) {
-				$ticket = $this->toArray(object: $rawTicket);
-
-				$deadline = $this->parseDeadline(raw: (string)($ticket['slaDeadline'] ?? ''));
-				if ($deadline !== null) {
-					if ($deadline < $now) {
-						$slaBreached++;
-					} elseif ($deadline <= $atRiskThreshold) {
-						$slaAtRisk++;
-					}
-				}
-			}
+			[$breached, $atRisk] = $this->slaCounts(tickets: $tickets, now: $now, atRiskThreshold: $atRiskThreshold);
+			$slaBreached += $breached;
+			$slaAtRisk += $atRisk;
 		}//end foreach
 
 		return [$openTicketsByType, $slaBreached, $slaAtRisk];
 	}//end collectOpenTickets()
+
+	/**
+	 * How many of the tickets breached their SLA deadline, and how many are at risk.
+	 *
+	 * @param iterable<mixed>   $tickets         The tickets.
+	 * @param DateTimeImmutable $now             Evaluation instant.
+	 * @param DateTimeImmutable $atRiskThreshold The end of the at-risk window.
+	 *
+	 * @return array{0: int, 1: int} [breached, atRisk].
+	 */
+	private function slaCounts(iterable $tickets, DateTimeImmutable $now, DateTimeImmutable $atRiskThreshold): array {
+		$slaBreached = 0;
+		$slaAtRisk = 0;
+		foreach ($tickets as $rawTicket) {
+			$ticket = $this->toArray(object: $rawTicket);
+
+			$deadline = $this->parseDeadline(raw: (string)($ticket['slaDeadline'] ?? ''));
+			if ($deadline !== null) {
+				if ($deadline < $now) {
+					$slaBreached++;
+				} elseif ($deadline <= $atRiskThreshold) {
+					$slaAtRisk++;
+				}
+			}
+		}
+
+		return [$slaBreached, $slaAtRisk];
+	}//end slaCounts()
 
 	/**
 	 * Parse a ticket's `slaDeadline` into an instant, or null when absent/unparsable.
@@ -257,34 +277,8 @@ class Customer360SummaryService {
 	 * @return string Resolved schema slug, or empty string when missing.
 	 */
 	private function getSchema(string $schemaKey): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 	}//end getSchema()
-
-	/**
-	 * Normalise an OpenRegister entity (object or array) to a plain array.
-	 *
-	 * @param mixed $object The object or array returned by ObjectService.
-	 *
-	 * @return array<string, mixed> Plain associative array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true) {
-			return (array)$object;
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Find leads matching the given equality filters, scoped to the pipelinq
@@ -313,11 +307,6 @@ class Customer360SummaryService {
 			return [];
 		}
 
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
+		return $this->resultsToArrays(results: $results);
 	}//end findLeadsSafe()
 }//end class

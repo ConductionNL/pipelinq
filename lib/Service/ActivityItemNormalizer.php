@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
+use OCA\Pipelinq\Service\Support\NonEmptyString;
 use OCP\IDateTimeFormatter;
 use OCP\IUserManager;
 use Throwable;
@@ -40,6 +41,8 @@ use Throwable;
  * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
  */
 class ActivityItemNormalizer {
+	use NonEmptyString;
+
 	/**
 	 * Constructor.
 	 *
@@ -67,14 +70,26 @@ class ActivityItemNormalizer {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-names-authors-by-display-name
 	 */
 	public function normalize(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		$item = $this->normalizeBySource(sourceType: $sourceType, object: $object, entityType: $entityType, entityId: $entityId);
+		$origin = new ActivityOrigin(entityType: $entityType, entityId: $entityId);
+		$item = $this->normalizeBySource(source: ['type' => $sourceType, 'object' => $object], origin: $origin);
+		return $this->withUserName(item: $item);
+	}//end normalize()
+
+	/**
+	 * The item with its author's display name as `userName`, unless it already carries one.
+	 *
+	 * @param array<string,mixed>|null $item The normalised item, or null.
+	 *
+	 * @return array<string,mixed>|null The item, or null when it was skipped.
+	 */
+	private function withUserName(?array $item): ?array {
 		if ($item === null) {
 			return null;
 		}
 
 		$item['userName'] ??= $this->displayName(userId: $item['user']);
 		return $item;
-	}//end normalize()
+	}//end withUserName()
 
 	/**
 	 * The display name of a user, the id itself when the user is unknown.
@@ -95,14 +110,13 @@ class ActivityItemNormalizer {
 	 * Normalise a raw note (a comment on the record) into an activity item.
 	 *
 	 * @param array<string,mixed> $note The note as NotesService reads it.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
 	 */
-	private function normalizeNote(array $note, string $entityType, string $entityId): array {
+	private function normalizeNote(array $note, ActivityOrigin $origin): array {
 		return [
 			'type' => 'note',
 			'id' => (string)($note['id'] ?? ''),
@@ -111,8 +125,8 @@ class ActivityItemNormalizer {
 			'date' => $this->stringOrNull(value: ($note['timestamp'] ?? null)),
 			'user' => $this->stringOrNull(value: ($note['authorId'] ?? null)),
 			'userName' => $this->stringOrNull(value: ($note['authorName'] ?? null)),
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [],
 		];
 	}//end normalizeNote()
@@ -121,14 +135,13 @@ class ActivityItemNormalizer {
 	 * Normalise a raw WhatsApp/SMS message into an activity item.
 	 *
 	 * @param array<string,mixed> $message The channelMessage object.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-notes-and-messages
 	 */
-	private function normalizeMessage(array $message, string $entityType, string $entityId): array {
+	private function normalizeMessage(array $message, ActivityOrigin $origin): array {
 		return [
 			'type' => 'message',
 			'id' => (string)($message['id'] ?? $message['uuid'] ?? ''),
@@ -136,8 +149,8 @@ class ActivityItemNormalizer {
 			'description' => '',
 			'date' => $this->stringOrNull(value: ($message['sentAt'] ?? null)),
 			'user' => null,
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'channel' => $this->stringOrNull(value: ($message['channel'] ?? null)),
 				'direction' => $this->stringOrNull(value: ($message['direction'] ?? null)),
@@ -152,14 +165,13 @@ class ActivityItemNormalizer {
 	 * service's name) and the appointment's time.
 	 *
 	 * @param array<string,mixed> $booking The appointmentBooking object, with `serviceName`.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 *
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
 	 */
-	private function normalizeBooking(array $booking, string $entityType, string $entityId): array {
+	private function normalizeBooking(array $booking, ActivityOrigin $origin): array {
 		$subject = $this->stringOrNull(value: ($booking['subject'] ?? $booking['title'] ?? $booking['serviceName'] ?? null));
 		$startAt = $this->stringOrNull(value: ($booking['startAt'] ?? null));
 		$bookedAt = $this->stringOrNull(value: ($booking['statusHistory'][0]['changedAt'] ?? null)) ?? $startAt;
@@ -175,8 +187,8 @@ class ActivityItemNormalizer {
 			'description' => '',
 			'date' => $bookedOn,
 			'user' => null,
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'startAt' => $startAt,
 				'status' => $this->stringOrNull(value: ($booking['status'] ?? null)),
@@ -206,23 +218,23 @@ class ActivityItemNormalizer {
 	/**
 	 * Normalise a raw object of one source into the unified activity item shape.
 	 *
-	 * @param string $sourceType The internal source-type key.
-	 * @param array<string,mixed> $object The raw object array.
-	 * @param string $entityType The originating entityType for back-reference.
-	 * @param string $entityId The originating entityId for back-reference.
+	 * @param array{type: string, object: array<string,mixed>} $source The internal source-type key and the raw object array.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
 	 */
-	private function normalizeBySource(string $sourceType, array $object, string $entityType, string $entityId): ?array {
-		return match ($sourceType) {
-			'interaction' => $this->normalizeInteraction(object: $object, entityType: $entityType, entityId: $entityId),
-			'task' => $this->normalizeTask(object: $object, entityType: $entityType, entityId: $entityId),
-			'emailLink' => $this->normalizeEmailLink(object: $object, entityType: $entityType, entityId: $entityId),
-			'calendarLink' => $this->normalizeCalendarLink(object: $object, entityType: $entityType, entityId: $entityId),
-			'note' => $this->normalizeNote(note: $object, entityType: $entityType, entityId: $entityId),
-			'message' => $this->normalizeMessage(message: $object, entityType: $entityType, entityId: $entityId),
-			'booking' => $this->normalizeBooking(booking: $object, entityType: $entityType, entityId: $entityId),
-			'linkedEmail' => $this->normalizeLinkedEmail(object: $object, entityType: $entityType, entityId: $entityId),
+	private function normalizeBySource(array $source, ActivityOrigin $origin): ?array {
+		$object = $source['object'];
+		return match ($source['type']) {
+			'interaction' => $this->normalizeInteraction(object: $object, origin: $origin),
+			'task' => $this->normalizeTask(object: $object, origin: $origin),
+			'emailLink' => $this->normalizeEmailLink(object: $object, origin: $origin),
+			'calendarLink' => $this->normalizeCalendarLink(object: $object, origin: $origin),
+			'note' => $this->normalizeNote(note: $object, origin: $origin),
+			'message' => $this->normalizeMessage(message: $object, origin: $origin),
+			'booking' => $this->normalizeBooking(booking: $object, origin: $origin),
+			'linkedEmail' => $this->normalizeLinkedEmail(object: $object, origin: $origin),
+			'leafEvent' => $this->normalizeLeafEvent(event: $object, origin: $origin),
 			default => null,
 		};
 	}//end normalizeBySource()
@@ -231,12 +243,11 @@ class ActivityItemNormalizer {
 	 * Normalise a contact moment ticket (a worklog when its channel is worklog) into an activity item.
 	 *
 	 * @param array<string,mixed> $object The raw row.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 */
-	private function normalizeInteraction(array $object, string $entityType, string $entityId): array {
+	private function normalizeInteraction(array $object, ActivityOrigin $origin): array {
 		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
 
 		// Ticket field names (unify-ticket-supertype): subject -> title,
@@ -253,8 +264,8 @@ class ActivityItemNormalizer {
 			'description' => (string)($object['description'] ?? ''),
 			'date' => $this->stringOrNull(value: ($object['occurredAt'] ?? null)),
 			'user' => $this->stringOrNull(value: ($object['assignee'] ?? null)),
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'channel' => $channel,
 				'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
@@ -268,12 +279,11 @@ class ActivityItemNormalizer {
 	 * Normalise a CRM task into an activity item.
 	 *
 	 * @param array<string,mixed> $object The raw row.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 */
-	private function normalizeTask(array $object, string $entityType, string $entityId): array {
+	private function normalizeTask(array $object, ActivityOrigin $origin): array {
 		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
 
 		return [
@@ -283,8 +293,8 @@ class ActivityItemNormalizer {
 			'description' => (string)($object['description'] ?? ''),
 			'date' => $this->stringOrNull(value: ($object['deadline'] ?? $object['createdAt'] ?? null)),
 			'user' => $this->stringOrNull(value: ($object['assigneeUserId'] ?? null)),
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'status' => $this->stringOrNull(value: ($object['status'] ?? null)),
 				'priority' => $this->stringOrNull(value: ($object['priority'] ?? null)),
@@ -296,12 +306,11 @@ class ActivityItemNormalizer {
 	 * Normalise an email link row into an activity item.
 	 *
 	 * @param array<string,mixed> $object The raw row.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 */
-	private function normalizeEmailLink(array $object, string $entityType, string $entityId): array {
+	private function normalizeEmailLink(array $object, ActivityOrigin $origin): array {
 		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
 
 		return [
@@ -311,8 +320,8 @@ class ActivityItemNormalizer {
 			'description' => (string)($object['sender'] ?? ''),
 			'date' => $this->stringOrNull(value: ($object['date'] ?? null)),
 			'user' => null,
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
 				'messageId' => $this->stringOrNull(value: ($object['messageId'] ?? null)),
@@ -324,12 +333,11 @@ class ActivityItemNormalizer {
 	 * Normalise a calendar link row into an activity item.
 	 *
 	 * @param array<string,mixed> $object The raw row.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 */
-	private function normalizeCalendarLink(array $object, string $entityType, string $entityId): array {
+	private function normalizeCalendarLink(array $object, ActivityOrigin $origin): array {
 		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
 
 		return [
@@ -339,25 +347,93 @@ class ActivityItemNormalizer {
 			'description' => (string)($object['notes'] ?? $object['description'] ?? ''),
 			'date' => $this->stringOrNull(value: ($object['startDate'] ?? null)),
 			'user' => null,
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'endDate' => $this->stringOrNull(value: ($object['endDate'] ?? null)),
 				'location' => $this->stringOrNull(value: ($object['location'] ?? null)),
+				'uid' => $this->stringOrNull(value: ($object['eventUid'] ?? $object['uid'] ?? null)),
 			],
 		];
 	}//end normalizeCalendarLink()
 
 	/**
+	 * Normalise an event read through the calendar leaf into an appointment item.
+	 *
+	 * A past event is completed activity, a future one scheduled. The item
+	 * carries the event UID, which the timeline dedupes on.
+	 *
+	 * @param array<string,mixed> $event The leaf's event row.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
+	 *
+	 * @return array<string,mixed>|null The activity item, or null for an event without a UID.
+	 *
+	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 */
+	private function normalizeLeafEvent(array $event, ActivityOrigin $origin): ?array {
+		$uid = $this->stringOrNull(value: ($event['uid'] ?? null));
+		if ($uid === null) {
+			return null;
+		}
+
+		$start = $this->stringOrNull(value: ($event['dtstart'] ?? null));
+
+		return [
+			'type' => 'calendar',
+			'id' => $uid,
+			'title' => (string)($event['summary'] ?? ''),
+			'description' => (string)($event['description'] ?? ''),
+			'date' => $start,
+			'user' => null,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
+			'metadata' => $this->leafEventMetadata(event: $event, uid: $uid),
+		];
+	}//end normalizeLeafEvent()
+
+	/**
+	 * `completed` for an event that started in the past, else `scheduled`.
+	 *
+	 * @param string|null $start The event start.
+	 *
+	 * @return string The status.
+	 */
+	private function leafEventStatus(string|null $start): string {
+		$status = 'scheduled';
+		if ($start !== null && strtotime($start) !== false && strtotime($start) < time()) {
+			$status = 'completed';
+		}
+
+		return $status;
+	}//end leafEventStatus()
+
+	/**
+	 * The calendar-leaf metadata of an event.
+	 *
+	 * @param array<string, mixed> $event The leaf event.
+	 * @param string $uid The event uid.
+	 *
+	 * @return array<string, mixed> The metadata.
+	 */
+	private function leafEventMetadata(array $event, string $uid): array {
+		return [
+			'uid' => $uid,
+			'source' => 'calendar-leaf',
+			'status' => $this->leafEventStatus(start: $this->stringOrNull(value: ($event['dtstart'] ?? null))),
+			'endDate' => $this->stringOrNull(value: ($event['dtend'] ?? null)),
+			'location' => $this->stringOrNull(value: ($event['location'] ?? null)),
+		];
+	}//end leafEventMetadata()
+
+	/**
 	 * Normalise an email linked through OpenRegister's reader into an activity item.
 	 *
 	 * @param array<string,mixed> $object The raw row.
-	 * @param string $entityType The originating entityType.
-	 * @param string $entityId The originating entityId.
+	 * @param ActivityOrigin $origin The originating entity, for back-reference.
 	 *
 	 * @return array<string,mixed> The activity item.
 	 */
-	private function normalizeLinkedEmail(array $object, string $entityType, string $entityId): array {
+	private function normalizeLinkedEmail(array $object, ActivityOrigin $origin): array {
 		return [
 			'type' => 'email',
 			'id' => (string)($object['id'] ?? ''),
@@ -365,36 +441,12 @@ class ActivityItemNormalizer {
 			'description' => (string)($object['sender'] ?? ''),
 			'date' => $this->stringOrNull(value: ($object['mailDate'] ?? $object['linkedAt'] ?? null)),
 			'user' => $this->stringOrNull(value: ($object['linkedBy'] ?? null)),
-			'entityType' => $entityType,
-			'entityId' => $entityId,
+			'entityType' => $origin->entityType,
+			'entityId' => $origin->entityId,
 			'metadata' => [
 				'mailAccountId' => $object['mailAccountId'] ?? null,
 				'mailMessageId' => $object['mailMessageId'] ?? null,
 			],
 		];
 	}//end normalizeLinkedEmail()
-
-	/**
-	 * Coerce a value to a string, or return null when empty/null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The string value or null.
-	 */
-	private function stringOrNull(mixed $value): ?string {
-		if ($value === null) {
-			return null;
-		}
-
-		$stringValue = '';
-		if (is_scalar($value) === true) {
-			$stringValue = (string)$value;
-		}
-
-		if ($stringValue === '') {
-			return null;
-		}
-
-		return $stringValue;
-	}//end stringOrNull()
 }//end class

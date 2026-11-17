@@ -8,6 +8,7 @@
 		<ClientForm
 			ref="form"
 			:initialName="prefillName"
+			:initialValues="values"
 			:showActions="false"
 			boardLayout
 			@save="onSave"
@@ -62,6 +63,16 @@ export default {
 		 * (`{ name: term }`). Its presence means a form opened this dialog.
 		 */
 		initialData: {
+			type: Object,
+			default: null,
+		},
+
+		/**
+		 * Field values to start the form with, e.g. what Paste or scan
+		 * proposed. Unlike `initialData` it does not mean a picker opened the
+		 * dialog: the new client is opened after Save.
+		 */
+		values: {
 			type: Object,
 			default: null,
 		},

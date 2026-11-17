@@ -32,17 +32,25 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Util\AppointmentServiceLookup;
+use OCA\Pipelinq\Service\Support\ByteTruncate;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
 use OCA\Pipelinq\Util\EntityIdOf;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Service\Support\WithoutSelf;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * BookingService — booking lifecycle service.
@@ -68,16 +76,14 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class BookingService {
+class BookingService implements BookingServiceInterface {
 	use EntityIdOf;
 	use NullablePayloadToArray;
-
-	/**
-	 * App-config key for the Booking schema id/slug.
-	 *
-	 * @var string
-	 */
-	public const BOOKING_SCHEMA_KEY = 'booking_schema';
+	use ConfiguredRegisterId;
+	use AppointmentServiceLookup;
+	use InjectedObjectService;
+	use ByteTruncate;
+	use WithoutSelf;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
@@ -833,10 +839,7 @@ class BookingService {
 		$booking['status'] = 'no-show';
 		$booking['statusHistory'] = $this->appendHistoryWithActor(
 			history: ($booking['statusHistory'] ?? []),
-			status: 'no-show',
-			changedAt: $nowIso,
-			changedBy: $actor,
-			reason: 'No-show marked by staff'
+			entry: ['status' => 'no-show', 'changedAt' => $nowIso, 'changedBy' => $actor, 'reason' => 'No-show marked by staff']
 		);
 
 		$this->saveBooking(payload: $this->stripSelf(payload: $booking), uuid: $bookingId);
@@ -1081,49 +1084,32 @@ class BookingService {
 	private function appendHistory(array $history, string $status, string $changedAt, string $reason): array {
 		return $this->appendHistoryWithActor(
 			history: $history,
-			status: $status,
-			changedAt: $changedAt,
-			changedBy: $this->actorUid(),
-			reason: $reason
+			entry: ['status' => $status, 'changedAt' => $changedAt, 'changedBy' => $this->actorUid(), 'reason' => $reason]
 		);
 	}//end appendHistory()
 
 	/**
 	 * Append a statusHistory entry with an explicit `changedBy`.
 	 *
-	 * @param array<int, mixed> $history Existing history.
-	 * @param string $status New status.
-	 * @param string $changedAt ISO timestamp.
-	 * @param string $changedBy Actor id (UID, customer id, or 'system').
-	 * @param string $reason Human-readable reason.
+	 * @param array<int, mixed>     $history Existing history.
+	 * @param array<string, string> $entry   The new entry: status, changedAt, changedBy (UID, customer id, or 'system') and reason.
 	 *
 	 * @return array<int, array<string, string>>
 	 */
-	private function appendHistoryWithActor(
-		array $history,
-		string $status,
-		string $changedAt,
-		string $changedBy,
-		string $reason,
-	): array {
+	private function appendHistoryWithActor(array $history, array $entry): array {
 		$entries = [];
-		foreach ($history as $entry) {
-			if (is_array($entry) === true) {
+		foreach ($history as $previous) {
+			if (is_array($previous) === true) {
 				$entries[] = [
-					'status' => (string)($entry['status'] ?? ''),
-					'changedAt' => (string)($entry['changedAt'] ?? ''),
-					'changedBy' => (string)($entry['changedBy'] ?? ''),
-					'reason' => (string)($entry['reason'] ?? ''),
+					'status' => (string)($previous['status'] ?? ''),
+					'changedAt' => (string)($previous['changedAt'] ?? ''),
+					'changedBy' => (string)($previous['changedBy'] ?? ''),
+					'reason' => (string)($previous['reason'] ?? ''),
 				];
 			}
 		}
 
-		$entries[] = [
-			'status' => $status,
-			'changedAt' => $changedAt,
-			'changedBy' => $changedBy,
-			'reason' => $reason,
-		];
+		$entries[] = $entry;
 		return $entries;
 	}//end appendHistoryWithActor()
 
@@ -1169,24 +1155,36 @@ class BookingService {
 			throw new RuntimeException('Booking register/schema not configured');
 		}
 
-		try {
-			$found = $this->getObjectService()->find(
-				id: $bookingId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: booking load failed', ['booking' => $bookingId]);
-			throw new RuntimeException('Booking lookup failed', 0, $e);
-		}
-
-		$data = $this->toArray(object: $found);
+		$data = $this->toArray(object: $this->findBooking(bookingId: $bookingId, register: $register, schema: $schema));
 		if ($data === null) {
 			throw new RuntimeException(sprintf('Booking %s not found', $bookingId));
 		}
 
 		return $data;
 	}//end loadBooking()
+
+	/**
+	 * Find a booking object.
+	 *
+	 * @param string $bookingId Booking UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The booking schema id.
+	 *
+	 * @return mixed The found object.
+	 *
+	 * @throws RuntimeException If the lookup fails.
+	 */
+	private function findBooking(string $bookingId, string $register, string $schema) {
+		try {
+			return $this->getObjectService()->find(
+				id: $bookingId,
+				options: new ObjectFindOptions(register: $register, schema: $schema)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: booking load failed', ['booking' => $bookingId]);
+			throw new RuntimeException('Booking lookup failed', 0, $e);
+		}
+	}//end findBooking()
 
 	/**
 	 * Load a Service by id (throwing).
@@ -1219,24 +1217,7 @@ class BookingService {
 			return null;
 		}
 
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::SERVICE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		try {
-			$found = $this->getObjectService()->find(
-				id: $serviceId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: service load failed', ['service' => $serviceId]);
-			return null;
-		}
-
-		return $this->toArray(object: $found);
+		return $this->findServiceObject(serviceId: $serviceId, failure: 'Pipelinq: service load failed');
 	}//end loadServiceQuiet()
 
 	/**
@@ -1373,32 +1354,58 @@ class BookingService {
 			return;
 		}
 
-		try {
-			$customer = $this->getObjectService()->find(
-				id: $customerId,
-				register: $register,
-				schema: $schema
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: customer load for no-show failed', ['customer' => $customerId]);
-			return;
-		}
-
-		$data = $this->toArray(object: $customer);
+		$data = $this->loadCustomerData(customerId: $customerId, register: $register, schema: $schema);
 		if ($data === null) {
 			return;
 		}
 
+		$this->saveNoShow(data: $data, customerId: $customerId, register: $register, schema: $schema);
+	}//end incrementCustomerNoShowCount()
+
+	/**
+	 * Load a customer's data for the no-show count.
+	 *
+	 * @param string $customerId Customer UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The customer schema id.
+	 *
+	 * @return array<string, mixed>|null The data, or null when the load fails or finds nothing.
+	 */
+	private function loadCustomerData(string $customerId, string $register, string $schema): array|null {
+		try {
+			$customer = $this->getObjectService()->find(
+				id: $customerId,
+				options: new ObjectFindOptions(register: $register, schema: $schema)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: customer load for no-show failed', ['customer' => $customerId]);
+			return null;
+		}
+
+		return $this->toArray(object: $customer);
+	}//end loadCustomerData()
+
+	/**
+	 * Raise a customer's no-show count by one and save it, logging a failure.
+	 *
+	 * @param array<string, mixed> $data The customer data.
+	 * @param string $customerId Customer UUID.
+	 * @param string $register The register id.
+	 * @param string $schema The customer schema id.
+	 *
+	 * @return void
+	 */
+	private function saveNoShow(array $data, string $customerId, string $register, string $schema): void {
 		$count = (int)($data['noShowCount'] ?? 0);
 		$data['noShowCount'] = ($count + 1);
 
 		try {
 			$this->getObjectService()->saveObject(
 				object: $this->stripSelf(payload: $data),
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $customerId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $customerId
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -1406,7 +1413,7 @@ class BookingService {
 				['customer' => $customerId]
 			);
 		}
-	}//end incrementCustomerNoShowCount()
+	}//end saveNoShow()
 
 	/**
 	 * Persist a Booking (create when uuid is null, update otherwise).
@@ -1425,10 +1432,10 @@ class BookingService {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $uuid
+			)
 		);
 	}//end saveBooking()
 
@@ -1629,25 +1636,6 @@ class BookingService {
 	}//end chargeCancellationFee()
 
 	/**
-	 * Strip OpenRegister metadata before re-saving an existing object.
-	 *
-	 * The OR engine reads `@self` for register/schema/id; including it on save
-	 * is harmless but `register`/`schema`/`uuid` are passed explicitly so we
-	 * remove the duplicate to keep payloads small.
-	 *
-	 * @param array<string, mixed> $payload Booking payload.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function stripSelf(array $payload): array {
-		if (array_key_exists('@self', $payload) === true) {
-			unset($payload['@self']);
-		}
-
-		return $payload;
-	}//end stripSelf()
-
-	/**
 	 * Normalise the resourceAssignments payload list.
 	 *
 	 * @param mixed $value Raw value.
@@ -1691,22 +1679,6 @@ class BookingService {
 
 		return 'portal';
 	}//end normaliseSource()
-
-	/**
-	 * Truncate a string to a maximum length.
-	 *
-	 * @param string $value Raw value.
-	 * @param int $max Maximum length.
-	 *
-	 * @return string
-	 */
-	private function truncate(string $value, int $max): string {
-		if (strlen($value) <= $max) {
-			return $value;
-		}
-
-		return substr($value, 0, $max);
-	}//end truncate()
 
 	/**
 	 * True when the value is a parseable ISO-8601 datetime.
@@ -1770,49 +1742,4 @@ class BookingService {
 	private function nowIso(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 	}//end nowIso()
-
-	/**
-	 * The pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

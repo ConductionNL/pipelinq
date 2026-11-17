@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -140,16 +140,33 @@ class EmailFallbackSender {
 			return false;
 		}
 
-		$html = $this->bodyWithNotice(message: $message, appendNotice: $appendNotice);
-		$html .= $this->unsubscribeParagraph(unsubscribe: $decision['unsubscribe']);
+		return $this->dispatched(
+			message: $message,
+			envelope: ['toEmail' => $toEmail, 'appendNotice' => $appendNotice, 'unsubscribe' => $decision['unsubscribe']]
+		);
+	}//end send()
+
+	/**
+	 * Build the mail with its notice and unsubscribe paragraph and headers, and hand it to the mailer.
+	 *
+	 * @param array<string,mixed>                                                   $message  The message.
+	 * @param array{toEmail: string, appendNotice: bool, unsubscribe: mixed} $envelope Recipient, notice flag, unsubscribe details.
+	 *
+	 * @return bool True iff IMailer accepted the message.
+	 *
+	 * @throws RuntimeException When the mailer fails.
+	 */
+	private function dispatched(array $message, array $envelope): bool {
+		$html = $this->bodyWithNotice(message: $message, appendNotice: $envelope['appendNotice']);
+		$html .= $this->unsubscribeParagraph(unsubscribe: $envelope['unsubscribe']);
 		try {
-			$msg = $this->withBody(msg: $this->addressedMessage(toEmail: $toEmail, message: $message), html: $html);
-			$this->unsubscribeMail->applyHeaders(message: $msg, unsubscribe: $decision['unsubscribe']);
+			$msg = $this->withBody(msg: $this->addressedMessage(toEmail: $envelope['toEmail'], message: $message), html: $html);
+			$this->unsubscribeMail->applyHeaders(message: $msg, unsubscribe: $envelope['unsubscribe']);
 			return empty($this->mailer->send($msg)) === true;
 		} catch (\Throwable $e) {
 			throw $this->dispatchFailure(error: $e);
 		}
-	}//end send()
+	}//end dispatched()
 
 	/**
 	 * Refuse an empty or invalid recipient address.
@@ -255,7 +272,7 @@ class EmailFallbackSender {
 	private function withBody(IMessage $msg, string $html): IMessage {
 		$msg->setHtmlBody($html);
 		$msg->setPlainBody(strip_tags($html));
-		$from = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_FROM_ADDRESS, '');
+		$from = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_FROM_ADDRESS, '');
 		if ($from !== '' && $this->mailer->validateMailAddress($from) === true) {
 			$msg->setFrom([$from]);
 		}

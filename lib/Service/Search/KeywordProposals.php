@@ -26,7 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Search;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KeywordProposalsInterface;
 use OCA\Pipelinq\Service\SearchConsole\SearchQueryReportService;
 use OCP\IAppConfig;
 
@@ -36,13 +37,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
  */
-class KeywordProposals {
-	/**
-	 * App-config key overriding the impression floor every derivation uses.
-	 *
-	 * @var string
-	 */
-	public const FLOOR_KEY = 'search.striking_min_impressions';
+class KeywordProposals implements KeywordProposalsInterface {
 
 	/**
 	 * Constructor.
@@ -99,7 +94,7 @@ class KeywordProposals {
 	 * @return int
 	 */
 	private function floor(): int {
-		$configured = (int)$this->appConfig->getValueString(Application::APP_ID, self::FLOOR_KEY, '');
+		$configured = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, self::FLOOR_KEY, '');
 		if ($configured < 1) {
 			return KeywordAnalysisService::DEFAULT_MIN_IMPRESSIONS;
 		}

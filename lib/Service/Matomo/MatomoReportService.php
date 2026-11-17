@@ -41,7 +41,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Matomo;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MatomoReportServiceInterface;
 use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
 use OCA\Pipelinq\Service\Egress\EgressResult;
@@ -53,7 +54,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
  */
-class MatomoReportService {
+class MatomoReportService implements MatomoReportServiceInterface {
 
 	/**
 	 * App-config key naming the OpenConnector source that reaches Matomo.
@@ -135,7 +136,7 @@ class MatomoReportService {
 
 		$out = ['connected' => true, 'reason' => '', 'from' => $from, 'to' => $to];
 		foreach (self::REPORTS as $name => $method) {
-			$out[$name] = $this->fetch(method: $method, from: $from, to: $to);
+			$out[$name] = $this->fetch(method: $method, range: ($from . ',' . $to));
 		}
 
 		$out['campaigns'] = $this->matchCampaigns(rows: (array)$out['campaigns']);
@@ -207,7 +208,7 @@ class MatomoReportService {
 	 * @spec openspec/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
 	 */
 	public function credentialRef(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, self::CREDENTIAL_KEY, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::CREDENTIAL_KEY, ''));
 	}//end credentialRef()
 
 	/**
@@ -229,12 +230,11 @@ class MatomoReportService {
 	 * One report, as rows.
 	 *
 	 * @param string $method The Matomo API method.
-	 * @param string $from Window start.
-	 * @param string $to Window end.
+	 * @param string $range  The window as `start,end`.
 	 *
 	 * @return array<int|string, mixed> The rows, or an empty list.
 	 */
-	private function fetch(string $method, string $from, string $to): array {
+	private function fetch(string $method, string $range): array {
 		$result = $this->egress->read(
 			configKey: self::SOURCE_KEY,
 			endpoint: self::ENDPOINT,
@@ -244,7 +244,7 @@ class MatomoReportService {
 					'method' => $method,
 					'idSite' => $this->siteId(),
 					'period' => 'range',
-					'date' => ($from . ',' . $to),
+					'date' => $range,
 					'format' => 'JSON',
 					'filter_limit' => '100',
 				],
@@ -325,7 +325,7 @@ class MatomoReportService {
 	 * @return string
 	 */
 	private function siteId(): string {
-		$value = trim($this->appConfig->getValueString(Application::APP_ID, self::SITE_KEY, ''));
+		$value = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::SITE_KEY, ''));
 		if ($value === '') {
 			return '1';
 		}

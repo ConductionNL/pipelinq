@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\QuestionDetailServiceInterface;
 use OCA\Pipelinq\Service\WooRequestConversionService;
 use OCP\IL10N;
 
@@ -43,7 +44,7 @@ use OCP\IL10N;
  *
  * @spec openspec/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
  */
-class QuestionDetailService {
+class QuestionDetailService implements QuestionDetailServiceInterface {
 	/**
 	 * The pipelinq schema key of the ticket supertype.
 	 *

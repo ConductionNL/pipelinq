@@ -27,7 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\WebForm;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WebFormFinderInterface;
 use OCP\IAppConfig;
 use RuntimeException;
 
@@ -36,7 +37,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
  */
-class WebFormFinder {
+class WebFormFinder implements WebFormFinderInterface {
 
 	/**
 	 * The status a form takes submits in.
@@ -196,7 +197,7 @@ class WebFormFinder {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/specs/website-enquiry-intake/spec.md#requirement-a-website-form-submits-into-the-destination-it-names
 	 */
 	public function schemaId(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'webForm_schema', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'webForm_schema', '');
 
 	}//end schemaId()
 
@@ -254,7 +255,7 @@ class WebFormFinder {
 	 * @throws RuntimeException When either is not configured.
 	 */
 	private function scope(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->schemaId();
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('Pipelinq: the webForm register or schema is not configured.');

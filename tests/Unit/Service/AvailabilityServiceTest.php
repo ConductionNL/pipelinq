@@ -32,6 +32,8 @@ use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * Tests for AvailabilityService.
@@ -456,7 +458,11 @@ class AvailabilityServiceTest extends TestCase {
 		);
 		$object->expects($this->once())
 			->method('deleteObject')
-			->with('cache-zap', 'pipelinq', 'availability-cache')
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => 'cache-zap',
+					'register' => 'pipelinq',
+					'schema' => 'availability-cache',
+				]))
 			->willReturn(true);
 
 		[$service] = $this->buildService(objectService: $object);
@@ -485,7 +491,8 @@ class AvailabilityServiceTest extends TestCase {
 			]);
 		$deleted = [];
 		$object->method('deleteObject')->willReturnCallback(
-			callback: static function (string $uuid) use (&$deleted): bool {
+			callback: static function (ObjectDeletion $deletion) use (&$deleted): bool {
+				$uuid = $deletion->uuid;
 				if ($uuid === 'day-2') {
 					throw new \RuntimeException('locked');
 				}

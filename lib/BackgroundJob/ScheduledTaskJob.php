@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\ScheduledTaskService;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -44,12 +44,12 @@ class ScheduledTaskJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory (required by TimedJob).
-	 * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
+	 * @param ScheduledTaskServiceInterface $scheduledTaskService The scheduled task service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ScheduledTaskService $scheduledTaskService,
+		private ScheduledTaskServiceInterface $scheduledTaskService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

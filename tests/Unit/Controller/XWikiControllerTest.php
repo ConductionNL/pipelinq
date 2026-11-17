@@ -175,4 +175,42 @@ class XWikiControllerTest extends TestCase {
 		$this->assertFalse(condition: $data['available']);
 		$this->assertSame(expected: 'error', actual: $data['source']);
 	}//end testStatusHandlesFailure()
+	/**
+	 * A failing pages proxy is logged and answers an empty page list marked unavailable.
+	 *
+	 * @return void
+	 */
+	public function testPagesHandlesServiceFailure(): void {
+		$service = $this->createMock(originalClassName: XWikiService::class);
+		$service->method('getPages')->willThrowException(new \RuntimeException('xwiki down'));
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('xWiki pages proxy failed');
+		$controller = new XWikiController(request: $this->createMock(originalClassName: IRequest::class), xwiki: $service, logger: $logger);
+
+		$response = $controller->pages();
+
+		$this->assertSame(['results' => [], 'total' => 0, 'limit' => 10, 'offset' => 0, 'error' => 'unavailable'], $response->getData());
+	}//end testPagesHandlesServiceFailure()
+
+	/**
+	 * A failing page proxy is logged and answers an empty page marked unavailable.
+	 *
+	 * @return void
+	 */
+	public function testPageHandlesServiceFailure(): void {
+		$service = $this->createMock(originalClassName: XWikiService::class);
+		$service->method('getPageContent')->willThrowException(new \RuntimeException('xwiki down'));
+		$service->expects($this->never())->method('sanitiseHtml');
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('xWiki page proxy failed');
+		$controller = new XWikiController(request: $this->createMock(originalClassName: IRequest::class), xwiki: $service, logger: $logger);
+
+		$response = $controller->page(wiki: 'xwiki', page: 'Main.WebHome');
+
+		$this->assertSame(
+			['title' => '', 'content' => '', 'url' => '', 'modified' => '', 'space' => '', 'id' => '', 'error' => 'unavailable'],
+			$response->getData()
+		);
+	}//end testPageHandlesServiceFailure()
+
 }//end class

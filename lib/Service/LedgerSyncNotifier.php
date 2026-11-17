@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Support\AdminNotice;
 use OCP\IGroupManager;
 
 /**
@@ -37,6 +38,8 @@ use OCP\IGroupManager;
  * @spec openspec/changes/archive/2026-06-14-pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
  */
 class LedgerSyncNotifier {
+	use AdminNotice;
+
 	/**
 	 * Constructor.
 	 *
@@ -61,22 +64,10 @@ class LedgerSyncNotifier {
 	 * @spec openspec/changes/archive/2026-06-14-pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
 	 */
 	public function notifyFailure(string $projectName, string $eventType, string $uuid): void {
-		$adminGroup = $this->groupManager->get('admin');
-		if ($adminGroup === null) {
-			return;
-		}
-
-		foreach ($adminGroup->getUsers() as $user) {
-			$this->notificationService->sendNotification(
-				userId: $user->getUID(),
-				subject: 'ledger_sync_failed',
-				parameters: [
-					'projectName' => $projectName,
-					'eventType' => $eventType,
-				],
-				objectType: 'project',
-				objectId: $uuid
-			);
-		}
+		$this->notifyAdmins(
+			subject: 'ledger_sync_failed',
+			parameters: ['projectName' => $projectName, 'eventType' => $eventType],
+			about: new NoticedObject(objectType: 'project', objectId: $uuid)
+		);
 	}//end notifyFailure()
 }//end class

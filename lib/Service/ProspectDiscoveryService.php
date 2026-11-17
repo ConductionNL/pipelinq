@@ -21,12 +21,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ProspectDiscoveryServiceInterface;
+
 /**
  * Orchestrator for prospect discovery.
  *
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
-class ProspectDiscoveryService {
+class ProspectDiscoveryService implements ProspectDiscoveryServiceInterface {
 	/**
 	 * Default cache TTL in seconds (1 hour) when unconfigured.
 	 *

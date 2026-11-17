@@ -126,14 +126,28 @@ class GoogleServiceAccountAuth {
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function buildAssertion(array $key, string $scope, ?int $now = null): string {
-		$issuedAt = ($now ?? $this->time->getTime());
+		return $this->assertion(key: $key, grant: ['scope' => $scope, 'issuedAt' => ($now ?? $this->time->getTime())]);
+	}//end buildAssertion()
+
+	/**
+	 * The RS256 JWT assertion for a key, a scope and an issue time.
+	 *
+	 * @param array<string, string>                $key   A parsed key (see `parseKey()`).
+	 * @param array{scope: string, issuedAt: int} $grant The OAuth scope and the issue time.
+	 *
+	 * @return string The compact JWT.
+	 *
+	 * @throws RuntimeException When the private key does not load or signing fails.
+	 */
+	private function assertion(array $key, array $grant): string {
+		$issuedAt = $grant['issuedAt'];
 		$header = self::base64Url(data: (string)json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-		$claims = ['iss' => $key['client_email'], 'scope' => $scope, 'aud' => $key['token_uri']];
+		$claims = ['iss' => $key['client_email'], 'scope' => $grant['scope'], 'aud' => $key['token_uri']];
 		$claims += ['iat' => $issuedAt, 'exp' => ($issuedAt + self::ASSERTION_TTL)];
 		$signingInput = ($header . '.' . self::base64Url(data: (string)json_encode($claims)));
 
 		return ($signingInput . '.' . self::base64Url(data: $this->signature(signingInput: $signingInput, privateKeyPem: $key['private_key'])));
-	}//end buildAssertion()
+	}//end assertion()
 
 	/**
 	 * The RS256 signature of the signing input with the service account's key.

@@ -30,10 +30,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Controller\Support\KeyedServiceResult;
+use OCA\Pipelinq\Controller\Support\RequestFields;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MailingListServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\MailingListService;
-use OCA\Pipelinq\Service\Marketing\SubscriptionQueryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -47,23 +49,25 @@ use OCP\IUserSession;
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
 class MailingListController extends Controller {
+	use KeyedServiceResult;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param MailingListService $lists Mailing list service.
-	 * @param SubscriptionQueryService $queries Membership reads.
+	 * @param MailingListServiceInterface $lists Mailing list service.
+	 * @param SubscriptionQueryServiceInterface $queries Membership reads.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly MailingListService $lists,
-		private readonly SubscriptionQueryService $queries,
+		private readonly MailingListServiceInterface $lists,
+		private readonly SubscriptionQueryServiceInterface $queries,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -139,15 +143,7 @@ class MailingListController extends Controller {
 	public function update(string $id): JSONResponse {
 		return $this->crmUserGuard()->respond(action: function () use ($id): JSONResponse {
 			$result = $this->lists->updateMailingList(listId: $id, patch: $this->collectBody());
-			if (($result['error'] ?? '') === 'Not found') {
-				return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-			}
-
-			if (isset($result['error']) === true) {
-				return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-			}
-
-			return new JSONResponse(['list' => ($result['list'] ?? null)]);
+			return $this->keyedResult(result: $result, key: 'list');
 		});
 	}//end update()
 
@@ -186,13 +182,9 @@ class MailingListController extends Controller {
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (['name', 'description', 'optInMode', 'senderName', 'senderEmail', 'replyTo', 'footerAddress', 'status'] as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
+		$body = (new RequestFields(request: $this->request))->strings(
+			keys: ['name', 'description', 'optInMode', 'senderName', 'senderEmail', 'replyTo', 'footerAddress', 'status']
+		);
 
 		$publicSignup = $this->request->getParam('publicSignup');
 		if ($publicSignup !== null) {

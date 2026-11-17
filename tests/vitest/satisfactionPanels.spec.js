@@ -16,7 +16,7 @@ import path from 'path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const get = vi.fn()
-vi.mock('@nextcloud/axios', () => ({ default: { get: (...args) => get(...args) } }))
+vi.mock('@nextcloud/axios', () => ({ default: { get: (...args) => get(...args), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } } }))
 vi.mock('@nextcloud/router', async (importOriginal) => ({
 	...(await importOriginal()),
 	generateUrl: (p, params = {}) =>

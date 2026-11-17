@@ -36,11 +36,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Controller\Support\RequestFields;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialPostServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Social\SocialPublicationStore;
-use OCA\Pipelinq\Service\SocialMetricsService;
-use OCA\Pipelinq\Service\SocialPostService;
+use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,13 +59,15 @@ use OCP\IUserSession;
  *  composer and the approval gate need; each is three lines over the service.
  */
 class SocialPostController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialPostService $posts The post lifecycle and publishing.
-	 * @param SocialPublicationStore $publications The per-account result rows.
-	 * @param SocialMetricsService $metrics The ranking.
+	 * @param SocialPostServiceInterface $posts The post lifecycle and publishing.
+	 * @param SocialPublicationStoreInterface $publications The per-account result rows.
+	 * @param SocialMetricsServiceInterface $metrics The ranking.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy.
 	 *
@@ -71,13 +75,13 @@ class SocialPostController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialPostService $posts,
-		private readonly SocialPublicationStore $publications,
-		private readonly SocialMetricsService $metrics,
+		private readonly SocialPostServiceInterface $posts,
+		private readonly SocialPublicationStoreInterface $publications,
+		private readonly SocialMetricsServiceInterface $metrics,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -271,21 +275,6 @@ class SocialPostController extends Controller {
 	}//end networkPerformance()
 
 	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
-
-	/**
 	 * The CRM-user gate over this request's session.
 	 *
 	 * @return CrmUserGuard The gate.
@@ -303,21 +292,9 @@ class SocialPostController extends Controller {
 	 * @return array<string, mixed> The sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (['title', 'articleId', 'campaignId', 'body', 'link', 'scheduledFor'] as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
+		$fields = new RequestFields(request: $this->request);
 
-		foreach (['accountIds', 'media', 'variants'] as $key) {
-			$value = $this->request->getParam($key);
-			if (is_array($value) === true) {
-				$body[$key] = $value;
-			}
-		}
-
-		return $body;
+		return $fields->strings(keys: ['title', 'articleId', 'campaignId', 'body', 'link', 'scheduledFor'])
+			+ $fields->arrays(keys: ['accountIds', 'media', 'variants']);
 	}//end collectBody()
 }//end class

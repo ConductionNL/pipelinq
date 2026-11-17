@@ -264,11 +264,6 @@ class SocialBrokerGateway {
 	 * @return SocialGatewayResult What came back, or which of the six failures happened.
 	 *
 	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The branches ARE the closed
-	 *  failure set this method exists to produce; folding them into a helper
-	 *  would move the mapping without reducing it, and the catch ORDER is the
-	 *  behaviour under test.
 	 */
 	public function request(
 		string $credentialRef,
@@ -278,6 +273,52 @@ class SocialBrokerGateway {
 		?string $body = null,
 		?string $actingUserId = null,
 	): SocialGatewayResult {
+		$refusal = $this->requestRefusal(credentialRef: $credentialRef);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->callBroker(
+			call: new BrokeredCall(method: $method, path: $path),
+			request: ['credentialRef' => $credentialRef, 'headers' => $headers, 'body' => $body, 'actingUserId' => $actingUserId]
+		);
+	}//end request()
+
+	/**
+	 * Make the call through the broker and turn what comes back, or what it throws, into a result.
+	 *
+	 * @param BrokeredCall                                                                                    $call    The method and path.
+	 * @param array{credentialRef: string, headers: array<string, string>, body: string|null, actingUserId: string|null} $request The rest of the call.
+	 *
+	 * @return SocialGatewayResult What came back, or which failure happened.
+	 */
+	private function callBroker(BrokeredCall $call, array $request): SocialGatewayResult {
+		try {
+			$broker = $this->container->get(self::BROKER_CLASS);
+			$response = $broker->request(
+				$request['credentialRef'],
+				self::APP_ID,
+				strtoupper($call->method),
+				$call->path,
+				$this->withoutBrokerOwnedHeaders(headers: $request['headers']),
+				$request['body'],
+				$request['actingUserId']
+			);
+		} catch (Throwable $failure) {
+			return $this->classify(failure: $failure, call: $call);
+		}
+
+		return $this->interpret(response: $response, call: $call);
+	}//end callBroker()
+
+	/**
+	 * Why a call cannot be made at all: no broker, or no credential. Null when it can.
+	 *
+	 * @param string $credentialRef The broker credential UUID stored on the account.
+	 *
+	 * @return SocialGatewayResult|null
+	 */
+	private function requestRefusal(string $credentialRef): SocialGatewayResult|null {
 		if ($this->isAvailable() === false) {
 			return SocialGatewayResult::failed(
 				code: SocialGatewayResult::UNAVAILABLE,
@@ -292,23 +333,8 @@ class SocialBrokerGateway {
 			);
 		}
 
-		try {
-			$broker = $this->container->get(self::BROKER_CLASS);
-			$response = $broker->request(
-				$credentialRef,
-				self::APP_ID,
-				strtoupper($method),
-				$path,
-				$this->withoutBrokerOwnedHeaders(headers: $headers),
-				$body,
-				$actingUserId
-			);
-		} catch (Throwable $failure) {
-			return $this->classify(failure: $failure, call: new BrokeredCall(method: $method, path: $path));
-		}
-
-		return $this->interpret(response: $response, call: new BrokeredCall(method: $method, path: $path));
-	}//end request()
+		return null;
+	}//end requestRefusal()
 
 	/**
 	 * Turn an exception from the broker into one of the named failures.

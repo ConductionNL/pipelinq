@@ -51,6 +51,7 @@ use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for BerichtenboxService.
@@ -159,6 +160,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
 			function (...$args): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				foreach ($args as $arg) {
 					if (is_array($arg) === true) {
 						$this->savedMessages[] = $arg;
@@ -545,6 +547,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$captured = [];
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (...$args) use (&$captured): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				foreach ($args as $arg) {
 					if (is_array($arg) === true) {
 						$captured[] = $arg;

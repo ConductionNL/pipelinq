@@ -15,7 +15,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -60,13 +80,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -93,7 +115,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -138,13 +180,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -175,7 +219,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -243,6 +307,8 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 },
@@ -262,13 +328,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-5"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 3,
             "lead": 2,
             "touchpoint": 2
         },
@@ -296,7 +364,27 @@
             "contact": {
                 "ct-9": {
                     "uuid": "ct-9",
-                    "email": "jane.doe@example.com"
+                    "email": "jane.doe@example.com",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -341,6 +429,8 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-2"
                 }
@@ -348,7 +438,8 @@
         },
         "writes": {
             "lead": 1,
-            "touchpoint": 1
+            "touchpoint": 1,
+            "contact": 1
         },
         "events": [
             {
@@ -370,7 +461,27 @@
             "contact": {
                 "ct-8": {
                     "uuid": "ct-8",
-                    "email": "JANE.DOE@EXAMPLE.COM"
+                    "email": "JANE.DOE@EXAMPLE.COM",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -415,6 +526,8 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-2"
                 }
@@ -422,7 +535,8 @@
         },
         "writes": {
             "lead": 1,
-            "touchpoint": 1
+            "touchpoint": 1,
+            "contact": 1
         },
         "events": [
             {
@@ -447,14 +561,54 @@
                     "email": "a@b.nl",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 },
                 "obj-5": {
                     "name": "c@d.nl",
                     "email": "c@d.nl",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-5"
+                    "uuid": "obj-5",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "client": {
@@ -532,6 +686,8 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "n-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-4"
                 },
@@ -551,13 +707,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "n-2",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-7"
                 }
             }
         },
         "writes": {
-            "contact": 2,
+            "contact": 4,
             "client": 1,
             "lead": 2,
             "touchpoint": 2
@@ -595,7 +753,27 @@
                     "email": "a@b.nl",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -641,13 +819,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -685,6 +865,8 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-1"
                 }
@@ -716,7 +898,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -761,13 +963,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -794,7 +998,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -839,13 +1063,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -872,7 +1098,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -917,13 +1163,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -950,7 +1198,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -995,13 +1263,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -1028,7 +1298,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "gone",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "gone",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -1073,13 +1363,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -1106,7 +1398,27 @@
                     "email": "jane.doe@example.com",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "gone",
+                        "landingPage": "open-tilburg",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "gone",
+                        "landingPage": "open-tilburg",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -1151,13 +1463,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },
@@ -1184,7 +1498,27 @@
                     "email": "x@y.nl",
                     "source": "landing-page",
                     "marketingConsent": false,
-                    "uuid": "obj-1"
+                    "uuid": "obj-1",
+                    "firstTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    },
+                    "lastTouch": {
+                        "campaign": "",
+                        "source": "linkedin",
+                        "medium": "social",
+                        "term": "",
+                        "content": "",
+                        "campaignId": "camp-1",
+                        "landingPage": "open-tilburg/campagne/webinar",
+                        "at": "2026-10-21T09:47:12+00:00"
+                    }
                 }
             },
             "lead": {
@@ -1229,13 +1563,15 @@
                     "sourceRef": "page-1",
                     "occurredAt": "2026-10-21T09:47:12+00:00",
                     "nonce": "nonce-1",
+                    "clientId": "",
+                    "landingPage": "open-tilburg/campagne/webinar",
                     "createdAt": "<now>",
                     "uuid": "obj-3"
                 }
             }
         },
         "writes": {
-            "contact": 1,
+            "contact": 2,
             "lead": 1,
             "touchpoint": 1
         },

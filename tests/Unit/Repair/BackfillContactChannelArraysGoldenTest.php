@@ -34,6 +34,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every backfill path: what is read, what is saved (by parameter name, as
@@ -44,6 +45,8 @@ use RuntimeException;
  * @covers \OCA\Pipelinq\Repair\BackfillContactChannelArrays
  * @covers \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-existing-records-backfill-channel-arrays-on-upgrade
  */
@@ -217,7 +220,7 @@ class BackfillContactChannelArraysGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($scenario): ObjectEntityInterface {
-				$named = $this->named(method: 'saveObject', args: $args);
+				$named = LegacyObjectArgs::flatten(args: $this->named(method: 'saveObject', args: $args));
 				if (($named['currentUser'] ?? null) instanceof IUser) {
 					$named['currentUser'] = 'user:' . $named['currentUser']->getUID();
 				}

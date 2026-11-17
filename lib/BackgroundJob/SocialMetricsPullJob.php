@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\SocialMetricsService;
+use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -47,14 +47,14 @@ class SocialMetricsPullJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param SocialMetricsService $metrics The pull and the normalisation.
+	 * @param SocialMetricsServiceInterface $metrics The pull and the normalisation.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SocialMetricsService $metrics,
+		private readonly SocialMetricsServiceInterface $metrics,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

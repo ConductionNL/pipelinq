@@ -31,6 +31,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use UnexpectedValueException;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 
 /**
  * @covers \OCA\Pipelinq\Flow\CompetitorWatchRunNode
@@ -135,7 +136,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 			->with(7, 'automation')
 			->willReturn(['watches' => 2, 'events' => 3, 'failures' => []]);
 
-		$out = $this->node->execute(items: [], config: ['limit' => 7], context: ['runAs' => 'automation']);
+		$out = $this->node->execute(new FlowNodeCall(items: [], config: ['limit' => 7], context: ['runAs' => 'automation']));
 
 		$this->assertCount(1, $out);
 		$this->assertSame(2, $out[0]['json'][CompetitorWatchRunNode::OUTCOME_KEY]['watches']);
@@ -152,7 +153,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 			->method('runDue')
 			->willReturn(['watches' => 0, 'events' => 0, 'failures' => []]);
 
-		$this->assertCount(1, $this->node->execute(items: [], config: [], context: []));
+		$this->assertCount(1, $this->node->execute(new FlowNodeCall(items: [], config: [], context: [])));
 	}//end testAnEmptyFiringStillRuns()
 
 	/**
@@ -166,7 +167,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 			['watches' => 3, 'events' => 1, 'failures' => ['watch-2' => 'answered 403']]
 		);
 
-		$out = $this->node->execute(items: [], config: [], context: []);
+		$out = $this->node->execute(new FlowNodeCall(items: [], config: [], context: []));
 		$summary = $out[0]['json'][CompetitorWatchRunNode::OUTCOME_KEY];
 
 		$this->assertSame(3, $summary['watches']);
@@ -217,11 +218,7 @@ class CompetitorWatchRunNodeTest extends TestCase {
 		$summary = ['watches' => 1, 'events' => 0, 'failures' => []];
 		$this->watches->expects($this->once())->method('runDue')->willReturn($summary);
 
-		$out = $this->node->execute(
-			items: [['json' => ['id' => 'a']], ['json' => ['id' => 'b'], 'binary' => 'x']],
-			config: [],
-			context: []
-		);
+		$out = $this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 'a']], ['json' => ['id' => 'b'], 'binary' => 'x']], config: [], context: []));
 
 		$this->assertSame(
 			[

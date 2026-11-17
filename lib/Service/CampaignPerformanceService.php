@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Pipelinq\Kernel\Contracts\CampaignPerformanceServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -43,7 +44,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
-class CampaignPerformanceService {
+class CampaignPerformanceService implements CampaignPerformanceServiceInterface {
 	/**
 	 * Portaliq's register slug (contract section 3).
 	 *
@@ -109,15 +110,27 @@ class CampaignPerformanceService {
 	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 	 */
 	public function forBlast(string $blastId, ?string $from=null, ?string $to=null): ?array {
+		return $this->performanceOf(blastId: $blastId, requested: ['from' => $from, 'to' => $to]);
+	}//end forBlast()
+
+	/**
+	 * The performance of one blast over the requested window.
+	 *
+	 * @param string                                   $blastId   Blast UUID or slug.
+	 * @param array{from: string|null, to: string|null} $requested The requested window.
+	 *
+	 * @return array<string, mixed>|null The performance record, or null when the blast does not exist.
+	 */
+	private function performanceOf(string $blastId, array $requested): ?array {
 		$blast = $this->blastService->getBlastById(blastId: $blastId);
 		if ($blast === null) {
 			return null;
 		}
 
 		$record           = $this->mailboxRecord(blastId: $blastId, blast: $blast);
-		$record['window'] = $this->window(blast: $blast, requested: ['from' => $from, 'to' => $to]);
+		$record['window'] = $this->window(blast: $blast, requested: $requested);
 		return $this->withSite(record: $record, blast: $blast);
-	}//end forBlast()
+	}//end performanceOf()
 
 	/**
 	 * The record with the mailbox and deal numbers, the site half not yet read.

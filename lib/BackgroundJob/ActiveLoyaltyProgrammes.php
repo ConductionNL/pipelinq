@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Throwable;
@@ -70,8 +70,8 @@ final class ActiveLoyaltyProgrammes {
 	 * @return array<string, string>|null The filters, or null without a register or programme schema.
 	 */
 	private function programmeFilters(): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'loyaltyProgramme_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'loyaltyProgramme_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}

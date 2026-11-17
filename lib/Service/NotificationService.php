@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTime;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
 use OCP\IConfig;
 use OCP\Notification\IManager;
 use Psr\Log\LoggerInterface;
@@ -62,7 +63,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-21-pipelinq-notifications-to-or/tasks.md#task-3.1
  */
-class NotificationService {
+class NotificationService implements NotificationServiceInterface {
 	/**
 	 * Map notification subjects to user setting keys.
 	 *
@@ -449,7 +450,7 @@ class NotificationService {
 
 		try {
 			$notification = $this->notificationManager->createNotification();
-			$notification->setApp(Application::APP_ID)
+			$notification->setApp(AppIdentity::APP_ID)
 				->setUser($recipient->userId)
 				->setDateTime(new DateTime())
 				->setObject(type: $recipient->object->objectType, id: $recipient->object->objectId)
@@ -484,7 +485,7 @@ class NotificationService {
 
 		$enabled = $this->config->getUserValue(
 			userId: $userId,
-			appName: Application::APP_ID,
+			appName: AppIdentity::APP_ID,
 			key: $settingKey,
 			default: 'true'
 		);

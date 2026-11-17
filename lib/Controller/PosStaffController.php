@@ -25,8 +25,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosStaffService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosStaffServiceInterface;
+use OCA\Pipelinq\Controller\Support\AdminOnlyResponse;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
+use OCA\Pipelinq\Controller\Support\PosJsonAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,11 +57,15 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 class PosStaffController extends Controller {
+	use AdminOnlyResponse;
+	use PosControllerResponses;
+	use PosJsonAction;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosStaffService $service The POS staff service.
+	 * @param PosStaffServiceInterface $service The POS staff service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager (admin gate).
 	 * @param IL10N $l10n The localization service.
@@ -66,13 +73,13 @@ class PosStaffController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosStaffService $service,
+		private PosStaffServiceInterface $service,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -85,12 +92,7 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function index(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['staff' => $this->service->listStaff()],
 			label: 'index'
 		);
@@ -110,15 +112,10 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function show(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
+		$forbidden = $this->refuseStaffAccess(staffId: $id);
 		if ($forbidden instanceof JSONResponse) {
 			return $forbidden;
 		}
-
-		$uid = $this->userSession->getUser()?->getUID() ?? '';
-
-		// Per-object schema-scope check (ADR-005 Rule 3).
-		$this->service->authorizeStaff(staffId: $id, userId: $uid);
 
 		return $this->run(
 			action: fn (): array => ['staff' => $this->service->getStaff(id: $id)],
@@ -136,12 +133,7 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function create(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['staff' => $this->service->saveStaff(data: $this->payload())],
 			label: 'create'
 		);
@@ -161,15 +153,10 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function update(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
+		$forbidden = $this->refuseStaffAccess(staffId: $id);
 		if ($forbidden instanceof JSONResponse) {
 			return $forbidden;
 		}
-
-		$uid = $this->userSession->getUser()?->getUID() ?? '';
-
-		// Per-object schema-scope check (ADR-005 Rule 3).
-		$this->service->authorizeStaff(staffId: $id, userId: $uid);
 
 		return $this->run(
 			action: fn (): array => ['staff' => $this->service->saveStaff(data: $this->payload(), id: $id)],
@@ -191,15 +178,10 @@ class PosStaffController extends Controller {
 	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.2
 	 */
 	public function destroy(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
+		$forbidden = $this->refuseStaffAccess(staffId: $id);
 		if ($forbidden instanceof JSONResponse) {
 			return $forbidden;
 		}
-
-		$uid = $this->userSession->getUser()?->getUID() ?? '';
-
-		// Per-object schema-scope check (ADR-005 Rule 3).
-		$this->service->authorizeStaff(staffId: $id, userId: $uid);
 
 		return $this->run(
 			action: function () use ($id): array {
@@ -246,6 +228,26 @@ class PosStaffController extends Controller {
 	}//end authenticate()
 
 	/**
+	 * The 401/403 for a non-admin caller, after the per-object schema-scope
+	 * check (ADR-005 Rule 3) of the staff record; null when allowed.
+	 *
+	 * @param string $staffId The staff UUID.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function refuseStaffAccess(string $staffId): ?JSONResponse {
+		$forbidden = $this->requireAdmin();
+		if ($forbidden instanceof JSONResponse) {
+			return $forbidden;
+		}
+
+		$uid = $this->userSession->getUser()?->getUID() ?? '';
+		$this->service->authorizeStaff(staffId: $staffId, userId: $uid);
+
+		return null;
+	}//end refuseStaffAccess()
+
+	/**
 	 * Read the staff payload from the request body.
 	 *
 	 * @return array<string, mixed> The request payload.
@@ -261,61 +263,4 @@ class PosStaffController extends Controller {
 
 		return $payload;
 	}//end payload()
-
-	/**
-	 * Require an authenticated user.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
-	 * Require an authenticated admin user.
-	 *
-	 * @return null|JSONResponse Null when the caller is an admin; 401/403 otherwise.
-	 */
-	private function requireAdmin(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		if ($this->groupManager->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Admin privileges required')],
-				Http::STATUS_FORBIDDEN
-			);
-		}
-
-		return null;
-	}//end requireAdmin()
-
-	/**
-	 * Run an action with shared error handling.
-	 *
-	 * @param callable $action The action.
-	 * @param string $label A short label for log context.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function run(callable $action, string $label): JSONResponse {
-		return $this->posResponses()->run(
-			respond: fn (): JSONResponse => new JSONResponse($action()),
-			logLabel: 'PosStaffController::' . $label
-		);
-	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

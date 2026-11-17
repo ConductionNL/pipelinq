@@ -34,7 +34,7 @@
                 ]
             },
             {
-                "TeamLoadService::getTeamLoad": []
+                "TeamLoadServiceInterface::getTeamLoad": []
             }
         ]
     }

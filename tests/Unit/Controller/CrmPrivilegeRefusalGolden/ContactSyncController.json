@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "ContactSyncService::cardStatus": [
+                "ContactSyncServiceInterface::cardStatus": [
                     "mallory"
                 ]
             }
@@ -110,7 +110,7 @@
                 ]
             },
             {
-                "ContactSyncService::importContact": [
+                "ContactSyncServiceInterface::importContact": [
                     "mallory",
                     ""
                 ]
@@ -189,7 +189,7 @@
                 ]
             },
             {
-                "ContactSyncSettingsService::writesBack": [
+                "ContactSyncSettingsServiceInterface::writesBack": [
                     "crm-user"
                 ]
             }
