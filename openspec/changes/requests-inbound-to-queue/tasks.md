@@ -50,5 +50,6 @@
 - [x] 6.1 English source strings and Dutch translations, sentence case, no em-dashes
   - Verify: `npm run test:l10n` exit 0
   - The Routing rules strings are in `en.json` and `nl.json` and their generated `.js`; `npm run test:l10n` and `npm run check:l10n-js` pass.
-- [ ] 6.2 Admin doc `docs/Features/inbound-to-queue.md`: name a ticket mailbox, switch on routing, write a rule, what the social half waits on
+- [x] 6.2 Admin doc `docs/Features/inbound-to-queue.md`: name a ticket mailbox, switch on routing, write a rule, what the social half waits on
   - Verify: docs build exit 0
+  - Written and listed in `docs/Features/README.md`. This repository has no docs build of its own; the documentation site build runs elsewhere and has not run on it yet.

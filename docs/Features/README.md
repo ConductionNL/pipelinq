@@ -105,6 +105,7 @@ Features required for Dutch municipal KCC-werkplek deployments. Demand validated
 | Customer 360 | KCC citizen profile | [customer-360.md](customer-360.md) |
 | KCC Werkplek | Municipal KCC | [kcc-werkplek.md](kcc-werkplek.md) |
 | Omnichannel Registration | Channel-aware logging | [omnichannel-registratie.md](omnichannel-registratie.md) |
+| Inbound messages to the Queue | Mail, WhatsApp, SMS and social intake | [inbound-to-queue.md](inbound-to-queue.md) |
 
 ### Analytics & Insights (V1)
 
