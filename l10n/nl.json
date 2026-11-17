@@ -9507,7 +9507,6 @@
         "Figure": "Cijfer",
         "This period": "Deze periode",
         "The period before": "De periode ervoor",
-        "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
         "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in de periode ervoor",
         "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
         "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}",
@@ -10118,6 +10117,22 @@
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "{email} is not in Pipelinq yet.": "{email} staat nog niet in Pipelinq.",
+        "Add as contact": "Toevoegen als contactpersoon",
+        "Added as a contact.": "Toegevoegd als contactpersoon.",
+        "Finish signing in in the window that opened.": "Rond het inloggen af in het venster dat is geopend.",
+        "Link to {organisation}": "Koppelen aan {organisation}",
+        "Log this mail": "Deze mail vastleggen",
+        "Logged as a contact moment.": "Vastgelegd als contactmoment.",
+        "Looking up {email}…": "{email} opzoeken…",
+        "Open in pipelinq": "Openen in Pipelinq",
+        "Open this page from Outlook, as the Pipelinq add-in.": "Open deze pagina vanuit Outlook, als de Pipelinq-invoegtoepassing.",
+        "Sign in with your Nextcloud account to see the sender of this mail in Pipelinq.": "Log in met je Nextcloud-account om de afzender van deze mail in Pipelinq te zien.",
+        "Sign out": "Uitloggen",
+        "Signing in did not finish. Try again.": "Het inloggen is niet afgerond. Probeer het opnieuw.",
+        "Something went wrong.": "Er ging iets mis.",
+        "This mail has no sender address.": "Deze mail heeft geen afzenderadres.",
+        "Your sign-in has ended. Sign in again.": "Je bent uitgelogd. Log opnieuw in."
     }
 }
