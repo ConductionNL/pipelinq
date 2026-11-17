@@ -85,7 +85,8 @@
 
 ## 5. Companion + advisory surface
 
-- [ ] 5.1 File the openregister companion change `mcp-reach-annotation`
+- [x] 5.1 File the openregister companion change `mcp-reach-annotation`
+  - **built**: openregister#10615 (`openspec/changes/mcp-reach-annotation/` with the validator and descriptor pass-through). Once it is on main, the derived entries here can declare `reach`.
   - **spec_ref**: `specs/crm-mcp-tool-surface/spec.md#requirement-every-tool-declares-scope-and-reach-for-the-grant-matrix`
   - **files**: `../openregister/openspec/changes/mcp-reach-annotation/` (separate repo — proposal only from this task)
   - **acceptance_criteria**:
