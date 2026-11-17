@@ -575,7 +575,11 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 	 * @return object|null The service.
 	 */
 	private function vies(): ?object {
-		if ($this->appManager->isEnabledForAnyone('shillinq') === false || interface_exists($this->viesClass) === false && class_exists($this->viesClass) === false) {
+		if ($this->appManager->isEnabledForAnyone('shillinq') === false) {
+			return null;
+		}
+
+		if (interface_exists($this->viesClass) === false && class_exists($this->viesClass) === false) {
 			return null;
 		}
 
