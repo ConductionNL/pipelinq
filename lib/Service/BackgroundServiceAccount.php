@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 
 /**
  * Resolves the background service account and runs background writes as it.
@@ -87,7 +87,7 @@ class BackgroundServiceAccount extends ServiceAccount {
 	protected function refuse(string $userId, string $reason): never {
 		$this->logger->warning(
 			'Pipelinq: no usable background service account, so calls are not mirrored and old mirrored calls are not removed',
-			['app' => Application::APP_ID, 'userId' => $userId, 'reason' => $reason, 'group' => self::GROUP]
+			['app' => AppIdentity::APP_ID, 'userId' => $userId, 'reason' => $reason, 'group' => self::GROUP]
 		);
 		throw new ServiceAccountUnavailableException('No usable background service account.');
 	}//end refuse()

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Calls\CallMirror;
+use OCA\Pipelinq\Kernel\Contracts\CallMirrorInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -41,12 +41,12 @@ class CallMirrorRetentionJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param CallMirror $mirror The call mirror.
+	 * @param CallMirrorInterface $mirror The call mirror.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private CallMirror $mirror,
+		private CallMirrorInterface $mirror,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

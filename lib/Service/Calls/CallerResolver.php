@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Calls;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\PhoneNormaliser;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -86,14 +86,14 @@ class CallerResolver {
 	 * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-a-call-event-is-mirrored-and-resolved-once
 	 */
 	public function inPipelinq(string $e164): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($e164 === '' || $register === '') {
 			return [];
 		}
 
 		$matches = [];
 		foreach (['client', 'contact'] as $type) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $type . '_schema', '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $type . '_schema', '');
 			if ($schema === '') {
 				continue;
 			}
@@ -149,7 +149,7 @@ class CallerResolver {
 	 * @return array<int, array{id: string, title: string, status: string}>
 	 */
 	private function openTickets(string $register, string $type, string $id): array {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
 		if ($schema === '') {
 			return [];
 		}
