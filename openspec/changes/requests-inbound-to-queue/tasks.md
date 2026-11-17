@@ -20,8 +20,9 @@
 - [x] 3.1 Admin endpoint `GET /api/admin/mail-intake/accounts` listing Mail accounts (id, address, owner) and a Ticket mailboxes section in `src/views/settings/Settings.vue` that stores `inboundMail.accounts`
   - Verify: PHPUnit controller test: non-admin gets 403; hydra gates route-auth and semantic-auth pass
   - Built as `MailIntakeAdminController` (`GET` and `PUT /api/admin/mail-intake/accounts`, admin by Nextcloud's default and checked again in the body, the `MessagingAdminController` pattern) over `MailIntake\MailIntakeAccounts`, which stores only ids that name a Mail account. The section is `TicketMailboxSettings.vue`. Tests: `MailIntakeAdminControllerTest`, `MailIntakeAccountsTest`.
-- [ ] 3.2 Add `lib/BackgroundJob/MailIntakeJob.php`: per account, INBOX messages since the cursor, sender matching, `receive()` with `mail:<account>:<threadRootId>`, email leaf link to the ticket, skip mail from the configured addresses
+- [x] 3.2 Add `lib/BackgroundJob/MailIntakeJob.php`: per account, INBOX messages since the cursor, sender matching, `receive()` with `mail:<account>:<threadRootId>`, email leaf link to the ticket, skip mail from the configured addresses
   - Verify: PHPUnit with a fake Mail table: two messages in one thread make one ticket; a message from the mailbox's own address makes none; the cursor advances; the Mail message is linked to the ticket
+  - Built as a thin five-minute `MailIntakeJob` over `MailIntake\MailIntakeService` (one pass: per mailbox the INBOX rows above `inboundMail.cursor.<account>`, sender matched by address then domain, `tryReceive()`, the mail linked to the ticket with `EmailMatchService::linkMessageTo()`), reading through `MailIntake\MailIntakeReader` (INBOX rows with thread root, subject and preview; the type-0 sender). A message without a thread root is its own thread. Tests: `MailIntakeServiceTest`, `MailIntakeReaderTest`, `MailIntakeJobTest`; "one ticket per thread" is asserted as both messages reaching the intake on one thread key, which `InboundTicketServiceTest` already proves is one ticket.
 
 ## 4. Facebook and Instagram
 
