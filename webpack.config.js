@@ -99,6 +99,12 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'webChat', 'window.js'),
 		filename: appId + '-web-chat-window.js',
 	},
+	// The Outlook add-in's task pane (contact-moments-mail-add-in). Plain DOM,
+	// no Vue: it runs inside Outlook, outside the Nextcloud shell.
+	mailAddIn: {
+		import: path.join(__dirname, 'src', 'mailAddIn.js'),
+		filename: appId + '-mailAddIn.js',
+	},
 }
 
 // @conduction/nextcloud-vue resolves normally from node_modules. To build

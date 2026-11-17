@@ -135,6 +135,19 @@ describe('the value input', () => {
 		form.value = '42'
 		expect(form.typedValue()).toBe(42)
 	})
+
+	it('types a list value as a list, so Healthcare on Industry becomes ["Healthcare"]', async () => {
+		const form = vm({ schemaObject: { properties: { industry: { type: 'array', items: { type: 'string' }, title: 'Industry' } } } })
+		await form.loadSchema()
+		form.onPropertyPick({ id: 'industry' })
+		expect(form.valueKind).toBe('list')
+		form.value = 'Healthcare'
+		expect(form.typedValue()).toEqual(['Healthcare'])
+		form.value = ' Healthcare , Retail,, '
+		expect(form.typedValue()).toEqual(['Healthcare', 'Retail'])
+		form.value = ''
+		expect(form.typedValue()).toEqual([])
+	})
 })
 
 describe('preview', () => {
