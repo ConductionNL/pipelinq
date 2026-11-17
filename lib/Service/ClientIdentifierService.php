@@ -501,14 +501,14 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 			return ['status' => 404, 'message' => $this->l10n->t('Client not found')];
 		}
 
-		$client = $this->readClient(clientId: $clientId, register: $location[0], schema: $location[1]);
+		$client = $this->readClient(clientId: $clientId, location: $location);
 		if (isset($client['status']) === true) {
 			return $client;
 		}
 
 		$identifiers = (array)($client['data']['identifiers'] ?? []);
 		$number = self::normalise(scheme: $scheme, value: $value);
-		$index = self::indexOf(identifiers: $identifiers, scheme: $scheme, number: $number);
+		$index = self::indexOf(identifiers: $identifiers, wanted: ['scheme' => $scheme, 'number' => $number]);
 		if ($index === null) {
 			return ['status' => 404, 'message' => $this->l10n->t('This client has no such number.')];
 		}
@@ -525,52 +525,54 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 		}
 
 		$identifiers[$index] = $checked;
-		return $this->store(clientId: $clientId, location: $location, data: $client['data'], identifiers: $identifiers, checked: $checked);
-	}//end check()
-
-	/**
-	 * Write the checked list back as the user.
-	 *
-	 * @param string                           $clientId    The client's id.
-	 * @param array{0: string, 1: string}      $location    The register and schema.
-	 * @param array<string, mixed>             $data        The client as read.
-	 * @param array<int, array<string, mixed>> $identifiers The checked list.
-	 * @param array<string, mixed>             $checked     The checked identifier.
-	 *
-	 * @return array{status: int, identifier?: array<string, mixed>, message?: string} The outcome.
-	 */
-	private function store(string $clientId, array $location, array $data, array $identifiers, array $checked): array {
+		$data = $client['data'];
 		$data['identifiers'] = $identifiers;
-		unset($data['@self'], $data['id']);
-		try {
-			$this->objectService->saveObject(
-				object: $data,
-				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $location[0], schema: $location[1]), uuid: $clientId)
-			);
-		} catch (NotAuthorizedException $e) {
-			return ['status' => 403, 'message' => $this->l10n->t('You may not change this client.')];
-		} catch (Throwable $e) {
-			$this->logger->warning('Pipelinq: storing an identifier check failed', ['clientId' => $clientId, 'exception' => $e->getMessage()]);
-			return ['status' => 500, 'message' => $this->l10n->t('The outcome of the check could not be saved.')];
+		$refusal = $this->store(
+			data: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $location[0], schema: $location[1]), uuid: $clientId)
+		);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return ['status' => 200, 'identifier' => $checked];
+	}//end check()
+
+	/**
+	 * Write the client with its checked list back as the user.
+	 *
+	 * @param array<string, mixed> $data    The client as read, with the checked list.
+	 * @param ObjectSaveOptions    $options The client's register, schema and id.
+	 *
+	 * @return array{status: int, message: string}|null The refusal, or null when it was saved.
+	 */
+	private function store(array $data, ObjectSaveOptions $options): ?array {
+		unset($data['@self'], $data['id']);
+		try {
+			$this->objectService->saveObject(object: $data, options: $options);
+		} catch (NotAuthorizedException $e) {
+			return ['status' => 403, 'message' => $this->l10n->t('You may not change this client.')];
+		} catch (Throwable $e) {
+			$this->logger->warning('Pipelinq: storing an identifier check failed', ['clientId' => $options->uuid, 'exception' => $e->getMessage()]);
+			return ['status' => 500, 'message' => $this->l10n->t('The outcome of the check could not be saved.')];
+		}
+
+		return null;
 	}//end store()
 
 	/**
 	 * The position of an identifier in the list, or null.
 	 *
-	 * @param array<int|string, mixed> $identifiers The list.
-	 * @param string                   $scheme      The scheme.
-	 * @param string                   $number      The normalised number.
+	 * @param array<int|string, mixed>               $identifiers The list.
+	 * @param array{scheme: string, number: string} $wanted      The scheme and the normalised number.
 	 *
 	 * @return int|null The index.
 	 */
-	private static function indexOf(array $identifiers, string $scheme, string $number): ?int {
+	private static function indexOf(array $identifiers, array $wanted): ?int {
 		foreach (array_values($identifiers) as $index => $identifier) {
 			if (is_array($identifier) === true
-				&& ($identifier['scheme'] ?? null) === $scheme
-				&& self::normalise(scheme: $scheme, value: (string)($identifier['value'] ?? '')) === $number
+				&& ($identifier['scheme'] ?? null) === $wanted['scheme']
+				&& self::normalise(scheme: $wanted['scheme'], value: (string)($identifier['value'] ?? '')) === $wanted['number']
 			) {
 				return $index;
 			}
@@ -582,13 +584,13 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 	/**
 	 * The client as the user may read it, or a refusal.
 	 *
-	 * @param string $clientId The client's id.
-	 * @param string $register The register.
-	 * @param string $schema   The schema.
+	 * @param string                      $clientId The client's id.
+	 * @param array{0: string, 1: string} $location The register and schema.
 	 *
 	 * @return array{status?: int, message?: string, data?: array<string, mixed>} The client's data, or a status.
 	 */
-	private function readClient(string $clientId, string $register, string $schema): array {
+	private function readClient(string $clientId, array $location): array {
+		[$register, $schema] = $location;
 		if (trim($clientId) === '' || $register === '' || $schema === '') {
 			return ['status' => 404, 'message' => $this->l10n->t('Client not found')];
 		}
@@ -641,7 +643,7 @@ class ClientIdentifierService implements ClientIdentifierServiceInterface {
 			return false;
 		}
 
-		return isset($this->readClient(clientId: $clientId, register: $location[0], schema: $location[1])['data']) === true;
+		return isset($this->readClient(clientId: $clientId, location: $location)['data']) === true;
 	}//end canAccessClient()
 
 	/**
