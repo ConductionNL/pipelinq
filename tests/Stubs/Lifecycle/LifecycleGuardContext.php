@@ -35,7 +35,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
  * sends, and its `id` may name another object, so a guard never resolves the
  * object it judges from it.
  *
- * @spec openspec/changes/lifecycle-guards-see-the-stored-object/specs/object-lifecycle/spec.md#requirement-a-transition-guard-can-judge-the-stored-object
+ * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md
  */
 final class LifecycleGuardContext {
 

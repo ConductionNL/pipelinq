@@ -29,7 +29,7 @@ namespace OCA\OpenRegister\Lifecycle;
  * OpenRegister then calls checkTransition() and never check(); check() stays
  * because the registry and older callers type against LifecycleGuardInterface.
  *
- * @spec openspec/changes/lifecycle-guards-see-the-stored-object/specs/object-lifecycle/spec.md#requirement-a-transition-guard-can-judge-the-stored-object
+ * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md
  */
 interface LifecycleTransitionGuardInterface extends LifecycleGuardInterface {
 	/**
@@ -39,7 +39,7 @@ interface LifecycleTransitionGuardInterface extends LifecycleGuardInterface {
 	 *
 	 * @return GuardResult Allow or deny + optional message.
 	 *
-	 * @spec openspec/changes/lifecycle-guards-see-the-stored-object/specs/object-lifecycle/spec.md#requirement-a-transition-guard-can-judge-the-stored-object
+	 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md
 	 */
 	public function checkTransition(LifecycleGuardContext $context): GuardResult;
 }//end interface
