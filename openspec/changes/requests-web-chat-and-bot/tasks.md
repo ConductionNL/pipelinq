@@ -2,8 +2,9 @@
 
 ## 1. Channel and schema
 
-- [ ] 1.1 Add fragment `lib/Settings/register.d/99-web-chat.json`: schema `webChatChannel` (slug, fields from design D2), the `chatWaiting` notification rule on `ticket`
+- [x] 1.1 Add fragment `lib/Settings/register.d/99-web-chat.json`: schema `webChatChannel` (slug, fields from design D2), the `chatWaiting` notification rule on `ticket`
   - Verify: import log has no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
+  - Built: `webChatChannel` (off by default, written by admins only), the chat fields on `channelConversation` (channel, secret hash, ticket, handover time, last message time, assistant token, answers without a source; no address field) and `chatWaiting` on `ticket` (created with channel chat, `nc-notification` and `web-push`, the `newTicket` recipients). Test: `tests/Unit/Settings/WebChatSchemaTest.php`. Every new schema string has an en and nl key; `check:schema-l10n` still exits 1 on 13 strings that are uncovered on development already. The import log is the live check.
 - [ ] 1.2 Admin Web chat section in `src/views/settings/Settings.vue`: list, add, switch on, copy the embed line
   - Verify: Vitest `tests/vitest/webChatSettings.spec.js` renders the embed line with the channel token
 

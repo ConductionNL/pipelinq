@@ -9506,7 +9506,6 @@
         "Figure": "Cijfer",
         "This period": "Deze periode",
         "The period before": "De periode ervoor",
-        "The report could not be exported.": "Het rapport kon niet worden geëxporteerd.",
         "was {previousPeriod.leadConversionRate|tile} in the period before": "was {previousPeriod.leadConversionRate|tile} in de periode ervoor",
         "was {previousPeriod.avgRequestResolutionTime|tile}": "was {previousPeriod.avgRequestResolutionTime|tile}",
         "contact moments, was {previousPeriod.contactMomentVolume|tile}": "contactmomenten, was {previousPeriod.contactMomentVolume|tile}",
@@ -10117,6 +10116,24 @@
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "Channel token": "Kanaaltoken",
+        "Random, not secret: part of the line pasted into the website.": "Willekeurig, niet geheim: onderdeel van de regel die in de website wordt geplakt.",
+        "Seconds a chat waits for a colleague": "Seconden dat een chat op een collega wacht",
+        "Show the colleague's first name": "Voornaam van de collega tonen",
+        "Text when nobody is available": "Tekst als niemand beschikbaar is",
+        "The assistant answers first": "De assistent antwoordt eerst",
+        "The exact origins (scheme, host and port) the chat may run on, such as https://www.example.org.": "De exacte herkomsten (schema, host en poort) waarop de chat mag draaien, zoals https://www.example.org.",
+        "Web chat channel": "Webchatkanaal",
+        "Websites": "Websites",
+        "A hash of the chat secret the visitor's window holds. The secret itself is never stored.": "Een hash van het chatgeheim dat het venster van de bezoeker bewaart. Het geheim zelf wordt nooit opgeslagen.",
+        "Answers in a row without a source": "Antwoorden op rij zonder bron",
+        "Assistant conversation token": "Gesprekstoken van de assistent",
+        "Handed over at": "Overgedragen op",
+        "Last message at": "Laatste bericht op",
+        "The ticket a handed-over chat is on.": "Het ticket waarop een overgedragen chat staat.",
+        "The token the assistant keeps this chat's context under.": "Het token waaronder de assistent de context van deze chat bewaart.",
+        "The web chat channel a website chat came in on.": "Het webchatkanaal waarop een websitechat binnenkwam.",
+        "Visitor secret hash": "Hash van het bezoekersgeheim"
     }
 }

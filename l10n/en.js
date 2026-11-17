@@ -9964,7 +9964,25 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "Channel token": "Channel token",
+        "Random, not secret: part of the line pasted into the website.": "Random, not secret: part of the line pasted into the website.",
+        "Seconds a chat waits for a colleague": "Seconds a chat waits for a colleague",
+        "Show the colleague's first name": "Show the colleague's first name",
+        "Text when nobody is available": "Text when nobody is available",
+        "The assistant answers first": "The assistant answers first",
+        "The exact origins (scheme, host and port) the chat may run on, such as https://www.example.org.": "The exact origins (scheme, host and port) the chat may run on, such as https://www.example.org.",
+        "Web chat channel": "Web chat channel",
+        "Websites": "Websites",
+        "A hash of the chat secret the visitor's window holds. The secret itself is never stored.": "A hash of the chat secret the visitor's window holds. The secret itself is never stored.",
+        "Answers in a row without a source": "Answers in a row without a source",
+        "Assistant conversation token": "Assistant conversation token",
+        "Handed over at": "Handed over at",
+        "Last message at": "Last message at",
+        "The ticket a handed-over chat is on.": "The ticket a handed-over chat is on.",
+        "The token the assistant keeps this chat's context under.": "The token the assistant keeps this chat's context under.",
+        "The web chat channel a website chat came in on.": "The web chat channel a website chat came in on.",
+        "Visitor secret hash": "Visitor secret hash"
     },
     "nplurals=2; plural=(n != 1);"
 )
