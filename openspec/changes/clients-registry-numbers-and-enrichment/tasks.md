@@ -35,5 +35,5 @@
 
 ## 5. Docs
 
-- [ ] 5.1 `docs/Features/client-identifiers.md`: the schemes, what Check does, what enrichment fills and what it never overwrites
+- [x] 5.1 `docs/Features/client-identifiers.md`: the schemes, what Check does, what enrichment fills and what it never overwrites
   - Verify: docs build exit 0
