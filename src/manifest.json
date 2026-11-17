@@ -6118,6 +6118,18 @@
 									}
 								},
 								{
+									"key": "priceSource",
+									"label": "Price from",
+									"secondary": "{priceListTitle}",
+									"enumLabels": {
+										"price-list": "Price list",
+										"base": "Product price",
+										"tier": "Quantity price",
+										"variant": "Variant price",
+										"manual": "Set by hand"
+									}
+								},
+								{
 									"key": "discount",
 									"label": "Discount"
 								},
