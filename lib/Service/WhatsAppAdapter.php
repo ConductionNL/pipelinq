@@ -999,11 +999,13 @@ class WhatsAppAdapter implements WhatsAppAdapterInterface {
 
 		if ($this->recordInboundOptIn(inbound: $inbound) === false) {
 			$result['ticket'] = $this->openInboundTicket(
-				channel: 'whatsapp',
 				conversationId: (string)$result['conversationId'],
-				contactId: $inbound->contactId,
-				body: $inbound->body,
-				from: $inbound->from,
+				message: [
+					'channel'     => 'whatsapp',
+					'contact'     => $inbound->contactId,
+					'text'        => $inbound->body,
+					'fromAddress' => $inbound->from,
+				],
 			);
 		}
 

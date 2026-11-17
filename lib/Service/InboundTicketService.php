@@ -124,7 +124,10 @@ class InboundTicketService {
 			return $this->addToTicket(ticket: $open, entry: $entry);
 		}
 
-		return $this->openTicket(channel: $channel, threadKey: $threadKey, message: $message, entry: $entry);
+		$message['channel']   = $channel;
+		$message['threadKey'] = $threadKey;
+
+		return $this->openTicket(message: $message, entry: $entry);
 	}//end receive()
 
 	/**
@@ -233,14 +236,14 @@ class InboundTicketService {
 	/**
 	 * Open a new request ticket for a thread: status new, no assignee, normal priority.
 	 *
-	 * @param string               $channel   The channel.
-	 * @param string               $threadKey The thread key.
-	 * @param array<string, mixed> $message   The message.
-	 * @param array<string, string> $entry    The message entry.
+	 * @param array<string, mixed>  $message The message, with its trimmed `channel` and `threadKey`.
+	 * @param array<string, string> $entry   The message entry.
 	 *
 	 * @return array{ticket: string, created: bool, status: string} The ticket.
 	 */
-	private function openTicket(string $channel, string $threadKey, array $message, array $entry): array {
+	private function openTicket(array $message, array $entry): array {
+		$channel   = (string) $message['channel'];
+		$threadKey = (string) $message['threadKey'];
 		$metadata = ['messages' => [$entry], 'lastMessageAt' => $entry['at']];
 		foreach (self::METADATA_KEYS as $key) {
 			$value = trim((string) ($message[$key] ?? ''));

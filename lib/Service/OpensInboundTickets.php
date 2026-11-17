@@ -41,17 +41,16 @@ trait OpensInboundTickets {
 	/**
 	 * Put a known contact's message on its conversation's ticket, or open one.
 	 *
-	 * @param string $channel        The channel (whatsapp, sms).
-	 * @param string $conversationId The conversation the message is on; '' for an unknown number.
-	 * @param string $contactId      The contact.
-	 * @param string $body           The message text.
-	 * @param string $from           The sender's number.
+	 * @param string               $conversationId The conversation the message is on; '' for an unknown number.
+	 * @param array<string, mixed> $message        The message as the intake takes it: `channel` (whatsapp, sms),
+	 *                                             `contact`, `text` and `fromAddress`; the thread key is
+	 *                                             derived from the conversation.
 	 *
 	 * @return string The ticket id, or '' when there is no conversation, no intake, or it failed.
 	 *
 	 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-an-inbound-message-becomes-a-ticket-in-the-queue-req-itq-001
 	 */
-	private function openInboundTicket(string $channel, string $conversationId, string $contactId, string $body, string $from): string {
+	private function openInboundTicket(string $conversationId, array $message): string {
 		if ($conversationId === '') {
 			return '';
 		}
@@ -59,18 +58,15 @@ trait OpensInboundTickets {
 		try {
 			$intake = $this->container->get(InboundTicketService::class);
 		} catch (Throwable $e) {
-			$this->logger->warning('Inbound ' . $channel . ' message: no ticket intake', ['exception' => $e->getMessage()]);
+			$this->logger->warning('Inbound ' . (string) ($message['channel'] ?? '') . ' message: no ticket intake', ['exception' => $e->getMessage()]);
 			return '';
 		}
 
 		return $intake->tryReceive(
-			message: [
-				'channel'     => $channel,
-				'threadKey'   => 'conversation:' . $conversationId,
-				'contact'     => $contactId,
-				'text'        => $body,
-				'fromAddress' => $from,
-			]
+			message: array_merge(
+				['channel' => (string) ($message['channel'] ?? ''), 'threadKey' => 'conversation:' . $conversationId],
+				$message
+			)
 		);
 	}//end openInboundTicket()
 }//end trait

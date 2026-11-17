@@ -527,11 +527,13 @@ class SmsAdapter implements SmsAdapterInterface {
 
 		if ($this->recordInboundOptIn(inbound: $inbound) === false) {
 			$result['ticket'] = $this->openInboundTicket(
-				channel: 'sms',
 				conversationId: (string)$result['conversationId'],
-				contactId: $inbound->contactId,
-				body: $inbound->body,
-				from: $inbound->from,
+				message: [
+					'channel'     => 'sms',
+					'contact'     => $inbound->contactId,
+					'text'        => $inbound->body,
+					'fromAddress' => $inbound->from,
+				],
 			);
 		}
 
