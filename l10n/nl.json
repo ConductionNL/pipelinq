@@ -10117,6 +10117,14 @@
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "{address} (account of {owner})": "{address} (account van {owner})",
+        "Could not load the Mail accounts.": "De Mail-accounts konden niet worden geladen.",
+        "Could not save the ticket mailboxes.": "De ticketmailboxen konden niet worden opgeslagen.",
+        "New mail in the inbox of a ticket mailbox becomes a ticket in the Queue. Add the team mailbox as a Mail account and switch on background sync for it, then tick it here.": "Nieuwe mail in de inbox van een ticketmailbox wordt een ticket in de wachtrij. Voeg de teammailbox toe als Mail-account, zet synchronisatie op de achtergrond aan en vink hem hier aan.",
+        "Save ticket mailboxes": "Ticketmailboxen opslaan",
+        "The ticket mailboxes are saved.": "De ticketmailboxen zijn opgeslagen.",
+        "There are no Mail accounts yet.": "Er zijn nog geen Mail-accounts.",
+        "Ticket mailboxes": "Ticketmailboxen"
     }
 }

@@ -17,8 +17,9 @@
 
 ## 3. Ticket mailboxes
 
-- [ ] 3.1 Admin endpoint `GET /api/admin/mail-intake/accounts` listing Mail accounts (id, address, owner) and a Ticket mailboxes section in `src/views/settings/Settings.vue` that stores `inboundMail.accounts`
+- [x] 3.1 Admin endpoint `GET /api/admin/mail-intake/accounts` listing Mail accounts (id, address, owner) and a Ticket mailboxes section in `src/views/settings/Settings.vue` that stores `inboundMail.accounts`
   - Verify: PHPUnit controller test: non-admin gets 403; hydra gates route-auth and semantic-auth pass
+  - Built as `MailIntakeAdminController` (`GET` and `PUT /api/admin/mail-intake/accounts`, admin by Nextcloud's default and checked again in the body, the `MessagingAdminController` pattern) over `MailIntake\MailIntakeAccounts`, which stores only ids that name a Mail account. The section is `TicketMailboxSettings.vue`. Tests: `MailIntakeAdminControllerTest`, `MailIntakeAccountsTest`.
 - [ ] 3.2 Add `lib/BackgroundJob/MailIntakeJob.php`: per account, INBOX messages since the cursor, sender matching, `receive()` with `mail:<account>:<threadRootId>`, email leaf link to the ticket, skip mail from the configured addresses
   - Verify: PHPUnit with a fake Mail table: two messages in one thread make one ticket; a message from the mailbox's own address makes none; the cursor advances; the Mail message is linked to the ticket
 
@@ -35,8 +36,9 @@
   - Verify: after import the flow is listed on `/flows`, unowned; `POST /api/flow/validate` accepts it; PHPUnit on the fragment asserts the node types and keys
 - [ ] 5.2 Add admin page `RoutingRules` (custom page, registered in `src/registry.js`) that reads the flow, edits its table as rows, adopts it on first save, then `PUT` and `publish`; show OpenRegister's refusal text
   - Verify: Vitest `tests/vitest/routingRules.spec.js` turns rows into a table and back; Playwright `tests/e2e/mail-routing.spec.ts` adds a rule "domain kadaster.nl sets category Registratie", feeds a mail from that domain and reads the category on the ticket in the Queue
-- [ ] 5.3 Add `category` to the Queue page facets in `src/manifest.json`
+- [x] 5.3 Add `category` to the Queue page facets in `src/manifest.json`
   - Verify: `npm run check:manifest` exit 0; the Queue sidebar lists the category facet
+  - The Queue's sidebar draws its facets from the schema's facetable properties, so 1.1 (`category` facetable) already puts it there; the page now also shows `category` as a column, so a row says which team it is for.
 
 ## 6. Text and docs
 

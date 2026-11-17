@@ -622,6 +622,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // The account the SMS and WhatsApp webhooks write as (admin only).
         ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
         ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
+        // The ticket mailboxes: Mail accounts whose inbox opens tickets in the Queue (admin only).
+        ['name' => 'mailIntakeAdmin#accounts',     'url' => '/api/admin/mail-intake/accounts', 'verb' => 'GET'],
+        ['name' => 'mailIntakeAdmin#saveAccounts', 'url' => '/api/admin/mail-intake/accounts', 'verb' => 'PUT'],
         // The account background work (the call mirror) writes as (admin only).
         ['name' => 'backgroundServiceAccount#show', 'url' => '/api/background/service-account', 'verb' => 'GET'],
         ['name' => 'backgroundServiceAccount#save', 'url' => '/api/background/service-account', 'verb' => 'PUT'],

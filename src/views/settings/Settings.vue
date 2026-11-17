@@ -138,6 +138,7 @@
 
 			<MessagingSettings v-if="isAdmin && isConfigured" />
 			<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />
+			<TicketMailboxSettings v-if="isAdmin && isConfigured" />
 
 			<!-- xWiki Integration (xwiki-integration) -->
 			<NcSettingsSection
@@ -399,6 +400,7 @@ import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
 import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
+import TicketMailboxSettings from './TicketMailboxSettings.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
@@ -505,6 +507,7 @@ export default {
 		CnConnectionsPanel,
 		MessagingSettings,
 		BackgroundServiceAccountSettings,
+		TicketMailboxSettings,
 		DeliverabilitySettings,
 		CtiEventLog,
 		CtiSettings,

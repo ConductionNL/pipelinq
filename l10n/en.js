@@ -9964,7 +9964,15 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "{address} (account of {owner})": "{address} (account of {owner})",
+        "Could not load the Mail accounts.": "Could not load the Mail accounts.",
+        "Could not save the ticket mailboxes.": "Could not save the ticket mailboxes.",
+        "New mail in the inbox of a ticket mailbox becomes a ticket in the Queue. Add the team mailbox as a Mail account and switch on background sync for it, then tick it here.": "New mail in the inbox of a ticket mailbox becomes a ticket in the Queue. Add the team mailbox as a Mail account and switch on background sync for it, then tick it here.",
+        "Save ticket mailboxes": "Save ticket mailboxes",
+        "The ticket mailboxes are saved.": "The ticket mailboxes are saved.",
+        "There are no Mail accounts yet.": "There are no Mail accounts yet.",
+        "Ticket mailboxes": "Ticket mailboxes"
     },
     "nplurals=2; plural=(n != 1);"
 )

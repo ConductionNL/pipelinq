@@ -10527,6 +10527,7 @@
 					"ticketType",
 					"priority",
 					"channel",
+					"category",
 					"status",
 					{
 						"key": "municipality",
