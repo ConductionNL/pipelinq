@@ -29,5 +29,5 @@
 
 ## 4. Admin page
 
-- [ ] 4.1 Add an Accessibility `NcSettingsSection` to `src/views/settings/Settings.vue` with the two links and the date of the last manual audit
+- [x] 4.1 Add an Accessibility `NcSettingsSection` to `src/views/settings/Settings.vue` with the two links and the date of the last manual audit
   - Verify: Vitest mounts the section and finds both links; `npm run test:l10n` exit 0

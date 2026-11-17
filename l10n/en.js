@@ -9964,7 +9964,13 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "Accessibility": "Accessibility",
+        "What the back office meets under WCAG 2.1 AA, and a draft accessibility statement your organisation completes and publishes.": "What the back office meets under WCAG 2.1 AA, and a draft accessibility statement your organisation completes and publishes.",
+        "Last manual audit: {date}": "Last manual audit: {date}",
+        "No manual audit has been recorded yet.": "No manual audit has been recorded yet.",
+        "Accessibility conformance report": "Accessibility conformance report",
+        "Draft accessibility statement": "Draft accessibility statement"
     },
     "nplurals=2; plural=(n != 1);"
 )

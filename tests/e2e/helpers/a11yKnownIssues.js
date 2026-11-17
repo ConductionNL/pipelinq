@@ -39,7 +39,9 @@ export function validateKnownIssues(list) {
 		}
 		const id = issueKey(entry.page, entry.rule, entry.target)
 		if (seen.has(id)) {
-			errors.push(`issue ${index} repeats ${entry.page} ${entry.rule} at ${entry.target}`)
+			errors.push(
+				`issue ${index} repeats ${entry.page} ${entry.rule} at ${entry.target}`,
+			)
 		}
 		seen.add(id)
 	})
@@ -56,15 +58,24 @@ export function validateKnownIssues(list) {
  * @return {{unexpected: string[], resolved: string[]}} New violations, and listed ones that no longer occur.
  */
 export function compareWithKnownIssues(page, violations, list) {
-	const listed = (list && Array.isArray(list.issues) ? list.issues : []).filter((entry) => entry && entry.page === page)
+	const listed = (list && Array.isArray(list.issues) ? list.issues : []).filter(
+		(entry) => entry && entry.page === page,
+	)
 	const found = new Map()
 	for (const violation of violations || []) {
 		for (const node of violation.nodes || []) {
-			const target = Array.isArray(node.target) ? node.target.join(' ') : String(node.target)
-			found.set(issueKey(page, violation.id, target), { rule: violation.id, target })
+			const target = Array.isArray(node.target)
+				? node.target.join(' ')
+				: String(node.target)
+			found.set(issueKey(page, violation.id, target), {
+				rule: violation.id,
+				target,
+			})
 		}
 	}
-	const listedKeys = new Set(listed.map((entry) => issueKey(page, entry.rule, entry.target)))
+	const listedKeys = new Set(
+		listed.map((entry) => issueKey(page, entry.rule, entry.target)),
+	)
 	const unexpected = []
 	for (const [key, hit] of found) {
 		if (!listedKeys.has(key)) {
@@ -73,7 +84,10 @@ export function compareWithKnownIssues(page, violations, list) {
 	}
 	const resolved = listed
 		.filter((entry) => !found.has(issueKey(page, entry.rule, entry.target)))
-		.map((entry) => `${page}: ${entry.rule} at ${entry.target} no longer occurs (fixed by ${entry.change}); remove it from a11y-known-issues.json`)
+		.map(
+			(entry) =>
+				`${page}: ${entry.rule} at ${entry.target} no longer occurs (fixed by ${entry.change}); remove it from a11y-known-issues.json`,
+		)
 	return { unexpected, resolved }
 }
 

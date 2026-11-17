@@ -9979,7 +9979,13 @@ OC.L10N.register(
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "Accessibility": "Toegankelijkheid",
+        "What the back office meets under WCAG 2.1 AA, and a draft accessibility statement your organisation completes and publishes.": "Wat de backoffice haalt onder WCAG 2.1 AA, en een concept-toegankelijkheidsverklaring die uw organisatie aanvult en publiceert.",
+        "Last manual audit: {date}": "Laatste handmatige audit: {date}",
+        "No manual audit has been recorded yet.": "Er is nog geen handmatige audit vastgelegd.",
+        "Accessibility conformance report": "Toegankelijkheidsrapport (conformiteit)",
+        "Draft accessibility statement": "Concept-toegankelijkheidsverklaring"
     },
     "nplurals=2; plural=(n != 1);"
 )
