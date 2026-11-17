@@ -35,8 +35,8 @@ import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
-import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import ClientIdentifiersSection from './components/clients/ClientIdentifiersSection.vue'
+import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
