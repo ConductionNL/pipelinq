@@ -9964,7 +9964,16 @@ OC.L10N.register(
         "The ticket's title.": "The ticket's title.",
         "The ticket's status when the call arrived.": "The ticket's status when the call arrived.",
         "Inbound thread": "Inbound thread",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.",
+        "Create event": "Create event",
+        "The event of this campaign: people who sign up on its landing page get a seat.": "The event of this campaign: people who sign up on its landing page get a seat.",
+        "Online event": "Online event",
+        "Sent to everyone with a seat.": "Sent to everyone with a seat.",
+        "Seats": "Seats",
+        "A whole number. Leave empty or 0 for no limit.": "A whole number. Leave empty or 0 for no limit.",
+        "Open registration now": "Open registration now",
+        "The event could not be created.": "The event could not be created.",
+        "The event is on the campaign.": "The event is on the campaign."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -10117,6 +10117,15 @@
         "The ticket's title.": "De titel van het ticket.",
         "The ticket's status when the call arrived.": "De status van het ticket toen het gesprek binnenkwam.",
         "Inbound thread": "Inkomende draad",
-        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat."
+        "The conversation or mail thread an inbound message came in on. Written by the intake; a follow-up on the same thread is added to this ticket while it is open.": "Het gesprek of de maildraad waarop een inkomend bericht binnenkwam. Ingevuld door de intake; een vervolgbericht op dezelfde draad komt bij dit ticket zolang het openstaat.",
+        "Create event": "Evenement maken",
+        "The event of this campaign: people who sign up on its landing page get a seat.": "Het evenement van deze campagne: wie zich op de landingspagina aanmeldt, krijgt een plaats.",
+        "Online event": "Online evenement",
+        "Sent to everyone with a seat.": "Wordt verstuurd naar iedereen met een plaats.",
+        "Seats": "Plaatsen",
+        "A whole number. Leave empty or 0 for no limit.": "Een heel getal. Laat leeg of vul 0 in voor geen maximum.",
+        "Open registration now": "Aanmelden nu openen",
+        "The event could not be created.": "Het evenement kon niet worden gemaakt.",
+        "The event is on the campaign.": "Het evenement staat bij de campagne."
     }
 }
