@@ -9997,7 +9997,23 @@ OC.L10N.register(
         "The result of the last register check.": "De uitkomst van de laatste controle bij het register.",
         "Until when the register's answer may be relied on, when the register says so.": "Tot wanneer op het antwoord van het register mag worden vertrouwd, als het register dat aangeeft.",
         "Valid": "Geldig",
-        "When the number was last checked against its register.": "Wanneer het nummer voor het laatst bij het register is gecontroleerd."
+        "When the number was last checked against its register.": "Wanneer het nummer voor het laatst bij het register is gecontroleerd.",
+        "\"%s\" is not a kind of number pipelinq keeps.": "\"%s\" is geen soort nummer dat pipelinq bijhoudt.",
+        "A KvK number has 8 digits.": "Een KvK-nummer heeft 8 cijfers.",
+        "An RSIN has 9 digits.": "Een RSIN heeft 9 cijfers.",
+        "A DUNS number has 9 digits.": "Een DUNS-nummer heeft 9 cijfers.",
+        "An OIN has 20 digits.": "Een OIN heeft 20 cijfers.",
+        "The RSIN %s is not valid: it fails the eleven test.": "Het RSIN %s is niet geldig: het voldoet niet aan de elfproef.",
+        "The identifiers must be a list.": "De registratienummers moeten een lijst zijn.",
+        "Each identifier needs a kind of number and a number.": "Elk registratienummer heeft een soort nummer en een nummer nodig.",
+        "Only a KvK number and a VAT number can be checked against a register.": "Alleen een KvK-nummer en een btw-nummer kunnen bij een register worden gecontroleerd.",
+        "This client has no such number.": "Deze klant heeft dit nummer niet.",
+        "You may not change this client.": "U mag deze klant niet wijzigen.",
+        "The outcome of the check could not be saved.": "De uitkomst van de controle kon niet worden opgeslagen.",
+        "Client not found": "Klant niet gevonden",
+        "You may not open this client.": "U mag deze klant niet openen.",
+        "A VAT number starts with the two letters of an EU country, such as NL or DE.": "Een btw-nummer begint met de twee letters van een EU-land, zoals NL of DE.",
+        "%s is not a valid VAT number for country %s.": "%s is geen geldig btw-nummer voor land %s."
     },
     "nplurals=2; plural=(n != 1);"
 )

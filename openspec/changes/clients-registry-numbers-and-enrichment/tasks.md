@@ -9,11 +9,11 @@
 
 ## 2. Checks
 
-- [ ] 2.1 `lib/Service/ClientIdentifierService.php::validateFormat()` with the RSIN eleven test and the EU VAT country patterns
+- [x] 2.1 `lib/Service/ClientIdentifierService.php::validateFormat()` with the RSIN eleven test and the EU VAT country patterns
   - Verify: PHPUnit `tests/Unit/Service/ClientIdentifierServiceTest.php` with valid and invalid numbers per scheme
-- [ ] 2.2 `checkKvk()` through the OpenRegister KvK leaf, writing `checkStatus`, `checkedAt`, `checkSource`; `unavailable` on a 503
+- [x] 2.2 `checkKvk()` through the OpenRegister KvK leaf, writing `checkStatus`, `checkedAt`, `checkSource`; `unavailable` on a 503
   - Verify: PHPUnit with a mocked HTTP client for 200, 404 and 503
-- [ ] 2.3 `checkVat()` resolving shillinq `ViesService` lazily; `unchecked` with source `shillinq not installed` without it
+- [x] 2.3 `checkVat()` resolving shillinq `ViesService` lazily; `unchecked` with source `shillinq not installed` without it
   - Verify: PHPUnit with the container returning the service and returning nothing
 - [ ] 2.4 Route `POST /api/clients/{id}/identifiers/check` with `#[NoAdminRequired]` and an object authorisation check on the client
   - Verify: hydra gates route-auth, no-admin-idor and route-reachability pass on the diff
