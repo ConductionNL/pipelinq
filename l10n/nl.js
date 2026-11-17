@@ -1360,6 +1360,7 @@ OC.L10N.register(
         "Unit of the quantity.": "Eenheid van het aantal.",
         "Whole queue": "Hele wachtrij",
         "Win chance": "Winkans",
+        "Lead score": "Leadscore",
         "days": "dagen",
         "months": "maanden",
         "pieces": "stuks",

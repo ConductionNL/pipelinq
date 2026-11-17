@@ -50,7 +50,7 @@ describe('the leads list as the board', () => {
 	it('reads each lead\'s client above its source', () => {
 		const title = state().columns.find((column) => column.key === 'title')
 		expect(title.secondary).toBe('{client.name} · {source}')
-		expect(source).toContain(':extend="[\'client\']"')
+		expect(source).toContain(':extend="[\'client\', \'calculations\']"')
 	})
 
 	it('counts the Verouderd lens', () => {

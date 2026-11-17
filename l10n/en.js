@@ -1403,6 +1403,7 @@ OC.L10N.register(
         "Unit of the quantity.": "Unit of the quantity.",
         "Whole queue": "Whole queue",
         "Win chance": "Win chance",
+        "Lead score": "Lead score",
         "days": "days",
         "months": "months",
         "pieces": "pieces",
