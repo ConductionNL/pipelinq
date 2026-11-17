@@ -3743,7 +3743,7 @@ OC.L10N.register(
         "Settings saved.": "Settings saved.",
         "Created by {actor}": "Created by {actor}",
         "Updated by {actor}": "Updated by {actor}",
-        "Passed to {changed.assignee} by {actor}": "Passed to {changed.assignee} by {actor}",
+        "Passed to {to} by {actor}": "Passed to {to} by {actor}",
         "Set back to new by {actor}": "Set back to new by {actor}",
         "Taken in progress by {actor}": "Taken in progress by {actor}",
         "Waiting for the customer by {actor}": "Waiting for the customer by {actor}",

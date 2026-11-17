@@ -3698,7 +3698,7 @@ OC.L10N.register(
         "Settings saved.": "Instellingen opgeslagen.",
         "Created by {actor}": "Aangemaakt door {actor}",
         "Updated by {actor}": "Bijgewerkt door {actor}",
-        "Passed to {changed.assignee} by {actor}": "Overgedragen aan {changed.assignee} door {actor}",
+        "Passed to {to} by {actor}": "Overgedragen aan {to} door {actor}",
         "Set back to new by {actor}": "Teruggezet naar nieuw door {actor}",
         "Taken in progress by {actor}": "In behandeling genomen door {actor}",
         "Waiting for the customer by {actor}": "Wacht op de klant, gezet door {actor}",
