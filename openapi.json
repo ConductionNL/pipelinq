@@ -2071,6 +2071,34 @@
                 }
             }
         },
+        "/brp/access": {
+            "get": {
+                "operationId": "brp-access",
+                "summary": "GET /api/brp/access — whether the session user may look a person up in the BRP",
+                "description": "GET /api/brp/access — whether the session user may look a person up in the BRP. The same privilege and group checks POST /api/brp/lookup runs; nothing is looked up or audited. Answers `{ allowed: bool }`. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "brp"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/brp/lookup": {
             "post": {
                 "operationId": "brp-lookup",
