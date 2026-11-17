@@ -15,5 +15,6 @@
 - [ ] 1.5 (live pass, decision 139, after 1.4) End to end against a dev instance with the pane opened in a browser harness that fakes Office.js
   - Verify: Playwright `tests/e2e/mail-add-in.spec.ts`: unknown sender, Add as contact, Log this mail, then the contact moment is on ContactDetail
   - Spec written: `tests/e2e/mail-add-in.spec.ts` (5 tests: the manifest, sign-in through the real login flow, unknown sender of a seeded organisation to Add as contact, Log this mail and the contact moment on ContactDetail, a known sender with Open in pipelinq, a call without the app password). Office.js is a stub served in place of Microsoft's; the colleague is a fresh non-admin `sales` account and every pane runs with an empty storage state. Not yet run against a dev instance, so the task stays open.
-- [ ] 1.6 Admin doc `docs/admin/outlook-add-in.md` (deploy in Microsoft 365, revoke) and user doc
+- [x] 1.6 Admin doc `docs/admin/outlook-add-in.md` (deploy in Microsoft 365, revoke) and user doc
   - Verify: docs build exit 0; `npm run test:l10n` exit 0
+  - Built: `docs/admin/outlook-add-in.md` (what the add-in is, requirements, deploy in the Microsoft 365 admin centre, sign-in and revoking, what is stored, troubleshooting) and `docs/user/outlook-add-in.md`. `docusaurus build` exits 0 (its broken-link warnings are on other pages); `npm run test:l10n` exits 0.
