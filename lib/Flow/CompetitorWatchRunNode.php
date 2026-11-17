@@ -43,6 +43,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\Pipelinq\Kernel\Contracts\CompetitorWatchServiceInterface;
 use OCP\IL10N;
@@ -59,7 +61,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
  */
-class CompetitorWatchRunNode implements IFlowNode {
+class CompetitorWatchRunNode implements ICallFlowNode {
 
 	/**
 	 * The node type, as the shipped flow names it.
@@ -183,22 +185,46 @@ class CompetitorWatchRunNode implements IFlowNode {
 	 * to go and find what to work on. It answers with one item carrying the
 	 * run summary, so a later node can branch on what was found.
 	 *
-	 * @param array $items The input items, empty on a schedule.
-	 * @param array $config The step configuration.
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The items, the step config and the run context.
 	 *
 	 * @return array One item carrying the summary.
 	 *
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
 		$this->validateConfig(config: $config);
-		$limit = CompetitorWatchServiceInterface::DEFAULT_LIMIT;
+		$summary = $this->watches->runDue(limit: self::limitOf(config: $config), actingUserId: $this->actingUser(context: $context));
+
+		return self::withSummary(items: $items, summary: $summary);
+	}//end execute()
+
+	/**
+	 * How many watches one firing may run: the configured limit, or the default.
+	 *
+	 * @param array $config The validated step configuration.
+	 *
+	 * @return int The limit.
+	 */
+	private static function limitOf(array $config): int {
 		if (array_key_exists('limit', $config) === true) {
-			$limit = (int)$config['limit'];
+			return (int)$config['limit'];
 		}
 
-		$summary = $this->watches->runDue(limit: $limit, actingUserId: $this->actingUser(context: $context));
+		return CompetitorWatchServiceInterface::DEFAULT_LIMIT;
+	}//end limitOf()
+
+	/**
+	 * The items with the run summary added; one summary item when there are none.
+	 *
+	 * @param array $items   The input items.
+	 * @param array $summary The run summary.
+	 *
+	 * @return array The output items.
+	 */
+	private static function withSummary(array $items, array $summary): array {
 		if ($items === []) {
 			return [['json' => [self::OUTCOME_KEY => $summary]]];
 		}
@@ -213,7 +239,7 @@ class CompetitorWatchRunNode implements IFlowNode {
 		}
 
 		return $out;
-	}//end execute()
+	}//end withSummary()
 
 	/**
 	 * The identity the run acts as, only so hermiq's own egress guard can be

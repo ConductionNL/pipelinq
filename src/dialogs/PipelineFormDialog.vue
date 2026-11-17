@@ -691,7 +691,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .pipeline-form {
 	padding: 24px;
 }
@@ -738,11 +740,7 @@ export default {
 }
 
 .mappings-empty {
-	text-align: center;
-	padding: 24px;
-	color: var(--color-text-maxcontrast);
-	border: 1px dashed var(--color-border);
-	border-radius: var(--border-radius-large);
+	@include dashed-empty-state;
 }
 
 .mappings-list {
@@ -752,13 +750,7 @@ export default {
 }
 
 .mapping-row {
-	display: flex;
-	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background: var(--color-main-background);
+	@include bordered-row;
 }
 
 .mapping-fields {
@@ -790,11 +782,7 @@ export default {
 }
 
 .stages-empty {
-	text-align: center;
-	padding: 24px;
-	color: var(--color-text-maxcontrast);
-	border: 1px dashed var(--color-border);
-	border-radius: var(--border-radius-large);
+	@include dashed-empty-state;
 }
 
 .stages-list {
@@ -804,13 +792,7 @@ export default {
 }
 
 .stage-row {
-	display: flex;
-	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background: var(--color-main-background);
+	@include bordered-row;
 }
 
 .stage-order {

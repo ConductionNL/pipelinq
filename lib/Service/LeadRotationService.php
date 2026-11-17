@@ -236,21 +236,47 @@ class LeadRotationService implements LeadRotationServiceInterface {
 			return [0, ''];
 		}
 
+		$leads = $this->findAssignedLeads(filters: ['register' => $register, 'schema' => $schema, 'assignee' => $userId]);
+		if ($leads === null) {
+			return [0, ''];
+		}
+
+		return $this->tallySince(leads: $leads, cutoff: $cutoff);
+	}//end recentLeads()
+
+	/**
+	 * The leads assigned to a colleague, or null (logged) when they cannot be read.
+	 *
+	 * @param array<string, string> $filters The register, the lead schema and the colleague as `assignee`.
+	 *
+	 * @return iterable<mixed>|null
+	 */
+	private function findAssignedLeads(array $filters): iterable|null {
 		try {
-			$leads = $this->objectService->findAll(
+			return $this->objectService->findAll(
 				[
-					'filters' => ['register' => $register, 'schema' => $schema, 'assignee' => $userId],
+					'filters' => $filters,
 					'limit' => self::LEAD_LIMIT,
 				]
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'LeadRotationService: failed to count recent leads',
-				['exception' => $e->getMessage(), 'userId' => $userId]
+				['exception' => $e->getMessage(), 'userId' => $filters['assignee']]
 			);
-			return [0, ''];
+			return null;
 		}
+	}//end findAssignedLeads()
 
+	/**
+	 * How many leads were created since the cutoff, and when the last one was ('' when none).
+	 *
+	 * @param iterable<mixed>   $leads  The colleague's leads.
+	 * @param DateTimeImmutable $cutoff The start of the window.
+	 *
+	 * @return array{0: int, 1: string}
+	 */
+	private function tallySince(iterable $leads, DateTimeImmutable $cutoff): array {
 		$count = 0;
 		$last = '';
 		foreach ($leads as $lead) {
@@ -265,7 +291,7 @@ class LeadRotationService implements LeadRotationServiceInterface {
 		}
 
 		return [$count, $last];
-	}//end recentLeads()
+	}//end tallySince()
 
 	/**
 	 * When a lead was created, from its metadata.

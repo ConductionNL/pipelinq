@@ -97,25 +97,51 @@ class AvailabilityCacheInvalidationListener implements IEventListener, DeferredO
 			return;
 		}
 
-		$entry = ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'kind' => $kind];
-		if ($kind === 'service') {
-			$before = null;
-			if ($previous !== null) {
-				$before = $this->resourceTypes(data: (array)$previous->getObject());
-			}
+		$entry = $this->deferredEntry(
+			entry: ['handler' => self::HANDLER_KEY, 'uuid' => $uuid, 'kind' => $kind],
+			versions: [$entity, $previous]
+		);
+		$this->deferral->defer(jobClass: DeferredObjectListenerJob::class, entry: $entry, dedupeKey: self::HANDLER_KEY . '|' . $uuid);
+	}//end handle()
 
-			$entry['resourceTypes'] = $this->affectedTypes(
-				current: $this->resourceTypes(data: (array)$entity->getObject()),
-				previous: $before
-			);
+	/**
+	 * The deferred entry; a service change also names the resource types it affects.
+	 *
+	 * @param array{handler: string, uuid: string, kind: string} $entry    The entry: handler, the changed object's uuid and
+	 *                                                                   its kind (`resource` or `service`).
+	 * @param array{0: object, 1: object|null}                   $versions The object as it is now, and as it was (or null).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function deferredEntry(array $entry, array $versions): array {
+		if ($entry['kind'] === 'service') {
+			$entry = $this->withAffectedTypes(entry: $entry, versions: $versions);
 		}
 
-		$this->deferral->defer(
-			jobClass: DeferredObjectListenerJob::class,
-			entry: $entry,
-			dedupeKey: self::HANDLER_KEY . '|' . $uuid
+		return $entry;
+	}//end deferredEntry()
+
+	/**
+	 * The entry with the resource types a service change affects, before and after.
+	 *
+	 * @param array<string, mixed>             $entry    The deferred entry.
+	 * @param array{0: object, 1: object|null} $versions The service as it is now, and as it was (or null).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withAffectedTypes(array $entry, array $versions): array {
+		[$entity, $previous] = $versions;
+		$before = null;
+		if ($previous !== null) {
+			$before = $this->resourceTypes(data: (array)$previous->getObject());
+		}
+
+		$entry['resourceTypes'] = $this->affectedTypes(
+			current: $this->resourceTypes(data: (array)$entity->getObject()),
+			previous: $before
 		);
-	}//end handle()
+		return $entry;
+	}//end withAffectedTypes()
 
 	/**
 	 * Delete the cached availability the change made wrong.

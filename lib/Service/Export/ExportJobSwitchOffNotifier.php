@@ -73,19 +73,27 @@ class ExportJobSwitchOffNotifier {
 			return;
 		}
 
-		$jobId = (string)($job['id'] ?? $job['uuid'] ?? '');
-		foreach ($adminGroup->getUsers() as $user) {
+		$parameters = ['title' => (string)($job['name'] ?? ''), 'failures' => $failures, 'error' => $lastError];
+		$this->notifyEach(users: $adminGroup->getUsers(), notice: ['objectId' => (string)($job['id'] ?? $job['uuid'] ?? ''), 'parameters' => $parameters]);
+	}//end notifySwitchedOff()
+
+	/**
+	 * Send the switch-off notification about one job to each user.
+	 *
+	 * @param array<\OCP\IUser> $users The administrators.
+	 * @param array{objectId: string, parameters: array<string, mixed>} $notice The job id and the notification parameters.
+	 *
+	 * @return void
+	 */
+	private function notifyEach(array $users, array $notice): void {
+		foreach ($users as $user) {
 			$this->notificationService->sendNotification(
 				userId: $user->getUID(),
 				subject: self::SUBJECT,
-				parameters: [
-					'title' => (string)($job['name'] ?? ''),
-					'failures' => $failures,
-					'error' => $lastError,
-				],
+				parameters: $notice['parameters'],
 				objectType: 'exportJob',
-				objectId: $jobId
+				objectId: $notice['objectId']
 			);
 		}
-	}//end notifySwitchedOff()
+	}//end notifyEach()
 }//end class

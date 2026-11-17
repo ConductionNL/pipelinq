@@ -45,6 +45,14 @@ use RuntimeException;
  * @covers \OCA\Pipelinq\Service\ActivityTimelineService
  * @covers \OCA\Pipelinq\Service\ActivityTimelineReader
  * @covers \OCA\Pipelinq\Service\ActivityItemNormalizer
+ * @uses \OCA\Pipelinq\Service\DateBounds
+ * @uses \OCA\Pipelinq\Service\PageRequest
+ * @uses \OCA\Pipelinq\Service\TimelineEntity
+ * @uses \OCA\Pipelinq\Service\TimelineFilter
+ * @uses \OCA\Pipelinq\Service\TimelinePages
+ * @uses \OCA\Pipelinq\Service\TimelineRun
+ * @uses \OCA\Pipelinq\Service\TimelineSource
+ * @uses \OCA\Pipelinq\Service\ActivityOrigin
  */
 class ActivityTimelineLeafEventsTest extends TestCase {
 

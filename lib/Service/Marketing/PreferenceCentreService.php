@@ -98,11 +98,33 @@ class PreferenceCentreService implements PreferenceCentreServiceInterface {
 			return null;
 		}
 
+		return $this->listPreferences(states: $this->subscriptionStates(contactId: $contactId));
+	}//end preferencesForToken()
+
+	/**
+	 * The contact's subscription state per list id.
+	 *
+	 * @param string $contactId The contact id.
+	 *
+	 * @return array<string, string> List id to subscription state.
+	 */
+	private function subscriptionStates(string $contactId): array {
 		$states = [];
 		foreach ($this->queries->listSubscriptionsForContact(contactId: $contactId) as $subscription) {
 			$states[(string)($subscription['listId'] ?? '')] = (string)($subscription['state'] ?? '');
 		}
 
+		return $states;
+	}//end subscriptionStates()
+
+	/**
+	 * Every non-archived mailing list, public fields only, with whether the contact is subscribed.
+	 *
+	 * @param array<string, string> $states List id to subscription state.
+	 *
+	 * @return array<int, array<string, mixed>> The preferences.
+	 */
+	private function listPreferences(array $states): array {
 		$out = [];
 		foreach ($this->lists->listMailingLists(page: 1, limit: 100)['data'] as $list) {
 			if ((string)($list['status'] ?? 'active') === 'archived') {
@@ -119,7 +141,7 @@ class PreferenceCentreService implements PreferenceCentreServiceInterface {
 		}
 
 		return $out;
-	}//end preferencesForToken()
+	}//end listPreferences()
 
 	/**
 	 * Save a preference choice.

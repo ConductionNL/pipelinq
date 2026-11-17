@@ -33,6 +33,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCP\IAppConfig;
@@ -170,10 +172,9 @@ class SeedPartyKinds implements IRepairStep {
 			try {
 				$this->objectService->saveObject(
 					object: $kind,
-					register: $register,
-					schema: $schema,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 					_rbac: false,
-					_multitenancy: false,
+					_multitenancy: false
 				);
 				$seeded++;
 			} catch (Throwable $e) {

@@ -43,8 +43,11 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\PosObjectReadWrite;
+use OCA\Pipelinq\Service\Support\RandomUuid;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -79,6 +82,9 @@ use Psr\Log\LoggerInterface;
  */
 class CashShiftService implements CashShiftServiceInterface {
 	use CastingPayloadToArray;
+	use RandomUuid;
+	use PosObjectReadWrite;
+	use InjectedObjectService;
 
 	/**
 	 * CloudEvent type emitted when a cash variance is approved.
@@ -105,7 +111,7 @@ class CashShiftService implements CashShiftServiceInterface {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
 	 * @param WebhookService $webhookService Dispatches POS webhooks.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
@@ -113,7 +119,7 @@ class CashShiftService implements CashShiftServiceInterface {
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
 		private readonly ObjectServiceInterface $objectService,
@@ -159,26 +165,40 @@ class CashShiftService implements CashShiftServiceInterface {
 		string $reference = '',
 		string $notes = '',
 	): array {
-		$this->requirePosUser(userId: $userId);
+		$opening = $this->openingFigures(operator: $userId, floatAmount: $floatAmount);
+		$shift = ['reference' => trim($reference), 'drawer' => trim($drawer)] + $opening + ['notes' => trim($notes)];
+
+		return $this->saveShift(id: '', shift: $shift);
+	}//end openShift()
+
+	/**
+	 * The operator, float and status fields of a new shift, once the operator
+	 * is a POS user and the float is not negative.
+	 *
+	 * @param string $operator    The acting operator UID (from the session).
+	 * @param float  $floatAmount The declared opening float.
+	 *
+	 * @return array<string, mixed> The opening fields.
+	 *
+	 * @throws OCSForbiddenException If the user is not a POS operator.
+	 * @throws OCSBadRequestException If the float is negative.
+	 */
+	private function openingFigures(string $operator, float $floatAmount): array {
+		$this->requirePosUser(userId: $operator);
 
 		if ($floatAmount < 0) {
 			throw new OCSBadRequestException('Openingsbedrag mag niet negatief zijn.');
 		}
 
-		$shift = [
-			'reference' => trim($reference),
-			'drawer' => trim($drawer),
-			'operator' => $userId,
+		return [
+			'operator' => $operator,
 			'currency' => 'EUR',
 			'floatAmount' => $this->money(value: $floatAmount),
 			'floatAt' => $this->now(),
 			'status' => 'open',
 			'reconciliationStatus' => 'pending',
-			'notes' => trim($notes),
 		];
-
-		return $this->saveShift(id: '', shift: $shift);
-	}//end openShift()
+	}//end openingFigures()
 
 	/**
 	 * Record a mid-shift cash drop (POS operator).
@@ -702,33 +722,6 @@ class CashShiftService implements CashShiftServiceInterface {
 	}//end fetchDiff()
 
 	/**
-	 * Fetch a single object by UUID for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID.
-	 * @param string $label The not-found error message.
-	 *
-	 * @return array<string, mixed> The object.
-	 *
-	 * @throws OCSNotFoundException If the object is not found.
-	 */
-	private function fetchOne(string $schemaKey, string $id, string $label): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			$object = null;
-		}
-
-		if ($object === null) {
-			throw new OCSNotFoundException($label);
-		}
-
-		return $this->toArray(object: $object);
-	}//end fetchOne()
-
-	/**
 	 * Fetch all objects of a schema linked to a shift.
 	 *
 	 * @param string $schemaKey The app-config schema key.
@@ -809,31 +802,6 @@ class CashShiftService implements CashShiftServiceInterface {
 	}//end saveShift()
 
 	/**
-	 * Persist an object via the OR ObjectService for a schema config key.
-	 *
-	 * @param string $schemaKey The app-config schema key.
-	 * @param string $id The object UUID (empty to create).
-	 * @param array<string, mixed> $object The object data.
-	 *
-	 * @return array<string, mixed> The saved object.
-	 */
-	private function saveObjectFor(string $schemaKey, string $id, array $object): array {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-
-		unset($object['@self']);
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $object,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $id
-		);
-
-		return $this->toArray(object: $saved);
-	}//end saveObjectFor()
-
-	/**
 	 * Resolve the register + a schema config key into their stored IDs.
 	 *
 	 * @param string $schemaKey The app-config schema key (e.g. cashShift_schema).
@@ -852,17 +820,6 @@ class CashShiftService implements CashShiftServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
@@ -888,17 +845,4 @@ class CashShiftService implements CashShiftServiceInterface {
 	private function now(): string {
 		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 	}//end now()
-
-	/**
-	 * Generate a v4 UUID.
-	 *
-	 * @return string The UUID.
-	 */
-	private function uuid(): string {
-		$data = random_bytes(16);
-		$data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
-		$data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
-
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end uuid()
 }//end class

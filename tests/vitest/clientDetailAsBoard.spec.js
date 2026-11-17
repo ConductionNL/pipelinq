@@ -41,7 +41,7 @@ describe('ClientDetail as the boards draw it', () => {
 
 	it('orders the tabs as the boards do, contact persons for an organisation and sales for a resident', () => {
 		const tabs = widget('client-panels').content.tabs
-		expect(tabs.map((tab) => nl[tab.label])).toEqual(['Overzicht', 'Zaken', 'Tickets', 'Contactpersonen', 'Contactmomenten', 'Verkoop', 'Documenten', 'Geschiedenis'])
+		expect(tabs.map((tab) => nl[tab.label])).toEqual(['Overzicht', 'Zaken', 'Tickets', 'Contactpersonen', 'Contactmomenten', 'Verkoop', 'Documenten', 'Klantkamer', 'Geschiedenis'])
 		expect(tabs[3].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(tabs[5].visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 	})
@@ -55,7 +55,7 @@ describe('ClientDetail as the boards draw it', () => {
 describe('ClientDetail overview as the boards draw it', () => {
 	it('opens on the resident or organisation card, the tickets and the latest contact moments', () => {
 		const overview = widget('client-panels').content.tabs[0]
-		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-cases', 'client-tickets', 'client-latest-moments', 'client-activity'])
+		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-cases', 'client-tickets', 'client-latest-moments', 'client-found-us', 'client-touchpoints', 'client-activity'])
 		expect(widget('client-person-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 		expect(widget('client-organisation-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
 		expect(widget('client-person-card').content.fields.map((field) => nl[field.label])).toEqual(['Naam', 'Voornamen', 'Achternaam', 'Geboortedatum', 'Woonadres', 'Omschrijving'])

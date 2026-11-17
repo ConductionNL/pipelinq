@@ -42,7 +42,9 @@ describe('ClientDetail parts both client boards share', () => {
 		expect(config.band[0]).toEqual({ widgetId: 'client-contact-strip', span: 12, chrome: 'bare' })
 		// The merged-into line (decision 288) shows only on a merged-away client, under the strip.
 		expect(config.band[1]).toEqual({ widgetId: 'client-merged-away', span: 12, chrome: 'bare' })
-		expect(config.band.slice(2)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
+		// The locked line (platform-record-lock) shows only on a locked client, under that.
+		expect(config.band[2]).toEqual({ widgetId: 'client-locked', span: 12, chrome: 'bare' })
+		expect(config.band.slice(3)).toEqual(FIGURES.map((widgetId) => ({ widgetId, span: 2 })))
 		expect(widget('client-contact-strip').type).toBe('PartyContactStripWidget')
 		expect(config.layout.map((item) => item.widgetId)).toEqual(['client-panels'])
 		expect(config.layout[0].gridY).toBe(0)

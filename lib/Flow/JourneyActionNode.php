@@ -37,7 +37,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
 use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCP\IURLGenerator;
@@ -48,7 +49,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
-class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
+class JourneyActionNode implements ICallFlowNode, IFlowNodeConfigKeys {
 
 	/**
 	 * The app-namespaced type identifier.
@@ -165,9 +166,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 * the items would make a later node read something a marketer never
 	 * authored.
 	 *
-	 * @param array<int, array<string, mixed>> $items The input items.
-	 * @param array<string, mixed> $config The step's authored configuration.
-	 * @param array<string, mixed> $context Run-level metadata.
+	 * @param FlowNodeCall $call The items, the step config and the run context.
 	 *
 	 * @return array<int, array<string, mixed>> The items, unchanged.
 	 *
@@ -175,7 +174,10 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
 		// Re-checked here on purpose: validateConfig() only runs when a flow
 		// is SAVED, and a seeded or imported flow reaches this method having
 		// never passed through that path.
@@ -184,22 +186,37 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 		$journeyId = trim((string)($config['journey'] ?? ''));
 		$flowRunUuid = (string)($context['runUuid'] ?? ($context['uuid'] ?? ''));
 
+		foreach ($this->subjectsOf(items: $items) as $subject) {
+			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
+		}
+
+		return $items;
+	}//end execute()
+
+	/**
+	 * The subject the journey runs for, per item; one empty subject when there are no items.
+	 *
+	 * @param array<int, array<string, mixed>> $items The input items.
+	 *
+	 * @return list<array<string, mixed>> The subjects.
+	 */
+	private function subjectsOf(array $items): array {
 		if ($items === []) {
 			// A scheduled journey fires with nothing attached. Its audience
 			// segment is the audience, and the runner resolves it.
-			$this->runner->run(journeyId: $journeyId, subject: [], flowRunUuid: $flowRunUuid);
-			return $items;
+			return [[]];
 		}
 
+		$subjects = [];
 		foreach ($items as $item) {
 			$subject = ($item['json'] ?? []);
 			if (is_array($subject) === false) {
 				$subject = [];
 			}
 
-			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
+			$subjects[] = $subject;
 		}
 
-		return $items;
-	}//end execute()
+		return $subjects;
+	}//end subjectsOf()
 }//end class

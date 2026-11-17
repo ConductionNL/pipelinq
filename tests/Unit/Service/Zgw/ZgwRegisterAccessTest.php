@@ -34,6 +34,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for ZgwRegisterAccess.
@@ -89,7 +91,9 @@ class ZgwRegisterAccessTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->calls[] = ['find', ['id' => $id, 'register' => $register, 'schema' => $schema]];
 				return ($this->find)();
 			}
@@ -117,7 +121,11 @@ class ZgwRegisterAccessTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): mixed {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->calls[] = ['saveObject', ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid]];
 				return ($this->save)();
 			}

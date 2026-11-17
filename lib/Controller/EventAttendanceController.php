@@ -108,6 +108,18 @@ class EventAttendanceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function add(string $id, string $name = '', string $email = ''): JSONResponse {
+		return ($this->addRefusal(id: $id, email: $email) ?? $this->registerByHand(id: $id, person: ['name' => $name, 'email' => $email]));
+	}//end add()
+
+	/**
+	 * Why a person may not be added to the event by hand, or null when they may.
+	 *
+	 * @param string $id    The event id.
+	 * @param string $email The person's address.
+	 *
+	 * @return JSONResponse|null 401 signed out, 404 unknown event, 400 without a valid address; null otherwise.
+	 */
+	private function addRefusal(string $id, string $email): ?JSONResponse {
 		if ($this->userSession->getUser() === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
@@ -120,22 +132,46 @@ class EventAttendanceController extends Controller {
 			return new JSONResponse(['message' => 'A valid email address is required'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return null;
+	}//end addRefusal()
+
+	/**
+	 * Register a person on an existing event and confirm a new registration.
+	 *
+	 * @param string                             $id     The event id.
+	 * @param array{name: string, email: string} $person The person's name and address.
+	 *
+	 * @return JSONResponse The outcome and registration; 409 when the event is closed.
+	 */
+	private function registerByHand(string $id, array $person): JSONResponse {
 		$event = ($this->registrations->event(eventId: $id) ?? []);
 		$outcome = $this->registrations->register(
 			event: $event,
-			person: ['name' => $name, 'email' => $email, 'source' => 'colleague']
+			person: $person + ['source' => 'colleague']
 		);
 		if ($outcome->status === EventRegistrationOutcome::CLOSED) {
 			return new JSONResponse(['message' => 'The event does not take registrations'], Http::STATUS_CONFLICT);
 		}
 
+		$this->confirmNewRegistration(event: $event, outcome: $outcome);
+
+		return new JSONResponse(['outcome' => $outcome->status, 'registration' => $outcome->registration]);
+	}//end registerByHand()
+
+	/**
+	 * Mail a new place or waiting-list registration its confirmation and stamp it.
+	 *
+	 * @param array<string, mixed>     $event   The event.
+	 * @param EventRegistrationOutcome $outcome The registration outcome.
+	 *
+	 * @return void
+	 */
+	private function confirmNewRegistration(array $event, EventRegistrationOutcome $outcome): void {
 		$isNew = in_array($outcome->status, [EventRegistrationOutcome::REGISTERED, EventRegistrationOutcome::WAITLISTED], true);
 		if ($isNew === true && $outcome->registration !== null
 			&& $this->mails->sendConfirmation(event: $event, registration: $outcome->registration) === true
 		) {
 			$this->registrations->stamp(registration: $outcome->registration, field: 'confirmationSentAt');
 		}
-
-		return new JSONResponse(['outcome' => $outcome->status, 'registration' => $outcome->registration]);
-	}//end add()
+	}//end confirmNewRegistration()
 }//end class

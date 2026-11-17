@@ -24,19 +24,25 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\BrpRetentionJob;
+use OCA\Pipelinq\BackgroundJob\BrpRetentionSweep;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The BRP retention sweep. Dates are far in the past or future so the
  * outcome does not depend on the clock.
  */
 #[CoversClass(BrpRetentionJob::class)]
+#[UsesClass(BrpRetentionSweep::class)]
 class BrpRetentionJobTest extends TestCase {
 
 	private const PAST = '2001-01-01T00:00:00Z';
@@ -151,7 +157,8 @@ class BrpRetentionJobTest extends TestCase {
 			 *
 			 * @return bool
 			 */
-			public function deleteObject(string $uuid): bool {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool {
+				$uuid = $deletion->uuid;
 				if (in_array($uuid, $this->failOn, true) === true) {
 					throw new \RuntimeException('locked ' . $uuid);
 				}
@@ -167,7 +174,9 @@ class BrpRetentionJobTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function find(string $id, string $register, string $schema): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$found = $this->contacts[$id] ?? null;
 				if ($found instanceof \Throwable) {
 					throw $found;
@@ -185,7 +194,11 @@ class BrpRetentionJobTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				return $object;
 			}
@@ -310,6 +323,25 @@ class BrpRetentionJobTest extends TestCase {
 		$this->assertSame(['p-1', 'p-2'], $objects->deleted);
 		$this->assertSame([], $objects->saved);
 	}//end testLeavesAContactPointingElsewhereAlone()
+
+	/**
+	 * A contact that reads back as an empty record is left alone, even when the
+	 * deleted person carried no id (so an empty brpPersonId would otherwise
+	 * match it): the person is deleted, nothing is written back for the contact.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyContactRecordIsNotWrittenBack(): void {
+		$objects = $this->objects(
+			[['retentionTo' => self::PAST, 'gekoppeldContact' => 'c-1']],
+			['c-1' => []]
+		);
+
+		$this->sweep();
+
+		$this->assertSame([''], $objects->deleted);
+		$this->assertSame([], $objects->saved);
+	}//end testAnEmptyContactRecordIsNotWrittenBack()
 
 	/**
 	 * Without a contact schema the contact is not touched.

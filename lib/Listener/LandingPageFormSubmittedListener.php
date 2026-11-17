@@ -47,6 +47,7 @@ use OCA\Pipelinq\Kernel\Contracts\EventRegistrationServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
 use OCA\Pipelinq\Kernel\Contracts\TouchpointServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome;
+use OCA\Pipelinq\Service\Marketing\SubmitterParties;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -157,8 +158,9 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		);
 		$records = $this->recordsFor(submission: $submission);
 
-		$this->touchpoints->append(
-			touchpoint: $this->touchpointFor(submission: $submission, records: $records)
+		$this->touchpoints->recordSubmission(
+			touchpoint: $this->touchpointFor(submission: $submission, records: $records),
+			landingPage: $this->landingPageOf(event: $event)
 		);
 
 		if ($records->leadId !== '') {
@@ -205,7 +207,12 @@ class LandingPageFormSubmittedListener implements IEventListener {
 				'source' => 'web-form',
 			];
 			$outcome = $this->eventRegistrations->register(event: $campaignEvent, person: $person);
-			$this->mailOutcome(campaignEvent: $campaignEvent, person: $person, outcome: $outcome);
+			if ($outcome->status === EventRegistrationOutcome::CLOSED) {
+				$this->eventMails?->sendClosed(event: $campaignEvent, person: $person);
+				return;
+			}
+
+			$this->mailConfirmation(campaignEvent: $campaignEvent, outcome: $outcome);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: landing page sign-up could not be registered for the event',
@@ -215,23 +222,17 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	}//end registerForEvent()
 
 	/**
-	 * Mail the person the outcome of their registration.
+	 * Mail the person the confirmation of a new registration or waiting-list place.
 	 *
 	 * @param array<string, mixed>     $campaignEvent The event.
-	 * @param array<string, mixed>     $person        The person who signed up.
-	 * @param EventRegistrationOutcome $outcome       What the registration did.
+	 * @param EventRegistrationOutcome $outcome       What the registration did; not CLOSED.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
-	private function mailOutcome(array $campaignEvent, array $person, EventRegistrationOutcome $outcome): void {
+	private function mailConfirmation(array $campaignEvent, EventRegistrationOutcome $outcome): void {
 		if ($this->eventMails === null) {
-			return;
-		}
-
-		if ($outcome->status === EventRegistrationOutcome::CLOSED) {
-			$this->eventMails->sendClosed(event: $campaignEvent, person: $person);
 			return;
 		}
 
@@ -243,7 +244,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 		if ($this->eventMails->sendConfirmation(event: $campaignEvent, registration: $outcome->registration) === true) {
 			$this->eventRegistrations?->stamp(registration: $outcome->registration, field: 'confirmationSentAt');
 		}
-	}//end mailOutcome()
+	}//end mailConfirmation()
 
 	/**
 	 * Acknowledge a redelivered submission whose nonce already has a touchpoint.
@@ -338,33 +339,25 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @return string The contact id, or an empty string when the write failed.
 	 */
 	private function matchOrCreateContact(string $email, array $values): string {
-		foreach ([$email, trim((string)($values['email'] ?? ''))] as $candidate) {
-			if ($candidate === '') {
-				continue;
-			}
-
-			$rows = $this->store->findAll(schemaSlug: self::CONTACT_SCHEMA_SLUG, filters: ['email' => $candidate]);
-			if ($rows !== []) {
-				return $this->store->idOf(payload: $rows[0]);
-			}
-		}
+		$candidates = array_filter(
+			[$email, trim((string)($values['email'] ?? ''))],
+			static fn (string $candidate): bool => $candidate !== ''
+		);
 
 		$name = trim((string)($values['name'] ?? ''));
 		if ($name === '') {
 			$name = $email;
 		}
 
-		$saved = $this->store->save(
-			schemaSlug: self::CONTACT_SCHEMA_SLUG,
-			payload: [
+		return $this->parties()->contactId(
+			candidates: array_values($candidates),
+			newContact: [
 				'name' => $name,
 				'email' => $email,
 				'source' => self::SOURCE,
 				'marketingConsent' => false,
-			],
+			]
 		);
-
-		return $this->store->idOf(payload: $saved);
 	}//end matchOrCreateContact()
 
 	/**
@@ -438,17 +431,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 			return '';
 		}
 
-		$rows = $this->store->findAll(schemaSlug: self::CLIENT_SCHEMA_SLUG, filters: ['name' => $organisation]);
-		if ($rows !== []) {
-			return $this->store->idOf(payload: $rows[0]);
-		}
-
-		$saved = $this->store->save(
-			schemaSlug: self::CLIENT_SCHEMA_SLUG,
-			payload: ['name' => $organisation, 'type' => 'organization', 'notes' => 'Created from a landing page submission.'],
-		);
-
-		return $this->store->idOf(payload: $saved);
+		return $this->parties()->clientId(organisation: $organisation, notes: 'Created from a landing page submission.');
 	}//end matchOrCreateClient()
 
 	/**
@@ -477,6 +460,25 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	}//end touchpointFor()
 
 	/**
+	 * The page a submission came from: the portal and the page route.
+	 *
+	 * @param LandingPageFormSubmittedEvent $event The submission.
+	 *
+	 * @return string `<portal>/<route>`, or whichever of the two is known.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	private function landingPageOf(LandingPageFormSubmittedEvent $event): string {
+		$portal = trim($event->getPortal(), " \t/");
+		$route = trim($event->getPageRoute(), " \t/");
+		if ($portal === '' || $route === '') {
+			return ($portal . $route);
+		}
+
+		return ($portal . '/' . $route);
+	}//end landingPageOf()
+
+	/**
 	 * Normalise a UTM block to the five keys the schemas declare.
 	 *
 	 * @param array<string, mixed> $utm Whatever Portaliq sent.
@@ -484,13 +486,17 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 * @return array<string, string> The block, absent keys empty.
 	 */
 	private function utmBlock(array $utm): array {
-		$block = [];
-		foreach (['campaign', 'source', 'medium', 'term', 'content'] as $key) {
-			$block[$key] = trim((string)($utm[$key] ?? ''));
-		}
-
-		return $block;
+		return $this->parties()->utmBlock(utm: $utm);
 	}//end utmBlock()
+
+	/**
+	 * The submitter's contact and client records.
+	 *
+	 * @return SubmitterParties
+	 */
+	private function parties(): SubmitterParties {
+		return new SubmitterParties(store: $this->store);
+	}//end parties()
 
 	/**
 	 * A readable description of where the lead came from.

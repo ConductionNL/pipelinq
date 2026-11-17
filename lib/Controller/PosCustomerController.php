@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosCustomerLinkServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,6 +55,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-customer-link/spec.md#REQ-PCL-001
  */
 class PosCustomerController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
@@ -196,15 +199,6 @@ class PosCustomerController extends Controller {
 	}//end history()
 
 	/**
-	 * Require an authenticated user; return the UID or a 401 response.
-	 *
-	 * @return string|JSONResponse The user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
 	 * Parse a request param into a strict bool (false on null / empty).
 	 *
 	 * @param mixed $value The raw param value.
@@ -238,13 +232,4 @@ class PosCustomerController extends Controller {
 			logLabel: 'PosCustomerController::' . $label
 		);
 	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

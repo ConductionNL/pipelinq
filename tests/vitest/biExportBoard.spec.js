@@ -75,7 +75,7 @@ describe('the BI export pages (pl2 PqBiExport)', () => {
 			expect(fields[key], key).toBeUndefined()
 		}
 		expect(job).toContain("key: 'lastRunStatus'")
-		expect(job).toContain('secondary: (row) => lastRunLine(row)')
+		expect(job).toContain('secondary: (row) => lastRunCell(row)')
 		expect(job).toContain("key: 'nextRunAt'")
 		expect(job).toContain("formatter: 'exportMoment'")
 		expect(job).toContain("filter: { lastRunStatus: 'failed' }")

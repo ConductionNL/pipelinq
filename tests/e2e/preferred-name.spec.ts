@@ -77,6 +77,7 @@ test.describe('preferred name on a contact person', () => {
 			name: `Johannes Jansen ${STAMP}`,
 			preferredName: 'Jan',
 			email: `johannes.${STAMP}@example.com`,
+			contactsUid: `e2e-johannes-${STAMP}`,
 		})
 
 		await gotoAppRoute(page, `/contacts/${id}`)
@@ -97,6 +98,7 @@ test.describe('preferred name on a contact person', () => {
 		const id = await seedContact(page, {
 			name: `Hanna de Wit ${STAMP}`,
 			email: `hanna.${STAMP}@example.com`,
+			contactsUid: `e2e-hanna-${STAMP}`,
 		})
 
 		await gotoAppRoute(page, `/contacts/${id}`)

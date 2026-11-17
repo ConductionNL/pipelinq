@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
+use OCA\Pipelinq\Controller\Support\OcsErrorResponse;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -42,8 +43,6 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -70,6 +69,8 @@ use Throwable;
  * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PosPaymentController extends Controller {
+	use OcsErrorResponse;
+
 	/**
 	 * Constructor.
 	 *
@@ -435,15 +436,7 @@ class PosPaymentController extends Controller {
 	 * @return string|JSONResponse
 	 */
 	private function requireUserId(): string|JSONResponse {
-		$user = $this->session->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
+		return (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->session->getUser());
 	}//end requireUserId()
 
 	/**
@@ -473,14 +466,8 @@ class PosPaymentController extends Controller {
 	private function run(callable $action, string $label): JSONResponse {
 		try {
 			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
 		} catch (Throwable $e) {
-			return $this->serverError(label: $label, exception: $e);
+			return ($this->ocsErrorResponse(failure: $e) ?? $this->serverError(label: $label, exception: $e));
 		}//end try
 	}//end run()
 

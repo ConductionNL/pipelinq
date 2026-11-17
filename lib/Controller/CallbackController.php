@@ -186,39 +186,66 @@ class CallbackController extends Controller {
 		$resultText = $this->request->getParam('resultText', '');
 
 		try {
-			$taskData = $this->authorizedTask(id: $id, userId: $user->getUID());
-			if ($taskData instanceof JSONResponse) {
-				return $taskData;
-			}
-
-			$refusal = $this->completionRefusal(taskData: $taskData);
-			if ($refusal !== null) {
-				return $refusal;
-			}
-
-			$taskData = $this->callbackService->applyCompletion($taskData, $resultText);
-			$taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
-
-			// Notify the creating agent about completion.
-			$createdBy = $taskData['createdBy'] ?? '';
-			if (empty($createdBy) === false) {
-				$author = $user->getUID();
-
-				$this->notificationService->notifyTaskCompleted(
-					$taskData['subject'] ?? '',
-					$resultText,
-					$createdBy,
-					$id,
-					$author
-				);
-			}
-
-			return new JSONResponse(['task' => $taskData]);
+			return $this->completeTask(completion: ['id' => $id, 'user' => $user, 'resultText' => $resultText]);
 		} catch (\Exception $e) {
 			$this->logFailure(action: 'complete', error: $e);
 			return $this->serverError(message: $this->l10n->t('Failed to complete task'));
 		}//end try
 	}//end complete()
+
+	/**
+	 * Complete an authorised task and notify its creator.
+	 *
+	 * @param array{id: string, user: IUser, resultText: mixed} $completion The task id, the acting user and the
+	 *                                                                 completion result text.
+	 *
+	 * @return JSONResponse The completed task, or a refusal.
+	 *
+	 * @throws \Exception When the task cannot be loaded or saved.
+	 */
+	private function completeTask(array $completion): JSONResponse {
+		$id = $completion['id'];
+		$taskData = $this->authorizedTask(id: $id, userId: $completion['user']->getUID());
+		if ($taskData instanceof JSONResponse) {
+			return $taskData;
+		}
+
+		$refusal = $this->completionRefusal(taskData: $taskData);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$taskData = $this->callbackService->applyCompletion($taskData, $completion['resultText']);
+		$taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
+
+		$this->notifyCreator(taskData: $taskData, completion: $completion);
+
+		return new JSONResponse(['task' => $taskData]);
+	}//end completeTask()
+
+	/**
+	 * Notify the creating agent about completion.
+	 *
+	 * @param array<string, mixed>                              $taskData   The completed task.
+	 * @param array{id: string, user: IUser, resultText: mixed} $completion The task id, the acting user and the
+	 *                                                                      completion result text.
+	 *
+	 * @return void
+	 */
+	private function notifyCreator(array $taskData, array $completion): void {
+		$createdBy = $taskData['createdBy'] ?? '';
+		if (empty($createdBy) === false) {
+			$author = $completion['user']->getUID();
+
+			$this->notificationService->notifyTaskCompleted(
+				$taskData['subject'] ?? '',
+				$completion['resultText'],
+				$createdBy,
+				$completion['id'],
+				$author
+			);
+		}
+	}//end notifyCreator()
 
 	/**
 	 * Reassign a task to a different user or group.
@@ -247,36 +274,47 @@ class CallbackController extends Controller {
 		}
 
 		try {
-			$taskData = $this->taskOrNotFound(id: $id);
-			if ($taskData instanceof JSONResponse) {
-				return $taskData;
-			}
-
-			$taskData = $this->callbackService->applyReassignment($taskData, $assignee, $assigneeType);
-
-			// Log the reassignment as an attempt entry.
-			$taskData = $this->callbackService->addAttempt($taskData, 'hertoegewezen', '');
-			$taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
-
-			// Notify the new assignee if it's a user.
-			if ($assigneeType === 'user') {
-				$author = $user->getUID();
-
-				$this->notificationService->notifyTaskReassigned(
-					$taskData['subject'] ?? '',
-					$assignee,
-					$id,
-					$author,
-					$taskData['deadline'] ?? ''
-				);
-			}
-
-			return new JSONResponse(['task' => $taskData]);
+			return $this->reassignTask(
+				reassignment: ['id' => $id, 'user' => $user, 'assignee' => $assignee, 'assigneeType' => $assigneeType]
+			);
 		} catch (\Exception $e) {
 			$this->logFailure(action: 'reassign', error: $e);
 			return $this->serverError(message: $this->l10n->t('Failed to reassign task'));
 		}//end try
 	}//end reassign()
+
+	/**
+	 * Reassign a task, log the attempt and notify a user assignee.
+	 *
+	 * @param array{id: string, user: IUser, assignee: mixed, assigneeType: mixed} $reassignment The task id, the acting
+	 *                                                                                   user, the new assignee and its type.
+	 *
+	 * @return JSONResponse The reassigned task, or not-found.
+	 *
+	 * @throws \Exception When the task cannot be loaded or saved.
+	 */
+	private function reassignTask(array $reassignment): JSONResponse {
+		['id' => $id, 'user' => $user, 'assignee' => $assignee, 'assigneeType' => $assigneeType] = $reassignment;
+		$taskData = $this->taskOrNotFound(id: $id);
+		if ($taskData instanceof JSONResponse) {
+			return $taskData;
+		}
+
+		$taskData = $this->callbackService->applyReassignment($taskData, $assignee, $assigneeType);
+
+		// Log the reassignment as an attempt entry.
+		$taskData = $this->callbackService->addAttempt($taskData, 'hertoegewezen', '');
+		$taskData = $this->scheduledTaskService->updateScheduledTask($id, $taskData);
+
+		// Notify the new assignee if it's a user.
+		if ($assigneeType === 'user') {
+			$author = $user->getUID();
+
+			$this->notificationService->notifyTaskReassigned($taskData['subject'] ?? '', $assignee, $id, $author, $taskData['deadline'] ?? '');
+		}
+
+		return new JSONResponse(['task' => $taskData]);
+	}//end reassignTask()
 
 	/**
 	 * Fetch a task from the real persistence layer (ScheduledTaskService).

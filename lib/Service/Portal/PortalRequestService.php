@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\Event\PortalRequestSubmittedEvent;
 use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
+use OCA\Pipelinq\Service\Portal\Support\NestedIdValue;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -55,6 +56,7 @@ use Psr\Log\LoggerInterface;
  *   audit are all unspecified
  */
 class PortalRequestService implements PortalRequestServiceInterface {
+	use NestedIdValue;
 	use NullableRowIdOf;
 
 	/**
@@ -177,6 +179,24 @@ class PortalRequestService implements PortalRequestServiceInterface {
 		$page = max(1, $page);
 		$perPage = min(100, max(1, $perPage));
 
+		$rows = $this->visibleSummaries(account: $account);
+		$total = count($rows);
+		return [
+			'total' => $total,
+			'page' => $page,
+			'perPage' => $perPage,
+			'items' => array_slice($rows, (($page - 1) * $perPage), $perPage),
+		];
+	}//end getForAccount()
+
+	/**
+	 * The summaries of the requests the account may see, newest first.
+	 *
+	 * @param array<string, mixed> $account The authenticated account.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function visibleSummaries(array $account): array {
 		$resolved = $this->scope->resolve($account, 'submit-requests');
 		$rows = [];
 		foreach ($this->reader->findAll(self::SCHEMA, ['ticketType' => self::TICKET_TYPE]) as $request) {
@@ -192,14 +212,8 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			static fn (array $left, array $right): int => strcmp((string)$right['date'], (string)$left['date'])
 		);
 
-		$total = count($rows);
-		return [
-			'total' => $total,
-			'page' => $page,
-			'perPage' => $perPage,
-			'items' => array_slice($rows, (($page - 1) * $perPage), $perPage),
-		];
-	}//end getForAccount()
+		return $rows;
+	}//end visibleSummaries()
 
 	/**
 	 * Read one request's customer-safe detail (internal notes stripped), or
@@ -437,6 +451,29 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			throw new PortalException(Http::STATUS_BAD_REQUEST, 'missingFields', 'Bericht is verplicht.');
 		}
 
+		$request = $this->visibleRequest(account: $account, requestId: $requestId);
+		$request = $this->withReply(request: $request, message: $message);
+
+		$saved = $this->reader->save(self::SCHEMA, $request, $requestId);
+		$this->auditReply(
+			actor: new PortalActor(accountId: (string)$this->idOf(object: $account), tenantId: $tenantId),
+			requestId: $requestId
+		);
+
+		return $this->presentDetail(request: $saved, exposeAssigneeName: false);
+	}//end addReply()
+
+	/**
+	 * The request, when it is a request the account may reply to.
+	 *
+	 * @param array<string, mixed> $account The authenticated account.
+	 * @param string $requestId The request id.
+	 *
+	 * @return array<string, mixed> The request ticket.
+	 *
+	 * @throws PortalException When the request is not visible.
+	 */
+	private function visibleRequest(array $account, string $requestId): array {
 		$request = $this->reader->find(self::SCHEMA, $requestId);
 		$resolved = $this->scope->resolve($account, 'submit-requests');
 		if ($request === null
@@ -446,12 +483,21 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			throw new PortalException(Http::STATUS_NOT_FOUND, 'notFound', 'Niet gevonden.');
 		}
 
+		return $request;
+	}//end visibleRequest()
+
+	/**
+	 * The request with the customer's reply appended, back in progress when it awaited the customer.
+	 *
+	 * @param array<string, mixed> $request The request ticket.
+	 * @param string $message The trimmed reply text.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withReply(array $request, string $message): array {
 		// Replies go to their own list. The ticket's `notes` is an internal
 		// string and is never read or written here.
-		$replies = [];
-		if (is_array($request['portalReplies'] ?? null) === true) {
-			$replies = array_values($request['portalReplies']);
-		}
+		$replies = array_values($this->portalReplies(request: $request));
 
 		$replies[] = [
 			'message' => $message,
@@ -463,10 +509,37 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			$request['status'] = self::STATUS_IN_PROGRESS;
 		}
 
-		$saved = $this->reader->save(self::SCHEMA, $request, $requestId);
+		return $request;
+	}//end withReply()
+
+	/**
+	 * The request's portal replies, or an empty list when it has none.
+	 *
+	 * @param array<string, mixed> $request The request ticket.
+	 *
+	 * @return array<mixed>
+	 */
+	private function portalReplies(array $request): array {
+		$replies = [];
+		if (is_array($request['portalReplies'] ?? null) === true) {
+			$replies = $request['portalReplies'];
+		}
+
+		return $replies;
+	}//end portalReplies()
+
+	/**
+	 * Audit a successful customer reply.
+	 *
+	 * @param PortalActor $actor     The replying account and its tenant.
+	 * @param string      $requestId The request id.
+	 *
+	 * @return void
+	 */
+	private function auditReply(PortalActor $actor, string $requestId): void {
 		$this->audit->log(
-			(string)$this->idOf(object: $account),
-			$tenantId,
+			$actor->accountId,
+			$actor->tenantId,
 			'request-reply',
 			'success',
 			[
@@ -474,9 +547,7 @@ class PortalRequestService implements PortalRequestServiceInterface {
 				'targetObjectId' => $requestId,
 			]
 		);
-
-		return $this->presentDetail(request: $saved, exposeAssigneeName: false);
-	}//end addReply()
+	}//end auditReply()
 
 	/**
 	 * Whether a request is visible to the resolved scope (own contact/client or
@@ -653,6 +724,24 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	 * @return array<int, array<string, mixed>> The customer-visible notes.
 	 */
 	private function customerNotes(array $request): array {
+		$kept = array_merge($this->handlerNotes(request: $request), $this->customerReplies(request: $request));
+
+		usort(
+			$kept,
+			static fn (array $left, array $right): int => strcmp((string)$left['createdAt'], (string)$right['createdAt'])
+		);
+
+		return $kept;
+	}//end customerNotes()
+
+	/**
+	 * The handler's message to the customer as a note, when there is one.
+	 *
+	 * @param array<string, mixed> $request The request ticket.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function handlerNotes(array $request): array {
 		$kept = [];
 		$handlerMessage = trim((string)($request['customerMessage'] ?? ''));
 		if ($handlerMessage !== '') {
@@ -663,12 +752,19 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			];
 		}
 
-		$replies = [];
-		if (is_array($request['portalReplies'] ?? null) === true) {
-			$replies = $request['portalReplies'];
-		}
+		return $kept;
+	}//end handlerNotes()
 
-		foreach ($replies as $reply) {
+	/**
+	 * The customer's non-empty portal replies as notes.
+	 *
+	 * @param array<string, mixed> $request The request ticket.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function customerReplies(array $request): array {
+		$kept = [];
+		foreach ($this->portalReplies(request: $request) as $reply) {
 			if (is_array($reply) === true && trim((string)($reply['message'] ?? '')) !== '') {
 				$kept[] = [
 					'author' => 'customer',
@@ -678,13 +774,8 @@ class PortalRequestService implements PortalRequestServiceInterface {
 			}
 		}
 
-		usort(
-			$kept,
-			static fn (array $left, array $right): int => strcmp((string)$left['createdAt'], (string)$right['createdAt'])
-		);
-
 		return $kept;
-	}//end customerNotes()
+	}//end customerReplies()
 
 	/**
 	 * Whether a ticket is a request (and not a complaint or a logged interaction).
@@ -696,30 +787,6 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	private function isRequest(array $ticket): bool {
 		return ($ticket['ticketType'] ?? null) === self::TICKET_TYPE;
 	}//end isRequest()
-
-	/**
-	 * Read a possibly-nested id value into a string, or null.
-	 *
-	 * @param mixed $value The raw value.
-	 *
-	 * @return string|null The id.
-	 */
-	private function readId(mixed $value): ?string {
-		if ($value === null || $value === '') {
-			return null;
-		}
-
-		if (is_array($value) === true) {
-			$id = ($value['id'] ?? $value['uuid'] ?? null);
-			if ($id === null) {
-				return null;
-			}
-
-			return (string)$id;
-		}
-
-		return (string)$value;
-	}//end readId()
 
 	/**
 	 * Read the first id from a scalar or list id value.

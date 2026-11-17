@@ -26,9 +26,12 @@ use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\Pipelinq\Service\Merge\MergedAwayStamp;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * The stamp names the surviving record on a merge and is cleared on a reversal.
+ *
+ * @covers \OCA\Pipelinq\Service\Merge\MergedAwayStamp
  *
  * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-013-mdm-steward-ui-deep-linked-to-openregister
  */
@@ -65,7 +68,9 @@ class MergedAwayStampTest extends TestCase {
 			}
 		);
 		$objects->method('patchObject')->willReturnCallback(
-			function (string $objectId, array $data): ObjectEntity {
+			function (ObjectPatch $patch): ObjectEntity {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
 				$this->patched[$objectId] = $data;
 				return new ObjectEntity();
 			}

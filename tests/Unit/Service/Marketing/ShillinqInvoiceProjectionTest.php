@@ -45,4 +45,22 @@ class ShillinqInvoiceProjectionTest extends TestCase {
 			$projection->lines(value: ['junk', ['itemName' => ' '], ['itemName' => ' Kassa ', 'netAmount' => '99.5', 'quantity' => 2, 'unitCode' => 'C62'], ['itemName' => 'Installatie']])
 		);
 	}//end testEveryLineShape()
+
+	/**
+	 * The head carries the id, the gross amount as a number, EUR when no
+	 * currency is set and the date part of the invoice date.
+	 *
+	 * @return void
+	 */
+	public function testTheHead(): void {
+		$projection = new ShillinqInvoiceProjection();
+		$this->assertSame(
+			['id' => 'i1', 'amount' => 12.5, 'currency' => 'EUR', 'invoiceDate' => '2026-03-01'],
+			$projection->head(row: ['grossAmount' => '12.5', 'invoiceDate' => '2026-03-01T10:00:00Z'], id: 'i1')
+		);
+		$this->assertSame(
+			['id' => 'i2', 'amount' => 0.0, 'currency' => 'USD', 'invoiceDate' => ''],
+			$projection->head(row: ['currency' => 'USD'], id: 'i2')
+		);
+	}//end testTheHead()
 }//end class

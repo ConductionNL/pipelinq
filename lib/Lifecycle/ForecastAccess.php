@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessInterface;
 use OCA\Pipelinq\Service\ForecastSnapshotQuery;
-use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011
  */
-class ForecastAccess {
+class ForecastAccess implements ForecastAccessInterface {
 	/**
 	 * Constructor.
 	 *
@@ -61,12 +61,7 @@ class ForecastAccess {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011
 	 */
 	public function actingUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user instanceof IUser) {
-			return $user->getUID();
-		}
-
-		return '';
+		return $this->userSession->getUser()?->getUID() ?? '';
 	}//end actingUserId()
 
 	/**

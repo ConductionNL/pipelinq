@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Repair\BackfillTicketMunicipality;
 use OCA\Pipelinq\Service\ObjectEventSilence;
@@ -134,18 +135,13 @@ class TicketMunicipalityBackfillServiceTest extends TestCase {
 		$objects->method('saveObject')->willReturnCallback(
 			function (
 				array $object,
-				?array $extend=[],
-				string|int|null $register=null,
-				string|int|null $schema=null,
-				?string $uuid=null,
+				ObjectSaveOptions $options=new ObjectSaveOptions(),
 				bool $_rbac=true,
 				bool $_multitenancy=true,
-				bool $silent=false,
-				bool $_validation=true,
-				?array $uploadedFiles=null,
-				?IUser $currentUser=null,
 			) use ($failOn): ObjectEntity {
-				$this->writes[] = ['uuid' => $uuid, 'schema' => $schema, 'object' => $object, 'silent' => $silent, 'inScope' => $this->inScope, 'user' => $currentUser];
+				$uuid   = $options->uuid;
+				$schema = $options->target->schema;
+				$this->writes[] = ['uuid' => $uuid, 'schema' => $schema, 'object' => $object, 'silent' => $options->policy->silent, 'inScope' => $this->inScope, 'user' => $options->actor->currentUser, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy];
 				if (in_array($uuid, $failOn, true) === true) {
 					throw new RuntimeException('refused');
 				}

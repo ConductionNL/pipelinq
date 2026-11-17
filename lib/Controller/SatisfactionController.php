@@ -87,15 +87,7 @@ class SatisfactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function responseRate(string $surveyId = '', string $channel = '', int $days = 0): JSONResponse {
-		$filters = [];
-		if (trim($surveyId) !== '') {
-			$filters['surveyRef'] = trim($surveyId);
-		}
-
-		if (trim($channel) !== '') {
-			$filters['channel'] = trim($channel);
-		}
-
+		$filters = self::filtersOf(surveyId: $surveyId, channel: $channel);
 		$invitations = $this->dispatchService->withinDays(
 			invitations: $this->dispatchService->read(filters: $filters),
 			days: $days
@@ -103,4 +95,19 @@ class SatisfactionController extends Controller {
 
 		return new JSONResponse($this->dispatchService->responseRate(invitations: $invitations), 200);
 	}//end responseRate()
+
+	/**
+	 * The invitation filters for a survey and a channel, leaving out the blank ones.
+	 *
+	 * @param string $surveyId The survey's uuid, or ''.
+	 * @param string $channel  One channel, or ''.
+	 *
+	 * @return array<string, string> The filters.
+	 */
+	private static function filtersOf(string $surveyId, string $channel): array {
+		return array_filter(
+			array_map('trim', ['surveyRef' => $surveyId, 'channel' => $channel]),
+			static fn (string $value): bool => $value !== ''
+		);
+	}//end filtersOf()
 }//end class

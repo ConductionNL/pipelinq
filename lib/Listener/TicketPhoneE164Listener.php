@@ -76,20 +76,59 @@ class TicketPhoneE164Listener implements IEventListener {
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof ObjectCreatingEvent) {
-			$entity = $event->getObject();
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
-		} else {
+			$this->normaliseTicketPhone(event: $event, entity: $event->getObject());
 			return;
 		}
 
-		$ticketSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
-		if ($ticketSchema === '' || (string) $entity->getSchema() !== $ticketSchema) {
+		if ($event instanceof ObjectUpdatingEvent) {
+			$this->normaliseTicketPhone(event: $event, entity: $event->getNewObject());
+		}
+	}//end handle()
+
+	/**
+	 * Store the ticket's phone number in E.164 on the event when it changed.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The creating or updating event.
+	 * @param mixed $entity The object being created, or the new object being updated.
+	 *
+	 * @return void
+	 */
+	private function normaliseTicketPhone(ObjectCreatingEvent|ObjectUpdatingEvent $event, $entity): void {
+		if ($this->isTicket(entity: $entity) === false) {
 			return;
 		}
 
 		$ticket = array_merge($entity->getObject(), $event->getModifiedData());
 
+		$e164 = $this->changedPhone(ticket: $ticket);
+		if ($e164 === null) {
+			return;
+		}
+
+		// Merge, never replace: another listener may already have modified the data.
+		$event->setModifiedData(array_merge($event->getModifiedData(), [TicketPhoneNumberInterface::FIELD => $e164]));
+	}//end normaliseTicketPhone()
+
+	/**
+	 * Whether the entity is a ticket of the configured ticket schema.
+	 *
+	 * @param mixed $entity The entity.
+	 *
+	 * @return bool True for a ticket.
+	 */
+	private function isTicket($entity): bool {
+		$ticketSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
+		return ($ticketSchema === '' || (string) $entity->getSchema() !== $ticketSchema) === false;
+	}//end isTicket()
+
+	/**
+	 * The ticket's phone number in E.164 when it differs from the stored one; null otherwise (logged when it fails).
+	 *
+	 * @param array<string, mixed> $ticket The ticket data.
+	 *
+	 * @return string|null The new E.164 number.
+	 */
+	private function changedPhone(array $ticket): string|null {
 		try {
 			$e164 = $this->phoneNumber->e164(ticket: $ticket);
 		} catch (Throwable $e) {
@@ -97,14 +136,13 @@ class TicketPhoneE164Listener implements IEventListener {
 				'Pipelinq: the phone number of a ticket could not be normalised',
 				['exception' => $e->getMessage()]
 			);
-			return;
+			return null;
 		}
 
 		if ($e164 === null || ($ticket[TicketPhoneNumberInterface::FIELD] ?? null) === $e164) {
-			return;
+			return null;
 		}
 
-		// Merge, never replace: another listener may already have modified the data.
-		$event->setModifiedData(array_merge($event->getModifiedData(), [TicketPhoneNumberInterface::FIELD => $e164]));
-	}//end handle()
+		return $e164;
+	}//end changedPhone()
 }//end class

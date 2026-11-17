@@ -20,4 +20,5 @@ After thirty days the merge is final.
 ## Where to find it
 
 - On the merged-away record: the line **merged into**, with a link to the record that stayed.
-- Coming: **Merge into another record** on the client and contact page, which shows the preview before anything changes, and the **Merges** section on the record that stayed, with **Undo** while the thirty days last. Until then a merge and its reversal run through OpenRegister's merge endpoints.
+- On the record that stayed: the **Merges** section on the client and contact page lists every record merged into it. While the thirty days last, **Undo** (asked once more before it runs) reverses the merge; after them the section shows the date the merge became final, and no Undo.
+- Starting a merge, with its preview of which values win, is done in OpenRegister's data steward screens, not on the pipelinq page.

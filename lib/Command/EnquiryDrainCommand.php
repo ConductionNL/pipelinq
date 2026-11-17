@@ -128,7 +128,7 @@ class EnquiryDrainCommand extends Command {
 			}
 
 			$pending += $report['pending'];
-			$this->print(label: $label, report: $report, apply: $apply, output: $output);
+			$this->print(run: ['label' => $label, 'report' => $report, 'apply' => $apply], output: $output);
 		}
 
 		return self::pendingExit(output: $output, pending: $pending);
@@ -176,30 +176,51 @@ class EnquiryDrainCommand extends Command {
 	/**
 	 * Print one schema's report.
 	 *
-	 * @param string               $label  The held schema.
-	 * @param array<string, mixed> $report The drain report.
-	 * @param bool                 $apply  Whether this run wrote.
-	 * @param OutputInterface      $output Console output.
+	 * @param array{label: string, report: array<string, mixed>, apply: bool} $run    The held schema, its drain report and whether this run wrote.
+	 * @param OutputInterface                                                 $output Console output.
 	 *
 	 * @return void
 	 */
-	private function print(string $label, array $report, bool $apply, OutputInterface $output): void {
+	private function print(array $run, OutputInterface $output): void {
+		$output->writeln(self::summaryLine(run: $run));
+		$this->printDelivered(rows: $run['report']['delivered'], output: $output);
+		$this->printRejected(report: $run['report'], output: $output);
+	}//end print()
+
+	/**
+	 * The one-line summary of a schema's report.
+	 *
+	 * @param array{label: string, report: array<string, mixed>, apply: bool} $run The held schema, its drain report and whether this run wrote.
+	 *
+	 * @return string
+	 */
+	private static function summaryLine(array $run): string {
 		$verb = 'would be delivered';
-		if ($apply === true) {
+		if ($run['apply'] === true) {
 			$verb = 'delivered';
 		}
 
-		$output->writeln(
-			sprintf(
-				'%s: %d %s, %d refused, %d unmapped.',
-				$label,
-				count($report['delivered']),
-				$verb,
-				count($report['refused']),
-				count($report['unmapped'])
-			)
+		$report = $run['report'];
+		return sprintf(
+			'%s: %d %s, %d refused, %d unmapped.',
+			$run['label'],
+			count($report['delivered']),
+			$verb,
+			count($report['refused']),
+			count($report['unmapped'])
 		);
-		foreach ($report['delivered'] as $row) {
+	}//end summaryLine()
+
+	/**
+	 * Print a line per delivered enquiry.
+	 *
+	 * @param array<int, array<string, mixed>> $rows   The delivered rows.
+	 * @param OutputInterface                  $output Console output.
+	 *
+	 * @return void
+	 */
+	private function printDelivered(array $rows, OutputInterface $output): void {
+		foreach ($rows as $row) {
 			$line = sprintf('  delivered %s (%s) into %s %s', $row['id'], $row['key'], $row['destination'], $row['reference']);
 			if (isset($row['notRemoved']) === true) {
 				$line .= ' (not removed: ' . $row['notRemoved'] . ')';
@@ -207,7 +228,17 @@ class EnquiryDrainCommand extends Command {
 
 			$output->writeln(rtrim($line));
 		}
+	}//end printDelivered()
 
+	/**
+	 * Print a line per refused and per unmapped enquiry.
+	 *
+	 * @param array<string, mixed> $report The drain report.
+	 * @param OutputInterface      $output Console output.
+	 *
+	 * @return void
+	 */
+	private function printRejected(array $report, OutputInterface $output): void {
 		foreach ($report['refused'] as $row) {
 			$output->writeln(sprintf('  refused %s: status %d %s', $row['id'], $row['status'], implode(',', $row['codes'])));
 		}
@@ -215,6 +246,5 @@ class EnquiryDrainCommand extends Command {
 		foreach ($report['unmapped'] as $row) {
 			$output->writeln(sprintf('  unmapped %s: no published form for source "%s"', $row['id'], $row['key']));
 		}
-
-	}//end print()
+	}//end printRejected()
 }//end class

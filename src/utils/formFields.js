@@ -35,3 +35,21 @@ export function withoutEmptyFields(data, keys) {
 	}
 	return data
 }
+
+/**
+ * The watcher of a form's record prop: fill the form (`populateForm`) as soon
+ * as the record arrives, and again whenever it changes, ignoring an empty one.
+ *
+ * @return {{immediate: boolean, handler: function(object): void}} The watcher definition.
+ * @spec exclude form-filling plumbing shared by the record forms, no behaviour of its own
+ */
+export function populateFormWatcher() {
+	return {
+		immediate: true,
+		handler(val) {
+			if (val && Object.keys(val).length > 0) {
+				this.populateForm(val)
+			}
+		},
+	}
+}

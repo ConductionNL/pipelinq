@@ -38,6 +38,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every call syncToContacts() and provisionContactFromForm() make on the
@@ -191,7 +192,8 @@ class ContactVcardGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (mixed ...$args) use ($world): ?ObjectEntityInterface {
-				$this->record(call: 'objects.find', args: $this->passed(class: ObjectServiceInterface::class, method: 'find', args: $args), result: null);
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args, trim: true);
+				$this->record(call: 'objects.find', args: $args, result: null);
 				if ($world['found'] === 'throw') {
 					throw new RuntimeException('register down');
 				}

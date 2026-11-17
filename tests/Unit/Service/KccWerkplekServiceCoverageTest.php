@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Exercises the workspace aggregation and availability toggle of
@@ -517,13 +518,13 @@ class KccWerkplekServiceCoverageTest extends TestCase {
 		$this->serveRows();
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				['userId' => 'alice', 'skills' => ['dutch'], 'maxConcurrent' => 4, 'isAvailable' => true],
-				[],
-				'reg',
-				'sch-agent',
-				'p-alice'
-			);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['userId' => 'alice', 'skills' => ['dutch'], 'maxConcurrent' => 4, 'isAvailable' => true],
+					'extend' => [],
+					'register' => 'reg',
+					'schema' => 'sch-agent',
+					'uuid' => 'p-alice',
+				]));
 
 		$result = $this->service()->setAvailability('alice', true);
 
@@ -541,7 +542,13 @@ class KccWerkplekServiceCoverageTest extends TestCase {
 		$this->serveRows();
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['userId' => 'alice', 'isAvailable' => false, 'maxConcurrent' => 1], [], 'reg', 'sch-agent', 'p-plain');
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['userId' => 'alice', 'isAvailable' => false, 'maxConcurrent' => 1],
+					'extend' => [],
+					'register' => 'reg',
+					'schema' => 'sch-agent',
+					'uuid' => 'p-plain',
+				]));
 
 		$this->assertSame(expected: ['userId' => 'alice', 'isAvailable' => false], actual: $this->service()->setAvailability('alice', false));
 	}//end testSetAvailabilityUsesPlainIdWithoutSelf()
@@ -556,7 +563,13 @@ class KccWerkplekServiceCoverageTest extends TestCase {
 		$this->serveRows();
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['userId' => 'alice', 'maxConcurrent' => 2, 'isAvailable' => true], [], 'reg', 'sch-agent', null);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['userId' => 'alice', 'maxConcurrent' => 2, 'isAvailable' => true],
+					'extend' => [],
+					'register' => 'reg',
+					'schema' => 'sch-agent',
+					'uuid' => null,
+				]));
 
 		$this->service()->setAvailability('alice', true);
 	}//end testSetAvailabilityMatchedProfileWithoutIdCreates()
@@ -581,7 +594,13 @@ class KccWerkplekServiceCoverageTest extends TestCase {
 		$this->serveRows();
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['userId' => 'alice', 'isAvailable' => true, 'maxConcurrent' => 1], [], 'reg', 'sch-agent', null);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['userId' => 'alice', 'isAvailable' => true, 'maxConcurrent' => 1],
+					'extend' => [],
+					'register' => 'reg',
+					'schema' => 'sch-agent',
+					'uuid' => null,
+				]));
 
 		$this->assertSame(expected: ['userId' => 'alice', 'isAvailable' => true], actual: $this->service()->setAvailability('alice', true));
 	}//end testSetAvailabilityCreatesProfile()
@@ -598,7 +617,13 @@ class KccWerkplekServiceCoverageTest extends TestCase {
 			->with('[KccWerkplekService] setAvailability lookup failed', ['error' => 'lookup down']);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['userId' => 'alice', 'isAvailable' => false, 'maxConcurrent' => 1], [], 'reg', 'sch-agent', null);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['userId' => 'alice', 'isAvailable' => false, 'maxConcurrent' => 1],
+					'extend' => [],
+					'register' => 'reg',
+					'schema' => 'sch-agent',
+					'uuid' => null,
+				]));
 
 		$this->assertSame(expected: ['userId' => 'alice', 'isAvailable' => false], actual: $this->service()->setAvailability('alice', false));
 	}//end testSetAvailabilityLookupFailureStillSaves()

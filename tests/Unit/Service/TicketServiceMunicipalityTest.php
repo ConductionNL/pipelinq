@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -102,7 +103,7 @@ class TicketServiceMunicipalityTest extends TestCase {
 		$client->method('getObject')->willReturn($data);
 		$this->objects->expects($this->once())
 			->method('find')
-			->with('c-1', [], false, 'reg-1', 'sch-client')
+			->with('c-1', new ObjectFindOptions(register: 'reg-1', schema: 'sch-client'))
 			->willReturn($client);
 	}//end clientIs()
 

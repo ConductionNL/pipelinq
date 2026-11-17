@@ -42,6 +42,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Receipt delivery over a mocked register, mailer and invoice sequence.
@@ -56,6 +58,8 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
+ * @uses   \OCA\Pipelinq\Service\ReceiptAction
+ * @uses   \OCA\Pipelinq\Service\ReceiptLayout
  */
 class ReceiptDeliveryServiceCoverageTest extends TestCase {
 
@@ -275,7 +279,11 @@ class ReceiptDeliveryServiceCoverageTest extends TestCase {
 	 */
 	private function wireObjectService(): void {
 		$this->objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntity {
+			function (int|string $id, ?ObjectFindOptions $options = null): ?ObjectEntity {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if (in_array($schema, $this->readFails, true) === true) {
 					throw new RuntimeException('read failed');
 				}
@@ -319,7 +327,11 @@ class ReceiptDeliveryServiceCoverageTest extends TestCase {
 		);
 
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if (in_array($schema, $this->writeFails, true) === true) {
 					throw new RuntimeException('write failed');
 				}

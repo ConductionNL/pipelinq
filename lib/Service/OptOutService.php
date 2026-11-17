@@ -27,8 +27,13 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\OptOutServiceInterface;
+use OCA\Pipelinq\Service\Support\BsnHashRows;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -44,6 +49,10 @@ use Throwable;
  *  it as a collaborator would not change behaviour.
  */
 class OptOutService implements OptOutServiceInterface {
+	use SerialisedToArray;
+	use InjectedObjectService;
+	use BsnHashRows;
+
 	/**
 	 * Constructor.
 	 *
@@ -88,21 +97,11 @@ class OptOutService implements OptOutServiceInterface {
 		string $rawBsn,
 	): ?array {
 		try {
-			[$register, $schema] = $this->config();
-			$hash = BsnValidationService::hash($rawBsn);
-			$results = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'bsnHash' => $hash,
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
+			$results = $this->rowsForBsn(rawBsn: $rawBsn);
 
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			foreach (($results ?? []) as $object) {
-				$arr = self::toArray(object: $object);
+				$arr = $this->toArray(value: $object);
 				if ($this->isActive(arr: $arr, today: $today) === true) {
 					return $arr;
 				}
@@ -154,9 +153,7 @@ class OptOutService implements OptOutServiceInterface {
 			];
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return true;
 		} catch (Throwable $e) {
@@ -200,9 +197,7 @@ class OptOutService implements OptOutServiceInterface {
 			$object = array_filter($object, static fn ($v) => $v !== null);
 			$this->getObjectService()->saveObject(
 				object: $object,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return true;
 		} catch (Throwable $e) {
@@ -225,6 +220,22 @@ class OptOutService implements OptOutServiceInterface {
 	private function isActive(array $arr, DateTimeImmutable $today): bool {
 		$ingang = (string)($arr['effectiveDate'] ?? '');
 		$endDate = $arr['endDate'] ?? null;
+		if ($this->hasStarted(ingang: $ingang, today: $today) === false) {
+			return false;
+		}
+
+		return $this->hasNotEnded(endDate: $endDate, today: $today);
+	}//end isActive()
+
+	/**
+	 * Whether a readable effective date has been reached.
+	 *
+	 * @param string            $ingang The effective date.
+	 * @param DateTimeImmutable $today  Today's UTC date.
+	 *
+	 * @return bool
+	 */
+	private function hasStarted(string $ingang, DateTimeImmutable $today): bool {
 		if ($ingang === '') {
 			return false;
 		}
@@ -239,6 +250,18 @@ class OptOutService implements OptOutServiceInterface {
 			return false;
 		}
 
+		return true;
+	}//end hasStarted()
+
+	/**
+	 * Whether the end date, if any, has not passed; an unreadable end date never ends.
+	 *
+	 * @param mixed             $endDate The end date, or null.
+	 * @param DateTimeImmutable $today   Today's UTC date.
+	 *
+	 * @return bool
+	 */
+	private function hasNotEnded(mixed $endDate, DateTimeImmutable $today): bool {
 		if ($endDate !== null && $endDate !== '') {
 			try {
 				$endDt = new DateTimeImmutable((string)$endDate, new DateTimeZone('UTC'));
@@ -252,31 +275,7 @@ class OptOutService implements OptOutServiceInterface {
 		}
 
 		return true;
-	}//end isActive()
-
-	/**
-	 * Normalise an OR object (entity or array) to an array.
-	 *
-	 * @param mixed $object Entity instance, JsonSerializable, or array.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private static function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serial = $object->jsonSerialize();
-			if (is_array($serial) === true) {
-				return $serial;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toArray()
+	}//end hasNotEnded()
 
 	/**
 	 * Resolve the [register, schema] pair.
@@ -294,15 +293,4 @@ class OptOutService implements OptOutServiceInterface {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Lazy OR ObjectService lookup.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

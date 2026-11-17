@@ -173,18 +173,23 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function report(string $id, ?string $from = null, ?string $to = null): JSONResponse {
-		$denied = $this->privilege->refusal();
-		if ($denied !== null) {
-			return $denied;
-		}
+		return ($this->privilege->refusal() ?? self::reportResponse(record: $this->report->forCampaign(campaignId: $id, from: $from, to: $to)));
+	}//end report()
 
-		$record = $this->report->forCampaign(campaignId: $id, from: $from, to: $to);
+	/**
+	 * The report as a response; 404 when there is no such campaign.
+	 *
+	 * @param array<string, mixed>|null $record The report, or null.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private static function reportResponse(?array $record): JSONResponse {
 		if ($record === null) {
 			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
 		}
 
 		return new JSONResponse($record);
-	}//end report()
+	}//end reportResponse()
 
 	/**
 	 * Ask Portaliq for a landing page with a lead-capture form.
@@ -203,18 +208,24 @@ class CampaignController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function createLandingPage(string $id, string $portal = '', string $route = ''): JSONResponse {
-		$denied = $this->privilege->refusal();
-		if ($denied !== null) {
-			return $denied;
-		}
+		return ($this->privilege->refusal()
+			?? self::landingPageResponse(result: $this->landingPages->createFor(campaignId: $id, portal: $portal, route: $route)));
+	}//end createLandingPage()
 
-		$result = $this->landingPages->createFor(campaignId: $id, portal: $portal, route: $route);
+	/**
+	 * Portaliq's answer as a response, with the status its failure code maps to.
+	 *
+	 * @param array<string, mixed> $result The landing-page result.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private static function landingPageResponse(array $result): JSONResponse {
 		if ($result['error'] === '') {
 			return new JSONResponse($result);
 		}
 
 		return new JSONResponse($result, (self::ERROR_STATUS[$result['error']] ?? Http::STATUS_BAD_GATEWAY));
-	}//end createLandingPage()
+	}//end landingPageResponse()
 
 	/**
 	 * Create or update, sharing the guard, the body read and the mapping

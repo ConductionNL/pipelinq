@@ -28,7 +28,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Provider;
 
 use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
+use OCA\OpenRegister\Service\Integration\Providers\OutboundMessage;
 use OCA\Pipelinq\Service\Provider\CmComSmsClient;
+use OCA\Pipelinq\Service\Provider\LeafSmsClient;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
 use PHPUnit\Framework\TestCase;
@@ -122,14 +124,12 @@ class MessageDispatchTraitEdgeCasesTest extends TestCase {
 			/**
 			 * Answer with a scalar.
 			 *
-			 * @param string $source  Source slug.
-			 * @param array  $body    Body.
-			 * @param string $path    Path.
-			 * @param array  $headers Headers.
+			 * @param string          $source  Source slug.
+			 * @param OutboundMessage $message The message.
 			 *
 			 * @return string
 			 */
-			public function dispatch(string $source, array $body, string $path, array $headers = []): string {
+			public function dispatch(string $source, OutboundMessage $message): string {
 				return 'ok';
 			}
 		};
@@ -214,6 +214,36 @@ class MessageDispatchTraitEdgeCasesTest extends TestCase {
 	}//end testContainerMissIsPermanentWithReason()
 
 	/**
+	 * An instance without the OpenRegister leaf class is a permanent error and never asks the container.
+	 *
+	 * @return void
+	 */
+	public function testMissingLeafClassIsPermanentWithoutContainerLookup(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+		$client = new CmComSmsClient(
+			container: $container,
+			logger: $this->createMock(LoggerInterface::class),
+			credentials: [],
+			fromNumber: '+31600000000',
+			webhookSecret: 's',
+			sourceId: 'cm-sms',
+		);
+
+		$property = new \ReflectionProperty(LeafSmsClient::class, 'dispatchLeafClass');
+		$original = $property->getValue();
+		$property->setValue(null, 'OCA\\OpenRegister\\Service\\Integration\\Providers\\AbsentDispatchProvider');
+
+		try {
+			$this->expectException(PermanentSmsProviderException::class);
+			$this->expectExceptionMessage('OpenRegister MessageDispatchProvider not available');
+			$client->send(toNumber: '+31611111111', body: 'hi');
+		} finally {
+			$property->setValue(null, $original);
+		}
+	}//end testMissingLeafClassIsPermanentWithoutContainerLookup()
+
+	/**
 	 * A leaf whose dispatch() throws the given error.
 	 *
 	 * @param \Throwable $error The error to throw.
@@ -233,14 +263,12 @@ class MessageDispatchTraitEdgeCasesTest extends TestCase {
 			/**
 			 * Throw the configured error.
 			 *
-			 * @param string $source  Source slug.
-			 * @param array  $body    Body.
-			 * @param string $path    Path.
-			 * @param array  $headers Headers.
+			 * @param string          $source  Source slug.
+			 * @param OutboundMessage $message The message.
 			 *
 			 * @return array
 			 */
-			public function dispatch(string $source, array $body, string $path, array $headers = []): array {
+			public function dispatch(string $source, OutboundMessage $message): array {
 				throw $this->error;
 			}
 		};

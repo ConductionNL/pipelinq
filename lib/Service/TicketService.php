@@ -47,6 +47,9 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
@@ -259,6 +262,18 @@ class TicketService implements TicketServiceInterface {
 			$query['sort'] = $sort;
 		}
 
+		return $this->findAllLogged(query: $query, ticketType: $ticketType);
+	}//end findByType()
+
+	/**
+	 * The tickets matching the query, none (logged) when OpenRegister fails.
+	 *
+	 * @param array<string, mixed> $query      The findAll query.
+	 * @param string               $ticketType The subtype, for the log.
+	 *
+	 * @return array<int, mixed> The matching ticket rows.
+	 */
+	private function findAllLogged(array $query, string $ticketType): array {
 		try {
 			return $this->getObjectService()->findAll($query);
 		} catch (\Throwable $e) {
@@ -268,7 +283,7 @@ class TicketService implements TicketServiceInterface {
 			);
 			return [];
 		}
-	}//end findByType()
+	}//end findAllLogged()
 
 	/**
 	 * Create or update a ticket of one subtype.
@@ -310,9 +325,10 @@ class TicketService implements TicketServiceInterface {
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			register: $this->getRegisterId(),
-			schema: $this->getSchemaId(),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->getRegisterId(), schema: $this->getSchemaId()),
+				uuid: $uuid
+			)
 		);
 	}//end save()
 
@@ -340,7 +356,10 @@ class TicketService implements TicketServiceInterface {
 		}
 
 		try {
-			$client = $this->getObjectService()->find(id: $clientId, register: $this->getRegisterId(), schema: $schema);
+			$client = $this->getObjectService()->find(
+				id: $clientId,
+				options: new ObjectFindOptions(register: $this->getRegisterId(), schema: $schema)
+			);
 		} catch (\Throwable $e) {
 			$this->logger->info(
 				'Pipelinq: the client of a new ticket could not be read; its municipality is not copied',
@@ -428,6 +447,20 @@ class TicketService implements TicketServiceInterface {
 			return;
 		}
 
+		$seen = $this->distinctCaseReferences(set: $set);
+		$this->assertPrimaryInCaseSet(payload: $payload, seen: $seen);
+	}//end assertCaseSet()
+
+	/**
+	 * The non-empty references of a case set, refusing a duplicate.
+	 *
+	 * @param array<mixed> $set The `caseReferences` set.
+	 *
+	 * @return array<int, string> The trimmed references.
+	 *
+	 * @throws InvalidArgumentException When the set holds a duplicate.
+	 */
+	private function distinctCaseReferences(array $set): array {
 		$seen = [];
 		foreach ($set as $reference) {
 			$reference = trim((string)$reference);
@@ -436,21 +469,33 @@ class TicketService implements TicketServiceInterface {
 			}
 
 			if (in_array($reference, $seen, true) === true) {
-				throw new InvalidArgumentException(
-					"caseReferences already holds {$reference}; a contact moment is filed on a case once."
-				);
+				throw new InvalidArgumentException("caseReferences already holds {$reference}; a contact moment is filed on a case once.");
 			}
 
 			$seen[] = $reference;
 		}
 
+		return $seen;
+	}//end distinctCaseReferences()
+
+	/**
+	 * Refuse a primary case reference that is not a member of the set.
+	 *
+	 * @param array<string, mixed> $payload The ticket fields.
+	 * @param array<int, string>   $seen    The trimmed references of the set.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the primary is not a member of the set.
+	 */
+	private function assertPrimaryInCaseSet(array $payload, array $seen): void {
 		$primary = trim((string)($payload['primaryCaseReference'] ?? ''));
 		if ($primary !== '' && in_array($primary, $seen, true) === false) {
 			throw new InvalidArgumentException(
 				"primaryCaseReference {$primary} is not one of the cases this contact moment is filed on."
 			);
 		}
-	}//end assertCaseSet()
+	}//end assertPrimaryInCaseSet()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.
@@ -535,64 +580,30 @@ class TicketService implements TicketServiceInterface {
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
-		$client = trim($client);
-		if ($client === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument client is missing.');
-		}
-
-		$channel = trim($channel);
-		if ($channel === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument channel is missing.');
-		}
-
-		$title = trim($title);
-		if ($title === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
-		}
-
-		// Direction is required on a contactmoment (REQ-CMD-001) and is
-		// deliberately NOT defaulted: a tool that guessed `inbound` would
-		// assert who reached out to whom, silently and often wrongly. The
-		// parameter is optional in the SIGNATURE only, so an existing caller
-		// gets a named refusal instead of a TypeError.
-		$direction = trim($direction);
-		if ($direction === '') {
-			return $this->mcp->error(
-				code: 'invalid_arguments',
-				message: 'Required argument direction is missing.'
-			);
-		}
-
-		if (in_array($direction, self::DIRECTIONS, true) === false) {
-			return $this->mcp->error(
-				code: 'invalid_arguments',
-				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
-			);
-		}
-
-		if ($this->isConfigured() === false) {
-			return $this->mcp->error(
-				code: 'not_configured',
-				message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
-			);
-		}
-
-		$payload = [
-			'client' => $client,
-			'channel' => $channel,
-			'title' => $title,
-			'direction' => $direction,
-			'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+		$fields = [
+			'client' => trim($client),
+			'channel' => trim($channel),
+			'title' => trim($title),
+			'direction' => trim($direction),
 		];
 
-		if ($outcome !== null && $outcome !== '') {
-			$payload['outcome'] = $outcome;
+		$refusal = $this->contactmomentRefusal(fields: $fields);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($notes !== null && $notes !== '') {
-			$payload['description'] = $notes;
-		}
+		$payload = $this->contactmomentPayload(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
+		return $this->saveContactmoment(payload: $payload);
+	}//end logContactmoment()
 
+	/**
+	 * Save a contactmoment and answer with its id, or the MCP error.
+	 *
+	 * @param array<string, mixed> $payload The contactmoment fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function saveContactmoment(array $payload): array {
 		try {
 			$saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
 		} catch (\Exception $e) {
@@ -604,7 +615,76 @@ class TicketService implements TicketServiceInterface {
 		return [
 			'ticketId' => (string)($data['id'] ?? $data['uuid'] ?? ''),
 		];
+	}//end saveContactmoment()
 
-	}//end logContactmoment()
+	/**
+	 * The refusal for an invalid logContactmoment() argument or an unconfigured app.
+	 *
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when the contactmoment may be saved.
+	 */
+	private function contactmomentRefusal(array $fields): ?array {
+		$refusal = $this->contactmomentArgumentError(fields: $fields);
+		if ($refusal !== null || $this->isConfigured() === true) {
+			return $refusal;
+		}
+
+		return $this->mcp->error(
+			code: 'not_configured',
+			message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+		);
+	}//end contactmomentRefusal()
+
+	/**
+	 * The refusal for the first missing or invalid logContactmoment() argument.
+	 *
+	 * Direction is required on a contactmoment (REQ-CMD-001) and is
+	 * deliberately NOT defaulted: a tool that guessed `inbound` would assert
+	 * who reached out to whom, silently and often wrongly. The parameter is
+	 * optional in the SIGNATURE only, so an existing caller gets a named
+	 * refusal instead of a TypeError.
+	 *
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when every argument is valid.
+	 */
+	private function contactmomentArgumentError(array $fields): ?array {
+		foreach ($fields as $name => $value) {
+			if ($value === '') {
+				return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument ' . $name . ' is missing.');
+			}
+		}
+
+		if (in_array($fields['direction'], self::DIRECTIONS, true) === false) {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
+			);
+		}
+
+		return null;
+	}//end contactmomentArgumentError()
+
+	/**
+	 * The contactmoment ticket payload; empty optional fields are left out.
+	 *
+	 * @param array<string, string>      $fields   The trimmed required arguments.
+	 * @param array<string, string|null> $optional The outcome and the notes (as `description`).
+	 *
+	 * @return array<string, mixed> The payload.
+	 */
+	private function contactmomentPayload(array $fields, array $optional): array {
+		$payload = $fields;
+		$payload['occurredAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		foreach ($optional as $name => $value) {
+			if ($value !== null && $value !== '') {
+				$payload[$name] = $value;
+			}
+		}
+
+		return $payload;
+	}//end contactmomentPayload()
 
 }//end class

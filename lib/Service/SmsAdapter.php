@@ -27,7 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\SmsAdapterInterface;
 use OCA\Pipelinq\Service\Provider\InboundWebhookDelivery;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
@@ -38,7 +40,11 @@ use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\SmsSendFailure;
 use OCA\Pipelinq\Service\Provider\SmsSendRun;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
+use OCA\Pipelinq\Service\Support\ChannelAdapterLookups;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -59,10 +65,16 @@ use Throwable;
  * surface with failover, persistence and webhook ingestion kept cohesive.
  *
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class SmsAdapter implements SmsAdapterInterface {
 	use PayloadToArray;
 	use WritesAsMessagingAccount;
+	use ConfiguredRegisterSlug;
+	use ContainerObjectService;
+	use ChannelAdapterLookups;
+	use SavedPayloadId;
 
 	/**
 	 * Scope for the webhook's LOOKUPS only: reads without RBAC. Writes run as the messaging account.
@@ -188,18 +200,26 @@ class SmsAdapter implements SmsAdapterInterface {
 			return ['status' => self::STATUS_CONSENT_MISSING];
 		}
 
+		$message = new SmsMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context);
+		return $this->sendThroughProviders(message: $message, providerHint: $providerHint);
+	}//end send()
+
+	/**
+	 * Send a consented message through the ordered providers; persist a failure and alert when all fail.
+	 *
+	 * @param SmsMessage $message The message to send.
+	 * @param string|null $providerHint Provider to use without failover, or null for the ordered list.
+	 *
+	 * @return array<string, mixed> The send outcome.
+	 */
+	private function sendThroughProviders(SmsMessage $message, string|null $providerHint): array {
 		$tenantId = $this->getTenantId();
 		$ordered = $this->orderedProvidersForSend(providerHint: $providerHint);
 		if ($ordered === []) {
 			return ['status' => self::STATUS_NO_PROVIDER];
 		}
 
-		$run = new SmsSendRun(
-			message: new SmsMessage(contactId: $contactId, toNumber: $toNumber, body: $body, context: $context),
-			tenantId: $tenantId,
-			allowFailover: ($providerHint === null),
-		);
-
+		$run = new SmsSendRun(message: $message, tenantId: $tenantId, allowFailover: ($providerHint === null));
 		foreach ($ordered as $row) {
 			$outcome = $this->attemptProviderSend(row: $row, run: $run);
 			if ($outcome !== null) {
@@ -207,15 +227,10 @@ class SmsAdapter implements SmsAdapterInterface {
 			}
 		}
 
-		// Exhausted all providers transiently — persist failed row + alert.
 		return $this->persistFailureAndAlert(
-			failure: new SmsSendFailure(
-				message: $run->message,
-				providerId: '',
-				error: 'all SMS providers returned transient errors',
-			),
+			failure: new SmsSendFailure(message: $run->message, providerId: '', error: 'all SMS providers returned transient errors'),
 		);
-	}//end send()
+	}//end sendThroughProviders()
 
 	/**
 	 * Try sending via a single provider row.
@@ -355,25 +370,6 @@ class SmsAdapter implements SmsAdapterInterface {
 
 		return $messageId;
 	}//end auditOutbound()
-
-	/**
-	 * The contact moment service, resolved lazily; null when it is absent.
-	 *
-	 * @return ContactmomentService|null The service or null.
-	 */
-	private function contactmoments(): ?ContactmomentService {
-		try {
-			$service = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return null;
-		}
-
-		if (($service instanceof ContactmomentService) === false) {
-			return null;
-		}
-
-		return $service;
-	}//end contactmoments()
 
 	/**
 	 * Handle an inbound SMS webhook.
@@ -775,8 +771,10 @@ class SmsAdapter implements SmsAdapterInterface {
 		try {
 			$found = $objectService->find(
 				id: $messageId,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+				options: new ObjectFindOptions(
+					register: $this->getRegisterSlug(),
+					schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+				)
 			);
 		} catch (Throwable $e) {
 			return null;
@@ -792,37 +790,6 @@ class SmsAdapter implements SmsAdapterInterface {
 
 		return $messageId;
 	}//end verifiedInbound()
-
-	/**
-	 * Persist a message payload via OpenRegister.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return array<string, mixed>|null Saved row.
-	 */
-	private function persistMessage(array $payload): ?array {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
-				uuid: null,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.persistMessage: save failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		return $this->toArray(value: $saved);
-	}//end persistMessage()
 
 	/**
 	 * Look up the open conversation for (contact, provider, channel)
@@ -842,27 +809,34 @@ class SmsAdapter implements SmsAdapterInterface {
 		}
 
 		$schema = $this->resolveSchemaSlug(key: 'conversation_schema', default: self::DEFAULT_CONVERSATION_SCHEMA_SLUG);
+		$conversation = ['contactId' => $contactId, 'providerId' => $providerId, 'channel' => $channel, 'status' => 'open'];
+		$existingId = $this->findOpenConversation(objectService: $objectService, conversation: $conversation, schema: $schema, scope: $scope);
+		if ($existingId !== null) {
+			return $existingId;
+		}
 
+		return $this->openConversation(objectService: $objectService, conversation: $conversation, schema: $schema);
+	}//end findOrOpenConversation()
+
+	/**
+	 * The id of the first open conversation matching the identity, or null when there is none.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $conversation The contact, provider, channel and open status.
+	 * @param string $schema The conversation schema slug.
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup.
+	 *
+	 * @return string|null The conversation id, or null when none is open.
+	 */
+	private function findOpenConversation(object $objectService, array $conversation, string $schema, array $scope): string|null {
 		try {
 			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'contactId' => $contactId,
-						'providerId' => $providerId,
-						'channel' => $channel,
-						'status' => 'open',
-						'register' => $this->getRegisterSlug(),
-						'schema' => $schema,
-					],
-				],
+				config: ['filters' => $conversation + ['register' => $this->getRegisterSlug(), 'schema' => $schema]],
 				_rbac: ($scope['_rbac'] ?? true),
 				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.findOrOpenConversation: findAll failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('SmsAdapter.findOrOpenConversation: findAll failed', ['exception' => $e->getMessage()]);
 			$rows = [];
 		}
 
@@ -870,29 +844,32 @@ class SmsAdapter implements SmsAdapterInterface {
 			return $this->extractId(payload: $this->toArray(value: $rows[0]));
 		}
 
+		return null;
+	}//end findOpenConversation()
+
+	/**
+	 * Open a new conversation stamped with the inbound time, returning its id or '' when the save fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $conversation The contact, provider, channel and open status.
+	 * @param string $schema The conversation schema slug.
+	 *
+	 * @return string The new conversation id.
+	 */
+	private function openConversation(object $objectService, array $conversation, string $schema): string {
 		try {
+			$object = $conversation + ['lastInboundAt' => $this->nowIso()];
 			$saved = $objectService->saveObject(
-				object: [
-					'contactId' => $contactId,
-					'providerId' => $providerId,
-					'channel' => $channel,
-					'status' => 'open',
-					'lastInboundAt' => $this->nowIso(),
-				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
+				object: $object,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $schema))
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.findOrOpenConversation: open failed',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('SmsAdapter.findOrOpenConversation: open failed', ['exception' => $e->getMessage()]);
 			return '';
 		}
 
 		return $this->extractId(payload: $this->toArray(value: $saved));
-	}//end findOrOpenConversation()
+	}//end openConversation()
 
 	/**
 	 * Decode an inbound webhook body — accepts JSON or form-encoded.
@@ -920,125 +897,6 @@ class SmsAdapter implements SmsAdapterInterface {
 		parse_str($trimmed, $parsed);
 		return $parsed;
 	}//end decodeBody()
-
-	/**
-	 * Extract the most relevant phone number from a contact row.
-	 *
-	 * @param array<string, mixed> $contact Contact row.
-	 *
-	 * @return string Phone number (E.164) or empty.
-	 */
-	private function extractPhone(array $contact): string {
-		foreach (['phoneNumber', 'mobile', 'telephone', 'phone'] as $key) {
-			$value = ($contact[$key] ?? null);
-			if (is_string($value) === true && $value !== '') {
-				return $value;
-			}
-		}
-
-		return '';
-	}//end extractPhone()
-
-	/**
-	 * Tenant id — defaults to the NC instance id when none is set.
-	 *
-	 * @return string Tenant id.
-	 */
-	private function getTenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end getTenantId()
-
-	/**
-	 * Resolve a schema slug app-config override.
-	 *
-	 * @param string $key App-config key.
-	 * @param string $default Built-in default.
-	 *
-	 * @return string Slug.
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
-
-	/**
-	 * Register slug.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		$id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
-		if ($id !== '') {
-			return $id;
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Return the first non-empty scalar value found under any of the given keys.
-	 *
-	 * @param array<string, mixed> $source Source array.
-	 * @param array<int, string> $keys Keys to try, in order.
-	 *
-	 * @return string The first matching value cast to string, or empty.
-	 */
-	private function firstScalarValue(array $source, array $keys): string {
-		foreach ($keys as $key) {
-			$value = ($source[$key] ?? null);
-			if (is_scalar($value) === true && (string)$value !== '') {
-				return (string)$value;
-			}
-		}
-
-		return '';
-	}//end firstScalarValue()
 
 	/**
 	 * Current ISO 8601 UTC timestamp.

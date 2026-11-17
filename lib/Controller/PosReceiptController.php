@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -52,6 +53,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
  */
 class PosReceiptController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
@@ -201,15 +204,6 @@ class PosReceiptController extends Controller {
 	}//end optionalString()
 
 	/**
-	 * Require an authenticated user, returning their UID.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
 	 * Run an action with shared OCS-exception to HTTP-status mapping.
 	 *
 	 * @param callable $action The action to run.
@@ -224,13 +218,4 @@ class PosReceiptController extends Controller {
 			logLabel: 'PosReceiptController::' . $label
 		);
 	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

@@ -32,10 +32,13 @@ namespace OCA\Pipelinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SlaSweepSourceInterface;
 use OCA\Pipelinq\Service\Sla\SlaSweepRun;
 use OCA\Pipelinq\Service\Sla\SlaSweepSurface;
+use OCA\Pipelinq\Repair\Support\SystemRunner;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -55,6 +58,8 @@ use Throwable;
  * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 class InitSlaStatus implements IRepairStep {
+	use SystemRunner;
+
 	private const BATCH_SIZE = 250;
 
 	/**
@@ -218,29 +223,20 @@ class InitSlaStatus implements IRepairStep {
 	 * @return bool True when a status was written, false when the object was skipped.
 	 */
 	private function initialiseObject(mixed $row, SlaSweepSurface $surface): bool {
-		$data = (array)$row;
-		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
-			$data = $row->getObject();
-		}
-
-		$uuid = (string)($data['uuid'] ?? $data['id'] ?? '');
-		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
-			$uuid = (string)$row->getUuid();
-		}
-
+		$data = $this->rowData(row: $row);
+		$uuid = $this->rowUuid(row: $row, data: $data);
 		if ($uuid === '') {
 			return false;
 		}
 
-		$slaStatus = $data['slaStatus'] ?? null;
-		if (is_array($slaStatus) === true && ($slaStatus['policyId'] ?? '') !== '') {
+		if ($this->hasSlaStatus(data: $data) === true) {
 			return false;
 		}
 
 		$metadata = [
-			'tier' => (string)($data['slaTier'] ?? $data['customerTier'] ?? ''),
-			'organisationId' => (string)($data['organisationId'] ?? $data['client'] ?? ''),
-			'contractId' => (string)($data['contractId'] ?? ''),
+			'tier' => $this->firstValue(data: $data, keys: ['slaTier', 'customerTier']),
+			'organisationId' => $this->firstValue(data: $data, keys: ['organisationId', 'client']),
+			'contractId' => $this->firstValue(data: $data, keys: ['contractId']),
 		];
 
 		$policy = $this->engine->resolvePolicyForObject($surface->type, $uuid, $metadata);
@@ -251,44 +247,96 @@ class InitSlaStatus implements IRepairStep {
 		$startedAt = $this->parseStarted(data: $data) ?? $surface->run->now;
 		$data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
 
-		$objectService = $surface->run->objectService;
-		$this->execAsSystem(
-			objectService: $objectService,
-			operation: static fn () => $objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $surface->run->register,
-				schema: $surface->schemaId,
-				uuid: $uuid,
-			)
-		);
+		$this->saveInitialised(data: $data, surface: $surface, uuid: $uuid);
 
 		return true;
 	}//end initialiseObject()
 
 	/**
-	 * Execute an OpenRegister write under the scoped system-operation context.
+	 * The data of an OR row (entity or array).
 	 *
-	 * Repair steps run without a user session (web-triggered upgrades, webcron),
-	 * so OpenRegister RBAC denies every write as 'Anonymous'
-	 * (NotAuthorizedException). ObjectService::runAsSystem scopes trusted-system
-	 * elevation to the callable; older OpenRegister versions without it fall
-	 * back to the direct call.
+	 * @param mixed $row OR row.
 	 *
-	 * @param object $objectService The OR ObjectService.
-	 * @param callable $operation The write operation to execute.
-	 *
-	 * @return mixed Whatever the operation returns.
-	 *
-	 * @spec exclude system-context adoption — back-compat elevation shim around OR writes, no behavioural spec surface.
+	 * @return array<string, mixed>
 	 */
-	private function execAsSystem(object $objectService, callable $operation): mixed {
-		if (method_exists($objectService, 'runAsSystem') === true) {
-			return $objectService->runAsSystem($operation);
+	private function rowData(mixed $row): array {
+		$data = (array)$row;
+		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
+			$data = $row->getObject();
 		}
 
-		return $operation();
-	}//end execAsSystem()
+		return $data;
+	}//end rowData()
+
+	/**
+	 * The UUID of an OR row: the entity's own, else the data's uuid or id.
+	 *
+	 * @param mixed                $row  OR row.
+	 * @param array<string, mixed> $data The row's data.
+	 *
+	 * @return string
+	 */
+	private function rowUuid(mixed $row, array $data): string {
+		$uuid = (string)($data['uuid'] ?? $data['id'] ?? '');
+		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+			$uuid = (string)$row->getUuid();
+		}
+
+		return $uuid;
+	}//end rowUuid()
+
+	/**
+	 * Whether the object already carries an initialised slaStatus.
+	 *
+	 * @param array<string, mixed> $data The object data.
+	 *
+	 * @return bool
+	 */
+	private function hasSlaStatus(array $data): bool {
+		$slaStatus = $data['slaStatus'] ?? null;
+		return is_array($slaStatus) === true && ($slaStatus['policyId'] ?? '') !== '';
+	}//end hasSlaStatus()
+
+	/**
+	 * The first of the keys that holds a non-null value, as a string ('' when none does).
+	 *
+	 * @param array<string, mixed> $data The object data.
+	 * @param array<int, string>   $keys The keys, in order of preference.
+	 *
+	 * @return string
+	 */
+	private function firstValue(array $data, array $keys): string {
+		foreach ($keys as $key) {
+			if (isset($data[$key]) === true) {
+				return (string)$data[$key];
+			}
+		}
+
+		return '';
+	}//end firstValue()
+
+	/**
+	 * Persist an object with its initialised slaStatus as the system.
+	 *
+	 * @param array<string, mixed> $data    The object data.
+	 * @param SlaSweepSurface      $surface The surface it was read from.
+	 * @param string               $uuid    The object UUID.
+	 *
+	 * @return void
+	 */
+	private function saveInitialised(array $data, SlaSweepSurface $surface, string $uuid): void {
+		$objectService = $surface->run->objectService;
+		$this->execAsSystem(
+			objectService: $objectService,
+			operation: static fn () => $objectService->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $surface->run->register, schema: $surface->schemaId),
+					uuid: $uuid
+				)
+			)
+		);
+	}//end saveInitialised()
 
 	/**
 	 * Parse the object's created/started timestamp.

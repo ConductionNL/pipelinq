@@ -71,7 +71,7 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 
 		$end = $this->dateOf(value: $contract['endDate'] ?? null);
 		$year = (int)$today->format('Y');
-		[$sent, $invoiced] = $this->invoicedIn(contract: $contract, year: $year, perPeriod: $perPeriod);
+		[$sent, $invoiced] = $this->invoicedIn(contract: $contract, basis: ['year' => $year, 'perPeriod' => $perPeriod]);
 
 		return [
 			'currency' => (string)($contract['currency'] ?? ''),
@@ -81,12 +81,7 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 			'daysToEnd' => $this->daysTo(end: $end, today: $today),
 			'invoicedThisYear' => $invoiced,
 			'invoicesSent' => $sent,
-			'invoicesDue' => $this->periodsInYear(
-				interval: $interval,
-				start: $this->dateOf(value: $contract['startDate'] ?? null),
-				end: $end,
-				year: $year
-			),
+			'invoicesDue' => $this->periodsInYear(contract: $contract, year: $year),
 		];
 	}//end figures()
 
@@ -126,13 +121,31 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 	 * The sends of a year and their amount. Read from `invoiceHistory`; a
 	 * contract without one counts its last send (`invoicedAt`) at the period value.
 	 *
-	 * @param array<string, mixed> $contract The contract.
-	 * @param int $year The year.
-	 * @param float $perPeriod The value per period.
+	 * @param array<string, mixed>             $contract The contract.
+	 * @param array{year: int, perPeriod: float} $basis    The year and the value per period.
 	 *
 	 * @return array{0: int, 1: float} The sends and the amount.
 	 */
-	private function invoicedIn(array $contract, int $year, float $perPeriod): array {
+	private function invoicedIn(array $contract, array $basis): array {
+		['year' => $year, 'perPeriod' => $perPeriod] = $basis;
+		$inYear = $this->sendsIn(sends: $this->sendsOf(contract: $contract, perPeriod: $perPeriod), year: $year);
+		$amount = 0.0;
+		foreach ($inYear as $send) {
+			$amount += (float)($send['amount'] ?? $perPeriod);
+		}
+
+		return [count($inYear), $amount];
+	}//end invoicedIn()
+
+	/**
+	 * The contract's sends: its `invoiceHistory`, else its last send at the period value, else none.
+	 *
+	 * @param array<string, mixed> $contract  The contract.
+	 * @param float                $perPeriod The value per period.
+	 *
+	 * @return array<mixed> The sends.
+	 */
+	private function sendsOf(array $contract, float $perPeriod): array {
 		$sends = $contract['invoiceHistory'] ?? [];
 		if (is_array($sends) === false || count($sends) === 0) {
 			$sends = [];
@@ -141,8 +154,19 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 			}
 		}
 
-		$sent = 0;
-		$amount = 0.0;
+		return $sends;
+	}//end sendsOf()
+
+	/**
+	 * The sends dated in a year.
+	 *
+	 * @param array<mixed> $sends The sends.
+	 * @param int          $year  The year.
+	 *
+	 * @return list<array<string, mixed>> The sends of that year.
+	 */
+	private function sendsIn(array $sends, int $year): array {
+		$inYear = [];
 		foreach ($sends as $send) {
 			$sentAt = null;
 			if (is_array($send) === true) {
@@ -150,30 +174,29 @@ class ContractFiguresService implements ContractFiguresServiceInterface {
 			}
 
 			if ($sentAt !== null && (int)$sentAt->format('Y') === $year) {
-				$sent++;
-				$amount += (float)($send['amount'] ?? $perPeriod);
+				$inYear[] = $send;
 			}
 		}
 
-		return [$sent, $amount];
-	}//end invoicedIn()
+		return $inYear;
+	}//end sendsIn()
 
 	/**
 	 * How many billing periods start within a year and the contract's term.
 	 *
-	 * @param string $interval The billing interval.
-	 * @param DateTimeImmutable|null $start The contract's start.
-	 * @param DateTimeImmutable|null $end The contract's end.
-	 * @param int $year The year.
+	 * @param array<string, mixed> $contract The contract.
+	 * @param int                  $year     The year.
 	 *
 	 * @return int The periods.
 	 */
-	private function periodsInYear(string $interval, ?DateTimeImmutable $start, ?DateTimeImmutable $end, int $year): int {
+	private function periodsInYear(array $contract, int $year): int {
+		$start = $this->dateOf(value: $contract['startDate'] ?? null);
 		if ($start === null) {
 			return 0;
 		}
 
-		$months = (self::PERIOD_MONTHS[$interval] ?? 0);
+		$end = $this->dateOf(value: $contract['endDate'] ?? null);
+		$months = (self::PERIOD_MONTHS[(string)($contract['billingInterval'] ?? '')] ?? 0);
 		if ($months === 0) {
 			return (int)((int)$start->format('Y') === $year);
 		}

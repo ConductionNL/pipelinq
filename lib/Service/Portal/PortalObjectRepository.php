@@ -45,6 +45,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
@@ -172,8 +175,10 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
+				options: new ObjectFindOptions(
+					register: $this->registerId(),
+					schema: $this->schemaId(schemaSlug: $schemaSlug)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -271,18 +276,37 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 		$register = $this->registerId();
 		$schema = $this->schemaId(schemaSlug: $schemaSlug);
 
-		// Outside the try: a missing service account is a 503 PortalException,
-		// not a failed save, and nothing has been written.
-		try {
-			$saved = $this->serviceAccount->runAs(
-				fn (): mixed => $this->objectService()->saveObject(
-					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
+		$saved = $this->savedAsServiceAccount(
+			save: fn (): mixed => $this->objectService()->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
 					uuid: $id
 				)
-			);
+			),
+			schemaSlug: $schemaSlug
+		);
+
+		return $this->toArray(object: $saved);
+	}//end save()
+
+	/**
+	 * Run a save as the portal service account; a failed save is logged and becomes a RuntimeException.
+	 *
+	 * Outside the try: a missing service account is a 503 PortalException,
+	 * not a failed save, and nothing has been written.
+	 *
+	 * @param callable(): mixed $save       The save.
+	 * @param string            $schemaSlug The schema slug, for the log.
+	 *
+	 * @return mixed The saved object.
+	 *
+	 * @throws PortalException When the service account is missing.
+	 * @throws RuntimeException When the save fails.
+	 */
+	private function savedAsServiceAccount(callable $save, string $schemaSlug): mixed {
+		try {
+			return $this->serviceAccount->runAs($save);
 		} catch (PortalException $e) {
 			throw $e;
 		} catch (\Throwable $e) {
@@ -292,9 +316,7 @@ class PortalObjectRepository implements PortalObjectRepositoryInterface {
 			);
 			throw new RuntimeException('Failed to persist portal object.');
 		}
-
-		return $this->toArray(object: $saved);
-	}//end save()
+	}//end savedAsServiceAccount()
 
 	/**
 	 * Refuse with 503 unless the portal can write. Called first by every flow

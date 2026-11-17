@@ -87,15 +87,8 @@ class ContactLineLabeller {
 			return [];
 		}
 
-		$provider = $this->provider();
-		if ($provider === null) {
-			return [];
-		}
-
-		try {
-			$answer = (string) $provider->generateText($this->prompt(lines: $lines), $userId, true, null);
-		} catch (Throwable $e) {
-			$this->logger->info('ContactLineLabeller: hermiq did not answer', ['exception' => $e->getMessage()]);
+		$answer = $this->askForLabels(lines: $lines, userId: $userId);
+		if ($answer === null) {
 			return [];
 		}
 
@@ -104,6 +97,40 @@ class ContactLineLabeller {
 			return [];
 		}
 
+		return $this->matchedLabels(decoded: $decoded, lines: $lines);
+	}//end labels()
+
+	/**
+	 * Hermiq's raw answer for the lines, or null without hermiq or an answer.
+	 *
+	 * @param list<string> $lines  The lines no rule placed.
+	 * @param string|null  $userId The user the model is asked for.
+	 *
+	 * @return string|null
+	 */
+	private function askForLabels(array $lines, string|null $userId): string|null {
+		$provider = $this->provider();
+		if ($provider === null) {
+			return null;
+		}
+
+		try {
+			return (string) $provider->generateText($this->prompt(lines: $lines), $userId, true, null);
+		} catch (Throwable $e) {
+			$this->logger->info('ContactLineLabeller: hermiq did not answer', ['exception' => $e->getMessage()]);
+			return null;
+		}
+	}//end askForLabels()
+
+	/**
+	 * The fields whose answer names one of the lines word for word, each line taken once.
+	 *
+	 * @param array<mixed> $decoded The decoded answer.
+	 * @param list<string> $lines   The lines no rule placed.
+	 *
+	 * @return array<string, string> Field to line.
+	 */
+	private function matchedLabels(array $decoded, array $lines): array {
 		$labels = [];
 		foreach (self::FIELDS as $field) {
 			$line = ($decoded[$field] ?? null);
@@ -113,7 +140,7 @@ class ContactLineLabeller {
 		}
 
 		return $labels;
-	}//end labels()
+	}//end matchedLabels()
 
 	/**
 	 * Hermiq's provider, or null when hermiq is absent.

@@ -30,8 +30,10 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\EntityActivityServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -56,6 +58,8 @@ use Throwable;
  * @spec openspec/changes/archive/2026-06-14-entity-notes/tasks.md#task-2
  */
 class EntityActivityService implements EntityActivityServiceInterface {
+	use InjectedObjectService;
+
 	/**
 	 * Entity types the endpoint is allowed to expose. Anything outside this
 	 * list is rejected by the controller with a 400.
@@ -159,11 +163,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 		$filterType = $this->normaliseTypeFilter(rawType: $type);
 		$window = new ActivityPage(page: max(1, $page), limit: $this->normaliseLimit(rawLimit: $limit));
 
-		$registerId = $this->appConfig->getValueString(
-			AppIdentity::APP_ID,
-			'register',
-			''
-		);
+		$registerId = $this->registerId();
 		if ($registerId === '') {
 			return $this->emptyResult(page: $window->page);
 		}
@@ -175,6 +175,19 @@ class EntityActivityService implements EntityActivityServiceInterface {
 
 		return $this->paginate(items: $this->newestFirst(items: $items), window: $window);
 	}//end getActivity()
+
+	/**
+	 * The configured register id, or '' when none is configured.
+	 *
+	 * @return string
+	 */
+	private function registerId(): string {
+		return $this->appConfig->getValueString(
+			AppIdentity::APP_ID,
+			'register',
+			''
+		);
+	}//end registerId()
 
 	/**
 	 * Collect the activity items the type filter asks for: contactmomenten
@@ -382,7 +395,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 			return [];
 		}
 
-		$object = $this->findObject(entityId: $query->entityId, registerId: $query->registerId, schemaId: $schemaId);
+		$object = $this->findObject(query: $query, schemaId: $schemaId);
 		if ($object === null) {
 			return [];
 		}
@@ -500,35 +513,34 @@ class EntityActivityService implements EntityActivityServiceInterface {
 	/**
 	 * Find a single object by UUID, scoped to the given register/schema.
 	 *
-	 * @param string $entityId The OR object UUID.
-	 * @param string $registerId The register id.
-	 * @param string $schemaId The schema id.
+	 * @param EntityActivityQuery $query    The entity and its register.
+	 * @param string              $schemaId The schema id.
 	 *
 	 * @return array<string,mixed>|null The object payload, or null.
 	 */
-	private function findObject(
-		string $entityId,
-		string $registerId,
-		string $schemaId,
-	): ?array {
+	private function findObject(EntityActivityQuery $query, string $schemaId): ?array {
 		try {
 			$objectService = $this->getObjectService();
-			$entity = $objectService->find(
-				id: $entityId,
-				register: $registerId,
-				schema: $schemaId
-			);
+			$entity = $objectService->find(id: $query->entityId, options: new ObjectFindOptions(register: $query->registerId, schema: $schemaId));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'EntityActivityService: failed to load entity for notes',
-				[
-					'exception' => $e->getMessage(),
-					'entityId' => $entityId,
-				]
+				['exception' => $e->getMessage(), 'entityId' => $query->entityId]
 			);
 			return null;
 		}
 
+		return $this->entityPayload(entity: $entity);
+	}//end findObject()
+
+	/**
+	 * The payload of a found entity: the array itself, or its `getObject()` array.
+	 *
+	 * @param mixed $entity The found entity.
+	 *
+	 * @return array<string,mixed>|null The object payload, or null.
+	 */
+	private function entityPayload(mixed $entity): array|null {
 		if ($entity === null) {
 			return null;
 		}
@@ -537,6 +549,17 @@ class EntityActivityService implements EntityActivityServiceInterface {
 			return $entity;
 		}
 
+		return $this->objectPayload(entity: $entity);
+	}//end entityPayload()
+
+	/**
+	 * The `getObject()` array of an entity object, or null.
+	 *
+	 * @param mixed $entity The found entity.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function objectPayload(mixed $entity): array|null {
 		if (is_object($entity) === true
 			&& method_exists($entity, 'getObject') === true
 		) {
@@ -547,7 +570,7 @@ class EntityActivityService implements EntityActivityServiceInterface {
 		}
 
 		return null;
-	}//end findObject()
+	}//end objectPayload()
 
 	/**
 	 * Coerce the OpenRegister `findAll` result into a list of plain arrays.
@@ -563,34 +586,58 @@ class EntityActivityService implements EntityActivityServiceInterface {
 
 		$output = [];
 		foreach ($results as $item) {
-			if (is_array($item) === true) {
-				$output[] = $item;
-				continue;
+			$normalised = $this->normaliseItem(item: $item);
+			if ($normalised !== null) {
+				$output[] = $normalised;
 			}
-
-			if (is_object($item) === false) {
-				continue;
-			}
-
-			if (method_exists($item, 'getObject') === true) {
-				$payload = $item->getObject();
-				if (is_array($payload) === true) {
-					if (isset($payload['id']) === false
-						&& method_exists($item, 'getUuid') === true
-					) {
-						$payload['id'] = $item->getUuid();
-					}
-
-					$output[] = $payload;
-					continue;
-				}
-			}
-
-			$output[] = (array)$item;
-		}//end foreach
+		}
 
 		return $output;
 	}//end normaliseResults()
+
+	/**
+	 * One findAll item as a plain array, or null to skip it.
+	 *
+	 * @param mixed $item The raw item.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function normaliseItem(mixed $item): array|null {
+		if (is_array($item) === true) {
+			return $item;
+		}
+
+		if (is_object($item) === false) {
+			return null;
+		}
+
+		if (method_exists($item, 'getObject') === true) {
+			$payload = $item->getObject();
+			if (is_array($payload) === true) {
+				return $this->withUuidAsId(payload: $payload, item: $item);
+			}
+		}
+
+		return (array)$item;
+	}//end normaliseItem()
+
+	/**
+	 * The payload with the entity's uuid as `id` when it carries none.
+	 *
+	 * @param array<string,mixed> $payload The entity's object payload.
+	 * @param object              $item    The entity.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function withUuidAsId(array $payload, object $item): array {
+		if (isset($payload['id']) === false
+			&& method_exists($item, 'getUuid') === true
+		) {
+			$payload['id'] = $item->getUuid();
+		}
+
+		return $payload;
+	}//end withUuidAsId()
 
 	/**
 	 * Slice the sorted items list into the requested page envelope.
@@ -651,15 +698,4 @@ class EntityActivityService implements EntityActivityServiceInterface {
 			'results' => [],
 		];
 	}//end emptyResult()
-
-	/**
-	 * Resolve the OpenRegister `ObjectService` through the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

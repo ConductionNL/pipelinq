@@ -29,6 +29,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -145,14 +149,14 @@ class TicketMunicipalityBackfillService {
 			try {
 				$this->objectService->saveObject(
 					object: $payload,
-					extend: [],
-					register: $register,
-					schema: $tickets,
-					uuid: $uuid,
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $tickets),
+						uuid: $uuid,
+						policy: new SavePolicy(silent: true),
+						actor: new SaveActor(currentUser: $actingAdmin)
+					),
 					_rbac: false,
-					_multitenancy: false,
-					silent: true,
-					currentUser: $actingAdmin,
+					_multitenancy: false
 				);
 				$counts['filled']++;
 			} catch (Throwable $e) {

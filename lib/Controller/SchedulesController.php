@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
-use OCA\Pipelinq\Lifecycle\SessionUser;
+use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -79,13 +79,13 @@ class SchedulesController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ScheduledTaskServiceInterface $scheduledTaskService Schedule service.
-	 * @param SessionUser $sessionUser The session user and their admin membership.
+	 * @param SessionUserInterface $sessionUser The session user and their admin membership.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ScheduledTaskServiceInterface $scheduledTaskService,
-		private SessionUser $sessionUser,
+		private SessionUserInterface $sessionUser,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
@@ -102,12 +102,10 @@ class SchedulesController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$userId = $this->sessionUser->uid();
-		if ($userId === '') {
-			return $this->unauthenticated();
+		$userId = $this->localisedUserId();
+		if ($userId instanceof JSONResponse) {
+			return $userId;
 		}
-
-		$this->applyAcceptLanguage();
 
 		try {
 			// Non-admins always see only their own tasks regardless of the
@@ -154,15 +152,36 @@ class SchedulesController extends Controller {
 			'subject' => (string)$this->request->getParam('subject', ''),
 			'deadline' => (string)$this->request->getParam('deadline', ''),
 		];
-		if (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
-			|| $required['subject'] === ''
-			|| $required['deadline'] === ''
-		) {
+		if ($this->hasRequiredFields(required: $required) === false) {
 			return $this->invalidInput();
 		}
 
 		$data = $this->buildScheduledTaskData(required: $required, userId: $userId);
 
+		return $this->storeScheduledTask(data: $data);
+	}//end create()
+
+	/**
+	 * Whether the type is valid and the subject and deadline are given.
+	 *
+	 * @param array{type: string, subject: string, deadline: string} $required The required fields.
+	 *
+	 * @return bool True when the request can be stored.
+	 */
+	private function hasRequiredFields(array $required): bool {
+		return (in_array($required['type'], ScheduledTaskServiceInterface::VALID_TYPES, true) === false
+			|| $required['subject'] === ''
+			|| $required['deadline'] === '') === false;
+	}//end hasRequiredFields()
+
+	/**
+	 * Create the scheduled task and answer 201, or an invalid-input or failure response.
+	 *
+	 * @param array<string, mixed> $data The scheduled task data.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function storeScheduledTask(array $data): JSONResponse {
 		try {
 			return new JSONResponse($this->scheduledTaskService->createScheduledTask($data), Http::STATUS_CREATED);
 		} catch (\InvalidArgumentException $e) {
@@ -170,7 +189,7 @@ class SchedulesController extends Controller {
 		} catch (Throwable $e) {
 			return $this->failed(action: 'create', error: $e);
 		}
-	}//end create()
+	}//end storeScheduledTask()
 
 	/**
 	 * List tasks due within a window.
@@ -222,12 +241,10 @@ class SchedulesController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$userId = $this->sessionUser->uid();
-		if ($userId === '') {
-			return $this->unauthenticated();
+		$userId = $this->localisedUserId();
+		if ($userId instanceof JSONResponse) {
+			return $userId;
 		}
-
-		$this->applyAcceptLanguage();
 
 		try {
 			$task = $this->scheduledTaskService->getScheduledTask($id);
@@ -375,6 +392,22 @@ class SchedulesController extends Controller {
 
 		return null;
 	}//end mutationRefusal()
+
+	/**
+	 * The session user's id once the request's language is applied, or the 401.
+	 *
+	 * @return string|JSONResponse
+	 */
+	private function localisedUserId(): string|JSONResponse {
+		$userId = $this->sessionUser->uid();
+		if ($userId === '') {
+			return $this->unauthenticated();
+		}
+
+		$this->applyAcceptLanguage();
+
+		return $userId;
+	}//end localisedUserId()
 
 	/**
 	 * Hand the request's Accept-Language to the task service.

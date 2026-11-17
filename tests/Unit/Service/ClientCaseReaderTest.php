@@ -19,9 +19,11 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Pipelinq\Service\ClientCaseReader
+ * @uses   \OCA\Pipelinq\Service\RegisterSchema
  */
 class ClientCaseReaderTest extends TestCase {
 
@@ -55,6 +57,7 @@ class ClientCaseReaderTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function find(string $id, mixed ...$rest): array {
+				$rest = LegacyObjectArgs::flatten(args: $rest);
 				if ($this->client instanceof \Throwable) {
 					throw $this->client;
 				}

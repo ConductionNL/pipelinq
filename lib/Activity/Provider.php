@@ -80,6 +80,19 @@ class Provider implements IProvider {
 	 * @spec openspec/specs/notifications-activity/spec.md
 	 */
 	public function parse($language, IEvent $event, ?IEvent $previousEvent = null): IEvent {
+		return $this->render(event: self::handled(event: $event), language: $language);
+	}//end parse()
+
+	/**
+	 * The event, when it is one of this app's handled subjects.
+	 *
+	 * @param IEvent $event The event to check.
+	 *
+	 * @return IEvent The same event.
+	 *
+	 * @throws UnknownActivityException When the event is not handled by this provider.
+	 */
+	private static function handled(IEvent $event): IEvent {
 		if ($event->getApp() !== AppIdentity::APP_ID) {
 			throw new UnknownActivityException();
 		}
@@ -88,6 +101,18 @@ class Provider implements IProvider {
 			throw new UnknownActivityException();
 		}
 
+		return $event;
+	}//end handled()
+
+	/**
+	 * Set a Pipelinq event's subject text and icon in the language.
+	 *
+	 * @param IEvent $event    The event to parse.
+	 * @param string $language The language code.
+	 *
+	 * @return IEvent The parsed event.
+	 */
+	private function render(IEvent $event, $language): IEvent {
 		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $language);
 		$params = $event->getSubjectParameters();
 
@@ -104,5 +129,5 @@ class Provider implements IProvider {
 		);
 
 		return $event;
-	}//end parse()
+	}//end render()
 }//end class

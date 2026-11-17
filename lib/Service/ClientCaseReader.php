@@ -34,8 +34,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Exception\NotAuthorizedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
+use OCA\Pipelinq\Service\Support\SerialisedCast;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -47,6 +49,8 @@ use Throwable;
  * @spec openspec/changes/client-page-as-the-relation-boards/specs/client-detail/spec.md#requirement-the-client-page-lists-the-clients-cases
  */
 class ClientCaseReader implements ClientCaseReaderInterface {
+	use SerialisedCast;
+
 	/**
 	 * Dossiq's case leaf, resolved by name: it exists exactly when dossiq is installed.
 	 *
@@ -99,7 +103,18 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 			return ['status' => 200, 'results' => [], 'total' => 0, 'available' => ($leaf !== null)];
 		}
 
-		$answer = $leaf->byMasterEntity($ref, $status);
+		return $this->limitedCases(answer: $leaf->byMasterEntity($ref, $status), limit: $limit);
+	}//end casesOf()
+
+	/**
+	 * The leaf's answer as the client's first cases, or its failure.
+	 *
+	 * @param mixed $answer The case leaf's answer.
+	 * @param int   $limit  The most rows to return.
+	 *
+	 * @return array<string, mixed> The answer.
+	 */
+	private function limitedCases(mixed $answer, int $limit): array {
 		if ((int)($answer['status'] ?? 500) !== 200) {
 			return ['status' => (int)($answer['status'] ?? 500), 'message' => (string)($answer['error'] ?? 'Operation failed')];
 		}
@@ -108,7 +123,7 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		$limit = max(1, min($limit, self::MAX_LIMIT));
 
 		return ['status' => 200, 'results' => array_slice($cases, 0, $limit), 'total' => count($cases), 'available' => true];
-	}//end casesOf()
+	}//end limitedCases()
 
 	/**
 	 * The client, read as the caller, under `client`; or an answer with the
@@ -125,13 +140,22 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 			return ['status' => 400, 'message' => 'Missing client'];
 		}
 
+		return $this->findClient(clientId: $clientId, location: new RegisterSchema(register: $register, schema: $schema));
+	}//end client()
+
+	/**
+	 * Read the client with RBAC on: the client, or a 403/404/refusal status.
+	 *
+	 * @param string         $clientId The client id.
+	 * @param RegisterSchema $location The register and client schema.
+	 *
+	 * @return array<string, mixed> `client`, or `status` and `message`.
+	 */
+	private function findClient(string $clientId, RegisterSchema $location): array {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $clientId,
-				register: $register,
-				schema: $schema,
-				_rbac: true,
-				_multitenancy: true,
+				options: new ObjectFindOptions(register: $location->register, schema: $location->schema)
 			);
 		} catch (NotAuthorizedException $e) {
 			return ['status' => 403, 'message' => 'Forbidden'];
@@ -144,7 +168,7 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		}
 
 		return ['client' => $this->asArray(object: $object)];
-	}//end client()
+	}//end findClient()
 
 	/**
 	 * The answer for a client read that threw: 404 for a client that does
@@ -163,21 +187,6 @@ class ClientCaseReader implements ClientCaseReaderInterface {
 		$this->logger->warning('ClientCaseReader: reading the client failed', ['clientId' => $clientId, 'exception' => $error->getMessage()]);
 		return ['status' => 500, 'message' => 'Operation failed'];
 	}//end refusal()
-
-	/**
-	 * A stored object as an array.
-	 *
-	 * @param mixed $object An array, or an entity that serialises to one.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function asArray(mixed $object): array {
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return (array)$object->jsonSerialize();
-		}
-
-		return (array)$object;
-	}//end asArray()
 
 	/**
 	 * Dossiq's case leaf, or null when dossiq is not installed.

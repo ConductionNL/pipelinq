@@ -48,6 +48,19 @@ interface TouchpointServiceInterface {
 	public function append(array $touchpoint): ?array;
 
 	/**
+	 * Record a form submission: append its touchpoint, naming the contact's client
+	 * and the landing page, and update the contact's and the client's touches.
+	 *
+	 * @param array<string, mixed> $touchpoint  The row, as append() takes it.
+	 * @param string               $landingPage The page the form was submitted on.
+	 *
+	 * @return array<string, mixed>|null The saved touchpoint, or null when the write failed.
+	 *
+	 * @spec openspec/changes/marketing-campaign-on-client/specs/marketing-origin-on-client/spec.md
+	 */
+	public function recordSubmission(array $touchpoint, string $landingPage): ?array;
+
+	/**
 	 * The channel a medium belongs to.
 	 *
 	 * A medium is what a link carried; a channel is what a marketer reads

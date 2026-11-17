@@ -30,8 +30,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,6 +54,9 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekService implements KccWerkplekServiceInterface {
+	use SerialisedPayload;
+	use ConfiguredRegisterId;
+
 	/**
 	 * Request statuses considered "open" for the inbox (REQ-KWP-020).
 	 *
@@ -132,31 +139,6 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	}//end getSchema()
 
 	/**
-	 * Read the pipelinq register slug from the app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string Register slug (typically `pipelinq`); '' when unconfigured.
-	 *
-	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
-	 */
-	private function getRegister(): string {
-		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end getRegister()
-
-	/**
 	 * Normalise an OpenRegister entity (object or array) to a plain array.
 	 *
 	 * @param mixed $object The object or array returned by ObjectService.
@@ -166,22 +148,12 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialised = $object->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($object) === true) {
+		$serialised = $this->serialisedPayload(value: $object);
+		if ($serialised === null && is_object($object) === true) {
 			return (array)$object;
 		}
 
-		return [];
+		return ($serialised ?? []);
 	}//end toArray()
 
 	/**
@@ -195,34 +167,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function findAllSafe(string $schemaKey): array {
-		$register = $this->getRegister();
-		$schema = $this->getSchema(schemaKey: $schemaKey);
-		if ($register === '' || $schema === '') {
-			$this->logger->info(
-				message: '[KccWerkplekService] register or schema not configured',
-				context: ['schemaKey' => $schemaKey]
-			);
-			return [];
-		}
-
-		try {
-			$results = $this->getObjectService()->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema]]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[KccWerkplekService] findAll failed',
-				context: ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
+		return $this->findSafe(schemaKey: $schemaKey, filters: [], failure: '[KccWerkplekService] findAll failed');
 	}//end findAllSafe()
 
 	/**
@@ -242,7 +187,21 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 * @spec openspec/changes/archive/2026-06-21-pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
 	 */
 	private function findFilteredSafe(string $schemaKey, array $filters): array {
-		$register = $this->getRegister();
+		return $this->findSafe(schemaKey: $schemaKey, filters: $filters, failure: '[KccWerkplekService] filtered findAll failed');
+	}//end findFilteredSafe()
+
+	/**
+	 * Find objects of a schema matching the filters, logging an unconfigured
+	 * schema or a failed read and answering [] for either.
+	 *
+	 * @param string               $schemaKey App config key (e.g. `task_schema`).
+	 * @param array<string, mixed> $filters   Field criteria (eq / IN).
+	 * @param string               $failure   Warning logged when the read fails.
+	 *
+	 * @return array<int, array<string, mixed>> Plain object arrays.
+	 */
+	private function findSafe(string $schemaKey, array $filters, string $failure): array {
+		$register = $this->registerId();
 		$schema = $this->getSchema(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			$this->logger->info(
@@ -258,7 +217,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				message: '[KccWerkplekService] filtered findAll failed',
+				message: $failure,
 				context: ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
 			);
 			return [];
@@ -270,7 +229,7 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 		}
 
 		return $out;
-	}//end findFilteredSafe()
+	}//end findSafe()
 
 	/**
 	 * Find tickets of one subtype matching the given equality / IN filters.
@@ -382,42 +341,101 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 	 *
 	 * @throws RuntimeException When OR is unavailable or the save fails.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Idempotent find-merge-save with defensive guards; extraction adds no clarity.
-	 *
 	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	public function setAvailability(string $userId, bool $available): array {
-		$register = $this->getRegister();
+		[$register, $schema] = $this->agentProfileScope();
+		$objectService = $this->getObjectService();
+
+		// Try to find an existing profile for this user.
+		$existingData = $this->findAgentProfile(objectService: $objectService, register: $register, schema: $schema, userId: $userId);
+		$payload = $this->availabilityPayload(existingData: $existingData, userId: $userId, available: $available);
+
+		try {
+			$saveId = $this->profileSaveId(existingData: $existingData);
+			$objectService->saveObject(
+				$payload,
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $saveId)
+			);
+		} catch (\Throwable $e) {
+			throw $this->availabilitySaveFailed(e: $e);
+		}
+
+		return ['userId' => $userId, 'isAvailable' => $available];
+	}//end setAvailability()
+
+	/**
+	 * The register and agentProfile schema, or an exception when either is missing.
+	 *
+	 * @return array{0: string, 1: string} The register and schema ids.
+	 *
+	 * @throws RuntimeException When the agentProfile schema is not configured.
+	 */
+	private function agentProfileScope(): array {
+		$register = $this->registerId();
 		$schema = $this->getSchema(schemaKey: 'agentProfile_schema');
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException('agentProfile schema is not configured');
 		}
 
-		$objectService = $this->getObjectService();
+		return [$register, $schema];
+	}//end agentProfileScope()
 
-		// Try to find an existing profile for this user.
-		$existingId = '';
-		$existingData = [];
+	/**
+	 * The stored profile of one agent, or an empty array when none is found or the lookup fails.
+	 *
+	 * @param \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService The object service.
+	 * @param string                                             $register      The register id.
+	 * @param string                                             $schema        The agentProfile schema id.
+	 * @param string                                             $userId        Nextcloud user UID of the agent.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function findAgentProfile(
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
+		string $register,
+		string $schema,
+		string $userId,
+	): array {
 		try {
-			$results = $objectService->findAll(
-				config: ['filters' => ['register' => $register, 'schema' => $schema]]
-			);
-			foreach ($results as $result) {
-				$arr = $this->toArray(object: $result);
-				if ((string)($arr['userId'] ?? '') === $userId) {
-					$existingData = $arr;
-					$existingId = (string)($arr['@self']['id'] ?? $arr['id'] ?? '');
-					break;
-				}
-			}
+			$results = $objectService->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
+			return $this->matchingProfile(results: $results, userId: $userId);
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[KccWerkplekService] setAvailability lookup failed',
-				context: ['error' => $e->getMessage()]
-			);
+			$this->logger->warning(message: '[KccWerkplekService] setAvailability lookup failed', context: ['error' => $e->getMessage()]);
 		}
 
-		// Merge the existing data with the new flag — preserves skills, maxConcurrent etc.
+		return [];
+	}//end findAgentProfile()
+
+	/**
+	 * The first profile of one agent among the found rows, or an empty array.
+	 *
+	 * @param iterable<mixed> $results The found profile rows.
+	 * @param string          $userId  Nextcloud user UID of the agent.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function matchingProfile(iterable $results, string $userId): array {
+		foreach ($results as $result) {
+			$arr = $this->toArray(object: $result);
+			if ((string)($arr['userId'] ?? '') === $userId) {
+				return $arr;
+			}
+		}
+
+		return [];
+	}//end matchingProfile()
+
+	/**
+	 * Merge the existing profile with the new flag, preserving skills, maxConcurrent etc.
+	 *
+	 * @param array<string, mixed> $existingData The stored profile, or an empty array.
+	 * @param string               $userId       Nextcloud user UID of the agent.
+	 * @param bool                 $available    Desired availability flag.
+	 *
+	 * @return array<string, mixed> The profile to save.
+	 */
+	private function availabilityPayload(array $existingData, string $userId, bool $available): array {
 		$payload = array_filter(
 			$existingData,
 			static fn (string $k): bool => $k !== '@self' && $k !== 'id',
@@ -429,30 +447,35 @@ class KccWerkplekService implements KccWerkplekServiceInterface {
 			$payload['maxConcurrent'] = 1;
 		}
 
-		try {
-			$saveId = null;
-			if ($existingId !== '') {
-				$saveId = $existingId;
-			}
+		return $payload;
+	}//end availabilityPayload()
 
-			$objectService->saveObject(
-				$payload,
-				[],
-				$register,
-				$schema,
-				$saveId
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				message: '[KccWerkplekService] saveObject failed',
-				context: ['error' => $e->getMessage()]
-			);
-			throw new RuntimeException('Failed to update agent availability', 0, $e);
-		}//end try
+	/**
+	 * The uuid to save the profile under, or null to create a new one.
+	 *
+	 * @param array<string, mixed> $existingData The stored profile, or an empty array.
+	 *
+	 * @return string|null
+	 */
+	private function profileSaveId(array $existingData): string|null {
+		$existingId = (string)($existingData['@self']['id'] ?? $existingData['id'] ?? '');
+		$saveId = null;
+		if ($existingId !== '') {
+			$saveId = $existingId;
+		}
 
-		return [
-			'userId' => $userId,
-			'isAvailable' => $available,
-		];
-	}//end setAvailability()
+		return $saveId;
+	}//end profileSaveId()
+
+	/**
+	 * Log a failed profile save and wrap it for the caller.
+	 *
+	 * @param \Throwable $e The save failure.
+	 *
+	 * @return RuntimeException The exception to throw.
+	 */
+	private function availabilitySaveFailed(\Throwable $e): RuntimeException {
+		$this->logger->error(message: '[KccWerkplekService] saveObject failed', context: ['error' => $e->getMessage()]);
+		return new RuntimeException('Failed to update agent availability', 0, $e);
+	}//end availabilitySaveFailed()
 }//end class

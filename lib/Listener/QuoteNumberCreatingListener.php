@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\QuoteNumberSequence;
+use OCA\Pipelinq\Kernel\Contracts\QuoteNumberSequenceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -44,12 +44,12 @@ class QuoteNumberCreatingListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig          $appConfig App config, source of the quote schema id.
-	 * @param QuoteNumberSequence $sequence  Allocates the number; it logs every failed attempt.
+	 * @param IAppConfig                   $appConfig App config, source of the quote schema id.
+	 * @param QuoteNumberSequenceInterface $sequence  Allocates the number; it logs every failed attempt.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly QuoteNumberSequence $sequence,
+		private readonly QuoteNumberSequenceInterface $sequence,
 	) {
 	}//end __construct()
 

@@ -37,6 +37,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A mail destination needs recipients that exist, no connector source or
@@ -84,7 +85,11 @@ class ExportMailDestinationTest extends TestCase {
 			fn (int|string $id): ?ObjectEntity => (isset($this->stored[$id]) === true ? self::entity((string)$id, $this->stored[$id]) : null)
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$uuid = ($uuid ?? 'dest-1');
 				$this->stored[$uuid] = $object;
 				return self::entity($uuid, $object);
@@ -195,6 +200,19 @@ class ExportMailDestinationTest extends TestCase {
 		$this->assertFalse($service->testConnection(id: 'dest-1'));
 		$this->assertSame('invalid', $this->stored['dest-1']['validationStatus']);
 	}//end testARemovedRecipientMakesTheDestinationInvalid()
+
+	/**
+	 * A stored mail destination whose recipients are not a list tests invalid.
+	 *
+	 * @return void
+	 */
+	public function testAStoredMailDestinationWithoutARecipientListIsInvalid(): void {
+		$service = $this->service();
+		$this->stored['dest-2'] = ['name' => 'Weekly', 'type' => 'mail', 'recipients' => 'ann'];
+
+		$this->assertFalse($service->testConnection(id: 'dest-2'));
+		$this->assertSame('invalid', $this->stored['dest-2']['validationStatus']);
+	}//end testAStoredMailDestinationWithoutARecipientListIsInvalid()
 
 	/**
 	 * Other types still need a connector source.

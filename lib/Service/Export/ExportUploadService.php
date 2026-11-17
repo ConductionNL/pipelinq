@@ -32,8 +32,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Kernel\Contracts\ExportSinkRegistryInterface;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
+use OCA\Pipelinq\Service\Support\ExportSourceCredentials;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,6 +46,8 @@ use RuntimeException;
  * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
  */
 class ExportUploadService extends AbstractExportService {
+	use ExportSourceCredentials;
+
 	/**
 	 * Backoff delays (seconds) between the 5 upload attempts.
 	 *
@@ -66,6 +69,13 @@ class ExportUploadService extends AbstractExportService {
 	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
 
 	/**
+	 * Log line when the connector source behind a destination cannot be read.
+	 *
+	 * @var string
+	 */
+	private const CREDENTIALS_FAILURE_MESSAGE = 'Pipelinq: failed to resolve export credentials';
+
+	/**
 	 * Legacy write-only credential fields still present on some Source
 	 * objects (`configuration.authentication.credentialRef`-based sources
 	 * resolve their secret through OpenConnector's own credential broker at
@@ -81,7 +91,7 @@ class ExportUploadService extends AbstractExportService {
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
-	 * @param ExportSinkRegistry $sinks The sink adapter registry.
+	 * @param ExportSinkRegistryInterface $sinks The sink adapter registry.
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -89,7 +99,7 @@ class ExportUploadService extends AbstractExportService {
 		ContainerInterface $container,
 		IAppConfig $appConfig,
 		ObjectServiceInterface $objectService,
-		private ExportSinkRegistry $sinks,
+		private ExportSinkRegistryInterface $sinks,
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 	) {
@@ -145,13 +155,9 @@ class ExportUploadService extends AbstractExportService {
 
 		$sink = $this->sinks->get(type: $type);
 		$credentials = $this->resolveCredentials(destination: $destination);
+		$target = new ExportUploadTarget(sink: $sink, credentials: $credentials, destination: $destination);
 
-		$manifest = [];
-		$byteCount = 0;
-		$lastAck = null;
-		$failures = [];
-		$succeeded = 0;
-
+		$tally = new ExportUploadTally();
 		foreach ($files as $file) {
 			$remotePath = $this->resolvePath(destination: $destination, file: $file, context: $context);
 			$entry = [
@@ -163,46 +169,22 @@ class ExportUploadService extends AbstractExportService {
 			];
 
 			try {
-				$ack = $this->uploadWithRetry(
-					sink: $sink,
-					credentials: $credentials,
-					destination: $destination,
-					remotePath: $remotePath,
-					contents: (string)($file['contents'] ?? '')
-				);
-
-				$entry['upload_status'] = 'success';
-				$entry['destination_ack'] = $ack;
-				$byteCount += $entry['size_bytes'];
-				$lastAck = $ack;
-				$succeeded++;
+				$ack = $this->uploadWithRetry(target: $target, remotePath: $remotePath, contents: (string)($file['contents'] ?? ''));
+				$tally->uploaded(entry: $entry, ack: $ack);
 			} catch (\Throwable $e) {
-				$entry['upload_status'] = 'failed';
-				$entry['error'] = $e->getMessage();
-				$failures[] = $remotePath . ': ' . $e->getMessage();
-			}//end try
+				$tally->failed(entry: $entry, error: $e->getMessage());
+			}
+		}
 
-			$manifest[] = $entry;
-		}//end foreach
-
-		return $this->buildResult(
-			manifest: $manifest,
-			total: count($files),
-			succeeded: $succeeded,
-			failures: $failures,
-			byteCount: $byteCount,
-			lastAck: $lastAck
-		);
+		return $tally->result(total: count($files));
 	}//end uploadFiles()
 
 	/**
 	 * Attempt one upload with exponential backoff (5 attempts).
 	 *
-	 * @param object $sink The sink adapter.
-	 * @param array<string, mixed> $credentials The resolved credentials.
-	 * @param array<string, mixed> $destination The destination configuration.
-	 * @param string $remotePath The resolved remote path.
-	 * @param string $contents The file bytes.
+	 * @param ExportUploadTarget $target     The sink, credentials and destination.
+	 * @param string             $remotePath The resolved remote path.
+	 * @param string             $contents   The file bytes.
 	 *
 	 * @return string The destination acknowledgement.
 	 *
@@ -210,19 +192,13 @@ class ExportUploadService extends AbstractExportService {
 	 *
 	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
-	private function uploadWithRetry(
-		object $sink,
-		array $credentials,
-		array $destination,
-		string $remotePath,
-		string $contents,
-	): string {
+	private function uploadWithRetry(ExportUploadTarget $target, string $remotePath, string $contents): string {
 		$attempts = count(self::BACKOFF_SECONDS);
 		$lastError = 'unknown error';
 
 		for ($attempt = 0; $attempt < $attempts; $attempt++) {
 			try {
-				return $sink->upload($credentials, $destination, $remotePath, $contents);
+				return $target->sink->upload($target->credentials, $target->destination, $remotePath, $contents);
 			} catch (\Throwable $e) {
 				$lastError = $e->getMessage();
 				$this->logger->warning(
@@ -279,142 +255,6 @@ class ExportUploadService extends AbstractExportService {
 		// Collapse a double slash from a trailing-slash template + filename.
 		return rtrim($base, '/') . '/' . ltrim($filename, '/');
 	}//end resolvePath()
-
-	/**
-	 * Resolve credentials for the destination's OpenConnector source.
-	 *
-	 * `OCA\OpenConnector\Service\SourceService` — the class this used to
-	 * resolve credentials through — no longer exists; Source objects moved
-	 * onto OpenRegister's generic object API (register `openconnector`,
-	 * schema `source`). A RENDERED read strips every write-only secret field
-	 * unconditionally (admins included); only `_render: false` survives that
-	 * boundary — the same raw re-read OpenConnector's own CallService /
-	 * RawSourceResolver use internally (ocon#242). `_rbac`/`_multitenancy`
-	 * stay true, so this is access-neutral, not a widened read.
-	 *
-	 * Never returns the credentials to a client — they are consumed only inside
-	 * the sink adapter. When OC is unavailable an empty map is returned and the
-	 * upload fails closed.
-	 *
-	 * @param array<string, mixed> $destination The destination configuration.
-	 *
-	 * @return array<string, mixed> The resolved credentials (empty when unavailable).
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function resolveCredentials(array $destination): array {
-		$sourceId = (string)($destination['connectorSourceId'] ?? '');
-		if ($sourceId === '') {
-			return [];
-		}
-
-		// The register is asked for, never assumed. Reading with a slug this
-		// instance does not carry returns no source, and this method's empty
-		// return then fails the upload closed with "no credentials" — the wrong
-		// diagnosis for a register that is not there. ConnectorSourceRegister logs
-		// which it was.
-		$registerSlug = $this->connectorRegister->slugOrNull(
-			operation: 'ExportUploadService.resolveCredentials',
-			sourceId: $sourceId
-		);
-		if ($registerSlug === null) {
-			return [];
-		}
-
-		try {
-			$source = $this->getObjectService()->find(
-				id: $sourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
-				_rbac: true,
-				_multitenancy: true,
-				_render: false,
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to resolve export credentials',
-				['sourceId' => $sourceId, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		if ($source === null) {
-			return [];
-		}
-
-		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
-	}//end resolveCredentials()
-
-	/**
-	 * Extract the legacy write-only credential fields (and any non-secret
-	 * broker authentication config) from a raw OpenConnector Source.
-	 *
-	 * @param array<string, mixed> $source The raw (unrendered) Source object.
-	 *
-	 * @return array<string, mixed> The extracted credentials.
-	 *
-	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
-	 */
-	private function extractSourceCredentials(array $source): array {
-		$credentials = [];
-		foreach (self::OPENCONNECTOR_LEGACY_SECRET_FIELDS as $field) {
-			$value = $source[$field] ?? null;
-			if (is_string($value) === true && $value !== '') {
-				$credentials[$field] = $value;
-			}
-		}
-
-		$authentication = $source['configuration']['authentication'] ?? null;
-		if (is_array($authentication) === true && $authentication !== []) {
-			$credentials['authentication'] = $authentication;
-		}
-
-		return $credentials;
-	}//end extractSourceCredentials()
-
-	/**
-	 * Build the UploadResult envelope from per-file outcomes.
-	 *
-	 * @param array<int, array<string, mixed>> $manifest The per-file manifest.
-	 * @param int $total Total files attempted.
-	 * @param int $succeeded Count of successful uploads.
-	 * @param array<int, string> $failures The failure descriptions.
-	 * @param int $byteCount Total bytes uploaded.
-	 * @param string|null $lastAck The last successful ack.
-	 *
-	 * @return array<string, mixed> The UploadResult.
-	 */
-	private function buildResult(
-		array $manifest,
-		int $total,
-		int $succeeded,
-		array $failures,
-		int $byteCount,
-		?string $lastAck,
-	): array {
-		$status = 'partial';
-		if ($total === 0 || $succeeded === $total) {
-			$status = 'all_succeeded';
-		}
-
-		if ($total > 0 && $succeeded === 0) {
-			$status = 'all_failed';
-		}
-
-		$error = null;
-		if ($failures !== []) {
-			$error = implode('; ', $failures);
-		}
-
-		return [
-			'status' => $status,
-			'manifest' => $manifest,
-			'file_count' => $succeeded,
-			'byte_count' => $byteCount,
-			'destination_ack' => $lastAck,
-			'error_message' => $error,
-		];
-	}//end buildResult()
 
 	/**
 	 * Build an all-failed result without attempting any upload.

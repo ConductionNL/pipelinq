@@ -28,6 +28,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every call carries the register, the schema and the session-free flags;
@@ -143,7 +145,15 @@ class ListObjectStoreTest extends TestCase {
 	 */
 	public function testFindCallsWithSessionFreeFlagsAndNormalises(): void {
 		$this->objects->expects($this->once())->method('find')
-			->with('abc', [], false, 'pipelinq', 'list', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'abc',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'pipelinq',
+				'schema' => 'list',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn(self::entity('abc', ['name' => 'News']));
 
 		$this->assertSame(
@@ -164,7 +174,15 @@ class ListObjectStoreTest extends TestCase {
 	public function testFindUsesTheConfiguredRegister(): void {
 		$this->config['register'] = 'crm';
 		$this->objects->expects($this->once())->method('find')
-			->with('abc', [], false, 'crm', 'list', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'abc',
+				'_extend' => [],
+				'files' => false,
+				'register' => 'crm',
+				'schema' => 'list',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn(null);
 
 		$this->assertNull($this->store()->find(schemaSlug: 'list', id: 'abc'));
@@ -266,7 +284,11 @@ class ListObjectStoreTest extends TestCase {
 	public function testSaveCreatesOrUpdates(): void {
 		$calls = [];
 		$this->objects->expects($this->exactly(3))->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid, bool $rbac, bool $mt) use (&$calls): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $rbac = true, bool $mt = true) use (&$calls): ObjectEntity {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$calls[] = [$object, $register, $schema, $uuid, $rbac, $mt];
 				return self::entity(($uuid ?? 'new-id'), $object);
 			}
@@ -311,7 +333,13 @@ class ListObjectStoreTest extends TestCase {
 	 */
 	public function testDeleteForwardsAndReportsTheResult(): void {
 		$this->objects->expects($this->exactly(2))->method('deleteObject')
-			->with('u-1', 'pipelinq', 'list', false, false)
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'u-1',
+				'register' => 'pipelinq',
+				'schema' => 'list',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturnOnConsecutiveCalls(true, false);
 
 		$store = $this->store();

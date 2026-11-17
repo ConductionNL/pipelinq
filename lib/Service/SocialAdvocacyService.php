@@ -93,9 +93,23 @@ class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function requestShare(array $publication, array $account, array $post, SocialPublishRequest $request): ?array {
-		$prepared = $this->asAwaitingShare(publication: $publication, request: $request);
+		return $this->shareRequested(share: ['publication' => $publication, 'account' => $account, 'post' => $post], request: $request);
+	}//end requestShare()
+
+	/**
+	 * Mark a publication as awaiting its owner's share and notify that owner.
+	 *
+	 * @param array{publication: array<string, mixed>, account: array<string, mixed>, post: array<string, mixed>} $share   The
+	 *        publication row, the account it belongs to and the post being shared.
+	 * @param SocialPublishRequest                                                                              $request The
+	 *        resolved text and link.
+	 *
+	 * @return array<string, mixed>|null The updated publication, or null.
+	 */
+	private function shareRequested(array $share, SocialPublishRequest $request): ?array {
+		$prepared = $this->asAwaitingShare(publication: $share['publication'], request: $request);
 		$saved = $this->publications->save(publication: $prepared);
-		$owner = trim((string)($account['ownerUserId'] ?? ''));
+		$owner = trim((string)($share['account']['ownerUserId'] ?? ''));
 		if ($owner === '') {
 			return $saved;
 		}
@@ -103,12 +117,12 @@ class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 		$this->notifications->sendNotification(
 			userId: $owner,
 			subject: self::SUBJECT_SHARE_REQUESTED,
-			parameters: $this->shareParameters(account: $account, post: $post) + ['body' => $request->bodyWithLink()],
+			parameters: $this->shareParameters(account: $share['account'], post: $share['post']) + ['body' => $request->bodyWithLink()],
 			objectType: 'socialPublication', objectId: $this->publications->idOf(publication: $saved ?? $prepared),
 		);
 
 		return $saved;
-	}//end requestShare()
+	}//end shareRequested()
 
 	/**
 	 * The publication waiting for its share, with the words and media it
@@ -221,12 +235,36 @@ class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function confirmShare(string $publicationId, string $uid, string $url = ''): array {
-		$context = $this->authorised(publicationId: $publicationId, uid: $uid);
+		return $this->shareConfirmed(caller: ['publicationId' => $publicationId, 'uid' => $uid], url: $url);
+	}//end confirmShare()
+
+	/**
+	 * Record that the owner posted a publication, when the caller may.
+	 *
+	 * @param array{publicationId: string, uid: string} $caller The publication and the caller, who must be the account's owner
+	 *                                                          or an administrator.
+	 * @param string                                    $url    Where it landed, when they know.
+	 *
+	 * @return array{error?: string, publication?: array<string, mixed>} The updated row, or an error.
+	 */
+	private function shareConfirmed(array $caller, string $url): array {
+		$context = $this->authorised(publicationId: $caller['publicationId'], uid: $caller['uid']);
 		if (isset($context['error']) === true) {
 			return ['error' => $context['error']];
 		}
 
-		$publication = $context['publication'];
+		return $this->recordShare(publication: $context['publication'], url: $url);
+	}//end shareConfirmed()
+
+	/**
+	 * Mark a publication waiting for its share as shared now, with the share's URL when given.
+	 *
+	 * @param array<string, mixed> $publication The authorised publication.
+	 * @param string               $url         The URL of the share, or ''.
+	 *
+	 * @return array<string, mixed> `publication` on success, `error` otherwise.
+	 */
+	private function recordShare(array $publication, string $url): array {
 		if ((string)($publication['status'] ?? '') !== SocialPublicationStore::AWAITING_SHARE) {
 			return ['error' => 'This publication is not waiting for a share.'];
 		}
@@ -243,7 +281,7 @@ class SocialAdvocacyService implements SocialAdvocacyServiceInterface {
 		}
 
 		return ['publication' => $saved];
-	}//end confirmShare()
+	}//end recordShare()
 
 	/**
 	 * Load the publication and its account, and refuse a caller who is neither

@@ -497,6 +497,70 @@ class RegisterAnnotationsTest extends TestCase {
 	}//end testArchivalAnnotationsAreWellFormed()
 
 	/**
+	 * The client, lead and ticket schemas switch on OpenRegister's freeze, so a user can lock them.
+	 *
+	 * @spec openspec/changes/platform-record-lock/tasks.md#1-1
+	 *
+	 * @return void
+	 */
+	public function testLockableSchemasSwitchOnTheFreeze(): void {
+		$schemas = [
+			'client' => $this->schemas['client'],
+			'lead' => $this->schemas['lead'],
+			'ticket' => self::ticketSchema(),
+		];
+
+		foreach ($schemas as $name => $schema) {
+			$this->assertSame(
+				expected: ['enabled' => true],
+				actual: ($schema['configuration']['x-openregister-archive'] ?? null),
+				message: "Schema {$name} must switch on the object state verbs."
+			);
+		}
+	}//end testLockableSchemasSwitchOnTheFreeze()
+
+	/**
+	 * `isFinished` on the lead and the ticket is an `or` of `eq` tests naming exactly
+	 * the lifecycle's final states, and is computed on read.
+	 *
+	 * @spec openspec/changes/platform-record-lock/tasks.md#1-2
+	 *
+	 * @return void
+	 */
+	public function testIsFinishedNamesExactlyTheFinalStates(): void {
+		foreach (['lead' => $this->schemas['lead'], 'ticket' => self::ticketSchema()] as $name => $schema) {
+			$configuration = $schema['configuration'];
+			$final = $configuration['x-openregister-lifecycle']['final'];
+			$field = $configuration['x-openregister-lifecycle']['field'];
+			$calc = ($configuration['x-openregister-calculations']['isFinished'] ?? null);
+
+			$this->assertIsArray(actual: $calc, message: "Schema {$name} must declare isFinished.");
+			$this->assertSame(expected: 'boolean', actual: $calc['type']);
+			$this->assertFalse(condition: $calc['materialise'], message: "{$name}.isFinished must be computed on read.");
+
+			$states = [];
+			foreach ($calc['expression']['or'] as $test) {
+				$this->assertSame(expected: ['prop' => $field], actual: $test['eq'][0], message: "{$name}.isFinished must test {$field}.");
+				$states[] = $test['eq'][1];
+			}
+
+			$this->assertSame(expected: $final, actual: $states, message: "{$name}.isFinished must name exactly the final states.");
+		}//end foreach
+	}//end testIsFinishedNamesExactlyTheFinalStates()
+
+	/**
+	 * The ticket schema, which the register.d overlay declares.
+	 *
+	 * @return array<string, mixed> The ticket schema.
+	 */
+	private static function ticketSchema(): array {
+		$path = dirname(__DIR__, 3) . '/lib/Settings/register.d/99-unify-ticket-supertype.json';
+		$decoded = json_decode((string)file_get_contents($path), true);
+
+		return $decoded['components']['schemas']['ticket'];
+	}//end ticketSchema()
+
+	/**
 	 * Return true when the value parses as an ISO-8601 duration via DateInterval.
 	 *
 	 * @param string $value Candidate duration string.

@@ -41,6 +41,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -184,21 +186,34 @@ class DetractorFollowUpService {
 		}
 
 		$now = ($now ?? new DateTimeImmutable());
+		$due = ['deadline' => $now->modify('+2 days')->format(DateTimeInterface::ATOM), 'client' => $client];
 
+		return $this->followUpTask(response: $response, due: $due);
+	}//end followUpTaskFor()
+
+	/**
+	 * The follow-up task for a detractor response, due at the deadline and assigned for the client.
+	 *
+	 * @param array<string, mixed> $response The response.
+	 * @param array{deadline: string, client: array<string, mixed>} $due The deadline and the client the response rolls up to.
+	 *
+	 * @return array<string, mixed> The task.
+	 */
+	private function followUpTask(array $response, array $due): array {
 		return [
 			'type' => 'followUp',
 			'subject' => 'Follow up an unhappy response',
 			'description' => trim((string)($response['verbatim'] ?? '')),
 			'status' => 'open',
 			'priority' => 'high',
-			'deadline' => $now->modify('+2 days')->format(DateTimeInterface::ATOM),
-			'assigneeUserId' => $this->assigneeFor(client: $client),
+			'deadline' => $due['deadline'],
+			'assigneeUserId' => $this->assigneeFor(client: $due['client']),
 			'clientId' => trim((string)($response['clientRef'] ?? '')),
 			// The response itself, so somebody picking the task up reads what
 			// was actually said rather than a score.
 			'surveyResponseId' => trim((string)($response['id'] ?? $response['uuid'] ?? '')),
 		];
-	}//end followUpTaskFor()
+	}//end followUpTask()
 
 	/**
 	 * Classify a response, raise its follow-up, and write both back.
@@ -252,8 +267,7 @@ class DetractorFollowUpService {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $task,
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 
 			return (string)($saved->getUuid() ?? '');
@@ -284,9 +298,10 @@ class DetractorFollowUpService {
 		try {
 			$this->objectService->saveObject(
 				object: $response,
-				register: $register,
-				schema: $schema,
-				uuid: (string)($response['id'] ?? $response['uuid'] ?? ''),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: (string)($response['id'] ?? $response['uuid'] ?? '')
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

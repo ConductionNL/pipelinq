@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Portal;
 
 use OCA\Pipelinq\Kernel\Contracts\PortalAssertionVerifierInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalContributionInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -46,5 +47,6 @@ class PortalRegistrar {
 	 */
 	public function register(IRegistrationContext $context): void {
 		$context->registerServiceAlias(PortalAssertionVerifierInterface::class, PortalAssertionVerifier::class);
+		$context->registerServiceAlias(PortalContributionInterface::class, PortalContribution::class);
 	}//end register()
 }//end class

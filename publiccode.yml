@@ -25,6 +25,7 @@ description:
       Nextcloud's ecosystem and provides a structured approach to managing customer
       relationships and sales workflows suitable for both government and commercial
       organisations.
+      Conduction maintains this component within the Nextcloud ISV programme.
     features:
       - Lead and contact management
       - Sales pipeline tracking
@@ -41,6 +42,7 @@ description:
       Nextcloud-ecosysteem en biedt een gestructureerde aanpak voor het beheren van
       klantrelaties en verkoopworkflows, geschikt voor zowel overheids- als
       commerciële organisaties.
+      Conduction onderhoudt dit component binnen het Nextcloud ISV-programma.
     features:
       - Lead- en contactbeheer
       - Verkooppipelinebewaking
@@ -53,7 +55,12 @@ legal:
   repoOwner: "Conduction B.V."
 
 maintenance:
-  type: community
+  type: contract
+  contractors:
+    - name: Conduction B.V.
+      until: "2028-12-31"
+      email: info@conduction.nl
+      website: https://conduction.nl
   contacts:
     - name: Conduction B.V.
       email: info@conduction.nl

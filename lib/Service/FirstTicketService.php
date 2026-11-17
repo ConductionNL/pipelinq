@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\FirstTicketServiceInterface;
 use OCA\Pipelinq\Util\SerialisedToArray;
@@ -121,6 +122,18 @@ class FirstTicketService implements FirstTicketServiceInterface {
 			return $overdue;
 		}
 
+		return $this->byPriorityThenAge(a: $a, b: $b);
+	}//end compare()
+
+	/**
+	 * Order of two tickets equally overdue: the highest priority, then the oldest.
+	 *
+	 * @param array<string, mixed> $a A ticket.
+	 * @param array<string, mixed> $b Another ticket.
+	 *
+	 * @return int The comparison.
+	 */
+	private function byPriorityThenAge(array $a, array $b): int {
 		$rankA = (WorklistService::PRIORITY_ORDER[(string) ($a['priority'] ?? '')] ?? WorklistService::PRIORITY_ORDER['normal']);
 		$rankB = (WorklistService::PRIORITY_ORDER[(string) ($b['priority'] ?? '')] ?? WorklistService::PRIORITY_ORDER['normal']);
 		if ($rankA !== $rankB) {
@@ -128,7 +141,7 @@ class FirstTicketService implements FirstTicketServiceInterface {
 		}
 
 		return ($this->createdAt(ticket: $a) <=> $this->createdAt(ticket: $b));
-	}//end compare()
+	}//end byPriorityThenAge()
 
 	/**
 	 * How long a ticket is past its deadline, in seconds; 0 when it is not.
@@ -209,7 +222,7 @@ class FirstTicketService implements FirstTicketServiceInterface {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		try {
-			$client = $this->objectService->find(id: $clientId, register: $register, schema: $schema);
+			$client = $this->objectService->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: client not read for the first ticket', ['exception' => $e->getMessage()]);
 			return '';

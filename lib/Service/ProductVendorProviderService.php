@@ -117,23 +117,46 @@ class ProductVendorProviderService {
 			match: new FieldMatch(field: 'productId', value: $productId),
 		);
 
-		if ($productData === null) {
-			$this->logger->warning(
-				'ProductVendorProviderService: product not found',
-				['productId' => $productId, 'consumer' => $consumerAppSlug]
-			);
-			return null;
-		}
-
-		$isAuthorised = $authorisedConsumer || $this->isAuthorisedForPrivateFields(
-			consumerAppSlug: $consumerAppSlug
-		);
-
-		return $this->projectProductView(
+		return $this->productViewFor(
 			product: $productData,
-			authorised: $isAuthorised,
+			consumer: ['productId' => $productId, 'consumerAppSlug' => $consumerAppSlug, 'authorised' => $authorisedConsumer]
 		);
 	}//end getProduct()
+
+	/**
+	 * The product projected for the consumer, or null (logged) when it was not found.
+	 *
+	 * @param array<string,mixed>|null                                            $product  The product data, or null.
+	 * @param array{productId: string, consumerAppSlug: string, authorised: bool} $consumer The productId, consumer app, authorised.
+	 *
+	 * @return array<string,mixed>|null The projected product array, or null on failure.
+	 */
+	private function productViewFor(?array $product, array $consumer): ?array {
+		if ($product === null) {
+			return $this->productNotFound(productId: $consumer['productId'], consumerAppSlug: $consumer['consumerAppSlug']);
+		}
+
+		return $this->projectProductView(
+			product: $product,
+			authorised: $consumer['authorised'] || $this->isAuthorisedForPrivateFields(consumerAppSlug: $consumer['consumerAppSlug']),
+		);
+	}//end productViewFor()
+
+	/**
+	 * Log a product that could not be found; there is nothing to project.
+	 *
+	 * @param string $productId       The stable productId.
+	 * @param string $consumerAppSlug Slug of the consuming app.
+	 *
+	 * @return null Always.
+	 */
+	private function productNotFound(string $productId, string $consumerAppSlug): null {
+		$this->logger->warning(
+			'ProductVendorProviderService: product not found',
+			['productId' => $productId, 'consumer' => $consumerAppSlug]
+		);
+		return null;
+	}//end productNotFound()
 
 	/**
 	 * Resolve the supplier commercial profile for a given contactsUid.

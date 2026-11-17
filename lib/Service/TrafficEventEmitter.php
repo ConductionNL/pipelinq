@@ -123,24 +123,48 @@ class TrafficEventEmitter {
 	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function emitEmailEvent(string $kind, array $delivery, array $blast, ?string $clickedUrl = null): void {
-		$portalSlug = $this->reportingPortal(kind: $kind);
+		$this->emit(interaction: new MailTrafficInteraction(kind: $kind, delivery: $delivery, blast: $blast, clickedUrl: $clickedUrl));
+	}//end emitEmailEvent()
+
+	/**
+	 * Report a mail interaction to its portal, when its kind has one.
+	 *
+	 * @param MailTrafficInteraction $interaction The open or click.
+	 *
+	 * @return void
+	 */
+	private function emit(MailTrafficInteraction $interaction): void {
+		$portalSlug = $this->reportingPortal(kind: $interaction->kind);
 		if ($portalSlug === '') {
 			return;
 		}
 
+		$this->report(interaction: $interaction, portalSlug: $portalSlug);
+	}//end emit()
+
+	/**
+	 * Ingest the interaction's event into the portal; a failure is logged, never thrown.
+	 *
+	 * @param MailTrafficInteraction $interaction The open or click.
+	 * @param string                 $portalSlug  The portal to report to.
+	 *
+	 * @return void
+	 */
+	private function report(MailTrafficInteraction $interaction, string $portalSlug): void {
+		$context = ['kind' => $interaction->kind, 'portal' => $portalSlug];
 		try {
 			$ingest = $this->ingestService();
 			if ($ingest === null) {
 				return;
 			}
 
-			$event = $this->buildEvent(kind: $kind, delivery: $delivery, blast: $blast, clickedUrl: $clickedUrl);
-			$this->logAccepted(kind: $kind, portalSlug: $portalSlug, result: $ingest->ingest($portalSlug, [$event], self::INGEST_CONTEXT));
+			$event = $this->buildEvent(interaction: $interaction);
+			$this->logAccepted(context: $context, result: $ingest->ingest($portalSlug, [$event], self::INGEST_CONTEXT));
 		} catch (Throwable $e) {
-			$context = ['kind' => $kind, 'portal' => $portalSlug, 'exception' => $e->getMessage()];
+			$context['exception'] = $e->getMessage();
 			$this->logger->warning('TrafficEventEmitter: reporting to Portaliq failed', $context);
 		}
-	}//end emitEmailEvent()
+	}//end report()
 
 	/**
 	 * The portal to report to; '' (logged) for an unknown kind, no
@@ -218,34 +242,20 @@ class TrafficEventEmitter {
 	 * empty array: Portaliq's PHP ingest receives it as-is and serialises it
 	 * to the contract's empty object.
 	 *
-	 * @param string $kind `open` or `click`.
-	 * @param array<string, mixed> $delivery The blastDelivery row.
-	 * @param array<string, mixed> $blast The parent blast row (may be empty).
-	 * @param string|null $clickedUrl The decoded click target, or null.
+	 * @param MailTrafficInteraction $interaction The open or click.
 	 *
 	 * @return array<string, mixed> The event.
 	 */
-	private function buildEvent(string $kind, array $delivery, array $blast, ?string $clickedUrl): array {
-		$blastId = (string)($delivery['blastId'] ?? '');
-		$contactId = (string)($delivery['contactId'] ?? '');
-		$pageLocation = ('mailto:blast/' . $blastId);
-		if ($clickedUrl !== null && $clickedUrl !== '') {
-			$pageLocation = $clickedUrl;
-		}
-
-		$campaign = (string)($blast['name'] ?? '');
-		if ($campaign === '') {
-			$campaign = (string)($blast['templateId'] ?? '');
-		}
-
-		if ($campaign === '') {
-			$campaign = $blastId;
-		}
+	private function buildEvent(MailTrafficInteraction $interaction): array {
+		$blastId = $interaction->blastId();
+		$contactId = $interaction->contactId();
+		$pageLocation = $this->pageLocationOf(blastId: $blastId, clickedUrl: $interaction->clickedUrl);
+		$campaign = $this->campaignOf(blast: $interaction->blast, blastId: $blastId);
 
 		return [
-			'name' => self::KINDS[$kind]['name'],
+			'name' => self::KINDS[$interaction->kind]['name'],
 			'timestamp' => gmdate('Y-m-d\TH:i:s\Z', $this->time->getTime()),
-			'sequence' => self::KINDS[$kind]['sequence'],
+			'sequence' => self::KINDS[$interaction->kind]['sequence'],
 			'pageLocation' => $pageLocation,
 			'params' => [],
 			'campaign' => $campaign,
@@ -257,16 +267,53 @@ class TrafficEventEmitter {
 	}//end buildEvent()
 
 	/**
+	 * The event's page location: the clicked URL, else the blast's mailto marker.
+	 *
+	 * @param string      $blastId    The blast id.
+	 * @param string|null $clickedUrl The decoded click target, or null.
+	 *
+	 * @return string
+	 */
+	private function pageLocationOf(string $blastId, string|null $clickedUrl): string {
+		$pageLocation = ('mailto:blast/' . $blastId);
+		if ($clickedUrl !== null && $clickedUrl !== '') {
+			$pageLocation = $clickedUrl;
+		}
+
+		return $pageLocation;
+	}//end pageLocationOf()
+
+	/**
+	 * The campaign label: the blast's name, else its template id, else the blast id.
+	 *
+	 * @param array<string, mixed> $blast   The parent blast row (may be empty).
+	 * @param string               $blastId The blast id.
+	 *
+	 * @return string
+	 */
+	private function campaignOf(array $blast, string $blastId): string {
+		$campaign = (string)($blast['name'] ?? '');
+		if ($campaign === '') {
+			$campaign = (string)($blast['templateId'] ?? '');
+		}
+
+		if ($campaign === '') {
+			$campaign = $blastId;
+		}
+
+		return $campaign;
+	}//end campaignOf()
+
+	/**
 	 * Log the ingest outcome: debug when accepted, info when refused.
 	 *
-	 * @param string $kind `open` or `click`.
-	 * @param string $portalSlug The portal the event went to.
-	 * @param mixed $result Whatever `ingest()` returned; expected
-	 *                      `{accepted:int, refused:array<string,int>}`.
+	 * @param array{kind: string, portal: string} $context The kind and the portal the event went to.
+	 * @param mixed                               $result  Whatever `ingest()` returned; expected
+	 *                                                     `{accepted:int, refused:array<string,int>}`.
 	 *
 	 * @return void
 	 */
-	private function logAccepted(string $kind, string $portalSlug, mixed $result): void {
+	private function logAccepted(array $context, mixed $result): void {
 		$accepted = 0;
 		$refused = [];
 		if (is_array($result) === true) {
@@ -279,11 +326,11 @@ class TrafficEventEmitter {
 		if ($accepted < 1 || $refused !== []) {
 			$this->logger->info(
 				'TrafficEventEmitter: Portaliq did not accept the event',
-				['kind' => $kind, 'portal' => $portalSlug, 'accepted' => $accepted, 'refused' => $refused]
+				$context + ['accepted' => $accepted, 'refused' => $refused]
 			);
 			return;
 		}
 
-		$this->logger->debug('TrafficEventEmitter: event reported', ['kind' => $kind, 'portal' => $portalSlug]);
+		$this->logger->debug('TrafficEventEmitter: event reported', $context);
 	}//end logAccepted()
 }//end class

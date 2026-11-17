@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\RoutingServiceInterface;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -48,8 +49,12 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1
  * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class RoutingService implements RoutingServiceInterface {
+	use SerialisedToArray;
+
 	/**
 	 * Terminal statuses excluded from workload counts.
 	 *
@@ -91,6 +96,31 @@ class RoutingService implements RoutingServiceInterface {
 	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-1.2
 	 */
 	public function getSuggestedAgents(string $entityType, string $entityId): array {
+		if ($this->isRoutingConfigured(entityType: $entityType) === false) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+		}
+
+		$data = $this->loadEntityData(entityType: $entityType, entityId: $entityId);
+		if ($data === null) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+		}
+
+		$candidates = $this->candidatesFor(data: $data);
+		if ($candidates === []) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+		}
+
+		return $this->rankCandidates(candidates: $candidates);
+	}//end getSuggestedAgents()
+
+	/**
+	 * Whether the register and the entity type's schema are configured (logs when not).
+	 *
+	 * @param string $entityType The entity type (`lead` or a ticket).
+	 *
+	 * @return bool True when routing can look up the entity.
+	 */
+	private function isRoutingConfigured(string $entityType): bool {
 		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 
 		$schemaId = $this->ticketService->getSchemaId();
@@ -100,22 +130,31 @@ class RoutingService implements RoutingServiceInterface {
 
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning('RoutingService: register or schema not configured for ' . $entityType);
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return false;
 		}
 
+		return true;
+	}//end isRoutingConfigured()
+
+	/**
+	 * Load the entity's object data, or null (logged on failure) when it cannot be read.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId The entity id.
+	 *
+	 * @return array<string, mixed>|null The entity data.
+	 */
+	private function loadEntityData(string $entityType, string $entityId): array|null {
 		$objectService = $this->getObjectService();
 
 		try {
-			$entity = $objectService->find(
-				$entityId,
-				[]
-			);
+			$entity = $objectService->find($entityId);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'RoutingService: failed to load entity',
 				['exception' => $e->getMessage(), 'entityType' => $entityType, 'entityId' => $entityId]
 			);
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return null;
 		}
 
 		// ObjectServiceInterface::find() returns an ObjectEntityInterface, so a
@@ -124,21 +163,36 @@ class RoutingService implements RoutingServiceInterface {
 		// suggestion request short-circuited to noMatch. Read the payload
 		// through the entity contract instead.
 		if ($entity === null) {
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return null;
 		}
 
-		$data = $entity->getObject();
+		return $entity->getObject();
+	}//end loadEntityData()
 
+	/**
+	 * The agents matching the entity's category; none when it has no category.
+	 *
+	 * @param array<string, mixed> $data The entity data.
+	 *
+	 * @return array<int, mixed> The candidate agent profiles.
+	 */
+	private function candidatesFor(array $data): array {
 		$category = (string)($data['category'] ?? '');
 		if ($category === '') {
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
+			return [];
 		}
 
-		$candidates = $this->findMatchingAgents(category: $category);
-		if ($candidates === []) {
-			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
-		}
+		return $this->findMatchingAgents(category: $category);
+	}//end candidatesFor()
 
+	/**
+	 * Filter candidates by availability and capacity and build the suggestions.
+	 *
+	 * @param array<int, mixed> $candidates The candidate agent profiles.
+	 *
+	 * @return array{suggestions: array, atCapacity: int, noMatch: bool} The routing suggestions.
+	 */
+	private function rankCandidates(array $candidates): array {
 		$available = $this->filterByAvailability(profiles: $candidates);
 		[$inCapacity, $atCapacityCount] = $this->filterByCapacity(profiles: $available);
 
@@ -149,7 +203,7 @@ class RoutingService implements RoutingServiceInterface {
 			'atCapacity' => $atCapacityCount,
 			'noMatch' => $suggestions === [] && $atCapacityCount === 0,
 		];
-	}//end getSuggestedAgents()
+	}//end rankCandidates()
 
 	/**
 	 * Build the workload-sorted suggestion list from in-capacity profiles.
@@ -199,14 +253,30 @@ class RoutingService implements RoutingServiceInterface {
 		}
 
 		$objectService = $this->getObjectService();
-		$count = 0;
 
-		// Open request tickets: the "non-terminal" predicate is a NOT IN over
-		// TERMINAL_STATUSES, which OpenRegister's query engine cannot express
-		// (no NOT IN operator), and the comparison is case-folded in PHP. This
-		// leg therefore stays a PHP-side count over the assignee-filtered set.
-		// TicketService::findByType pins register + schema + ticketType=request
-		// and degrades to [] on any failure (it logs the cause itself).
+		return $this->openRequestCount(userId: $userId)
+			+ $this->openLeadCount(
+				objectService: $objectService,
+				filters: ['register' => $registerId, 'schema' => $leadSchemaId, 'assignee' => $userId]
+			);
+	}//end getAgentWorkload()
+
+	/**
+	 * Count the agent's open (non-terminal) request tickets.
+	 *
+	 * The "non-terminal" predicate is a NOT IN over TERMINAL_STATUSES, which
+	 * OpenRegister's query engine cannot express (no NOT IN operator), and the
+	 * comparison is case-folded in PHP. This leg therefore stays a PHP-side
+	 * count over the assignee-filtered set. TicketService::findByType pins
+	 * register + schema + ticketType=request and degrades to [] on any failure
+	 * (it logs the cause itself).
+	 *
+	 * @param string $userId The agent's user id.
+	 *
+	 * @return int The number of open requests.
+	 */
+	private function openRequestCount(string $userId): int {
+		$count = 0;
 		$requests = $this->ticketService->findByType(
 			ticketType: TicketService::TYPE_REQUEST,
 			extraFilters: ['assignee' => $userId],
@@ -220,30 +290,32 @@ class RoutingService implements RoutingServiceInterface {
 			}
 		}
 
-		// Open leads (status=open) — push the COUNT down into OpenRegister
-		// since every predicate is a server-side equality filter.
-		if ($leadSchemaId !== '') {
-			try {
-				$count += $objectService->count(
-					[
-						'filters' => [
-							'register' => $registerId,
-							'schema' => $leadSchemaId,
-							'assignee' => $userId,
-							'status' => 'open',
-						],
-					]
-				);
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'RoutingService: failed to count open leads',
-					['exception' => $e->getMessage(), 'userId' => $userId]
-				);
-			}//end try
-		}//end if
-
 		return $count;
-	}//end getAgentWorkload()
+	}//end openRequestCount()
+
+	/**
+	 * Count the agent's open leads server-side; 0 when no lead schema is set or the count fails (logged).
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, string> $filters      The register, the lead schema and the agent's user id as `assignee`.
+	 *
+	 * @return int The number of open leads.
+	 */
+	private function openLeadCount(object $objectService, array $filters): int {
+		if ($filters['schema'] === '') {
+			return 0;
+		}
+
+		try {
+			return $objectService->count(['filters' => $filters + ['status' => 'open']]);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'RoutingService: failed to count open leads',
+				['exception' => $e->getMessage(), 'userId' => $filters['assignee']]
+			);
+			return 0;
+		}
+	}//end openLeadCount()
 
 	/**
 	 * Find agent profiles whose skills cover the given category.
@@ -270,7 +342,7 @@ class RoutingService implements RoutingServiceInterface {
 			return [];
 		}
 
-		$skills = $this->loadActiveSkills(registerId: $registerId, skillSchemaId: $skillSchemaId, category: $category);
+		$skills = $this->loadActiveSkills(scope: ['register' => $registerId, 'schema' => $skillSchemaId], category: $category);
 		$matchingSkillsById = $this->collectMatchingSkills(skills: $skills, category: $category);
 		if ($matchingSkillsById === []) {
 			return [];
@@ -284,21 +356,16 @@ class RoutingService implements RoutingServiceInterface {
 	/**
 	 * Load all active skills, returning an empty list on failure.
 	 *
-	 * @param string $registerId The configured register ID.
-	 * @param string $skillSchemaId The skill schema ID.
-	 * @param string $category The category (for error context only).
+	 * @param array<string, string> $scope    The configured register and the skill schema.
+	 * @param string                $category The category (for error context only).
 	 *
 	 * @return array<int, array<string, mixed>> The active skills as plain arrays (empty on error).
 	 */
-	private function loadActiveSkills(string $registerId, string $skillSchemaId, string $category): array {
+	private function loadActiveSkills(array $scope, string $category): array {
 		try {
 			$skills = $this->getObjectService()->findAll(
 				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $skillSchemaId,
-						'isActive' => true,
-					],
+					'filters' => $scope + ['isActive' => true],
 					'limit' => 999,
 				]
 			);
@@ -458,28 +525,6 @@ class RoutingService implements RoutingServiceInterface {
 		$max = (int)($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT);
 		return $workload >= $max;
 	}//end isAgentAtCapacity()
-
-	/**
-	 * Normalise an OpenRegister entity to a plain array.
-	 *
-	 * OpenRegister's findAll() returns ObjectEntity instances, which cannot be read with
-	 * array access.
-	 *
-	 * @param mixed $value Entity or array.
-	 *
-	 * @return array<string, mixed> Plain payload.
-	 */
-	private function toArray(mixed $value): array {
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$value = $value->jsonSerialize();
-		}
-
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		return [];
-	}//end toArray()
 
 	/**
 	 * Get the injected OpenRegister ObjectService.

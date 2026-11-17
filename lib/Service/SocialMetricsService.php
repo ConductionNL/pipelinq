@@ -47,7 +47,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\SocialMetricsServiceInterface;
 use OCA\Pipelinq\Service\Social\MeteredRead;
 use OCA\Pipelinq\Service\Social\NetworkTotals;
@@ -57,6 +56,8 @@ use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
 use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
+use OCA\Pipelinq\Util\ConfiguredTenantId;
+use OCA\Pipelinq\Service\Support\SocialSpendBudget;
 use OCP\IAppConfig;
 
 /**
@@ -75,6 +76,9 @@ use OCP\IAppConfig;
  *  into every adapter, would add a collaborator that constructs a struct.
  */
 class SocialMetricsService implements SocialMetricsServiceInterface {
+	use ConfiguredTenantId;
+	use SocialSpendBudget;
+
 	/**
 	 * Constructor.
 	 *
@@ -146,36 +150,85 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 			return false;
 		}
 
+		$read = $this->meteredReadFor(account: $account, externalId: $externalId);
+		if ($read === null) {
+			return false;
+		}
+
+		$result = $this->read(read: $read, account: $account);
+		if ($result->accepted === false) {
+			return $this->rejectPull(result: $result, accountId: $accountId);
+		}
+
+		return $this->storeMetrics(
+			publication: $publication,
+			reading: [
+				'metrics' => $read->adapter->normaliseMetrics(payload: $result->body, externalId: $externalId),
+				'rawMetrics' => $result->body,
+				'cost' => $read->adapter->costPerRead(),
+			]
+		);
+	}//end pullOne()
+
+	/**
+	 * The metered metrics read for a publication, or null when the network cannot report one.
+	 *
+	 * @param array<string, mixed> $account The social account.
+	 * @param string $externalId The publication's external id.
+	 *
+	 * @return MeteredRead|null The read.
+	 */
+	private function meteredReadFor(array $account, string $externalId): MeteredRead|null {
 		$adapter = $this->registry->forNetwork(network: (string)($account['network'] ?? ''));
 		if ($adapter === null) {
-			return false;
+			return null;
 		}
 
 		$call = $adapter->metricsCall(externalId: $externalId, account: $account);
 		if ($call === null) {
 			// This network reports nothing Pipelinq can reach. That is not a
 			// failure and it does not clear the numbers already stored.
-			return false;
+			return null;
 		}
 
-		$result = $this->read(read: new MeteredRead(call: $call, adapter: $adapter), account: $account);
-		if ($result->accepted === false) {
-			if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
-				$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
-			}
+		return new MeteredRead(call: $call, adapter: $adapter);
+	}//end meteredReadFor()
 
-			// The previous numbers are kept. An unreadable pull is not a drop
-			// to zero, which would read as a post that lost its engagement.
-			return false;
+	/**
+	 * Handle a refused pull: flag the account for relinking when asked; always false.
+	 *
+	 * The previous numbers are kept. An unreadable pull is not a drop
+	 * to zero, which would read as a post that lost its engagement.
+	 *
+	 * @param SocialGatewayResult $result The refused result.
+	 * @param string $accountId The account id.
+	 *
+	 * @return bool Always false.
+	 */
+	private function rejectPull(SocialGatewayResult $result, string $accountId): bool {
+		if ($result->failureCode === SocialGatewayResult::RELINK_NEEDED) {
+			$this->accounts->markRelinkNeeded(accountId: $accountId, reason: $result->failureReason);
 		}
 
-		$publication['metrics'] = $adapter->normaliseMetrics(payload: $result->body, externalId: $externalId);
-		$publication['rawMetrics'] = $result->body;
+		return false;
+	}//end rejectPull()
+
+	/**
+	 * Store the normalised and raw metrics and the read cost on the publication.
+	 *
+	 * @param array<string, mixed> $publication The publication.
+	 * @param array{metrics: array<string, mixed>, rawMetrics: array<string, mixed>, cost: float} $reading Metrics, raw metrics, cost.
+	 *
+	 * @return bool True when the publication was saved.
+	 */
+	private function storeMetrics(array $publication, array $reading): bool {
+		$publication['metrics'] = $reading['metrics'];
+		$publication['rawMetrics'] = $reading['rawMetrics'];
 		$publication['metricsAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $adapter->costPerRead());
+		$publication['cost'] = ((float)($publication['cost'] ?? 0) + $reading['cost']);
 
 		return ($this->publications->save(publication: $publication) !== null);
-	}//end pullOne()
+	}//end storeMetrics()
 
 	/**
 	 * Refresh the follower count on every connected account that can report one.
@@ -351,7 +404,7 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 		$result = $this->brokered(call: $read->call, account: $account);
 		if ($cost > 0.0 && $result->accepted === true) {
 			$this->budget->recordSend(
-				tenantId: $this->tenantId(),
+				tenantId: $this->getTenantId(),
 				providerId: $adapter->network(),
 				costEur: $cost,
 			);
@@ -369,16 +422,7 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 	 * @return SocialGatewayResult|null
 	 */
 	private function budgetStop(SocialNetworkAdapter $adapter, float $cost): ?SocialGatewayResult {
-		if ($cost <= 0.0) {
-			return null;
-		}
-
-		$allowed = $this->budget->canSend(
-			tenantId: $this->tenantId(),
-			providerId: $adapter->network(),
-			estimatedCostEur: $cost,
-		);
-		if ($allowed === true) {
+		if ($this->withinBudget(adapter: $adapter, cost: $cost) === true) {
 			return null;
 		}
 
@@ -412,19 +456,4 @@ class SocialMetricsService implements SocialMetricsServiceInterface {
 			actingUserId: $acting,
 		);
 	}//end brokered()
-
-	/**
-	 * The tenant the spend budget is kept for, matching every other metered
-	 * channel in this app.
-	 *
-	 * @return string The tenant id.
-	 */
-	private function tenantId(): string {
-		$tenantId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
-		if ($tenantId !== '') {
-			return $tenantId;
-		}
-
-		return 'default';
-	}//end tenantId()
 }//end class

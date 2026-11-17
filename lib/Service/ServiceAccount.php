@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ServiceAccountInterface;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -53,35 +54,7 @@ use Throwable;
  *
  * @spec exclude shared plumbing of the portal and messaging service accounts; no requirement owns the acting identity
  */
-abstract class ServiceAccount {
-	/**
-	 * Why the account cannot be used: none is set.
-	 *
-	 * @var string
-	 */
-	public const REASON_UNSET = 'unset';
-
-	/**
-	 * Why the account cannot be used: the uid names no account.
-	 *
-	 * @var string
-	 */
-	public const REASON_UNKNOWN = 'unknown';
-
-	/**
-	 * Why the account cannot be used: the account is disabled.
-	 *
-	 * @var string
-	 */
-	public const REASON_DISABLED = 'disabled';
-
-	/**
-	 * Why the account cannot be used: it is not in the service group.
-	 *
-	 * @var string
-	 */
-	public const REASON_NOT_IN_GROUP = 'not-in-group';
-
+abstract class ServiceAccount implements ServiceAccountInterface {
 	/**
 	 * Constructor.
 	 *
