@@ -39,8 +39,18 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TrackingLinkServiceInterface;
+use OCA\Pipelinq\Util\Base64UrlDecode;
+use OCA\Pipelinq\Service\Support\BlastDeliveryLookup;
+use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Service\Support\ConfiguredSigningKey;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
@@ -59,8 +69,15 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-07-12-marketing-email-open-click-tracking/tasks.md#1
  */
-class TrackingLinkService {
+class TrackingLinkService implements TrackingLinkServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
+	use Base64UrlDecode;
+	use BlastDeliveryLookup;
+	use ConfiguredSigningKey;
 
 	/**
 	 * App-config key for the per-instance HMAC signing secret.
@@ -448,21 +465,6 @@ class TrackingLinkService {
 	}//end signPayload()
 
 	/**
-	 * Resolve (or lazily mint) the per-instance HMAC signing key.
-	 *
-	 * @return string The signing key.
-	 */
-	private function signingKey(): string {
-		$key = $this->appConfig->getValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, '');
-		if ($key === '') {
-			$key = $this->secureRandom->generate(64, ISecureRandom::CHAR_ALPHANUMERIC);
-			$this->appConfig->setValueString(Application::APP_ID, self::SECRET_CONFIG_KEY, $key, false, true);
-		}
-
-		return $key;
-	}//end signingKey()
-
-	/**
 	 * Resolve the token TTL in seconds — 90-day fixed default,
 	 * admin-overridable via app-config key `blast.tracking_token_ttl_days`.
 	 *
@@ -470,7 +472,7 @@ class TrackingLinkService {
 	 */
 	private function resolveTtlSeconds(): int {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::TTL_CONFIG_KEY,
 			(string)self::DEFAULT_TTL_DAYS,
 		);
@@ -498,22 +500,6 @@ class TrackingLinkService {
 	}//end base64UrlEncode()
 
 	/**
-	 * Base64url-decode.
-	 *
-	 * @param string $data The encoded string.
-	 *
-	 * @return string The decoded data (empty on failure).
-	 */
-	private function base64UrlDecode(string $data): string {
-		$decoded = base64_decode(strtr($data, '-_', '+/'), true);
-		if ($decoded === false) {
-			return '';
-		}
-
-		return $decoded;
-	}//end base64UrlDecode()
-
-	/**
 	 * Load one BlastDelivery row by id.
 	 *
 	 * @param string $id BlastDelivery UUID or slug.
@@ -521,32 +507,11 @@ class TrackingLinkService {
 	 * @return array<string, mixed>|null Row or null.
 	 */
 	private function loadDelivery(string $id): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '' || $id === '') {
+		if ($id === '') {
 			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				'TrackingLinkService.loadDelivery: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->findBlastDelivery(id: $id, notFound: 'TrackingLinkService.loadDelivery: not found');
 	}//end loadDelivery()
 
 	/**
@@ -570,7 +535,10 @@ class TrackingLinkService {
 		}
 
 		try {
-			$objectService->saveObject(object: $payload, register: $register, schema: $schema, uuid: $id);
+			$objectService->saveObject(
+				object: $payload,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'TrackingLinkService.saveDelivery: save failed',
@@ -578,78 +546,6 @@ class TrackingLinkService {
 			);
 		}
 	}//end saveDelivery()
-
-	/**
-	 * Extract the object id from a payload (`uuid` / `id` / `slug`,
-	 * falling back to the `@self` envelope).
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Resolve the BlastDelivery schema slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'TrackingLinkService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
 
 	/**
 	 * Current time as an ISO-8601 string.

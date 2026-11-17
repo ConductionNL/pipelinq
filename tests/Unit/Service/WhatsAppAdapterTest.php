@@ -35,6 +35,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for WhatsAppAdapter — template lookup + parameter
@@ -119,7 +121,10 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
@@ -141,7 +146,9 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->access[] = ['call' => 'find', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				return ($this->store[$id] ?? null);
 			}

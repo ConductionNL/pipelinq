@@ -9,6 +9,7 @@
 - [x] 1.2 Destination reference and `receivedAt` in the answer; same for `PortalRequestService`
   - Files: lib/Controller/WebFormController.php, lib/Service/Portal/PortalRequestService.php; Test: PortalRequestServiceTest::testSubmitCreatesRequestTicket
 - [ ] 1.3 Live: submit each seeded website form on an instance and read the ticket back (live pass, decision 139)
+  - Live pass 17 Nov 2026: all three seeded forms answered 503 because OpenRegister removed `submitAll()`; fixed in pipelinq#3914. After that fix OpenRegister refuses the ticket create as `pipelinq-system` (403 "You may not send this form", a NotAuthorizedException), although the ticket schema grants `user:pipelinq-system` create. Open: an access-control question for OpenRegister's form submit.
 
 ## 2. Landing page into lead
 

@@ -49,9 +49,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
-use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\IURLGenerator;
 use RuntimeException;
 use UnexpectedValueException;
@@ -59,7 +60,7 @@ use UnexpectedValueException;
 /**
  * Resolves the addressbook identity a client or contact object needs.
  */
-class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
+class ProvisionContactIdentityNode implements ICallFlowNode, IFlowNodeConfigKeys {
 
 	/**
 	 * The node type identifier.
@@ -76,11 +77,11 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContactVcardService $vcards The addressbook identity resolver.
+	 * @param ContactVcardServiceInterface $vcards The addressbook identity resolver.
 	 * @param IURLGenerator       $urls   Builds the palette icon URL.
 	 */
 	public function __construct(
-		private readonly ContactVcardService $vcards,
+		private readonly ContactVcardServiceInterface $vcards,
 		private readonly IURLGenerator $urls,
 	) {
 	}//end __construct()
@@ -187,9 +188,7 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Provision one addressbook identity per item.
 	 *
-	 * @param array<int, array> $items   The incoming items.
-	 * @param array<string, mixed> $config The step configuration.
-	 * @param array<string, mixed> $context The run context.
+	 * @param FlowNodeCall $call The items, the step config and the run context.
 	 *
 	 * @return array<int, array> The items, each with the UID added.
 	 *
@@ -198,7 +197,10 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @spec openspec/specs/website-enquiry-intake/spec.md
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
 		unset($context);
 
 		// `validateConfig()` only runs on SAVE. A flow imported from an
@@ -206,52 +208,109 @@ class ProvisionContactIdentityNode implements IFlowNode, IFlowNodeConfigKeys {
 		// the configuration is checked again here rather than assumed.
 		$this->validateConfig(config: $config);
 
-		$type = trim((string)$config['objectType']);
-		$outKey = trim((string)$config['output']);
 		$out = [];
-
 		foreach ($items as $item) {
-			$json = (array)($item['json'] ?? []);
-
-			// The vCard matcher only searches ORG when the form type says
-			// organization, so a client must say so or two enquiries from one
-			// company provision two identities.
-			$formType = 'person';
-			if ($type === 'client') {
-				$formType = 'organization';
-			}
-
-			$form = [
-				'name' => $this->field(json: $json, path: (string)($config['nameFrom'] ?? '')),
-				'email' => $this->field(json: $json, path: (string)($config['emailFrom'] ?? '')),
-				'phone' => $this->field(json: $json, path: (string)($config['phoneFrom'] ?? '')),
-				'type' => $formType,
-			];
-
-			if ($form['name'] === '' && $form['email'] === '') {
-				throw new RuntimeException(
-					'Cannot provision a contact identity without a name or an email address.'
-				);
-			}
-
-			$resolved = $this->vcards->provisionContactFromForm(form: $form, objectType: $type);
-			if ($resolved === null || trim((string)($resolved['contactsUid'] ?? '')) === '') {
-				// Null means Contacts was unavailable or the write failed.
-				// Throwing hands the engine the step's onError policy; carrying
-				// on would give the next write an item with no uid and a
-				// validation error naming the wrong thing.
-				throw new RuntimeException(
-					'Could not provision an addressbook identity for this ' . $type . '.'
-				);
-			}
-
-			$json[$outKey] = (string)$resolved['contactsUid'];
-			$item['json'] = $json;
-			$out[] = $item;
-		}//end foreach
+			$out[] = $this->provisionItem(item: $item, config: $config);
+		}
 
 		return $out;
 	}//end execute()
+
+	/**
+	 * Provision the identity of one item and write its UID to the output field.
+	 *
+	 * The object type (`contact` or `client`) and the item field to write the
+	 * UID to are the step's `objectType` and `output`.
+	 *
+	 * @param array<string, mixed> $item   The incoming item.
+	 * @param array<string, mixed> $config The validated step configuration.
+	 *
+	 * @return array<string, mixed> The item, with the UID added.
+	 *
+	 * @throws RuntimeException When the identity could not be provisioned.
+	 */
+	private function provisionItem(array $item, array $config): array {
+		$type = trim((string)$config['objectType']);
+		$json = (array)($item['json'] ?? []);
+		$form = $this->identityForm(json: $json, config: $config);
+		$resolved = $this->provisionIdentity(form: $form, type: $type);
+
+		$json[trim((string)$config['output'])] = (string)$resolved['contactsUid'];
+		$item['json'] = $json;
+		return $item;
+	}//end provisionItem()
+
+	/**
+	 * The vCard form for one item.
+	 *
+	 * @param array<string, mixed> $json   The item's data.
+	 * @param array<string, mixed> $config The validated step configuration.
+	 *
+	 * @return array{name: string, email: string, phone: string, type: string}
+	 *
+	 * @throws RuntimeException When the item has neither a name nor an email address.
+	 */
+	private function identityForm(array $json, array $config): array {
+		$form = [
+			'name' => $this->field(json: $json, path: (string)($config['nameFrom'] ?? '')),
+			'email' => $this->field(json: $json, path: (string)($config['emailFrom'] ?? '')),
+			'phone' => $this->field(json: $json, path: (string)($config['phoneFrom'] ?? '')),
+			'type' => $this->formTypeFor(type: trim((string)$config['objectType'])),
+		];
+
+		if ($form['name'] === '' && $form['email'] === '') {
+			throw new RuntimeException(
+				'Cannot provision a contact identity without a name or an email address.'
+			);
+		}
+
+		return $form;
+	}//end identityForm()
+
+	/**
+	 * The vCard form type for an object type.
+	 *
+	 * The vCard matcher only searches ORG when the form type says
+	 * organization, so a client must say so or two enquiries from one
+	 * company provision two identities.
+	 *
+	 * @param string $type The object type.
+	 *
+	 * @return string
+	 */
+	private function formTypeFor(string $type): string {
+		$formType = 'person';
+		if ($type === 'client') {
+			$formType = 'organization';
+		}
+
+		return $formType;
+	}//end formTypeFor()
+
+	/**
+	 * Provision the addressbook identity, refusing an answer without a UID.
+	 *
+	 * @param array{name: string, email: string, phone: string, type: string} $form The vCard form.
+	 * @param string                                                         $type The object type.
+	 *
+	 * @return array<string, mixed> The resolved identity.
+	 *
+	 * @throws RuntimeException When the identity could not be provisioned.
+	 */
+	private function provisionIdentity(array $form, string $type): array {
+		$resolved = $this->vcards->provisionContactFromForm(form: $form, objectType: $type);
+		if ($resolved === null || trim((string)($resolved['contactsUid'] ?? '')) === '') {
+			// Null means Contacts was unavailable or the write failed.
+			// Throwing hands the engine the step's onError policy; carrying
+			// on would give the next write an item with no uid and a
+			// validation error naming the wrong thing.
+			throw new RuntimeException(
+				'Could not provision an addressbook identity for this ' . $type . '.'
+			);
+		}
+
+		return $resolved;
+	}//end provisionIdentity()
 
 	/**
 	 * One dotted field off the item, as a trimmed string.

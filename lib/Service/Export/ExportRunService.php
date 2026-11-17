@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 
 /**
@@ -36,7 +37,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-010
  */
-class ExportRunService extends AbstractExportService {
+class ExportRunService extends AbstractExportService implements ExportRunServiceInterface {
 	/**
 	 * The exportRun schema config key.
 	 *
@@ -120,7 +121,7 @@ class ExportRunService extends AbstractExportService {
 		$dateFrom = (string)($filters['date_from'] ?? '');
 		$dateTo = (string)($filters['date_to'] ?? '');
 		if ($dateFrom !== '' || $dateTo !== '') {
-			$runs = $this->filterByDate(runs: $runs, dateFrom: $dateFrom, dateTo: $dateTo);
+			$runs = $this->filterByDate(runs: $runs, range: ['from' => $dateFrom, 'to' => $dateTo]);
 		}
 
 		usort($runs, static fn (array $a, array $b): int => strcmp((string)($b['startedAt'] ?? ''), (string)($a['startedAt'] ?? '')));
@@ -314,21 +315,20 @@ class ExportRunService extends AbstractExportService {
 	/**
 	 * Filter runs to a startedAt date range (inclusive bounds, ISO comparison).
 	 *
-	 * @param array<int, array<string, mixed>> $runs The runs.
-	 * @param string $dateFrom The lower bound (ISO, optional).
-	 * @param string $dateTo The upper bound (ISO, optional).
+	 * @param array<int, array<string, mixed>>   $runs  The runs.
+	 * @param array{from: string, to: string} $range The lower and upper bounds (ISO, each optional).
 	 *
 	 * @return array<int, array<string, mixed>> The filtered runs.
 	 */
-	private function filterByDate(array $runs, string $dateFrom, string $dateTo): array {
+	private function filterByDate(array $runs, array $range): array {
 		$filtered = [];
 		foreach ($runs as $run) {
 			$started = (string)($run['startedAt'] ?? '');
-			if ($dateFrom !== '' && ($started === '' || strcmp($started, $dateFrom) < 0)) {
+			if ($range['from'] !== '' && ($started === '' || strcmp($started, $range['from']) < 0)) {
 				continue;
 			}
 
-			if ($dateTo !== '' && ($started === '' || strcmp($started, $dateTo) > 0)) {
+			if ($range['to'] !== '' && ($started === '' || strcmp($started, $range['to']) > 0)) {
 				continue;
 			}
 

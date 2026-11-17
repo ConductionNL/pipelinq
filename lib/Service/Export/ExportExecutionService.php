@@ -31,7 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportExecutionServiceInterface;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
@@ -43,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
  */
-class ExportExecutionService {
+class ExportExecutionService implements ExportExecutionServiceInterface {
 	/**
 	 * Distributed lock TTL (seconds) — a stuck run releases after this.
 	 *
@@ -62,6 +63,7 @@ class ExportExecutionService {
 	 * @param SchemaEvolutionService $evolution The schema-evolution service.
 	 * @param ICacheFactory $cacheFactory The distributed cache factory (lock).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ReportMailRun|null $mailRun Delivers a run whose destination is mail.
 	 */
 	public function __construct(
 		private ExportJobService $jobs,
@@ -72,6 +74,7 @@ class ExportExecutionService {
 		private SchemaEvolutionService $evolution,
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
+		private ?ReportMailRun $mailRun = null,
 	) {
 	}//end __construct()
 
@@ -140,6 +143,16 @@ class ExportExecutionService {
 		$job = $this->jobs->getJob(id: $pending->jobId());
 		$this->runs->markRunning(runId: $pending->runId());
 		$destination = $this->destinationOf(job: $job);
+		if (($destination['type'] ?? '') === ExportDestinationService::TYPE_MAIL && $this->mailRun !== null) {
+			// A mailed report is read once per recipient, as that recipient,
+			// and every send is recorded on this run (REQ-RPD-002).
+			$completed = $this->runs->completeRun(
+				runId: $pending->runId(),
+				outcome: $this->mailRun->deliver(job: $job, destination: $destination)
+			);
+			return $this->recordOnJob(jobId: $pending->jobId(), run: $completed);
+		}
+
 
 		// Thread the destination compression onto the job for extraction.
 		$extraction = new ExportExtraction(
@@ -206,7 +219,7 @@ class ExportExecutionService {
 		);
 
 		self::addFile(extraction: $extraction, file: $file);
-		$this->snapshotSchema(runId: $pending->runId(), jobId: $pending->jobId(), slug: $slug, file: $file);
+		$this->snapshotSchema(pending: $pending, schema: ['slug' => $slug, 'columns' => ($file['column_definitions'] ?? [])]);
 	}//end extractSource()
 
 	/**
@@ -299,18 +312,16 @@ class ExportExecutionService {
 	/**
 	 * Capture the structure snapshot + drift for one schema of a run.
 	 *
-	 * @param string $runId The run UUID.
-	 * @param string $jobId The job UUID.
-	 * @param string $slug The schema slug.
-	 * @param array<string, mixed> $file The extracted file descriptor.
+	 * @param PendingExportRun                    $pending The run being executed.
+	 * @param array{slug: string, columns: mixed} $schema  The schema slug and the extracted column definitions.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-009
 	 */
-	private function snapshotSchema(string $runId, string $jobId, string $slug, array $file): void {
-		$columns = ($file['column_definitions'] ?? []);
-		$previous = $this->runs->findPreviousSnapshot(jobId: $jobId, schemaName: $slug);
+	private function snapshotSchema(PendingExportRun $pending, array $schema): void {
+		['slug' => $slug, 'columns' => $columns] = $schema;
+		$previous = $this->runs->findPreviousSnapshot(jobId: $pending->jobId(), schemaName: $slug);
 		$changes = $this->evolution->compareToSnapshot(current: $columns, previous: $previous);
 
 		if ($changes !== []) {
@@ -318,7 +329,7 @@ class ExportExecutionService {
 		}
 
 		$this->runs->createSnapshot(
-			runId: $runId,
+			runId: $pending->runId(),
 			schemaName: $slug,
 			columnDefinitions: $columns,
 			comparedToPrevious: $changes
@@ -356,7 +367,7 @@ class ExportExecutionService {
 			return true;
 		}
 
-		$cache = $this->cacheFactory->createDistributed(Application::APP_ID . '-export-lock-');
+		$cache = $this->cacheFactory->createDistributed(AppIdentity::APP_ID . '-export-lock-');
 		return $cache->add($jobId, '1', self::LOCK_TTL);
 	}//end acquireLock()
 
@@ -372,7 +383,7 @@ class ExportExecutionService {
 			return;
 		}
 
-		$cache = $this->cacheFactory->createDistributed(Application::APP_ID . '-export-lock-');
+		$cache = $this->cacheFactory->createDistributed(AppIdentity::APP_ID . '-export-lock-');
 		$cache->remove($jobId);
 	}//end releaseLock()
 }//end class

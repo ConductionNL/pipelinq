@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -128,7 +128,7 @@ class MessagingExchangeRateService {
 	 * @return float|null
 	 */
 	private function configuredRate(string $currency): ?float {
-		$override = $this->appConfig->getValueString(Application::APP_ID, 'messaging.exchange_rates_json', '');
+		$override = $this->appConfig->getValueString(AppIdentity::APP_ID, 'messaging.exchange_rates_json', '');
 		if ($override === '') {
 			return null;
 		}

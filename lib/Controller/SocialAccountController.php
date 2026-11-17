@@ -40,10 +40,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SocialAccountServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\ConnectionReportService;
-use OCA\Pipelinq\Service\SocialAccountService;
+use OCA\Pipelinq\Controller\Support\ErrorAwareJsonAnswer;
+use OCA\Pipelinq\Controller\Support\RequestFields;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,25 +59,27 @@ use OCP\IUserSession;
  * @spec openspec/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
  */
 class SocialAccountController extends Controller {
+	use ErrorAwareJsonAnswer;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SocialAccountService $accounts The account lifecycle.
+	 * @param SocialAccountServiceInterface $accounts The account lifecycle.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy, for the list routes.
-	 * @param ConnectionReportService $connectionReports Reports each network's readiness to integriq's connection registry.
+	 * @param ConnectionReportServiceInterface $connectionReports Reports each network's readiness to integriq's connection registry.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SocialAccountService $accounts,
+		private readonly SocialAccountServiceInterface $accounts,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
-		private readonly ConnectionReportService $connectionReports,
+		private readonly ConnectionReportServiceInterface $connectionReports,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -114,18 +118,9 @@ class SocialAccountController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		$account = $this->accounts->getAccount(accountId: $id);
-		if ($account === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
-			return $this->refuse();
+		$account = $this->actableAccount(accountId: $id);
+		if ($account instanceof JSONResponse) {
+			return $account;
 		}
 
 		return new JSONResponse(['account' => $account]);
@@ -239,37 +234,13 @@ class SocialAccountController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sync(string $id): JSONResponse {
-		$uid = $this->requireUser();
-		if ($uid === null) {
-			return $this->refuse();
-		}
-
-		$account = $this->accounts->getAccount(accountId: $id);
-		if ($account === null) {
-			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
-			return $this->refuse();
+		$account = $this->actableAccount(accountId: $id);
+		if ($account instanceof JSONResponse) {
+			return $account;
 		}
 
 		return new JSONResponse(['account' => $this->accounts->syncStatus(accountId: $id)]);
 	}//end sync()
-
-	/**
-	 * Turn a service answer into a response.
-	 *
-	 * @param array<string, mixed> $result The service's answer.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function answer(array $result): JSONResponse {
-		if (isset($result['error']) === true) {
-			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-		}
-
-		return new JSONResponse($result);
-	}//end answer()
 
 	/**
 	 * Where the network's consent screen comes back to. A path on this
@@ -280,7 +251,7 @@ class SocialAccountController extends Controller {
 	 * @return string The return path.
 	 */
 	private function returnUrl(string $accountId): string {
-		return '/apps/' . Application::APP_ID . '/social-accounts/' . rawurlencode($accountId);
+		return '/apps/' . AppIdentity::APP_ID . '/social-accounts/' . rawurlencode($accountId);
 	}//end returnUrl()
 
 	/**
@@ -307,6 +278,31 @@ class SocialAccountController extends Controller {
 	}//end requireCrmUser()
 
 	/**
+	 * The account the session user may act on, or the 403 or 404 that refuses it.
+	 *
+	 * @param string $accountId The account UUID or slug.
+	 *
+	 * @return array<string, mixed>|JSONResponse
+	 */
+	private function actableAccount(string $accountId): array|JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->refuse();
+		}
+
+		$account = $this->accounts->getAccount(accountId: $accountId);
+		if ($account === null) {
+			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($this->accounts->mayActOn(uid: $uid, account: $account) === false) {
+			return $this->refuse();
+		}
+
+		return $account;
+	}//end actableAccount()
+
+	/**
 	 * The single refusal, so an unauthenticated and an unprivileged caller
 	 * cannot tell each other apart.
 	 *
@@ -326,14 +322,6 @@ class SocialAccountController extends Controller {
 	 * @return array<string, mixed> The sanitised payload.
 	 */
 	private function collectBody(): array {
-		$body = [];
-		foreach (SocialAccountService::CLIENT_WRITABLE as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null) {
-				$body[$key] = (string)$value;
-			}
-		}
-
-		return $body;
+		return (new RequestFields(request: $this->request))->strings(keys: SocialAccountServiceInterface::CLIENT_WRITABLE);
 	}//end collectBody()
 }//end class

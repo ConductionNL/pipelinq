@@ -25,13 +25,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\BrpCacheService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BrpCacheServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
+use OCA\Pipelinq\Kernel\Contracts\BsnAuditServiceInterface;
 use OCA\Pipelinq\Service\BsnAudit\LookupAudit;
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
 use OCA\Pipelinq\Service\BsnAudit\LookupResult;
 use OCA\Pipelinq\Service\BsnAudit\LookupSubject;
-use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -49,19 +50,19 @@ use Throwable;
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-03
  */
-class BrpMutationWebhookListener {
+class BrpMutationWebhookListener implements BrpMutationWebhookListenerInterface {
 	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig App config (webhook secret).
-	 * @param BrpCacheService $cacheService Cache service.
-	 * @param BsnAuditService $auditService Audit service.
+	 * @param BrpCacheServiceInterface $cacheService Cache service.
+	 * @param BsnAuditServiceInterface $auditService Audit service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private BrpCacheService $cacheService,
-		private BsnAuditService $auditService,
+		private BrpCacheServiceInterface $cacheService,
+		private BsnAuditServiceInterface $auditService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -70,16 +71,6 @@ class BrpMutationWebhookListener {
 	 * Result codes for handle().
 	 */
 	public const RESULT_OK = 'ok';
-
-	/**
-	 * Result code: signature mismatch.
-	 */
-	public const RESULT_FORBIDDEN = 'forbidden';
-
-	/**
-	 * Result code: payload was malformed / missing BSN.
-	 */
-	public const RESULT_BAD_REQUEST = 'bad-request';
 
 	/**
 	 * Process a single webhook delivery.
@@ -113,7 +104,7 @@ class BrpMutationWebhookListener {
 	 * @return bool
 	 */
 	private function isSignatureAccepted(string $rawBody, string $signature): bool {
-		$secret = $this->appConfig->getValueString(Application::APP_ID, 'brp.webhook_secret', '');
+		$secret = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.webhook_secret', '');
 		if ($secret === '') {
 			$this->logger->warning('BRP webhook secret not configured; dropping delivery');
 			return false;

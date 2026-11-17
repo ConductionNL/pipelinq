@@ -96,6 +96,8 @@ test.describe('First-time setup contract', () => {
 			'currency',
 			'demo-data',
 			'organisation',
+			'pos',
+			'integrations',
 			'done',
 		]) {
 			expect(
@@ -111,9 +113,8 @@ test.describe('First-time setup contract', () => {
 		// The optional steps reflect their OWN state rather than the app's,
 		// and completion is true regardless — which is the whole scenario:
 		// only currency gates completion.
-		// Provisioning and the integrations are not wizard steps any more.
+		// Provisioning is an admin settings action, not a wizard step.
 		expect(res.json.steps.provision).toBeUndefined()
-		expect(res.json.steps.integrations).toBeUndefined()
 		expect(
 			res.json.steps['demo-data'].done,
 			'ci-seed recorded the demo-data decision',

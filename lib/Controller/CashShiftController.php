@@ -30,9 +30,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\CashShiftService;
-use OCA\Pipelinq\Service\CashShiftSummaryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
+use OCA\Pipelinq\Controller\Support\PosJsonAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,6 +58,9 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-cash-management/spec.md
  */
 class CashShiftController extends Controller {
+	use PosControllerResponses;
+	use PosJsonAction;
+
 	/**
 	 * The measures the shifts list can ask for per shift.
 	 *
@@ -67,21 +72,21 @@ class CashShiftController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CashShiftService $service The cash-shift service.
-	 * @param CashShiftSummaryService $summaries The cash-shift summary reader.
+	 * @param CashShiftServiceInterface $service The cash-shift service.
+	 * @param CashShiftSummaryServiceInterface $summaries The cash-shift summary reader.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private CashShiftService $service,
-		private CashShiftSummaryService $summaries,
+		private CashShiftServiceInterface $service,
+		private CashShiftSummaryServiceInterface $summaries,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -324,44 +329,4 @@ class CashShiftController extends Controller {
 
 		return $this->service->pendingDiffId(shiftId: $shiftId);
 	}//end diffIdFor()
-
-	/**
-	 * Require an authenticated user, returning their UID.
-	 *
-	 * Returns a 401 JSONResponse when no user is in the session. Object-level
-	 * access is scoped to this app's own cash schemas inside the service (an
-	 * object in another app/register resolves to a 404), preventing IDOR.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
-	 * Run a lifecycle action with shared error handling.
-	 *
-	 * Maps the service's OCS exceptions to HTTP status codes (404 not found,
-	 * 422 invalid transition / bad input, 403 operator-/manager-only).
-	 *
-	 * @param callable $action The action to run.
-	 * @param string $label A short label for log context.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function run(callable $action, string $label): JSONResponse {
-		return $this->posResponses()->run(
-			respond: fn (): JSONResponse => new JSONResponse($action()),
-			logLabel: 'CashShiftController::' . $label
-		);
-	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

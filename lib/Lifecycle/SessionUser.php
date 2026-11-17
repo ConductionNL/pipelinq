@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -36,7 +37,7 @@ use OCP\IUserSession;
  *
  * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-2
  */
-class SessionUser {
+class SessionUser implements SessionUserInterface {
 	/**
 	 * Constructor.
 	 *

@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LeadStagePlacer;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -87,8 +87,8 @@ class LeadStageCreatingListener implements IEventListener {
 			return;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$leadSchema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$leadSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'lead_schema', '');
 		$entity = $event->getObject();
 		if ($leadSchema === '' || (string)$entity->getSchema() !== $leadSchema) {
 			return;
@@ -117,7 +117,7 @@ class LeadStageCreatingListener implements IEventListener {
 	 * @return array<int, array<string, mixed>> The pipelines, [] when unreadable.
 	 */
 	private function readPipelines(string $register): array {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pipeline_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}

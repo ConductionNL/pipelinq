@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\SearchConsole\SearchConsoleImportService;
+use OCA\Pipelinq\Kernel\Contracts\SearchConsoleImportServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,10 +43,10 @@ class SearchConsoleImportCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param SearchConsoleImportService $importer The importer.
+	 * @param SearchConsoleImportServiceInterface $importer The importer.
 	 */
 	public function __construct(
-		private SearchConsoleImportService $importer,
+		private SearchConsoleImportServiceInterface $importer,
 	) {
 		parent::__construct();
 	}//end __construct()

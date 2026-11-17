@@ -23,11 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ContactmomentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ContactmomentServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\NotPermittedException;
 use OCP\IL10N;
@@ -45,19 +44,19 @@ class ContactmomentController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ContactmomentService $contactmomentService The contactmoment service.
+	 * @param ContactmomentServiceInterface $contactmomentService The contactmoment service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ContactmomentService $contactmomentService,
+		private ContactmomentServiceInterface $contactmomentService,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -74,18 +73,15 @@ class ContactmomentController extends Controller {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
 	 */
 	public function destroy(string $id): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$uid = (new PosResponses(l10n: $this->l10n, logger: $this->logger))->userIdOr401(user: $this->userSession->getUser());
+		if ($uid instanceof JSONResponse) {
+			return $uid;
 		}
 
 		try {
 			$this->contactmomentService->delete(
 				$id,
-				$user->getUID()
+				$uid
 			);
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {

@@ -32,7 +32,10 @@ namespace OCA\Pipelinq\Service\Event;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EventReminderServiceInterface;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -46,14 +49,13 @@ use Throwable;
  *
  * @spec openspec/specs/campaign-events/spec.md
  */
-class EventReminderService
+class EventReminderService implements EventReminderServiceInterface
 {
 
     /**
      * Most registrations read for one event.
      */
     private const LIMIT = 1000;
-
 
     /**
      * Constructor.
@@ -75,7 +77,6 @@ class EventReminderService
     ) {
 
     }//end __construct()
-
 
     /**
      * Send the reminder to every confirmed registration with an e-mail address.
@@ -112,7 +113,6 @@ class EventReminderService
 
     }//end send()
 
-
     /**
      * Write reminderSentAt on the event, as the caller.
      *
@@ -126,20 +126,23 @@ class EventReminderService
     private function stamp(string $eventId, array $event): void
     {
         $register = $this->reader->register();
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'campaignEvent_schema', '');
+        $schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignEvent_schema', '');
         try {
             $this->objectService->saveObject(
                 object: array_merge($event, ['reminderSentAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM)]),
-                register: $register,
-                schema: $schema,
-                uuid: $eventId,
+                options: new ObjectSaveOptions(
+                	target: new ObjectFindTarget(
+	                		register: $register,
+	                		schema: $schema
+	                	),
+                	uuid: $eventId
+                )
             );
         } catch (Throwable $e) {
             throw new RuntimeException('event_not_saved: '.$e->getMessage(), 0, $e);
         }
 
     }//end stamp()
-
 
     /**
      * The event's registrations with a confirmed place.
@@ -151,7 +154,7 @@ class EventReminderService
     private function confirmedRegistrations(string $eventId): array
     {
         $register = $this->reader->register();
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'eventRegistration_schema', '');
+        $schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'eventRegistration_schema', '');
         if ($register === '' || $schema === '') {
             return [];
         }
@@ -163,6 +166,19 @@ class EventReminderService
             ]
         );
 
+        return $this->registrationArrays(rows: $rows);
+
+    }//end confirmedRegistrations()
+
+    /**
+     * The registrations as arrays, serialising objects and dropping anything else.
+     *
+     * @param array<mixed> $rows The registrations found.
+     *
+     * @return list<array<string, mixed>> The registrations.
+     */
+    private function registrationArrays(array $rows): array
+    {
         $out = [];
         foreach ($rows as $row) {
             $data = $row;
@@ -177,8 +193,7 @@ class EventReminderService
 
         return $out;
 
-    }//end confirmedRegistrations()
-
+    }//end registrationArrays()
 
     /**
      * Mail one registration.
@@ -211,13 +226,12 @@ class EventReminderService
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: an event reminder could not be sent',
-                ['app' => Application::APP_ID, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'exception' => $e->getMessage()]
             );
             return false;
         }
 
     }//end mail()
-
 
     /**
      * The event's start in the user's language, or '' without one.
@@ -240,6 +254,5 @@ class EventReminderService
         }
 
     }//end when()
-
 
 }//end class

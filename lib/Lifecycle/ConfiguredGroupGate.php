@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -82,7 +82,7 @@ final class ConfiguredGroupGate {
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-011
 	 */
 	public function isMemberOf(string $userId, ConfiguredGroup $group): bool {
-		$groupId = $this->appConfig->getValueString(Application::APP_ID, $group->key, $group->default);
+		$groupId = $this->appConfig->getValueString(AppIdentity::APP_ID, $group->key, $group->default);
 		if ($groupId === '') {
 			return false;
 		}

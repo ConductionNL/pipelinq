@@ -50,6 +50,8 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *  memo that makes the whole thing affordable in four places.
  *
  * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
 class SegmentSignalService {
 
@@ -499,28 +501,68 @@ class SegmentSignalService {
 
 		$longest = null;
 		foreach ($rows as $row) {
-			if ((string)($row['client'] ?? '') !== $clientId) {
+			if ($this->isOpenLeadOf(row: $row, clientId: $clientId) === false) {
 				continue;
 			}
 
-			$status = strtolower(trim((string)($row['status'] ?? '')));
-			if ($status !== '' && in_array($status, self::OPEN_LEAD_STATUSES, true) === false) {
-				continue;
-			}
-
-			$days = $this->daysUntil(value: ($row['stageEnteredAt'] ?? null));
-			if ($days === null) {
-				continue;
-			}
-
-			$waited = -$days;
-			if ($longest === null || $waited > $longest) {
-				$longest = $waited;
-			}
+			$longest = $this->longerWait(longest: $longest, waited: $this->stageWait(row: $row));
 		}
 
 		return $longest;
 	}//end stalledDays()
+
+	/**
+	 * Whether a lead row belongs to the client and is open (a lead without a status counts as open).
+	 *
+	 * @param array<string, mixed> $row      The lead row.
+	 * @param string               $clientId The pipelinq client id.
+	 *
+	 * @return bool
+	 */
+	private function isOpenLeadOf(array $row, string $clientId): bool {
+		if ((string)($row['client'] ?? '') !== $clientId) {
+			return false;
+		}
+
+		$status = strtolower(trim((string)($row['status'] ?? '')));
+		return ($status === '' || in_array($status, self::OPEN_LEAD_STATUSES, true) === true);
+	}//end isOpenLeadOf()
+
+	/**
+	 * Days a lead has sat in its stage, or null when it carries no stage date.
+	 *
+	 * @param array<string, mixed> $row The lead row.
+	 *
+	 * @return int|null
+	 */
+	private function stageWait(array $row): int|null {
+		$days = $this->daysUntil(value: ($row['stageEnteredAt'] ?? null));
+		if ($days === null) {
+			return null;
+		}
+
+		return -$days;
+	}//end stageWait()
+
+	/**
+	 * The longer of the longest wait so far and a lead's wait.
+	 *
+	 * @param int|null $longest The longest wait so far, or null.
+	 * @param int|null $waited  This lead's wait, or null when undated.
+	 *
+	 * @return int|null
+	 */
+	private function longerWait(int|null $longest, int|null $waited): int|null {
+		if ($waited === null) {
+			return $longest;
+		}
+
+		if ($longest === null || $waited > $longest) {
+			return $waited;
+		}
+
+		return $longest;
+	}//end longerWait()
 
 	/**
 	 * Whole CALENDAR days from today to a date, negative when it has passed.

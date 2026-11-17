@@ -31,6 +31,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Which opt-out flag is active on a day, and what the BRP-derived and local
@@ -38,6 +39,9 @@ use RuntimeException;
  *
  * @covers \OCA\Pipelinq\Service\OptOutService
  * @uses   \OCA\Pipelinq\Service\BsnValidationService
+ * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
+ * @uses   \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006
  */
@@ -100,7 +104,10 @@ class OptOutServiceBehaviourTest extends TestCase {
 	 */
 	private function recordSaves(): void {
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saves[] = ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema];
 				return $this->createMock(ObjectEntityInterface::class);
 			}

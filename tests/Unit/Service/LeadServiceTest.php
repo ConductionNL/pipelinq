@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for LeadService.
@@ -270,13 +271,11 @@ class LeadServiceTest extends TestCase {
 		$captured = [];
 		$objectService = $this->mockObjectService();
 		$objectService->method('saveObject')->willReturnCallback(
-			static function (
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = [
 					'object' => $object,
 					'register' => $register,

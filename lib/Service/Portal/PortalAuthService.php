@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuthServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\IHasher;
@@ -45,7 +46,7 @@ use OCP\Security\IHasher;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAuthService {
+class PortalAuthService implements PortalAuthServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -138,21 +139,49 @@ class PortalAuthService {
 	): array {
 		$this->repository->requireWritable();
 		$run = new PortalLoginRun(tenantId: $tenantId, client: new PortalClient(ipHash: $ipHash, userAgentHash: $userAgentHash));
-		$this->findAccount(run: $run, email: $email);
+		$this->authenticate(run: $run, credentials: ['email' => $email, 'password' => $password]);
+
+		return $this->loggedIn(run: $run, totpCode: $totpCode);
+	}//end login()
+
+	/**
+	 * Find the account and pass its status, lockout and password gates, resetting its failure counter.
+	 *
+	 * @param PortalLoginRun                          $run         The login in progress.
+	 * @param array{email: string, password: string} $credentials The login email and plaintext password.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException On any authentication failure (safe, audited).
+	 */
+	private function authenticate(PortalLoginRun $run, array $credentials): void {
+		$this->findAccount(run: $run, email: $credentials['email']);
 		$this->refuseClosedAccount(run: $run);
 		$this->refuseLockedOut(run: $run);
-		$this->verifyPassword(run: $run, password: $password);
+		$this->verifyPassword(run: $run, password: $credentials['password']);
 
 		// Password OK from here: reset the failure counter on the in-memory
 		// account so the success-path save below persists it once.
 		$this->resetFailures(account: $run->account);
+	}//end authenticate()
 
-		if ($this->mfaRequired(account: $run->account, tenantId: $tenantId) === true) {
+	/**
+	 * The MFA stage when the account needs a second factor, else a full session.
+	 *
+	 * @param PortalLoginRun $run      The authenticated login.
+	 * @param string|null    $totpCode An optional TOTP code provided up-front.
+	 *
+	 * @return array{status: string, mfaRequired: bool, accountId: string, token?: string, sessionId?: string}
+	 *
+	 * @throws PortalException When the provided TOTP code is wrong.
+	 */
+	private function loggedIn(PortalLoginRun $run, ?string $totpCode): array {
+		if ($this->mfaRequired(account: $run->account, tenantId: $run->tenantId) === true) {
 			return $this->completeMfaStage(run: $run, totpCode: $totpCode);
 		}
 
 		return $this->startSession(run: $run);
-	}//end login()
+	}//end loggedIn()
 
 	/**
 	 * Find the account by its normalised email in the tenant and put it on the run.

@@ -12,10 +12,10 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', () => ({ CnSettingsSection: {}, CnStatusBadge: {}, CnDialog: {} }))
-vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }))
+vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } } }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/event-bus', () => ({ emit: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn() }))
-vi.mock('@nextcloud/router', () => ({ generateUrl: (p) => p, imagePath: (app, p) => p }))
+vi.mock('@nextcloud/router', async (importOriginal) => ({ ...(await importOriginal()), generateUrl: (p) => p, imagePath: (app, p) => p }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 
 const formatters = {}

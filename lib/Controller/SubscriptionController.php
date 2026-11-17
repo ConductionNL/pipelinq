@@ -31,11 +31,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PreferenceCentreServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionServiceInterface;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\Marketing\PreferenceCentreService;
-use OCA\Pipelinq\Service\Marketing\SubscriptionQueryService;
-use OCA\Pipelinq\Service\SubscriptionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,21 +53,21 @@ class SubscriptionController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SubscriptionService $subscriptions Membership state changes.
-	 * @param SubscriptionQueryService $queries Membership reads.
-	 * @param PreferenceCentreService $preferences The preference centre.
+	 * @param SubscriptionServiceInterface $subscriptions Membership state changes.
+	 * @param SubscriptionQueryServiceInterface $queries Membership reads.
+	 * @param PreferenceCentreServiceInterface $preferences The preference centre.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SubscriptionService $subscriptions,
-		private readonly SubscriptionQueryService $queries,
-		private readonly PreferenceCentreService $preferences,
+		private readonly SubscriptionServiceInterface $subscriptions,
+		private readonly SubscriptionQueryServiceInterface $queries,
+		private readonly PreferenceCentreServiceInterface $preferences,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

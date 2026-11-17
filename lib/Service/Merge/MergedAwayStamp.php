@@ -31,7 +31,10 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MergedAwayStampInterface;
 use OCP\IAppConfig;
 
 /**
@@ -40,13 +43,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-013-mdm-steward-ui-deep-linked-to-openregister
  */
-class MergedAwayStamp {
-	/**
-	 * The fields of the stamp.
-	 *
-	 * @var array<int, string>
-	 */
-	public const FIELDS = ['mergedInto', 'mergedIntoLabel', 'mergedAt'];
+class MergedAwayStamp implements MergedAwayStampInterface {
 
 	/**
 	 * Constructor.
@@ -81,7 +78,7 @@ class MergedAwayStamp {
 			$fields = $this->stampFor(survivorUuid: $event->getSurvivorUuid());
 		}
 
-		$this->objects->patchObject(objectId: $uuid, data: $fields, _rbac: false, _multitenancy: false);
+		$this->objects->patchObject(new ObjectPatch(objectId: $uuid, data: $fields), _rbac: false, _multitenancy: false);
 	}//end apply()
 
 	/**
@@ -97,8 +94,8 @@ class MergedAwayStamp {
 		}
 
 		$schemas = [
-			$this->appConfig->getValueString(Application::APP_ID, 'client_schema', ''),
-			$this->appConfig->getValueString(Application::APP_ID, 'contact_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', ''),
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'contact_schema', ''),
 		];
 		return in_array((string)$record->getSchema(), array_filter($schemas), true);
 	}//end isParty()
@@ -129,6 +126,6 @@ class MergedAwayStamp {
 	 * @return ObjectEntityInterface|null The record.
 	 */
 	private function load(string $uuid): ?ObjectEntityInterface {
-		return $this->objects->find(id: $uuid, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		return $this->objects->find(id: $uuid, options: new ObjectFindOptions(render: false, audit: false), _rbac: false, _multitenancy: false);
 	}//end load()
 }//end class

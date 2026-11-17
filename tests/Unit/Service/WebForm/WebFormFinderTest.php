@@ -63,6 +63,25 @@ class WebFormFinderTest extends TestCase {
 	}//end finder()
 
 	/**
+	 * A destination form without a mapping, or with a mapping that is not a
+	 * list of settings, writes with a null mapping rather than a made-up one.
+	 *
+	 * @return void
+	 */
+	public function testADestinationWithoutAMappingWritesANullMapping(): void {
+		$finder = $this->finder([]);
+
+		$this->assertSame(
+			[['as' => 'destination', 'register' => null, 'schema' => 'ticket', 'mapping' => null]],
+			$finder->writesOf(form: ['destination' => ['schema' => 'ticket']])
+		);
+		$this->assertSame(
+			[['as' => 'destination', 'register' => 'pipelinq', 'schema' => 'ticket', 'mapping' => null]],
+			$finder->writesOf(form: ['destination' => ['register' => 'pipelinq', 'schema' => 'ticket'], 'mapping' => 'fields'])
+		);
+	}//end testADestinationWithoutAMappingWritesANullMapping()
+
+	/**
 	 * The published form for a key, with its id, read with RBAC off and filtered on status and key.
 	 *
 	 * @return void

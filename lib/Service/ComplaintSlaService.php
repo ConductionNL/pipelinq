@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -86,7 +86,7 @@ class ComplaintSlaService {
 
 		$key = 'complaint_sla_' . $category;
 		$value = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$key,
 			'',
 		);

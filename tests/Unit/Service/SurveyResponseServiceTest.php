@@ -35,6 +35,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for the token path and the dispatch job's decision.
@@ -91,7 +92,11 @@ class SurveyResponseServiceTest extends TestCase {
 			}
 		);
 		$objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, mixed $register = null, mixed $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = ['id' => (string)$id, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac];
 				$stored = ['survey-1' => 'sch-survey', 'case-elsewhere' => 'sch-elsewhere'];
 				if (isset($stored[(string)$id]) === false) {

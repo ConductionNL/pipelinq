@@ -21,6 +21,11 @@
 							variant="warning"
 							:label="t('pipelinq', 'Unavailable')"
 							class="agent-availability" />
+						<CnStatusBadge
+							v-if="profile.pauseLeadAssignment === true"
+							variant="warning"
+							:label="t('pipelinq', 'Paused for new leads')"
+							class="agent-availability" />
 						<span class="agent-meta">
 							{{
 								getSkillNames(profile).join(', ')
@@ -94,6 +99,27 @@
 							</label>
 						</div>
 					</div>
+					<div class="edit-row">
+						<div class="edit-field">
+							<label for="agent-edit-lead-cap">{{
+								t('pipelinq', 'Most new leads in 30 days')
+							}}</label>
+							<input
+								id="agent-edit-lead-cap"
+								v-model.number="editForm.leadCapPer30Days"
+								type="number"
+								min="1"
+								:placeholder="t('pipelinq', 'No limit')" />
+						</div>
+						<div class="edit-field">
+							<label>
+								<input
+									v-model="editForm.pauseLeadAssignment"
+									type="checkbox" />
+								{{ t('pipelinq', 'Pause lead assignment') }}
+							</label>
+						</div>
+					</div>
 					<div class="edit-actions">
 						<NcButton @click="cancelEdit">
 							{{ t('pipelinq', 'Cancel') }}
@@ -131,6 +157,7 @@ import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
+import { profileToSave } from '../../utils/agentProfileForm.js'
 import inlineEditRowsMixin from './inlineEditRowsMixin.js'
 
 export default {
@@ -233,7 +260,7 @@ export default {
 		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
 		 */
 		async saveEdit() {
-			await this.profilesStore.saveProfile(this.editForm)
+			await this.profilesStore.saveProfile(profileToSave(this.editForm))
 			this.cancelEdit()
 		},
 
@@ -268,7 +295,9 @@ export default {
 
 <style scoped src="./inlineEditRows.css"></style>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .agent-settings {
 	display: flex;
 	flex-direction: column;
@@ -297,10 +326,7 @@ export default {
 }
 
 .agent-meta {
-	display: block;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	margin-top: 2px;
+	@include meta-line;
 }
 
 .agent-item__actions {

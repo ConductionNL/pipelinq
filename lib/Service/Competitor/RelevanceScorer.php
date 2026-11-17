@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Competitor;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -100,7 +100,7 @@ class RelevanceScorer {
 	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored
 	 */
 	public function enabled(): bool {
-		return ($this->appConfig->getValueString(Application::APP_ID, self::ENABLED_KEY, 'false') === 'true');
+		return ($this->appConfig->getValueString(AppIdentity::APP_ID, self::ENABLED_KEY, 'false') === 'true');
 	}//end enabled()
 
 	/**
@@ -204,7 +204,7 @@ class RelevanceScorer {
 	 * @return string
 	 */
 	private function prompt(array $item): string {
-		$context = trim($this->appConfig->getValueString(Application::APP_ID, self::CONTEXT_KEY, ''));
+		$context = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONTEXT_KEY, ''));
 		if ($context === '') {
 			$context = 'the marketing and sales interests of this organisation';
 		}

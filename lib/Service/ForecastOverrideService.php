@@ -26,7 +26,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -43,6 +48,8 @@ use RuntimeException;
  */
 class ForecastOverrideService {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use ConfiguredObjectFind;
 
 	/**
 	 * The categories that may be overridden.
@@ -165,22 +172,7 @@ class ForecastOverrideService {
 	 *   scenario to admin-settings, which never grew one
 	 */
 	public function getOverride(string $id): ?array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '' || $id === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(), id: $id);
 	}//end getOverride()
 
 	/**
@@ -199,7 +191,9 @@ class ForecastOverrideService {
 		}
 
 		try {
-			return (bool)$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			return (bool)$this->getObjectService()->deleteObject(
+				new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $register, schema: $schema))
+			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to delete forecast override', ['exception' => $e->getMessage(), 'id' => $id]);
 			return false;
@@ -221,10 +215,7 @@ class ForecastOverrideService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $override,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: null
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 
 		return $this->toArray(value: $saved);
@@ -244,8 +235,8 @@ class ForecastOverrideService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'forecastOverride_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'forecastOverride_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: register/forecastOverride_schema not configured; OpenRegister calls are refused, not run unscoped'
@@ -254,15 +245,4 @@ class ForecastOverrideService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

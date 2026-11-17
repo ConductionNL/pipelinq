@@ -25,8 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ReceiptDeliveryService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -52,23 +53,25 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
  */
 class PosReceiptController extends Controller {
+	use PosControllerResponses;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ReceiptDeliveryService $service The receipt delivery service.
+	 * @param ReceiptDeliveryServiceInterface $service The receipt delivery service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ReceiptDeliveryService $service,
+		private ReceiptDeliveryServiceInterface $service,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -201,15 +204,6 @@ class PosReceiptController extends Controller {
 	}//end optionalString()
 
 	/**
-	 * Require an authenticated user, returning their UID.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		return $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
-	}//end requireUserId()
-
-	/**
 	 * Run an action with shared OCS-exception to HTTP-status mapping.
 	 *
 	 * @param callable $action The action to run.
@@ -224,13 +218,4 @@ class PosReceiptController extends Controller {
 			logLabel: 'PosReceiptController::' . $label
 		);
 	}//end run()
-
-	/**
-	 * The login check and error mapping shared by the POS controllers.
-	 *
-	 * @return PosResponses The shared responses.
-	 */
-	private function posResponses(): PosResponses {
-		return new PosResponses(l10n: $this->l10n, logger: $this->logger);
-	}//end posResponses()
 }//end class

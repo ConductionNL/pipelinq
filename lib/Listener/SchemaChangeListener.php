@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
-use OCA\Pipelinq\Service\Export\SchemaEvolutionService;
+use OCA\Pipelinq\Kernel\Contracts\SchemaEvolutionServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -45,11 +45,11 @@ class SchemaChangeListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SchemaEvolutionService $evolution The schema-evolution service.
+	 * @param SchemaEvolutionServiceInterface $evolution The schema-evolution service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaEvolutionService $evolution,
+		private SchemaEvolutionServiceInterface $evolution,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()

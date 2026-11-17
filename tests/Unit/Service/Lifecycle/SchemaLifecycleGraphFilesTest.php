@@ -223,4 +223,22 @@ class SchemaLifecycleGraphFilesTest extends TestCase {
 		self::assertSame(['weight' => 0.5], $graph->configurationFor(schemaSlug: 'lead', key: 'x-forecast'));
 		self::assertNull($graph->configurationFor(schemaSlug: 'other', key: 'x-forecast'));
 	}//end testConfigurationIsLookedUpAcrossFiles()
+
+	/**
+	 * Configuration lookup skips an unreadable file, a non-list schemas value and a non-array schema, and keeps scanning.
+	 *
+	 * @return void
+	 */
+	public function testConfigurationLookupSkipsMalformedFilesAndSchemas(): void {
+		file_put_contents($this->dir . '/pipelinq_register.json', '{not json');
+		$this->write(path: 'register.d/10-scalar.json', schemas: 'nothing');
+		$this->write(path: 'register.d/20-odd.json', schemas: ['lead' => 'not a schema', 'other' => ['configuration' => ['x-forecast' => ['weight' => 1]]]]);
+		$this->write(path: 'register.d/30-lead.json', schemas: ['lead' => ['configuration' => ['x-forecast' => ['weight' => 0.25]]]]);
+
+		$graph = new SchemaLifecycleGraph(settingsDir: $this->dir);
+
+		self::assertSame(['weight' => 0.25], $graph->configurationFor(schemaSlug: 'lead', key: 'x-forecast'));
+		self::assertSame(['weight' => 1], $graph->configurationFor(schemaSlug: 'other', key: 'x-forecast'));
+		self::assertNull($graph->configurationFor(schemaSlug: 'missing', key: 'x-forecast'));
+	}//end testConfigurationLookupSkipsMalformedFilesAndSchemas()
 }//end class

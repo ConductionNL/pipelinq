@@ -26,6 +26,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Tester\CommandTester;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 
 /**
  * Runs pipelinq:references:audit over read-only and write runs: the exit code,
@@ -271,7 +272,11 @@ class ReferencesAuditCommandGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function patchObject(string $objectId, array $data, ?string $register = null, ?string $schema = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function patchObject(ObjectPatch $patch, bool $_rbac = true, bool $_multitenancy = true): array {
+				$objectId = $patch->objectId;
+				$data = $patch->data;
+				$register = $patch->target->register;
+				$schema = $patch->target->schema;
 				$this->test->calls[] = ['patchObject' => [$objectId, $data, $register, $schema, $_rbac, $_multitenancy]];
 				if (($this->case['patchThrows'] ?? false) === true) {
 					throw new RuntimeException('locked: '.$objectId);

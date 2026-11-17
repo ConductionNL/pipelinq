@@ -33,6 +33,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A ticket is assigned to the signed-in user, under their RBAC.
@@ -94,15 +95,15 @@ class TicketAssignControllerTest extends TestCase {
 	public function testAssignsTheSignedInUser(): void {
 		$controller = $this->controller();
 		$this->objects->method('find')->willReturn($this->ticket());
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			$this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
 				&& $object['ticketType'] === 'complaint'
 				&& $object['title'] === 'Late delivery'),
-			$this->anything(),
-			'20',
-			'40',
-			't-1',
-		)->willReturn($this->ticket());
+				'extend' => $this->anything(),
+				'register' => '20',
+				'schema' => '40',
+				'uuid' => 't-1',
+			]))->willReturn($this->ticket());
 
 		$response = $controller->assignToMe(id: 't-1');
 
@@ -166,15 +167,15 @@ class TicketAssignControllerTest extends TestCase {
 				['id' => 't-4', 'title' => 'Newer', 'status' => 'new'],
 			]
 		);
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			$this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
 				&& $object['title'] === 'Waiting'
 				&& isset($object['@self']) === false),
-			$this->anything(),
-			'20',
-			'40',
-			't-3',
-		)->willReturn($this->ticket());
+				'extend' => $this->anything(),
+				'register' => '20',
+				'schema' => '40',
+				'uuid' => 't-3',
+			]))->willReturn($this->ticket());
 
 		$response = $controller->assignOldest();
 

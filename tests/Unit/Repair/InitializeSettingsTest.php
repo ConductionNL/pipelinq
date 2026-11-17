@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use ArrayObject;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCA\Pipelinq\Repair\InitializeSettings;
 use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Service\SystemTagService;
@@ -209,7 +210,7 @@ class InitializeSettingsTest extends TestCase {
 		});
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(static fn (string $id): object => $id === SystemTagService::class ? $tags : $settings);
+		$container->method('get')->willReturnCallback(static fn (string $id): object => $id === SystemTagServiceInterface::class ? $tags : $settings);
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('getInstalledApps')->willReturn($installed);
 

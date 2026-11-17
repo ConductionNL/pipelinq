@@ -149,6 +149,32 @@ class SubmittedLeadIntakeTest extends TestCase {
 	}//end testTheStoredLeadGetsItsSubmitTouchpoint()
 
 	/**
+	 * A submission without a name names the new contact after its address and leaves the title alone.
+	 */
+	public function testANamelessSubmissionNamesTheContactAfterItsAddress(): void {
+		$lead = self::LEAD;
+		$lead['submitterName'] = '  ';
+
+		$patch = $this->intake()->partiesFor(lead: $lead);
+
+		$this->assertSame('jane.doe@example.com', $this->store->find(schemaSlug: 'contact', id: $patch['contact'])['name']);
+		$this->assertArrayNotHasKey('title', $patch);
+	}//end testANamelessSubmissionNamesTheContactAfterItsAddress()
+
+	/**
+	 * A last touch that is not a block records a touchpoint with every UTM key empty.
+	 */
+	public function testALastTouchThatIsNotABlockRecordsAnEmptyUtm(): void {
+		$intake = $this->intake();
+
+		$this->assertTrue($intake->recordTouchpoint(leadId: 'lead-2', lead: array_merge(self::LEAD, ['lastTouch' => 'linkedin'])));
+
+		$rows = $this->store->findAll(schemaSlug: 'touchpoint');
+		$this->assertCount(1, $rows);
+		$this->assertSame(['campaign' => '', 'source' => '', 'medium' => '', 'term' => '', 'content' => ''], $rows[0]['utm']);
+	}//end testALastTouchThatIsNotABlockRecordsAnEmptyUtm()
+
+	/**
 	 * Spec scenario: a redelivered submission creates nothing twice.
 	 */
 	public function testARedeliveredSubmissionCreatesNothingTwice(): void {

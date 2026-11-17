@@ -7,6 +7,9 @@
  * section on mount and whenever its period changes.
  */
 
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+
 /** The colour of each contact channel; an unknown channel is grey. */
 export const CHANNEL_COLORS = {
 	telefoon: '#4c84db',
@@ -55,6 +58,41 @@ export const reportSectionMixin = {
 		fromWorkspace(key, fallback) {
 			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
 			return (ctx && ctx[key]) || fallback
+		},
+
+		/**
+		 * Read one rapportage endpoint for the section's period.
+		 *
+		 * @param {string} path The endpoint under `/api/rapportage/`, such as `channels`.
+		 * @return {Promise<object>} The response body.
+		 */
+		async reportData(path) {
+			const { data } = await axios.get(
+				generateUrl('/apps/pipelinq/api/rapportage/' + path),
+				{
+					params: { period: this.effectivePeriod },
+				},
+			)
+			return data
+		},
+
+		/**
+		 * Fill one data property with what `read` resolves to, showing the
+		 * spinner meanwhile; a failure leaves the property an empty list.
+		 *
+		 * @param {string} key The data property to fill.
+		 * @param {function(): Promise<Array<object>>} read Resolves to the new value.
+		 * @return {Promise<void>}
+		 */
+		async loadInto(key, read) {
+			this.loading = true
+			try {
+				this[key] = await read()
+			} catch {
+				this[key] = []
+			} finally {
+				this.loading = false
+			}
 		},
 	},
 }

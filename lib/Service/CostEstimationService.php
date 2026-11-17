@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -118,19 +118,21 @@ class CostEstimationService {
 		string $category = 'utility',
 		string $country = 'NL',
 	): float {
-		$table = $this->loadTable();
+		$channelRow = $this->rowAt(table: $this->loadTable(), keys: [$vendor, $channel]);
+		$catRow = $this->categoryRow(channelRow: $channelRow, category: $category);
 
-		$vendorRow = ($table[$vendor] ?? null);
-		if (is_array($vendorRow) === false) {
-			return 0.0;
-		}
+		return $this->categoryPrice(catRow: $catRow, country: $country);
+	}//end estimate()
 
-		$channelRow = ($vendorRow[$channel] ?? null);
-		if (is_array($channelRow) === false) {
-			return 0.0;
-		}
-
-		$catRow = ($channelRow[$category] ?? ($channelRow['default'] ?? null));
+	/**
+	 * The price a category entry gives a country: a flat number, or the per-country price.
+	 *
+	 * @param mixed  $catRow  The category's entry.
+	 * @param string $country ISO 3166-1 alpha-2 country code.
+	 *
+	 * @return float Estimated EUR cost (0.0 when nothing matches).
+	 */
+	private function categoryPrice(mixed $catRow, string $country): float {
 		if (is_array($catRow) === false) {
 			if (is_numeric($catRow) === true) {
 				return (float)$catRow;
@@ -139,6 +141,54 @@ class CostEstimationService {
 			return 0.0;
 		}
 
+		return $this->countryPrice(catRow: $catRow, country: $country);
+	}//end categoryPrice()
+
+	/**
+	 * The table entry for a category (falling back to the channel default), or null when the vendor or channel is missing.
+	 *
+	 * @param array<string, mixed>|null $channelRow The channel's entry, or null.
+	 * @param string                    $category   Template category.
+	 *
+	 * @return mixed
+	 */
+	private function categoryRow(array|null $channelRow, string $category): mixed {
+		if ($channelRow === null) {
+			return null;
+		}
+
+		return ($channelRow[$category] ?? ($channelRow['default'] ?? null));
+	}//end categoryRow()
+
+	/**
+	 * The table entry under a vendor, then a channel; null when any of them is missing.
+	 *
+	 * @param array<string, mixed> $table The price table.
+	 * @param array<int, string>   $keys  The vendor and the channel.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function rowAt(array $table, array $keys): array|null {
+		$row = $table;
+		foreach ($keys as $key) {
+			$row = ($row[$key] ?? null);
+			if (is_array($row) === false) {
+				return null;
+			}
+		}
+
+		return $row;
+	}//end rowAt()
+
+	/**
+	 * A category's price for a country, else its default, else 0.0.
+	 *
+	 * @param array<string, mixed> $catRow  The category entry.
+	 * @param string               $country ISO 3166-1 alpha-2 country code.
+	 *
+	 * @return float
+	 */
+	private function countryPrice(array $catRow, string $country): float {
 		if (isset($catRow[$country]) === true && is_numeric($catRow[$country]) === true) {
 			return (float)$catRow[$country];
 		}
@@ -148,7 +198,7 @@ class CostEstimationService {
 		}
 
 		return 0.0;
-	}//end estimate()
+	}//end countryPrice()
 
 	/**
 	 * Load the effective price table (built-in merged with app-config override).
@@ -157,7 +207,7 @@ class CostEstimationService {
 	 */
 	private function loadTable(): array {
 		$override = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'messaging.price_table_json',
 			''
 		);
@@ -166,6 +216,22 @@ class CostEstimationService {
 			return self::DEFAULT_PRICE_TABLE;
 		}
 
+		$decoded = $this->decodeOverride(override: $override);
+		if ($decoded === null) {
+			return self::DEFAULT_PRICE_TABLE;
+		}
+
+		return $this->mergedTable(decoded: $decoded);
+	}//end loadTable()
+
+	/**
+	 * The override's decoded table, or null (an invalid one logged) when it is not a JSON object.
+	 *
+	 * @param string $override The configured price_table_json.
+	 *
+	 * @return array<mixed>|null
+	 */
+	private function decodeOverride(string $override): array|null {
 		try {
 			$decoded = json_decode($override, true, 512, JSON_THROW_ON_ERROR);
 		} catch (Throwable $e) {
@@ -173,13 +239,24 @@ class CostEstimationService {
 				'CostEstimationService.loadTable: invalid price_table_json — using defaults',
 				['exception' => $e->getMessage()]
 			);
-			return self::DEFAULT_PRICE_TABLE;
+			return null;
 		}
 
 		if (is_array($decoded) === false) {
-			return self::DEFAULT_PRICE_TABLE;
+			return null;
 		}
 
+		return $decoded;
+	}//end decodeOverride()
+
+	/**
+	 * The default table with the override's vendors replacing their defaults.
+	 *
+	 * @param array<mixed> $decoded The decoded override.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function mergedTable(array $decoded): array {
 		// Shallow-merge per vendor so operators can override one
 		// vendor without losing the defaults for the others.
 		$merged = self::DEFAULT_PRICE_TABLE;
@@ -190,5 +267,5 @@ class CostEstimationService {
 		}
 
 		return $merged;
-	}//end loadTable()
+	}//end mergedTable()
 }//end class

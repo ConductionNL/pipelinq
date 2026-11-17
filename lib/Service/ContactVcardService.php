@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use Psr\Log\LoggerInterface;
 
@@ -31,7 +32,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactVcardService {
+class ContactVcardService implements ContactVcardServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -113,16 +114,57 @@ class ContactVcardService {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function provisionContactFromForm(array $form, string $objectType): ?array {
+		if ($this->canProvision(objectType: $objectType) === false) {
+			return null;
+		}
+
+		$contactsUid = $this->contactUidFor(form: $form, objectType: $objectType);
+		if ($contactsUid === null || $contactsUid === '') {
+			return null;
+		}
+
+		return [
+			'contactsUid' => $contactsUid,
+			'name' => (string)($form['name'] ?? ''),
+			'email' => (string)($form['email'] ?? ''),
+			'phone' => (string)($form['phone'] ?? ''),
+		];
+	}//end provisionContactFromForm()
+
+	/**
+	 * Whether a contact can be provisioned for the type, logging why not.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function canProvision(string $objectType): bool {
 		if (in_array($objectType, ContactObjectReader::OBJECT_TYPES, true) === false) {
 			$this->logger->warning('ContactVcardService: invalid objectType for provisioning', ['objectType' => $objectType]);
-			return null;
+			return false;
 		}
 
 		if ($this->contactsManager->isEnabled() === false) {
 			$this->logger->warning('Pipelinq: cannot provision contact -- Contacts (IManager) not available');
-			return null;
+			return false;
 		}
 
+		return true;
+	}//end canProvision()
+
+	/**
+	 * The UID of the matching existing contact, or of a fresh vCard built from the form.
+	 *
+	 * @param array $form The raw create-form fields.
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function contactUidFor(array $form, string $objectType): string|null {
 		// 1) Try to match an EXISTING contact (email first, then ORG for orgs) so
 		// we never create a duplicate identity when one already exists.
 		$contactsUid = $this->matchExistingContact(form: $form);
@@ -138,17 +180,8 @@ class ContactVcardService {
 			$contactsUid = $this->writerService->writeVcard(properties: $properties);
 		}
 
-		if ($contactsUid === null || $contactsUid === '') {
-			return null;
-		}
-
-		return [
-			'contactsUid' => $contactsUid,
-			'name' => (string)($form['name'] ?? ''),
-			'email' => (string)($form['email'] ?? ''),
-			'phone' => (string)($form['phone'] ?? ''),
-		];
-	}//end provisionContactFromForm()
+		return $contactsUid;
+	}//end contactUidFor()
 
 	/**
 	 * Match an existing Nextcloud Contact for a create form by email first, then

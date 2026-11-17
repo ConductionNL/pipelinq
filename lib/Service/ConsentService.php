@@ -28,10 +28,18 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Pipelinq\Service\Consent\ConsentSubject;
 use OCA\Pipelinq\Service\Consent\ConsentWish;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
+use OCA\Pipelinq\Service\Support\SchemaRowArrays;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -57,9 +65,15 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
  *   integriq (opt-out-before-send) read the same append-only log; splitting them would duplicate its ordering rules.
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class ConsentService {
+class ConsentService implements ConsentServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use SavedPayloadId;
+	use ContainerObjectService;
+	use SchemaRowArrays;
 
 	/**
 	 * Default messagingConsentRecord schema slug.
@@ -225,24 +239,49 @@ class ConsentService {
 		}
 
 		if ($this->integriq->isCutover() === true) {
-			// Showing a state is not a send: ask as a probe, so integriq's
-			// seven-year decision log only holds real sends.
-			$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: '');
-			$decision = $this->integriq->probeOne(
-				ask: $subject->askFor(category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true),
-				recipient: $this->recipientFor(subject: $subject, inReplyTo: null)
-			);
-			if ($decision['code'] === IntegriqConsentClient::CODE_OPTED_OUT) {
-				return 'opted-out';
-			}
-
-			if ($decision['send'] === true && $decision['code'] === IntegriqConsentClient::CODE_ALLOWED) {
-				return 'opted-in';
-			}
-
-			return 'unknown';
+			return $this->integriqState(contactId: $contactId, channel: $channel);
 		}
 
+		return $this->recordedState(contactId: $contactId, channel: $channel);
+	}//end latestState()
+
+	/**
+	 * The consent state as integriq reports it, asked as a probe.
+	 *
+	 * Showing a state is not a send: ask as a probe, so integriq's
+	 * seven-year decision log only holds real sends.
+	 *
+	 * @param string $contactId The contact id.
+	 * @param string $channel The channel.
+	 *
+	 * @return string `opted-out`, `opted-in` or `unknown`.
+	 */
+	private function integriqState(string $contactId, string $channel): string {
+		$subject = new ConsentSubject(contactId: $contactId, channel: $channel, address: '');
+		$decision = $this->integriq->probeOne(
+			ask: $subject->askFor(category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true),
+			recipient: $this->recipientFor(subject: $subject, inReplyTo: null)
+		);
+		if ($decision['code'] === IntegriqConsentClient::CODE_OPTED_OUT) {
+			return 'opted-out';
+		}
+
+		if ($decision['send'] === true && $decision['code'] === IntegriqConsentClient::CODE_ALLOWED) {
+			return 'opted-in';
+		}
+
+		return 'unknown';
+	}//end integriqState()
+
+	/**
+	 * The state of the latest pipelinq consent record, `unknown` when there is none.
+	 *
+	 * @param string $contactId The contact id.
+	 * @param string $channel The channel.
+	 *
+	 * @return string The recorded state.
+	 */
+	private function recordedState(string $contactId, string $channel): string {
 		$latest = $this->loadLatestRecord(contactId: $contactId, channel: $channel);
 		if ($latest === null) {
 			return 'unknown';
@@ -254,7 +293,7 @@ class ConsentService {
 		}
 
 		return $state;
-	}//end latestState()
+	}//end recordedState()
 
 	/**
 	 * Append an `opted-in` consent record.
@@ -369,8 +408,20 @@ class ConsentService {
 			return 0;
 		}
 
-		$register = $this->getRegisterSlug();
-		$schema = $this->getSchemaSlug();
+		return $this->deleteRecords(objectService: $objectService, rows: $rows, contactId: $contactId);
+	}//end deleteForContact()
+
+	/**
+	 * Delete each record that has an id; failures are logged and not counted.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<int, array<string, mixed>> $rows The contact's consent records.
+	 * @param string $contactId The contact id.
+	 *
+	 * @return int The number of records deleted.
+	 */
+	private function deleteRecords(object $objectService, array $rows, string $contactId): int {
+		$target = [$this->getRegisterSlug(), $this->getSchemaSlug()];
 		$deleted = 0;
 
 		foreach ($rows as $row) {
@@ -379,21 +430,37 @@ class ConsentService {
 				continue;
 			}
 
-			try {
-				if (method_exists($objectService, 'deleteObject') === true) {
-					$objectService->deleteObject($id, $register, $schema);
-					$deleted++;
-				}
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'ConsentService.deleteForContact: delete failed',
-					['contactId' => $contactId, 'id' => $id, 'exception' => $e->getMessage()]
-				);
-			}
-		}//end foreach
+			$deleted += $this->deleteRecord(objectService: $objectService, id: $id, target: $target, contactId: $contactId);
+		}
 
 		return $deleted;
-	}//end deleteForContact()
+	}//end deleteRecords()
+
+	/**
+	 * Delete one consent record; 1 when deleted, 0 when unsupported or failed (logged).
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $id The record id.
+	 * @param array{0: string, 1: string} $target The register and schema slugs.
+	 * @param string $contactId The contact id.
+	 *
+	 * @return int The number of records deleted.
+	 */
+	private function deleteRecord(object $objectService, string $id, array $target, string $contactId): int {
+		try {
+			if (method_exists($objectService, 'deleteObject') === true) {
+				$objectService->deleteObject(new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $target[0], schema: $target[1])));
+				return 1;
+			}
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ConsentService.deleteForContact: delete failed',
+				['contactId' => $contactId, 'id' => $id, 'exception' => $e->getMessage()]
+			);
+		}
+
+		return 0;
+	}//end deleteRecord()
 
 	/**
 	 * Every record, for the migration and the replay.
@@ -481,12 +548,23 @@ class ConsentService {
 			return $counts;
 		}
 
+		return $this->replayRows(pending: $this->recordsSinceCutover(contactId: $contactId), counts: $counts);
+	}//end replayPending()
+
+	/**
+	 * The records written at or after the integriq cutover, optionally for one contact.
+	 *
+	 * @param string $contactId The contact id, or '' for every contact.
+	 *
+	 * @return array<int, array<string, mixed>> The pending records.
+	 */
+	private function recordsSinceCutover(string $contactId): array {
 		$filters = [];
 		if ($contactId !== '') {
 			$filters['contactId'] = $contactId;
 		}
 
-		$cutoverAt = (int)$this->appConfig->getValueString(Application::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, '0');
+		$cutoverAt = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, '0');
 		$pending = [];
 		foreach ($this->loadRecords(filters: $filters) as $row) {
 			$recordedAt = strtotime((string)($row['recordedAt'] ?? ''));
@@ -495,6 +573,18 @@ class ConsentService {
 			}
 		}
 
+		return $pending;
+	}//end recordsSinceCutover()
+
+	/**
+	 * Replay the pending records to integriq, oldest first, counting the outcomes.
+	 *
+	 * @param array<int, array<string, mixed>> $pending The pending records.
+	 * @param array{replayed: int, failed: int} $counts The counts so far.
+	 *
+	 * @return array{replayed: int, failed: int} The counts.
+	 */
+	private function replayRows(array $pending, array $counts): array {
 		foreach (array_reverse($this->newestFirst(matching: $pending)) as $row) {
 			$address = $this->addresses->addressFor(contactId: (string)($row['contactId'] ?? ''), channel: (string)($row['channel'] ?? ''));
 			$outcome = $this->integriq->record(request: $this->changeRequestFor(row: $row, address: $address));
@@ -507,7 +597,7 @@ class ConsentService {
 		}
 
 		return $counts;
-	}//end replayPending()
+	}//end replayRows()
 
 	/**
 	 * The recipient integriq is asked about: the subject's address, looked up when empty.
@@ -712,37 +802,12 @@ class ConsentService {
 	 */
 	private function loadRecords(array $filters): array {
 		$contactId = (string)($filters['contactId'] ?? '');
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
 
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $this->getRegisterSlug(),
-							'schema' => $this->getSchemaSlug(),
-						]
-					),
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.loadAllRecords: findAll failed',
-				['contactId' => $contactId, 'exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
+		return $this->schemaRowArrays(
+			filters: $filters,
+			failure: 'ConsentService.loadAllRecords: findAll failed',
+			context: ['contactId' => $contactId]
+		);
 	}//end loadRecords()
 
 	/**
@@ -761,9 +826,7 @@ class ConsentService {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				register: $this->getRegisterSlug(),
-				schema: $this->getSchemaSlug(),
-				uuid: null,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->getRegisterSlug(), schema: $this->getSchemaSlug()))
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -777,72 +840,13 @@ class ConsentService {
 	}//end saveObject()
 
 	/**
-	 * Resolve OpenRegister ObjectService.
-	 *
-	 * @return object|null Service or null.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConsentService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
-
-	/**
-	 * Extract a UUID / id / slug from a payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id or empty.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential key-lookup fallbacks; extraction adds no clarity.
-	 */
-	private function extractId(array $payload): string {
-		foreach (['uuid', 'id', 'slug'] as $key) {
-			if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string)$payload[$key] !== '') {
-				return (string)$payload[$key];
-			}
-		}
-
-		if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($payload['@self'][$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Register slug (app-config overridable).
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
 	 * Schema slug (app-config overridable).
 	 *
 	 * @return string Slug.
 	 */
 	private function getSchemaSlug(): string {
 		$slug = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'messagingConsentRecord_schema',
 			''
 		);

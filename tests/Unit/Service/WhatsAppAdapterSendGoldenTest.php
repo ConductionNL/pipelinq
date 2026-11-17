@@ -39,6 +39,8 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 use TypeError;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Every provider outcome of send(), for template and free-form sends: the
@@ -303,7 +305,10 @@ class WhatsAppAdapterSendGoldenTest extends TestCase {
 			public function __construct(private WhatsAppAdapterSendGoldenTest $test, private bool $saveFails, private array $template) {
 			}
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->test->note(['saveObject' => compact('object', 'register', 'schema', 'uuid', '_rbac', '_multitenancy')]);
 				if ($this->saveFails === true && ($object['direction'] ?? '') === 'outbound') {
 					throw new RuntimeException('save down');
@@ -322,7 +327,9 @@ class WhatsAppAdapterSendGoldenTest extends TestCase {
 				return [];
 			}
 
-			public function find($id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+			public function find($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->test->note(['find' => compact('id', 'register', 'schema')]);
 				if ($id === $this->template['uuid']) {
 					return $this->template;

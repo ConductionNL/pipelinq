@@ -60,6 +60,8 @@ use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 // Same reason as the listener unit tests: the deferral doubles live in the Tests
 // namespace (no PSR-4 mapping) and are not `*Test.php`, so load them here rather
@@ -99,7 +101,11 @@ class IntegrationFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
 		$data = (array)$object;
 		$this->saved[(string)$uuid] = $data;
 		$this->stored[(string)$uuid] = $data;
@@ -127,7 +133,9 @@ class IntegrationFakeObjectService {
 	 *
 	 * @return ObjectEntity|null
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): ?ObjectEntity {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntity {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
 		if (isset($this->stored[$id]) === false) {
 			return null;
 		}
