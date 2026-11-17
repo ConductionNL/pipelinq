@@ -2418,7 +2418,9 @@
         "The open tickets of this client or contact, at most ten.": "Los tickets abiertos de este cliente o contacto, diez como máximo.",
         "The ticket's id.": "El id del ticket.",
         "The ticket's title.": "El título del ticket.",
-        "The ticket's status when the call arrived.": "El estado del ticket cuando llegó la llamada."
+        "The ticket's status when the call arrived.": "El estado del ticket cuando llegó la llamada.",
+        "Last contact": "Último contacto",
+        "No contact yet": "Aún sin contacto"
     },
     "plurals": null
 }

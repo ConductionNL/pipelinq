@@ -2419,7 +2419,9 @@ OC.L10N.register(
         "The open tickets of this client or contact, at most ten.": "Die offenen Tickets dieses Kunden oder Kontakts, höchstens zehn.",
         "The ticket's id.": "Die ID des Tickets.",
         "The ticket's title.": "Der Titel des Tickets.",
-        "The ticket's status when the call arrived.": "Der Status des Tickets, als der Anruf einging."
+        "The ticket's status when the call arrived.": "Der Status des Tickets, als der Anruf einging.",
+        "Last contact": "Letzter Kontakt",
+        "No contact yet": "Noch kein Kontakt"
     },
     "nplurals=2; plural=(n != 1);"
 )
