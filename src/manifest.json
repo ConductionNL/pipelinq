@@ -2087,6 +2087,14 @@
 						"handler": "open-modal",
 						"target": "BulkChangeFieldModal",
 						"props": { "register": "pipelinq", "schema": "client" }
+					},
+					{
+						"id": "fill-from-kvk",
+						"label": "Fill in from KvK",
+						"icon": "DatabaseSyncOutline",
+						"handler": "open-modal",
+						"target": "BulkFillFromKvkModal",
+						"props": { "register": "pipelinq", "schema": "client" }
 					}
 				]
 			}
@@ -3790,6 +3798,19 @@
 						"props": {
 							"clientId": "@objectId",
 							"inline": true
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "client-identifiers",
+						"component": "ClientIdentifiersSection",
+						"title": "Identifiers",
+						"placement": "end",
+						"_note": "clients-registry-numbers-and-enrichment REQ-CRN-001/002: the official numbers of the organisation with the status of their last register check, Add, and Check on a KvK or VAT number.",
+						"props": {
+							"clientId": "@objectId",
+							"identifiers": "@object.identifiers"
 						},
 						"colSpan": 6,
 						"card": true
