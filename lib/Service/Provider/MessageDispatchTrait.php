@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Provider;
 
+use OCA\OpenRegister\Service\Integration\Providers\OutboundMessage;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -101,9 +102,7 @@ trait MessageDispatchTrait {
 		$result = $this->callLeaf(
 			call: static fn () => $provider->dispatch(
 				source: $source,
-				body: $request['body'],
-				path: $request['path'],
-				headers: $request['headers']
+				message: new OutboundMessage(path: $request['path'], body: $request['body'], headers: $request['headers']),
 			)
 		);
 

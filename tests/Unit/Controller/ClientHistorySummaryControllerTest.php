@@ -39,6 +39,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * The history summary route reads the client as the caller first (task 2.2).
  *
  * @covers \OCA\Pipelinq\Controller\ClientHistorySummaryController
+ * @uses \OCA\Pipelinq\Service\RegisterSchema
  *
  * @spec openspec/changes/clients-history-summary-and-risk/tasks.md#task-2.2
  */

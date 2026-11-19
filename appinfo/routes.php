@@ -65,6 +65,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
         ['name' => 'mailAddIn#contact', 'url' => '/api/mail-add-in/contact', 'verb' => 'POST'],
         ['name' => 'mailAddIn#log', 'url' => '/api/mail-add-in/log', 'verb' => 'POST'],
+        // The Outlook add-in itself: its manifest and the pane Outlook frames.
+        ['name' => 'mailAddIn#manifest', 'url' => '/mail-add-in/manifest.xml', 'verb' => 'GET'],
+        ['name' => 'mailAddIn#taskpane', 'url' => '/mail-add-in/taskpane', 'verb' => 'GET'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
@@ -131,6 +134,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'reporting#getSla',      'url' => '/api/rapportage/sla',      'verb' => 'GET'],
         ['name' => 'reporting#updateSla',   'url' => '/api/rapportage/sla',      'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
+        ['name' => 'contactReport#topSubjects', 'url' => '/api/rapportage/top-subjects', 'verb' => 'GET'],
+        ['name' => 'contactReport#occupancy',   'url' => '/api/rapportage/occupancy',    'verb' => 'GET'],
+        ['name' => 'contactReport#forecast',    'url' => '/api/rapportage/forecast',     'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
@@ -693,25 +699,14 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         // The Blocks editor's preview of unsaved blocks (marketing-block-editor).
         ['name' => 'template#render',  'url' => '/api/templates/render',   'verb' => 'POST'],
+        ['name' => 'template#articles', 'url' => '/api/templates/articles', 'verb' => 'GET'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
         ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 
-        // Marketing — Articles (marketing-article-hub). Articles are the
-        // content hub for both mailings and posts. Literal-suffixed routes
-        // (publish, archive, transition, usages) precede the bare {id}
-        // routes (ADR-016), matching the Blast block below.
-        ['name' => 'article#index',      'url' => '/api/articles',                'verb' => 'GET'],
-        ['name' => 'article#create',     'url' => '/api/articles',                'verb' => 'POST'],
-        ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
-        ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
-        ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
         // Shared label list: a rename also rewrites the items that carry the label.
         ['name' => 'label#rename', 'url' => '/api/labels/{id}/rename', 'verb' => 'POST'],
-        ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
-        ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
-        ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
         // Marketing — Social publishing (social-publishing, phase 3). Three
         // objects, three controllers. Literal-suffixed routes (connect,
@@ -768,6 +763,8 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
         ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
         ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        // marketing-events REQ-MEV-001: the campaign page's Create event.
+        ['name' => 'campaignEvent#create',       'url' => '/api/campaigns/{id}/events',       'verb' => 'POST'],
         ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
 
         // Marketing — Journeys (marketing-integrated-campaigns). A journey is

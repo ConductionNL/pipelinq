@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\Kernel\Contracts\ForecastAccessPolicyInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -39,14 +40,7 @@ use OCP\IGroupManager;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastAccessPolicy {
-	/**
-	 * App-config key for the forecast manager group.
-	 *
-	 * @var string
-	 */
-	public const MANAGER_GROUP_KEY = 'forecast_manager_group';
-
+class ForecastAccessPolicy implements ForecastAccessPolicyInterface {
 	/**
 	 * Constructor.
 	 *

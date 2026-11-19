@@ -200,13 +200,8 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 		$body = $this->unsubscribeMail->appendLine(body: $this->composeConfirmationBody(context: $context), unsubscribe: $decision['unsubscribe']);
 		$ics = $this->buildIcs(context: $context);
 
-		$accepted = $this->dispatch(
-			recipient: (string)$context['recipientEmail'],
-			subject: $subject,
-			body: $body,
-			icsContent: $ics,
-			unsubscribe: $decision['unsubscribe']
-		);
+		$mail = new AppointmentMail(recipient: (string)$context['recipientEmail'], subject: $subject, body: $body, icsContent: $ics);
+		$accepted = $this->dispatch(mail: $mail, unsubscribe: $decision['unsubscribe']);
 		if ($accepted === true) {
 			$this->stamp(bookingId: $bookingId, field: 'confirmationSentAt');
 		}
@@ -242,13 +237,8 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 
 		$body = $this->unsubscribeMail->appendLine(body: $this->composeReminderBody(context: $context), unsubscribe: $decision['unsubscribe']);
 
-		$accepted = $this->dispatch(
-			recipient: (string)$context['recipientEmail'],
-			subject: $subject,
-			body: $body,
-			icsContent: null,
-			unsubscribe: $decision['unsubscribe']
-		);
+		$mail = new AppointmentMail(recipient: (string)$context['recipientEmail'], subject: $subject, body: $body, icsContent: null);
+		$accepted = $this->dispatch(mail: $mail, unsubscribe: $decision['unsubscribe']);
 		if ($accepted === true) {
 			$this->stamp(bookingId: $bookingId, field: 'reminderSentAt');
 		}
@@ -436,21 +426,18 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	/**
 	 * Dispatch an email through `IMailer` (the seam for the email-calendar-sync leaf).
 	 *
-	 * @param string $recipient The recipient address.
-	 * @param string $subject Subject line.
-	 * @param string $body Plain-text body.
-	 * @param string|null $icsContent Optional `.ics` attachment body.
+	 * @param AppointmentMail          $mail        The recipient, subject, plain-text body and optional `.ics` attachment body.
 	 * @param array<string,mixed>|null $unsubscribe Integriq's link material for the headers.
 	 *
 	 * @return bool True when accepted for delivery.
 	 */
-	private function dispatch(string $recipient, string $subject, string $body, ?string $icsContent, ?array $unsubscribe = null): bool {
-		if ($this->isValidRecipient(recipient: $recipient) === false) {
+	private function dispatch(AppointmentMail $mail, ?array $unsubscribe = null): bool {
+		if ($this->isValidRecipient(recipient: $mail->recipient) === false) {
 			return false;
 		}
 
 		try {
-			$message = $this->composeMessage(recipient: $recipient, subject: $subject, body: $body, icsContent: $icsContent);
+			$message = $this->composeMessage(mail: $mail);
 			$this->applySender(message: $message);
 			$this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: $unsubscribe);
 
@@ -484,19 +471,16 @@ class AppointmentEmailService implements AppointmentEmailServiceInterface {
 	/**
 	 * Build the message: recipient, subject, body and the optional `.ics` attachment.
 	 *
-	 * @param string      $recipient  The recipient address.
-	 * @param string      $subject    Subject line.
-	 * @param string      $body       Plain-text body.
-	 * @param string|null $icsContent Optional `.ics` attachment body.
+	 * @param AppointmentMail $mail The recipient, subject, plain-text body and optional `.ics` attachment body.
 	 *
 	 * @return \OCP\Mail\IMessage
 	 */
-	private function composeMessage(string $recipient, string $subject, string $body, string|null $icsContent): \OCP\Mail\IMessage {
+	private function composeMessage(AppointmentMail $mail): \OCP\Mail\IMessage {
 		$message = $this->mailer->createMessage();
-		$message->setTo([$recipient]);
-		$message->setSubject($subject);
-		$message->setPlainBody($body);
-		$this->attachIcs(message: $message, icsContent: $icsContent);
+		$message->setTo([$mail->recipient]);
+		$message->setSubject($mail->subject);
+		$message->setPlainBody($mail->body);
+		$this->attachIcs(message: $message, icsContent: $mail->icsContent);
 
 		return $message;
 	}//end composeMessage()

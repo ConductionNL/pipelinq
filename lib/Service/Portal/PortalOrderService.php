@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalOrderServiceInterface;
+
 /**
  * Per-customer order read facade.
  *
@@ -35,7 +37,7 @@ namespace OCA\Pipelinq\Service\Portal;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalOrderService extends AbstractPosTransactionFacade {
+class PortalOrderService extends AbstractPosTransactionFacade implements PortalOrderServiceInterface {
 	/**
 	 * {@inheritDoc}
 	 *

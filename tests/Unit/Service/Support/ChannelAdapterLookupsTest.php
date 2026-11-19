@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Support;
 
+use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\Support\ChannelAdapterLookups;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -35,6 +36,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  *
  * @covers \OCA\Pipelinq\Service\Support\ChannelAdapterLookups
  * @uses \OCA\Pipelinq\Util\ConfiguredSchemaSlug
+ * @uses \OCA\Pipelinq\Util\ConfiguredTenantId
+ * @uses \OCA\Pipelinq\Kernel\AppIdentity
  */
 class ChannelAdapterLookupsTest extends TestCase {
 
@@ -71,6 +74,28 @@ class ChannelAdapterLookupsTest extends TestCase {
 		$this->assertSame('', $host->call('extractPhone', ['phoneNumber' => '']));
 		$this->assertNull($host->call('contactmoments'));
 	}//end testScalarReads()
+
+	/**
+	 * The container's contact moment service is returned only when it is one.
+	 *
+	 * @return void
+	 */
+	public function testContactmomentsResolvesOnlyTheRealService(): void {
+		$appConfig = $this->createStub(IAppConfig::class);
+		$logger    = $this->createStub(LoggerInterface::class);
+		$service   = $this->createStub(ContactmomentService::class);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->once())->method('get')
+			->with('OCA\\Pipelinq\\Service\\ContactmomentService')
+			->willReturn($service);
+		$host = new ChannelAdapterLookupsHost($appConfig, $container, $logger, null);
+		$this->assertSame($service, $host->call('contactmoments'));
+
+		$other = $this->createStub(ContainerInterface::class);
+		$other->method('get')->willReturn(new \stdClass());
+		$this->assertNull((new ChannelAdapterLookupsHost($appConfig, $other, $logger, null))->call('contactmoments'));
+	}//end testContactmomentsResolvesOnlyTheRealService()
 
 	/**
 	 * @return void

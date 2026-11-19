@@ -8193,6 +8193,38 @@
         "openCases": [],
         "inPipelinq": [],
         "mirroredAt": "2026-03-01T09:01:43+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "servedMunicipality",
+          "slug": "servedmunicipality-goes"
+        },
+        "name": "Goes",
+        "code": "0664",
+        "portalTenantId": "goes",
+        "organisation": "00000000-0000-4000-8000-000000000000"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "servedMunicipality",
+          "slug": "servedmunicipality-borsele"
+        },
+        "name": "Borsele",
+        "code": "0654",
+        "portalTenantId": "borsele",
+        "organisation": "00000000-0000-4000-8000-000000000001"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "servedMunicipality",
+          "slug": "servedmunicipality-middelburg"
+        },
+        "name": "Middelburg",
+        "code": "0687",
+        "organisation": "00000000-0000-4000-8000-000000000002"
       }
     ]
   }

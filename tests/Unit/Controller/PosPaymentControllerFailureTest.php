@@ -38,6 +38,7 @@ use RuntimeException;
 
 /**
  * @covers \OCA\Pipelinq\Controller\PosPaymentController
+ * @uses \OCA\Pipelinq\Controller\PosResponses
  */
 class PosPaymentControllerFailureTest extends TestCase {
 

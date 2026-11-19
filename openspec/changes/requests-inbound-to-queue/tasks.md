@@ -2,15 +2,16 @@
 
 ## 1. The intake
 
-- [ ] 1.1 Add fragment `lib/Settings/register.d/99-inbound-ticket-intake.json`: ticket property `inboundThreadKey` (string), `category` set `facetable: true`
+- [x] 1.1 Add fragment `lib/Settings/register.d/99-inbound-ticket-intake.json`: ticket property `inboundThreadKey` (string), `category` set `facetable: true`
   - Verify: import log has no `PARTIAL IMPORT`; `npm run check:schema-l10n` exit 0
-- [ ] 1.2 Add `lib/Service/InboundTicketService.php` with `receive()`: find an open ticket by `inboundThreadKey`, add the message or create a request ticket (`status: new`, no assignee, `priority: normal`, `channel`, `client`, `contact`, `channelMetadata`); move `awaiting_customer` to `in_progress` on a follow-up
+- [x] 1.2 Add `lib/Service/InboundTicketService.php` with `receive()`: find an open ticket by `inboundThreadKey`, add the message or create a request ticket (`status: new`, no assignee, `priority: normal`, `channel`, `client`, `contact`, `channelMetadata`); move `awaiting_customer` to `in_progress` on a follow-up
   - Verify: PHPUnit `tests/Unit/Service/InboundTicketServiceTest.php`: new thread creates one ticket with no assignee; same thread twice creates one ticket; a follow-up on an awaiting ticket moves it to in progress; a closed ticket on the same thread gets a new ticket
 
 ## 2. WhatsApp and SMS
 
-- [ ] 2.1 Call `receive()` from `WhatsAppAdapter::handleInboundWebhook()` and `SmsAdapter::handleInboundWebhook()` after the message is stored; skip the STOP and opt-in keywords; catch and log an intake failure
+- [x] 2.1 Call `receive()` from `WhatsAppAdapter::handleInboundWebhook()` and `SmsAdapter::handleInboundWebhook()` after the message is stored; skip the STOP and opt-in keywords; catch and log an intake failure
   - Verify: PHPUnit on both adapters: a normal inbound calls the intake once with `conversation:<id>`; a STOP message does not; an intake exception still returns `received`
+  - Built through the shared trait `OpensInboundTickets` and `InboundTicketService::tryReceive()`. A message from an unknown number has no conversation (the adapters open none for it), so it opens no ticket and still goes to the unknown-sender contact moment as before. The thread lookup reads past RBAC: the webhook writes as the messaging account, which may create and update tickets but not list them.
 - [ ] 2.2 End to end: an inbound WhatsApp from the mock provider shows in the Queue
   - Verify: Playwright `tests/e2e/inbound-to-queue.spec.ts` posts a signed mock webhook and finds the ticket on `/queue` with channel whatsapp
 

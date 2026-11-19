@@ -36,6 +36,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  * Reads and saves against the configured register and the host's schema key.
  *
  * @covers \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectFind
  */
 class ConfiguredSchemaObjectReadTest extends TestCase {
 

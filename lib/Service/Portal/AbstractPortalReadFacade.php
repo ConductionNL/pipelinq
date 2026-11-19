@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalReadFacadeInterface;
 use OCA\Pipelinq\Service\Portal\Support\NestedIdValue;
 use OCA\Pipelinq\Util\RowIdentity;
 
@@ -40,7 +41,7 @@ use OCA\Pipelinq\Util\RowIdentity;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-abstract class AbstractPortalReadFacade {
+abstract class AbstractPortalReadFacade implements PortalReadFacadeInterface {
 	use NestedIdValue {
 		readId as protected;
 	}

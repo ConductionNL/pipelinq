@@ -27,6 +27,8 @@ use PHPUnit\Framework\TestCase;
  * Only an admin reads or picks the account, and both routes exist.
  *
  * @covers \OCA\Pipelinq\Controller\BackgroundServiceAccountController
+ * @uses \OCA\Pipelinq\Middleware\Support\ApiPathAliases
+ * @uses \OCA\Pipelinq\Middleware\Support\StandardProtocolPaths
  */
 class BackgroundServiceAccountControllerTest extends TestCase {
 	/**

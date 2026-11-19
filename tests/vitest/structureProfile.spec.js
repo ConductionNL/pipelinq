@@ -151,7 +151,7 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 54 entries: 43 main, 3 footer, 8 settings, 0 integrations', () => {
+	it('still counts 54 entries: 42 main, 3 footer, 9 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
@@ -163,11 +163,12 @@ describe('the full profile', () => {
 		// caption that has entries under it (nextcloud-vue #1608).
 		// Bulk changes (clients-bulk-edit-and-undo) sits under the Dashboard
 		// group with Clients and Contacts. Call reviews (contact-moments-call-review)
-		// sits under the KCC workplace with My work and the queue.
+		// sits under the KCC workplace with My work and the queue. Municipalities
+		// (requests-municipality-per-contact) is a settings entry too.
 		expect(flat(menu)).toHaveLength(54)
-		expect(count('main')).toBe(43)
+		expect(count('main')).toBe(42)
 		expect(count('footer')).toBe(3)
-		expect(count('settings')).toBe(8)
+		expect(count('settings')).toBe(9)
 		expect(count('integrations')).toBe(0)
 	})
 
@@ -490,11 +491,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 110 pages as the full profile, so every route stays', () => {
+	it('builds the same 108 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(110)
+		expect(built.pages).toHaveLength(108)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)

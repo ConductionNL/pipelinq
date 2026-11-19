@@ -233,3 +233,34 @@ The first-time setup SHALL run Welcome, Example data, Currency, Organisation, Ti
 
 - **GIVEN** the admin runs the setup wizard and reaches Organisatie
 - **THEN** the stepper reads "stap 4 van 7", every field reads "(optioneel)", and "Deze stap overslaan" moves on to Kassa without saving
+
+### Requirement: REQ-SETUP-PIP-001 — Currency Is The Single Required Setup Choice
+
+pipelinq SHALL declare a `setup` block whose `currency` step is `required: true` and writes an ISO-4217 `currency` app-config key (default `EUR`); all other steps (`register-mapping`, optional actions) SHALL be optional and non-gating.
+
+#### Scenario: App is gated only on currency
+
+- **GIVEN** pipelinq is enabled with no `currency` configured
+- **WHEN** an admin opens the app
+- **THEN** `CnSetupWizard` SHALL gate the shell on the `currency` step only
+- **AND** once `currency` is set the app SHALL be usable without further required steps
+
+### Requirement: REQ-SETUP-PIP-002 — Configured Currency Drives Reporting
+
+pipelinq SHALL source the dashboard/report currency from the `currency` app-config value (exposed via initial-state) instead of a hard-coded literal, so commercial `stat`/`chart` widgets format amounts in the chosen currency.
+
+#### Scenario: Dashboard formats amounts in the chosen currency
+
+- **GIVEN** an admin set `currency` to a non-EUR value
+- **WHEN** the commercial dashboard renders revenue/forecast widgets
+- **THEN** the amounts SHALL be formatted in the configured currency
+
+### Requirement: REQ-SETUP-PIP-003 — Setup Status Is Reported For The Wizard
+
+pipelinq SHALL expose `GET /apps/pipelinq/api/setup/status` returning `{ version, completed, steps }` where `currency.done` reflects the `currency` key being set, and SHALL write `setup_completed_version` once the required step is done.
+
+#### Scenario: Completion after currency chosen
+
+- **GIVEN** `currency` is set
+- **WHEN** the wizard re-queries status
+- **THEN** `completed` SHALL be true and the wizard SHALL stop gating

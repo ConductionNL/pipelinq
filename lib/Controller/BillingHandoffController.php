@@ -31,9 +31,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BillingHandoffAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
 use OCA\Pipelinq\Kernel\Contracts\TimeBillingHandoffServiceInterface;
-use OCA\Pipelinq\Lifecycle\BillingHandoffAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,7 +45,7 @@ use OCP\IUserSession;
  * "Send to billing" availability + trigger endpoints.
  *
  * Both endpoints are `#[NoAdminRequired]` + guarded by
- * {@see BillingHandoffAccessPolicy::isManager()} (manager group or NC admin)
+ * {@see BillingHandoffAccessPolicyInterface::isManager()} (manager group or NC admin)
  * — closes the IDOR that a plain `#[NoAdminRequired]` alone would leave open
  * (any authenticated user could otherwise bill any client's hours).
  *
@@ -57,14 +57,14 @@ class BillingHandoffController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param TimeBillingHandoffServiceInterface $handoffService The billing handoff service.
-	 * @param BillingHandoffAccessPolicy $accessPolicy The manager access policy.
+	 * @param BillingHandoffAccessPolicyInterface $accessPolicy The manager access policy.
 	 * @param IntegrationDetectorInterface $integrations Detects Shillinq for the deep-link fallback.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
 		private TimeBillingHandoffServiceInterface $handoffService,
-		private BillingHandoffAccessPolicy $accessPolicy,
+		private BillingHandoffAccessPolicyInterface $accessPolicy,
 		private IntegrationDetectorInterface $integrations,
 		private IUserSession $userSession,
 	) {

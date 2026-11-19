@@ -32,8 +32,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCA\Pipelinq\Kernel\Contracts\PosTransactionServiceInterface;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\PosObjectFetch;
 use OCA\Pipelinq\Service\Support\RandomUuid;
@@ -130,14 +130,14 @@ class PosTransactionService implements PosTransactionServiceInterface {
 	 *
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
 	 * @param IEventDispatcher $eventDispatcher Event dispatcher for PosStockMovedEvent.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private LoggerInterface $logger,
 		private IEventDispatcher $eventDispatcher,
 	) {

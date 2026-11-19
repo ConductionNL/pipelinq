@@ -212,6 +212,26 @@ class SubmissionTouchRecorderTest extends TestCase {
 	}//end testAnUnknownAddressRecordsTheTouchpointOnly()
 
 	/**
+	 * A submit that carries no email address is tied to no contact, not even
+	 * to a contact whose own address is empty.
+	 *
+	 * @return void
+	 */
+	public function testASubmitWithoutAnAddressIsTiedToNoContact(): void {
+		$seed = self::seed();
+		$seed['contact'][] = ['uuid' => 'contact-blank', 'name' => 'Zonder adres', 'email' => '', 'client' => 'client-1'];
+		$saved = $this->recorder(new InMemoryListObjectStore($seed))->record(
+			form: ['id' => 'f'],
+			payload: ['contactEmail' => '   ', 'utmCampaign' => 'voorjaar']
+		);
+
+		$this->assertArrayNotHasKey('contactId', $saved);
+		$this->assertSame('', $saved['clientId']);
+		$this->assertSame('campaign-1', $saved['campaignId']);
+		$this->assertArrayNotHasKey('lastTouch', $this->store->find('contact', 'contact-blank'));
+	}//end testASubmitWithoutAnAddressIsTiedToNoContact()
+
+	/**
 	 * A repeated submit with the same Idempotency-Key records one touchpoint.
 	 *
 	 * @return void

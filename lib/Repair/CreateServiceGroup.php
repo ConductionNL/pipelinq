@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\Service\ServiceAccount;
+use OCA\Pipelinq\Kernel\Contracts\ServiceAccountInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
@@ -39,10 +39,10 @@ abstract class CreateServiceGroup implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param ServiceAccount $serviceAccount Creates the group and enrols the account.
+	 * @param ServiceAccountInterface $serviceAccount Creates the group and enrols the account.
 	 */
 	public function __construct(
-		private readonly ServiceAccount $serviceAccount,
+		private readonly ServiceAccountInterface $serviceAccount,
 	) {
 	}//end __construct()
 

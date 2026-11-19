@@ -6,10 +6,13 @@ honest, mails each person what happened, and records who came.
 
 ## Create an event on a campaign
 
-Open the campaign and add an event in its Events card. Give it a title, a start
-and end, a venue (or tick Online and give the join link), the number of places
-and, if you want, the moment registration closes. Set Registration to
-Registration open when people may sign up. Zero places means no limit.
+Open the campaign and choose Create event. Give it a title, a start and, if
+you want, an end (times are read in your own time zone), a venue (or tick
+Online event and give the join link) and the number of seats. Leave Open
+registration now ticked when people may sign up straight away; untick it to
+keep the event a draft. Empty or zero seats means no limit. The event then
+appears in the campaign's Events card; open it there to set the moment
+registration closes or to change anything else.
 
 ## What happens when someone signs up
 

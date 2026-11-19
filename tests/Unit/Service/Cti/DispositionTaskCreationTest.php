@@ -37,6 +37,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * Follow-up task creation on disposition.
  *
  * @covers \OCA\Pipelinq\Service\CtiDispositionService
+ * @uses \OCA\Pipelinq\Service\CallDisposition
  */
 final class DispositionTaskCreationTest extends TestCase {
 

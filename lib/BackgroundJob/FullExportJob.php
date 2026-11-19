@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\FullExportServiceInterface;
-use OCA\Pipelinq\Service\Export\FullExportState;
+use OCA\Pipelinq\Kernel\Contracts\FullExportStateInterface;
 use OCA\Pipelinq\Service\UserNotice;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
@@ -52,7 +52,7 @@ class FullExportJob extends QueuedJob {
 	 * @param FullExportServiceInterface $export        Builds and stores the archive.
 	 * @param IManager          $notifications Nextcloud notifications.
 	 * @param LoggerInterface   $logger        The logger.
-	 * @param FullExportState|null $state The state of the last export, for the page.
+	 * @param FullExportStateInterface|null $state The state of the last export, for the page.
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
@@ -61,7 +61,7 @@ class FullExportJob extends QueuedJob {
 		private readonly FullExportServiceInterface $export,
 		private readonly IManager $notifications,
 		private readonly LoggerInterface $logger,
-		private readonly ?FullExportState $state = null,
+		private readonly ?FullExportStateInterface $state = null,
 	) {
 		parent::__construct(time: $time);
 	}//end __construct()

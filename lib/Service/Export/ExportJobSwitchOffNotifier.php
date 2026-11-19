@@ -80,7 +80,7 @@ class ExportJobSwitchOffNotifier {
 	/**
 	 * Send the switch-off notification about one job to each user.
 	 *
-	 * @param array<int, \OCP\IUser> $users The administrators.
+	 * @param array<\OCP\IUser> $users The administrators.
 	 * @param array{objectId: string, parameters: array<string, mixed>} $notice The job id and the notification parameters.
 	 *
 	 * @return void

@@ -609,7 +609,8 @@ describe('the tickets list', () => {
 		const keys = simple.columns.map((column) =>
 			typeof column === 'string' ? column : column.key,
 		)
-		for (const old of before.columns) {
+		for (const column of before.columns) {
+			const old = typeof column === 'string' ? column : column.key
 			if (old !== 'direction' && old !== 'priority') {
 				expect(keys, old).toContain(old)
 			}

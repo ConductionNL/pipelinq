@@ -40,6 +40,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  * @covers \OCA\Pipelinq\Service\BrpCacheService
  * @uses   \OCA\Pipelinq\Service\BsnValidationService
  * @uses   \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
+ * @uses   \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004
  */

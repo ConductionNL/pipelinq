@@ -67,10 +67,6 @@
 								"route": "Templates"
 							},
 							{
-								"label": "Articles",
-								"route": "Articles"
-							},
-							{
 								"label": "Mailing lists",
 								"route": "MailingLists",
 								"highlight": true
