@@ -766,6 +766,8 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
         ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
         ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        // marketing-events REQ-MEV-001: the campaign page's Create event.
+        ['name' => 'campaignEvent#create',       'url' => '/api/campaigns/{id}/events',       'verb' => 'POST'],
         ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
 
         // Marketing — Journeys (marketing-integrated-campaigns). A journey is
