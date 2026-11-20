@@ -24,11 +24,17 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use InvalidArgumentException;
 use OCA\Pipelinq\Controller\MailAddInController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\MailAddIn\AddInManifest;
 use OCA\Pipelinq\Service\MailAddIn\OpenMailService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\Response;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserSession;
 use OutOfBoundsException;
@@ -36,6 +42,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use ReflectionMethod;
+use ReflectionProperty;
 use RuntimeException;
 
 /**
@@ -52,6 +59,8 @@ use RuntimeException;
 class MailAddInControllerTest extends TestCase {
 	private OpenMailService&MockObject $openMail;
 	private ObjectOwnerAccessPolicy&MockObject $policy;
+	private AddInManifest&MockObject $addIn;
+	private IInitialState&MockObject $initialState;
 
 	/**
 	 * Build the controller.
@@ -86,7 +95,23 @@ class MailAddInControllerTest extends TestCase {
 		$this->policy = $this->createMock(ObjectOwnerAccessPolicy::class);
 		$this->policy->method('isPrivileged')->with('anna')->willReturn($privileged);
 
-		return new MailAddInController($request, $session, $this->openMail, $this->policy, new NullLogger());
+		$this->addIn = $this->createMock(AddInManifest::class);
+		$this->initialState = $this->createMock(IInitialState::class);
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('linkToRouteAbsolute')->willReturnCallback(
+			static fn (string $route): string => 'https://cloud.example.nl/route/' . $route
+		);
+
+		return new MailAddInController(
+			$request,
+			$session,
+			$this->openMail,
+			$this->policy,
+			new NullLogger(),
+			$this->addIn,
+			$this->initialState,
+			$urls
+		);
 	}//end controller()
 
 	/**
@@ -220,4 +245,81 @@ class MailAddInControllerTest extends TestCase {
 			$this->assertSame($status, $controller->log()->getStatus());
 		}
 	}//end testLoggingAMailAnswersAndRefuses()
+
+	/**
+	 * The manifest and the pane are public pages without a CSRF token:
+	 * Microsoft 365 fetches the one, Outlook frames the other, neither with
+	 * a Nextcloud session.
+	 *
+	 * @return void
+	 */
+	public function testTheManifestAndThePaneArePublic(): void {
+		foreach (['manifest', 'taskpane'] as $action) {
+			$method = new ReflectionMethod(MailAddInController::class, $action);
+			$this->assertCount(1, $method->getAttributes(PublicPage::class), $action);
+			$this->assertCount(1, $method->getAttributes(NoCSRFRequired::class), $action);
+		}
+	}//end testTheManifestAndThePaneArePublic()
+
+	/**
+	 * The manifest is served as XML, as the manifest builder made it.
+	 *
+	 * @return void
+	 */
+	public function testTheManifestIsServedAsXml(): void {
+		$controller = $this->controller(authorization: '', signedIn: false);
+		$this->addIn->method('xml')->willReturn('<OfficeApp/>');
+		$this->openMail->expects($this->never())->method($this->anything());
+
+		$response = $controller->manifest();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('<OfficeApp/>', $response->getData());
+		// Response::getHeaders() reaches into the server container; read the
+		// headers the controller set directly.
+		$headers = (new ReflectionProperty(Response::class, 'headers'))->getValue($response);
+		$this->assertSame('application/xml; charset=utf-8', $headers['Content-Type']);
+		$this->assertStringContainsString('pipelinq-outlook-add-in.xml', $headers['Content-Disposition']);
+	}//end testTheManifestIsServedAsXml()
+
+	/**
+	 * The pane may be framed by the Outlook hosts only (besides the
+	 * instance itself), may load Office.js, and gets the URLs it calls.
+	 *
+	 * @return void
+	 */
+	public function testThePaneIsFramedByOutlookOnly(): void {
+		$controller = $this->controller(authorization: '', signedIn: false);
+		$this->initialState->expects($this->once())->method('provideInitialState')->with(
+			'mail-add-in',
+			[
+				'loginFlowUrl' => 'https://cloud.example.nl/route/core.ClientFlowLoginV2.init',
+				'lookupUrl' => 'https://cloud.example.nl/route/pipelinq.mailAddIn.lookup',
+				'contactUrl' => 'https://cloud.example.nl/route/pipelinq.mailAddIn.contact',
+				'logUrl' => 'https://cloud.example.nl/route/pipelinq.mailAddIn.log',
+				'appUrl' => 'https://cloud.example.nl/route/pipelinq.dashboard.page',
+			]
+		);
+
+		$response = $controller->taskpane();
+
+		$this->assertSame('mail-add-in', $response->getTemplateName());
+		$this->assertSame(TemplateResponse::RENDER_AS_BASE, $response->getRenderAs());
+
+		$policy = $response->getContentSecurityPolicy()->buildPolicy();
+		$this->assertMatchesRegularExpression('/frame-ancestors ([^;]+)/', $policy);
+		preg_match('/frame-ancestors ([^;]+)/', $policy, $match);
+		$ancestors = explode(' ', trim($match[1]));
+		sort($ancestors);
+		$expected = array_merge(["'self'"], AddInManifest::FRAME_HOSTS);
+		sort($expected);
+		$this->assertSame($expected, $ancestors);
+		$this->assertSame(
+			['https://outlook.live.com', 'https://outlook.office.com', 'https://outlook.office365.com'],
+			array_values(array_filter($ancestors, static fn (string $host): bool => $host !== "'self'"))
+		);
+
+		preg_match('/script-src ([^;]+)/', $policy, $script);
+		$this->assertContains('https://appsforoffice.microsoft.com', explode(' ', trim($script[1])));
+	}//end testThePaneIsFramedByOutlookOnly()
 }//end class

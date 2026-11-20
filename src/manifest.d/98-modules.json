@@ -137,6 +137,10 @@
 							{
 								"label": "Products",
 								"route": "Products"
+							},
+							{
+								"label": "Price lists",
+								"route": "PriceLists"
 							}
 						],
 						"settings": {

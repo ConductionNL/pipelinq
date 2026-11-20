@@ -191,6 +191,8 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
      * @param string                                                  $outputMode 'both' keeps a copy in the user's Files, 'return' only returns it.
      * @param list<array<string, mixed>>                              $listRefs   Lists the template reads beside the records
      *                                                                            (filinq listRefs: register, schema, filter, as, order).
+     * @param array<string, mixed>                                    $adHocData  Values the template reads beside the records
+     *                                                                            (filinq adHocData, merged on top of them).
      *
      * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
      *
@@ -198,11 +200,23 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
      *
      * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
-    public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both', array $listRefs=[]): array
+    public function render(
+        string $templateId,
+        array $dataRefs,
+        string $filename,
+        string $outputMode='both',
+        array $listRefs=[],
+        array $adHocData=[]
+    ): array
     {
         return $this->renderedLetter(
             letter: ['templateId' => $templateId, 'dataRefs' => $dataRefs],
-            output: ['filename' => $filename, 'mode' => $outputMode, 'listRefs' => $listRefs]
+            output: [
+                'filename'  => $filename,
+                'mode'      => $outputMode,
+                'listRefs'  => $listRefs,
+                'adHocData' => $adHocData,
+            ]
         );
 
     }//end render()
@@ -211,7 +225,8 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
      * Render a letter through filinq for the acting user.
      *
      * @param array{templateId: string, dataRefs: array<mixed>}             $letter The template and the data references.
-     * @param array{filename: string, mode: string, listRefs: array<mixed>} $output The filename, the output mode and the list
+     * @param array{filename: string, mode: string, listRefs: array<mixed>, adHocData: array<string, mixed>} $output The output:
+     *        filename, mode, list
      *                                                                              references.
      *
      * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
@@ -247,8 +262,8 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
     /**
      * The generateDocument options for a PDF letter.
      *
-     * @param string                                                                $userId The acting user's id.
-     * @param array{filename: string, mode: string, listRefs: list<array<string, mixed>>} $output File name, output mode, lists read.
+     * @param string              $userId The acting user's id.
+     * @param array<string, mixed> $output File name, output mode, lists read (listRefs) and ad-hoc data (adHocData).
      *
      * @return array<string, mixed> The options.
      *
@@ -261,7 +276,7 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
             'userId'   => $userId,
             'filename' => $output['filename'],
             'output'   => ['mode' => $output['mode']],
-        ] + $this->listOptions(listRefs: $output['listRefs']);
+        ] + $this->listOptions(listRefs: $output['listRefs']) + self::adHocOptions(adHocData: ($output['adHocData'] ?? []));
 
     }//end letterOptions()
 
@@ -453,6 +468,26 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
         return ['listRefs' => $listRefs];
 
     }//end listOptions()
+
+
+    /**
+     * The `adHocData` render option, or none when there is nothing to add.
+     *
+     * @param array<string, mixed> $adHocData Values the template reads beside the records.
+     *
+     * @return array<string, array<string, mixed>> The option.
+     *
+     * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
+     */
+    private static function adHocOptions(array $adHocData): array
+    {
+        if ($adHocData === []) {
+            return [];
+        }
+
+        return ['adHocData' => $adHocData];
+
+    }//end adHocOptions()
 
     /**
      * One of pipelinq's templates by its slug, or null when filinq has none.

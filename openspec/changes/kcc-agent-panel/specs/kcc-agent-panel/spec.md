@@ -143,6 +143,54 @@ the administration overview SHALL warn while there is none.
 `BackgroundServiceAccount`, `CallMirror`, `BackgroundServiceAccountController`,
 `BackgroundServiceAccountCheck` and `CreateBackgroundServiceGroup`.
 
+### Requirement: The incoming-call card also shows a mirrored call
+
+The incoming-call card (cti-screenpop-adapter REQ-CTI-012) SHALL also show
+the newest open `mirroredCall` of the signed-in agent, beside calls from
+pipelinq's own telephony; of the two, the call that started last shows. A
+mirrored call is open when it has a `ringing` event for that agent, no
+`ended` or `transferred` event, and rang less than two hours ago. The card
+SHALL show without a telephony platform configured in pipelinq when calls
+are mirrored, and the screen pop switch SHALL still turn it off.
+
+The agent SHALL get the call's number and its times and nothing else. The
+read runs as the background service account with access checks on, and an
+agent SHALL only ever get a call whose `agentId` is their own user id. The
+clients, contacts and tickets the mirror stored for the number SHALL NOT be
+handed to the agent: the mirror read them without access checks, so the card
+looks the number up again as the agent. A mirrored call has no contact
+moment in pipelinq, so opening a record from the card SHALL NOT write a
+ticket.
+
+#### Scenario: A mirrored call shows on the card
+
+- GIVEN a `ringing` `mirroredCall` for agent `noor` from five seconds ago
+- WHEN `noor`'s card asks for the incoming call
+- THEN the answer carries the call's number and start time, marked as
+  coming from the mirror, and no name, case, client or ticket
+
+#### Scenario: A colleague's call is never handed over
+
+- GIVEN a `ringing` `mirroredCall` for agent `henk`
+- WHEN `noor`'s card asks for the incoming call
+- THEN the answer carries no call
+
+#### Scenario: An ended call is not incoming
+
+- GIVEN a `ringing` and an `ended` `mirroredCall` of the same call
+- WHEN the agent's card asks for the incoming call
+- THEN the answer carries no call
+
+#### Scenario: Opening a record from a mirrored call writes no ticket
+
+- GIVEN the card shows a mirrored call with one match
+- WHEN the agent opens the client
+- THEN the client's page opens and no ticket is read or saved
+
+@e2e exclude a mirrored call needs integriq and a telephony source on the
+instance; covered by PHPUnit on `MirroredCallReader` and `IncomingCallFinder`
+and by vitest on `IncomingCallCard`; the live pass is task 1c.
+
 ### Requirement: The panel shows the caller and their open items
 
 `KccAgentPanel` SHALL render the active call's caller number, the caller's
