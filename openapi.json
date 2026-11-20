@@ -2802,6 +2802,100 @@
                 }
             }
         },
+        "/campaigns/{id}/events": {
+            "post": {
+                "operationId": "campaign-event-create",
+                "summary": "Create the event of a campaign",
+                "description": "Create the event of a campaign from the campaign page's Create event dialog. A time without a zone is read in the caller's own time zone; an online event takes a join link, an event on site a venue. The event is written as the caller, so OpenRegister's access rules decide whether the write may happen. Needs a signed-in Nextcloud user who can read the campaign.",
+                "tags": [
+                    "campaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The campaign id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "title",
+                                    "startAt"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "description": "The event's title."
+                                    },
+                                    "startAt": {
+                                        "type": "string",
+                                        "description": "When it starts: an ISO 8601 date and time, with or without a zone."
+                                    },
+                                    "endAt": {
+                                        "type": "string",
+                                        "description": "When it ends, after the start; optional."
+                                    },
+                                    "online": {
+                                        "type": "boolean",
+                                        "description": "True for an online event."
+                                    },
+                                    "joinUrl": {
+                                        "type": "string",
+                                        "description": "The join link of an online event, starting with https://."
+                                    },
+                                    "venue": {
+                                        "type": "string",
+                                        "description": "The venue of an event on site."
+                                    },
+                                    "capacity": {
+                                        "type": "string",
+                                        "description": "The number of seats, a whole number from 1; empty for no limit."
+                                    },
+                                    "openNow": {
+                                        "type": "boolean",
+                                        "description": "True (the default) opens registration at once; false keeps the event a draft."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
         "/campaigns/{id}/report": {
             "get": {
                 "operationId": "campaign-report",
