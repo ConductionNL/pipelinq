@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 
 declare(strict_types=1);
@@ -33,7 +33,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -42,7 +44,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 /**
  * Append-only audit logger.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 class DeliveryAuditLogger {
 	/**
@@ -83,7 +85,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(messageId: $messageId, event: 'queued', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'queued', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
+		);
+		$this->writeEvent(entry: $entry);
 	}//end logQueued()
 
 	/**
@@ -105,14 +110,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(
-			messageId: $messageId,
-			event: 'sent',
-			payloadHash: $payloadHash,
-			retentionUntil: $retentionUntil,
-			actor: $actor,
-			extras: ['logiusMessageId' => $logiusMessageId]
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'sent', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
 		);
+		$this->writeEvent(entry: $entry, extras: ['logiusMessageId' => $logiusMessageId]);
 	}//end logSent()
 
 	/**
@@ -132,7 +133,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(messageId: $messageId, event: 'read', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'read', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
+		);
+		$this->writeEvent(entry: $entry);
 	}//end logRead()
 
 	/**
@@ -154,14 +158,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(
-			messageId: $messageId,
-			event: 'fallback',
-			payloadHash: $payloadHash,
-			retentionUntil: $retentionUntil,
-			actor: $actor,
-			extras: ['reason' => $reason]
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'fallback', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
 		);
+		$this->writeEvent(entry: $entry, extras: ['reason' => $reason]);
 	}//end logFallback()
 
 	/**
@@ -183,14 +183,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(
-			messageId: $messageId,
-			event: 'failed',
-			payloadHash: $payloadHash,
-			retentionUntil: $retentionUntil,
-			actor: $actor,
-			extras: ['reason' => $reason]
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'failed', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
 		);
+		$this->writeEvent(entry: $entry, extras: ['reason' => $reason]);
 	}//end logFailed()
 
 	/**
@@ -210,7 +206,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(messageId: $replyId, event: 'reply-received', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
+		$entry = new DeliveryAuditEntry(
+			messageId: $replyId, event: 'reply-received', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
+		);
+		$this->writeEvent(entry: $entry);
 	}//end logReplyReceived()
 
 	/**
@@ -232,14 +231,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(
-			messageId: $messageId,
-			event: 'processing-error',
-			payloadHash: $payloadHash,
-			retentionUntil: $retentionUntil,
-			actor: $actor,
-			extras: ['reason' => $reason]
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'processing-error', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
 		);
+		$this->writeEvent(entry: $entry, extras: ['reason' => $reason]);
 	}//end logProcessingError()
 
 	/**
@@ -259,7 +254,10 @@ class DeliveryAuditLogger {
 		?DateTimeInterface $retentionUntil = null,
 		string $actor = 'system',
 	): void {
-		$this->writeEvent(messageId: $messageId, event: 'opted-out', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor);
+		$entry = new DeliveryAuditEntry(
+			messageId: $messageId, event: 'opted-out', payloadHash: $payloadHash, retentionUntil: $retentionUntil, actor: $actor
+		);
+		$this->writeEvent(entry: $entry);
 	}//end logOptedOut()
 
 	/**
@@ -274,13 +272,13 @@ class DeliveryAuditLogger {
 	 *
 	 * @return DateTimeImmutable
 	 *
-	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+	 * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a native immutable factory; no DI alternative.
 	 */
 	public function calculateRetentionUntil(string $caseType, ?DateTimeInterface $from = null): DateTimeImmutable {
 		$years = (int)$this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'selectielijst.' . $caseType,
 			(string)self::DEFAULT_RETENTION_YEARS
 		);
@@ -313,34 +311,23 @@ class DeliveryAuditLogger {
 	/**
 	 * Insert an audit row.
 	 *
-	 * @param string $messageId Subject UUID.
-	 * @param string $event Event tag.
-	 * @param string $payloadHash Hash.
-	 * @param DateTimeInterface|null $retentionUntil Retention end.
-	 * @param string $actor Actor.
-	 * @param array $extras Optional reason/extra fields.
+	 * @param DeliveryAuditEntry $entry  The audited event.
+	 * @param array              $extras Optional reason/extra fields.
 	 *
 	 * @return void
 	 */
-	private function writeEvent(
-		string $messageId,
-		string $event,
-		string $payloadHash,
-		?DateTimeInterface $retentionUntil,
-		string $actor,
-		array $extras = [],
-	): void {
+	private function writeEvent(DeliveryAuditEntry $entry, array $extras = []): void {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$retention = ($retentionUntil ?? $this->calculateRetentionUntil(caseType: ''));
+		$retention = ($entry->retentionUntil ?? $this->calculateRetentionUntil(caseType: ''));
 
 		$row = array_merge(
 			$extras,
 			[
-				'messageId' => $messageId,
-				'event' => $event,
+				'messageId' => $entry->messageId,
+				'event' => $entry->event,
 				'eventAt' => $now->format(DATE_ATOM),
-				'actor' => $actor,
-				'payloadHash' => $payloadHash,
+				'actor' => $entry->actor,
+				'payloadHash' => $entry->payloadHash,
 				'retentionUntil' => $retention->format(DATE_ATOM),
 			]
 		);
@@ -349,17 +336,14 @@ class DeliveryAuditLogger {
 			[$register, $schema] = $this->config();
 			$this->getObjectService()->saveObject(
 				object: $row,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: null
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 		} catch (\Throwable $e) {
 			// Audit logging should not break the dispatch path; we still
 			// record the failure in the NC logger.
 			$this->logger->error(
 				'DeliveryAuditLogger write failed.',
-				['exception' => $e->getMessage(), 'event' => $event, 'messageId' => $messageId]
+				['exception' => $e->getMessage(), 'event' => $entry->event, 'messageId' => $entry->messageId]
 			);
 		}
 	}//end writeEvent()
@@ -381,9 +365,9 @@ class DeliveryAuditLogger {
 	 * @return array{0: string, 1: string}
 	 */
 	private function config(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'deliveryAuditLog_schema',
 			''
 		);

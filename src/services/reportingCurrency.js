@@ -8,7 +8,7 @@
  * Every money figure that is not tied to one object's own currency shows in
  * this currency, so an install set up in USD never reads "EUR".
  *
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 
 import { loadState } from '@nextcloud/initial-state'
@@ -20,7 +20,7 @@ export const FALLBACK_CURRENCY = 'EUR'
  * Read the reporting currency.
  *
  * @return {string} An upper-case three-letter currency code.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function reportingCurrency() {
 	try {
@@ -39,7 +39,7 @@ export function reportingCurrency() {
  *
  * @param {string|null|undefined} own The object's own currency code.
  * @return {string} An upper-case three-letter currency code.
- * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function currencyOr(own) {
 	const code = String(own || '')

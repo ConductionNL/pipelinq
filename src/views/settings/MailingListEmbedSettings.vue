@@ -50,20 +50,31 @@
 			rows="9"
 			readonly
 			:value="snippet" />
+		<NcButton
+			v-if="snippet"
+			class="cn-button--tonal"
+			@click="copySnippet">
+			<template #icon>
+				<ContentCopy :size="16" />
+			</template>
+			{{ t('pipelinq', 'Copy') }}
+		</NcButton>
 
-		<p class="mailing-list-embed__note">
+		<NcNoteCard type="warning">
 			{{
 				t(
 					'pipelinq',
 					'Unsubscribe links are signed with a key held by this instance. Keep it: a lost key breaks every unsubscribe link already sent. The preference centre link is the way back if that happens.',
 				)
 			}}
-		</p>
+		</NcNoteCard>
 	</NcSettingsSection>
 </template>
 
 <script>
-import { NcNoteCard, NcSelect, NcSettingsSection } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcNoteCard, NcSelect, NcSettingsSection } from '@nextcloud/vue'
+import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import { fetchMailingLists } from '../../services/mailingListApi.js'
 import { embedSnippet } from '../../services/subscriptionState.js'
 
@@ -71,6 +82,8 @@ export default {
 	name: 'MailingListEmbedSettings',
 
 	components: {
+		ContentCopy,
+		NcButton,
 		NcNoteCard,
 		NcSelect,
 		NcSettingsSection,
@@ -132,6 +145,21 @@ export default {
 		},
 
 		/**
+		 * Copy the signup form to the clipboard.
+		 *
+		 * @spec openspec/specs/marketing-lists/spec.md#requirement-self-service-subscribe-creates-a-pending-subscription
+		 * @return {Promise<void>} Resolves once copied or refused.
+		 */
+		async copySnippet() {
+			try {
+				await navigator.clipboard.writeText(this.snippet)
+				showSuccess(t('pipelinq', 'Signup form copied to the clipboard.'))
+			} catch {
+				showError(t('pipelinq', 'Could not copy the signup form.'))
+			}
+		},
+
+		/**
 		 * @param {object} list A mailing list payload.
 		 * @spec openspec/specs/marketing-lists/spec.md#requirement-self-service-subscribe-creates-a-pending-subscription
 		 * @return {string} The list id, whichever key carries it.
@@ -154,8 +182,4 @@ export default {
 	margin-block-start: 0.5rem;
 }
 
-.mailing-list-embed__note {
-	color: var(--color-text-maxcontrast);
-	margin-block-start: 1rem;
-}
 </style>

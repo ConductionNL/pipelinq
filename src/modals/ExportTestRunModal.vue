@@ -3,9 +3,9 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Export test run')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="export-test-run">
@@ -58,18 +58,19 @@
 				{{ t('pipelinq', 'Close') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { CnDialog } from '@conduction/nextcloud-vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { exportApi } from '../services/exportApi.js'
 
 export default {
 	name: 'ExportTestRunModal',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcLoadingIcon,
 		NcNoteCard,
 	},

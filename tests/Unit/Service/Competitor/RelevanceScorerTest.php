@@ -231,4 +231,161 @@ class RelevanceScorerTest extends TestCase {
 		$this->assertSame(0, $lowest['score']);
 		$this->assertSame(100, $highest['score']);
 	}//end testBothEndsOfTheRangeAreAccepted()
+
+	/**
+	 * App config with scoring switched on and every other key at its default.
+	 *
+	 * @return IAppConfig
+	 */
+	private function enabledConfig(): IAppConfig {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				if ($key === RelevanceScorer::ENABLED_KEY) {
+					return 'true';
+				}
+
+				return $default;
+			}
+		);
+
+		return $appConfig;
+	}//end enabledConfig()
+
+	/**
+	 * A throwing model leaves the event unscored and logs why.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingModelLeavesTheEventUnscored(): void {
+		$factory = new class {
+			/**
+			 * Fail like a provider that is down.
+			 *
+			 * @param string $prompt The prompt.
+			 * @param string|null $userId The acting user.
+			 * @param bool $allowNextcloud Whether the Nextcloud provider may be used.
+			 * @param string|null $organisation The organisation.
+			 *
+			 * @return string
+			 */
+			public function generateText(string $prompt, ?string $userId = null, bool $allowNextcloud = true, ?string $organisation = null): string {
+				throw new RuntimeException('provider down');
+			}//end generateText()
+		};
+		$appConfig = $this->enabledConfig();
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($factory);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('info')
+			->with('RelevanceScorer: hermiq did not answer', ['exception' => 'provider down']);
+
+		$scorer = new RelevanceScorer(container: $container, appConfig: $appConfig, logger: $logger);
+
+		$this->assertSame([], $scorer->fieldsFor(item: $this->item(), actingUserId: 'alice'));
+	}//end testAThrowingModelLeavesTheEventUnscored()
+
+	/**
+	 * A resolved service without `generateText` counts as hermiq being absent.
+	 *
+	 * @return void
+	 */
+	public function testAServiceWithoutGenerateTextCountsAsAbsent(): void {
+		$appConfig = $this->enabledConfig();
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->once())
+			->method('get')
+			->with(RelevanceScorer::PROVIDER_CLASS)
+			->willReturn(new \stdClass());
+
+		$scorer = new RelevanceScorer(container: $container, appConfig: $appConfig, logger: $this->createMock(LoggerInterface::class));
+
+		$this->assertSame([], $scorer->fieldsFor(item: $this->item()));
+	}//end testAServiceWithoutGenerateTextCountsAsAbsent()
+
+	/**
+	 * A JSON score that is not numeric is unscored, and a JSON reason is
+	 * trimmed and capped at 500 characters.
+	 *
+	 * @return void
+	 */
+	public function testJsonScoresAreCheckedAndReasonsCapped(): void {
+		$scorer = $this->scorer(enabled: true, factory: null);
+
+		$this->assertNull($scorer->parse(answer: '{"score": "high", "reason": "x"}'));
+		$this->assertNull($scorer->parse(answer: '{"score": null}'));
+
+		$parsed = $scorer->parse(answer: json_encode(['score' => '42', 'reason' => '  ' . str_repeat('a', 600) . '  ']));
+		$this->assertIsArray($parsed);
+		$this->assertSame(42, $parsed['score']);
+		$this->assertSame(str_repeat('a', 500), $parsed['reason']);
+
+		$this->assertSame(['score' => 7, 'reason' => ''], $scorer->parse(answer: '{"score": 7}'));
+	}//end testJsonScoresAreCheckedAndReasonsCapped()
+
+	/**
+	 * The tenant's own relevance context is put in front of the model, and
+	 * the acting user is passed through.
+	 *
+	 * @return void
+	 */
+	public function testThePromptCarriesTheTenantContext(): void {
+		$factory = new class {
+			/**
+			 * The prompt it was given.
+			 *
+			 * @var string
+			 */
+			public string $prompt = '';
+
+			/**
+			 * The user it was given.
+			 *
+			 * @var string|null
+			 */
+			public ?string $userId = null;
+
+			/**
+			 * Record the prompt and answer with a score.
+			 *
+			 * @param string $prompt The prompt.
+			 * @param string|null $userId The acting user.
+			 * @param bool $allowNextcloud Whether the Nextcloud provider may be used.
+			 * @param string|null $organisation The organisation.
+			 *
+			 * @return string
+			 */
+			public function generateText(string $prompt, ?string $userId = null, bool $allowNextcloud = true, ?string $organisation = null): string {
+				$this->prompt = $prompt;
+				$this->userId = $userId;
+				return '55';
+			}//end generateText()
+		};
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				if ($key === RelevanceScorer::ENABLED_KEY) {
+					return 'true';
+				}
+
+				if ($key === RelevanceScorer::CONTEXT_KEY) {
+					return '  gemeentelijke zaaksystemen  ';
+				}
+
+				return $default;
+			}
+		);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($factory);
+
+		$scorer = new RelevanceScorer(container: $container, appConfig: $appConfig, logger: $this->createMock(LoggerInterface::class));
+		$fields = $scorer->fieldsFor(item: $this->item(), actingUserId: 'bob');
+
+		$this->assertSame(['relevanceScore' => 55, 'relevanceReason' => '', 'agentAuthored' => true], $fields);
+		$this->assertSame('bob', $factory->userId);
+		$this->assertStringStartsWith('Score how relevant this item is to gemeentelijke zaaksystemen.', $factory->prompt);
+		$this->assertStringContainsString("Title: Voorbeeld B.V. wint aanbesteding\nURL: https://example.org/1\nSummary: Een alinea.", $factory->prompt);
+	}//end testThePromptCarriesTheTenantContext()
+
 }//end class

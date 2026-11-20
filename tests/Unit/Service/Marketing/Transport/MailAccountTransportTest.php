@@ -22,6 +22,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing\Transport;
 
 use OCA\Pipelinq\Service\Marketing\Transport\MailAccountTransport;
+use OCA\Pipelinq\Service\Marketing\Transport\MailAddressing;
+use OCA\Pipelinq\Service\Marketing\Transport\MailContent;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -58,7 +60,21 @@ class MailAccountTransportTest extends TestCase {
 	 * @return RenderedMail
 	 */
 	private function mail(): RenderedMail {
-		return new RenderedMail('noreply@example.test', 'Pipelinq', '', 'user@example.test', 'Hi', '<p>hi</p>', 'hi', [], 'd-1');
+		return new RenderedMail(
+			addressing: new MailAddressing(
+				fromEmail: 'noreply@example.test',
+				fromName: 'Pipelinq',
+				replyTo: '',
+				toEmail: 'user@example.test',
+			),
+			content: new MailContent(
+				subject: 'Hi',
+				html: '<p>hi</p>',
+				text: 'hi',
+			),
+			headers: [],
+			deliveryId: 'd-1',
+		);
 	}//end mail()
 
 	/**

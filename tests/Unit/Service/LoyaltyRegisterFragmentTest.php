@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
+ * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
 
 declare(strict_types=1);

@@ -35,6 +35,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for the token path and the dispatch job's decision.
@@ -55,6 +56,13 @@ class SurveyResponseServiceTest extends TestCase {
 	private array $written = [];
 
 	/**
+	 * The arguments every find() was called with.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $finds = [];
+
+	/**
 	 * Build the response service over doubles.
 	 *
 	 * @return SurveyResponseService The service under test.
@@ -65,6 +73,8 @@ class SurveyResponseServiceTest extends TestCase {
 			static function (string $app, string $key, string $default = ''): string {
 				$values = [
 					'register' => 'reg-1',
+					'survey_schema' => 'sch-survey',
+					'client_schema' => 'sch-client',
 					'surveyInvitation_schema' => 'sch-invitation',
 					'surveyResponse_schema' => 'sch-response',
 					'contact_schema' => 'sch-contact',
@@ -82,16 +92,25 @@ class SurveyResponseServiceTest extends TestCase {
 			}
 		);
 		$objectService->method('find')->willReturnCallback(
-			function (int|string $id): ?ObjectEntityInterface {
-				if ((string)$id !== 'survey-1') {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$this->finds[] = ['id' => (string)$id, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac];
+				$stored = ['survey-1' => 'sch-survey', 'case-elsewhere' => 'sch-elsewhere'];
+				if (isset($stored[(string)$id]) === false) {
 					return null;
 				}
 
 				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity->method('getRegister')->willReturn('reg-1');
+				$entity->method('getSchema')->willReturn($stored[(string)$id]);
 				$entity->method('jsonSerialize')->willReturn(
 					[
-						'id' => 'survey-1',
+						'id' => (string)$id,
 						'title' => 'KTO',
+						'internalNote' => 'not for the respondent',
 						'questions' => [
 							['key' => 'recommend', 'kind' => 'nps'],
 							['key' => 'service', 'kind' => 'rating'],
@@ -176,7 +195,31 @@ class SurveyResponseServiceTest extends TestCase {
 
 		$this->assertSame(200, $result['status']);
 		$this->assertSame('KTO', $result['survey']['title']);
+		$this->assertArrayNotHasKey('internalNote', $result['survey']);
+		$this->assertSame(['id' => 'survey-1', 'register' => 'reg-1', 'schema' => 'sch-survey', 'rbac' => true], $this->finds[0]);
 	}//end testASentTokenOpensTheSurvey()
+
+	/**
+	 * An invitation whose survey reference names an object of another
+	 * schema shows no survey.
+	 *
+	 * @return void
+	 */
+	public function testASurveyReferenceOutsideTheSurveySchemaShowsNothing(): void {
+		$this->invitations = [
+			[
+				'id' => 'inv-2',
+				'token' => 'def',
+				'status' => 'sent',
+				'surveyRef' => 'case-elsewhere',
+				'expiresAt' => '2099-01-01T00:00:00+00:00',
+			],
+		];
+
+		$result = $this->service()->show(token: 'def');
+
+		$this->assertSame([], $result['survey']);
+	}//end testASurveyReferenceOutsideTheSurveySchemaShowsNothing()
 
 	/**
 	 * An expired token opens a closed page rather than the form.

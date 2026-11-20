@@ -27,15 +27,15 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosBookkeepingService;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -45,9 +45,11 @@ use Psr\Log\LoggerInterface;
 /**
  * Periodic re-raise job for pending POS-day journal entries.
  *
- * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+ * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
 class PosRetryBackoffJob extends TimedJob {
+	use CastingPayloadToArray;
+
 	/**
 	 * Polling interval in seconds (15 minutes).
 	 *
@@ -60,14 +62,14 @@ class PosRetryBackoffJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosBookkeepingService $service The bookkeeping service.
+	 * @param PosBookkeepingServiceInterface $service The bookkeeping service.
 	 * @param ContainerInterface $container The DI container (OR ObjectService).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
-		private PosBookkeepingService $service,
+		private PosBookkeepingServiceInterface $service,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
@@ -89,7 +91,7 @@ class PosRetryBackoffJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
+	 * @spec openspec/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
 	 */
 	protected function run(mixed $argument): void {
 		if ($this->service->shouldDispatch() === false) {
@@ -126,76 +128,51 @@ class PosRetryBackoffJob extends TimedJob {
 	 * @return array<int, array<string, mixed>> The pending Z-reports.
 	 */
 	private function findPendingZReports(): array {
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schema = $this->appConfig->getValueString(Application::APP_ID, 'posZReport_schema', '');
-			if ($register === '' || $schema === '') {
-				return [];
-			}
-
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'PosRetryBackoffJob: failed to read pending Z-reports',
-				['exception' => $e->getMessage()]
-			);
-			return [];
-		}//end try
-
 		$pending = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($this->zReportRows() as $row) {
 			$data = $this->toArray(object: $row);
-			$status = (string)($data['bookkeepingStatus'] ?? 'pending');
-			if ($status !== 'pending') {
-				continue;
+			if ($this->awaitsBookkeeping(data: $data) === true) {
+				$pending[] = $data;
 			}
-
-			// Only re-raise Z-reports that actually carry takings (a draft / empty
-			// day has no journal consequence).
-			if ((int)($data['transactionCount'] ?? 0) <= 0) {
-				continue;
-			}
-
-			$pending[] = $data;
 		}
 
 		return $pending;
 	}//end findPendingZReports()
 
 	/**
-	 * Normalise an OR object (entity or array) into a plain array.
+	 * Every posZReport, or [] when they cannot be read (logged).
 	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
+	 * @return iterable<mixed> The Z-reports.
 	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
+	private function zReportRows(): iterable {
+		try {
+			$rows = (new ConfiguredSchemaRows(container: $this->container, appConfig: $this->appConfig))
+				->rows(schemaKey: 'posZReport_schema');
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'PosRetryBackoffJob: failed to read pending Z-reports',
+				['exception' => $e->getMessage()]
+			);
+			return [];
 		}
 
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
+		return ($rows ?? []);
+	}//end zReportRows()
+
+	/**
+	 * Whether a Z-report still awaits its bookkeeping post.
+	 *
+	 * @param array<string, mixed> $data The Z-report.
+	 *
+	 * @return bool True when it is pending and carries takings.
+	 */
+	private function awaitsBookkeeping(array $data): bool {
+		if ((string)($data['bookkeepingStatus'] ?? 'pending') !== 'pending') {
+			return false;
 		}
 
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
+		// Only re-raise Z-reports that actually carry takings (a draft / empty
+		// day has no journal consequence).
+		return (int)($data['transactionCount'] ?? 0) > 0;
+	}//end awaitsBookkeeping()
 }//end class

@@ -19,14 +19,14 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\TaskNameBackfillService;
+use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
@@ -36,16 +36,16 @@ use OCP\Migration\IRepairStep;
  * Idempotent: a task that already has a name is not saved, so a second run
  * writes nothing.
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 class BackfillTaskNames implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TaskNameBackfillService $service Does the work.
+	 * @param TaskNameBackfillServiceInterface $service Does the work.
 	 */
 	public function __construct(
-		private readonly TaskNameBackfillService $service,
+		private readonly TaskNameBackfillServiceInterface $service,
 	) {
 	}//end __construct()
 
@@ -54,7 +54,7 @@ class BackfillTaskNames implements IRepairStep {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+	 * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function getName(): string {
 		return 'Name existing tasks after their subject, without notifying anyone';
@@ -67,7 +67,7 @@ class BackfillTaskNames implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+	 * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
 	 */
 	public function run(IOutput $output): void {
 		$result = $this->service->backfill();

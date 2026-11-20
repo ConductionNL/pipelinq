@@ -1,0 +1,1240 @@
+{
+    "blast without totals": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "b2",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-08-05",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 0,
+                "delivered": 0,
+                "opened": 0,
+                "clicked": 0
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-08-05",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "created date fallback": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "winter",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-07-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 0,
+                "delivered": 0,
+                "opened": 0,
+                "clicked": 0
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-07-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "explicit window": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-08-01",
+                "to": "2026-08-15"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-08-01",
+                                "lt": "2026-08-16"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "findAll fails": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "CampaignPerformanceService: reading portalTrafficDaily failed",
+                    "context": {
+                        "portal": "gemeente-portal",
+                        "exception": "findAll failed"
+                    }
+                }
+            }
+        ]
+    },
+    "findAll not iterable": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "invalid dates": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "mixed rollups": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "no blast dates": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "undated",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-08-05",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 0,
+                "delivered": 0,
+                "opened": 0,
+                "clicked": 0
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-08-05",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "no deals keys": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 0,
+                "attributedValue": 0,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "no portal": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "",
+            "connected": false,
+            "reason": "no_portal",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": null
+        },
+        "events": []
+    },
+    "object service unavailable": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "log.warning",
+                "args": {
+                    "message": "CampaignPerformanceService: OpenRegister unavailable",
+                    "context": {
+                        "exception": "no ObjectService"
+                    }
+                }
+            }
+        ]
+    },
+    "padded blast name": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "page cap": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 400,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 1,
+                "sources": [
+                    {
+                        "source": "s",
+                        "medium": "m",
+                        "sessions": 400
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 200
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "portaliq missing": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": false,
+            "reason": "portaliq_missing",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": null
+        },
+        "events": []
+    },
+    "scheduled date fallback": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "autumn",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-08-20",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 0,
+                "delivered": 0,
+                "opened": 0,
+                "clicked": 0
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 0,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 0,
+                "sources": []
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-08-20",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "start after end": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-02",
+                "to": "2026-09-02"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-02",
+                                "lt": "2026-09-03"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "two pages": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2026-09-01",
+                "to": "2026-09-04"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 205,
+                "pageViews": null,
+                "formSubmits": null,
+                "days": 1,
+                "sources": [
+                    {
+                        "source": "s",
+                        "medium": "m",
+                        "sessions": 205
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2026-09-01",
+                                "lt": "2026-09-05"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 200
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "unknown blast": {
+        "record": null,
+        "events": []
+    },
+    "window just over a year": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2025-01-14",
+                "to": "2026-01-15"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2025-01-14",
+                                "lt": "2026-01-16"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    },
+    "window longer than a year": {
+        "record": {
+            "blastId": "blast-1",
+            "campaign": "spring-newsletter-2026",
+            "portal": "gemeente-portal",
+            "connected": true,
+            "reason": "",
+            "window": {
+                "from": "2024-12-31",
+                "to": "2026-01-01"
+            },
+            "email": {
+                "sent": 100,
+                "delivered": 95,
+                "opened": 40,
+                "clicked": 12
+            },
+            "deals": {
+                "dealCount": 2,
+                "attributedValue": 1500.5,
+                "currency": "EUR"
+            },
+            "site": {
+                "sessions": 29,
+                "pageViews": 9,
+                "formSubmits": 5,
+                "days": 3,
+                "sources": [
+                    {
+                        "source": "newsletter",
+                        "medium": "email",
+                        "sessions": 16
+                    },
+                    {
+                        "source": "social",
+                        "medium": "cpc",
+                        "sessions": 12
+                    },
+                    {
+                        "source": "",
+                        "medium": "",
+                        "sessions": 1
+                    }
+                ]
+            }
+        },
+        "events": [
+            {
+                "call": "container.get",
+                "args": {
+                    "id": "OCA\\OpenRegister\\Service\\ObjectService"
+                }
+            },
+            {
+                "call": "findAll",
+                "args": {
+                    "config": {
+                        "filters": {
+                            "register": "portaliq",
+                            "schema": "portalTrafficDaily",
+                            "portal": "gemeente-portal",
+                            "date": {
+                                "gte": "2024-12-31",
+                                "lt": "2026-01-02"
+                            }
+                        },
+                        "limit": 200,
+                        "offset": 0
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            }
+        ]
+    }
+}

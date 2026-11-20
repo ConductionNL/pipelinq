@@ -7,7 +7,7 @@
 			"children": [
 				{
 					"id": "SearchQueries",
-					"label": "Search queries",
+					"label": "Search insight",
 					"icon": "Magnify",
 					"route": "SearchQueries"
 				}
@@ -17,10 +17,10 @@
 	"pages": [
 		{
 			"id": "SearchQueries",
-			"_note": "Search Console top queries (marketing-campaign-attribution). Custom rather than a declarative type:index over searchQueryDaily because the page shows an AGGREGATION (one row per query, clicks and impressions summed, impression-weighted position over a window) served by GET /api/marketing/search-queries, and an empty state that points to the settings when nothing is connected. Missing primitive: an aggregation-backed index page.",
+			"_note": "Search insight, board PqZoekinzicht: the Search Console top queries (marketing-campaign-attribution) with the keyword proposals, the competitor watches and the connection audit as sections below them. Custom rather than a declarative type:index over searchQueryDaily because the page shows an AGGREGATION (one row per query, clicks and impressions summed, impression-weighted position over a window) served by GET /api/marketing/search-queries, and an empty state that points to the settings when nothing is connected. Missing primitive: an aggregation-backed index page.",
 			"route": "/marketing/search-queries",
 			"type": "custom",
-			"title": "Search queries",
+			"title": "Search insight",
 			"component": "SearchQueriesView",
 			"config": {
 				"register": "pipelinq",

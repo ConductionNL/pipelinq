@@ -9,6 +9,14 @@
   - With no telephony platform configured the first answer says so, and the
   - card stops: nothing is shown, nothing is polled and nothing errors.
   -
+  - `?callPreview=<number>` in the address shows the card for that number
+  - without a call on the line, so the card, the chooser
+  - (`&callPreviewOpen=chooser`) and the new-contact form
+  - (`&callPreviewOpen=intake`) and the wrap-up after the call
+  - (`&callPreviewOpen=disposition`) can be seen and checked against their boards.
+  - The preview only looks the number up; it writes nothing until the agent
+  - saves a new contact or opens a record, as with a real call.
+  -
   - @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
   -->
 <template>
@@ -66,6 +74,23 @@
 							}}</span>
 						</span>
 					</div>
+					<dl
+						v-if="facts"
+						class="incoming-call__facts"
+						data-testid="incoming-call-facts">
+						<div class="incoming-call__fact">
+							<dt>{{ t('pipelinq', 'Open') }}</dt>
+							<dd data-testid="incoming-call-fact-open">{{ facts.open }}</dd>
+						</div>
+						<div class="incoming-call__fact">
+							<dt>{{ t('pipelinq', 'Last contact') }}</dt>
+							<dd data-testid="incoming-call-fact-last">{{ lastContactLabel }}</dd>
+						</div>
+						<div class="incoming-call__fact">
+							<dt>{{ t('pipelinq', 'Waiting') }}</dt>
+							<dd data-testid="incoming-call-fact-waiting">{{ facts.waiting }}</dd>
+						</div>
+					</dl>
 				</template>
 				<span
 					v-else-if="manyMatches"
@@ -142,8 +167,20 @@
 			v-if="intakeOpen"
 			:e164="pop && pop.e164 ? pop.e164 : ''"
 			:prefillPhone="call ? call.fromNumber : ''"
+			:queueName="call && call.queueName ? call.queueName : ''"
 			@close="intakeOpen = false"
 			@submit="createContact" />
+		<CtiDispositionModal
+			v-if="wrapUp"
+			:number="wrapUp.number"
+			:clientName="wrapUp.clientName"
+			:durationSeconds="wrapUp.durationSeconds"
+			:recordedAs="wrapUp.recordedAs"
+			:recordedHref="wrapUp.recordedHref"
+			:saving="savingWrapUp"
+			:queueOptions="queueOptions"
+			@close="wrapUp = null"
+			@submit="saveWrapUp" />
 	</div>
 </template>
 
@@ -153,19 +190,132 @@ import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import PhoneIncoming from 'vue-material-design-icons/PhoneIncoming.vue'
+import CtiDispositionModal from '../modals/CtiDispositionModal.vue'
 import NewContactIntakeModal from '../modals/NewContactIntakeModal.vue'
 import ScreenPopModal from '../modals/ScreenPopModal.vue'
-import { incomingCall, screenPop } from '../services/ctiApi.js'
+import { customerSummary, escalationQueues, incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /** How often the card asks again when no live event arrives. */
 export const POLL_MS = 15000
+
+/**
+ * The screen pop for a lookup result: a failed or empty lookup reads as
+ * an intake without matches.
+ *
+ * @param {object|null} result The lookup result.
+ * @return {{action: string, matches: Array, e164: string, rawNumber: string}} The pop.
+ * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+ */
+function popFrom(result) {
+	const found = result || {}
+	return {
+		action: found.action || 'intake',
+		matches: Array.isArray(found.matches) ? found.matches : [],
+		e164: found.e164 || '',
+		rawNumber: found.rawNumber || '',
+	}
+}
+
+/**
+ * The three facts the card draws under one match, from the client's 360
+ * summary: its open requests, complaints and meldingen (contact moments are
+ * logged interactions, not open work), when it was last in contact, and how
+ * many of its tickets wait for the client.
+ *
+ * @param {object|null} summary The answer of `GET /api/customer-360/summary`.
+ * @return {{open: number, lastContactAt: string, waiting: number}|null} The facts, or null without a summary.
+ * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+ */
+export function factsFrom(summary) {
+	if (!summary || typeof summary !== 'object') {
+		return null
+	}
+	const byType = summary.openTicketsByType && typeof summary.openTicketsByType === 'object' ? summary.openTicketsByType : {}
+	const open = Object.entries(byType)
+		.filter(([type]) => type !== 'interaction')
+		.reduce((total, [, count]) => total + (Number(count) || 0), 0)
+	return {
+		open,
+		lastContactAt: typeof summary.lastActivityAt === 'string' ? summary.lastActivityAt : '',
+		waiting: Number(summary.awaitingCustomerCount) || 0,
+	}
+}
+
+/**
+ * The client whose summary the card reads for a match: a client match is
+ * that client, a contact match is the client it belongs to.
+ *
+ * @param {object} match The matched record.
+ * @return {string} The client id, or '' when the match has none.
+ * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+ */
+export function summaryClientId(match) {
+	if (match._matchType === 'client') {
+		return match.id || match.uuid || ''
+	}
+	return typeof match.client === 'string' ? match.client : ''
+}
+
+/**
+ * Whole seconds since a moment, or -1 when the moment cannot be read.
+ *
+ * @param {string} startedAt When the call started.
+ * @return {number} The seconds.
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
+ */
+function secondsSince(startedAt) {
+	const started = Date.parse(startedAt)
+	return Number.isNaN(started) ? -1 : Math.max(0, Math.round((Date.now() - started) / 1000))
+}
+
+/**
+ * The contact to store from the new-contact form: the name and phone, and
+ * the e-mail address when one was typed.
+ *
+ * @param {object} form What the agent typed in the new-contact form.
+ * @return {object} The contact.
+ * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+ */
+function contactFromIntake(form) {
+	const contact = { name: form.name.trim(), phone: form.phone.trim() }
+	if (form.email && form.email.trim() !== '') {
+		contact.email = form.email.trim()
+	}
+	return contact
+}
+
+/**
+ * The organisation and notes from the new-contact form, one per line.
+ *
+ * @param {object} form What the agent typed in the new-contact form.
+ * @return {string} The notes, or ''.
+ * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+ */
+function intakeNotes(form) {
+	return [form.organisation, form.notes]
+		.map((part) => (part || '').trim())
+		.filter(Boolean)
+		.join('\n')
+}
+
+/**
+ * The id of a stored object, or undefined when nothing was stored.
+ *
+ * @param {object|null} saved The stored object.
+ * @return {string|undefined} Its id or uuid.
+ * @spec exclude reads an id, no behaviour of its own.
+ */
+function savedId(saved) {
+	return saved ? saved.id || saved.uuid : undefined
+}
 
 export default {
 	name: 'IncomingCallCard',
 
 	components: {
 		AccountOutline,
+		CtiDispositionModal,
 		Close,
 		NcButton,
 		NcLoadingIcon,
@@ -183,6 +333,8 @@ export default {
 			/** The screen pop's answer for that call's number, or null. */
 			pop: null,
 			looking: false,
+			/** Open, last contact and waiting for the one match, or null. */
+			facts: null,
 			/** The agent said the single match is not the caller. */
 			rejected: false,
 			/** The call the agent closed or opened: its card stays away. */
@@ -191,6 +343,12 @@ export default {
 			revealedCallId: '',
 			chooserOpen: false,
 			intakeOpen: false,
+			/** The call the agent wraps up after it ended, or null. */
+			wrapUp: null,
+			savingWrapUp: false,
+			/** The escalation queues the wrap-up offers; loaded when a wrap-up opens. */
+			queues: [],
+			queuesLoaded: false,
 			now: Date.now(),
 			pollTimer: null,
 			tickTimer: null,
@@ -201,6 +359,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The escalation queues as the wrap-up's select options.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 */
+		queueOptions() {
+			return this.queues.map((queue) => ({ value: queue.id, label: queue.label }))
+		},
+
 		/**
 		 * @return {object} The shared object store, used for live hints and for
 		 *   linking the call to the record the agent opens.
@@ -283,6 +451,18 @@ export default {
 		},
 
 		/**
+		 * @return {string} The day of the match's last contact, or that there was none.
+		 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+		 */
+		lastContactLabel() {
+			const date = new Date(this.facts.lastContactAt)
+			if (this.facts.lastContactAt === '' || Number.isNaN(date.getTime())) {
+				return this.t('pipelinq', 'No contact yet')
+			}
+			return date.toLocaleDateString()
+		},
+
+		/**
 		 * @return {number} The store's last live event, watched as a refetch hint.
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
@@ -298,6 +478,25 @@ export default {
 		liveLastEventAt() {
 			if (this.active) {
 				this.refresh()
+			}
+		},
+
+		/**
+		 * A wrap-up opened: load the escalation queues it offers, once.
+		 *
+		 * @param {object|null} wrapUp The call being wrapped up.
+		 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-the-agent-chooses-the-escalation-queue-at-wrap-up
+		 */
+		async wrapUp(wrapUp) {
+			if (!wrapUp || this.queuesLoaded) {
+				return
+			}
+			this.queuesLoaded = true
+			try {
+				this.queues = await escalationQueues()
+			} catch {
+				// Without the list the dialog leaves the choice out; the server falls back to the first queue.
+				this.queuesLoaded = false
 			}
 		},
 	},
@@ -327,6 +526,9 @@ export default {
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		async refresh() {
+			if (this.showPreview()) {
+				return
+			}
 			let answer
 			try {
 				answer = await incomingCall()
@@ -337,6 +539,36 @@ export default {
 			if (this.destroyed) {
 				return
 			}
+			this.takeAnswer(answer)
+		},
+
+		/**
+		 * Show the call the address previews, once, instead of asking the
+		 * server.
+		 *
+		 * @return {boolean} Whether the address previews a call.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
+		showPreview() {
+			const preview = this.previewCall()
+			if (preview === null) {
+				return false
+			}
+			if (this.call === null) {
+				this.active = true
+				this.receive(preview, 0)
+			}
+			return true
+		},
+
+		/**
+		 * Act on the server's first answer: watch on when the card is
+		 * enabled, stop for good otherwise.
+		 *
+		 * @param {object|null} answer The server's answer.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
+		takeAnswer(answer) {
 			if (!answer || answer.enabled !== true) {
 				this.stop()
 				return
@@ -355,6 +587,9 @@ export default {
 		 */
 		receive(call, delayMs) {
 			if (call === null) {
+				if (this.call !== null && this.call.id === this.handledCallId) {
+					this.wrapUp = this.wrapUpFor(this.call)
+				}
 				this.clearCall()
 				return
 			}
@@ -387,16 +622,74 @@ export default {
 			if (this.call === null || this.call.id !== call.id) {
 				return
 			}
-			this.pop = {
-				action: (result && result.action) || 'intake',
-				matches: Array.isArray(result && result.matches)
-					? result.matches
-					: [],
-
-				e164: (result && result.e164) || '',
-				rawNumber: (result && result.rawNumber) || '',
-			}
+			this.pop = popFrom(result)
 			this.looking = false
+			this.openPreview(call)
+			if (this.pop.action === 'navigate' && this.pop.matches.length === 1) {
+				await this.loadFacts(call, this.pop.matches[0])
+			}
+		},
+
+		/**
+		 * Read the match's open work, last contact and waiting tickets. A
+		 * match without a client, a refusal or a failed read shows no facts:
+		 * the card still names the caller.
+		 *
+		 * @param {object} call The call the match belongs to.
+		 * @param {object} match The one matched record.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+		 */
+		async loadFacts(call, match) {
+			const clientId = summaryClientId(match)
+			if (clientId === '') {
+				return
+			}
+			const summary = await customerSummary(clientId).catch(() => null)
+			if (this.call === null || this.call.id !== call.id) {
+				return
+			}
+			this.facts = factsFrom(summary)
+		},
+
+		/**
+		 * Open the part of the card the address previews: the chooser when
+		 * there is more than one match, the intake, or the wrap-up.
+		 *
+		 * @param {object} call The call that was looked up.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
+		openPreview(call) {
+			if (call.previewOpen === 'chooser' && this.pop.matches.length > 1) {
+				this.chooserOpen = true
+			}
+			if (call.previewOpen === 'intake') {
+				this.intakeOpen = true
+			}
+			if (call.previewOpen === 'disposition') {
+				this.wrapUp = this.wrapUpFor(call)
+			}
+		},
+
+		/**
+		 * The previewed call named in the address (`callPreview`,
+		 * `callPreviewOpen`), or null when there is none.
+		 *
+		 * @return {object|null} A call without a line behind it.
+		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+		 */
+		previewCall() {
+			const params = new URLSearchParams(window.location.search)
+			const number = (params.get('callPreview') || '').trim()
+			if (number === '') {
+				return null
+			}
+			return {
+				id: 'preview',
+				fromNumber: number,
+				startedAt: new Date().toISOString(),
+				previewOpen: params.get('callPreviewOpen') || '',
+			}
 		},
 
 		/**
@@ -454,10 +747,82 @@ export default {
 			this.revealTimer = null
 			this.call = null
 			this.pop = null
+			this.facts = null
 			this.looking = false
 			this.rejected = false
 			this.chooserOpen = false
 			this.intakeOpen = false
+		},
+
+		/**
+		 * What the wrap-up shows for a call: its number, who called (when the
+		 * screen pop found one), how long it took and the contact moment.
+		 *
+		 * @param {object} call The call that ended.
+		 * @return {object} The wrap-up.
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		wrapUpFor(call) {
+			const reference = call.reference || ''
+			return {
+				callId: call.id,
+				preview: call.id === 'preview',
+				number: this.wrapUpNumber(call),
+				clientName: this.wrapUpClientName(),
+				durationSeconds: secondsSince(call.startedAt),
+				recordedAs: reference
+					? this.t('pipelinq', 'Contact moment at {reference}', { reference })
+					: this.t('pipelinq', 'Contact moment'),
+
+				recordedHref: call.id === 'preview' ? '' : this.$router.resolve({ name: 'TicketDetail', params: { id: call.id } }).href,
+			}
+		},
+
+		/**
+		 * The number the wrap-up shows: as the screen pop read it, else the
+		 * call's own.
+		 *
+		 * @param {object} call The call that ended.
+		 * @return {string} The number, or ''.
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		wrapUpNumber(call) {
+			return (this.pop && this.pop.rawNumber) || call.fromNumber || ''
+		},
+
+		/**
+		 * The caller's name when the screen pop found exactly one match.
+		 *
+		 * @return {string} The name, or ''.
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		wrapUpClientName() {
+			const match = this.pop && this.pop.matches.length === 1 ? this.pop.matches[0] : null
+			return match ? this.displayName(match) : ''
+		},
+
+		/**
+		 * Record the wrap-up on the call's contact moment. A previewed call
+		 * has none, so its wrap-up only closes.
+		 *
+		 * @param {object} form Subject, outcome and notes.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
+		 */
+		async saveWrapUp(form) {
+			if (!this.wrapUp || this.wrapUp.preview) {
+				this.wrapUp = null
+				return
+			}
+			this.savingWrapUp = true
+			try {
+				await submitDisposition(this.wrapUp.callId, form)
+				this.wrapUp = null
+			} catch {
+				showError(this.t('pipelinq', 'The call outcome is not saved. Try again.'))
+			} finally {
+				this.savingWrapUp = false
+			}
 		},
 
 		/**
@@ -508,24 +873,17 @@ export default {
 		 */
 		async createContact(form) {
 			const callId = this.call.id
-			const contact = { name: form.name.trim(), phone: form.phone.trim() }
-			if (form.email && form.email.trim() !== '') {
-				contact.email = form.email.trim()
-			}
 			const saved = await this.objectStore
-				.saveObject('contact', contact)
+				.saveObject('contact', contactFromIntake(form))
 				.catch(() => null)
-			if (!saved || !(saved.id || saved.uuid)) {
+			const id = savedId(saved)
+			if (!id) {
 				showError(this.t('pipelinq', 'The contact is not saved. Try again.'))
 				return
 			}
-			const id = saved.id || saved.uuid
 			this.intakeOpen = false
 			this.handledCallId = callId
-			const notes = [form.organisation, form.notes]
-				.map((part) => (part || '').trim())
-				.filter(Boolean)
-				.join('\n')
+			const notes = intakeNotes(form)
 			await this.linkCall(
 				callId,
 				notes ? { contact: id, notes } : { contact: id },
@@ -701,6 +1059,31 @@ export default {
 	display: flex;
 	gap: 12px;
 	align-items: center;
+}
+
+.incoming-call__facts {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+	margin: 0;
+}
+
+.incoming-call__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.incoming-call__fact dt {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
+}
+
+.incoming-call__fact dd {
+	margin: 0;
+	font-weight: bold;
+	overflow-wrap: anywhere;
 }
 
 .incoming-call__initials {

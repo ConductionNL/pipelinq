@@ -17,15 +17,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\ShillinqStockReader;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqStockReaderInterface;
+use OCA\Pipelinq\Util\SerialisedPayload;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,27 +41,28 @@ use Throwable;
 /**
  * GET /api/products/{id}/stock.
  *
- * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+ * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
  */
 class ProductStockController extends Controller {
+	use SerialisedPayload;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ShillinqStockReader $reader Reads shillinq's stock as the user.
+	 * @param ShillinqStockReaderInterface $reader Reads shillinq's stock as the user.
 	 * @param ContainerInterface $container For the lazy OpenRegister object service.
 	 * @param IAppConfig $appConfig For the register and product schema slugs.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ShillinqStockReader $reader,
+		private ShillinqStockReaderInterface $reader,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -73,7 +76,7 @@ class ProductStockController extends Controller {
 	 *
 	 * @return JSONResponse `{state, tracked, available, onHand, reserved, unit, locations}`.
 	 *
-	 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
+	 * @spec openspec/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
 	 */
 	#[NoAdminRequired]
 	public function show(string $id = ''): JSONResponse {
@@ -118,30 +121,30 @@ class ProductStockController extends Controller {
 			return null;
 		}
 
+		return $this->serialisedPayload(value: $this->findProduct(id: $id));
+	}//end loadProduct()
+
+	/**
+	 * Find a product, or null when it cannot be read.
+	 *
+	 * @param string $id The product id.
+	 *
+	 * @return mixed
+	 */
+	private function findProduct(string $id) {
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$entity = $objectService->find(
+			return $objectService->find(
 				id: $id,
-				register: $this->slug(key: 'register', default: 'pipelinq'),
-				schema: $this->slug(key: 'product_schema', default: 'product')
+				options: new ObjectFindOptions(
+					register: $this->slug(key: 'register', default: 'pipelinq'),
+					schema: $this->slug(key: 'product_schema', default: 'product')
+				)
 			);
 		} catch (Throwable $e) {
 			return null;
 		}
-
-		if (is_array($entity) === true) {
-			return $entity;
-		}
-
-		if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
-			$data = $entity->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end loadProduct()
+	}//end findProduct()
 
 	/**
 	 * An app-config slug, never empty.
@@ -152,7 +155,7 @@ class ProductStockController extends Controller {
 	 * @return string The slug.
 	 */
 	private function slug(string $key, string $default): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value === '') {
 			return $default;
 		}

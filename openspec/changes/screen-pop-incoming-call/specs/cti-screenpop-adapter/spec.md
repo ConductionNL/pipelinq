@@ -36,6 +36,16 @@ report no error.
 - AND the call's contact moment carries Sanne de Vries as its client
 - @e2e exclude needs a `ringing` webhook from a telephony platform, which the CI instance does not have; covered by `tests/vitest/incomingCallCard.spec.js` ("a call with one match") and `tests/Unit/Service/Cti/IncomingCallFinderTest.php`
 
+#### Scenario: One match shows what is open, the last contact and what waits
+
+- GIVEN a call rings on agent Noor's line and exactly one client, Sanne de Vries, has the number
+- AND Sanne has two open requests and one open complaint, of which one waits for her answer, and was last in contact on 1 October
+- WHEN the card shows
+- THEN under her name it shows Open 3, Last contact 1 October and Waiting 1
+- AND contact moments are not counted as open
+- AND when Noor may not read Sanne's summary, the card shows no facts and still names her
+- @e2e exclude needs a `ringing` webhook from a telephony platform; covered by `tests/vitest/incomingCallCard.spec.js` ("the three facts under one match") and `tests/Unit/Service/Customer360SummaryServiceTest.php`
+
 #### Scenario: Several matches open the chooser
 
 - GIVEN a call from a number that two contacts share
@@ -135,3 +145,11 @@ PqInkomendGesprek draws a card the agent acts on.
 - THEN the system normalises the number to E.164: `+31612345678`
 - AND the lookup matches against normalised stored numbers
 - AND the original raw number `0612345678` is preserved in `contactmoment.channelMetadata.raw_inbound_number` for forensics
+
+#### Scenario: Single contact match navigates to customer 360 view
+
+- GIVEN the incoming-call card names the one contact that matches `+31612345678`
+- WHEN the agent clicks the button that opens that contact
+- THEN the agent's browser navigates to `/customer-360/contact/{contactId}` for that contact's customer-360 view
+- AND the browser does not navigate before the agent clicks
+- AND the contactmoment is linked to the contact (see REQ-CTI-003)

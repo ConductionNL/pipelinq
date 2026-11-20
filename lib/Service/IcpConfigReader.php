@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -53,7 +53,7 @@ class IcpConfigReader {
 	 */
 	public function getString(string $key, string $default = ''): string {
 		return $this->appConfig->getValueString(
-			app: Application::APP_ID,
+			app: AppIdentity::APP_ID,
 			key: $key,
 			default: $default
 		);
@@ -70,7 +70,7 @@ class IcpConfigReader {
 	 */
 	public function setString(string $key, string $value): void {
 		$this->appConfig->setValueString(
-			app: Application::APP_ID,
+			app: AppIdentity::APP_ID,
 			key: $key,
 			value: $value
 		);
@@ -90,7 +90,7 @@ class IcpConfigReader {
 	 */
 	public function setSensitiveString(string $key, string $value): void {
 		$this->appConfig->setValueString(
-			app: Application::APP_ID,
+			app: AppIdentity::APP_ID,
 			key: $key,
 			value: $value,
 			sensitive: true,

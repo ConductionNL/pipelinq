@@ -370,6 +370,68 @@ class SocialAdapterRequestShapeTest extends TestCase {
 	}
 
 	/**
+	 * Instagram and Threads publish in two steps: the container, then its
+	 * publication. A container without an id is refused without the second
+	 * call, a failing second call reports that failure, and the published
+	 * outcome carries the media id and no address.
+	 *
+	 * @return void
+	 */
+	public function testTheTwoStepNetworksPublishTheContainerTheyCreated(): void {
+		$networks = [
+			'instagram' => [
+				'adapter' => static fn (SocialBrokerGateway $g): SocialNetworkAdapter => new InstagramBusinessAdapter($g),
+				'publishPath' => '/' . FacebookPageAdapter::GRAPH_VERSION . '/acct-1/media_publish',
+				'noContainer' => 'Instagram accepted the media but named no container, so there is nothing to publish.',
+			],
+			'threads' => [
+				'adapter' => static fn (SocialBrokerGateway $g): SocialNetworkAdapter => new ThreadsAdapter($g),
+				'publishPath' => '/v1.0/acct-1/threads_publish',
+				'noContainer' => 'Threads accepted the text but named no container, so there is nothing to publish.',
+			],
+		];
+		$media = [['url' => 'https://conduction.nl/img/or3.jpg']];
+		foreach ($networks as $network => $case) {
+			$seen = [];
+			$outcome = ($case['adapter'])($this->recordingGateway(
+				answers: [
+					SocialGatewayResult::succeeded(status: 200, body: ['id' => 'container-1']),
+					SocialGatewayResult::succeeded(status: 200, body: ['id' => 'media-9', 'url' => 'https://example.test/p/9', 'permalink' => 'https://example.test/p/9']),
+				],
+				seen: $seen,
+			))->publish(request: $this->post(network: $network, media: $media));
+			$this->assertTrue($outcome->accepted, $network);
+			$this->assertSame('media-9', $outcome->externalId, $network);
+			$this->assertSame('', $outcome->url, $network);
+			$this->assertSame(0.0, $outcome->cost, $network);
+			$this->assertSame($case['publishPath'], $seen[1]['path'], $network);
+
+			$seen = [];
+			$outcome = ($case['adapter'])($this->recordingGateway(
+				answers: [SocialGatewayResult::succeeded(status: 200, body: ['other' => 'x'])],
+				seen: $seen,
+			))->publish(request: $this->post(network: $network, media: $media));
+			$this->assertFalse($outcome->accepted, $network);
+			$this->assertSame(SocialGatewayResult::REJECTED_BY_NETWORK, $outcome->failureCode, $network);
+			$this->assertSame($case['noContainer'], $outcome->failureReason, $network);
+			$this->assertCount(1, $seen, $network);
+
+			$seen = [];
+			$outcome = ($case['adapter'])($this->recordingGateway(
+				answers: [
+					SocialGatewayResult::succeeded(status: 200, body: ['id' => 'container-1']),
+					SocialGatewayResult::failed(code: SocialGatewayResult::RELINK_NEEDED, reason: 'Token expired.'),
+				],
+				seen: $seen,
+			))->publish(request: $this->post(network: $network, media: $media));
+			$this->assertFalse($outcome->accepted, $network);
+			$this->assertSame(SocialGatewayResult::RELINK_NEEDED, $outcome->failureCode, $network);
+			$this->assertSame('Token expired.', $outcome->failureReason, $network);
+			$this->assertCount(2, $seen, $network);
+		}//end foreach
+	}//end testTheTwoStepNetworksPublishTheContainerTheyCreated()
+
+	/**
 	 * A network with no developer application filed fails TYPED and never
 	 * reaches the broker.
 	 *
@@ -427,4 +489,59 @@ class SocialAdapterRequestShapeTest extends TestCase {
 			}
 		}
 	}
+	/**
+	 * Every LinkedIn follower shape: no elements is zero; a flat count and
+	 * per-association counts are both summed; non-list elements, entries and
+	 * association lists are skipped; missing counts are zero.
+	 *
+	 * @return void
+	 */
+	public function testEveryLinkedInFollowerShape(): void {
+		$linkedin = new LinkedInAdapter($this->readyGateway());
+		$this->assertSame(0, $linkedin->readFollowers(payload: []));
+		$this->assertSame(0, $linkedin->readFollowers(payload: ['elements' => 'none']));
+		$this->assertSame(
+			10 + 3 + 4 + 5,
+			$linkedin->readFollowers(payload: ['elements' => [
+				'junk',
+				['followerCounts' => ['organicFollowerCount' => 10]],
+				['followerCountsByAssociationType' => [
+					['followerCounts' => ['organicFollowerCount' => 3]],
+					'junk',
+					['followerCounts' => ['organicFollowerCount' => '4']],
+					['followerCounts' => []],
+				]],
+				['followerCounts' => ['organicFollowerCount' => 5], 'followerCountsByAssociationType' => 'bad'],
+			]])
+		);
+	}//end testEveryLinkedInFollowerShape()
+
+	/**
+	 * Every insights shape: entries that are not lists, have no name or no
+	 * values are skipped; the first value counts, a by-type value is
+	 * summed, a missing value is zero; a later entry with the same name
+	 * wins; a payload without a data list reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testEveryInsightsShape(): void {
+		$facebook = new FacebookPageAdapter($this->readyGateway());
+		$payload = ['data' => [
+			'junk',
+			['name' => '', 'values' => [['value' => 9]]],
+			['name' => 'post_clicks', 'values' => []],
+			['name' => 'post_clicks', 'values' => 'x'],
+			['name' => 'post_video_views', 'values' => [['value' => '12'], ['value' => 99]]],
+			['name' => 'post_reactions_by_type_total', 'values' => [['value' => ['like' => 3, 'love' => '2']]]],
+			['name' => 'post_clicks', 'values' => ['flat']],
+		]];
+		$this->assertSame(['views' => 12, 'likes' => 5, 'comments' => 0, 'shares' => 0, 'clicks' => 0], $facebook->normaliseMetrics(payload: $payload));
+		$this->assertSame(['views' => 0, 'likes' => 0, 'comments' => 0, 'shares' => 0, 'clicks' => 0], $facebook->normaliseMetrics(payload: ['data' => 'none']));
+
+		$instagram = new InstagramBusinessAdapter($this->readyGateway());
+		$this->assertSame(
+			['views' => 7, 'likes' => 2, 'comments' => 0, 'shares' => 1, 'clicks' => 0],
+			$instagram->normaliseMetrics(payload: ['data' => [['name' => 'views', 'values' => [['value' => 7]]], ['name' => 'likes', 'values' => [['value' => 1]]], ['name' => 'likes', 'values' => [['value' => 2]]], ['name' => 'shares', 'values' => [['value' => 1.9]]]]])
+		);
+	}//end testEveryInsightsShape()
 }//end class

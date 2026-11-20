@@ -1,0 +1,278 @@
+{
+  "_note": "PqOfferte (round 12): the quote a salesperson makes from a lead, with its lines. New schemas only; nothing existing changes.",
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "salesQuote",
+          "salesQuoteLine"
+        ]
+      }
+    },
+    "schemas": {
+      "salesQuote": {
+        "slug": "salesQuote",
+        "title": "Quote",
+        "icon": "FileDocumentEditOutline",
+        "summary": "A priced offer made from a lead, sent to the client",
+        "description": "A quote made from a lead: who it goes to, its lines and its totals, and where it stands from draft to accepted.",
+        "@type": "object",
+        "type": "object",
+        "required": [
+          "title",
+          "lead"
+        ],
+        "x-notes": "PqOfferte (round 12). The client and contact are references, never copies. Totals are stored as the editor last computed them, so a list can sum them without reading every line. The slug is salesQuote because shillinq already owns Quote, and a schema slug is global per organisation (matched without case).",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "terminal": [
+              "rejected",
+              "expired",
+              "ordered"
+            ],
+            "transitions": {
+              "send": {
+                "from": [
+                  "draft"
+                ],
+                "to": "sent",
+                "description": "Send the quote to the client."
+              },
+              "accept": {
+                "from": [
+                  "sent"
+                ],
+                "to": "accepted",
+                "description": "The client accepted the quote."
+              },
+              "reject": {
+                "from": [
+                  "sent"
+                ],
+                "to": "rejected",
+                "description": "The client turned the quote down."
+              },
+              "expire": {
+                "from": [
+                  "sent"
+                ],
+                "to": "expired",
+                "description": "The quote passed its expiry date without an answer."
+              },
+              "toOrder": {
+                "from": [
+                  "accepted"
+                ],
+                "to": "ordered",
+                "description": "Convert the accepted quote into an order."
+              },
+              "backToDraft": {
+                "from": [
+                  "sent"
+                ],
+                "to": "draft",
+                "description": "Take the quote back to change it."
+              }
+            }
+          }
+        },
+        "properties": {
+          "number": {
+            "type": "string",
+            "title": "Number",
+            "description": "The quote number on the pdf, such as OFF-2026-0042."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "The title on the pdf."
+          },
+          "lead": {
+            "type": "string",
+            "title": "Lead",
+            "description": "The lead the quote belongs to.",
+            "format": "uuid",
+            "$ref": "lead"
+          },
+          "client": {
+            "type": "string",
+            "title": "Client",
+            "description": "Taken from the lead.",
+            "format": "uuid",
+            "$ref": "client"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact",
+            "description": "Receives the quote by email.",
+            "format": "uuid",
+            "$ref": "contact"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Where the quote stands.",
+            "enum": [
+              "draft",
+              "sent",
+              "accepted",
+              "rejected",
+              "expired",
+              "ordered"
+            ],
+            "default": "draft",
+            "x-enum-labels": {
+              "draft": "Draft",
+              "sent": "Sent",
+              "accepted": "Accepted",
+              "rejected": "Rejected",
+              "expired": "Expired",
+              "ordered": "Ordered"
+            }
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Counts up each time the quote is changed after sending.",
+            "default": 1,
+            "minimum": 1
+          },
+          "sentAt": {
+            "type": "string",
+            "title": "Sent on",
+            "description": "Set when the quote is sent.",
+            "format": "date"
+          },
+          "expiresAt": {
+            "type": "string",
+            "title": "Expires on",
+            "description": "30 days after sending.",
+            "format": "date"
+          },
+          "assignee": {
+            "type": "string",
+            "title": "Assigned to",
+            "description": "Signs the quote."
+          },
+          "paymentTerm": {
+            "type": "string",
+            "title": "Payment term",
+            "description": "Printed on the pdf."
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "The currency of the amounts.",
+            "default": "EUR"
+          },
+          "subtotal": {
+            "type": "number",
+            "title": "Subtotal",
+            "description": "The sum of the line totals, excl. VAT."
+          },
+          "vatAmount": {
+            "type": "number",
+            "title": "VAT",
+            "description": "The VAT on the subtotal."
+          },
+          "total": {
+            "type": "number",
+            "title": "Total",
+            "description": "The subtotal with VAT."
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "description": "Internal. Notes do not go on the pdf."
+          }
+        }
+      },
+      "salesQuoteLine": {
+        "slug": "salesQuoteLine",
+        "title": "Quote line",
+        "icon": "FormatListBulleted",
+        "summary": "One line of a quote",
+        "description": "A product from the catalogue at its current price, or a line of its own for work the catalogue does not hold.",
+        "@type": "object",
+        "type": "object",
+        "required": [
+          "quote",
+          "description"
+        ],
+        "properties": {
+          "quote": {
+            "type": "string",
+            "title": "Quote",
+            "description": "The quote this line is on.",
+            "format": "uuid",
+            "$ref": "salesQuote"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product",
+            "description": "The catalogue product; empty on a line of its own.",
+            "format": "uuid",
+            "$ref": "product"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "A catalogue product or a line of its own.",
+            "enum": [
+              "catalogue",
+              "own"
+            ],
+            "default": "catalogue",
+            "x-enum-labels": {
+              "catalogue": "Catalogue product",
+              "own": "Own line"
+            }
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the line delivers."
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "A line under the description on the pdf."
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity",
+            "description": "How many.",
+            "default": 1,
+            "minimum": 0
+          },
+          "unitPrice": {
+            "type": "number",
+            "title": "Unit price",
+            "description": "The price of one, excl. VAT."
+          },
+          "discount": {
+            "type": "number",
+            "title": "Discount %",
+            "description": "Discount on this line, in percent.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 100
+          },
+          "total": {
+            "type": "number",
+            "title": "Line total",
+            "description": "Quantity times unit price, less the discount."
+          },
+          "sortOrder": {
+            "type": "integer",
+            "title": "Order",
+            "description": "The place of the line on the quote.",
+            "default": 0
+          }
+        }
+      }
+    }
+  }
+}

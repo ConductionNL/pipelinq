@@ -1,0 +1,102 @@
+{
+ "dry": {
+  "stdout": "{\n \"root\": \"<root>\",\n \"counts\": {\n  \"REPOINT_ANCHOR\": 10,\n  \"DANGLING\": 26,\n  \"REPOINT_FILE\": 10\n },\n \"repoint_anchor\": 10,\n \"repoint_file\": 10,\n \"dangling\": 26,\n \"files_changed\": 4\n}\n",
+  "report": {
+   "root": "<root>",
+   "counts": {
+    "REPOINT_ANCHOR": 10,
+    "DANGLING": 26,
+    "REPOINT_FILE": 10
+   },
+   "repoint_anchor": 10,
+   "repoint_file": 10,
+   "dangling": 26,
+   "files_changed": 4,
+   "changed_files": [
+    "lib/Service/Widget.php",
+    "src/dist/top.js",
+    "src/notes.md",
+    "src/views/Widget.vue"
+   ]
+  },
+  "dangling": "# Residual dangling @spec anchors — <root>\n\n26 anchors could not be repointed unambiguously and need human triage.\n\n\n## C. capability archived/deleted — no canonical spec (requirement genuinely gone) (16)\n- `lib/Service/Widget.php` → `openspec/changes/old-archive/tasks.md#task-1`\n- `src/views/Widget.vue` → `openspec/changes/x/specs/missing-cap/spec.md#a`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n0`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n1`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n2`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n3`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n4`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n5`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n6`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n7`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n8`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n9`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n10`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n11`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n12`\n- … +1 more\n\n## D. non-tasks.md ref (decimal task / design.md / proposal.md / specs anchor re-headed) (5)\n- `src/views/Widget.vue` → `openspec/changes/live-change/tasks.md#notes`\n- `src/views/Widget.vue` → `openspec/changes/other/design.md`\n- `src/views/Widget.vue` → `openspec/changes/other/proposal.md#nothing`\n- `src/views/Widget.vue` → `openspec/specs/widgets/spec.md#vanished`\n- `src/views/Widget.vue` → `openspec/specs/dir.md#x`\n\n## D. change uses non-annotate tasks.md (no task-N: cap#REQ line) — needs spec delta read (2)\n- `lib/Service/Widget.php` → `openspec/changes/live-change/tasks.md#task-4`\n- `lib/Service/Widget.php` → `openspec/changes/live-change/tasks.md#task-9`\n\n## D. archived change dir not located (2)\n- `lib/Service/Widget.php` → `openspec/changes/twice/tasks.md#task-1`\n- `lib/Service/Widget.php` → `openspec/changes/nowhere/tasks.md#task-1`\n\n## D. no-fragment tasks.md ref, slug is not a canonical capability (1)\n- `lib/Service/Widget.php` → `openspec/changes/not-a-cap/tasks.md`\n"
+ },
+ "dry_files": {
+  "lib/Controller/Clean.php": "<?php\n// @spec openspec/specs/widgets/spec.md\n",
+  "lib/Service/Widget.php": "<?php\r\n/**\r\n * @spec openspec/changes/live-change/tasks.md#task-1\r\n * @spec openspec/changes/live-change/tasks.md#task-2\r\n * @spec openspec/changes/live-change/tasks.md#task-3\r\n * @spec openspec/changes/live-change/tasks.md#task-4\r\n * @spec openspec/changes/live-change/tasks.md#task-5\r\n * @spec openspec/changes/live-change/tasks.md#task-9\r\n * @spec openspec/changes/live-change/tasks.md#task-6\r\n * @spec openspec/changes/live-change/tasks.md#task-7\r\n * @spec openspec/changes/live-cap/tasks.md#\r\n * @spec openspec/changes/plain-archived/tasks.md#task-1\r\n * @spec openspec/changes/plain-archived/tasks.md#task-2\r\n * @spec openspec/changes/plain-archived/tasks.md#task-3\r\n * @spec openspec/changes/plain-archived/tasks.md#task-4\r\n * @spec openspec/changes/old-archive/tasks.md#task-1\r\n * @spec openspec/changes/dated/tasks.md#task-1\r\n * @spec openspec/changes/dated-old/tasks.md#task-1\r\n * @spec openspec/changes/twice/tasks.md#task-1\r\n * @spec openspec/changes/nowhere/tasks.md#task-1\r\n * @spec openspec/changes/live-cap/tasks.md\r\n * @spec openspec/changes/not-a-cap/tasks.md\r\n */\r\nclass Widget {}\r\n",
+  "src/build/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/dist/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/dist/top.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/node_modules/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/notes.md": "See @spec openspec/changes/live-cap/tasks.md in the notes\n",
+  "src/skip.txt": "@spec openspec/changes/live-cap/tasks.md\n",
+  "src/store/many.js": "// @spec openspec/changes/x/specs/missing-cap/spec.md#n0\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n1\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n2\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n3\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n4\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n5\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n6\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n7\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n8\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n9\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n10\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n11\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n12\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n13\n",
+  "src/vendor/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/views/Widget.vue": "// @spec openspec/changes/live-change/tasks.md#notes\n// @spec openspec/changes/x/specs/widgets/spec.md\n// @spec openspec/changes/x/specs/widgets/spec.md#plain-heading\n// @spec openspec/changes/x/specs/widgets/spec.md#Plain-Heading\n// @spec openspec/changes/x/specs/widgets/spec.md#gone-anchor\n// @spec openspec/changes/x/specs/missing-cap/spec.md#a\n// @spec openspec/changes/other/design.md\n// @spec openspec/changes/other/proposal.md#nothing\n// @spec openspec/specs/widgets/spec.md#requirement-register-widgets-by-slug\n// @spec openspec/specs/widgets/spec.md\n// @spec openspec/specs/widgets/spec.md#vanished\n// @spec openspec/specs/dir.md#x\n// @spec openspec/changes/live-cap/specs/live-cap/spec.md#delta\n// @spec lib/Service/Widget.php#anything\n"
+ },
+ "apply": {
+  "stdout": "{\n \"root\": \"<root>\",\n \"counts\": {\n  \"REPOINT_ANCHOR\": 10,\n  \"DANGLING\": 26,\n  \"REPOINT_FILE\": 10\n },\n \"repoint_anchor\": 10,\n \"repoint_file\": 10,\n \"dangling\": 26,\n \"files_changed\": 4\n}\n",
+  "report": {
+   "root": "<root>",
+   "counts": {
+    "REPOINT_ANCHOR": 10,
+    "DANGLING": 26,
+    "REPOINT_FILE": 10
+   },
+   "repoint_anchor": 10,
+   "repoint_file": 10,
+   "dangling": 26,
+   "files_changed": 4,
+   "changed_files": [
+    "lib/Service/Widget.php",
+    "src/dist/top.js",
+    "src/notes.md",
+    "src/views/Widget.vue"
+   ]
+  },
+  "dangling": "# Residual dangling @spec anchors — <root>\n\n26 anchors could not be repointed unambiguously and need human triage.\n\n\n## C. capability archived/deleted — no canonical spec (requirement genuinely gone) (16)\n- `lib/Service/Widget.php` → `openspec/changes/old-archive/tasks.md#task-1`\n- `src/views/Widget.vue` → `openspec/changes/x/specs/missing-cap/spec.md#a`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n0`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n1`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n2`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n3`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n4`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n5`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n6`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n7`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n8`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n9`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n10`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n11`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n12`\n- … +1 more\n\n## D. non-tasks.md ref (decimal task / design.md / proposal.md / specs anchor re-headed) (5)\n- `src/views/Widget.vue` → `openspec/changes/live-change/tasks.md#notes`\n- `src/views/Widget.vue` → `openspec/changes/other/design.md`\n- `src/views/Widget.vue` → `openspec/changes/other/proposal.md#nothing`\n- `src/views/Widget.vue` → `openspec/specs/widgets/spec.md#vanished`\n- `src/views/Widget.vue` → `openspec/specs/dir.md#x`\n\n## D. change uses non-annotate tasks.md (no task-N: cap#REQ line) — needs spec delta read (2)\n- `lib/Service/Widget.php` → `openspec/changes/live-change/tasks.md#task-4`\n- `lib/Service/Widget.php` → `openspec/changes/live-change/tasks.md#task-9`\n\n## D. archived change dir not located (2)\n- `lib/Service/Widget.php` → `openspec/changes/twice/tasks.md#task-1`\n- `lib/Service/Widget.php` → `openspec/changes/nowhere/tasks.md#task-1`\n\n## D. no-fragment tasks.md ref, slug is not a canonical capability (1)\n- `lib/Service/Widget.php` → `openspec/changes/not-a-cap/tasks.md`\n"
+ },
+ "apply_files": {
+  "lib/Controller/Clean.php": "<?php\n// @spec openspec/specs/widgets/spec.md\n",
+  "lib/Service/Widget.php": "<?php\r\n/**\r\n * @spec openspec/specs/widgets/spec.md#requirement-register-widgets-by-slug\r\n * @spec openspec/specs/widgets/spec.md#plain-heading\r\n * @spec openspec/specs/gadgets/spec.md#requirement-gadget-export\r\n * @spec openspec/changes/live-change/tasks.md#task-4\r\n * @spec openspec/specs/widgets/spec.md\r\n * @spec openspec/changes/live-change/tasks.md#task-9\r\n * @spec openspec/specs/widgets/spec.md\r\n * @spec openspec/specs/widgets/spec.md#requirement-en-dash-title\r\n * @spec openspec/specs/live-cap/spec.md\r\n * @spec openspec/specs/sectioned/spec.md#requirement-from-the-section\r\n * @spec openspec/specs/widgets/spec.md#requirement-register-widgets-by-slug\r\n * @spec openspec/specs/gadgets/spec.md#requirement-gadget-export\r\n * @spec openspec/specs/gadgets/spec.md\r\n * @spec openspec/changes/old-archive/tasks.md#task-1\r\n * @spec openspec/specs/live-cap/spec.md\r\n * @spec openspec/specs/widgets/spec.md#plain-heading\r\n * @spec openspec/changes/twice/tasks.md#task-1\r\n * @spec openspec/changes/nowhere/tasks.md#task-1\r\n * @spec openspec/specs/live-cap/spec.md\r\n * @spec openspec/changes/not-a-cap/tasks.md\r\n */\r\nclass Widget {}\r\n",
+  "src/build/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/dist/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/dist/top.js": "// @spec openspec/specs/live-cap/spec.md\n",
+  "src/node_modules/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/notes.md": "See @spec openspec/specs/live-cap/spec.md in the notes\n",
+  "src/skip.txt": "@spec openspec/changes/live-cap/tasks.md\n",
+  "src/store/many.js": "// @spec openspec/changes/x/specs/missing-cap/spec.md#n0\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n1\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n2\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n3\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n4\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n5\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n6\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n7\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n8\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n9\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n10\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n11\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n12\n// @spec openspec/changes/x/specs/missing-cap/spec.md#n13\n",
+  "src/vendor/inner/x.js": "// @spec openspec/changes/live-cap/tasks.md\n",
+  "src/views/Widget.vue": "// @spec openspec/changes/live-change/tasks.md#notes\n// @spec openspec/specs/widgets/spec.md\n// @spec openspec/specs/widgets/spec.md#plain-heading\n// @spec openspec/specs/widgets/spec.md#Plain-Heading\n// @spec openspec/specs/widgets/spec.md\n// @spec openspec/changes/x/specs/missing-cap/spec.md#a\n// @spec openspec/changes/other/design.md\n// @spec openspec/changes/other/proposal.md#nothing\n// @spec openspec/specs/widgets/spec.md#requirement-register-widgets-by-slug\n// @spec openspec/specs/widgets/spec.md\n// @spec openspec/specs/widgets/spec.md#vanished\n// @spec openspec/specs/dir.md#x\n// @spec openspec/changes/live-cap/specs/live-cap/spec.md#delta\n// @spec lib/Service/Widget.php#anything\n"
+ },
+ "second_apply": {
+  "stdout": "{\n \"root\": \"<root>\",\n \"counts\": {\n  \"DANGLING\": 26\n },\n \"repoint_anchor\": 0,\n \"repoint_file\": 0,\n \"dangling\": 26,\n \"files_changed\": 0\n}\n",
+  "report": {
+   "root": "<root>",
+   "counts": {
+    "DANGLING": 26
+   },
+   "repoint_anchor": 0,
+   "repoint_file": 0,
+   "dangling": 26,
+   "files_changed": 0,
+   "changed_files": []
+  },
+  "dangling": "# Residual dangling @spec anchors — <root>\n\n26 anchors could not be repointed unambiguously and need human triage.\n\n\n## C. capability archived/deleted — no canonical spec (requirement genuinely gone) (16)\n- `lib/Service/Widget.php` → `openspec/changes/old-archive/tasks.md#task-1`\n- `src/views/Widget.vue` → `openspec/changes/x/specs/missing-cap/spec.md#a`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n0`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n1`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n2`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n3`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n4`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n5`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n6`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n7`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n8`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n9`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n10`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n11`\n- `src/store/many.js` → `openspec/changes/x/specs/missing-cap/spec.md#n12`\n- … +1 more\n\n## D. non-tasks.md ref (decimal task / design.md / proposal.md / specs anchor re-headed) (5)\n- `src/views/Widget.vue` → `openspec/changes/live-change/tasks.md#notes`\n- `src/views/Widget.vue` → `openspec/changes/other/design.md`\n- `src/views/Widget.vue` → `openspec/changes/other/proposal.md#nothing`\n- `src/views/Widget.vue` → `openspec/specs/widgets/spec.md#vanished`\n- `src/views/Widget.vue` → `openspec/specs/dir.md#x`\n\n## D. change uses non-annotate tasks.md (no task-N: cap#REQ line) — needs spec delta read (2)\n- `lib/Service/Widget.php` → `openspec/changes/live-change/tasks.md#task-4`\n- `lib/Service/Widget.php` → `openspec/changes/live-change/tasks.md#task-9`\n\n## D. archived change dir not located (2)\n- `lib/Service/Widget.php` → `openspec/changes/twice/tasks.md#task-1`\n- `lib/Service/Widget.php` → `openspec/changes/nowhere/tasks.md#task-1`\n\n## D. no-fragment tasks.md ref, slug is not a canonical capability (1)\n- `lib/Service/Widget.php` → `openspec/changes/not-a-cap/tasks.md`\n"
+ },
+ "bare_app": {
+  "stdout": "{\n \"root\": \"<root>\",\n \"counts\": {\n  \"DANGLING\": 1\n },\n \"repoint_anchor\": 0,\n \"repoint_file\": 0,\n \"dangling\": 1,\n \"files_changed\": 0\n}\n",
+  "report": {
+   "root": "<root>",
+   "counts": {
+    "DANGLING": 1
+   },
+   "repoint_anchor": 0,
+   "repoint_file": 0,
+   "dangling": 1,
+   "files_changed": 0,
+   "changed_files": []
+  },
+  "dangling": "# Residual dangling @spec anchors — <root>\n\n1 anchors could not be repointed unambiguously and need human triage.\n\n\n## D. non-tasks.md ref (decimal task / design.md / proposal.md / specs anchor re-headed) (1)\n- `lib/a.php` → `openspec/nothing.md`\n"
+ }
+}

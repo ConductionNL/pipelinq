@@ -44,6 +44,7 @@ use OCA\Pipelinq\Service\Social\SocialBrokerGateway;
 use OCA\Pipelinq\Service\Social\SocialGatewayResult;
 use OCA\Pipelinq\Service\Social\SocialNetworkAdapter;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
+use OCA\Pipelinq\Service\Social\XAdapter;
 use OCA\Pipelinq\Service\SocialAccountService;
 use OCA\Pipelinq\Service\SocialMetricsService;
 use OCA\Pipelinq\Tests\Unit\Service\Social\InMemoryObjectStore;
@@ -162,7 +163,7 @@ class SocialMetricsServiceTest extends TestCase {
 	 *
 	 * @return SocialMetricsService The service.
 	 */
-	private function service(?SocialBrokerGateway $gateway = null): SocialMetricsService {
+	private function service(?SocialBrokerGateway $gateway = null, ?BudgetService $budget = null): SocialMetricsService {
 		$gateway = ($gateway ?? $this->gateway());
 
 		$registry = $this->createMock(SocialAdapterRegistry::class);
@@ -174,6 +175,7 @@ class SocialMetricsServiceTest extends TestCase {
 					'bluesky' => new BlueskyAdapter($gateway),
 					'linkedin' => new LinkedInAdapter($gateway),
 					'facebook' => new FacebookPageAdapter($gateway),
+					'x' => new XAdapter($gateway),
 					default => null,
 				};
 			}
@@ -191,8 +193,10 @@ class SocialMetricsServiceTest extends TestCase {
 			$this->createMock(NotificationService::class),
 		);
 
-		$budget = $this->createMock(BudgetService::class);
-		$budget->method('canSend')->willReturn(true);
+		if ($budget === null) {
+			$budget = $this->createMock(BudgetService::class);
+			$budget->method('canSend')->willReturn(true);
+		}
 
 		return new SocialMetricsService(
 			$this->publications,
@@ -435,6 +439,86 @@ class SocialMetricsServiceTest extends TestCase {
 	}
 
 	/**
+	 * The per-network totals add up each network's publications in the
+	 * period, carry the followers of its accounts, and leave older
+	 * publications and unpublished ones out.
+	 *
+	 * @return void
+	 */
+	public function testNetworkTotalsAddUpThePeriodPerNetwork(): void {
+		$this->store->seed(
+			schemaSlug: SocialAccountService::SCHEMA,
+			id: 'acc-mastodon',
+			payload: ['network' => 'mastodon', 'active' => true, 'followerCount' => 2140],
+		);
+		$this->store->seed(
+			schemaSlug: SocialAccountService::SCHEMA,
+			id: 'acc-instagram',
+			payload: ['network' => 'instagram', 'active' => false, 'status' => 'not_configured'],
+		);
+		$recent = (new \DateTimeImmutable('-3 days'))->format(DATE_ATOM);
+		$old = (new \DateTimeImmutable('-45 days'))->format(DATE_ATOM);
+		$this->publish(postId: 'post-1', publishedAt: $recent, metrics: ['views' => 6000, 'likes' => 250, 'comments' => 20, 'shares' => 60]);
+		$this->publish(postId: 'post-2', publishedAt: $recent, metrics: ['views' => 3820, 'likes' => 162, 'comments' => 18, 'shares' => 36]);
+		$this->publish(postId: 'post-3', publishedAt: $old, metrics: ['views' => 999, 'likes' => 99, 'comments' => 0, 'shares' => 0]);
+		$this->publications->open(postId: 'post-4', accountId: 'acc-mastodon', network: 'mastodon');
+
+		$rows = $this->service()->networkTotals(days: 30);
+
+		$this->assertCount(expectedCount: 1, haystack: $rows);
+		$this->assertSame(
+			expected: [
+				'network' => 'mastodon',
+				'label' => 'Mastodon',
+				'published' => 2,
+				'views' => 9820,
+				'likes' => 412,
+				'comments' => 38,
+				'shares' => 96,
+				'followers' => 2140,
+				'engagementPercent' => 5.6,
+			],
+			actual: $rows[0],
+		);
+	}
+
+	/**
+	 * A network whose publications report no views shows no rate.
+	 *
+	 * @return void
+	 */
+	public function testNetworkTotalsShowNoRateWithoutViews(): void {
+		$this->store->seed(
+			schemaSlug: SocialAccountService::SCHEMA,
+			id: 'acc-mastodon',
+			payload: ['network' => 'mastodon', 'active' => true, 'followerCount' => 10],
+		);
+		$this->publish(postId: 'post-1', publishedAt: (new \DateTimeImmutable('-1 day'))->format(DATE_ATOM), metrics: ['likes' => 4]);
+
+		$rows = $this->service()->networkTotals(days: 30);
+
+		$this->assertNull(actual: $rows[0]['engagementPercent']);
+		$this->assertSame(expected: 4, actual: $rows[0]['likes']);
+	}
+
+	/**
+	 * Record one published Mastodon publication with its numbers.
+	 *
+	 * @param string $postId The post.
+	 * @param string $publishedAt When it went out.
+	 * @param array<string, int> $metrics Its normalised numbers.
+	 *
+	 * @return void
+	 */
+	private function publish(string $postId, string $publishedAt, array $metrics): void {
+		$row = $this->publications->open(postId: $postId, accountId: 'acc-mastodon', network: 'mastodon');
+		$row['status'] = SocialPublicationStore::PUBLISHED;
+		$row['publishedAt'] = $publishedAt;
+		$row['metrics'] = $metrics;
+		$this->publications->save(publication: $row);
+	}
+
+	/**
 	 * One ranking row for a made-up publication and follower count.
 	 *
 	 * @param string $accountId The account.
@@ -454,4 +538,25 @@ class SocialMetricsServiceTest extends TestCase {
 			followers: [$accountId => $followers],
 		);
 	}
+
+	/**
+	 * A charged read asks the spend budget first: refused, nothing is read and
+	 * nothing is charged; allowed, the accepted read is charged once.
+	 *
+	 * @return void
+	 */
+	public function testAChargedReadAsksTheBudgetFirstAndChargesOnce(): void {
+		$id = $this->seedPublished(network: 'x', externalId: 't-1');
+		$this->answers = ['/2/tweets/t-1' => SocialGatewayResult::succeeded(status: 200, body: ['data' => ['public_metrics' => ['like_count' => 2]]])];
+
+		$refusing = $this->createMock(BudgetService::class);
+		$refusing->expects($this->once())->method('canSend')->with('default', 'x', XAdapter::COST_PER_READ_EUR)->willReturn(false);
+		$refusing->expects($this->never())->method('recordSend');
+		$this->assertFalse($this->service(budget: $refusing)->pullOne(publication: $this->publications->find(publicationId: $id)));
+
+		$allowing = $this->createMock(BudgetService::class);
+		$allowing->method('canSend')->willReturn(true);
+		$allowing->expects($this->once())->method('recordSend')->with('default', 'x', XAdapter::COST_PER_READ_EUR);
+		$this->assertTrue($this->service(budget: $allowing)->pullOne(publication: $this->publications->find(publicationId: $id)));
+	}//end testAChargedReadAsksTheBudgetFirstAndChargesOnce()
 }//end class

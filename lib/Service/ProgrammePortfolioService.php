@@ -39,7 +39,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
  */
 
 declare(strict_types=1);
@@ -47,7 +47,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ProgrammePortfolioServiceInterface;
+use OCA\Pipelinq\Service\Support\JsonSerializableRows;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -55,9 +59,13 @@ use Throwable;
 /**
  * Link work to a programme, and answer how far along it is.
  *
- * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+ * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class ProgrammePortfolioService {
+class ProgrammePortfolioService implements ProgrammePortfolioServiceInterface {
+	use JsonSerializableRows;
+
 	/**
 	 * The app-config key holding the instance's default progress mode.
 	 *
@@ -100,7 +108,7 @@ class ProgrammePortfolioService {
 	 */
 	private function defaultMode(): string {
 		$configured = trim(
-			$this->appConfig->getValueString(Application::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
+			$this->appConfig->getValueString(AppIdentity::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
 		);
 
 		if (in_array($configured, self::MODES, true) === true) {
@@ -117,7 +125,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return string One of the MODES.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	public function modeFor(array $programme): string {
 		$override = trim((string)($programme['progressMode'] ?? ''));
@@ -139,7 +147,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return array{allowed: bool, reason: string} The answer.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function mayLink(
 		string $domainObjectType,
@@ -154,17 +162,29 @@ class ProgrammePortfolioService {
 			return ['allowed' => false, 'reason' => 'A programme, an object type and an object are required.'];
 		}
 
-		foreach ($existingLinks as $link) {
-			if ((string)($link['domainObjectType'] ?? '') !== $domainObjectType) {
-				continue;
-			}
+		return $this->existingLinkAnswer(
+			existingLinks: $existingLinks,
+			claim: ['domainObjectType' => $domainObjectType, 'domainObjectRef' => $domainObjectRef, 'programme' => $programmeId]
+		);
+	}//end mayLink()
 
-			if ((string)($link['domainObjectRef'] ?? '') !== $domainObjectRef) {
+	/**
+	 * Refuse a work item that is already linked to a programme, allow it otherwise.
+	 *
+	 * @param array<int, array<string, mixed>> $existingLinks Every work item already written.
+	 * @param array<string, string>            $claim         The trimmed `domainObjectType` and `domainObjectRef`,
+	 *                                                        and the `programme` it would be linked to.
+	 *
+	 * @return array{allowed: bool, reason: string} The answer.
+	 */
+	private function existingLinkAnswer(array $existingLinks, array $claim): array {
+		foreach ($existingLinks as $link) {
+			if (self::linksSameWork(link: $link, work: $claim) === false) {
 				continue;
 			}
 
 			$holder = (string)($link['programme'] ?? '');
-			if ($holder === trim($programmeId)) {
+			if ($holder === trim($claim['programme'])) {
 				return ['allowed' => false, 'reason' => 'This work is already in this programme.'];
 			}
 
@@ -174,7 +194,20 @@ class ProgrammePortfolioService {
 		}
 
 		return ['allowed' => true, 'reason' => ''];
-	}//end mayLink()
+	}//end existingLinkAnswer()
+
+	/**
+	 * Whether an existing work item points at the same object.
+	 *
+	 * @param array<string, mixed>  $link The existing work item.
+	 * @param array<string, string> $work The trimmed `domainObjectType` (`<app>:<schema>`) and `domainObjectRef` (object uuid).
+	 *
+	 * @return bool
+	 */
+	private static function linksSameWork(array $link, array $work): bool {
+		return ((string)($link['domainObjectType'] ?? '') === $work['domainObjectType']
+			&& (string)($link['domainObjectRef'] ?? '') === $work['domainObjectRef']);
+	}//end linksSameWork()
 
 	/**
 	 * Present a work item, resolved or not.
@@ -186,7 +219,7 @@ class ProgrammePortfolioService {
 	 * @return array<string, mixed> The row, with `resolved` false when the
 	 *   owning app is absent or answered nothing.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function presentWorkItem(array $workItem, array $resolvedTitles = [], array $installedApps = []): array {
 		$type = (string)($workItem['domainObjectType'] ?? '');
@@ -232,83 +265,108 @@ class ProgrammePortfolioService {
 	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
 	 *   The figure, always naming its mode.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	public function progressFor(array $programme, array $tasks = [], ?array $effort = null): array {
 		$mode = $this->modeFor(programme: $programme);
 
 		if ($mode === 'manual') {
-			$typed = ($programme['manualProgress'] ?? null);
-			$entered = is_numeric($typed);
-
-			$progress = null;
-			$reason = 'No progress has been entered.';
-			if ($entered === true) {
-				$progress = (int)$typed;
-				$reason = '';
-			}
-
-			return [
-				'mode' => 'manual',
-				'progress' => $progress,
-				'computable' => $entered,
-				'reason' => $reason,
-			];
+			return $this->manualProgress(programme: $programme);
 		}
 
 		if ($mode === 'fromTasks') {
-			$total = count($tasks);
-			if ($total === 0) {
-				return [
-					'mode' => 'fromTasks',
-					'progress' => null,
-					'computable' => false,
-					'reason' => 'This programme has no tasks to derive progress from.',
-				];
-			}
-
-			$closed = count(
-				array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed')
-			);
-
-			return [
-				'mode' => 'fromTasks',
-				'progress' => (int)round((($closed / $total) * 100)),
-				'computable' => true,
-				'reason' => '',
-			];
+			return $this->taskProgress(tasks: $tasks);
 		}
 
+		return $this->effortProgress(effort: $effort);
+	}//end progressFor()
+
+	/**
+	 * Progress in `manual` mode: the figure somebody typed, if any.
+	 *
+	 * @param array<string, mixed> $programme The programme.
+	 *
+	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
+	 */
+	private function manualProgress(array $programme): array {
+		$typed = ($programme['manualProgress'] ?? null);
+		$entered = is_numeric($typed);
+
+		$progress = null;
+		$reason = 'No progress has been entered.';
+		if ($entered === true) {
+			$progress = (int)$typed;
+			$reason = '';
+		}
+
+		return ['mode' => 'manual', 'progress' => $progress, 'computable' => $entered, 'reason' => $reason];
+	}//end manualProgress()
+
+	/**
+	 * Progress in `fromTasks` mode: the share of closed tasks.
+	 *
+	 * @param array<int, array<string, mixed>> $tasks The programme's tasks.
+	 *
+	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
+	 */
+	private function taskProgress(array $tasks): array {
+		$total = count($tasks);
+		if ($total === 0) {
+			return $this->uncomputableProgress(mode: 'fromTasks', reason: 'This programme has no tasks to derive progress from.');
+		}
+
+		$closed = count(
+			array_filter($tasks, static fn (array $task): bool => ($task['status'] ?? '') === 'closed')
+		);
+
+		return [
+			'mode' => 'fromTasks',
+			'progress' => (int)round((($closed / $total) * 100)),
+			'computable' => true,
+			'reason' => '',
+		];
+	}//end taskProgress()
+
+	/**
+	 * Progress in `fromEffort` mode: hours booked against hours estimated.
+	 *
+	 * @param array<string, mixed>|null $effort Hours booked and estimated, or null when humaniq cannot be resolved.
+	 *
+	 * @return array{mode: string, progress: int|null, computable: bool, reason: string}
+	 */
+	private function effortProgress(array|null $effort): array {
 		if ($effort === null) {
 			// NOT zero. Zero reads as "nothing has been done", which is a
 			// different and much worse sentence than "we cannot tell".
-			return [
-				'mode' => 'fromEffort',
-				'progress' => null,
-				'computable' => false,
-				'reason' => 'Hours cannot be read on this instance, so progress cannot be computed.',
-			];
+			return $this->uncomputableProgress(mode: 'fromEffort', reason: 'Hours cannot be read on this instance, so progress cannot be computed.');
 		}
 
 		$estimated = (float)($effort['estimated'] ?? 0);
 		if ($estimated <= 0.0) {
-			return [
-				'mode' => 'fromEffort',
-				'progress' => null,
-				'computable' => false,
-				'reason' => 'Nothing has been estimated, so progress cannot be computed.',
-			];
+			return $this->uncomputableProgress(mode: 'fromEffort', reason: 'Nothing has been estimated, so progress cannot be computed.');
 		}
 
 		$booked = (float)($effort['booked'] ?? 0);
 
+		return ['mode' => 'fromEffort', 'progress' => (int)round((($booked / $estimated) * 100)), 'computable' => true, 'reason' => ''];
+	}//end effortProgress()
+
+	/**
+	 * The progress answer for a mode that cannot produce a figure.
+	 *
+	 * @param string $mode   The progress mode.
+	 * @param string $reason Why no figure can be computed.
+	 *
+	 * @return array{mode: string, progress: null, computable: false, reason: string}
+	 */
+	private function uncomputableProgress(string $mode, string $reason): array {
 		return [
-			'mode' => 'fromEffort',
-			'progress' => (int)round((($booked / $estimated) * 100)),
-			'computable' => true,
-			'reason' => '',
+			'mode' => $mode,
+			'progress' => null,
+			'computable' => false,
+			'reason' => $reason,
 		];
-	}//end progressFor()
+	}//end uncomputableProgress()
 
 	/**
 	 * The work items of one programme.
@@ -366,7 +424,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return array<string, mixed> `status` plus either `workItem` or `error`.
 	 *
-	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
+	 * @spec openspec/specs/project-portfolio/spec.md#requirement-a-project-shall-hold-work-it-does-not-own-by-reference-req-prj-002
 	 */
 	public function linkWork(
 		string $programmeId,
@@ -388,19 +446,30 @@ class ProgrammePortfolioService {
 			return ['status' => 409, 'error' => $answer['reason']];
 		}
 
-		$workItem = [
-			'programme' => trim($programmeId),
-			'domainObjectType' => trim($domainObjectType),
-			'domainObjectRef' => trim($domainObjectRef),
-			'title' => trim($title),
-		];
+		return $this->savedWorkItem(
+			workItem: [
+				'programme' => trim($programmeId),
+				'domainObjectType' => trim($domainObjectType),
+				'domainObjectRef' => trim($domainObjectRef),
+				'title' => trim($title),
+			]
+		);
+	}//end linkWork()
 
+	/**
+	 * Write a work item: 201 with the item, or 500 when it could not be saved.
+	 *
+	 * @param array<string, string> $workItem The trimmed work item.
+	 *
+	 * @return array{status: int, error?: string, workItem?: array<string, mixed>}
+	 */
+	private function savedWorkItem(array $workItem): array {
 		if ($this->write(schemaKey: 'programmeWorkItem_schema', object: $workItem) === false) {
 			return ['status' => 500, 'error' => 'The work item could not be saved.'];
 		}
 
 		return ['status' => 201, 'workItem' => $workItem];
-	}//end linkWork()
+	}//end savedWorkItem()
 
 	/**
 	 * Read rows of one schema as plain arrays.
@@ -411,8 +480,8 @@ class ProgrammePortfolioService {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	public function read(string $schemaKey, array $filters): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug(
 				'ProgrammePortfolioService: the programme surface is not configured',
@@ -422,13 +491,21 @@ class ProgrammePortfolioService {
 			return [];
 		}
 
+		$filters = array_merge(['register' => $register, 'schema' => $schema], $filters);
+		return $this->plainRows(rows: $this->findRows(schemaKey: $schemaKey, filters: $filters));
+	}//end read()
+
+	/**
+	 * Run the findAll for one schema, logging a failed read.
+	 *
+	 * @param string               $schemaKey The app-config key holding the schema id.
+	 * @param array<string, mixed> $filters   The full filter set, register and schema included.
+	 *
+	 * @return array<int, mixed> The raw rows, or none when the read failed.
+	 */
+	private function findRows(string $schemaKey, array $filters): array {
 		try {
-			$rows = $this->objectService->findAll(
-				[
-					'filters' => array_merge(['register' => $register, 'schema' => $schema], $filters),
-					'limit' => self::LIMIT,
-				]
-			);
+			return $this->objectService->findAll(['filters' => $filters, 'limit' => self::LIMIT]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ProgrammePortfolioService: the read failed',
@@ -437,24 +514,7 @@ class ProgrammePortfolioService {
 
 			return [];
 		}
-
-		$out = [];
-		foreach ($rows as $row) {
-			if (is_array($row) === true) {
-				$out[] = $row;
-				continue;
-			}
-
-			if (($row instanceof \JsonSerializable) === true) {
-				$data = $row->jsonSerialize();
-				if (is_array($data) === true) {
-					$out[] = $data;
-				}
-			}
-		}
-
-		return $out;
-	}//end read()
+	}//end findRows()
 
 	/**
 	 * Save one object of a programme schema.
@@ -466,19 +526,35 @@ class ProgrammePortfolioService {
 	 * @return bool True when the write landed.
 	 */
 	public function write(string $schemaKey, array $object, ?string $uuid = null): bool {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			return false;
 		}
 
-		try {
-			$this->objectService->saveObject(
+		return $this->landed(
+			save: fn (): mixed => $this->objectService->saveObject(
 				object: $object,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
-			);
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
+			),
+			schemaKey: $schemaKey
+		);
+	}//end write()
+
+	/**
+	 * Run a save; a failure is logged and answers false.
+	 *
+	 * @param callable(): mixed $save      The save.
+	 * @param string            $schemaKey The app-config key of the schema, for the log.
+	 *
+	 * @return bool True when the write landed.
+	 */
+	private function landed(callable $save, string $schemaKey): bool {
+		try {
+			$save();
 
 			return true;
 		} catch (Throwable $e) {
@@ -489,5 +565,5 @@ class ProgrammePortfolioService {
 
 			return false;
 		}
-	}//end write()
+	}//end landed()
 }//end class

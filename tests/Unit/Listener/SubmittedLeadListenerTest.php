@@ -161,7 +161,7 @@ class SubmittedLeadListenerTest extends TestCase {
 	 * The listener is wired to both events; a listener nothing registers never runs.
 	 */
 	public function testTheListenerIsRegisteredForBothEvents(): void {
-		$source = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		$source = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Listener/ListenerRegistrar.php');
 
 		foreach (['ObjectCreatingEvent', 'ObjectCreatedEvent'] as $event) {
 			$this->assertMatchesRegularExpression(

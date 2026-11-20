@@ -1,0 +1,29 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "When a journey first became a flow and when it last went live (PqJourney). Named 99-zz so it merges after 99-marketing-integrated-campaigns, which declares the schema."
+	},
+	"components": {
+		"schemas": {
+			"journey": {
+				"slug": "journey",
+				"version": "1.1.0",
+				"properties": {
+					"compiledAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Converted into a flow",
+						"description": "When the journey was first converted into a flow."
+					},
+					"activatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Activated",
+						"description": "When the journey last went live."
+					}
+				}
+			}
+		}
+	}
+}

@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\NotesController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
@@ -37,6 +38,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for NotesController.
@@ -117,17 +119,13 @@ class NotesControllerTest extends TestCase {
 		// the double — which reads as "the object does not exist".
 		$objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
 		$objectServiceMock->method('find')->willReturnCallback(
-			function (
-				int|string $id,
-				?array $_extend = [],
-				bool $files = false,
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $_render = true,
-				bool $_audit = true,
-			): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
+				$_audit = $options?->audit ?? true;
 				$this->findCalls[] = ['register' => (string)$register, 'schema' => (string)$schema];
 
 				$entity = new ObjectEntity();
@@ -147,14 +145,13 @@ class NotesControllerTest extends TestCase {
 		$this->controller = new NotesController($request,
 			$this->notesService,
 			$noteEventService,
-			$userSession,
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$logger,
 			$container,
 			$groupManager,
 			$settingsService,
 			$ticketService,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end setUp()
 
@@ -323,14 +320,13 @@ class NotesControllerTest extends TestCase {
 		$controller = new NotesController($request,
 			$notesService,
 			$this->createMock(NoteEventService::class),
-			$userSession,
+			new CrmPrivilegeCheck($userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			$l10n,
 			$this->createMock(\Psr\Log\LoggerInterface::class),
 			$this->createMock(ContainerInterface::class),
 			$groupManager,
 			$settingsService,
 			$ticketService,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 
 		$response = $controller->deleteAll('pipelinq_client', 'obj-1');

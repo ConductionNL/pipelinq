@@ -1,0 +1,6 @@
+- [x] client 1.4.0 identity fields (register.d/94-client-zz-identity-verified.json)
+- [x] BrpController verifiedClient/identityCheck stamp
+- [x] HaalCentraalClient: person by BSN, Dutch name shape
+- [x] BrpClientCheckDialog + Wie is het rows and action
+- [x] Tests: PHPUnit BrpController, HaalCentraalClient; vitest brpClientCheckDialog, simpleContactDashboard
+- [x] integriq #2751 mock residents

@@ -1,0 +1,201 @@
+{
+	"$comment": "pipelinq's website submissions in the Zuiddrecht set: form tickets with their source page and no client until someone links them, as PqAanvragen and PqAanvraagOmzetten draw them (decision 179).",
+	"objects": [
+		{
+			"key": "websiteaanvraag-catering-opening",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Catering voor de opening van onze nieuwe winkel",
+				"source": "website-contact",
+				"sourceUrl": "https://zuiddrecht.example/contact",
+				"channel": "web",
+				"status": "new",
+				"priority": "normal",
+				"reporterName": "Joke Smit",
+				"customerMessage": "Goedemiddag, op 24 oktober openen we onze tweede winkel aan de Markt. Kunt u koffie en lunch verzorgen voor ongeveer 60 gasten? We ontvangen graag een offerte.",
+				"description": "Goedemiddag, op 24 oktober openen we onze tweede winkel aan de Markt. Kunt u koffie en lunch verzorgen voor ongeveer 60 gasten? We ontvangen graag een offerte.",
+				"occurredAt": "{{datetime:0 09:42}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "joke@bakkerijdegraaf.example",
+				"reporterPhone": "06 41 22 87 90",
+				"reporterOrganisation": "Bakkerij De Graaf"
+			}
+		},
+		{
+			"key": "websiteaanvraag-zaalhuur-sportavond",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Zaalhuur voor een sportavond",
+				"source": "website-contact",
+				"sourceUrl": "https://zuiddrecht.example/zaalverhuur",
+				"channel": "web",
+				"status": "new",
+				"priority": "normal",
+				"reporterName": "Mohammed El Amrani",
+				"customerMessage": "Wij willen in november een sportavond houden voor onze leden. Is de sporthal op een vrijdagavond te huur, en wat kost dat?",
+				"description": "Wij willen in november een sportavond houden voor onze leden. Is de sporthal op een vrijdagavond te huur, en wat kost dat?",
+				"occurredAt": "{{datetime:0 08:15}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "m.elamrani@sportcentrum.example",
+				"reporterOrganisation": "Zuiddrecht Sportcentrum"
+			}
+		},
+		{
+			"key": "websiteaanvraag-leveranciersportaal",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Inloggen op het leveranciersportaal werkt niet",
+				"source": "website-support",
+				"sourceUrl": "https://zuiddrecht.example/support",
+				"channel": "web",
+				"status": "in_progress",
+				"priority": "normal",
+				"reporterName": "Erik Verhoef",
+				"customerMessage": "Sinds vanochtend kan ik niet meer inloggen op het leveranciersportaal. Ik krijg de melding dat mijn account onbekend is.",
+				"description": "Sinds vanochtend kan ik niet meer inloggen op het leveranciersportaal. Ik krijg de melding dat mijn account onbekend is.",
+				"occurredAt": "{{datetime:-1 16:58}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "kantoor@verhoef-bv.example",
+				"reporterOrganisation": "Installatiebedrijf Verhoef BV",
+				"assignee": "{{cast:fatmayildiz.uid}}"
+			}
+		},
+		{
+			"key": "websiteaanvraag-marktkraam",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Marktkraam op zaterdag",
+				"source": "website-contact",
+				"sourceUrl": "https://zuiddrecht.example/markt",
+				"channel": "web",
+				"status": "new",
+				"priority": "normal",
+				"reporterName": "Anna de Vries",
+				"customerMessage": "Ik wil graag op zaterdag een kraam op de markt met zelfgemaakte sieraden. Hoe vraag ik een plek aan?",
+				"description": "Ik wil graag op zaterdag een kraam op de markt met zelfgemaakte sieraden. Hoe vraag ik een plek aan?",
+				"occurredAt": "{{datetime:-2 14:03}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "anna@devriesadvies.example"
+			}
+		},
+		{
+			"key": "websiteaanvraag-volgers",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Goedkope volgers voor je pagina",
+				"source": "website-contact",
+				"sourceUrl": "https://zuiddrecht.example/contact",
+				"channel": "web",
+				"status": "rejected",
+				"priority": "normal",
+				"reporterName": "Onbekende afzender",
+				"customerMessage": "Koop nu 10.000 volgers voor je pagina, snel en goedkoop.",
+				"description": "Koop nu 10.000 volgers voor je pagina, snel en goedkoop.",
+				"occurredAt": "{{datetime:-4 03:55}}",
+				"category": "websiteaanvraag",
+				"assignee": "{{cast:joris.uid}}"
+			}
+		},
+		{
+			"key": "websiteaanvraag-energiecontract",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Vraag over ons energiecontract",
+				"source": "website-support",
+				"sourceUrl": "https://zuiddrecht.example/support",
+				"channel": "web",
+				"status": "new",
+				"priority": "normal",
+				"reporterName": "Fatma Yildiz",
+				"customerMessage": "Wij hebben een vraag over het energiecontract dat via de gemeente loopt voor ondernemers aan de Markt. Wie kan ons daarmee helpen?",
+				"description": "Wij hebben een vraag over het energiecontract dat via de gemeente loopt voor ondernemers aan de Markt. Wie kan ons daarmee helpen?",
+				"occurredAt": "{{datetime:-5 15:30}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "info@bloemenhuisyildiz.example",
+				"reporterOrganisation": "Bloemenhuis Yildiz"
+			}
+		},
+		{
+			"key": "websiteaanvraag-warmtepompen",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Offerte voor onderhoud van 40 warmtepompen",
+				"source": "website-contact",
+				"sourceUrl": "https://zuiddrecht.example/contact",
+				"channel": "web",
+				"status": "in_progress",
+				"priority": "normal",
+				"reporterName": "Ruud Hendriks",
+				"customerMessage": "Wij zoeken een partij voor het jaarlijkse onderhoud van 40 warmtepompen in onze nieuwbouw. Kunt u een offerte sturen?",
+				"description": "Wij zoeken een partij voor het jaarlijkse onderhoud van 40 warmtepompen in onze nieuwbouw. Kunt u een offerte sturen?",
+				"occurredAt": "{{datetime:-8 10:20}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "onderhoud@drechthof.example",
+				"reporterOrganisation": "Woningstichting Drechthof",
+				"assignee": "{{cast:pieter.uid}}",
+				"client": "{{object:client-drechthof.id}}"
+			}
+		},
+		{
+			"key": "websiteaanvraag-factuuradres",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Factuuradres is gewijzigd",
+				"source": "website-support",
+				"sourceUrl": "https://zuiddrecht.example/support",
+				"channel": "web",
+				"status": "in_progress",
+				"priority": "normal",
+				"reporterName": "Mark Visser",
+				"customerMessage": "Ons factuuradres is gewijzigd. Wilt u de nieuwe gegevens gebruiken voor de volgende factuur?",
+				"description": "Ons factuuradres is gewijzigd. Wilt u de nieuwe gegevens gebruiken voor de volgende factuur?",
+				"occurredAt": "{{datetime:-10 11:05}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "administratie@cloudgemeente.example",
+				"reporterOrganisation": "CloudGemeente B.V.",
+				"assignee": "{{cast:fatmayildiz.uid}}",
+				"client": "{{object:client-cloudgemeente.id}}"
+			}
+		},
+		{
+			"key": "websiteaanvraag-sponsoring",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Sponsoring van het jeugdtoernooi",
+				"source": "website-contact",
+				"sourceUrl": "https://zuiddrecht.example/contact",
+				"channel": "web",
+				"status": "resolved",
+				"priority": "normal",
+				"reporterName": "Kees de Wit",
+				"customerMessage": "Wij organiseren in juni een jeugdtoernooi en zoeken sponsors. Wil de gemeente meedoen?",
+				"description": "Wij organiseren in juni een jeugdtoernooi en zoeken sponsors. Wil de gemeente meedoen?",
+				"occurredAt": "{{datetime:-14 09:00}}",
+				"category": "websiteaanvraag",
+				"reporterEmail": "jeugd@sportclub.example",
+				"reporterOrganisation": "Sportclub Zuiddrecht 1958",
+				"assignee": "{{cast:pieter.uid}}",
+				"client": "{{object:client-sportclub.id}}",
+				"resolvedAt": "{{datetime:-9 15:00}}"
+			}
+		}
+	]
+}

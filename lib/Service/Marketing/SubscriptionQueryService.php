@@ -31,16 +31,20 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\SubscriptionQueryServiceInterface;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\SubscriptionService;
+use OCA\Pipelinq\Service\Support\SubscriptionContactKey;
 
 /**
  * SubscriptionQueryService — counts, listings and the blast audience.
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
  */
-class SubscriptionQueryService {
+class SubscriptionQueryService implements SubscriptionQueryServiceInterface {
+	use SubscriptionContactKey;
+
 	/**
 	 * The channel a mailing list sends on.
 	 *
@@ -61,6 +65,7 @@ class SubscriptionQueryService {
 	 * @param ListObjectStore $store Register-scoped, session-free object access.
 	 * @param ComplianceService $compliance The consent ledger.
 	 * @param ListTokenService $tokens Signs the per-recipient unsubscribe link.
+	 * @param RecipientNameReader $names Names a membership's contact.
 	 *
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
@@ -68,6 +73,7 @@ class SubscriptionQueryService {
 		private ListObjectStore $store,
 		private ComplianceService $compliance,
 		private ListTokenService $tokens,
+		private RecipientNameReader $names,
 	) {
 	}//end __construct()
 
@@ -95,43 +101,60 @@ class SubscriptionQueryService {
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
 	public function getBlastAudienceForList(string $listId): array {
-		if ($listId === '') {
-			return ['members' => [], 'skipped' => []];
-		}
-
 		$members = [];
 		$skipped = [];
 		foreach ($this->rowsForList(listId: $listId) as $subscription) {
 			$contactId = $this->contactKeyFor(subscription: $subscription);
-			if ((string)($subscription['state'] ?? '') !== SubscriptionService::STATE_CONFIRMED) {
+			if ($this->mayReceive(subscription: $subscription, listId: $listId) === false) {
 				$skipped[] = $contactId;
 				continue;
 			}
 
-			$permitted = $this->compliance->hasConsentForList(
-				contactId: $contactId,
-				listId: $listId,
-				channel: self::CHANNEL,
-			);
-			if ($permitted === false) {
-				$skipped[] = $contactId;
-				continue;
-			}
-
-			$subscriptionId = $this->store->idOf(payload: $subscription);
-			$members[] = [
-				'contactId' => $contactId,
-				'email' => (string)($subscription['email'] ?? ''),
-				'subscriptionId' => $subscriptionId,
-				'unsubscribeUrl' => $this->unsubscribeUrlFor(
-					subscriptionId: $subscriptionId,
-					contactId: $contactId,
-				),
-			];
+			$members[] = $this->memberFor(subscription: $subscription, contactId: $contactId);
 		}
 
 		return ['members' => $members, 'skipped' => $skipped];
 	}//end getBlastAudienceForList()
+
+	/**
+	 * Whether a membership may receive a blast on its list: it is confirmed
+	 * and the consent ledger holds the list open for its contact. The ledger
+	 * is only asked about a confirmed membership.
+	 *
+	 * @param array<string, mixed> $subscription The membership.
+	 * @param string               $listId       MailingList UUID or slug.
+	 *
+	 * @return bool
+	 */
+	private function mayReceive(array $subscription, string $listId): bool {
+		if ((string)($subscription['state'] ?? '') !== SubscriptionService::STATE_CONFIRMED) {
+			return false;
+		}
+
+		return $this->compliance->hasConsentForList(
+			contactId: $this->contactKeyFor(subscription: $subscription),
+			listId: $listId,
+			channel: self::CHANNEL,
+		);
+	}//end mayReceive()
+
+	/**
+	 * One queued audience member, with its own unsubscribe link.
+	 *
+	 * @param array<string, mixed> $subscription The membership.
+	 * @param string               $contactId    The membership's contact key.
+	 *
+	 * @return array{contactId: string, email: string, subscriptionId: string, unsubscribeUrl: string}
+	 */
+	private function memberFor(array $subscription, string $contactId): array {
+		$subscriptionId = $this->store->idOf(payload: $subscription);
+		return [
+			'contactId' => $contactId,
+			'email' => (string)($subscription['email'] ?? ''),
+			'subscriptionId' => $subscriptionId,
+			'unsubscribeUrl' => $this->unsubscribeUrlFor(subscriptionId: $subscriptionId, contactId: $contactId),
+		];
+	}//end memberFor()
 
 	/**
 	 * The first-party unsubscribe link for one membership.
@@ -210,7 +233,19 @@ class SubscriptionQueryService {
 	public function listSubscriptionsForList(string $listId, int $page, int $limit): array {
 		$page = max(1, $page);
 		$limit = min(100, max(1, $limit));
-		$all = $this->rowsForList(listId: $listId);
+		return $this->pageOf(all: $this->rowsForList(listId: $listId), window: ['page' => $page, 'limit' => $limit]);
+	}//end listSubscriptionsForList()
+
+	/**
+	 * One page of memberships, each with its name, and the pagination envelope.
+	 *
+	 * @param array<int, array<string, mixed>> $all    Every membership of the list.
+	 * @param array{page: int, limit: int}     $window The 1-based page and the clamped page size.
+	 *
+	 * @return array{data: array<int, array<string, mixed>>, pagination: array{page: int, limit: int, total: int, pages: int}}
+	 */
+	private function pageOf(array $all, array $window): array {
+		['page' => $page, 'limit' => $limit] = $window;
 		$total = count($all);
 
 		$pages = 0;
@@ -218,8 +253,13 @@ class SubscriptionQueryService {
 			$pages = (int)ceil($total / $limit);
 		}
 
+		$rows = array_map(
+			fn (array $row): array => $this->withName(subscription: $row),
+			array_slice($all, (($page - 1) * $limit), $limit)
+		);
+
 		return [
-			'data' => array_slice($all, (($page - 1) * $limit), $limit),
+			'data' => $rows,
 			'pagination' => [
 				'page' => $page,
 				'limit' => $limit,
@@ -227,7 +267,7 @@ class SubscriptionQueryService {
 				'pages' => $pages,
 			],
 		];
-	}//end listSubscriptionsForList()
+	}//end pageOf()
 
 	/**
 	 * Every membership one contact holds.
@@ -268,24 +308,29 @@ class SubscriptionQueryService {
 	}//end rowsForList()
 
 	/**
-	 * The key the consent ledger is written under for a membership.
-	 *
-	 * A public signup not yet matched to a contact still needs a ledger
-	 * entry, so the address stands in for the contact id. Mirrors
-	 * `SubscriptionService::contactKeyFor()`, which writes what this reads.
+	 * A membership with the name of its contact, so a subscriber row reads
+	 * as the person or organisation above their address. A public signup
+	 * not yet matched to a contact keeps its address alone.
 	 *
 	 * @param array<string, mixed> $subscription The membership.
 	 *
-	 * @return string The consent key.
+	 * @return array<string, mixed> The membership, with `name` when known.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-lists-subscribers-read-by-name
 	 */
-	private function contactKeyFor(array $subscription): string {
+	private function withName(array $subscription): array {
 		$contactId = (string)($subscription['contactId'] ?? '');
-		if ($contactId !== '') {
-			return $contactId;
+		if ($contactId === '' || trim((string)($subscription['name'] ?? '')) !== '') {
+			return $subscription;
 		}
 
-		return (string)($subscription['email'] ?? '');
-	}//end contactKeyFor()
+		$name = $this->names->fullName(recipientId: $contactId);
+		if ($name !== '') {
+			$subscription['name'] = $name;
+		}
+
+		return $subscription;
+	}//end withName()
 
 	/**
 	 * Resolve the Subscription schema slug.

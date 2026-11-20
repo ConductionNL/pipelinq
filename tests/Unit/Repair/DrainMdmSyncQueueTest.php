@@ -237,4 +237,83 @@ final class DrainMdmSyncQueueTest extends TestCase {
 		$this->buildStep()->run($this->createStub(IOutput::class));
 		$this->assertCount(0, $this->dispatched);
 	}//end testEmptyQueueNoOp()
+
+	/**
+	 * A recording output.
+	 *
+	 * @param \ArrayObject<int, array<int, string>> $lines The lines written.
+	 *
+	 * @return IOutput
+	 */
+	private function recordingOutput(\ArrayObject $lines): IOutput {
+		$output = $this->createMock(IOutput::class);
+		$output->method('info')->willReturnCallback(static function (string $message) use ($lines): void {
+			$lines[] = ['info', $message];
+		});
+		$output->method('warning')->willReturnCallback(static function (string $message) use ($lines): void {
+			$lines[] = ['warning', $message];
+		});
+		return $output;
+	}//end recordingOutput()
+
+	/**
+	 * The run reports its counts on the output and in the log, logs each
+	 * failed hand-off with its row and target, and warns about the rows left.
+	 *
+	 * @return void
+	 */
+	public function testSummaryAndFailureLines(): void {
+		$this->seedRow('a', 'queued');
+		$this->seedRow('b', 'acknowledged');
+		$this->seedRow('c', 'sending', 'erp');
+		$lines = new \ArrayObject();
+		$logged = new \ArrayObject();
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		foreach (['info', 'error'] as $level) {
+			$logger->method($level)->willReturnCallback(static function (string $message, array $context = []) use ($logged, $level): void {
+				$logged[] = [$level, $message, $context];
+			});
+		}
+
+		$step = $this->buildStep(failTarget: 'erp');
+		$container = (new \ReflectionProperty($step, 'container'))->getValue($step);
+		(new DrainMdmSyncQueue($this->repo, $container, $logger))->run($this->recordingOutput(lines: $lines));
+
+		$summary = 'Pipelinq MDM sync-queue drain: 1 drained, 1 skipped (terminal), 1 failed (left non-terminal).';
+		$this->assertSame(
+			[['info', $summary], ['warning', 'Pipelinq MDM sync-queue drain: 1 row(s) could not be handed off — they remain for the next run.']],
+			$lines->getArrayCopy()
+		);
+		$this->assertSame(
+			[
+				['error', 'Pipelinq MDM sync-queue drain: hand-off failed; row left in place', ['item' => 'c', 'target' => 'erp', 'exception' => 'delivery failed']],
+				['info', $summary, []],
+			],
+			$logged->getArrayCopy()
+		);
+		$this->assertSame([['targetSystem' => 'shillinq', 'changeType' => 'merge', 'masterEntity' => 'm-a', 'payload' => ['k' => 'a']]], $this->dispatched);
+	}//end testSummaryAndFailureLines()
+
+	/**
+	 * Without the queue schema, an empty queue or OpenRegister's webhook
+	 * service, the run says so and changes nothing.
+	 *
+	 * @return void
+	 */
+	public function testNothingToDrainLines(): void {
+		$lines = new \ArrayObject();
+		$this->buildStep()->run($this->recordingOutput(lines: $lines));
+		$this->assertSame([['info', 'Pipelinq MDM sync-queue drain: queue is empty, nothing to drain.']], $lines->getArrayCopy());
+
+		$this->seedRow('a', 'queued');
+		$lines = new \ArrayObject();
+		$this->buildStepOrAbsent()->run($this->recordingOutput(lines: $lines));
+		$this->assertSame([['warning', 'Pipelinq MDM sync-queue drain: OpenRegister WebhookService unavailable — rows left in place for a later run.']], $lines->getArrayCopy());
+
+		$repo = $this->createMock(\OCA\Pipelinq\Service\Mdm\MdmObjectRepository::class);
+		$repo->method('findAll')->willThrowException(new \RuntimeException('no such schema'));
+		$lines = new \ArrayObject();
+		(new DrainMdmSyncQueue($repo, $this->createStub(ContainerInterface::class), new NullLogger()))->run($this->recordingOutput(lines: $lines));
+		$this->assertSame([['info', 'Pipelinq MDM sync-queue drain: no queue schema present, nothing to drain (no such schema).']], $lines->getArrayCopy());
+	}//end testNothingToDrainLines()
 }//end class

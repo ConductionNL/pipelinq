@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Adapter;
 /**
  * Google Cloud Storage export sink adapter.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
  */
 class GcsExportAdapter extends AbstractOpenConnectorSink {
 	/**

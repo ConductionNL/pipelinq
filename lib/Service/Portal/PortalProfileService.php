@@ -21,13 +21,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-007
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-007
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalProfileServiceInterface;
 use OCP\IL10N;
 
 /**
@@ -41,7 +42,7 @@ use OCP\IL10N;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalProfileService {
+class PortalProfileService implements PortalProfileServiceInterface {
 	/**
 	 * Schema slug for accounts.
 	 *
@@ -115,43 +116,59 @@ class PortalProfileService {
 	 * @param array<string, mixed> $changes The requested changes.
 	 *
 	 * @return array<string, mixed> The updated safe profile.
-	 * @spec openspec/changes/customer-portal/specs.md#REQ-007
+	 * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-007
 	 */
 	public function update(array $account, string $tenantId, array $changes): array {
-		$accountId = (string)$this->repository->idOf(object: $account);
+		$edit = ['accountId' => (string)$this->repository->idOf(object: $account), 'tenantId' => $tenantId, 'changes' => $changes];
+		$account = $this->withChanges(account: $account, edit: $edit);
 
-		foreach (self::EDITABLE as $field) {
-			if (array_key_exists($field, $changes) === false) {
-				continue;
-			}
-
-			$new = $changes[$field];
-			$old = ($account[$field] ?? null);
-			if ($old === $new) {
-				continue;
-			}
-
-			$account[$field] = $new;
-			$this->audit->log(
-				$accountId,
-				$tenantId,
-				'profile-update',
-				'success',
-				[
-					'fieldName' => $field,
-					'previousValue' => $old,
-					'newValue' => $new,
-				]
-			);
-		}//end foreach
-
-		if (array_key_exists('email', $changes) === true) {
-			$this->startEmailChange(account: $account, accountId: $accountId, tenantId: $tenantId, newEmail: (string)$changes['email']);
-		}
-
-		$saved = $this->repository->save(self::SCHEMA, $account, $accountId);
+		$saved = $this->repository->save(self::SCHEMA, $account, $edit['accountId']);
 		return $this->present(account: $saved);
 	}//end update()
+
+	/**
+	 * The account with the changes applied, each changed field audited, and an email change staged.
+	 *
+	 * @param array<string, mixed>                                                   $account The account record.
+	 * @param array{accountId: string, tenantId: string, changes: array<string, mixed>} $edit    The account id, the tenant id
+	 *   and the requested changes.
+	 *
+	 * @return array<string, mixed> The account record to save.
+	 */
+	private function withChanges(array $account, array $edit): array {
+		['accountId' => $accountId, 'tenantId' => $tenantId, 'changes' => $changes] = $edit;
+		foreach ($this->changedFields(account: $account, changes: $changes) as $field => [$old, $new]) {
+			$account[$field] = $new;
+			$details = ['fieldName' => $field, 'previousValue' => $old, 'newValue' => $new];
+			$this->audit->log($accountId, $tenantId, 'profile-update', 'success', $details);
+		}
+
+		if (array_key_exists('email', $changes) === true) {
+			$this->startEmailChange(account: $account, edit: ['accountId' => $accountId, 'tenantId' => $tenantId, 'newEmail' => (string)$changes['email']]);
+		}
+
+		return $account;
+	}//end withChanges()
+
+	/**
+	 * The editable fields the changes actually change, in field order, each
+	 * with its old and new value.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 * @param array<string, mixed> $changes The requested changes.
+	 *
+	 * @return array<string, array{0: mixed, 1: mixed}>
+	 */
+	private function changedFields(array $account, array $changes): array {
+		$changed = [];
+		foreach (self::EDITABLE as $field) {
+			if (array_key_exists($field, $changes) === true && ($account[$field] ?? null) !== $changes[$field]) {
+				$changed[$field] = [($account[$field] ?? null), $changes[$field]];
+			}
+		}
+
+		return $changed;
+	}//end changedFields()
 
 	/**
 	 * Verify a pending email change with a token, swapping it into place.
@@ -166,54 +183,75 @@ class PortalProfileService {
 	 *   audit are all unspecified
 	 */
 	public function verifyEmail(string $token, string $tenantId): bool {
+		$account = $this->accountForEmailToken(token: $token, tenantId: $tenantId);
+		if ($account === null) {
+			return false;
+		}
+
+		$accountId = (string)$this->repository->idOf(object: $account);
+		$verified = $this->asVerified(account: $account);
+		$this->repository->save(self::SCHEMA, $verified, $accountId);
+
+		$details = ['newValue' => $verified['email']];
+		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'email-change', outcome: 'success', details: $details);
+		return true;
+	}//end verifyEmail()
+
+	/**
+	 * The tenant's account the email token belongs to, when the token is
+	 * valid and unexpired; null otherwise.
+	 *
+	 * @param string $token    The plaintext email token.
+	 * @param string $tenantId The tenant.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function accountForEmailToken(string $token, string $tenantId): ?array {
 		$account = $this->repository->findOneBy(
 			self::SCHEMA,
 			['emailVerifyTokenHash' => $this->tokens->hash(plain: $token), 'tenantId' => $tenantId]
 		);
 		if ($account === null) {
-			return false;
+			return null;
 		}
 
-		if ($this->tokens->verify(
-			$token,
-			($account['emailVerifyTokenHash'] ?? null),
-			($account['emailVerifyExpiresAt'] ?? null)
-		) === false
-		) {
-			return false;
+		if ($this->tokens->verify($token, ($account['emailVerifyTokenHash'] ?? null), ($account['emailVerifyExpiresAt'] ?? null)) === false) {
+			return null;
 		}
 
-		$accountId = (string)$this->repository->idOf(object: $account);
-		$newEmail = strtolower((string)($account['pendingEmail'] ?? ''));
-		$account['email'] = $newEmail;
+		return $account;
+	}//end accountForEmailToken()
+
+	/**
+	 * The account with its pending address (lower-cased) in place and the
+	 * email token cleared.
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function asVerified(array $account): array {
+		$account['email'] = strtolower((string)($account['pendingEmail'] ?? ''));
 		$account['pendingEmail'] = null;
 		$account['emailVerifyTokenHash'] = null;
 		$account['emailVerifyExpiresAt'] = null;
-		$this->repository->save(self::SCHEMA, $account, $accountId);
 
-		$this->audit->log(
-			accountId: $accountId,
-			tenantId: $tenantId,
-			eventType: 'email-change',
-			outcome: 'success',
-			details: ['newValue' => $newEmail]
-		);
-		return true;
-	}//end verifyEmail()
+		return $account;
+	}//end asVerified()
 
 	/**
 	 * Stage an email change: store the pending email + token and send the link.
 	 * The login email is left untouched until verification.
 	 *
-	 * @param array<string, mixed> $account The account record (by reference via return).
-	 * @param string $accountId The account id.
-	 * @param string $tenantId The tenant id.
-	 * @param string $newEmail The requested new email.
+	 * @param array<string, mixed>                                      $account The account record (by reference via return).
+	 * @param array{accountId: string, tenantId: string, newEmail: string} $edit    The account id, the tenant id and the
+	 *   requested new email.
 	 *
 	 * @return void
 	 */
-	private function startEmailChange(array &$account, string $accountId, string $tenantId, string $newEmail): void {
-		$newEmail = strtolower(trim($newEmail));
+	private function startEmailChange(array &$account, array $edit): void {
+		['accountId' => $accountId, 'tenantId' => $tenantId] = $edit;
+		$newEmail = strtolower(trim($edit['newEmail']));
 		if ($newEmail === '' || $newEmail === strtolower((string)($account['email'] ?? ''))) {
 			return;
 		}
@@ -223,23 +261,26 @@ class PortalProfileService {
 		$account['emailVerifyTokenHash'] = $token['hash'];
 		$account['emailVerifyExpiresAt'] = $token['expiresAt'];
 
+		$this->mailEmailToken(newEmail: $newEmail, plainToken: $token['plain']);
+		$details = ['fieldName' => 'email', 'newValue' => $newEmail];
+		$this->audit->log($accountId, $tenantId, 'profile-update', 'pending-verification', $details);
+	}//end startEmailChange()
+
+	/**
+	 * Mail the confirmation link for a new address.
+	 *
+	 * @param string $newEmail   The new address.
+	 * @param string $plainToken The plaintext token.
+	 *
+	 * @return void
+	 */
+	private function mailEmailToken(string $newEmail, string $plainToken): void {
 		$this->mail->sendTokenLink(
 			$newEmail,
 			'/index.php/apps/pipelinq/portal/verify-email',
-			$token['plain'],
+			$plainToken,
 			$this->l10n->t('Confirm your new email address'),
 			$this->l10n->t('Click the link below to confirm this email address for your portal account.')
 		);
-
-		$this->audit->log(
-			$accountId,
-			$tenantId,
-			'profile-update',
-			'pending-verification',
-			[
-				'fieldName' => 'email',
-				'newValue' => $newEmail,
-			]
-		);
-	}//end beginEmailChange()
+	}//end mailEmailToken()
 }//end class

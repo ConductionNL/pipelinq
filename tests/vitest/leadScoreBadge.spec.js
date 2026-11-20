@@ -146,8 +146,10 @@ describe('callers', () => {
 	it('the Leads list has a sortable score column and a Call first toggle', () => {
 		const list = read('src/views/leads/LeadList.vue')
 		expect(list).toMatch(
-			/key: 'qualificationScore',[\s\S]{0,120}widget: 'progress'/,
+			/key: 'qualificationScore',[\s\S]{0,120}widget: 'lead-score',[\s\S]{0,40}sortable: true/,
 		)
+		// The win chance is its own column, not the lead score.
+		expect(list).toMatch(/key: 'winProbability',[\s\S]{0,120}widget: 'progress'/)
 		expect(list).toMatch(/Call first/)
 		expect(list).toMatch(/CALL_FIRST_SORT/)
 		const manifest = JSON.parse(read('src/manifest.json'))
@@ -162,7 +164,9 @@ describe('callers', () => {
 			}),
 		)
 		for (const column of leads.config.columns) {
-			if (typeof column === 'object') {
+			// winProbability is a `materialise: false` calculation: it is
+			// computed on read, so OpenRegister has no stored value to sort on.
+			if (typeof column === 'object' && column.key !== 'winProbability') {
 				expect(column).toMatchObject({ sortable: true })
 			}
 		}
@@ -173,7 +177,7 @@ describe('callers', () => {
 			/<LeadScoreBadge/,
 		)
 		const board = read('src/views/pipeline/PipelineBoard.vue')
-		expect(board).toMatch(/toggleSort\('score'\)/)
+		expect(board).toMatch(/\{ key: 'score', label: this\.t\('pipelinq', 'Score'\) \}/)
 		expect(board).toMatch(/compareCallFirst/)
 	})
 })

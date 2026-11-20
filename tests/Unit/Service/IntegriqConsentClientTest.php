@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\Consent\ConsentAsk;
 use OCA\Pipelinq\Service\IntegriqConsentClient;
 use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;
 use OCP\IAppConfig;
@@ -83,12 +84,12 @@ class IntegriqConsentClientTest extends TestCase {
 		$client = $this->client(decisionEvent: $decisionEvent);
 
 		foreach (['marketing', 'service', 'reminder'] as $category) {
-			$decision = $client->decideOne(channel: 'email', category: $category, requiresConsent: false, address: 'a@example.nl');
+			$decision = $client->decideOne(ask: new ConsentAsk(channel: 'email', category: $category, requiresConsent: false), recipient: ['address' => 'a@example.nl']);
 			self::assertFalse($decision['send'], $category.' must be refused when integriq is '.$mode);
 			self::assertSame('authority-unavailable', $decision['code']);
 		}
 
-		$account = $client->decideOne(channel: 'email', category: 'account', requiresConsent: false, address: 'a@example.nl');
+		$account = $client->decideOne(ask: new ConsentAsk(channel: 'email', category: 'account', requiresConsent: false), recipient: ['address' => 'a@example.nl']);
 		self::assertTrue($account['send']);
 		self::assertSame('authority-unavailable', $account['code']);
 		self::assertNull($account['unsubscribe']);
@@ -97,9 +98,7 @@ class IntegriqConsentClientTest extends TestCase {
 	public function testAnOptOutIsRefusedAndAnAllowedSendCarriesTheLink(): void {
 		$this->integriq->seed(['address' => 'out@example.nl', 'state' => 'opted-out', 'scope' => 'instance', 'channel' => '']);
 		$decisions = $this->client()->decide(
-			channel: 'email',
-			category: 'service',
-			requiresConsent: false,
+			question: (new ConsentAsk(channel: 'email', category: 'service', requiresConsent: false))->question(),
 			recipients: [['address' => 'out@example.nl'], ['address' => 'in@example.nl']]
 		);
 
@@ -114,11 +113,8 @@ class IntegriqConsentClientTest extends TestCase {
 	public function testAReplyWithInReplyToPassesAnOptOut(): void {
 		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'whatsapp']);
 		$decision = $this->client()->decideOne(
-			channel: 'whatsapp',
-			category: 'reply',
-			requiresConsent: false,
-			address: '+31612345678',
-			inReplyTo: 'msg-1'
+			ask: new ConsentAsk(channel: 'whatsapp', category: 'reply', requiresConsent: false),
+			recipient: ['address' => '+31612345678', 'inReplyTo' => 'msg-1']
 		);
 
 		self::assertTrue($decision['send']);
@@ -131,7 +127,10 @@ class IntegriqConsentClientTest extends TestCase {
 			$recipients[] = ['address' => 'p'.$i.'@example.nl'];
 		}
 
-		$decisions = $this->client()->decide(channel: 'email', category: 'marketing', requiresConsent: false, recipients: $recipients);
+		$decisions = $this->client()->decide(
+			question: (new ConsentAsk(channel: 'email', category: 'marketing', requiresConsent: false))->question(),
+			recipients: $recipients
+		);
 
 		self::assertCount(3, $this->integriq->decisionEvents);
 		self::assertCount(1200, $decisions);

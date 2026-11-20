@@ -84,97 +84,20 @@ The system MUST provide a complaint form for creating and editing complaints wit
 
 ### Requirement: Complaint List View
 
-The complaint list MUST support search, filtering by status/category/priority, sorting, and pagination.
+Complaints SHALL be listed on the Tickets page under the view Klachten, with the ticket list's columns, filters, sort and bulk actions; its empty state offers Nieuw verzoek. Board: pipelinq/PqTickets (view Klachten).
 
-#### Scenario: Filter by status
-
-- GIVEN 8 new complaints, 3 in-progress, and 2 resolved complaints
-- WHEN the user selects "new" from the status filter
-- THEN only the 8 new complaints MUST be shown
-- AND the filter MUST be clearable
-
-#### Scenario: Filter by category
-
-- GIVEN complaints across multiple categories
-- WHEN the user selects "service" from the category filter
-- THEN only service complaints MUST be shown
-
-#### Scenario: Search by title or description
-
-- GIVEN complaints "Onjuiste factuur" and "Levertijd te lang"
-- WHEN the user types "factuur" in the search box
-- THEN "Onjuiste factuur" MUST appear in results
-- AND search MUST be debounced (300ms)
-
-#### Scenario: Sort by date or priority
-
-- GIVEN the complaint list
-- WHEN the user clicks the date column header
-- THEN complaints MUST sort by creation date descending (newest first)
-- AND clicking again MUST reverse to ascending
-
-#### Scenario: Visual SLA overdue indicator
-
-- GIVEN a complaint with `slaDeadline` in the past and status not resolved/rejected
-- WHEN the user views the complaint list
-- THEN the complaint row MUST display a visual overdue indicator (red badge or icon)
-
-#### Scenario: Empty state
-
-- GIVEN no complaints exist
-- WHEN the user views the complaint list
-- THEN an empty state message MUST display
-- AND a "Register first complaint" button MUST be visible
-
-#### Scenario: Pagination
-
-- GIVEN 45 complaints with page size 20
-- THEN page navigation MUST show current page, total pages, and total count
-- AND prev/next buttons MUST be functional
-
----
+#### Scenario: The Klachten view lists only complaints
+- WHEN a user opens Tickets and chooses the view Klachten
+- THEN only tickets of kind Klacht are listed, newest first, with status, assignee and deadline
 
 ### Requirement: Complaint Detail View
 
-The complaint detail view MUST show all complaint information, linked entities, status timeline, and resolution fields.
+A complaint SHALL open as a ticket of kind Klacht on the ticket page, with the ticket's status transitions (in behandeling, afgerond, afgewezen) and its history. Board: pipelinq/PqTicket.
 
-#### Scenario: Display complaint details
-
-- GIVEN a complaint "Onjuiste factuur" linked to client "Acme B.V."
-- WHEN the agent views the complaint detail
-- THEN all fields MUST be displayed: title, description, category, priority, status, channel, SLA deadline
-- AND the linked client name MUST be clickable (navigates to client detail)
-- AND the linked contact name MUST be clickable if set
-- AND the assigned agent MUST be shown
-
-#### Scenario: SLA deadline visual indicator
-
-- GIVEN a complaint with SLA deadline in 2 hours
-- WHEN the agent views the detail
-- THEN the SLA deadline MUST show with an "approaching" warning indicator (orange)
-- AND if the deadline is past, it MUST show as "overdue" (red)
-- AND if resolved before deadline, it MUST show as "met" (green)
-
-#### Scenario: Status transition buttons
-
-- GIVEN a complaint with status "new"
-- WHEN the agent views the detail
-- THEN buttons for valid transitions MUST be shown:
-  - "new" -> "In behandeling nemen" (to in_progress)
-- AND from "in_progress":
-  - "Afhandelen" (to resolved — requires resolution text)
-  - "Afwijzen" (to rejected — requires resolution text)
-- AND from "resolved"/"rejected": no further transitions
-
-#### Scenario: Resolution requires explanation
-
-- GIVEN a complaint in status "in_progress"
-- WHEN the agent clicks "Afhandelen"
-- THEN a dialog MUST appear requiring a resolution text
-- AND the resolution MUST be saved with the status change
-- AND `resolvedAt` MUST be set to the current timestamp
-
----
+#### Scenario: A complaint's status is changed on the ticket page
+- GIVEN an open complaint
+- WHEN the handler sets it to In behandeling, Afgerond or Afgewezen
+- THEN the ticket shows the new status and the history records who changed it and when
 
 ### Requirement: Complaint Audit Trail
 
@@ -217,18 +140,13 @@ The dashboard MUST include a complaints widget showing key metrics.
 
 ### Requirement: Complaints on Client Detail
 
-Complaints linked to a client MUST be visible on the client detail view.
+A complaint SHALL appear on the client page as a ticket of kind Klacht in the Tickets card, with its status and deadline; the card's "Nieuw verzoek" action registers a complaint by choosing the kind Klacht. There SHALL be no separate Complaints section. Boards: pipelinq/PqKlant (Tickets card), pipelinq/PqNieuwVerzoek.
 
-#### Scenario: Show complaint history on client detail
-
-- GIVEN client "Acme B.V." with 3 complaints (1 new, 1 in_progress, 1 resolved)
-- WHEN the agent views the client detail
-- THEN a "Complaints" section MUST show all 3 complaints
-- AND each complaint MUST display title, status, and date
-- AND clicking a complaint MUST navigate to the complaint detail
-- AND an "Add complaint" button MUST be visible
-
----
+#### Scenario: A client's complaints are listed as tickets
+- GIVEN a client with one open complaint
+- WHEN a user opens the client page
+- THEN the Tickets card lists the complaint with the kind Klacht, its status and its deadline
+- AND Nieuw verzoek with kind Klacht registers another one
 
 ### Requirement: SLA Configuration
 

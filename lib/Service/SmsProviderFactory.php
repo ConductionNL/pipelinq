@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -40,16 +40,27 @@ use Psr\Log\LoggerInterface;
  *   the row's `vendor`, or null when the vendor is not yet
  *   supported.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsProviderFactory {
+	/**
+	 * The client class per supported vendor key.
+	 *
+	 * @var array<string, class-string<TwilioSmsClient|MessageBirdSmsClient|CmComSmsClient>>
+	 */
+	private const CLIENT_CLASSES = [
+		'twilio' => TwilioSmsClient::class,
+		'messagebird' => MessageBirdSmsClient::class,
+		'cm-com' => CmComSmsClient::class,
+	];
+
 	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -65,46 +76,37 @@ class SmsProviderFactory {
 	 * @return SmsProviderClientInterface|null Client or null when the
 	 *                                         vendor key is not supported.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function create(array $channelProvider): ?SmsProviderClientInterface {
-		$vendor = (string)($channelProvider['vendor'] ?? '');
-		$fromNumber = (string)($channelProvider['phoneNumber'] ?? '');
-		$secret = (string)($channelProvider['webhookSecret'] ?? '');
-		$sourceId = (string)($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
-		$credentials = (array)($channelProvider['credentials'] ?? []);
-
-		$sourceIdOrNull = $sourceId;
-		if ($sourceId === '') {
-			$sourceIdOrNull = null;
+		$clientClass = (self::CLIENT_CLASSES[(string)($channelProvider['vendor'] ?? '')] ?? null);
+		if ($clientClass === null) {
+			return null;
 		}
 
-		return match ($vendor) {
-			'twilio' => new TwilioSmsClient(
-				container: $this->container,
-				logger: $this->logger,
-				credentials: $credentials,
-				fromNumber: $fromNumber,
-				webhookSecret: $secret,
-				sourceId: $sourceIdOrNull,
-			),
-			'messagebird' => new MessageBirdSmsClient(
-				container: $this->container,
-				logger: $this->logger,
-				credentials: $credentials,
-				fromNumber: $fromNumber,
-				webhookSecret: $secret,
-				sourceId: $sourceIdOrNull,
-			),
-			'cm-com' => new CmComSmsClient(
-				container: $this->container,
-				logger: $this->logger,
-				credentials: $credentials,
-				fromNumber: $fromNumber,
-				webhookSecret: $secret,
-				sourceId: $sourceIdOrNull,
-			),
-			default => null,
-		};// End match.
+		return new $clientClass(
+			container: $this->container,
+			logger: $this->logger,
+			credentials: (array)($channelProvider['credentials'] ?? []),
+			fromNumber: (string)($channelProvider['phoneNumber'] ?? ''),
+			webhookSecret: (string)($channelProvider['webhookSecret'] ?? ''),
+			sourceId: $this->sourceIdOf(channelProvider: $channelProvider),
+		);
 	}//end create()
+
+	/**
+	 * The row's OpenConnector source id (the legacy key as fallback), or null when it has none.
+	 *
+	 * @param array<string, mixed> $channelProvider channelProvider row.
+	 *
+	 * @return string|null The source id.
+	 */
+	private function sourceIdOf(array $channelProvider): ?string {
+		$sourceId = (string)($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
+		if ($sourceId === '') {
+			return null;
+		}
+
+		return $sourceId;
+	}//end sourceIdOf()
 }//end class

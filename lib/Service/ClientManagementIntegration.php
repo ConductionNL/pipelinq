@@ -19,13 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ClientManagementIntegrationInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -36,9 +37,9 @@ use Throwable;
  * - onContactDeleted(contactId) — listener hook that cascades
  *   `messagingConsentRecord` deletion via ConsentService.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class ClientManagementIntegration {
+class ClientManagementIntegration implements ClientManagementIntegrationInterface {
 	/**
 	 * Constructor.
 	 *
@@ -46,7 +47,7 @@ class ClientManagementIntegration {
 	 * @param LoggerInterface $logger Logger.
 	 * @param IntegriqConsentClient $integriq Tells integriq to drop the contact link and keep the opt-out.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 */
 	public function __construct(
 		private ConsentService $consentService,
@@ -62,7 +63,7 @@ class ClientManagementIntegration {
 	 *
 	 * @return int Number of consent rows deleted.
 	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-contact-erasure-keeps-the-opt-out-in-integriq-req-cii-005
 	 */
 	public function onContactDeleted(string $contactId): int {

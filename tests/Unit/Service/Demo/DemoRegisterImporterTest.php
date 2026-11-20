@@ -21,6 +21,8 @@ use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Pipelinq\Service\Demo\DemoRecordSweeper;
+use OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCP\App\IAppManager;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
@@ -31,11 +33,16 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * @covers \OCA\Pipelinq\Service\Demo\DemoRegisterImporter
+ * @covers \OCA\Pipelinq\Service\Demo\DemoRecordsDescriptor
+ * @covers \OCA\Pipelinq\Service\Demo\DemoRecordSweeper
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
  * @uses   \OCA\Pipelinq\Service\Demo\DemoUserFields
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
+ * @uses   \OCA\Pipelinq\Service\Demo\ExampleUserAccounts
  */
 class DemoRegisterImporterTest extends TestCase {
 	/**
@@ -130,24 +137,27 @@ class DemoRegisterImporterTest extends TestCase {
 			fn (array $config): array => $this->storedFor((string)$config['filters']['schema'])
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register = null, $schemaId = null): bool {
+			function (ObjectDeletion $deletion): bool {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schemaId = $deletion->target->schema;
 				$this->record(['deleteObject', $uuid, (string)$register, (string)$schemaId]);
 				return true;
 			}
 		);
 
+		$logger     = $this->createMock(originalClassName: LoggerInterface::class);
+		$userFields = new DemoUserFields(
+			userSession: $this->userSession(uid: $actingUid),
+			userManager: $this->userManager(),
+			configLoader: new ConfigFileLoaderService(appManager: $appManager),
+		);
+
 		return new DemoRegisterImporter(
-			appManager: $appManager,
-			appConfig: $appConfig,
+			descriptor: new DemoRecordsDescriptor(appManager: $appManager, userFields: $userFields, logger: $logger),
 			configurationService: $configuration,
-			schemaMapper: $schemaMapper,
-			objectService: $objectService,
-			logger: $this->createMock(LoggerInterface::class),
-			userFields: new DemoUserFields(
-				userSession: $this->userSession(uid: $actingUid),
-				userManager: $this->userManager(),
-				configLoader: new ConfigFileLoaderService($appManager),
-			),
+			sweeper: new DemoRecordSweeper(appConfig: $appConfig, schemaMapper: $schemaMapper, objectService: $objectService),
+			logger: $logger,
 		);
 	}//end importer()
 

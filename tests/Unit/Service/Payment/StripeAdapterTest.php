@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ require_once __DIR__ . '/StubHttpTransport.php';
 /**
  * Tests for StripeAdapter.
  *
- * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
+ * @spec openspec/specs/pos-payment-provider-adapter/spec.md
  */
 class StripeAdapterTest extends TestCase {
 	/**

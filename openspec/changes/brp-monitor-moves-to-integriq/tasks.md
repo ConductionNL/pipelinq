@@ -4,9 +4,9 @@ Spec only in this PR. Build after integriq `brp-connection-monitor-from-pipelinq
 
 ## 1. Move the settings
 
-- [ ] 1.1 Repair step `MoveBrpConnectionToIntegriq` as in design section 2: no overwrite, secrets only through integriq's event, keys cleared only after confirmation, report per key.
+- [x] 1.1 Repair step `MoveBrpConnectionToIntegriq` as in design section 2: no overwrite, secrets only through integriq's event, keys cleared only after confirmation, report per key.
   - spec_ref: `specs/brp-lookup/spec.md#requirement-the-brp-connection-settings-move-to-integriq-once`
-  - files: `lib/Repair/MoveBrpConnectionToIntegriq.php`, `appinfo/info.xml`, `tests/Unit/Repair/MoveBrpConnectionToIntegriqTest.php`
+  - files: `lib/Repair/MoveBrpConnectionToIntegriq.php`, `lib/Event/BrpConnectionHandoverEvent.php` (the string-named event integriq listens for: settings and secrets in, an answer per part out), `appinfo/info.xml`, `tests/Unit/Repair/MoveBrpConnectionToIntegriqTest.php`, `tests/Unit/Event/BrpConnectionHandoverEventTest.php`
   - test: `vendor/bin/phpunit --no-coverage --filter MoveBrpConnectionToIntegriqTest`
 
 ## 2. Look up through integriq only

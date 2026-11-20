@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\RapportageController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\AppFramework\Http;
@@ -96,7 +97,7 @@ class RapportageControllerTest extends TestCase {
 			'avgDaysToClose' => 0.0,
 		]);
 
-		$controller = new RapportageController($this->request, $this->service, $this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]));
+		$controller = new RapportageController($this->request, $this->service, new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])));
 		$response = $controller->getPipelineStats();
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$data = $response->getData();
@@ -115,7 +116,7 @@ class RapportageControllerTest extends TestCase {
 	public function testGetPipelineStatsReturnsUnauthorizedWithoutSession(): void {
 		$this->userSession->method('getUser')->willReturn(null);
 
-		$controller = new RapportageController($this->request, $this->service, $this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]));
+		$controller = new RapportageController($this->request, $this->service, new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])));
 		$response = $controller->getPipelineStats();
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 
@@ -135,7 +136,7 @@ class RapportageControllerTest extends TestCase {
 
 		$this->service->method('getStageValues')->willThrowException(new \RuntimeException('boom'));
 
-		$controller = new RapportageController($this->request, $this->service, $this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]));
+		$controller = new RapportageController($this->request, $this->service, new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])));
 		$response = $controller->getPipelineStats();
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$data = $response->getData();
@@ -143,4 +144,44 @@ class RapportageControllerTest extends TestCase {
 
 	}//end testGetPipelineStatsReturnsServerErrorOnFailure()
 
+	/**
+	 * Golden: empty filters reach the service as null, given ones as is, in this call order.
+	 *
+	 * @return void
+	 */
+	public function testFiltersReachTheServiceExactly(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
+		foreach ([[[], [null, null, null]], [['pipelineId' => 'p-1', 'dateFrom' => '2026-01-01', 'dateTo' => '2026-06-30'], ['p-1', '2026-01-01', '2026-06-30']]] as [$params, [$pipeline, $from, $to]]) {
+			$request = $this->createMock(IRequest::class);
+			$request->method('getParam')->willReturnCallback(
+				static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default)
+			);
+			$calls = [];
+			$service = $this->createMock(RapportageService::class);
+			$service->method('getStageValues')->willReturnCallback(static function (?string $pipelineId) use (&$calls): array {
+				$calls[] = ['stageValues', $pipelineId];
+				return ['s'];
+			});
+			$service->method('getSourcePerformance')->willReturnCallback(static function (?string $dateFrom, ?string $dateTo) use (&$calls): array {
+				$calls[] = ['sourcePerformance', $dateFrom, $dateTo];
+				return ['p'];
+			});
+			$service->method('getAgingBuckets')->willReturnCallback(static function () use (&$calls): array {
+				$calls[] = ['agingBuckets'];
+				return ['a'];
+			});
+			$service->method('getWinLossAnalysis')->willReturnCallback(static function (?string $dateFrom, ?string $dateTo) use (&$calls): array {
+				$calls[] = ['winLoss', $dateFrom, $dateTo];
+				return ['w'];
+			});
+
+			$controller = new RapportageController($request, $service, new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])));
+			$response = $controller->getPipelineStats();
+
+			$this->assertSame(['stageValues' => ['s'], 'sourcePerformance' => ['p'], 'agingBuckets' => ['a'], 'winLoss' => ['w']], $response->getData());
+			$this->assertSame([['stageValues', $pipeline], ['sourcePerformance', $from, $to], ['agingBuckets'], ['winLoss', $from, $to]], $calls);
+		}
+	}//end testFiltersReachTheServiceExactly()
 }//end class

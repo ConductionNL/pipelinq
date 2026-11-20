@@ -28,15 +28,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
-use OCA\Pipelinq\Service\SlaAttainmentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaAttainmentServiceInterface;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -54,19 +53,17 @@ class SlaAttainmentController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request HTTP request.
-	 * @param SlaAttainmentService $attainment Attainment service.
-	 * @param IUserSession $userSession Active session.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
+	 * @param SlaAttainmentServiceInterface $attainment Attainment service.
+	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private SlaAttainmentService $attainment,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $accessPolicy,
+		private SlaAttainmentServiceInterface $attainment,
+		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -78,15 +75,11 @@ class SlaAttainmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function attainment(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => 'notAuthenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
 		// SLA attainment reports across the whole service desk — a CRM
 		// capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->privilege->refusalWith(['error' => 'notAuthenticated'], ['error' => 'forbidden']);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$params = [

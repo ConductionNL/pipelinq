@@ -31,8 +31,15 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
+use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
+use OCA\Pipelinq\Util\CastingPayloadToArray;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -41,7 +48,6 @@ use OCP\IL10N;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for receipt rendering, email delivery and thermal output.
@@ -59,7 +65,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/pos-receipt-engine/spec.md
  */
-class ReceiptDeliveryService {
+class ReceiptDeliveryService implements ReceiptDeliveryServiceInterface {
+	use CastingPayloadToArray;
+	use InjectedObjectService;
+
 	/**
 	 * Statuses a transaction must be in before a receipt may be issued.
 	 *
@@ -78,7 +87,7 @@ class ReceiptDeliveryService {
 	 * @param InvoiceSequenceService $invoiceSequence The invoice number allocator.
 	 * @param IMailer $mailer The Nextcloud mailer.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param PosAccessPolicyInterface $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
@@ -88,7 +97,7 @@ class ReceiptDeliveryService {
 		private InvoiceSequenceService $invoiceSequence,
 		private IMailer $mailer,
 		private IAppConfig $appConfig,
-		private PosAccessPolicy $policy,
+		private PosAccessPolicyInterface $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
@@ -108,13 +117,25 @@ class ReceiptDeliveryService {
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 *
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
 	 */
 	public function preview(string $transactionId, ?string $templateId = null, string $userId = ''): array {
 		$transaction = $this->loadTransactionWithLines(id: $transactionId);
 		$this->assertCanAccess(transaction: $transaction, userId: $userId);
 		$template = $this->loadTemplate(id: $templateId);
 
+		return $this->previewOf(transaction: $transaction, template: $template);
+	}//end preview()
+
+	/**
+	 * The preview of a loaded transaction rendered with a template.
+	 *
+	 * @param array<string, mixed> $transaction The transaction with lines.
+	 * @param array<string, mixed> $template The receipt template (empty for the default).
+	 *
+	 * @return array<string, mixed> The preview.
+	 */
+	private function previewOf(array $transaction, array $template): array {
 		$text = $this->receiptService->renderText(transaction: $transaction, template: $template);
 		$html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
 
@@ -125,7 +146,106 @@ class ReceiptDeliveryService {
 			'reference' => (string)($transaction['reference'] ?? $transaction['id'] ?? ''),
 			'customerEmail' => $this->customerEmail(transaction: $transaction),
 		];
-	}//end preview()
+	}//end previewOf()
+
+	/**
+	 * What the receipt card on a transaction page shows: the newest print and
+	 * its printer, how often it was printed, the newest mail that was sent,
+	 * and whether the sale prints as a receipt or an invoice.
+	 *
+	 * @param string $transactionId The transaction UUID.
+	 * @param string $userId The acting user UID (must be able to access the transaction).
+	 *
+	 * @return array<string, mixed> printedAt, printerDevice, printCount, emailedAt, emailRecipient, layout, invoiceThreshold.
+	 *
+	 * @throws OCSNotFoundException If the transaction is not in this app's register.
+	 * @throws OCSForbiddenException If the caller may not access the transaction.
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md#requirement-a-transaction-page-shows-its-receipt-history
+	 */
+	public function receiptLog(string $transactionId, string $userId): array {
+		$transaction = $this->loadTransactionWithLines(id: $transactionId);
+		$this->assertCanAccess(transaction: $transaction, userId: $userId);
+
+		$prints = [];
+		$mails = [];
+		foreach ($this->loadLogs(transactionId: $transactionId) as $log) {
+			if ((string)($log['status'] ?? 'success') === 'failed') {
+				continue;
+			}
+
+			if ((string)($log['action'] ?? '') === 'email') {
+				$mails[] = $log;
+				continue;
+			}
+
+			$prints[] = $log;
+		}
+
+		$print = $this->newestLog(logs: $prints);
+		$mail = $this->newestLog(logs: $mails);
+		$layout = 'receipt';
+		if ($this->receiptService->isInvoiceTransaction(transaction: $transaction) === true) {
+			$layout = 'invoice';
+		}
+
+		return [
+			'printedAt' => (string)($print['printedAt'] ?? ''),
+			'printerDevice' => (string)($print['printerDevice'] ?? ''),
+			'printCount' => count($prints),
+			'emailedAt' => (string)($mail['printedAt'] ?? ''),
+			'emailRecipient' => (string)($mail['emailRecipient'] ?? ''),
+			'layout' => $layout,
+			'invoiceThreshold' => ReceiptService::INVOICE_THRESHOLD_EUR,
+		];
+	}//end receiptLog()
+
+	/**
+	 * The newest of some receipt log entries, by printedAt.
+	 *
+	 * @param array<int, array<string, mixed>> $logs The entries.
+	 *
+	 * @return array<string, mixed> The newest entry, or [] for none.
+	 */
+	private function newestLog(array $logs): array {
+		$newest = [];
+		foreach ($logs as $log) {
+			if (strcmp((string)($log['printedAt'] ?? ''), (string)($newest['printedAt'] ?? '')) > 0) {
+				$newest = $log;
+			}
+		}
+
+		return $newest;
+	}//end newestLog()
+
+	/**
+	 * The receipt log entries of a transaction.
+	 *
+	 * @param string $transactionId The transaction UUID.
+	 *
+	 * @return array<int, array<string, mixed>> The entries.
+	 */
+	private function loadLogs(string $transactionId): array {
+		try {
+			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
+			$results = $this->getObjectService()->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema, 'transaction' => $transactionId]]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('Pipelinq: failed to read the receipt log', ['exception' => $e->getMessage()]);
+			return [];
+		}
+
+		$logs = [];
+		foreach (($results ?? []) as $result) {
+			$row = $this->toArray(object: $result);
+			if ((string)($row['transaction'] ?? '') === $transactionId) {
+				$logs[] = $row;
+			}
+		}
+
+		return $logs;
+	}//end loadLogs()
 
 	/**
 	 * Email a receipt to the transaction's customer.
@@ -164,70 +284,93 @@ class ReceiptDeliveryService {
 		$recipient = $this->resolveCustomerRecipient(transaction: $transaction, requested: $requestedRecipient);
 
 		$transaction = $this->ensureInvoiceNumber(transaction: $transaction);
+		$action = new ReceiptAction(transaction: $transaction, template: $template, action: 'email', userId: $userId);
+		return $this->deliverReceiptEmail(action: $action, recipient: $recipient);
+	}//end emailReceipt()
+
+	/**
+	 * Render the receipt, send it and log the outcome.
+	 *
+	 * @param ReceiptAction $action The email action.
+	 * @param string $recipient The validated recipient address.
+	 *
+	 * @return array<string, mixed> The status, recipient, log id and (on failure) error.
+	 */
+	private function deliverReceiptEmail(ReceiptAction $action, string $recipient): array {
+		$transaction = $action->transaction;
+		$template = $action->template;
 		$subject = $this->l10n->t('Your receipt') . ' ' . (string)($transaction['reference'] ?? '');
 		$text = $this->receiptService->renderText(transaction: $transaction, template: $template);
 		$html = $this->receiptService->renderHtml(transaction: $transaction, template: $template);
 
 		try {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$recipient]);
-			$message->setSubject($subject);
-			$message->setPlainBody($text);
-			$message->setHtmlBody($html);
+			$this->sendReceiptMail(recipient: $recipient, mail: ['subject' => $subject, 'text' => $text, 'html' => $html]);
 
-			$sender = $this->appConfig->getValueString(Application::APP_ID, 'receipt_email_sender', '');
-			if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
-				$message->setFrom([$sender]);
-			}
-
-			$failed = $this->mailer->send($message);
-			if (count($failed) > 0) {
-				throw new RuntimeException('Mailer reported failed recipients.');
-			}
-
-			$logId = $this->writeLog(
-				transaction: $transaction,
-				template: $template,
-				action: 'email',
-				status: 'success',
-				extra: [
-					'emailRecipient' => $recipient,
-					'renderedContent' => $text,
-					'errorMessage' => null,
-					'actor' => $userId,
-				]
-			);
+			$fields = ['status' => 'success', 'emailRecipient' => $recipient, 'renderedContent' => $text, 'errorMessage' => null];
+			$logId = $this->writeLog(action: $action, fields: $fields);
 
 			return ['status' => 'success', 'emailRecipient' => $recipient, 'logId' => $logId];
 		} catch (\Throwable $e) {
 			// Real send path; transport (SMTP) is environment-gated. Record the
 			// failure for audit without leaking internal error detail upstream.
-			$this->logger->warning(
-				'Pipelinq: receipt email send failed (SMTP may be disabled on this host)',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->warning('Pipelinq: receipt email send failed (SMTP may be disabled on this host)', ['exception' => $e->getMessage()]);
 
-			$logId = $this->writeLog(
-				transaction: $transaction,
-				template: $template,
-				action: 'email',
-				status: 'failed',
-				extra: [
-					'emailRecipient' => $recipient,
-					'errorMessage' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
-					'renderedContent' => null,
-					'actor' => $userId,
-				]
-			);
-
-			return [
-				'status' => 'failed',
-				'emailRecipient' => $recipient,
-				'logId' => $logId,
-				'error' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
-			];
+			return $this->logEmailFailure(action: $action, recipient: $recipient);
 		}//end try
-	}//end emailReceipt()
+	}//end deliverReceiptEmail()
+
+	/**
+	 * Build and send the receipt mail, throwing when the mailer reports failed recipients.
+	 *
+	 * @param string $recipient The recipient address.
+	 * @param array{subject: string, text: string, html: string} $mail The subject, plain-text body and HTML body.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the mailer reports failed recipients.
+	 */
+	private function sendReceiptMail(string $recipient, array $mail): void {
+		$message = $this->mailer->createMessage();
+		$message->setTo([$recipient]);
+		$message->setSubject($mail['subject']);
+		$message->setPlainBody($mail['text']);
+		$message->setHtmlBody($mail['html']);
+
+		$sender = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_email_sender', '');
+		if ($sender !== '' && $this->mailer->validateMailAddress($sender) === true) {
+			$message->setFrom([$sender]);
+		}
+
+		$failed = $this->mailer->send($message);
+		if (count($failed) > 0) {
+			throw new RuntimeException('Mailer reported failed recipients.');
+		}
+	}//end sendReceiptMail()
+
+	/**
+	 * Log a failed receipt email and return the failed outcome.
+	 *
+	 * @param ReceiptAction $action The email action.
+	 * @param string $recipient The recipient address.
+	 *
+	 * @return array<string, mixed> The failed outcome.
+	 */
+	private function logEmailFailure(ReceiptAction $action, string $recipient): array {
+		$fields = [
+			'status' => 'failed',
+			'emailRecipient' => $recipient,
+			'errorMessage' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
+			'renderedContent' => null,
+		];
+		$logId = $this->writeLog(action: $action, fields: $fields);
+
+		return [
+			'status' => 'failed',
+			'emailRecipient' => $recipient,
+			'logId' => $logId,
+			'error' => $this->l10n->t('Mail delivery failed (no SMTP relay configured).'),
+		];
+	}//end logEmailFailure()
 
 	/**
 	 * Produce the ESC/POS thermal byte stream for a transaction.
@@ -254,24 +397,34 @@ class ReceiptDeliveryService {
 		$template = $this->loadTemplate(id: $templateId);
 		$transaction = $this->ensureInvoiceNumber(transaction: $transaction);
 
+		return $this->printFor(action: new ReceiptAction(transaction: $transaction, template: $template, action: 'print', userId: $userId));
+	}//end printReceipt()
+
+	/**
+	 * Render the ESC/POS stream of a print action and log it.
+	 *
+	 * @param ReceiptAction $action The print action.
+	 *
+	 * @return array<string, mixed> The result: status, escposBase64, byteLength, logId.
+	 */
+	private function printFor(ReceiptAction $action): array {
+		$transaction = $action->transaction;
+		$template = $action->template;
 		$bytes = $this->receiptService->renderEscPos(transaction: $transaction, template: $template);
-		$device = $this->appConfig->getValueString(Application::APP_ID, 'receipt_printer_host', '');
-		$port = $this->appConfig->getValueString(Application::APP_ID, 'receipt_printer_port', '9100');
+		$device = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_printer_host', '');
+		$port = $this->appConfig->getValueString(AppIdentity::APP_ID, 'receipt_printer_port', '9100');
 		$target = '';
 		if ($device !== '') {
 			$target = $device . ':' . $port;
 		}
 
 		$logId = $this->writeLog(
-			transaction: $transaction,
-			template: $template,
-			action: 'print',
-			status: 'success',
-			extra: [
+			action: $action,
+			fields: [
+				'status' => 'success',
 				'printerDevice' => $target,
 				'renderedContent' => $this->receiptService->renderText(transaction: $transaction, template: $template),
 				'errorMessage' => null,
-				'actor' => $userId,
 			]
 		);
 
@@ -282,7 +435,7 @@ class ReceiptDeliveryService {
 			'printerDevice' => $target,
 			'logId' => $logId,
 		];
-	}//end printReceipt()
+	}//end printFor()
 
 	/**
 	 * Resolve and validate the customer recipient for an email receipt.
@@ -346,7 +499,7 @@ class ReceiptDeliveryService {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'client_schema');
-			$client = $this->getObjectService()->find(id: $clientId, register: $register, schema: $schema);
+			$client = $this->getObjectService()->find(id: $clientId, options: new ObjectFindOptions(register: $register, schema: $schema));
 			$client = $this->toArray(object: $client);
 
 			return (string)($client['email'] ?? $client['emailAddress'] ?? '');
@@ -399,10 +552,10 @@ class ReceiptDeliveryService {
 			unset($persist['lines'], $persist['@self']);
 			$this->getObjectService()->saveObject(
 				object: $persist,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $id
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $id
+				)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('Pipelinq: failed to persist invoice number', ['exception' => $e->getMessage()]);
@@ -458,36 +611,38 @@ class ReceiptDeliveryService {
 	 * Each call creates a NEW log object (append-only); entries are never
 	 * updated, so the audit trail is immutable (REQ-PRE-005 / task 13.5).
 	 *
-	 * @param array<string, mixed> $transaction The transaction.
-	 * @param array<string, mixed> $template The template used (may be empty).
-	 * @param string $action 'print' or 'email'.
-	 * @param string $status 'success', 'failed' or 'pending'.
-	 * @param array<string, mixed> $extra Action-specific fields.
+	 * The actor is written after the action-specific fields.
+	 *
+	 * @param ReceiptAction $action The action: transaction, template used (may be empty), 'print' or 'email', actor.
+	 * @param array<string, mixed> $fields The status ('success', 'failed' or 'pending') then the action-specific fields.
 	 *
 	 * @return string The created log id (or '' on failure).
 	 *
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
-	private function writeLog(array $transaction, array $template, string $action, string $status, array $extra): string {
+	private function writeLog(ReceiptAction $action, array $fields): string {
+		$transaction = $action->transaction;
+		$template = $action->template;
+		$status = $fields['status'];
+		unset($fields['status']);
 		$log = array_merge(
 			[
 				'transaction' => (string)($transaction['id'] ?? $transaction['uuid'] ?? ''),
 				'template' => (string)($template['id'] ?? $template['uuid'] ?? ''),
-				'action' => $action,
+				'action' => $action->action,
 				'status' => $status,
 				'invoiceNumber' => (string)($transaction['invoiceNumber'] ?? ''),
 				'printedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 			],
-			$extra
+			$fields,
+			['actor' => $action->userId]
 		);
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptPrintLog_schema');
 			$saved = $this->getObjectService()->saveObject(
 				object: $log,
-				extend: [],
-				register: $register,
-				schema: $schema
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			$saved = $this->toArray(object: $saved);
 
@@ -512,7 +667,7 @@ class ReceiptDeliveryService {
 		[$register, $schema] = $this->resolveSchema(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -599,7 +754,7 @@ class ReceiptDeliveryService {
 
 		try {
 			[$register, $schema] = $this->resolveSchema(schemaKey: 'receiptTemplate_schema');
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->getObjectService()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 
 			return $this->toArray(object: $object);
 		} catch (\Throwable $e) {
@@ -623,7 +778,7 @@ class ReceiptDeliveryService {
 	 *
 	 * @throws OCSForbiddenException If the caller may not access the transaction.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.1
 	 */
 	private function assertCanAccess(array $transaction, string $userId): void {
 		if ($this->policy->canAccessTransaction(object: $transaction, userId: $userId) === false) {
@@ -644,52 +799,12 @@ class ReceiptDeliveryService {
 	 * @throws OCSNotFoundException If the register or schema is not configured.
 	 */
 	private function resolveSchema(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			throw new OCSNotFoundException('POS register of schema is niet geconfigureerd.');
 		}
 
 		return [$register, $schema];
 	}//end resolveSchema()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
-
-	/**
-	 * Normalise an OR object (entity or array) into a plain array.
-	 *
-	 * @param mixed $object The OR object.
-	 *
-	 * @return array<string, mixed> The object as an array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return (array)$object;
-	}//end toArray()
 }//end class

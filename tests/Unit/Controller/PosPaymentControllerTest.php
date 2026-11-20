@@ -470,6 +470,36 @@ class PosPaymentControllerTest extends TestCase {
 	/**
 	 * @return void
 	 */
+	public function testMethodsAnswersTheCashierReadableList(): void {
+		$methods = [['provider' => 'ccv', 'providerLabel' => 'CCV', 'type' => 'terminal', 'method' => 'card']];
+		$this->service->expects($this->once())->method('listPaymentMethods')->willReturn($methods);
+
+		$response = $this->controller->methods();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['methods' => $methods], actual: $response->getData());
+	}//end testMethodsAnswersTheCashierReadableList()
+
+	/**
+	 * A cashier is not an admin: the methods list must be open to every
+	 * signed-in user, while the provider configuration stays admin-only.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pos-payment-methods/spec.md#requirement-a-cashier-reads-the-payment-methods-of-the-active-providers
+	 */
+	public function testMethodsIsOpenToCashiersAndProviderConfigIsNot(): void {
+		$open = static fn (string $method): bool => (new \ReflectionMethod(PosPaymentController::class, $method))
+			->getAttributes(\OCP\AppFramework\Http\Attribute\NoAdminRequired::class) !== [];
+
+		$this->assertTrue(condition: $open('methods'));
+		$this->assertFalse(condition: $open('index'));
+		$this->assertFalse(condition: $open('show'));
+	}//end testMethodsIsOpenToCashiersAndProviderConfigIsNot()
+
+	/**
+	 * @return void
+	 */
 	public function testCaptureReturnsSettledPayment(): void {
 		$this->loginAs();
 		$this->service->expects($this->once())
@@ -550,4 +580,55 @@ class PosPaymentControllerTest extends TestCase {
 		$this->assertSame('An unexpected error occurred', $response->getData()['error']);
 		$this->assertStringNotContainsString('SQLSTATE', (string)$response->getData()['error']);
 	}//end testRefundMaps500OnUnexpectedFailureWithoutLeakingInternals()
+
+	/**
+	 * Every service answer maps to exactly this status and body, and a crash logs exactly this.
+	 *
+	 * @return void
+	 */
+	public function testEveryWebhookAnswerIsExact(): void {
+		$answers = [
+			['status' => 'ok', 'id' => 'tr_1'],
+			['status' => 'duplicate'],
+			['status' => 'ignored'],
+			['status' => 'invalid', 'reason' => 'bad mac'],
+			['status' => 'unmatched', 'sessionId' => 's-1'],
+			['no' => 'status'],
+		];
+		$this->withBody(['id' => 'tr_1']);
+		$this->withHeaders([]);
+		$this->service->method('handleWebhook')->willReturnOnConsecutiveCalls(...$answers);
+		$seen = [];
+		foreach ($answers as $ignored) {
+			$response = $this->controller->webhook(provider: 'stripe');
+			$seen[] = [$response->getStatus(), $response->getData()];
+		}
+
+		$this->assertSame(
+			[
+				[200, ['status' => 'ok', 'id' => 'tr_1']],
+				[200, ['status' => 'duplicate']],
+				[200, ['status' => 'ignored']],
+				[400, ['error' => 'Invalid webhook signature']],
+				[503, ['status' => 'unmatched', 'sessionId' => 's-1']],
+				[200, ['no' => 'status']],
+			],
+			$seen
+		);
+
+		$logged = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			function (string $message, array $context = []) use (&$logged): void {
+				$logged[] = [$message, $context];
+			}
+		);
+		$service = $this->createMock(PosPaymentService::class);
+		$service->method('handleWebhook')->willThrowException(new \LogicException('secret detail'));
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$response = (new PosPaymentController($this->request, $service, $this->session, $l10n, $logger))->webhook(provider: 'ccv');
+		$this->assertSame([500, ['status' => 'error', 'error' => 'Webhook processing failed']], [$response->getStatus(), $response->getData()]);
+		$this->assertSame([['PosPaymentController::webhook crashed', ['provider' => 'ccv', 'class' => 'LogicException']]], $logged);
+	}//end testEveryWebhookAnswerIsExact()
 }//end class

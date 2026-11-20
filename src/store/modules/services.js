@@ -7,7 +7,7 @@
  * `'appointmentService'` type slug; this convenience module mirrors the product-store
  * pattern so callers can reach for a named import when readability matters.
  *
- * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+ * @spec openspec/changes/archive/2026-06-14-appointment-booking-11-admin-ui/tasks.md
  */
 import { useObjectStore } from './object.js'
 

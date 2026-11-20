@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SlaAttainmentController;
+use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\SlaAttainmentService;
@@ -243,8 +244,7 @@ class SlaAttainmentControllerTest extends TestCase {
 				logger: $logger,
 				container: $container,
 			),
-			userSession: $this->userSession,
-			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			privilege: new CrmPrivilegeCheck($this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])),
 			logger: $logger,
 		);
 	}//end buildController()

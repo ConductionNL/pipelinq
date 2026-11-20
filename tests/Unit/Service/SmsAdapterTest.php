@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -37,14 +37,22 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for SmsAdapter — priority failover, provider hint, consent
  * gate, inbound webhook signature verification.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class SmsAdapterTest extends TestCase {
+
+	/**
+	 * The ticket intake, when a test registers one.
+	 *
+	 * @var \OCA\Pipelinq\Service\InboundTicketService|null
+	 */
+	private ?\OCA\Pipelinq\Service\InboundTicketService $intake = null;
 	private ContainerInterface $container;
 	private IAppConfig $appConfig;
 	private ChannelProviderRepository $providerRepo;
@@ -110,7 +118,10 @@ class SmsAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				$object['uuid'] = ($uuid ?? ('row-' . count($this->saved)));
 				$this->saved[] = $object;
@@ -150,6 +161,9 @@ class SmsAdapterTest extends TestCase {
 				}
 				if ($id === 'OCA\\Pipelinq\\Service\\MessagingServiceAccount') {
 					return $this->messaging->account;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\InboundTicketService' && $this->intake !== null) {
+					return $this->intake;
 				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
@@ -353,6 +367,37 @@ class SmsAdapterTest extends TestCase {
 
 		$this->assertSame('invalidSignature', $result['status']);
 	}//end testHandleInboundWebhookInvalidSignature()
+
+	/**
+	 * The inbound webhook refuses, in order: an unknown provider, a vendor
+	 * without a client, a bad signature (logged), a payload without a
+	 * sender or a body; nothing is written for any of them.
+	 *
+	 * @return void
+	 */
+	public function testTheInboundWebhookRefusalsInOrder(): void {
+		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
+		$rows = [null, $row, $row, $row, $row];
+		$this->providerRepo->method('findByIdForWebhook')->willReturnCallback(static function () use (&$rows): ?array {
+			return array_shift($rows);
+		});
+		$clients = [null, $this->buildClient('twilio', 'success', 'ext-1', false), $this->buildClient('twilio', 'success', 'ext-1', true), $this->buildClient('twilio', 'success', 'ext-1', true)];
+		$this->providerFactory->method('create')->willReturnCallback(static function () use (&$clients) {
+			return array_shift($clients);
+		});
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(static function (string $message, array $context = []) use (&$warnings): void {
+			$warnings[] = [$message, $context];
+		});
+
+		$this->assertSame(['status' => 'providerUnknown'], $this->adapter->handleInboundWebhook('{}', 's', 'prov-0'));
+		$this->assertSame(['status' => 'vendorUnsupported'], $this->adapter->handleInboundWebhook('{}', 's', 'prov-1'));
+		$this->assertSame(['status' => 'invalidSignature'], $this->adapter->handleInboundWebhook('{}', 'bad', 'prov-1'));
+		$this->assertSame(['status' => 'invalidPayload'], $this->adapter->handleInboundWebhook((string)json_encode(['Body' => 'hi']), 's', 'prov-1'));
+		$this->assertSame(['status' => 'invalidPayload'], $this->adapter->handleInboundWebhook((string)json_encode(['From' => '+31600000000', 'body' => '']), 's', 'prov-1'));
+		$this->assertSame([['SmsAdapter.handleInboundWebhook: invalid signature', ['providerId' => 'prov-1']]], $warnings);
+		$this->assertSame([], $this->objectService->saved);
+	}//end testTheInboundWebhookRefusalsInOrder()
 
 	/**
 	 * Inbound webhook with valid signature persists the message. The OR mock
@@ -580,6 +625,72 @@ class SmsAdapterTest extends TestCase {
 	}//end testAnSmsFromAKnownContactIsNotLoggedAsUnknown()
 
 	/**
+	 * An opt-in keyword from a known contact records the opt-in, and the
+	 * inbound row is stored as a delivered message of that contact.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInSmsFromAKnownContactIsRecordedAndStored(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->consentService->expects($this->once())
+			->method('recordOptIn')
+			->with('c-gert', 'sms', 'chat-reply', 'Inbound SMS body "START" matched opt-in keyword', 'consent', '+31611119999');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '31611119999', 'body' => 'START']), 'sig', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertFalse($result['unknownSender']);
+		$this->assertFalse($result['optOutRecorded']);
+		$this->assertArrayNotHasKey('contactMomentId', $result);
+		$inbound = array_values(array_filter(
+			$this->objectService->saved,
+			static fn (array $row): bool => ($row['direction'] ?? '') === 'inbound'
+		));
+		$this->assertCount(1, $inbound);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', $inbound[0]['sentAt']);
+		unset($inbound[0]['sentAt']);
+		$this->assertSame(
+			['contactId', 'conversationId', 'channel', 'direction', 'body', 'providerId', 'deliveryStatus'],
+			array_keys(array_intersect_key($inbound[0], array_flip(['contactId', 'conversationId', 'channel', 'direction', 'body', 'providerId', 'deliveryStatus'])))
+		);
+		$this->assertSame('c-gert', $inbound[0]['contactId']);
+		$this->assertNotSame('', $inbound[0]['conversationId']);
+		$this->assertSame('sms', $inbound[0]['channel']);
+		$this->assertSame('START', $inbound[0]['body']);
+		$this->assertSame('prov-1', $inbound[0]['providerId']);
+		$this->assertSame('delivered', $inbound[0]['deliveryStatus']);
+	}//end testAnOptInSmsFromAKnownContactIsRecordedAndStored()
+
+	/**
+	 * An opt-in keyword from an unknown number records no opt-in: it is
+	 * logged for a person like any other message from that number.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInSmsFromAnUnknownNumberIsOnlyLogged(): void {
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptIn');
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->willReturn('cm-2');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31699990000', 'body' => 'START']), 'sig', 'prov-1');
+
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-2', $result['contactMomentId']);
+	}//end testAnOptInSmsFromAnUnknownNumberIsOnlyLogged()
+
+	/**
 	 * Without a usable messaging service account the webhook answers
 	 * serviceUnavailable (503, so the provider retries) and writes nothing:
 	 * no message, no conversation, no opt-out, no contact moment.
@@ -601,4 +712,86 @@ class SmsAdapterTest extends TestCase {
 			$this->assertNotSame('saveObject', $access['call'], 'something was written without the service account');
 		}
 	}//end testWithoutAServiceAccountNothingIsWritten()
+	/**
+	 * Send one inbound message from a known contact.
+	 *
+	 * @param string $body The text.
+	 *
+	 * @return array<string, mixed> The webhook outcome.
+	 */
+	private function inboundFromKnownContact(string $body): array {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+
+		return $this->adapter->handleInboundWebhook((string)json_encode(['from' => '+31611119999', 'body' => $body]), 'sig', 'prov-1');
+	}//end inboundFromKnownContact()
+
+	/**
+	 * A known contact's message goes to the ticket intake on its conversation's thread.
+	 *
+	 * @return void
+	 */
+	public function testAKnownContactsMessageReachesTheTicketIntake(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$sent = [];
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->expects($this->once())->method('tryReceive')->willReturnCallback(
+			static function (array $message) use (&$sent): string {
+				$sent = $message;
+				return 'ticket-7';
+			}
+		);
+
+		$result = $this->inboundFromKnownContact(body: 'Is my permit ready?');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertSame('ticket-7', $result['ticket']);
+		$this->assertNotSame('', $result['conversationId']);
+		$this->assertSame(
+			[
+				'channel' => 'sms',
+				'threadKey' => 'conversation:' . $result['conversationId'],
+				'contact' => 'c-gert',
+				'text' => 'Is my permit ready?',
+				'fromAddress' => '+31611119999',
+			],
+			$sent
+		);
+	}//end testAKnownContactsMessageReachesTheTicketIntake()
+
+	/**
+	 * A STOP or an opt-in keyword opens no ticket.
+	 *
+	 * @return void
+	 */
+	public function testKeywordsOpenNoTicket(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturnCallback(static fn (string $body): bool => $body === 'STOP');
+		$this->consentService->method('isOptInKeyword')->willReturnCallback(static fn (string $body): bool => $body === 'START');
+		$this->consentService->method('recordOptOut')->willReturn(['store' => 'integriq']);
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->expects($this->never())->method('tryReceive');
+
+		$this->assertArrayNotHasKey('ticket', $this->inboundFromKnownContact(body: 'STOP'));
+		$this->assertArrayNotHasKey('ticket', $this->inboundFromKnownContact(body: 'START'));
+	}//end testKeywordsOpenNoTicket()
+
+	/**
+	 * A failed intake still answers received, so the provider does not deliver the message again.
+	 *
+	 * @return void
+	 */
+	public function testAFailedIntakeStillAnswersReceived(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->method('tryReceive')->willReturn('');
+
+		$result = $this->inboundFromKnownContact(body: 'hallo');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertSame('', $result['ticket']);
+	}//end testAFailedIntakeStillAnswersReceived()
 }//end class

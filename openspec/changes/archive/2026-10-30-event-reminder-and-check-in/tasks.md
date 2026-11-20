@@ -1,0 +1,5 @@
+- [x] register.d: campaignEvent.reminderSentAt, eventRegistration.checkedInAt (1.1.0)
+- [x] EventReminderService + EventReminderController + route
+- [x] Manifest: header actions, EventCheckIn list page, Results tab, Registrations tab as index-list
+- [x] Tests: EventReminderServiceTest, campaignEvents.spec.js
+- [x] l10n nl/en
