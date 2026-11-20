@@ -25,6 +25,9 @@ vi.mock('@nextcloud/vue', () => ({
 }))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({ default: {} }))
 vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/dialogs/ClientBrpLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/dialogs/ClientKvkLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/services/clientLookupsApi.js', () => ({ createLookedUpClient: async () => null, fetchBrpAccess: async () => false, lookupFailed: () => {} }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
 vi.mock('../../src/store/modules/requestChannels.js', () => ({ useRequestChannelsStore: () => ({}) }))
 vi.mock('../../src/services/ticketCategories.js', () => ({ categoryOptions: () => [], fetchTicketCategories: async () => [] }))
@@ -74,9 +77,9 @@ describe('RequestForm.clientRow', () => {
 	it('labels an organisation and a resident, with the address after the kind', () => {
 		const ctx = context()
 		expect(ctx.clientRow({ id: 'c-1', name: 'Acme', type: 'organization', address: 'Street 1' })).toEqual({
-			id: 'c-1', label: 'Acme', secondary: 'Organisation · Street 1', avatar: true,
+			id: 'c-1', label: 'Acme', secondary: 'Organisation · Street 1 · Known', avatar: true,
 		})
-		expect(ctx.clientRow({ id: 'c-2', type: 'person' })).toEqual({ id: 'c-2', label: '', secondary: 'Resident', avatar: true })
+		expect(ctx.clientRow({ id: 'c-2', type: 'person' })).toEqual({ id: 'c-2', label: '', secondary: 'Resident · Known', avatar: true })
 	})
 })
 
@@ -88,7 +91,7 @@ describe('RequestForm.onClientSearch', () => {
 		expect(ctx.clientSearching).toBe(true)
 		await pending
 		expect(ctx.objectStore.fetchCollectionForOptions).toHaveBeenCalledWith('client', { _search: 'acm', _limit: 20 })
-		expect(ctx.clientOptions).toEqual([{ id: 'c-1', label: 'Acme', secondary: 'Organisation', avatar: true }])
+		expect(ctx.clientOptions).toEqual([{ id: 'c-1', label: 'Acme', secondary: 'Organisation · Known', avatar: true }])
 		expect(ctx.clientSearching).toBe(false)
 	})
 
@@ -168,7 +171,7 @@ describe('RequestForm.newClient', () => {
 		await ctx.newClient()
 		expect(ctx.createClient).toHaveBeenCalledWith('')
 		expect(ctx.clientOptions).toEqual([
-			{ id: 'c-1', label: 'Acme', secondary: 'Organisation', avatar: true },
+			{ id: 'c-1', label: 'Acme', secondary: 'Organisation · Known', avatar: true },
 			{ id: 'c-0' },
 		])
 		expect(ctx.onClientChange).toHaveBeenCalledWith('c-1')

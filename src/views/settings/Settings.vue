@@ -138,6 +138,8 @@
 
 			<MessagingSettings v-if="isAdmin && isConfigured" />
 			<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />
+			<TicketMailboxSettings v-if="isAdmin && isConfigured" />
+			<RoutingRulesSettings v-if="isAdmin && isConfigured" />
 
 			<!-- xWiki Integration (xwiki-integration) -->
 			<NcSettingsSection
@@ -275,6 +277,13 @@
 			<VatRatesSettings v-if="isAdmin" :config="config" />
 			<PosRoleManager v-if="isAdmin && isConfigured" />
 			<PosStaffManager v-if="isAdmin && isConfigured" />
+			<!-- Board PqBeheerKassa: the refund limit below which a till user
+			     completes a refund without a manager (pos-refund-limit). -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.posRefunds"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
 
 			<!-- The till's customer lookup is a page of its own in the app. -->
 			<NcSettingsSection
@@ -397,8 +406,10 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import RoutingRulesSettings from './RoutingRulesSettings.vue'
 import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
+import TicketMailboxSettings from './TicketMailboxSettings.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
@@ -505,6 +516,8 @@ export default {
 		CnConnectionsPanel,
 		MessagingSettings,
 		BackgroundServiceAccountSettings,
+		TicketMailboxSettings,
+		RoutingRulesSettings,
 		DeliverabilitySettings,
 		CtiEventLog,
 		CtiSettings,

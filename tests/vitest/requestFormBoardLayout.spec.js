@@ -45,6 +45,9 @@ vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
 vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
 	default: { name: 'ContactCreateDialog', render: () => null },
 }))
+vi.mock('../../src/dialogs/ClientBrpLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/dialogs/ClientKvkLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/services/clientLookupsApi.js', () => ({ createLookedUpClient: async () => null, fetchBrpAccess: async () => false, lookupFailed: () => {} }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnResourceSelect: { name: 'CnResourceSelect', render: () => null },
 	CnSearchSelect: {
@@ -235,10 +238,10 @@ describe('RequestForm board layout: the client search', () => {
 		const wrapper = await mountForm({ boardLayout: true })
 		wrapper.findComponent({ name: 'CnSearchSelect' }).vm.$emit('search', 'de Vries')
 		await flushPromises()
-		expect(storeMock.fetchCollectionForOptions).toHaveBeenLastCalledWith('client', { _search: 'de Vries', _limit: 20 })
+		expect(storeMock.fetchCollectionForOptions).toHaveBeenCalledWith('client', { _search: 'de Vries', _limit: 20 })
 		expect(wrapper.findComponent({ name: 'CnSearchSelect' }).props('options')).toEqual([
-			{ id: 'c-1', label: 'Sanne de Vries', secondary: 'Resident · Lindelaan 14', avatar: true },
-			{ id: 'c-2', label: 'Buurtvereniging Oost', secondary: 'Organisation', avatar: true },
+			{ id: 'c-1', label: 'Sanne de Vries', secondary: 'Resident · Lindelaan 14 · Known', avatar: true },
+			{ id: 'c-2', label: 'Buurtvereniging Oost', secondary: 'Organisation · Known', avatar: true },
 		])
 	})
 

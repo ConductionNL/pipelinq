@@ -64,6 +64,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Public Intake Forms | Public-facing intake forms for citizen self-service | Planned | GEMMA Klantgeleiding; TEC 3.6 | [public-intake-forms.md](public-intake-forms.md) |
 | Marketing | Segments, templates and email blasts today; lists with double opt-in, content hub, social publishing, campaigns with attribution, search and competitor intelligence in six planned phases | Partial | GEMMA Sociale media; GEMMA Mediamonitor en webcare; TEC 2; RFC 8058 | [marketing.md](marketing.md) |
 | Product Catalog Quoting | Quotation generation from product catalog line items | Planned | TEC 1.8 | [product-catalog-quoting.md](product-catalog-quoting.md) |
+| Quotes from a lead | Send a quote PDF built from a lead's lines, mailed to the client and logged on the lead | Implemented | TEC 1.8 | [quotes.md](quotes.md) |
 | CRM MCP Tool Surface | Agent-addressable CRM tools (clients, leads, forecast, create-lead, log-contactmoment) for the Nextcloud Hub Assistant | Implemented | Model Context Protocol; OpenRegister `IMcpToolProvider` | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
 
 ## Feature Groups
@@ -107,6 +108,7 @@ Features required for Dutch municipal KCC-werkplek deployments. Demand validated
 | Customer 360 | KCC citizen profile | [customer-360.md](customer-360.md) |
 | KCC Werkplek | Municipal KCC | [kcc-werkplek.md](kcc-werkplek.md) |
 | Omnichannel Registration | Channel-aware logging | [omnichannel-registratie.md](omnichannel-registratie.md) |
+| Inbound messages to the Queue | Mail, WhatsApp, SMS and social intake | [inbound-to-queue.md](inbound-to-queue.md) |
 
 ### Analytics & Insights (V1)
 
