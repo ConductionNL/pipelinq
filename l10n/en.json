@@ -10189,6 +10189,12 @@
         "The quote was made and filed, but the mail could not be sent.": "The quote was made and filed, but the mail could not be sent.",
         "Quote %1$s sent to %2$s, total EUR %3$s including VAT, valid until %4$s.": "Quote %1$s sent to %2$s, total EUR %3$s including VAT, valid until %4$s.",
         "A copy is filed at %s.": "A copy is filed at %s.",
-        "filinq could not make the quote.": "filinq could not make the quote."
+        "filinq could not make the quote.": "filinq could not make the quote.",
+        "Why does this deal slip?": "Why does this deal slip?",
+        "The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.": "The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.",
+        "At least {count} characters.": "At least {count} characters.",
+        "Save with reason": "Save with reason",
+        "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Not saved: a deal that slips out of its forecast period needs a slip reason.",
+        "The lead could not be saved.": "The lead could not be saved."
     }
 }

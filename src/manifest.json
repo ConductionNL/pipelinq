@@ -5952,6 +5952,9 @@
 			"type": "detail",
 			"title": "Lead",
 			"actionsComponent": "LogVisitAction",
+			"slots": {
+				"form-dialog": "LeadEditDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",

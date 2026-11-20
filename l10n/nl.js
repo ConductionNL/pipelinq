@@ -10097,7 +10097,13 @@ OC.L10N.register(
         "The quote was made and filed, but the mail could not be sent.": "De offerte is gemaakt en opgeslagen, maar de e-mail kon niet worden verstuurd.",
         "Quote %1$s sent to %2$s, total EUR %3$s including VAT, valid until %4$s.": "Offerte %1$s verstuurd naar %2$s, totaal EUR %3$s inclusief btw, geldig tot %4$s.",
         "A copy is filed at %s.": "Een kopie staat in %s.",
-        "filinq could not make the quote.": "filinq kon de offerte niet maken."
+        "filinq could not make the quote.": "filinq kon de offerte niet maken.",
+        "Why does this deal slip?": "Waarom schuift deze deal op?",
+        "The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.": "De sluitdatum schuift van {from} naar {to}, buiten de periode waarin deze deal in de prognose stond. Geef aan waarom, zodat uw manager het in het prognoseverloop kan lezen.",
+        "At least {count} characters.": "Minstens {count} tekens.",
+        "Save with reason": "Opslaan met reden",
+        "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Niet opgeslagen: een deal die buiten zijn prognoseperiode schuift, heeft een reden nodig.",
+        "The lead could not be saved.": "De lead kon niet worden opgeslagen."
     },
     "nplurals=2; plural=(n != 1);"
 )
