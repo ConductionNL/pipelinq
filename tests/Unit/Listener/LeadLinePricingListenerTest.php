@@ -32,6 +32,11 @@ use PHPUnit\Framework\TestCase;
  */
 class LeadLinePricingListenerTest extends TestCase {
 
+	/**
+	 * A new lead line gets its price merged into what is stored.
+	 *
+	 * @return void
+	 */
 	public function testANewLeadLineGetsItsPriceMergedIntoWhatIsStored(): void {
 		$event = new ObjectCreatingEvent(PosSaleStore::makeEntity(object: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1], schema: 'lp'));
 		$event->setModifiedData(['notes' => 'kept']);
@@ -39,44 +44,82 @@ class LeadLinePricingListenerTest extends TestCase {
 		$this->listener(resolves: true)->handle(event: $event);
 
 		$this->assertSame(
-			['notes' => 'kept', 'unitPrice' => 95.0, 'priceSource' => 'price-list', 'priceListTitle' => 'Overheid 2027'],
-			$event->getModifiedData()
+			expected: ['notes' => 'kept', 'unitPrice' => 95.0, 'priceSource' => 'price-list', 'priceListTitle' => 'Overheid 2027'],
+			actual: $event->getModifiedData()
 		);
 	}//end testANewLeadLineGetsItsPriceMergedIntoWhatIsStored()
 
+	/**
+	 * An edit compares with the stored line.
+	 *
+	 * @return void
+	 */
 	public function testAnEditComparesWithTheStoredLine(): void {
-		$old   = PosSaleStore::makeEntity(object: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 95, 'priceSource' => 'price-list'], schema: 'lp');
-		$new   = PosSaleStore::makeEntity(object: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 88, 'priceSource' => 'price-list'], schema: 'lp');
+		$old   = PosSaleStore::makeEntity(
+			object: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 95, 'priceSource' => 'price-list'],
+			schema: 'lp'
+		);
+		$new   = PosSaleStore::makeEntity(
+			object: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 88, 'priceSource' => 'price-list'],
+			schema: 'lp'
+		);
 		$event = new ObjectUpdatingEvent($new, $old);
 
 		$this->listener(resolves: false)->handle(event: $event);
 
-		$this->assertSame(['priceSource' => 'manual', 'priceListTitle' => null], $event->getModifiedData());
+		$this->assertSame(expected: ['priceSource' => 'manual', 'priceListTitle' => null], actual: $event->getModifiedData());
 	}//end testAnEditComparesWithTheStoredLine()
 
+	/**
+	 * Another schema is left alone.
+	 *
+	 * @return void
+	 */
 	public function testAnotherSchemaIsLeftAlone(): void {
 		$event = new ObjectCreatingEvent(PosSaleStore::makeEntity(object: ['product' => 'p-1'], schema: 'salesQuoteLine'));
 
 		$this->listener(resolves: false)->handle(event: $event);
 
-		$this->assertSame([], $event->getModifiedData());
+		$this->assertSame(expected: [], actual: $event->getModifiedData());
 	}//end testAnotherSchemaIsLeftAlone()
 
+	/**
+	 * An event after the write is ignored.
+	 *
+	 * @return void
+	 */
 	public function testAnEventAfterTheWriteIsIgnored(): void {
 		$event = new ObjectCreatedEvent(PosSaleStore::makeEntity(object: ['product' => 'p-1'], schema: 'lp'));
 
 		$this->listener(resolves: false)->handle(event: $event);
 
-		$this->addToAssertionCount(1);
+		$this->addToAssertionCount(count: 1);
 	}//end testAnEventAfterTheWriteIsIgnored()
 
+	/**
+	 * Stand-in for listener().
+	 *
+	 * @param bool $resolves The resolves.
+	 *
+	 * @return LeadLinePricingListener
+	 */
 	private function listener(bool $resolves): LeadLinePricingListener {
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(static fn (string $app, string $key): string => ($key === 'leadProduct_schema' ? 'lp' : ''));
-		$reader = $this->createMock(CallerObjectReaderInterface::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key): string => match ($key) {
+				'leadProduct_schema' => 'lp',
+				default => '',
+			}
+		);
+		$reader = $this->createMock(originalClassName: CallerObjectReaderInterface::class);
 		$reader->method('read')->willReturn(['id' => 'x']);
-		$catalog = $this->createMock(ProductCatalogServiceInterface::class);
-		$catalog->expects($resolves ? $this->once() : $this->never())->method('resolveEffectivePrice')
+		$catalog = $this->createMock(originalClassName: ProductCatalogServiceInterface::class);
+		$expectation = $this->never();
+		if ($resolves === true) {
+			$expectation = $this->once();
+		}
+
+		$catalog->expects($expectation)->method('resolveEffectivePrice')
 			->willReturn(['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027']);
 
 		return new LeadLinePricingListener(pricer: new LeadLinePricer(catalog: $catalog, reader: $reader), appConfig: $appConfig);

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
@@ -64,16 +65,28 @@ class LeadLinePricingListener implements IEventListener {
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
 	public function handle(Event $event): void {
-		if ($event instanceof ObjectCreatingEvent) {
-			$entity = $event->getObject();
-			$old    = null;
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$entity = $event->getNewObject();
-			$old    = $event->getOldObject()?->getObject();
-		} else {
+		if ($event instanceof ObjectUpdatingEvent) {
+			$this->priceLine(event: $event, entity: $event->getNewObject(), old: $event->getOldObject()?->getObject());
 			return;
 		}
 
+		if ($event instanceof ObjectCreatingEvent) {
+			$this->priceLine(event: $event, entity: $event->getObject(), old: null);
+		}
+	}//end handle()
+
+	/**
+	 * Price a lead line that is being created or updated.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event  The event.
+	 * @param ObjectEntity                            $entity The line being written.
+	 * @param array<string, mixed>|null               $old    The line before the update, null on create.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 */
+	private function priceLine(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntity $entity, ?array $old): void {
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'leadProduct_schema', '');
 		if ($schema === '' || (string)$entity->getSchema() !== $schema) {
 			return;
@@ -84,5 +97,5 @@ class LeadLinePricingListener implements IEventListener {
 		if ($figures !== []) {
 			$event->setModifiedData(array_merge($event->getModifiedData(), $figures));
 		}
-	}//end handle()
+	}//end priceLine()
 }//end class
