@@ -4178,8 +4178,8 @@
       "type": "library",
       "name": "password-confirmation",
       "group": "@nextcloud",
-      "version": "6.1.0",
-      "bom-ref": "pipelinq@0.1.0|@nextcloud/password-confirmation@6.1.0",
+      "version": "6.2.1",
+      "bom-ref": "pipelinq@0.1.0|@nextcloud/password-confirmation@6.2.1",
       "licenses": [
         {
           "license": {
@@ -4187,15 +4187,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40nextcloud/password-confirmation@6.1.0",
+      "purl": "pkg:npm/%40nextcloud/password-confirmation@6.2.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@nextcloud/password-confirmation/-/password-confirmation-6.1.0.tgz",
+          "url": "https://registry.npmjs.org/@nextcloud/password-confirmation/-/password-confirmation-6.2.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "3760a15c36cf7147100a80238f5c9ceb9cdf73ad7288aa5d337aa6ff2dd8ff2fff346ed758d348370060f3996a2764884a09954ada6c4357746e5a450a841791"
+              "content": "151450d0b02c513ec8f4e1b25103a0f3a4312322d354b98121b3d6ee57ddba3f5a0ed619cabaedc878d396df1c6947ddbb643fb42afcf2f85b17386f47db8c85"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -24892,8 +24892,8 @@
     {
       "type": "library",
       "name": "vue-router",
-      "version": "4.6.4",
-      "bom-ref": "pipelinq@0.1.0|vue-router@4.6.4",
+      "version": "4.6.5",
+      "bom-ref": "pipelinq@0.1.0|vue-router@4.6.5",
       "licenses": [
         {
           "license": {
@@ -24901,15 +24901,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/vue-router@4.6.4",
+      "purl": "pkg:npm/vue-router@4.6.5",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/vue-router/-/vue-router-4.6.4.tgz",
+          "url": "https://registry.npmjs.org/vue-router/-/vue-router-4.6.5.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "1f3f6ae6c6b7dd885dba0970cfa83db244fc3813e28bee1b167f3cc3a27e27831f128e0a451a6688d1bf8471e475b44594b04eab137ccbc81fd856f431352056"
+              "content": "1c1a06aa2c690767a3d64235ecda2d74e6ad51d288b22df27ce439be1c0085ca0793dd3e26dc2d232ecc11e3aa74f8b5fa7a66415304bb917e1efc3edd3538f3"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -24927,7 +24927,7 @@
           "name": "devtools-api",
           "group": "@vue",
           "version": "6.6.4",
-          "bom-ref": "pipelinq@0.1.0|vue-router@4.6.4|@vue/devtools-api@6.6.4",
+          "bom-ref": "pipelinq@0.1.0|vue-router@4.6.5|@vue/devtools-api@6.6.4",
           "licenses": [
             {
               "license": {
