@@ -1,10 +1,12 @@
 # Tasks: request-dialog-client-lookups
 
 - [x] RequestForm: Klant as a search field with the result list (initials, kind, address) on CnSearchSelect, the DqNieuweZaak "Aanvrager" field
-- [ ] Each row also names the open tickets and marks a known client "Bekend"
-- [ ] BRP pill: lookup dialog on POST /api/brp/lookup; select or create a resident client; offered only to brp.allowed_groups
-- [ ] GET /api/kvk/search wrapping KvkApiClient (login, rate limit); KVK pill selects or creates an organisation client
-  - Built (server half): `GET /api/kvk/search` → `KvkSearchController::search()` wraps `KvkApiClient` (`companyByNumber` for an 8-digit query, else `searchByName`), behind the same `CrmPrivilegeCheck` login as the enrichment endpoints; the KVK source's own rate limit applies downstream. The KVK pill (frontend) is not built here.
-- [ ] Tonal pills as the board draws them
-- [ ] PHPUnit for the KVK search endpoint and its auth; vitest for the dialog
-  - Built (PHPUnit): `tests/Unit/Controller/KvkSearchControllerTest.php` (refused without the CRM capability, empty query 400, name vs 8-digit-number routing) plus a `CrmPrivilegeRefusalGolden/KvkSearchController.json` entry. The dialog vitest is not built here.
+- [x] Each row also names the open tickets and marks a known client "Bekend"
+  - Built: the found clients' open tickets are counted in one `ticket` search (`client[]` of the found ids; a ticket counts while its status is not final, `openTicketCounts` in `src/services/clientLookups.js`), and every row, being an existing client, ends in "Known" ("Bekend"). The library's CnSearchSelect has one secondary line and no badge, so both stand in that line.
+- [x] BRP pill: lookup dialog on POST /api/brp/lookup; select or create a resident client; offered only to brp.allowed_groups
+  - Built: `src/dialogs/ClientBrpLookupDialog.vue` (BSN, reason, purpose binding; the server audits as for every lookup). The pill shows only when the new `GET /api/brp/access` says yes: it runs the same CRM privilege and `brp.allowed_groups` checks as the lookup, looks nothing up and audits nothing (`BrpAccessTest`). The found person becomes the resident client with the same name and address, else a new client with name and address only; the BSN is not stored.
+- [x] GET /api/kvk/search wrapping KvkApiClient (login, rate limit); KVK pill selects or creates an organisation client
+  - Built (server half): `GET /api/kvk/search` → `KvkSearchController::search()` wraps `KvkApiClient` (`companyByNumber` for an 8-digit query, else `searchByName`), behind the same `CrmPrivilegeCheck` login as the enrichment endpoints; the KVK source's own rate limit applies downstream. The KVK pill: `src/dialogs/ClientKvkLookupDialog.vue` searches by name or number, and the picked company becomes the client with that KVK number, else a new organisation client with name, KVK number, legal form (the enrichment table) and place.
+- [x] Tonal pills as the board draws them (`cn-button--tonal`, as New client)
+- [x] PHPUnit for the KVK search endpoint and its auth; vitest for the dialog
+  - Built (PHPUnit): `tests/Unit/Controller/KvkSearchControllerTest.php` (refused without the CRM capability, empty query 400, name vs 8-digit-number routing) plus a `CrmPrivilegeRefusalGolden/KvkSearchController.json` entry. Vitest: `clientLookups.spec.js`, `clientLookupDialogs.spec.js`, `requestFormClientLookups.spec.js`. The Playwright scenarios of the spec are not built here (e2e).

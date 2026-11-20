@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\Social\Support\PostMetricsCall;
  */
 class FacebookPageAdapter extends AbstractSocialAdapter {
 	use PostMetricsCall;
+	use ReadsMetaConversations;
 
 	/**
 	 * The Graph API version every path is prefixed with. It is pinned rather
@@ -286,6 +287,17 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	public function followersCall(array $account): ?SocialAdapterCall {
 		return null;
 	}//end followersCall()
+
+	/**
+	 * A page's inbox is Messenger.
+	 *
+	 * @return string The platform the conversations edge is asked for.
+	 *
+	 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
+	 */
+	public function messagingPlatform(): string {
+		return 'messenger';
+	}//end messagingPlatform()
 
 	/**
 	 * Facebook's own sharer.

@@ -124,6 +124,7 @@ import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileOutline from 'vue-material-design-icons/FileOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
+import FileSendOutline from 'vue-material-design-icons/FileSendOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FilterVariant from 'vue-material-design-icons/FilterVariant.vue'
 import FolderAccountOutline from 'vue-material-design-icons/FolderAccountOutline.vue'
@@ -344,6 +345,7 @@ export default {
 	FileDocumentOutline,
 	FileOutline,
 	FilePdfBox,
+	FileSendOutline,
 	FileSign,
 	FilterVariant,
 	FolderAccountOutline,
