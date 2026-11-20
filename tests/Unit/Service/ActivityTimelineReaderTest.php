@@ -26,6 +26,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -196,8 +197,11 @@ class ActivityTimelineReaderTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoEmailReaderMeansNoEmails(): void {
-		$this->container->method('has')->with(self::EMAIL_READER)->willReturn(false);
-		$this->container->expects($this->never())->method('get');
+		$this->container->method('get')->with(self::EMAIL_READER)->willThrowException(
+			new class ('not in the container') extends RuntimeException implements NotFoundExceptionInterface {
+			}
+		);
+		$this->logger->expects($this->never())->method('error');
 
 		$this->assertSame([], $this->reader()->linkedEmails(entityId: 'e-1'));
 	}//end testNoEmailReaderMeansNoEmails()
@@ -229,7 +233,8 @@ class ActivityTimelineReaderTest extends TestCase {
 				return ['items' => ['junk', ['subject' => 'A'], null, ['subject' => 'B']]];
 			}//end getLinkedEmails()
 		};
-		$this->container->method('has')->willReturn(true);
+		// Nextcloud's app container answers has() false for another app's alias.
+		$this->container->method('has')->willReturn(false);
 		$this->container->method('get')->with(self::EMAIL_READER)->willReturn($reader);
 
 		$this->assertSame([['subject' => 'A'], ['subject' => 'B']], $this->reader()->linkedEmails(entityId: 'e-1'));
@@ -242,8 +247,21 @@ class ActivityTimelineReaderTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailingEmailReaderIsLogged(): void {
-		$this->container->method('has')->willReturn(true);
-		$this->container->method('get')->willThrowException(new RuntimeException('gone'));
+		$this->container->method('get')->willReturn(
+			new class () {
+				/**
+				 * A read that fails.
+				 *
+				 * @param string $objectUuid The object.
+				 * @param int    $limit      The page size.
+				 *
+				 * @return array<string, mixed>
+				 */
+				public function getLinkedEmails(string $objectUuid, int $limit): array {
+					throw new RuntimeException('gone');
+				}//end getLinkedEmails()
+			}
+		);
 		$this->logger->expects($this->once())->method('error')
 			->with('ActivityTimelineReader: failed to read linked emails', ['exception' => 'gone']);
 

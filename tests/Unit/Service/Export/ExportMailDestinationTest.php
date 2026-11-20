@@ -202,6 +202,19 @@ class ExportMailDestinationTest extends TestCase {
 	}//end testARemovedRecipientMakesTheDestinationInvalid()
 
 	/**
+	 * A stored mail destination whose recipients are not a list tests invalid.
+	 *
+	 * @return void
+	 */
+	public function testAStoredMailDestinationWithoutARecipientListIsInvalid(): void {
+		$service = $this->service();
+		$this->stored['dest-2'] = ['name' => 'Weekly', 'type' => 'mail', 'recipients' => 'ann'];
+
+		$this->assertFalse($service->testConnection(id: 'dest-2'));
+		$this->assertSame('invalid', $this->stored['dest-2']['validationStatus']);
+	}//end testAStoredMailDestinationWithoutARecipientListIsInvalid()
+
+	/**
 	 * Other types still need a connector source.
 	 *
 	 * @return void

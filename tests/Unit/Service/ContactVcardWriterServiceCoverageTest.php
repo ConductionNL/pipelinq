@@ -37,6 +37,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * Error paths and fallbacks of the vCard writer.
  *
  * @covers \OCA\Pipelinq\Service\ContactVcardWriterService
+ * @uses \OCA\Pipelinq\Service\VcardWrite
  */
 class ContactVcardWriterServiceCoverageTest extends TestCase {
 	/**

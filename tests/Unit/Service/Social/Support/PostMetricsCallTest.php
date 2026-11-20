@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
  * A GET for an identified post, nothing for a blank id.
  *
  * @covers \OCA\Pipelinq\Service\Social\Support\PostMetricsCall
+ * @uses \OCA\Pipelinq\Service\Social\SocialAdapterCall
  */
 class PostMetricsCallTest extends TestCase {
 

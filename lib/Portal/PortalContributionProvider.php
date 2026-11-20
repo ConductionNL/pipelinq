@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalContributionInterface;
 use OCA\Pipelinq\Kernel\Contracts\QuestionDetailServiceInterface;
 
 /**
@@ -86,7 +87,7 @@ class PortalContributionProvider {
 	 *
 	 * @var string
 	 */
-	public const RULE_QUESTION_ANSWERED = 'pipelinq.question.answered';
+	public const RULE_QUESTION_ANSWERED = PortalContributionInterface::RULE_QUESTION_ANSWERED;
 
 	/**
 	 * The menu heading over a resident's own questions, requests and complaints (portaliq `group`).

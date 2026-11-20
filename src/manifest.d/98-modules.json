@@ -67,10 +67,6 @@
 								"route": "Templates"
 							},
 							{
-								"label": "Articles",
-								"route": "Articles"
-							},
-							{
 								"label": "Mailing lists",
 								"route": "MailingLists",
 								"highlight": true
@@ -141,6 +137,10 @@
 							{
 								"label": "Products",
 								"route": "Products"
+							},
+							{
+								"label": "Price lists",
+								"route": "PriceLists"
 							}
 						],
 						"settings": {

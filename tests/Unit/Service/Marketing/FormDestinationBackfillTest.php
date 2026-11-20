@@ -252,4 +252,40 @@ class FormDestinationBackfillTest extends TestCase {
 
 		$this->assertSame(['status' => 'no-openregister', 'named' => 0, 'skipped' => 0, 'failed' => 0], $backfill->run());
 	}//end testNothingToReadIsNotAFailure()
+
+	/**
+	 * A page that is no list of rows ends the read: nothing is named, and it is not a failure.
+	 */
+	public function testAPageThatIsNoListEndsTheRead(): void {
+		$objects = new class {
+
+			/**
+			 * @var int
+			 */
+			public int $reads = 0;
+
+			/**
+			 * @param array<string, mixed> $config The query.
+			 *
+			 * @return mixed
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$this->reads++;
+
+				return null;
+			}//end findAll()
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objects);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$backfill = new FormDestinationBackfill(
+			$container,
+			new CampaignService(new InMemoryListObjectStore(), $appConfig, new CampaignLinkDecorator($appConfig)),
+			new CampaignFormDestination(),
+			$this->createMock(LoggerInterface::class)
+		);
+
+		$this->assertSame(['status' => 'done', 'named' => 0, 'skipped' => 0, 'failed' => 0], $backfill->run());
+		$this->assertSame(1, $objects->reads);
+	}//end testAPageThatIsNoListEndsTheRead()
 }//end class

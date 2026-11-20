@@ -26,7 +26,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Registers the lifecycle guards the POS schemas name.
+ * Registers the lifecycle guards the POS and ticket schemas name.
  *
  * @category Lifecycle
  * @package  OCA\Pipelinq\Lifecycle
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  */
 class LifecycleRegistrar {
 	/**
-	 * Register the POS lifecycle guards keyed by the FQCN tag the
+	 * Register the POS and ticket lifecycle guards keyed by the FQCN tag the
 	 * posTransaction / posRefund schemas reference in their
 	 * x-openregister-lifecycle.transitions[*].requires.
 	 *
@@ -47,6 +47,9 @@ class LifecycleRegistrar {
 	 * NC server container as FQCN fallback). The registry is fail-closed: a
 	 * transition that references an unregistered guard tag cannot proceed, so
 	 * these registrations are load-bearing for the POS lifecycle.
+	 *
+	 * It also aliases the Kernel contracts of the lifecycle classes other
+	 * components call to their implementations.
 	 *
 	 * @param IRegistrationContext $context The registration context.
 	 *
@@ -102,5 +105,14 @@ class LifecycleRegistrar {
 				);
 			}
 		);
+
+		$context->registerService(
+			TicketAssigneeGuard::class,
+			static function ($c): TicketAssigneeGuard {
+				return new TicketAssigneeGuard(groupManager: $c->get(IGroupManager::class));
+			}
+		);
+
+		(new LifecycleContractRegistrar())->register(context: $context);
 	}//end register()
 }//end class

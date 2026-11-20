@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Reads and saves by register, schema and uuid; failures log the host's line.
  *
  * @covers \OCA\Pipelinq\Util\ContainerObjectFind
- * @uses   \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class ContainerObjectFindTest extends TestCase {
 

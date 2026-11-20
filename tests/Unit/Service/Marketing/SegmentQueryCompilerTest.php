@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \OCA\Pipelinq\Service\Marketing\SegmentQueryCompiler
  * @uses   \OCA\Pipelinq\Service\Marketing\SegmentRuleTree
+ * @uses   \OCA\Pipelinq\Service\Marketing\SegmentProperty
  */
 class SegmentQueryCompilerTest extends TestCase {
 
@@ -95,6 +96,25 @@ class SegmentQueryCompilerTest extends TestCase {
 			$where
 		);
 	}//end testRootAndPushesCompilableChildren()
+
+	/**
+	 * A stored list with a stray scalar in it compiles the conditions and skips the scalar.
+	 *
+	 * @return void
+	 */
+	public function testAStrayScalarInAnAndIsSkipped(): void {
+		$this->assertSame(
+			['type' => 'AND', 'children' => [['field' => 'place', 'operator' => 'like', 'value' => 'Zuiddrecht'], ['field' => 'type', 'operator' => 'like', 'value' => 'organization']]],
+			$this->where(
+				[
+					'place',
+					['field' => 'place', 'operator' => 'equals', 'value' => 'Zuiddrecht'],
+					42,
+					['field' => 'type', 'operator' => 'equals', 'value' => 'organization'],
+				]
+			)
+		);
+	}//end testAStrayScalarInAnAndIsSkipped()
 
 	/**
 	 * notEquals keeps the rows without a value, as the engine does.

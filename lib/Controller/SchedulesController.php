@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
-use OCA\Pipelinq\Lifecycle\SessionUser;
+use OCA\Pipelinq\Kernel\Contracts\SessionUserInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -79,13 +79,13 @@ class SchedulesController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ScheduledTaskServiceInterface $scheduledTaskService Schedule service.
-	 * @param SessionUser $sessionUser The session user and their admin membership.
+	 * @param SessionUserInterface $sessionUser The session user and their admin membership.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private ScheduledTaskServiceInterface $scheduledTaskService,
-		private SessionUser $sessionUser,
+		private SessionUserInterface $sessionUser,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

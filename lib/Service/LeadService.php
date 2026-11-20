@@ -44,11 +44,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Mcp\McpAnswer;
+use OCA\Pipelinq\Mcp\McpRecordUpdate;
+use OCA\Pipelinq\Mcp\McpTransition;
+use DateTimeImmutable;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -61,6 +65,9 @@ use Throwable;
  *   (Requirement: MCP provider exposes RBAC-guarded CRM write tools)
  * @spec openspec/specs/crm-mcp-tool-surface/spec.md
  *   (Requirement: MCP provider exposes a CRM read tool surface)
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The curated lead tools read, save and transition
+ *   through OpenRegister's value objects; each is one MCP tool the scanner reflects on this class.
  */
 class LeadService {
 
@@ -85,11 +92,14 @@ class LeadService {
 	 * @param ContainerInterface $container The DI container (for OR ObjectService).
 	 * @param IAppConfig $appConfig The app config (lead schema resolution).
 	 * @param McpAnswer $mcp Shapes what the MCP tools on this service answer.
+	 * @param McpTransition|null $transitions Runs the lead's declared lifecycle transitions;
+	 *                                        null answers `not_configured` from winLead/loseLead.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly McpAnswer $mcp,
+		private readonly ?McpTransition $transitions = null,
 	) {
 	}//end __construct()
 
@@ -106,7 +116,8 @@ class LeadService {
 		readOnlyHint: false,
 		destructiveHint: false,
 		idempotentHint: false,
-		scope: 'create'
+		scope: 'create',
+		reach: 'instance'
 	)]
 	/**
 	 * Create a new sales lead. Only "title" is required; client, value,
@@ -211,6 +222,224 @@ class LeadService {
 	}//end saveLead()
 
 	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app; see createLead().
+	#[McpTool(
+		name: 'updateLead',
+		subject: 'lead',
+		action: 'update',
+		description: 'Change fields of an existing lead by id: title, client, value, source, assignee, stage, '
+			. 'expectedCloseDate, priority or notes. Moving the lead to another stage records when it '
+			. 'entered that stage. The status cannot be set here: close a lead with pipelinq_winLead or '
+			. 'pipelinq_loseLead.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Change fields of an existing lead.
+	 *
+	 * Validates first (an id, at least one field, no `status`), then reads the
+	 * lead through ObjectService (RBAC `read`, a missing lead is `not_found`),
+	 * then saves the merged lead through ObjectService->saveObject (RBAC
+	 * `update`). A stage that differs from the stored one stamps
+	 * `stageEnteredAt` with the write time, so the declarative `daysInStage`
+	 * stays truthful; an update that leaves the stage alone leaves the stamp
+	 * alone.
+	 *
+	 * @param string      $id                The lead uuid.
+	 * @param string|null $title             New title.
+	 * @param string|null $client            New client uuid.
+	 * @param float|null  $value             New estimated deal value.
+	 * @param string|null $source            New origin of the lead.
+	 * @param string|null $assignee          New Nextcloud user id of the lead owner.
+	 * @param string|null $stage             New pipeline stage.
+	 * @param string|null $expectedCloseDate New expected close date (YYYY-MM-DD).
+	 * @param string|null $priority          New priority.
+	 * @param string|null $notes             New notes.
+	 * @param string|null $status            Refused: lifecycle state moves through winLead/loseLead.
+	 *
+	 * @return array<string, mixed> `['lead' => ...]`, or an MCP error envelope.
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) An MCP tool's arguments are its parameters.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 * @orphaned-write-capability exclude MCP tool, reached by OpenRegister's AttributeToolScanner through ServiceRegistrar::MCP_SCANNABLE_SERVICES.
+	 */
+	public function updateLead(
+		string $id,
+		?string $title = null,
+		?string $client = null,
+		?float $value = null,
+		?string $source = null,
+		?string $assignee = null,
+		?string $stage = null,
+		?string $expectedCloseDate = null,
+		?string $priority = null,
+		?string $notes = null,
+		?string $status = null,
+	): array {
+		$id = trim($id);
+		$changes = $this->records()->filled(
+			fields: [
+				'title' => trim((string)$title),
+				'client' => $client,
+				'value' => $value,
+				'source' => $source,
+				'assignee' => $assignee,
+				'stage' => $stage,
+				'expectedCloseDate' => $expectedCloseDate,
+				'priority' => $priority,
+				'notes' => $notes,
+			]
+		);
+
+		$refusal = $this->records()->refusal(
+			id: $id,
+			changes: $changes,
+			status: $status,
+			statusRefusal: 'The status of a lead cannot be set by updateLead: use winLead or loseLead.'
+		);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$config = $this->resolveLeadContext();
+		if (isset($config['error']) === true) {
+			return $config;
+		}
+
+		return $this->applyLeadUpdate(id: $id, changes: $changes, config: $config);
+	}//end updateLead()
+
+	/**
+	 * Read the lead, merge the changes, stamp a stage change and save.
+	 *
+	 * @param string               $id      The lead uuid.
+	 * @param array<string, mixed> $changes The fields to change.
+	 * @param array<string, mixed> $config  The register and schema.
+	 *
+	 * @return array<string, mixed> `['lead' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function applyLeadUpdate(string $id, array $changes, array $config): array {
+		$objectService = $this->getObjectService();
+		$lead = $this->records()->stored(
+			find: static fn (): mixed => $objectService->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
+			),
+			subject: 'lead'
+		);
+		if (isset($lead['error']) === true) {
+			return $lead;
+		}
+
+		if (isset($changes['stage']) === true && (string)($lead['stage'] ?? '') !== (string)$changes['stage']) {
+			$changes['stageEnteredAt'] = (new DateTimeImmutable())->format(DATE_ATOM);
+		}
+
+		$saved = $this->records()->saved(
+			save: static fn (): mixed => $objectService->saveObject(
+				object: array_merge($lead, $changes),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']),
+					uuid: $id
+				)
+			),
+			operation: 'update lead'
+		);
+		if (isset($saved['error']) === true) {
+			return $saved;
+		}
+
+		return ['lead' => $saved];
+	}//end applyLeadUpdate()
+
+	/**
+	 * The steps the update tool shares with the other curated update tools.
+	 *
+	 * @return McpRecordUpdate
+	 */
+	private function records(): McpRecordUpdate {
+		return new McpRecordUpdate(mcp: $this->mcp);
+	}//end records()
+
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app; see createLead().
+	#[McpTool(
+		name: 'winLead',
+		subject: 'lead',
+		action: 'win',
+		description: 'Close an open lead as won, by id. Allowed for the lead\'s assignee or a member of the '
+			. 'sales group. A lead that is already won or lost answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Close an open lead as won, through the lead's declared `win` transition.
+	 *
+	 * @param string $id The lead uuid.
+	 *
+	 * @return array<string, mixed> `['lead' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function winLead(string $id): array {
+		return $this->transition(id: $id, action: 'win');
+	}//end winLead()
+
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app; see createLead().
+	#[McpTool(
+		name: 'loseLead',
+		subject: 'lead',
+		action: 'lose',
+		description: 'Close an open lead as lost, by id. Allowed for the lead\'s assignee or a member of the '
+			. 'sales group. A lead that is already won or lost answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Close an open lead as lost, through the lead's declared `lose` transition.
+	 *
+	 * @param string $id The lead uuid.
+	 *
+	 * @return array<string, mixed> `['lead' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function loseLead(string $id): array {
+		return $this->transition(id: $id, action: 'lose');
+	}//end loseLead()
+
+	/**
+	 * Run one of the lead's declared transitions.
+	 *
+	 * @param string $id     The lead uuid.
+	 * @param string $action The transition.
+	 *
+	 * @return array<string, mixed> `['lead' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	private function transition(string $id, string $action): array {
+		if ($this->transitions === null) {
+			return $this->mcp->error(code: 'not_configured', message: 'Lead transitions are not available on this instance.');
+		}
+
+		return $this->transitions->run(objectId: $id, action: $action, subject: 'lead');
+	}//end transition()
+
+	// The attribute sits ABOVE the docblock, which is the other way round
 	// from everywhere else in this app. A multi-line PHP attribute breaks the
 	// line-walk gate-16 uses to find a method's docblock, so with the usual
 	// order the @spec tag below is invisible to it and the method reads as
@@ -226,7 +455,8 @@ class LeadService {
 		readOnlyHint: true,
 		destructiveHint: false,
 		idempotentHint: true,
-		scope: 'read'
+		scope: 'read',
+		reach: 'user'
 	)]
 	/**
 	 * Per-stage totals over open leads: lead count, summed value, weighted

@@ -204,6 +204,38 @@ class SegmentSignalServiceEdgesTest extends TestCase {
 	}//end testALeadWithoutAStatusIsOpenAndTheLongestWaitWins()
 
 	/**
+	 * A store that ignores the client filter still only counts the client's own
+	 * contracts and open leads, and a shorter wait after a longer one keeps the longer.
+	 *
+	 * @return void
+	 */
+	public function testRowsOfAnotherClientAreSkippedWhenTheStoreIgnoresTheFilter(): void {
+		$this->store = new class extends InMemoryListObjectStore {
+			/**
+			 * Every row of the schema, whatever the filters ask.
+			 *
+			 * @param string               $schemaSlug The schema.
+			 * @param array<string, mixed> $filters    Ignored.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(string $schemaSlug, array $filters = []): array {
+				return parent::findAll(schemaSlug: $schemaSlug);
+			}//end findAll()
+		};
+		$this->store->save('salesContract', ['clientRef' => 'client-2', 'endDate' => '2026-09-10']);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => '2026-10-05']);
+		$this->store->save('lead', ['client' => 'client-2', 'status' => 'open', 'stageEnteredAt' => '2026-01-01']);
+		$this->store->save('lead', ['client' => 'client-1', 'status' => 'open', 'stageEnteredAt' => '2026-07-07']);
+		$this->store->save('lead', ['client' => 'client-1', 'status' => 'open', 'stageEnteredAt' => '2026-08-26']);
+
+		$signals = $this->service()->signalsFor(clientId: 'client-1');
+
+		$this->assertSame(expected: 30, actual: $signals[SegmentSignalService::FIELD_RENEWAL_DAYS]);
+		$this->assertSame(expected: 60, actual: $signals[SegmentSignalService::FIELD_STALLED_DAYS]);
+	}//end testRowsOfAnotherClientAreSkippedWhenTheStoreIgnoresTheFilter()
+
+	/**
 	 * A catalogue entry with a blank name classifies nothing; the named one still does.
 	 *
 	 * @return void

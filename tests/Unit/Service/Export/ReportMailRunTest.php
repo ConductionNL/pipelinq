@@ -105,6 +105,27 @@ class ReportMailRunTest extends TestCase {
 	private array $users = [];
 
 	/**
+	 * The compression the extraction reports.
+	 *
+	 * @var string
+	 */
+	private string $compression = 'none';
+
+	/**
+	 * Whether telling the owner throws.
+	 *
+	 * @var bool
+	 */
+	private bool $notifyFails = false;
+
+	/**
+	 * Warnings logged by the run: [message, context].
+	 *
+	 * @var list<array{0: string, 1: array}>
+	 */
+	private array $warnings = [];
+
+	/**
 	 * Anna and Bram in the group Team leads, Cees on his own, the owner.
 	 *
 	 * @return void
@@ -116,6 +137,9 @@ class ReportMailRunTest extends TestCase {
 		$this->notified = [];
 		$this->readAs = [];
 		$this->users = [];
+		$this->compression = 'none';
+		$this->notifyFails = false;
+		$this->warnings = [];
 		foreach (['anna', 'bram', 'cees', 'owner'] as $uid) {
 			$this->users[$uid] = $this->user(uid: $uid);
 		}
@@ -171,14 +195,25 @@ class ReportMailRunTest extends TestCase {
 				}
 
 				$rows = ['anna' => 2, 'bram' => 1, 'cees' => 3][$uid] ?? 0;
-				return ['schema' => $schemaSlug, 'rows' => $rows, 'contents' => "rows for {$uid}", 'compression_used' => 'none'];
+				return ['schema' => $schemaSlug, 'rows' => $rows, 'contents' => "rows for {$uid}", 'compression_used' => $this->compression];
 			}
 		);
 
 		$notifications = $this->createMock(NotificationService::class);
 		$notifications->method('sendNotification')->willReturnCallback(
 			function (string $userId, string $subject, array $parameters): void {
+				if ($this->notifyFails === true) {
+					throw new RuntimeException('notifications down');
+				}
+
 				$this->notified[] = [$userId, $subject, $parameters];
+			}
+		);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			function (string $message, array $context = []): void {
+				$this->warnings[] = [$message, $context];
 			}
 		);
 
@@ -189,7 +224,7 @@ class ReportMailRunTest extends TestCase {
 			data: $data,
 			delivery: $this->delivery(userManager: $userManager),
 			notifications: $notifications,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $logger
 		);
 	}//end run()
 
@@ -453,4 +488,42 @@ class ReportMailRunTest extends TestCase {
 		$run->deliver(job: array_merge(self::JOB, ['format' => 'xml', 'name' => '!!!']), destination: ['recipients' => [['type' => 'user', 'id' => 'cees']]]);
 		$this->assertSame([['report-ticket.csv', 'rows for cees', 'text/csv']], $this->mails[0][2]);
 	}//end testAttachmentNamesFollowFormatAndCompression()
+
+	/**
+	 * A gzip-compressed file is attached as `.gz` with the gzip type.
+	 *
+	 * @return void
+	 */
+	public function testACompressedFileIsAttachedAsGzip(): void {
+		$this->compression = 'gzip';
+
+		$this->mailRun()->deliver(job: self::JOB, destination: ['recipients' => [['type' => 'user', 'id' => 'cees']]]);
+
+		$this->assertSame([['open-tickets-ticket.csv.gz', 'rows for cees', 'application/gzip']], $this->mails[0][2]);
+	}//end testACompressedFileIsAttachedAsGzip()
+
+	/**
+	 * A failed send of a job without an owner tells no one; a failing
+	 * notification is logged and the run's outcome stands.
+	 *
+	 * @return void
+	 */
+	public function testAFailedSendWithoutAnOwnerOrNotificationsStillReports(): void {
+		$this->refused = ['cees@example.org'];
+		$job = array_merge(self::JOB, ['createdBy' => '  ']);
+
+		$outcome = $this->mailRun()->deliver(job: $job, destination: ['recipients' => [['type' => 'user', 'id' => 'cees']]]);
+		$this->assertSame('failed', $outcome['status']);
+		$this->assertSame([], $this->notified);
+		$this->assertSame([], $this->warnings);
+
+		$this->notifyFails = true;
+		$outcome = $this->mailRun()->deliver(job: self::JOB, destination: ['recipients' => [['type' => 'user', 'id' => 'cees']]]);
+		$this->assertSame('failed', $outcome['status']);
+		$this->assertSame('cees: The mail server refused the recipient.', $outcome['errorMessage']);
+		$this->assertSame(
+			[['Pipelinq: the owner of a mailed report could not be told it failed', ['exception' => 'notifications down']]],
+			$this->warnings
+		);
+	}//end testAFailedSendWithoutAnOwnerOrNotificationsStillReports()
 }//end class

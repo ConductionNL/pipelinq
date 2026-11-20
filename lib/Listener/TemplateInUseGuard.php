@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectDeletingEvent;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -117,7 +117,7 @@ class TemplateInUseGuard implements IEventListener {
 	 */
 	private function isTemplate(ObjectEntity $object): bool {
 		$schema = (string)$object->getSchema();
-		$configured = $this->appConfig->getValueString(Application::APP_ID, 'campaignTemplate_schema', '');
+		$configured = $this->appConfig->getValueString(AppIdentity::APP_ID, 'campaignTemplate_schema', '');
 
 		return $schema !== '' && $configured !== '' && $schema === $configured;
 	}//end isTemplate()
@@ -133,8 +133,8 @@ class TemplateInUseGuard implements IEventListener {
 	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
 	 */
 	private function scheduledMailingUsing(string $templateId): ?string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'blast_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'blast_schema', '');
 		if ($templateId === '' || $register === '' || $schema === '') {
 			return null;
 		}

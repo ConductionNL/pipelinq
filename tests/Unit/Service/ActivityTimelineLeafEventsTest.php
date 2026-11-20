@@ -52,6 +52,7 @@ use RuntimeException;
  * @uses \OCA\Pipelinq\Service\TimelinePages
  * @uses \OCA\Pipelinq\Service\TimelineRun
  * @uses \OCA\Pipelinq\Service\TimelineSource
+ * @uses \OCA\Pipelinq\Service\ActivityOrigin
  */
 class ActivityTimelineLeafEventsTest extends TestCase {
 

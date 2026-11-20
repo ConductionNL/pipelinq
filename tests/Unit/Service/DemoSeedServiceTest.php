@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Lifecycle\KeepLifecycleStatesScope;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
@@ -655,6 +656,51 @@ class DemoSeedServiceTest extends TestCase {
 		// 48 CRM objects + 7 services, 7 resources and 24 bookings.
 		self::assertSame(86, array_sum($result['skipped']));
 	}//end testSeedIsIdempotentOnRerun()
+
+	/**
+	 * Every demo write runs inside OpenRegister's keep-states scope, so the
+	 * won and lost demo leads are not refused for not starting open.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedWritesInsideTheKeepLifecycleStatesScope(): void {
+		$this->provisionConfig();
+		$this->objectService->method('findAll')->willReturn([]);
+
+		$outside = [];
+		$sequence = 0;
+		$this->objectService->method('saveObject')
+			->willReturnCallback(
+				function (array $data) use (&$outside, &$sequence): object {
+					$sequence++;
+					if (KeepLifecycleStatesScope::isActive() === false) {
+						$outside[] = $data['name'] ?? ($data['title'] ?? '?');
+					}
+
+					return self::savedEntity('uuid-' . $sequence);
+				}
+			);
+		$this->ticketService->method('save')
+			->willReturnCallback(
+				function () use (&$outside, &$sequence): object {
+					$sequence++;
+					if (KeepLifecycleStatesScope::isActive() === false) {
+						$outside[] = 'ticket';
+					}
+
+					return self::savedEntity('uuid-' . $sequence);
+				}
+			);
+
+		$result = $this->service->seed();
+
+		self::assertTrue($result['success']);
+		self::assertGreaterThan(0, $sequence);
+		self::assertSame([], $outside, 'a demo write ran outside the keep-states scope');
+		self::assertFalse(KeepLifecycleStatesScope::isActive(), 'the scope stays open after the seed');
+	}//end testSeedWritesInsideTheKeepLifecycleStatesScope()
 
 	/**
 	 * A reseed re-points demo leads whose pipeline was deleted at the demo

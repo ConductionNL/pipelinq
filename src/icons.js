@@ -79,6 +79,7 @@ import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CheckDecagramOutline from 'vue-material-design-icons/CheckDecagramOutline.vue'
 import ChevronDoubleRight from 'vue-material-design-icons/ChevronDoubleRight.vue'
+import City from 'vue-material-design-icons/City.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
@@ -123,6 +124,7 @@ import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileOutline from 'vue-material-design-icons/FileOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
+import FileSendOutline from 'vue-material-design-icons/FileSendOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FilterVariant from 'vue-material-design-icons/FilterVariant.vue'
 import FolderAccountOutline from 'vue-material-design-icons/FolderAccountOutline.vue'
@@ -294,6 +296,7 @@ export default {
 	ChartTimelineVariantShimmer,
 	Check,
 	CheckCircle,
+	City,
 	CheckCircleOutline,
 	CheckboxMarkedCircleOutline,
 	CheckboxMarkedOutline,
@@ -342,6 +345,7 @@ export default {
 	FileDocumentOutline,
 	FileOutline,
 	FilePdfBox,
+	FileSendOutline,
 	FileSign,
 	FilterVariant,
 	FolderAccountOutline,

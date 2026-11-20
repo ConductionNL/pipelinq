@@ -12,10 +12,14 @@
   - Tests: `tests/vitest/incomingCallCard.spec.js`, from the answer of the endpoint to the record that opens, and the mount in `App.vue`.
 - [x] 2.2 Opening a record links the call's contact moment to it; a new contact is stored first
   - Built: `openMatch()`, `createContact()` and `linkCall()` in the card, through the object store. A failed link never blocks opening the record.
-- [ ] 2.3 The three facts the board draws under one match: open requests and cases, last contact, what is waiting (not built: the lookup returns no counts; needs a summary read per match)
+- [x] 2.3 The three facts the board draws under one match: open requests and cases, last contact, what is waiting
+  - Built: for one match the card reads the client's 360 summary (`GET /api/customer-360/summary`, which checks that the agent may read the client): Open is its open requests, complaints and meldingen (contact moments are logged interactions, not open work), Last contact is the summary's last activity, Waiting is the new `awaitingCustomerCount`, its requests, complaints and meldingen in status `awaiting_customer`. A contact match reads the summary of the client it belongs to; a contact without a client, several matches or a refused read show no facts, and the card still names the caller.
+  - Files: `lib/Service/Customer360SummaryService.php`, `src/components/IncomingCallCard.vue`, `src/services/ctiApi.js`, `l10n/{de,es,fr,it}.json`
+  - Tests: `tests/Unit/Service/Customer360SummaryServiceTest.php` (`testAwaitingCustomerCountsTheClientsWaitingTickets`, `testAwaitingCustomerRechecksEveryRow`), `tests/vitest/incomingCallCard.spec.js` ("the three facts under one match")
 - [x] 2.4 Strings in six locales; the chooser's title loses its dash and follows the board ("Inkomend gesprek: kies contact")
 - [x] 2.5 `docs/Integrations/cti-adapter-setup.md`: what the agent sees
 
 ## 3. Live
-- [ ] 3.1 (live pass, decision 139) `tests/e2e/incoming-call-card.spec.ts`: an install without a telephony platform shows no card and the endpoint answers `enabled: false` (written, not run)
+- [x] 3.1 (live pass, decision 139) `tests/e2e/incoming-call-card.spec.ts`: an install without a telephony platform shows no card and the endpoint answers `enabled: false` (written, not run)
+  - Live pass 16 Nov 2026: `incoming-call-card.spec.ts` passed on a clean install without telephony.
 - [ ] 3.2 (live pass, decision 139) With a platform configured: post a signed `ringing` webhook for an agent's extension, see the card within 15 seconds, open the match, see `client` on the contact moment; post `ended`, see the card go

@@ -117,6 +117,8 @@ class AppInfoPropertiesTest extends TestCase {
 		'EventCancelController::show' => 'the signed per-registration cancel token (EventEmailService)',
 		'EventCancelController::cancel' => 'the signed per-registration cancel token (EventEmailService)',
 		'OpenApiController::show' => 'none: serves the static OpenAPI document, no record data',
+		'MailAddInController::manifest' => 'none: serves the Outlook add-in manifest, which holds only this instance\'s public URLs',
+		'MailAddInController::taskpane' => 'none: serves the Outlook pane\'s page shell; its calls carry an app password (MailAddInController::caller)',
 	];
 
 	/**
@@ -146,6 +148,10 @@ class AppInfoPropertiesTest extends TestCase {
 		'posPayment#test',
 		'messagingAdmin#getServiceAccount',
 		'messagingAdmin#saveServiceAccount',
+		'mailIntakeAdmin#accounts',
+		'mailIntakeAdmin#saveAccounts',
+		'backgroundServiceAccount#show',
+		'backgroundServiceAccount#save',
 		'berichtenboxAdmin#retry',
 		'berichtenboxAdmin#stats',
 		'portalAdmin#getConfig',
@@ -197,8 +203,8 @@ class AppInfoPropertiesTest extends TestCase {
 	public function testTheLicenceIsTheEuplInBothPlaces(): void {
 		$info = simplexml_load_string($this->file(path: 'appinfo/info.xml'));
 
-		$this->assertSame('EUPL-1.2', (string)$info->licence);
-		$this->assertStringStartsWith('EUROPEAN UNION PUBLIC LICENCE v. 1.2', $this->file(path: 'LICENSE'));
+		$this->assertSame(expected: 'EUPL-1.2', actual: (string)$info->licence);
+		$this->assertStringStartsWith(prefix: 'EUROPEAN UNION PUBLIC LICENCE v. 1.2', string: $this->file(path: 'LICENSE'));
 	}//end testTheLicenceIsTheEuplInBothPlaces()
 
 	/**
@@ -221,7 +227,7 @@ class AppInfoPropertiesTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['openregister'], $required);
+		$this->assertSame(expected: ['openregister'], actual: $required);
 	}//end testOpenRegisterIsTheOnlyRequiredApp()
 
 	/**
@@ -238,7 +244,7 @@ class AppInfoPropertiesTest extends TestCase {
 			}
 		}
 
-		$this->assertSame([], $found);
+		$this->assertSame(expected: [], actual: $found);
 	}//end testNothingInLibCountsSeats()
 
 	/**
@@ -261,12 +267,12 @@ class AppInfoPropertiesTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(self::ADMIN_DEFAULT_ROUTES, $undeclared, 'a route without an access attribute');
+		$this->assertSame(expected: self::ADMIN_DEFAULT_ROUTES, actual: $undeclared, message: 'a route without an access attribute');
 		$listed = array_keys(self::PUBLIC_ROUTES);
 		sort($listed);
 		$public = array_values(array_unique($public));
 		sort($public);
-		$this->assertSame($listed, $public, 'a public route not listed with its check, or a listed one no longer public');
+		$this->assertSame(expected: $listed, actual: $public, message: 'a public route not listed with its check, or a listed one no longer public');
 	}//end testEveryRouteDeclaresItsAccessPosture()
 
 	/**
@@ -276,7 +282,7 @@ class AppInfoPropertiesTest extends TestCase {
 	 */
 	public function testEveryPublicRouteNamesItsCheck(): void {
 		foreach (self::PUBLIC_ROUTES as $route => $check) {
-			$this->assertNotSame('', trim($check), $route);
+			$this->assertNotSame(expected: '', actual: trim($check), message: $route);
 		}
 	}//end testEveryPublicRouteNamesItsCheck()
 
@@ -309,7 +315,7 @@ class AppInfoPropertiesTest extends TestCase {
 	 */
 	private function declarationOf(string $class, string $method): array {
 		$path = 'lib/Controller/' . $class . '.php';
-		$this->assertFileExists(dirname(__DIR__, 3) . '/' . $path, 'routed controller ' . $class);
+		$this->assertFileExists(filename: dirname(__DIR__, 3) . '/' . $path, message: 'routed controller ' . $class);
 		$source = $this->file(path: $path);
 
 		$found = preg_match(
@@ -317,7 +323,7 @@ class AppInfoPropertiesTest extends TestCase {
 			$source,
 			$head
 		);
-		$this->assertSame(1, $found, 'routed method ' . $class . '::' . $method);
+		$this->assertSame(expected: 1, actual: $found, message: 'routed method ' . $class . '::' . $method);
 
 		$classHead = '';
 		if (preg_match('/((?:#\[[^\n]*\]\s*)*)(?:final |abstract )?class /', $source, $match) === 1) {

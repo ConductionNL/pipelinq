@@ -1,5 +1,12 @@
 {
   "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "ticket"
+        ]
+      }
+    },
     "schemas": {
       "ticket": {
         "slug": "ticket",
@@ -146,8 +153,8 @@
               "start": {
                 "from": ["new"],
                 "to": "in_progress",
-                "description": "Pick up the ticket for handling. Authorization: the assignee or a member of the sales group.",
-                "authorization": ["sales"]
+                "description": "Pick up the ticket for handling. Authorization: the assignee or a member of the sales group (TicketAssigneeGuard).",
+                "requires": "OCA\\Pipelinq\\Lifecycle\\TicketAssigneeGuard"
               },
               "complete": {
                 "from": ["in_progress"],
@@ -177,8 +184,8 @@
               "reject": {
                 "from": ["new", "in_progress"],
                 "to": "rejected",
-                "description": "Reject the ticket as unfounded or out of scope. Authorization: the assignee or a member of the sales group.",
-                "authorization": ["sales"]
+                "description": "Reject the ticket as unfounded or out of scope. Authorization: the assignee or a member of the sales group (TicketAssigneeGuard).",
+                "requires": "OCA\\Pipelinq\\Lifecycle\\TicketAssigneeGuard"
               },
               "close": {
                 "from": ["new", "in_progress"],

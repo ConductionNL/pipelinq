@@ -1,0 +1,41 @@
+# Pipelinq
+
+> CRM for Nextcloud: client and organisation management, lead pipelines on kanban boards, request intake before a request becomes a case, and a log of every interaction. A thin client on OpenRegister, which stores its records.
+
+## Start here
+
+- [AGENTS.md](AGENTS.md): setup, build, test and lint commands, OpenSpec flow and conventions
+- [README.md](README.md): overview, installation and the Docker evaluation stack
+- [DEVELOPMENT.md](DEVELOPMENT.md): development environment
+- [CONTRIBUTING.md](CONTRIBUTING.md): branches, pull requests and commit format
+- [CLAUDE.md](CLAUDE.md): frontend styling conventions
+
+## Documentation
+
+- [docs/intro.md](docs/intro.md): documentation home
+- [docs/installation.md](docs/installation.md): installation
+- [docs/Features/](docs/Features/): one page per feature
+- [docs/Technical/architecture.md](docs/Technical/architecture.md): architecture
+- [docs/Technical/development.md](docs/Technical/development.md): development notes
+- [docs/admin/](docs/admin/): administrator guides
+- [docs/user-guide/](docs/user-guide/): user guide
+
+## API
+
+- [openapi.json](openapi.json): OpenAPI 3.0 description of the app's JSON API
+- [docs/api/mdm-read-api.md](docs/api/mdm-read-api.md): read access to master data for downstream apps
+- [docs/Technical/avg-requests-api.md](docs/Technical/avg-requests-api.md): GDPR data-subject requests API
+
+## Specifications and decisions
+
+- [openspec/config.yaml](openspec/config.yaml): OpenSpec project context and rules
+- [openspec/specs/](openspec/specs/): current requirements, one directory per capability
+- [openspec/changes/](openspec/changes/): proposed and in-progress changes; finished ones in `archive/`
+- [openspec/architecture/](openspec/architecture/): architecture decision records
+
+## Code
+
+- [appinfo/info.xml](appinfo/info.xml): app metadata
+- [lib/](lib/): PHP backend
+- [src/](src/): Vue frontend; pages and menu in [src/manifest.json](src/manifest.json)
+- [lib/Settings/pipelinq_register.json](lib/Settings/pipelinq_register.json): OpenRegister register and schemas

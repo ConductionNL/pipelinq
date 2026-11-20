@@ -151,7 +151,7 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 54 entries: 43 main, 3 footer, 8 settings, 0 integrations', () => {
+	it('still counts 55 entries: 43 main, 3 footer, 9 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
@@ -163,11 +163,13 @@ describe('the full profile', () => {
 		// caption that has entries under it (nextcloud-vue #1608).
 		// Bulk changes (clients-bulk-edit-and-undo) sits under the Dashboard
 		// group with Clients and Contacts. Call reviews (contact-moments-call-review)
-		// sits under the KCC workplace with My work and the queue.
-		expect(flat(menu)).toHaveLength(54)
+		// sits under the KCC workplace with My work and the queue. Municipalities
+		// (requests-municipality-per-contact) is a settings entry too. Price lists
+		// (products-price-lists) sits next to Products.
+		expect(flat(menu)).toHaveLength(55)
 		expect(count('main')).toBe(43)
 		expect(count('footer')).toBe(3)
-		expect(count('settings')).toBe(8)
+		expect(count('settings')).toBe(9)
 		expect(count('integrations')).toBe(0)
 	})
 

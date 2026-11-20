@@ -35,6 +35,7 @@ use RuntimeException;
  * failing publish.
  *
  * @covers \OCA\Pipelinq\Service\Marketing\JourneyService
+ * @uses   \OCA\Pipelinq\Service\Marketing\JourneyCompileRun
  */
 class JourneyServiceEdgesTest extends TestCase {
 

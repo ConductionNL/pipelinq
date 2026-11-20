@@ -51,8 +51,11 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { downloadBlob } from '../../services/csvExport.js'
 import { channelColor, reportSectionMixin } from './reportSection.js'
 
 export default {
@@ -94,10 +97,27 @@ export default {
 			})
 		},
 
-		exportCsv() {
-			window.location.href = generateUrl(
-				'/apps/pipelinq/api/rapportage/export',
-			)
+		/**
+		 * Download the period's figures as CSV. Fetched with the request token,
+		 * because a plain navigation carries none and is refused.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async exportCsv() {
+			try {
+				const response = await axios.get(
+					generateUrl('/apps/pipelinq/api/rapportage/export'),
+					{
+						params: { period: this.effectivePeriod },
+						responseType: 'blob',
+					},
+				)
+				const disposition = response.headers?.['content-disposition'] ?? ''
+				const match = /filename="?([^";]+)"?/.exec(disposition)
+				downloadBlob(match ? match[1] : 'rapportage.csv', response.data)
+			} catch {
+				showError(t('pipelinq', 'The report could not be exported.'))
+			}
 		},
 	},
 }

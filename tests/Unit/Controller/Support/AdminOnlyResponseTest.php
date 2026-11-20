@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
  * No user is 401, a non-admin is 403, an admin passes.
  *
  * @covers \OCA\Pipelinq\Controller\Support\AdminOnlyResponse
+ * @uses \OCA\Pipelinq\Controller\PosResponses
+ * @uses \OCA\Pipelinq\Controller\Support\PosControllerResponses
  */
 class AdminOnlyResponseTest extends TestCase {
 
