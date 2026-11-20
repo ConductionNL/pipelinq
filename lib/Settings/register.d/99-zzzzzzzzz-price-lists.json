@@ -1,5 +1,5 @@
 {
-  "_note": "products-price-lists (D1, D2): a price list per customer segment, country or client, and a client's country and own price list. New schema priceList; client gains two optional fields and moves to 1.7.0.",
+  "_note": "products-price-lists (D1, D2): a price list per customer segment, country or client, and a client's country and own price list. New schema priceList; client gains two optional fields and moves to 1.7.0. A lead line says where its price came from (priceSource, priceListTitle) and moves to 1.3.0; unitPrice is no longer required on it, because the server fills it from the client's lists when the salesperson leaves it empty (task 1.4).",
   "components": {
     "registers": {
       "pipelinq": {
@@ -141,6 +141,44 @@
             "description": "The client's own price list; it goes before any list for its segment or country.",
             "format": "uuid",
             "$ref": "priceList"
+          }
+        }
+      },
+      "leadProduct": {
+        "slug": "leadProduct",
+        "version": "1.3.0",
+        "required": [
+          "lead",
+          "product",
+          "quantity"
+        ],
+        "properties": {
+          "unitPrice": {
+            "type": "number",
+            "title": "Unit price",
+            "description": "Leave empty to take the price from the client's price list or the product. A price you type is kept and marked as set by hand.",
+            "minimum": 0
+          },
+          "priceSource": {
+            "type": "string",
+            "title": "Price from",
+            "description": "Where the unit price came from: the client's price list, the product's base price, a quantity tier or variant, or typed by hand.",
+            "enum": [
+              "price-list",
+              "base",
+              "tier",
+              "variant",
+              "manual"
+            ],
+            "facetable": true,
+            "readOnly": true
+          },
+          "priceListTitle": {
+            "type": "string",
+            "title": "Price list",
+            "description": "The price list that priced the line, when one did.",
+            "maxLength": 255,
+            "readOnly": true
           }
         }
       }

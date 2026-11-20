@@ -182,6 +182,7 @@ import EmailReceiptModal from './modals/EmailReceiptModal.vue'
 import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 import LinkSubmissionToClientModal from './modals/LinkSubmissionToClientModal.vue'
 import PrintReceiptModal from './modals/PrintReceiptModal.vue'
+import SendQuoteModal from './modals/SendQuoteModal.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
 //     the list, the new-blast wizard (BlastWizardDialog, which embeds the
@@ -1337,6 +1338,13 @@ const registry = {
 		component: LetterFromTemplateModal,
 		propsSchema: null,
 		_note: 'Make a letter. Target of the make-letter header action on ClientDetail and TicketDetail; reads the record id from the route.',
+	},
+
+	SendQuoteModal: {
+		kind: 'modal',
+		component: SendQuoteModal,
+		propsSchema: null,
+		_note: 'Send a quote from the lead\'s lines (products-quote-from-lead). Target of the send-quote header action on LeadDetail, shown only while filinq is there; reads the lead id from the route.',
 	},
 
 	LeadCreateDialog: {

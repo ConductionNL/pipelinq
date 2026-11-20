@@ -409,6 +409,10 @@
 				{
 					"id": "Products",
 					"order": 63
+				},
+				{
+					"id": "PriceLists",
+					"order": 64
 				}
 			]
 		},
@@ -468,7 +472,8 @@
 		"products": {
 			"label": "Products",
 			"ids": [
-				"Products"
+				"Products",
+				"PriceLists"
 			],
 			"menu": []
 		},
