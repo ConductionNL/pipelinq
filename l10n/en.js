@@ -1,6 +1,16 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Companies found": "Companies found",
+        "Company name or KVK number": "Company name or KVK number",
+        "Find the caller in the population register": "Find the caller in the population register",
+        "Find the company in the trade register": "Find the company in the trade register",
+        "Known": "Known",
+        "Look up in the KVK": "Look up in the KVK",
+        "No company found.": "No company found.",
+        "The BRP did not find this person.": "The BRP did not find this person.",
+        "The KVK could not be asked. Try again.": "The KVK could not be asked. Try again.",
+        "The lookup gave no name to make a client from.": "The lookup gave no name to make a client from.",
         "{schedule} to {recipients}": "{schedule} to {recipients}",
         "A mailed report goes to the recipients chosen on its export job.": "A mailed report goes to the recipients chosen on its export job.",
         "Choose at least one recipient": "Choose at least one recipient",

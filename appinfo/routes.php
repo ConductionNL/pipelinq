@@ -804,6 +804,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // BRP / BSN — Haalcentraal Personen integration (bsn-validatie-en-brp-lookup).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'brp#lookup',           'url' => '/api/brp/lookup',                    'verb' => 'POST'],
+        ['name' => 'brp#access',           'url' => '/api/brp/access',                    'verb' => 'GET'],
         ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
         ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
         ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],
