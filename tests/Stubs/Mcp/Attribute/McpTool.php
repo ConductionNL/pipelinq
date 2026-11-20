@@ -51,6 +51,9 @@ if (class_exists(McpTool::class) === false) {
 		 *                           McpAnnotationValidator::SCOPES).
 		 * @param string|null $subject The thing the tool acts on (grant-matrix taxonomy).
 		 * @param string|null $action The verb it performs on that subject.
+		 * @param string|null $reach The widest set of principals a call can affect
+		 *                           (`self`, `user`, `instance`, `external`), as on openregister main.
+		 * @param array<string, bool|int|float|string> $annotations Free-form marks a consumer reads.
 		 */
 		public function __construct(
 			public readonly ?string $name = null,
@@ -61,6 +64,8 @@ if (class_exists(McpTool::class) === false) {
 			public readonly ?string $scope = null,
 			public readonly ?string $subject = null,
 			public readonly ?string $action = null,
+			public readonly ?string $reach = null,
+			public readonly array $annotations = [],
 		) {
 		}//end __construct()
 	}//end class
