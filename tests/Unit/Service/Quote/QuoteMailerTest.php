@@ -68,10 +68,10 @@ class QuoteMailerTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->message = $this->createMock(IMessage::class);
-		$this->mailer  = $this->createMock(IMailer::class);
+		$this->message = $this->createMock(originalClassName: IMessage::class);
+		$this->mailer  = $this->createMock(originalClassName: IMailer::class);
 		$this->mailer->method('createMessage')->willReturn($this->message);
-		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 	}//end setUp()
 
 	/**
@@ -80,7 +80,7 @@ class QuoteMailerTest extends TestCase {
 	 * @return QuoteMailer
 	 */
 	private function quoteMailer(): QuoteMailer {
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters)
 		);
@@ -111,7 +111,7 @@ class QuoteMailerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMailsThePdfToTheRecipient(): void {
-		$attachment = $this->createMock(IAttachment::class);
+		$attachment = $this->createMock(originalClassName: IAttachment::class);
 		$this->mailer->expects($this->once())->method('createAttachment')
 			->with('%PDF-1.7 quote', 'OFF-2026-0042 Nieuw kantoor.pdf', 'application/pdf')
 			->willReturn($attachment);
@@ -124,7 +124,7 @@ class QuoteMailerTest extends TestCase {
 
 		$sent = $this->quoteMailer()->send(recipient: ['email' => 'kees@degraaf.example', 'name' => 'Kees Bakker'], quote: self::quote());
 
-		$this->assertTrue($sent);
+		$this->assertTrue(condition: $sent);
 	}//end testMailsThePdfToTheRecipient()
 
 	/**
@@ -136,7 +136,7 @@ class QuoteMailerTest extends TestCase {
 		$this->mailer->method('send')->willReturn([]);
 		$this->message->expects($this->once())->method('setTo')->with(['info@degraaf.example']);
 
-		$this->assertTrue($this->quoteMailer()->send(recipient: ['email' => 'info@degraaf.example', 'name' => ''], quote: self::quote()));
+		$this->assertTrue(condition: $this->quoteMailer()->send(recipient: ['email' => 'info@degraaf.example', 'name' => ''], quote: self::quote()));
 	}//end testANamelessRecipientIsAddressedByEmail()
 
 	/**
@@ -147,7 +147,7 @@ class QuoteMailerTest extends TestCase {
 	public function testARefusedRecipientIsAFailure(): void {
 		$this->mailer->method('send')->willReturn(['kees@degraaf.example']);
 
-		$this->assertFalse($this->quoteMailer()->send(recipient: ['email' => 'kees@degraaf.example', 'name' => 'Kees'], quote: self::quote()));
+		$this->assertFalse(condition: $this->quoteMailer()->send(recipient: ['email' => 'kees@degraaf.example', 'name' => 'Kees'], quote: self::quote()));
 	}//end testARefusedRecipientIsAFailure()
 
 	/**
@@ -159,9 +159,9 @@ class QuoteMailerTest extends TestCase {
 		$this->mailer->method('send')->willThrowException(new RuntimeException('SMTP down'));
 		$this->logger->expects($this->once())->method('error')->with(
 			'Pipelinq: a quote was made but its mail did not go out',
-			$this->callback(static fn (array $context): bool => $context['quote'] === 'OFF-2026-0042' && $context['exception'] === 'SMTP down')
+			$this->callback(callback: static fn (array $context): bool => $context['quote'] === 'OFF-2026-0042' && $context['exception'] === 'SMTP down')
 		);
 
-		$this->assertFalse($this->quoteMailer()->send(recipient: ['email' => 'kees@degraaf.example', 'name' => 'Kees'], quote: self::quote()));
+		$this->assertFalse(condition: $this->quoteMailer()->send(recipient: ['email' => 'kees@degraaf.example', 'name' => 'Kees'], quote: self::quote()));
 	}//end testAThrowingMailerIsLoggedAndAFailure()
 }//end class

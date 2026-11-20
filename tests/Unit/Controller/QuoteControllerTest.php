@@ -84,8 +84,8 @@ class QuoteControllerTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->sender  = $this->createMock(QuoteSender::class);
-		$this->letters = $this->createMock(FilinqLetterAdapter::class);
+		$this->sender  = $this->createMock(originalClassName: QuoteSender::class);
+		$this->letters = $this->createMock(originalClassName: FilinqLetterAdapter::class);
 		$this->leads   = [self::LEAD => ['title' => 'Nieuw kantoor', 'assignee' => 'sanne', 'client' => 'c-1']];
 	}//end setUp()
 
@@ -98,21 +98,21 @@ class QuoteControllerTest extends TestCase {
 	 * @return QuoteController
 	 */
 	private function controller(array $params = [], ?string $uid = 'sanne'): QuoteController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static fn (string $key, $default = null) => ($params[$key] ?? $default)
 		);
 
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$user    = null;
 		if ($uid !== null) {
-			$user = $this->createMock(IUser::class);
+			$user = $this->createMock(originalClassName: IUser::class);
 			$user->method('getUID')->willReturn($uid);
 		}
 
 		$session->method('getUser')->willReturn($user);
 
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => match ($key) {
 				'register' => '7',
@@ -122,7 +122,7 @@ class QuoteControllerTest extends TestCase {
 		);
 
 		$leads         = $this->leads;
-		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->method('find')->willReturnCallback(
 			static function (int|string $id) use ($leads): ?ObjectEntity {
 				if (isset($leads[$id]) === false) {
@@ -135,19 +135,19 @@ class QuoteControllerTest extends TestCase {
 				return $entity;
 			}
 		);
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
-		$groups = $this->createMock(IGroupManager::class);
+		$groups = $this->createMock(originalClassName: IGroupManager::class);
 		$groups->method('isInGroup')->willReturn($this->privileged);
 
 		return new QuoteController(
-			$request,
-			$this->sender,
-			$this->letters,
-			$session,
-			new CallerObjectReader($container, $config, $this->createMock(LoggerInterface::class)),
-			new ObjectOwnerAccessPolicy($groups, $config)
+			request: $request,
+			sender: $this->sender,
+			letters: $this->letters,
+			userSession: $session,
+			reader: new CallerObjectReader(container: $container, appConfig: $config, logger: $this->createMock(originalClassName: LoggerInterface::class)),
+			accessPolicy: new ObjectOwnerAccessPolicy(groupManager: $groups, appConfig: $config)
 		);
 	}//end controller()
 
@@ -159,7 +159,10 @@ class QuoteControllerTest extends TestCase {
 	private function filinqPresent(): void {
 		$this->letters->method('unavailableReason')->willReturn(null);
 		$this->letters->method('findTemplate')->willReturnCallback(
-			static fn (string $id): ?array => ($id === 'tpl-q' ? ['id' => 'tpl-q', 'name' => 'Offerte', 'description' => ''] : null)
+			static fn (string $id): ?array => match ($id) {
+				'tpl-q' => ['id' => 'tpl-q', 'name' => 'Offerte', 'description' => ''],
+				default => null,
+			}
 		);
 	}//end filinqPresent()
 
@@ -171,8 +174,8 @@ class QuoteControllerTest extends TestCase {
 	public function testWithoutAUserIs401(): void {
 		$this->sender->expects($this->never())->method('send');
 
-		$this->assertSame(401, $this->controller(params: ['templateId' => 'tpl-q'], uid: null)->send(id: self::LEAD)->getStatus());
-		$this->assertSame(401, $this->controller(uid: null)->recipient(id: self::LEAD)->getStatus());
+		$this->assertSame(expected: 401, actual: $this->controller(params: ['templateId' => 'tpl-q'], uid: null)->send(id: self::LEAD)->getStatus());
+		$this->assertSame(expected: 401, actual: $this->controller(uid: null)->recipient(id: self::LEAD)->getStatus());
 	}//end testWithoutAUserIs401()
 
 	/**
@@ -184,9 +187,15 @@ class QuoteControllerTest extends TestCase {
 		$this->filinqPresent();
 		$this->sender->expects($this->never())->method('send');
 
-		$this->assertSame(400, $this->controller()->send(id: self::LEAD)->getStatus());
-		$this->assertSame(400, $this->controller(params: ['templateId' => 'tpl-q', 'validUntil' => '17-12-2026'])->send(id: self::LEAD)->getStatus());
-		$this->assertSame(400, $this->controller(params: ['templateId' => 'tpl-q', 'validUntil' => '2020-01-01'])->send(id: self::LEAD)->getStatus());
+		$this->assertSame(expected: 400, actual: $this->controller()->send(id: self::LEAD)->getStatus());
+		$this->assertSame(
+			expected: 400,
+			actual: $this->controller(params: ['templateId' => 'tpl-q', 'validUntil' => '17-12-2026'])->send(id: self::LEAD)->getStatus()
+		);
+		$this->assertSame(
+			expected: 400,
+			actual: $this->controller(params: ['templateId' => 'tpl-q', 'validUntil' => '2020-01-01'])->send(id: self::LEAD)->getStatus()
+		);
 	}//end testAMissingTemplateOrABadDateIs400()
 
 	/**
@@ -202,8 +211,8 @@ class QuoteControllerTest extends TestCase {
 
 		$response = $this->controller(params: ['templateId' => 'tpl-q'])->send(id: self::LEAD);
 
-		$this->assertSame(503, $response->getStatus());
-		$this->assertSame('filinq_absent: filinq is not installed', $response->getData()['reason']);
+		$this->assertSame(expected: 503, actual: $response->getStatus());
+		$this->assertSame(expected: 'filinq_absent: filinq is not installed', actual: $response->getData()['reason']);
 	}//end testWithoutFilinqIs503()
 
 	/**
@@ -216,9 +225,9 @@ class QuoteControllerTest extends TestCase {
 		$this->sender->expects($this->never())->method('send');
 		$this->sender->expects($this->never())->method('recipientFor');
 
-		$this->assertSame(404, $this->controller(params: ['templateId' => 'tpl-q'])->send(id: 'no-such-lead')->getStatus());
-		$this->assertSame(404, $this->controller(params: ['templateId' => 'tpl-q'], uid: 'piet')->send(id: self::LEAD)->getStatus());
-		$this->assertSame(404, $this->controller(uid: 'piet')->recipient(id: self::LEAD)->getStatus());
+		$this->assertSame(expected: 404, actual: $this->controller(params: ['templateId' => 'tpl-q'])->send(id: 'no-such-lead')->getStatus());
+		$this->assertSame(expected: 404, actual: $this->controller(params: ['templateId' => 'tpl-q'], uid: 'piet')->send(id: self::LEAD)->getStatus());
+		$this->assertSame(expected: 404, actual: $this->controller(uid: 'piet')->recipient(id: self::LEAD)->getStatus());
 	}//end testALeadTheCallerMayNotReadIs404()
 
 	/**
@@ -231,7 +240,7 @@ class QuoteControllerTest extends TestCase {
 		$this->privileged = true;
 		$this->sender->expects($this->once())->method('send')->willReturn(['number' => 'OFF-2026-0042']);
 
-		$this->assertSame(200, $this->controller(params: ['templateId' => 'tpl-q'], uid: 'manager')->send(id: self::LEAD)->getStatus());
+		$this->assertSame(expected: 200, actual: $this->controller(params: ['templateId' => 'tpl-q'], uid: 'manager')->send(id: self::LEAD)->getStatus());
 	}//end testAPrivilegedUserMaySendFromAnotherLead()
 
 	/**
@@ -245,8 +254,8 @@ class QuoteControllerTest extends TestCase {
 
 		$response = $this->controller(params: ['templateId' => 'tpl-other'])->send(id: self::LEAD);
 
-		$this->assertSame(404, $response->getStatus());
-		$this->assertSame('Template not found', $response->getData()['message']);
+		$this->assertSame(expected: 404, actual: $response->getStatus());
+		$this->assertSame(expected: 'Template not found', actual: $response->getData()['message']);
 	}//end testAnUnknownTemplateIs404()
 
 	/**
@@ -269,8 +278,8 @@ class QuoteControllerTest extends TestCase {
 
 		$response = $this->controller(params: ['templateId' => 'tpl-q', 'validUntil' => '2099-12-17'])->send(id: self::LEAD);
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['number' => 'OFF-2026-0042', 'contactMomentId' => 'cm-1'], $response->getData());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: ['number' => 'OFF-2026-0042', 'contactMomentId' => 'cm-1'], actual: $response->getData());
 	}//end testSendsTheQuote()
 
 	/**
@@ -281,13 +290,20 @@ class QuoteControllerTest extends TestCase {
 	public function testARefusalKeepsItsStatusAndDetails(): void {
 		$this->filinqPresent();
 		$this->sender->method('send')->willThrowException(
-			new QuoteRefusedException(message: 'The quote was made and filed, but the mail could not be sent.', status: 502, details: ['path' => '/Pipelinq/q.pdf'])
+			new QuoteRefusedException(
+				message: 'The quote was made and filed, but the mail could not be sent.',
+				status: 502,
+				details: ['path' => '/Pipelinq/q.pdf']
+			)
 		);
 
 		$response = $this->controller(params: ['templateId' => 'tpl-q'])->send(id: self::LEAD);
 
-		$this->assertSame(502, $response->getStatus());
-		$this->assertSame(['message' => 'The quote was made and filed, but the mail could not be sent.', 'path' => '/Pipelinq/q.pdf'], $response->getData());
+		$this->assertSame(expected: 502, actual: $response->getStatus());
+		$this->assertSame(
+			expected: ['message' => 'The quote was made and filed, but the mail could not be sent.', 'path' => '/Pipelinq/q.pdf'],
+			actual: $response->getData()
+		);
 	}//end testARefusalKeepsItsStatusAndDetails()
 
 	/**
@@ -302,10 +318,10 @@ class QuoteControllerTest extends TestCase {
 		);
 
 		$this->assertSame(
-			['recipient' => ['email' => 'kees@degraaf.example', 'name' => 'Kees Bakker', 'source' => 'contact']],
-			$this->controller()->recipient(id: self::LEAD)->getData()
+			expected: ['recipient' => ['email' => 'kees@degraaf.example', 'name' => 'Kees Bakker', 'source' => 'contact']],
+			actual: $this->controller()->recipient(id: self::LEAD)->getData()
 		);
-		$this->assertSame(['recipient' => null], $this->controller()->recipient(id: self::LEAD)->getData());
+		$this->assertSame(expected: ['recipient' => null], actual: $this->controller()->recipient(id: self::LEAD)->getData());
 	}//end testTheRecipientPreview()
 
 	/**
@@ -316,9 +332,9 @@ class QuoteControllerTest extends TestCase {
 	public function testTheValidityDate(): void {
 		$today = new DateTimeImmutable('2026-11-17');
 
-		$this->assertSame('2026-12-17', QuoteController::validUntil(value: '', today: $today));
-		$this->assertSame('2026-11-17', QuoteController::validUntil(value: '2026-11-17', today: $today));
-		$this->assertNull(QuoteController::validUntil(value: '2026-11-16', today: $today));
-		$this->assertNull(QuoteController::validUntil(value: '2026-02-30', today: $today));
+		$this->assertSame(expected: '2026-12-17', actual: QuoteController::validUntil(value: '', today: $today));
+		$this->assertSame(expected: '2026-11-17', actual: QuoteController::validUntil(value: '2026-11-17', today: $today));
+		$this->assertNull(actual: QuoteController::validUntil(value: '2026-11-16', today: $today));
+		$this->assertNull(actual: QuoteController::validUntil(value: '2026-02-30', today: $today));
 	}//end testTheValidityDate()
 }//end class

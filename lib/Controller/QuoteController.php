@@ -176,7 +176,7 @@ class QuoteController extends Controller {
 			return $today->modify('+'.self::DEFAULT_VALID_DAYS.' days')->format('Y-m-d');
 		}
 
-		$date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+		$date = date_create_immutable_from_format(format: '!Y-m-d', datetime: $value);
 		if ($date === false || $date->format('Y-m-d') !== $value || $date < $today) {
 			return null;
 		}

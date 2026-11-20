@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Quote;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\FilinqLetterAdapterInterface;
@@ -35,7 +36,6 @@ use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IL10N;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -66,15 +66,15 @@ class QuoteSender {
 	/**
 	 * Constructor.
 	 *
-	 * @param QuoteService                 $quotes    Totals per VAT rate, the number and the recipient.
-	 * @param FilinqLetterAdapterInterface $letters   filinq's side: renders the PDF and files a copy.
-	 * @param QuoteMailer                  $mailer    Mails the PDF.
-	 * @param TicketService                $tickets   Stores the contact moment.
-	 * @param CallerObjectReaderInterface  $reader    Reads the client, contact and products as the caller.
-	 * @param ContainerInterface           $container OpenRegister's ObjectService, for the lead's lines.
-	 * @param IAppConfig                   $appConfig The register and schema ids.
-	 * @param IL10N                        $l10n      The app's translations.
-	 * @param LoggerInterface              $logger    Logger.
+	 * @param QuoteService                 $quotes        Totals per VAT rate, the number and the recipient.
+	 * @param FilinqLetterAdapterInterface $letters       filinq's side: renders the PDF and files a copy.
+	 * @param QuoteMailer                  $mailer        Mails the PDF.
+	 * @param TicketService                $tickets       Stores the contact moment.
+	 * @param CallerObjectReaderInterface  $reader        Reads the client, contact and products as the caller.
+	 * @param ObjectServiceInterface       $objectService OpenRegister's object service, for the lead's lines.
+	 * @param IAppConfig                   $appConfig     The register and schema ids.
+	 * @param IL10N                        $l10n          The app's translations.
+	 * @param LoggerInterface              $logger        Logger.
 	 */
 	public function __construct(
 		private readonly QuoteService $quotes,
@@ -82,7 +82,7 @@ class QuoteSender {
 		private readonly QuoteMailer $mailer,
 		private readonly TicketService $tickets,
 		private readonly CallerObjectReaderInterface $reader,
-		private readonly ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly IAppConfig $appConfig,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
@@ -372,8 +372,7 @@ class QuoteSender {
 			'lead'     => $leadId,
 		];
 
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		$rows          = (array) $objectService->findAll(config: ['filters' => $filters, 'limit' => self::LINE_LIMIT]);
+		$rows = (array) $this->objectService->findAll(config: ['filters' => $filters, 'limit' => self::LINE_LIMIT]);
 
 		$lines = [];
 		foreach ($rows as $row) {

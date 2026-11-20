@@ -128,10 +128,10 @@ class QuoteSenderTest extends TestCase {
 			['name' => 'Advies', 'product' => self::ADVICE, 'quantity' => 10, 'unitPrice' => 100, 'total' => 1000],
 			['name' => 'Handboek', 'product' => self::BOOK, 'quantity' => 20, 'unitPrice' => 25, 'total' => 500],
 		];
-		$this->letters  = $this->createMock(FilinqLetterAdapter::class);
-		$this->mailer   = $this->createMock(QuoteMailer::class);
-		$this->tickets  = $this->createMock(TicketService::class);
-		$this->numbers  = $this->createMock(QuoteNumberSequence::class);
+		$this->letters  = $this->createMock(originalClassName: FilinqLetterAdapter::class);
+		$this->mailer   = $this->createMock(originalClassName: QuoteMailer::class);
+		$this->tickets  = $this->createMock(originalClassName: TicketService::class);
+		$this->numbers  = $this->createMock(originalClassName: QuoteNumberSequence::class);
 	}//end setUp()
 
 	/**
@@ -140,7 +140,7 @@ class QuoteSenderTest extends TestCase {
 	 * @return QuoteSender
 	 */
 	private function sender(): QuoteSender {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => match ($key) {
 				'register' => '7',
@@ -153,7 +153,7 @@ class QuoteSenderTest extends TestCase {
 		);
 
 		$readable      = $this->readable;
-		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->method('find')->willReturnCallback(
 			static function (int|string $id) use ($readable): ?ObjectEntity {
 				if (isset($readable[$id]) === false) {
@@ -180,14 +180,18 @@ class QuoteSenderTest extends TestCase {
 			}
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$catalog = new ProductCatalogService($config, $logger, objectService: $this->createMock(ObjectServiceInterface::class));
+		$catalog = new ProductCatalogService(
+			appConfig: $config,
+			logger: $logger,
+			objectService: $this->createMock(originalClassName: ObjectServiceInterface::class)
+		);
 		$quotes  = new QuoteService(catalog: $catalog, numbers: $this->numbers, math: new LineTotalMath());
 
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters)
 		);
@@ -197,8 +201,8 @@ class QuoteSenderTest extends TestCase {
 			letters: $this->letters,
 			mailer: $this->mailer,
 			tickets: $this->tickets,
-			reader: new CallerObjectReader($container, $config, $logger),
-			container: $container,
+			reader: new CallerObjectReader(container: $container, appConfig: $config, logger: $logger),
+			objectService: $objectService,
 			appConfig: $config,
 			l10n: $l10n,
 			logger: $logger
@@ -238,7 +242,14 @@ class QuoteSenderTest extends TestCase {
 
 		$rendered = null;
 		$this->letters->expects($this->once())->method('render')->willReturnCallback(
-			static function (string $templateId, array $dataRefs, string $filename, string $outputMode, array $listRefs, array $adHocData) use (&$rendered): array {
+			static function (
+				string $templateId,
+				array $dataRefs,
+				string $filename,
+				string $outputMode,
+				array $listRefs,
+				array $adHocData
+			) use (&$rendered): array {
 				$rendered = compact('templateId', 'dataRefs', 'filename', 'outputMode', 'adHocData');
 				return ['content' => '%PDF-1.7 quote', 'fileId' => 4711, 'path' => '/Pipelinq/OFF-2026-0042 Nieuw kantoor.pdf', 'warnings' => []];
 			}
@@ -264,19 +275,19 @@ class QuoteSenderTest extends TestCase {
 
 		$result = $this->sender()->send(leadId: self::LEAD, lead: self::lead(), templateId: 'tpl-q', validUntil: '2026-12-17');
 
-		$this->assertSame('tpl-q', $rendered['templateId']);
-		$this->assertSame('both', $rendered['outputMode']);
-		$this->assertSame('OFF-2026-0042 Nieuw kantoor', $rendered['filename']);
+		$this->assertSame(expected: 'tpl-q', actual: $rendered['templateId']);
+		$this->assertSame(expected: 'both', actual: $rendered['outputMode']);
+		$this->assertSame(expected: 'OFF-2026-0042 Nieuw kantoor', actual: $rendered['filename']);
 		$this->assertSame(
-			[
+			expected: [
 				['register' => '7', 'schema' => 'lead', 'id' => self::LEAD],
 				['register' => '7', 'schema' => 'client', 'id' => self::CLIENT],
 				['register' => '7', 'schema' => 'contact', 'id' => self::CONTACT],
 			],
-			$rendered['dataRefs']
+			actual: $rendered['dataRefs']
 		);
 		$this->assertSame(
-			[
+			expected: [
 				'rates'        => [
 					['rate' => 21, 'net' => 1000.0, 'vat' => 210.0, 'gross' => 1210.0],
 					['rate' => 9, 'net' => 500.0, 'vat' => 45.0, 'gross' => 545.0],
@@ -285,23 +296,26 @@ class QuoteSenderTest extends TestCase {
 				'totalVat'     => 255.0,
 				'totalInclVat' => 1755.0,
 			],
-			$rendered['adHocData']['totals']
+			actual: $rendered['adHocData']['totals']
 		);
-		$this->assertSame('OFF-2026-0042', $rendered['adHocData']['quote']['number']);
-		$this->assertSame('2026-12-17', $rendered['adHocData']['quote']['validUntil']);
-		$this->assertSame('Advies', $rendered['adHocData']['lines'][0]['product']['name']);
-		$this->assertSame(['filters' => ['register' => '7', 'schema' => '16', 'lead' => self::LEAD], 'limit' => 200], $this->lineQueries[0]);
+		$this->assertSame(expected: 'OFF-2026-0042', actual: $rendered['adHocData']['quote']['number']);
+		$this->assertSame(expected: '2026-12-17', actual: $rendered['adHocData']['quote']['validUntil']);
+		$this->assertSame(expected: 'Advies', actual: $rendered['adHocData']['lines'][0]['product']['name']);
+		$this->assertSame(
+			expected: ['filters' => ['register' => '7', 'schema' => '16', 'lead' => self::LEAD], 'limit' => 200],
+			actual: $this->lineQueries[0]
+		);
 
-		$this->assertSame(['email' => 'kees@degraaf.example', 'name' => 'Kees Bakker', 'source' => 'contact'], $mailed[0]);
-		$this->assertSame('OFF-2026-0042 Nieuw kantoor.pdf', $mailed[1]->filename);
-		$this->assertSame('%PDF-1.7 quote', $mailed[1]->content);
-		$this->assertSame(1755.0, $mailed[1]->totalInclVat);
+		$this->assertSame(expected: ['email' => 'kees@degraaf.example', 'name' => 'Kees Bakker', 'source' => 'contact'], actual: $mailed[0]);
+		$this->assertSame(expected: 'OFF-2026-0042 Nieuw kantoor.pdf', actual: $mailed[1]->filename);
+		$this->assertSame(expected: '%PDF-1.7 quote', actual: $mailed[1]->content);
+		$this->assertSame(expected: 1755.0, actual: $mailed[1]->totalInclVat);
 
-		$this->assertSame(TicketService::TYPE_CONTACTMOMENT, $saved[0]);
+		$this->assertSame(expected: TicketService::TYPE_CONTACTMOMENT, actual: $saved[0]);
 		$payload = $saved[1];
 		unset($payload['occurredAt']);
 		$this->assertSame(
-			[
+			expected: [
 				'lead'        => self::LEAD,
 				'title'       => 'Quote OFF-2026-0042',
 				'direction'   => 'outbound',
@@ -312,13 +326,13 @@ class QuoteSenderTest extends TestCase {
 				'client'      => self::CLIENT,
 				'contact'     => self::CONTACT,
 			],
-			$payload
+			actual: $payload
 		);
 
-		$this->assertSame('OFF-2026-0042', $result['number']);
-		$this->assertSame(4711, $result['fileId']);
-		$this->assertSame('cm-1', $result['contactMomentId']);
-		$this->assertSame('contact', $result['recipient']['source']);
+		$this->assertSame(expected: 'OFF-2026-0042', actual: $result['number']);
+		$this->assertSame(expected: 4711, actual: $result['fileId']);
+		$this->assertSame(expected: 'cm-1', actual: $result['contactMomentId']);
+		$this->assertSame(expected: 'contact', actual: $result['recipient']['source']);
 	}//end testSendsToTheContactAndLogsTheQuote()
 
 	/**
@@ -332,8 +346,8 @@ class QuoteSenderTest extends TestCase {
 		$this->readable[self::CONTACT]['email'] = '';
 
 		$this->assertSame(
-			['email' => 'info@degraaf.example', 'name' => 'Bakkerij De Graaf', 'source' => 'client'],
-			$this->sender()->recipientFor(lead: self::lead())
+			expected: ['email' => 'info@degraaf.example', 'name' => 'Bakkerij De Graaf', 'source' => 'client'],
+			actual: $this->sender()->recipientFor(lead: self::lead())
 		);
 	}//end testWithoutAContactEmailTheClientReceivesIt()
 
@@ -358,9 +372,9 @@ class QuoteSenderTest extends TestCase {
 
 		$result = $this->sender()->send(leadId: self::LEAD, lead: self::lead(), templateId: 'tpl-q', validUntil: '2026-12-17');
 
-		$this->assertArrayNotHasKey('contact', $saved);
-		$this->assertSame(self::CLIENT, $saved['client']);
-		$this->assertSame('client', $result['recipient']['source']);
+		$this->assertArrayNotHasKey(key: 'contact', array: $saved);
+		$this->assertSame(expected: self::CLIENT, actual: $saved['client']);
+		$this->assertSame(expected: 'client', actual: $result['recipient']['source']);
 	}//end testAnUnreadableContactIsLeftOut()
 
 	/**
@@ -380,10 +394,10 @@ class QuoteSenderTest extends TestCase {
 
 		try {
 			$this->sender()->send(leadId: self::LEAD, lead: self::lead(), templateId: 'tpl-q', validUntil: '2026-12-17');
-			$this->fail('A quote without a recipient must be refused.');
+			$this->fail(message: 'A quote without a recipient must be refused.');
 		} catch (QuoteRefusedException $e) {
-			$this->assertSame(422, $e->getStatus());
-			$this->assertSame('Add an email address to the contact or the client of this lead, then send the quote.', $e->getMessage());
+			$this->assertSame(expected: 422, actual: $e->getStatus());
+			$this->assertSame(expected: 'Add an email address to the contact or the client of this lead, then send the quote.', actual: $e->getMessage());
 		}
 	}//end testWithoutARecipientNothingIsSentOrLogged()
 
@@ -402,12 +416,12 @@ class QuoteSenderTest extends TestCase {
 
 		try {
 			$this->sender()->send(leadId: self::LEAD, lead: self::lead(), templateId: 'tpl-q', validUntil: '2026-12-17');
-			$this->fail('A quote whose mail failed must be refused.');
+			$this->fail(message: 'A quote whose mail failed must be refused.');
 		} catch (QuoteRefusedException $e) {
-			$this->assertSame(502, $e->getStatus());
+			$this->assertSame(expected: 502, actual: $e->getStatus());
 			$this->assertSame(
-				['number' => 'OFF-2026-0042', 'fileId' => 4711, 'path' => '/Pipelinq/OFF-2026-0042 Nieuw kantoor.pdf'],
-				$e->getDetails()
+				expected: ['number' => 'OFF-2026-0042', 'fileId' => 4711, 'path' => '/Pipelinq/OFF-2026-0042 Nieuw kantoor.pdf'],
+				actual: $e->getDetails()
 			);
 		}
 	}//end testAFailedMailLogsNothingAndNamesTheFile()
@@ -424,10 +438,10 @@ class QuoteSenderTest extends TestCase {
 
 		try {
 			$this->sender()->send(leadId: self::LEAD, lead: self::lead(), templateId: 'tpl-q', validUntil: '2026-12-17');
-			$this->fail('A refused render must be refused.');
+			$this->fail(message: 'A refused render must be refused.');
 		} catch (QuoteRefusedException $e) {
-			$this->assertSame(502, $e->getStatus());
-			$this->assertSame(['reason' => 'filinq_render_failed: template broken'], $e->getDetails());
+			$this->assertSame(expected: 502, actual: $e->getStatus());
+			$this->assertSame(expected: ['reason' => 'filinq_render_failed: template broken'], actual: $e->getDetails());
 		}
 	}//end testARefusedRenderMailsNothing()
 
@@ -450,10 +464,10 @@ class QuoteSenderTest extends TestCase {
 		$this->lines[0]['total']    = 1200;
 		$second = $sender->send(leadId: self::LEAD, lead: self::lead(), templateId: 'tpl-q', validUntil: '2026-12-17');
 
-		$this->assertSame('OFF-2026-0042', $first['number']);
-		$this->assertSame(1755.0, $first['totals']['totalInclVat']);
-		$this->assertSame('OFF-2026-0043', $second['number']);
-		$this->assertSame(1997.0, $second['totals']['totalInclVat']);
+		$this->assertSame(expected: 'OFF-2026-0042', actual: $first['number']);
+		$this->assertSame(expected: 1755.0, actual: $first['totals']['totalInclVat']);
+		$this->assertSame(expected: 'OFF-2026-0043', actual: $second['number']);
+		$this->assertSame(expected: 1997.0, actual: $second['totals']['totalInclVat']);
 	}//end testSendingAgainTakesTheNextNumber()
 
 	/**
@@ -462,8 +476,11 @@ class QuoteSenderTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheFileNameIsSafe(): void {
-		$this->assertSame('OFF-2026-0042 Kantoor Utrecht en Zeist', QuoteSender::filename(number: 'OFF-2026-0042', title: 'Kantoor / Utrecht  en Zeist'));
-		$this->assertSame('OFF-2026-0042', QuoteSender::filename(number: 'OFF-2026-0042', title: ' ../ '));
+		$this->assertSame(
+			expected: 'OFF-2026-0042 Kantoor Utrecht en Zeist',
+			actual: QuoteSender::filename(number: 'OFF-2026-0042', title: 'Kantoor / Utrecht  en Zeist')
+		);
+		$this->assertSame(expected: 'OFF-2026-0042', actual: QuoteSender::filename(number: 'OFF-2026-0042', title: ' ../ '));
 	}//end testTheFileNameIsSafe()
 
 	/**
@@ -489,8 +506,11 @@ class QuoteSenderTest extends TestCase {
 			occurredAt: new DateTimeImmutable('2026-11-17T10:00:00+01:00')
 		);
 
-		$this->assertSame('2026-11-17T10:00:00+01:00', $payload['occurredAt']);
-		$this->assertSame('Quote OFF-2026-0042 sent to a@b.example, total EUR 1755.00 including VAT, valid until 2026-12-17.', $payload['description']);
-		$this->assertArrayNotHasKey('client', $payload);
+		$this->assertSame(expected: '2026-11-17T10:00:00+01:00', actual: $payload['occurredAt']);
+		$this->assertSame(
+			expected: 'Quote OFF-2026-0042 sent to a@b.example, total EUR 1755.00 including VAT, valid until 2026-12-17.',
+			actual: $payload['description']
+		);
+		$this->assertArrayNotHasKey(key: 'client', array: $payload);
 	}//end testTheContactMomentCarriesTheMoment()
 }//end class
