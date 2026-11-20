@@ -1906,7 +1906,8 @@
 								{
 									"action": "update",
 									"field": "assignee",
-									"label": "Passed to {changed.assignee} by {actor}"
+									"label": "Passed to {to} by {actor}",
+									"values": "user"
 								},
 								{
 									"action": "update",
