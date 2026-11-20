@@ -88,6 +88,8 @@ interface FilinqLetterAdapterInterface {
 	 * @param string                                                  $outputMode 'both' keeps a copy in the user's Files, 'return' only returns it.
 	 * @param list<array<string, mixed>>                              $listRefs   Lists the template reads beside the records
 	 *                                                                            (filinq listRefs: register, schema, filter, as, order).
+	 * @param array<string, mixed>                                    $adHocData  Values the template reads beside the records
+	 *                                                                            (filinq adHocData, merged on top of them).
 	 *
 	 * @return array{content: string, fileId: int|null, path: string|null, warnings: list<string>} The letter.
 	 *
@@ -95,7 +97,14 @@ interface FilinqLetterAdapterInterface {
 	 *
 	 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
 	 */
-	public function render(string $templateId, array $dataRefs, string $filename, string $outputMode='both', array $listRefs=[]): array;
+	public function render(
+		string $templateId,
+		array $dataRefs,
+		string $filename,
+		string $outputMode='both',
+		array $listRefs=[],
+		array $adHocData=[]
+	): array;
 
 	/**
 	 * Why filinq cannot make a letter on this instance, or null when it can.

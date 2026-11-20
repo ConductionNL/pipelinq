@@ -6707,6 +6707,19 @@
 						}
 					},
 					{
+						"id": "send-quote",
+						"label": "Send quote",
+						"type": "open-modal",
+						"target": "SendQuoteModal",
+						"icon": "FileSendOutline",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/letters/templates",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
+					},
+					{
 						"id": "lock-record",
 						"type": "api-call",
 						"label": "Lock",

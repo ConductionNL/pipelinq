@@ -159,6 +159,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         ['name' => 'letter#preview', 'url' => '/api/clients/{id}/letters/preview', 'verb' => 'POST'],
+        // Send a quote from a lead's lines (filinq renders, pipelinq mails and logs).
+        ['name' => 'quote#send', 'url' => '/api/leads/{id}/quotes', 'verb' => 'POST'],
+        ['name' => 'quote#recipient', 'url' => '/api/leads/{id}/quotes/recipient', 'verb' => 'GET'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 

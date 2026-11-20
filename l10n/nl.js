@@ -10004,7 +10004,25 @@ OC.L10N.register(
         "Signing in did not finish. Try again.": "Het inloggen is niet afgerond. Probeer het opnieuw.",
         "Something went wrong.": "Er ging iets mis.",
         "This mail has no sender address.": "Deze mail heeft geen afzenderadres.",
-        "Your sign-in has ended. Sign in again.": "Je bent uitgelogd. Log opnieuw in."
+        "Your sign-in has ended. Sign in again.": "Je bent uitgelogd. Log opnieuw in.",
+        "Send quote": "Offerte versturen",
+        "Quotes are made by filinq, and filinq is not available.": "Offertes worden gemaakt door filinq, en filinq is niet beschikbaar.",
+        "There are no quote templates yet. An administrator adds them in filinq with the namespace pipelinq.": "Er zijn nog geen offertesjablonen. Een beheerder voegt ze toe in filinq met de namespace pipelinq.",
+        "The quote goes to {name} ({email}).": "De offerte gaat naar {name} ({email}).",
+        "This lead has no contact or client with an email address. Add one, then send the quote.": "Deze lead heeft geen contactpersoon of klant met een e-mailadres. Voeg er een toe en verstuur dan de offerte.",
+        "Quote {number} was sent to {email}.": "Offerte {number} is verstuurd naar {email}.",
+        "A copy is filed at {path}.": "Een kopie staat in {path}.",
+        "The quote was sent, but it could not be logged as a contact moment.": "De offerte is verstuurd, maar kon niet als contactmoment worden vastgelegd.",
+        "Sending quote": "Offerte wordt verstuurd",
+        "The quote could not be prepared.": "De offerte kon niet worden voorbereid.",
+        "The quote could not be sent.": "De offerte kon niet worden verstuurd.",
+        "Quote %s": "Offerte %s",
+        "Please find attached quote %1$s, for a total of EUR %2$s including VAT. It is valid until %3$s.": "Bijgaand vindt u offerte %1$s, voor een totaal van EUR %2$s inclusief btw. De offerte is geldig tot %3$s.",
+        "Add an email address to the contact or the client of this lead, then send the quote.": "Voeg een e-mailadres toe aan de contactpersoon of de klant van deze lead en verstuur dan de offerte.",
+        "The quote was made and filed, but the mail could not be sent.": "De offerte is gemaakt en opgeslagen, maar de e-mail kon niet worden verstuurd.",
+        "Quote %1$s sent to %2$s, total EUR %3$s including VAT, valid until %4$s.": "Offerte %1$s verstuurd naar %2$s, totaal EUR %3$s inclusief btw, geldig tot %4$s.",
+        "A copy is filed at %s.": "Een kopie staat in %s.",
+        "filinq could not make the quote.": "filinq kon de offerte niet maken."
     },
     "nplurals=2; plural=(n != 1);"
 )
