@@ -629,6 +629,37 @@ class SocialAccountService implements SocialAccountServiceInterface {
 	}//end recordFollowerCount()
 
 	/**
+	 * Store whether the account's inbox can be read, apart from its posting status.
+	 *
+	 * Reading messages and posting are separate grants at Meta, so a refused
+	 * inbox read must not mark an account that posts fine as broken. `status`
+	 * and `statusReason` are left as they are; only `messagingStatus` and
+	 * `messagingStatusReason` change, and only when they differ.
+	 *
+	 * @param string $accountId The account.
+	 * @param string $status    `receiving`, or the gateway's failure code.
+	 * @param string $reason    Why, when it is a refusal; '' otherwise.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#scenario-a-page-without-messaging-permission-says-so
+	 */
+	public function recordMessagingStatus(string $accountId, string $status, string $reason): void {
+		$account = $this->getAccount(accountId: $accountId);
+		if ($account === null) {
+			return;
+		}
+
+		if ((string)($account['messagingStatus'] ?? '') === $status && (string)($account['messagingStatusReason'] ?? '') === $reason) {
+			return;
+		}
+
+		$account['messagingStatus'] = $status;
+		$account['messagingStatusReason'] = $reason;
+		$this->store->save(schemaSlug: $this->schema(), payload: $account, id: $accountId);
+	}//end recordMessagingStatus()
+
+	/**
 	 * Re-read one account's status from the broker and store what it says.
 	 *
 	 * The broker is the authority on whether a grant still works, so this

@@ -71,6 +71,17 @@ class InstagramBusinessAdapter extends FacebookPageAdapter implements PublishesT
 	}//end network()
 
 	/**
+	 * A business account's inbox is Instagram Direct.
+	 *
+	 * @return string The platform the conversations edge is asked for.
+	 *
+	 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
+	 */
+	public function messagingPlatform(): string {
+		return 'instagram';
+	}//end messagingPlatform()
+
+	/**
 	 * An Instagram caption is 2,200 characters.
 	 *
 	 * @return int The character limit.
