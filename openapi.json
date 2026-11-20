@@ -522,6 +522,10 @@
         {
             "name": "quote",
             "description": "Controller that sends a quote from a lead's lines: filinq renders the PDF, pipelinq mails it and logs the contact moment."
+        },
+        {
+            "name": "web-chat",
+            "description": "The website chat: the visitor's start, send and poll, and the colleague's routes on its ticket."
         }
     ],
     "paths": {
@@ -18649,6 +18653,305 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/web-chat/{channelToken}/start": {
+            "post": {
+                "operationId": "web-chat-start",
+                "summary": "POST /api/web-chat/{channelToken}/start: start a website chat",
+                "description": "POST /api/web-chat/{channelToken}/start: start a website chat on an active channel. Answers the conversation id and the visitor's chat secret; only a hash of the secret is stored. Public: it needs no login.",
+                "tags": [
+                    "web-chat"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "channelToken",
+                        "in": "path",
+                        "required": true,
+                        "description": "The web chat channel's token, from the embed line.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/web-chat/{channelToken}/send": {
+            "post": {
+                "operationId": "web-chat-send",
+                "summary": "POST /api/web-chat/{channelToken}/send: a visitor's message, a request for a person, or an address",
+                "description": "POST /api/web-chat/{channelToken}/send: a visitor's message, a request for a person, or an email address to be answered at. The body carries the conversation and its secret. Public: it needs no login.",
+                "tags": [
+                    "web-chat"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "channelToken",
+                        "in": "path",
+                        "required": true,
+                        "description": "The web chat channel's token, from the embed line.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/web-chat/{channelToken}/poll": {
+            "post": {
+                "operationId": "web-chat-poll",
+                "summary": "POST /api/web-chat/{channelToken}/poll: the messages after a time and where the chat stands",
+                "description": "POST /api/web-chat/{channelToken}/poll: the messages after a time and where the chat stands. The body carries the conversation and its secret. Public: it needs no login.",
+                "tags": [
+                    "web-chat"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "channelToken",
+                        "in": "path",
+                        "required": true,
+                        "description": "The web chat channel's token, from the embed line.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/web-chat/conversations/{id}": {
+            "get": {
+                "operationId": "web-chat-show",
+                "summary": "GET /api/web-chat/conversations/{id}: a website chat on its ticket",
+                "description": "GET /api/web-chat/conversations/{id}: the transcript and state of a website chat. Needs a colleague who may read the chat.",
+                "tags": [
+                    "web-chat"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The chat's conversation id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/web-chat/conversations/{id}/take": {
+            "post": {
+                "operationId": "web-chat-take",
+                "summary": "POST /api/web-chat/conversations/{id}/take: take this chat",
+                "description": "POST /api/web-chat/conversations/{id}/take: assign the chat and its ticket to the current user, which takes the ticket out of the Queue. Needs a colleague who may read the chat.",
+                "tags": [
+                    "web-chat"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The chat's conversation id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/web-chat/conversations/{id}/reply": {
+            "post": {
+                "operationId": "web-chat-reply",
+                "summary": "POST /api/web-chat/conversations/{id}/reply: answer the visitor",
+                "description": "POST /api/web-chat/conversations/{id}/reply: an answer the visitor sees in their window. Needs a colleague who may read the chat.",
+                "tags": [
+                    "web-chat"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The chat's conversation id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/web-chat/conversations/{id}/end": {
+            "post": {
+                "operationId": "web-chat-end",
+                "summary": "POST /api/web-chat/conversations/{id}/end: end the chat",
+                "description": "POST /api/web-chat/conversations/{id}/end: end the chat; the ticket stays as it is. Needs a colleague who may read the chat.",
+                "tags": [
+                    "web-chat"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The chat's conversation id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
                     }
                 }
             }

@@ -393,6 +393,7 @@ describe('the pills and the side column', () => {
 			'side-deadline',
 			'side-case',
 			'side-related',
+			'ticket-web-chat',
 			'ticket-resident-view',
 		])
 		for (const card of simple.sideColumn.filter(
@@ -535,6 +536,11 @@ describe('the body', () => {
 				'ticket-resident-view',
 				'ResidentViewWidget',
 				'ResidentViewSection',
+			],
+			'web-chat': [
+				'ticket-web-chat',
+				'WebChatWidget',
+				'WebChatSection',
 			],
 		}
 		for (const section of full.config.bodyWidgets) {
