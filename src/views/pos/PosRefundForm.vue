@@ -475,6 +475,8 @@ export default {
 		 * user when the refund is at or below the refund limit (pos-refund-limit).
 		 *
 		 * @return {string} The sentence.
+		 *
+		 * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
 		 */
 		approvalText() {
 			const limit = refundLimitFrom(useSettingsStore().getConfig)
@@ -517,6 +519,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the settings for the refund limit sentence and the refund's data.
+	 *
+	 * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
+	 */
 	async mounted() {
 		this.loading = true
 		const settings = useSettingsStore()

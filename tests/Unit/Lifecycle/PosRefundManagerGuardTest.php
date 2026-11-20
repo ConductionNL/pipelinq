@@ -157,7 +157,7 @@ class PosRefundManagerGuardTest extends TestCase {
 		parent::setUp();
 		$this->objects = new RefundGuardFakeObjectService();
 		$this->objects->transactions['tx-1'] = ['id' => 'tx-1', 'total' => 100.0];
-		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 	}//end setUp()
 
 	/**
@@ -166,18 +166,18 @@ class PosRefundManagerGuardTest extends TestCase {
 	 * @return PosRefundManagerGuard The guard.
 	 */
 	private function guard(): PosRefundManagerGuard {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => ($this->config[$key] ?? $default)
 		);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn(false);
 		$groupManager->method('isInGroup')->willReturnCallback(
 			static fn (string $uid, string $group): bool => ($uid === 'manager' && $group === 'pos-managers')
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($this->objects);
 
 		return new PosRefundManagerGuard(
@@ -196,9 +196,9 @@ class PosRefundManagerGuardTest extends TestCase {
 	public function testNonManagerIsDenied(): void {
 		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 1], 'complete', 'clerk');
 
-		$this->assertFalse($result->isAllowed());
-		$this->assertSame('Alleen een beheerder mag een retour verwerken.', $result->getMessage());
-		$this->assertSame([], $this->objects->findCalls);
+		$this->assertFalse(condition: $result->isAllowed());
+		$this->assertSame(expected: 'Alleen een beheerder mag een retour verwerken.', actual: $result->getMessage());
+		$this->assertSame(expected: [], actual: $this->objects->findCalls);
 	}//end testNonManagerIsDenied()
 
 	/**
@@ -209,8 +209,8 @@ class PosRefundManagerGuardTest extends TestCase {
 	public function testManagerPassesNonCompleteActions(): void {
 		$result = $this->guard()->check(['refundAmount' => 999], 'cancel', 'manager');
 
-		$this->assertTrue($result->isAllowed());
-		$this->assertSame([], $this->objects->findCalls);
+		$this->assertTrue(condition: $result->isAllowed());
+		$this->assertSame(expected: [], actual: $this->objects->findCalls);
 	}//end testManagerPassesNonCompleteActions()
 
 	/**
@@ -221,8 +221,8 @@ class PosRefundManagerGuardTest extends TestCase {
 	public function testCompleteWithoutOriginalTransactionIsDenied(): void {
 		$result = $this->guard()->check(['refundAmount' => 1], 'complete', 'manager');
 
-		$this->assertFalse($result->isAllowed());
-		$this->assertSame('Originele kassabon ontbreekt; retour kan niet worden bevestigd.', $result->getMessage());
+		$this->assertFalse(condition: $result->isAllowed());
+		$this->assertSame(expected: 'Originele kassabon ontbreekt; retour kan niet worden bevestigd.', actual: $result->getMessage());
 	}//end testCompleteWithoutOriginalTransactionIsDenied()
 
 	/**
@@ -234,18 +234,18 @@ class PosRefundManagerGuardTest extends TestCase {
 		$expected = 'Originele kassabon niet gevonden. Kan retour niet verwerken.';
 
 		$unknown = $this->guard()->check(['originalTransaction' => 'nope'], 'complete', 'manager');
-		$this->assertFalse($unknown->isAllowed());
-		$this->assertSame($expected, $unknown->getMessage());
-		$this->assertSame(['id' => 'nope', 'register' => 'reg', 'schema' => 'tx'], $this->objects->findCalls[0]);
+		$this->assertFalse(condition: $unknown->isAllowed());
+		$this->assertSame(expected: $expected, actual: $unknown->getMessage());
+		$this->assertSame(expected: ['id' => 'nope', 'register' => 'reg', 'schema' => 'tx'], actual: $this->objects->findCalls[0]);
 
 		$throws = $this->guard()->check(['originalTransaction' => 'throws'], 'complete', 'manager');
-		$this->assertSame($expected, $throws->getMessage());
+		$this->assertSame(expected: $expected, actual: $throws->getMessage());
 
 		$this->config['posTransaction_schema'] = '';
 		$calls = count($this->objects->findCalls);
 		$unconfigured = $this->guard()->check(['originalTransaction' => 'tx-1'], 'complete', 'manager');
-		$this->assertSame($expected, $unconfigured->getMessage());
-		$this->assertCount($calls, $this->objects->findCalls);
+		$this->assertSame(expected: $expected, actual: $unconfigured->getMessage());
+		$this->assertCount(expectedCount: $calls, haystack: $this->objects->findCalls);
 	}//end testCompleteWithUnresolvableOriginalIsDenied()
 
 	/**
@@ -264,9 +264,9 @@ class PosRefundManagerGuardTest extends TestCase {
 			'manager'
 		);
 
-		$this->assertTrue($result->isAllowed());
+		$this->assertTrue(condition: $result->isAllowed());
 		$this->assertSame(
-			[
+			expected: [
 				[
 					'filters' => [
 						'register'            => 'reg',
@@ -276,7 +276,7 @@ class PosRefundManagerGuardTest extends TestCase {
 					],
 				],
 			],
-			$this->objects->findAllCalls
+			actual: $this->objects->findAllCalls
 		);
 	}//end testRefundWithinTheOriginalTotalIsAllowed()
 
@@ -297,10 +297,10 @@ class PosRefundManagerGuardTest extends TestCase {
 			'manager'
 		);
 
-		$this->assertFalse($result->isAllowed());
+		$this->assertFalse(condition: $result->isAllowed());
 		$this->assertSame(
-			'Retourvolume (€1.100,00) overschrijdt originele totaal (€100,00).',
-			$result->getMessage()
+			expected: 'Retourvolume (€1.100,00) overschrijdt originele totaal (€100,00).',
+			actual: $result->getMessage()
 		);
 	}//end testRefundsAboveTheOriginalTotalAreDenied()
 
@@ -320,7 +320,7 @@ class PosRefundManagerGuardTest extends TestCase {
 			'manager'
 		);
 
-		$this->assertTrue($result->isAllowed());
+		$this->assertTrue(condition: $result->isAllowed());
 	}//end testTheRefundItselfIsExcludedFromTheSiblingSum()
 
 	/**
@@ -334,14 +334,14 @@ class PosRefundManagerGuardTest extends TestCase {
 			'complete',
 			'manager'
 		);
-		$this->assertTrue($within->isAllowed());
+		$this->assertTrue(condition: $within->isAllowed());
 
 		$over = $this->guard()->check(
 			['id' => 'r', 'originalTransaction' => 'tx-1', 'refundAmount' => 100.0, 'totalTax' => 0.02],
 			'complete',
 			'manager'
 		);
-		$this->assertFalse($over->isAllowed());
+		$this->assertFalse(condition: $over->isAllowed());
 	}//end testOneCentToleranceOnTheCap()
 
 	/**
@@ -364,7 +364,7 @@ class PosRefundManagerGuardTest extends TestCase {
 			'manager'
 		);
 
-		$this->assertFalse($result->isAllowed());
+		$this->assertFalse(condition: $result->isAllowed());
 	}//end testSiblingLookupFailureFailsClosed()
 
 	/**
@@ -381,8 +381,8 @@ class PosRefundManagerGuardTest extends TestCase {
 			'manager'
 		);
 
-		$this->assertFalse($result->isAllowed());
-		$this->assertSame([], $this->objects->findAllCalls);
+		$this->assertFalse(condition: $result->isAllowed());
+		$this->assertSame(expected: [], actual: $this->objects->findAllCalls);
 	}//end testMissingRefundSchemaFailsClosed()
 
 	/**
@@ -396,9 +396,9 @@ class PosRefundManagerGuardTest extends TestCase {
 
 		$result = $this->guard()->check(['id' => 'r1', 'originalTransaction' => 'tx-1', 'refundAmount' => 10, 'totalTax' => 2], 'complete', 'clerk');
 
-		$this->assertTrue($result->isAllowed());
-		$this->assertSame([['id' => 'tx-1', 'register' => 'reg', 'schema' => 'tx']], $this->objects->findCalls);
-		$this->assertCount(1, $this->objects->findAllCalls);
+		$this->assertTrue(condition: $result->isAllowed());
+		$this->assertSame(expected: [['id' => 'tx-1', 'register' => 'reg', 'schema' => 'tx']], actual: $this->objects->findCalls);
+		$this->assertCount(expectedCount: 1, haystack: $this->objects->findAllCalls);
 	}//end testATillUserRefundsBelowTheLimit()
 
 	/**
@@ -412,7 +412,7 @@ class PosRefundManagerGuardTest extends TestCase {
 
 		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 21.07, 'totalTax' => 4.43], 'complete', 'clerk');
 
-		$this->assertTrue($result->isAllowed());
+		$this->assertTrue(condition: $result->isAllowed());
 	}//end testARefundAtTheLimitNeedsNoManager()
 
 	/**
@@ -426,11 +426,11 @@ class PosRefundManagerGuardTest extends TestCase {
 		$refund = ['originalTransaction' => 'tx-1', 'refundAmount' => 33.06, 'totalTax' => 6.94];
 
 		$denied = $this->guard()->check($refund, 'complete', 'clerk');
-		$this->assertFalse($denied->isAllowed());
-		$this->assertSame('Een retour boven €25,00 moet een beheerder verwerken.', $denied->getMessage());
-		$this->assertSame([], $this->objects->findCalls);
+		$this->assertFalse(condition: $denied->isAllowed());
+		$this->assertSame(expected: 'Een retour boven €25,00 moet een beheerder verwerken.', actual: $denied->getMessage());
+		$this->assertSame(expected: [], actual: $this->objects->findCalls);
 
-		$this->assertTrue($this->guard()->check($refund, 'complete', 'manager')->isAllowed());
+		$this->assertTrue(condition: $this->guard()->check($refund, 'complete', 'manager')->isAllowed());
 	}//end testAboveTheLimitAManagerApproves()
 
 	/**
@@ -446,12 +446,12 @@ class PosRefundManagerGuardTest extends TestCase {
 			$this->config['pos.refund_limit'] = $limit;
 			$result = $this->guard()->check($refund, 'complete', 'clerk');
 
-			$this->assertFalse($result->isAllowed(), "limit '{$limit}'");
-			$this->assertSame('Alleen een beheerder mag een retour verwerken.', $result->getMessage());
-			$this->assertNull($this->guard()->refundLimit());
+			$this->assertFalse(condition: $result->isAllowed(), message: "limit '{$limit}'");
+			$this->assertSame(expected: 'Alleen een beheerder mag een retour verwerken.', actual: $result->getMessage());
+			$this->assertNull(actual: $this->guard()->refundLimit());
 		}
 
-		$this->assertSame([], $this->objects->findCalls);
+		$this->assertSame(expected: [], actual: $this->objects->findCalls);
 	}//end testNoUsableLimitKeepsEveryRefundWithAManager()
 
 	/**
@@ -465,8 +465,8 @@ class PosRefundManagerGuardTest extends TestCase {
 
 		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 2], 'reject', 'clerk');
 
-		$this->assertFalse($result->isAllowed());
-		$this->assertSame('Alleen een beheerder mag een retour verwerken.', $result->getMessage());
+		$this->assertFalse(condition: $result->isAllowed());
+		$this->assertSame(expected: 'Alleen een beheerder mag een retour verwerken.', actual: $result->getMessage());
 	}//end testRejectStaysWithAManager()
 
 	/**
@@ -480,9 +480,9 @@ class PosRefundManagerGuardTest extends TestCase {
 
 		$result = $this->guard()->check(['originalTransaction' => 'tx-1', 'refundAmount' => 5], 'complete', 'clerk');
 
-		$this->assertFalse($result->isAllowed());
-		$this->assertSame('Je mag deze kassabon niet terugboeken.', $result->getMessage());
-		$this->assertSame([], $this->objects->findAllCalls);
+		$this->assertFalse(condition: $result->isAllowed());
+		$this->assertSame(expected: 'Je mag deze kassabon niet terugboeken.', actual: $result->getMessage());
+		$this->assertSame(expected: [], actual: $this->objects->findAllCalls);
 	}//end testATillUserWithoutAccessToTheTransactionIsRefused()
 
 	/**
@@ -494,11 +494,11 @@ class PosRefundManagerGuardTest extends TestCase {
 		$this->config['pos.refund_limit'] = '25';
 
 		$missing = $this->guard()->check(['refundAmount' => 5], 'complete', 'clerk');
-		$this->assertSame('Originele kassabon ontbreekt; retour kan niet worden bevestigd.', $missing->getMessage());
+		$this->assertSame(expected: 'Originele kassabon ontbreekt; retour kan niet worden bevestigd.', actual: $missing->getMessage());
 
 		$unknown = $this->guard()->check(['originalTransaction' => 'tx-404', 'refundAmount' => 5], 'complete', 'clerk');
-		$this->assertFalse($unknown->isAllowed());
-		$this->assertSame('Originele kassabon niet gevonden. Kan retour niet verwerken.', $unknown->getMessage());
+		$this->assertFalse(condition: $unknown->isAllowed());
+		$this->assertSame(expected: 'Originele kassabon niet gevonden. Kan retour niet verwerken.', actual: $unknown->getMessage());
 	}//end testATillUserRefundWithoutItsTransactionIsRefused()
 
 	/**
@@ -513,8 +513,8 @@ class PosRefundManagerGuardTest extends TestCase {
 
 		$result = $this->guard()->check(['id' => 'r2', 'originalTransaction' => 'tx-1', 'refundAmount' => 12], 'complete', 'clerk');
 
-		$this->assertFalse($result->isAllowed());
-		$this->assertSame('Retourvolume (€102,00) overschrijdt originele totaal (€100,00).', $result->getMessage());
-		$this->assertCount(1, $this->objects->findCalls);
+		$this->assertFalse(condition: $result->isAllowed());
+		$this->assertSame(expected: 'Retourvolume (€102,00) overschrijdt originele totaal (€100,00).', actual: $result->getMessage());
+		$this->assertCount(expectedCount: 1, haystack: $this->objects->findCalls);
 	}//end testTheCapStillAppliesBelowTheLimit()
 }//end class

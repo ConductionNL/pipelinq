@@ -24,6 +24,8 @@ export const REFUND_LIMIT_KEY = 'pos.refund_limit'
  *
  * @param {object|null} config The settings' config map.
  * @return {number|null} The limit, rounded to cents.
+ *
+ * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
  */
 export function refundLimitFrom(config) {
 	const raw = String((config && config[REFUND_LIMIT_KEY]) ?? '').trim().replace(',', '.')
@@ -40,6 +42,8 @@ export function refundLimitFrom(config) {
  * @param {number|null} limit The refund limit, or null.
  * @return {'manager'|'tillUser'|'aboveLimit'} `manager` with no limit, `tillUser`
  *     at or below the limit, `aboveLimit` above it.
+ *
+ * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
  */
 export function refundApprover(total, limit) {
 	if (limit === null || limit === undefined) {

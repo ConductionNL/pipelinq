@@ -141,7 +141,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
 	 */
 	public function refundLimit(): ?float {
-		$raw = str_replace(',', '.', trim($this->appConfig->getValueString(Application::APP_ID, self::REFUND_LIMIT_KEY, '')));
+		$raw = str_replace(',', '.', trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::REFUND_LIMIT_KEY, '')));
 		if ($raw === '' || is_numeric($raw) === false || (float)$raw < 0) {
 			return null;
 		}
