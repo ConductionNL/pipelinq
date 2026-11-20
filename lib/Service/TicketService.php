@@ -729,6 +729,7 @@ class TicketService implements TicketServiceInterface {
 	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
 	 *
 	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 * @orphaned-write-capability exclude MCP tool, reached by OpenRegister's AttributeToolScanner through ServiceRegistrar::MCP_SCANNABLE_SERVICES.
 	 */
 	public function createTicket(
 		string $ticketType,
@@ -779,6 +780,7 @@ class TicketService implements TicketServiceInterface {
 	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
 	 *
 	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 * @orphaned-write-capability exclude MCP tool, reached by OpenRegister's AttributeToolScanner through ServiceRegistrar::MCP_SCANNABLE_SERVICES.
 	 */
 	public function updateTicket(
 		string $id,

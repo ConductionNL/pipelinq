@@ -94,7 +94,7 @@ class LeadServiceTest extends TestCase {
 		return new LeadService(
 			container: $this->container,
 			appConfig: $this->appConfig,
-			mcp: new McpAnswer($this->logger),
+			mcp: new McpAnswer(logger: $this->logger),
 		);
 	}//end buildService()
 
@@ -519,8 +519,8 @@ class LeadServiceTest extends TestCase {
 		$service = new LeadService(
 			container: $this->container,
 			appConfig: $this->appConfig,
-			mcp: new McpAnswer($this->logger),
-			transitions: new McpTransition(container: $engines, mcp: new McpAnswer($this->logger), logger: $this->logger),
+			mcp: new McpAnswer(logger: $this->logger),
+			transitions: new McpTransition(container: $engines, mcp: new McpAnswer(logger: $this->logger), logger: $this->logger),
 		);
 
 		$won = $service->winLead(id: self::NIL_UUID);

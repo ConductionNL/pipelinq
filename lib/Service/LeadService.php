@@ -265,6 +265,7 @@ class LeadService {
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) An MCP tool's arguments are its parameters.
 	 *
 	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 * @orphaned-write-capability exclude MCP tool, reached by OpenRegister's AttributeToolScanner through ServiceRegistrar::MCP_SCANNABLE_SERVICES.
 	 */
 	public function updateLead(
 		string $id,

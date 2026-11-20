@@ -107,7 +107,7 @@ class TicketServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			objectService: $this->objectService,
-			mcp: new McpAnswer(new NullLogger()),
+			mcp: new McpAnswer(logger: new NullLogger()),
 		);
 	}//end buildService()
 
@@ -312,7 +312,7 @@ class TicketServiceTest extends TestCase {
 		];
 		foreach ($cases as [[$client, $channel, $title, $direction], $message]) {
 			$result = $service->logContactmoment(client: $client, channel: $channel, title: $title, direction: $direction);
-			$this->assertSame(['error' => ['code' => 'invalid_arguments', 'message' => $message]], $result, $message);
+			$this->assertSame(expected: ['error' => ['code' => 'invalid_arguments', 'message' => $message]], actual: $result, message: $message);
 		}
 	}//end testLogContactmomentRefusalMessagesInArgumentOrder()
 
@@ -346,14 +346,14 @@ class TicketServiceTest extends TestCase {
 			notes: ''
 		);
 
-		$this->assertSame(['ticketId' => self::NIL_UUID], $result);
-		$this->assertSame(self::NIL_UUID, $captured['client']);
-		$this->assertSame('email', $captured['channel']);
-		$this->assertSame('Vraag', $captured['title']);
-		$this->assertSame('outbound', $captured['direction']);
-		$this->assertArrayNotHasKey('outcome', $captured);
-		$this->assertArrayNotHasKey('description', $captured);
-		$this->assertNotFalse(\DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $captured['occurredAt']));
+		$this->assertSame(expected: ['ticketId' => self::NIL_UUID], actual: $result);
+		$this->assertSame(expected: self::NIL_UUID, actual: $captured['client']);
+		$this->assertSame(expected: 'email', actual: $captured['channel']);
+		$this->assertSame(expected: 'Vraag', actual: $captured['title']);
+		$this->assertSame(expected: 'outbound', actual: $captured['direction']);
+		$this->assertArrayNotHasKey(key: 'outcome', array: $captured);
+		$this->assertArrayNotHasKey(key: 'description', array: $captured);
+		$this->assertNotFalse(condition: \DateTimeImmutable::createFromFormat(format: \DateTimeInterface::ATOM, datetime: $captured['occurredAt']));
 	}//end testLogContactmomentTrimsAndOmitsEmptyOptionals()
 
 	/**
@@ -434,8 +434,8 @@ class TicketServiceTest extends TestCase {
 		$objectService = $this->mockObjectService();
 		$objectService->expects($this->never())->method('saveObject');
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('direction');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'direction');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -454,8 +454,8 @@ class TicketServiceTest extends TestCase {
 		$this->stubConfigured();
 		$this->mockObjectService();
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('inbound, outbound, internal');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'inbound, outbound, internal');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -512,8 +512,8 @@ class TicketServiceTest extends TestCase {
 		$objectService = $this->mockObjectService();
 		$objectService->expects($this->never())->method('saveObject');
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('already holds case-a');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'already holds case-a');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -538,8 +538,8 @@ class TicketServiceTest extends TestCase {
 		$objectService = $this->mockObjectService();
 		$objectService->expects($this->never())->method('saveObject');
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('case-c is not one of the cases');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'case-c is not one of the cases');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -823,8 +823,8 @@ class TicketServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			objectService: $this->objectService,
-			mcp: new McpAnswer(new NullLogger()),
-			transitions: new McpTransition(container: $engines, mcp: new McpAnswer(new NullLogger()), logger: new NullLogger()),
+			mcp: new McpAnswer(logger: new NullLogger()),
+			transitions: new McpTransition(container: $engines, mcp: new McpAnswer(logger: new NullLogger()), logger: new NullLogger()),
 		);
 
 		$tools = ['startTicket' => 'start', 'completeTicket' => 'complete', 'convertTicket' => 'convert',

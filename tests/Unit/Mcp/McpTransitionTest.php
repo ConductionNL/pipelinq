@@ -85,12 +85,12 @@ class McpTransitionTest extends TestCase {
 			}
 		};
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')
 			->with('OCA\\OpenRegister\\Service\\Lifecycle\\TransitionEngine')
 			->willReturn($engine);
 
-		return new McpTransition(container: $container, mcp: new McpAnswer(new NullLogger()), logger: new NullLogger());
+		return new McpTransition(container: $container, mcp: new McpAnswer(logger: new NullLogger()), logger: new NullLogger());
 	}//end transitionOver()
 
 	/**
@@ -104,8 +104,8 @@ class McpTransitionTest extends TestCase {
 
 		$result = $this->transitionOver(outcome: $moved)->run(objectId: ' lead-1 ', action: 'win', subject: 'lead');
 
-		$this->assertSame(['lead' => ['id' => 'lead-1', 'status' => 'won']], $result);
-		$this->assertSame([['lead-1', 'win']], $this->calls);
+		$this->assertSame(expected: ['lead' => ['id' => 'lead-1', 'status' => 'won']], actual: $result);
+		$this->assertSame(expected: [['lead-1', 'win']], actual: $this->calls);
 	}//end testSuccessAnswersTheMovedObject()
 
 	/**
@@ -116,8 +116,8 @@ class McpTransitionTest extends TestCase {
 	public function testBlankIdIsInvalidAndNeverReachesTheEngine(): void {
 		$result = $this->transitionOver(outcome: new ObjectEntity())->run(objectId: '  ', action: 'win', subject: 'lead');
 
-		$this->assertSame('invalid_arguments', $result['error']['code']);
-		$this->assertSame([], $this->calls);
+		$this->assertSame(expected: 'invalid_arguments', actual: $result['error']['code']);
+		$this->assertSame(expected: [], actual: $this->calls);
 	}//end testBlankIdIsInvalidAndNeverReachesTheEngine()
 
 	/**
@@ -130,7 +130,7 @@ class McpTransitionTest extends TestCase {
 			outcome: new NotAuthorizedException('You do not have permission to transition object "t-1".')
 		)->run(objectId: 't-1', action: 'reject', subject: 'ticket');
 
-		$this->assertSame(['error' => ['code' => 'forbidden', 'message' => 'You are not allowed to reject this ticket.']], $result);
+		$this->assertSame(expected: ['error' => ['code' => 'forbidden', 'message' => 'You are not allowed to reject this ticket.']], actual: $result);
 	}//end testNotAuthorizedIsForbidden()
 
 	/**
@@ -143,8 +143,8 @@ class McpTransitionTest extends TestCase {
 			outcome: new RuntimeException('Transition "win" is not allowed from current state "won".')
 		)->run(objectId: 'lead-1', action: 'win', subject: 'lead');
 
-		$this->assertSame('conflict', $result['error']['code']);
-		$this->assertSame('Transition "win" is not allowed from current state "won".', $result['error']['message']);
+		$this->assertSame(expected: 'conflict', actual: $result['error']['code']);
+		$this->assertSame(expected: 'Transition "win" is not allowed from current state "won".', actual: $result['error']['message']);
 	}//end testWrongFromStateIsConflict()
 
 	/**
@@ -156,7 +156,7 @@ class McpTransitionTest extends TestCase {
 		$result = $this->transitionOver(outcome: new RuntimeException('Object "x" not found.'))
 			->run(objectId: 'x', action: 'start', subject: 'ticket');
 
-		$this->assertSame(['error' => ['code' => 'not_found', 'message' => 'No ticket with that id.']], $result);
+		$this->assertSame(expected: ['error' => ['code' => 'not_found', 'message' => 'No ticket with that id.']], actual: $result);
 	}//end testMissingObjectIsNotFound()
 
 	/**
@@ -168,8 +168,8 @@ class McpTransitionTest extends TestCase {
 		$result = $this->transitionOver(outcome: new RuntimeException('SQLSTATE[HY000] connection lost'))
 			->run(objectId: 'x', action: 'close', subject: 'ticket');
 
-		$this->assertSame('internal_error', $result['error']['code']);
-		$this->assertStringNotContainsString('SQLSTATE', $result['error']['message']);
+		$this->assertSame(expected: 'internal_error', actual: $result['error']['code']);
+		$this->assertStringNotContainsString(needle: 'SQLSTATE', haystack: $result['error']['message']);
 	}//end testOtherFailureIsInternalErrorWithoutDetail()
 
 	/**
@@ -178,12 +178,12 @@ class McpTransitionTest extends TestCase {
 	 * @return void
 	 */
 	public function testMissingEngineIsNotConfigured(): void {
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willThrowException(new RuntimeException('no such service'));
-		$transition = new McpTransition(container: $container, mcp: new McpAnswer(new NullLogger()), logger: new NullLogger());
+		$transition = new McpTransition(container: $container, mcp: new McpAnswer(logger: new NullLogger()), logger: new NullLogger());
 
 		$result = $transition->run(objectId: 'lead-1', action: 'win', subject: 'lead');
 
-		$this->assertSame('not_configured', $result['error']['code']);
+		$this->assertSame(expected: 'not_configured', actual: $result['error']['code']);
 	}//end testMissingEngineIsNotConfigured()
 }//end class

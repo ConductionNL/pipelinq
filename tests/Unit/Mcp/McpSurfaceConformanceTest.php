@@ -93,10 +93,10 @@ class McpSurfaceConformanceTest extends TestCase {
 	 * @return array<string, array<string, mixed>>
 	 */
 	private function mergedSchemas(): array {
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
 
-		return (new ConfigFileLoaderService($appManager))->loadConfigurationFile()['components']['schemas'];
+		return (new ConfigFileLoaderService(appManager: $appManager))->loadConfigurationFile()['components']['schemas'];
 	}//end mergedSchemas()
 
 	/**
