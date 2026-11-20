@@ -74,16 +74,27 @@ final class BrpAccessTest extends TestCase {
 	 *
 	 * @return BrpController
 	 */
-	private function controller(bool $signedIn = true, bool $privileged = true, bool $admin = false, array $groups = [], string $configured = ''): BrpController {
-		$user = $this->createMock(IUser::class);
+	private function controller(
+		bool $signedIn = true,
+		bool $privileged = true,
+		bool $admin = false,
+		array $groups = [],
+		string $configured = ''
+	): BrpController {
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('handler');
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($signedIn === true ? $user : null);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$sessionUser = null;
+		if ($signedIn === true) {
+			$sessionUser = $user;
+		}
 
-		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
+		$session->method('getUser')->willReturn($sessionUser);
+
+		$policy = $this->createMock(originalClassName: ObjectOwnerAccessPolicy::class);
 		$policy->method('isPrivileged')->with('handler')->willReturn($privileged);
 
-		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
 		$groupManager->method('isAdmin')->with('handler')->willReturn($admin);
 		$groupManager->method('get')->willReturnCallback(
 			function (string $groupId) use ($groups, $user): ?IGroup {
@@ -91,40 +102,43 @@ final class BrpAccessTest extends TestCase {
 					return null;
 				}
 
-				$group = $this->createMock(IGroup::class);
+				$group = $this->createMock(originalClassName: IGroup::class);
 				$group->method('inGroup')->with($user)->willReturn($groups[$groupId]);
 				return $group;
 			}
 		);
 
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default = ''): string => ($key === 'brp.allowed_groups' ? $configured : $default)
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'brp.allowed_groups' => $configured,
+				default => $default,
+			}
 		);
 
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->haalCentraal = $this->createMock(HaalCentraalClientInterface::class);
+		$this->haalCentraal = $this->createMock(originalClassName: HaalCentraalClientInterface::class);
 		$this->haalCentraal->expects($this->never())->method('lookupPersoon');
-		$this->audit = $this->createMock(BsnAuditServiceInterface::class);
+		$this->audit = $this->createMock(originalClassName: BsnAuditServiceInterface::class);
 		$this->audit->expects($this->never())->method($this->anything());
 
 		return new BrpController(
-			request: $this->createMock(IRequest::class),
+			request: $this->createMock(originalClassName: IRequest::class),
 			userSession: $session,
 			accessPolicy: $policy,
 			groupManager: $groupManager,
 			l10n: $l10n,
 			appConfig: $appConfig,
-			validation: $this->createMock(BsnValidationService::class),
-			cacheService: $this->createMock(BrpCacheServiceInterface::class),
+			validation: $this->createMock(originalClassName: BsnValidationService::class),
+			cacheService: $this->createMock(originalClassName: BrpCacheServiceInterface::class),
 			haalCentraal: $this->haalCentraal,
 			audit: $this->audit,
-			optOut: $this->createMock(OptOutServiceInterface::class),
-			webhookListener: $this->createMock(BrpMutationWebhookListenerInterface::class),
-			logger: $this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			optOut: $this->createMock(originalClassName: OptOutServiceInterface::class),
+			webhookListener: $this->createMock(originalClassName: BrpMutationWebhookListenerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			objectService: $this->createMock(originalClassName: ObjectServiceInterface::class),
 		);
 	}//end controller()
 
@@ -136,8 +150,8 @@ final class BrpAccessTest extends TestCase {
 	public function testAMemberOfAnAllowedGroupMayLookUp(): void {
 		$response = $this->controller(groups: ['klantcontact' => true], configured: 'burgerzaken, klantcontact')->access();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['allowed' => true], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['allowed' => true], actual: $response->getData());
 	}//end testAMemberOfAnAllowedGroupMayLookUp()
 
 	/**
@@ -148,7 +162,7 @@ final class BrpAccessTest extends TestCase {
 	public function testAUserOutsideTheAllowedGroupsMayNot(): void {
 		$response = $this->controller(groups: ['klantcontact' => false, 'behandelaar-burgerzaken' => true], configured: 'klantcontact')->access();
 
-		$this->assertSame(['allowed' => false], $response->getData());
+		$this->assertSame(expected: ['allowed' => false], actual: $response->getData());
 	}//end testAUserOutsideTheAllowedGroupsMayNot()
 
 	/**
@@ -157,8 +171,8 @@ final class BrpAccessTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutAConfiguredListTheDefaultGroupsApply(): void {
-		$this->assertSame(['allowed' => true], $this->controller(groups: ['behandelaar-avg' => true])->access()->getData());
-		$this->assertSame(['allowed' => false], $this->controller(groups: ['klantcontact' => true])->access()->getData());
+		$this->assertSame(expected: ['allowed' => true], actual: $this->controller(groups: ['behandelaar-avg' => true])->access()->getData());
+		$this->assertSame(expected: ['allowed' => false], actual: $this->controller(groups: ['klantcontact' => true])->access()->getData());
 	}//end testWithoutAConfiguredListTheDefaultGroupsApply()
 
 	/**
@@ -167,7 +181,7 @@ final class BrpAccessTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAdminMayLookUp(): void {
-		$this->assertSame(['allowed' => true], $this->controller(admin: true)->access()->getData());
+		$this->assertSame(expected: ['allowed' => true], actual: $this->controller(admin: true)->access()->getData());
 	}//end testAnAdminMayLookUp()
 
 	/**
@@ -176,7 +190,10 @@ final class BrpAccessTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutTheCrmPrivilegeNobodyMay(): void {
-		$this->assertSame(['allowed' => false], $this->controller(privileged: false, admin: true, groups: ['behandelaar-avg' => true])->access()->getData());
+		$this->assertSame(
+			expected: ['allowed' => false],
+			actual: $this->controller(privileged: false, admin: true, groups: ['behandelaar-avg' => true])->access()->getData()
+		);
 	}//end testWithoutTheCrmPrivilegeNobodyMay()
 
 	/**
@@ -187,7 +204,7 @@ final class BrpAccessTest extends TestCase {
 	public function testWithoutASessionTheAnswerIsUnauthorised(): void {
 		$response = $this->controller(signedIn: false)->access();
 
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-		$this->assertArrayNotHasKey('allowed', $response->getData());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
+		$this->assertArrayNotHasKey(key: 'allowed', array: $response->getData());
 	}//end testWithoutASessionTheAnswerIsUnauthorised()
 }//end class
