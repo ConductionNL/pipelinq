@@ -76,6 +76,21 @@
 					</p>
 				</CnDetailCard>
 				<CnDetailCard
+					:title="t('pipelinq', 'Deals that slipped out of this quarter')"
+					class="forecast-trend__slips">
+					<CnDataTable
+						v-if="slipRows.length"
+						data-testid="forecast-slips"
+						:columns="slipColumns"
+						:rows="slipRows"
+						rowKey="id"
+						rowTitle="title"
+						localHeaders />
+					<p v-else class="forecast-trend__none">
+						{{ t('pipelinq', 'No commit or best-case deal slipped out of this quarter.') }}
+					</p>
+				</CnDetailCard>
+				<CnDetailCard
 					:title="t('pipelinq', 'Forecast accuracy')"
 					:subtitle="accuracySubtitle"
 					class="forecast-trend__accuracy">
@@ -119,6 +134,7 @@ import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
 import { accuracyBand, accuracyRows, commitMovements, isoWeekOf, previousPeriodId, sumSnapshotsByDate } from '../../services/forecastMath.js'
+import { fetchSlippedDeals } from '../../services/forecastSlips.js'
 import { fetchUserDisplayName } from '../../services/userDisplayName.js'
 
 export default {
@@ -139,6 +155,7 @@ export default {
 			ownerId: '',
 			series: [],
 			movements: [],
+			slipRows: [],
 			accuracyRows: [],
 		}
 	},
@@ -171,6 +188,22 @@ export default {
 		 * @spec openspec/specs/forecast-table-heads/spec.md#requirement-the-forecast-tables-sort-and-filter-their-rows
 		 * @return {Array<object>} One row per seller.
 		 */
+		/**
+		 * The slipped deals table: the deal, where its close date slipped
+		 * from, where it is now and why (REQ-FRC-012).
+		 *
+		 * @spec openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories/spec.md#scenario-the-manager-reads-why-a-deal-slipped-req-frc-012-05
+		 * @return {Array<object>} The columns.
+		 */
+		slipColumns() {
+			return [
+				{ key: 'title', label: this.t('pipelinq', 'Deal'), sortable: true },
+				{ key: 'slippedFrom', label: this.t('pipelinq', 'Slipped from'), sortable: true },
+				{ key: 'closeDate', label: this.t('pipelinq', 'Expected close'), sortable: true },
+				{ key: 'reason', label: this.t('pipelinq', 'Slip reason') },
+			]
+		},
+
 		movementRows() {
 			return this.movements.map((move) => ({
 				id: move.owner_id,
@@ -296,12 +329,25 @@ export default {
 				})
 				this.series = sumSnapshotsByDate(data.snapshots || [])
 				await this.loadMovements(data.snapshots || [])
+				this.loadSlips()
 				await this.loadAccuracy()
 			} catch {
 				this.series = []
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The deals that slipped out of this quarter, with their reasons. Read
+		 * beside the trend, not before it: the bars and tables do not wait on
+		 * it, and a failed read leaves the list empty.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories/spec.md#scenario-the-manager-reads-why-a-deal-slipped-req-frc-012-05
+		 */
+		async loadSlips() {
+			this.slipRows = await fetchSlippedDeals({ periodId: this.periodId, ownerId: this.embedded ? null : this.ownerId })
 		},
 
 		/**

@@ -131,6 +131,32 @@ class BrpController extends Controller {
 	}//end __construct()
 
 	/**
+	 * GET /api/brp/access — whether the session user may look a person up in the BRP.
+	 *
+	 * The same two checks POST /api/brp/lookup runs before it asks the BRP: the
+	 * CRM privilege and membership of a group `brp.allowed_groups` allows (or
+	 * admin). Nothing is looked up, so nothing is audited; the lookup endpoint
+	 * keeps checking both on every call.
+	 *
+	 * @return JSONResponse JSON shape: { allowed: bool }.
+	 *
+	 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+	 */
+	#[NoAdminRequired]
+	public function access(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$actor = $user->getUID();
+		$allowed = $this->accessPolicy->isPrivileged(uid: $actor) === true
+			&& $this->resolveActorRole(actor: $actor) !== null;
+
+		return new JSONResponse(['allowed' => $allowed]);
+	}//end access()
+
+	/**
 	 * POST /api/brp/lookup — execute a BRP lookup with doelbinding.
 	 *
 	 * Body params:
