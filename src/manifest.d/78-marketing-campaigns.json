@@ -405,6 +405,93 @@
 				"actionsMenu": {
 					"label": "More"
 				},
+				"_headerActionsNote": "marketing-events REQ-MEV-001: Create event makes this campaign's event from the campaign page (POST /api/campaigns/{id}/events). Times are read in the marketer's own time zone, an online event takes a join link instead of a venue, and with Open registration now ticked a landing page sign-up registers at once. The new event appears in the Events card.",
+				"headerActions": [
+					{
+						"id": "create-event",
+						"type": "open-modal",
+						"label": "Create event",
+						"icon": "CalendarPlus",
+						"target": "CnActionDialog",
+						"props": {
+							"objectId": "@objectId",
+							"config": {
+								"title": "Create event",
+								"subtitle": "The event of this campaign: people who sign up on its landing page get a seat.",
+								"fields": [
+									{
+										"field": "title",
+										"type": "text",
+										"label": "Title"
+									},
+									{
+										"field": "startAt",
+										"type": "datetime",
+										"label": "Starts"
+									},
+									{
+										"field": "endAt",
+										"type": "datetime",
+										"label": "Ends",
+										"required": false
+									},
+									{
+										"field": "online",
+										"type": "checkbox",
+										"label": "Online event",
+										"default": false
+									},
+									{
+										"field": "joinUrl",
+										"type": "text",
+										"label": "Join link",
+										"required": false,
+										"hint": "Sent to everyone with a seat.",
+										"visibleWhen": {
+											"field": "online",
+											"equals": true
+										}
+									},
+									{
+										"field": "venue",
+										"type": "text",
+										"label": "Venue",
+										"required": false,
+										"visibleWhen": {
+											"field": "online",
+											"equals": false
+										}
+									},
+									{
+										"field": "capacity",
+										"type": "text",
+										"label": "Seats",
+										"required": false,
+										"hint": "A whole number. Leave empty or 0 for no limit."
+									},
+									{
+										"field": "openNow",
+										"type": "checkbox",
+										"label": "Open registration now",
+										"default": true
+									}
+								],
+								"confirm": {
+									"label": "Create event",
+									"icon": "CalendarPlus",
+									"request": {
+										"method": "POST",
+										"url": "/apps/pipelinq/api/campaigns/@objectId/events"
+									},
+									"errorText": "The event could not be created."
+								},
+								"doneText": "The event is on the campaign.",
+								"closeOnDone": true
+							}
+						}
+					}
+				],
+				"quickActions": ["create-event"],
 				"sideColumn": [
 					"campaign-contents",
 					"campaign-side-history"

@@ -38,14 +38,14 @@ describe('the lead page (board PqLead)', () => {
 		const deal = widget('lead-deal').content
 		// calculatedValue only shows on a lead whose value was typed over its lines.
 		const facts = deal.include.filter((key) => key !== 'calculatedValue')
-		expect(facts).toEqual(['value', 'qualificationScore', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt'])
+		expect(facts).toEqual(['value', 'winProbability', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt'])
 		expect(deal.columns).toBe(2)
 		expect(deal.fixedColumns).toBe(true)
 		expect(facts.map((key) => deal.overrides[key].order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
 	})
 
 	it('reads the win chance as a percentage', () => {
-		expect(widget('side-win-chance').content.fields[0]).toMatchObject({ as: 'title', path: 'qualificationScore', suffix: '%' })
+		expect(widget('side-win-chance').content.fields[0]).toMatchObject({ as: 'title', path: 'winProbability', suffix: '%' })
 	})
 
 	it('puts the header buttons under the title', () => {

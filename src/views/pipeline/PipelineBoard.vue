@@ -1650,8 +1650,11 @@ export default {
 
 			try {
 				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
+				// A lead's win chance is a `materialise: false` calculation, served
+				// only on `_extend[]=calculations` (lead-win-probability-recency).
+				const extend = objectType === 'lead' ? '_extend[]=calculations&' : ''
 				const url = generateUrl(
-					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}${extend}pipeline=${this.selectedPipelineId}&_limit=200`,
 				)
 				const response = await fetch(url, {
 					headers: jsonRequestHeaders(),

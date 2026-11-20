@@ -38,7 +38,7 @@
 		:countValues="countValues"
 		:defaultFilters="defaultFilters"
 		:appConfig="appConfig"
-		:extend="['client']"
+		:extend="['client', 'calculations']"
 		:footerNote="
 			t(
 				'pipelinq',
@@ -99,9 +99,11 @@ export default {
 					formatterOptions: { decimals: 0 },
 				},
 				{
-					key: 'qualificationScore',
+					// The stage chance decayed by how long the lead stood still: a
+					// `materialise: false` calculation OpenRegister computes only on
+					// `_extend[]=calculations` (lead-win-probability-recency).
+					key: 'winProbability',
 					label: t('pipelinq', 'Win chance'),
-					sortable: true,
 					widget: 'progress',
 					widgetProps: {
 						fallbackFields: ['probability'],
@@ -113,6 +115,13 @@ export default {
 							when: { status: 'open' },
 						},
 					},
+				},
+				{
+					// The lead score keeps its own label (REQ-LSCORE-001).
+					key: 'qualificationScore',
+					label: t('pipelinq', 'Lead score'),
+					widget: 'lead-score',
+					sortable: true,
 				},
 				{
 					key: 'expectedCloseDate',
