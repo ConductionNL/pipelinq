@@ -45,7 +45,9 @@ import { closeDay, needsSlipReason } from '../services/forecastSlipCheck.js'
  */
 function dayText(value) {
 	const d = closeDay(value)
-	return d ? `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}` : ''
+	return d
+		? `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+		: ''
 }
 
 export default {
@@ -150,7 +152,10 @@ export default {
 		onReasonCancel() {
 			this.pending = null
 			this.$refs.formDialog?.setResult?.({
-				error: t('pipelinq', 'Not saved: a deal that slips out of its forecast period needs a slip reason.'),
+				error: t(
+					'pipelinq',
+					'Not saved: a deal that slips out of its forecast period needs a slip reason.',
+				),
 			})
 		},
 
@@ -163,14 +168,21 @@ export default {
 		 */
 		async save(data) {
 			if (typeof this.confirm !== 'function') {
-				this.$refs.formDialog?.setResult?.({ error: t('pipelinq', 'The lead could not be saved.') })
+				this.$refs.formDialog?.setResult?.({
+					error: t('pipelinq', 'The lead could not be saved.'),
+				})
 				return
 			}
 			let result
 			try {
 				result = await this.confirm(data)
 			} catch (e) {
-				result = { error: e?.response?.data?.message || e?.message || t('pipelinq', 'The lead could not be saved.') }
+				result = {
+					error:
+						e?.response?.data?.message
+						|| e?.message
+						|| t('pipelinq', 'The lead could not be saved.'),
+				}
 			}
 			this.$refs.formDialog?.setResult?.(result || { success: true })
 		},

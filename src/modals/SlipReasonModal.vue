@@ -18,12 +18,22 @@
 		@closing="cancel">
 		<div class="slip-reason">
 			<p class="slip-reason__intro">
-				{{ t('pipelinq', 'The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.', { from: fromDate || '-', to: toDate || '-' }) }}
+				{{
+					t(
+						'pipelinq',
+						'The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.',
+						{ from: fromDate || '-', to: toDate || '-' },
+					)
+				}}
 			</p>
 			<NcTextArea
 				v-model="reason"
 				:label="t('pipelinq', 'Slip reason')"
-				:helperText="t('pipelinq', 'At least {count} characters.', { count: minLength })"
+				:helperText="
+					t('pipelinq', 'At least {count} characters.', {
+						count: minLength,
+					})
+				"
 				:error="touched && !valid"
 				resize="vertical"
 				data-testid="slip-reason-text"
@@ -47,7 +57,10 @@
 <script>
 import { CnDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcTextArea } from '@nextcloud/vue'
-import { isSlipReasonValid, SLIP_REASON_MIN_LENGTH } from '../services/forecastSlipCheck.js'
+import {
+	isSlipReasonValid,
+	SLIP_REASON_MIN_LENGTH,
+} from '../services/forecastSlipCheck.js'
 
 export default {
 	name: 'SlipReasonModal',

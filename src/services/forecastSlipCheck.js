@@ -119,5 +119,7 @@ export function isSlipReasonValid(reason) {
  * @spec openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories/spec.md#requirement-a-deal-that-slips-out-of-its-forecast-period-needs-a-slip-reason-req-frc-012
  */
 export function needsSlipReason(lead, changes) {
-	return slipsOutOfPeriod(lead, changes) && !isSlipReasonValid(changes?.slip_reason)
+	return (
+		slipsOutOfPeriod(lead, changes) && !isSlipReasonValid(changes?.slip_reason)
+	)
 }

@@ -52,7 +52,15 @@ vi.mock('@nextcloud/vue', () => ({
 		props: { disabled: Boolean },
 		emits: ['click'],
 		render() {
-			return h('button', { type: 'button', disabled: this.disabled, onClick: () => this.$emit('click') }, this.$slots.default?.())
+			return h(
+				'button',
+				{
+					type: 'button',
+					disabled: this.disabled,
+					onClick: () => this.$emit('click'),
+				},
+				this.$slots.default?.(),
+			)
 		},
 	},
 	NcTextArea: {
@@ -76,22 +84,39 @@ const {
 	quarterEnd,
 	slipsOutOfPeriod,
 } = await import('../../src/services/forecastSlipCheck.js')
-const SlipReasonModal = (await import('../../src/modals/SlipReasonModal.vue')).default
+const SlipReasonModal = (await import('../../src/modals/SlipReasonModal.vue'))
+	.default
 const LeadEditDialog = (await import('../../src/dialogs/LeadEditDialog.vue')).default
 
 beforeAll(() => {
-	globalThis.t = (_app, text, vars) => String(text).replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? vars[k] : m))
+	globalThis.t = (_app, text, vars) =>
+		String(text).replace(/\{(\w+)\}/g, (m, k) =>
+			vars && k in vars ? vars[k] : m,
+		)
 })
 
 const GLOBAL = { mixins: [{ methods: { t: (...args) => globalThis.t(...args) } }] }
 
-const commitLead = { id: 'lead-1', status: 'open', forecast_category: 'commit', expectedCloseDate: '2026-06-20' }
+const commitLead = {
+	id: 'lead-1',
+	status: 'open',
+	forecast_category: 'commit',
+	expectedCloseDate: '2026-06-20',
+}
 
 describe('forecastSlipCheck', () => {
 	it('reads a date, a date-time and a Date, and refuses what is no date', () => {
 		expect(closeDay('2026-06-20')).toEqual({ year: 2026, month: 6, day: 20 })
-		expect(closeDay('2026-06-20T10:00:00+02:00')).toEqual({ year: 2026, month: 6, day: 20 })
-		expect(closeDay(new Date(2026, 6, 15))).toEqual({ year: 2026, month: 7, day: 15 })
+		expect(closeDay('2026-06-20T10:00:00+02:00')).toEqual({
+			year: 2026,
+			month: 6,
+			day: 20,
+		})
+		expect(closeDay(new Date(2026, 6, 15))).toEqual({
+			year: 2026,
+			month: 7,
+			day: 15,
+		})
 		expect(closeDay('2026-02-30')).toBeNull()
 		expect(closeDay('')).toBeNull()
 		expect(closeDay(null)).toBeNull()
@@ -99,36 +124,87 @@ describe('forecastSlipCheck', () => {
 	})
 
 	it('ends a quarter on its last day', () => {
-		expect(quarterEnd({ year: 2026, month: 5, day: 10 })).toEqual({ year: 2026, month: 6, day: 30 })
-		expect(quarterEnd({ year: 2026, month: 1, day: 1 })).toEqual({ year: 2026, month: 3, day: 31 })
-		expect(quarterEnd({ year: 2026, month: 12, day: 31 })).toEqual({ year: 2026, month: 12, day: 31 })
+		expect(quarterEnd({ year: 2026, month: 5, day: 10 })).toEqual({
+			year: 2026,
+			month: 6,
+			day: 30,
+		})
+		expect(quarterEnd({ year: 2026, month: 1, day: 1 })).toEqual({
+			year: 2026,
+			month: 3,
+			day: 31,
+		})
+		expect(quarterEnd({ year: 2026, month: 12, day: 31 })).toEqual({
+			year: 2026,
+			month: 12,
+			day: 31,
+		})
 	})
 
 	it('a commit deal moved into the next quarter slips (REQ-FRC-012-01)', () => {
-		expect(slipsOutOfPeriod(commitLead, { expectedCloseDate: '2026-07-15' })).toBe(true)
+		expect(
+			slipsOutOfPeriod(commitLead, { expectedCloseDate: '2026-07-15' }),
+		).toBe(true)
 	})
 
 	it('a best-case deal slips too', () => {
-		expect(slipsOutOfPeriod({ ...commitLead, forecast_category: 'best_case' }, { expectedCloseDate: '2026-10-01' })).toBe(true)
+		expect(
+			slipsOutOfPeriod(
+				{ ...commitLead, forecast_category: 'best_case' },
+				{ expectedCloseDate: '2026-10-01' },
+			),
+		).toBe(true)
 	})
 
 	it('a move inside the quarter does not slip (REQ-FRC-012-03)', () => {
-		expect(slipsOutOfPeriod({ ...commitLead, expectedCloseDate: '2026-05-10' }, { expectedCloseDate: '2026-06-25' })).toBe(false)
-		expect(slipsOutOfPeriod(commitLead, { expectedCloseDate: '2026-06-30' })).toBe(false)
+		expect(
+			slipsOutOfPeriod(
+				{ ...commitLead, expectedCloseDate: '2026-05-10' },
+				{ expectedCloseDate: '2026-06-25' },
+			),
+		).toBe(false)
+		expect(
+			slipsOutOfPeriod(commitLead, { expectedCloseDate: '2026-06-30' }),
+		).toBe(false)
 	})
 
 	it('a pipeline deal does not slip (REQ-FRC-012-04)', () => {
-		expect(slipsOutOfPeriod({ ...commitLead, forecast_category: 'pipeline' }, { expectedCloseDate: '2026-07-15' })).toBe(false)
+		expect(
+			slipsOutOfPeriod(
+				{ ...commitLead, forecast_category: 'pipeline' },
+				{ expectedCloseDate: '2026-07-15' },
+			),
+		).toBe(false)
 	})
 
 	it('the category the form saves counts, not the stored one', () => {
-		expect(slipsOutOfPeriod(commitLead, { forecast_category: 'pipeline', expectedCloseDate: '2026-07-15' })).toBe(false)
-		expect(slipsOutOfPeriod({ ...commitLead, forecast_category: 'pipeline' }, { forecast_category: 'commit', expectedCloseDate: '2026-07-15' })).toBe(true)
+		expect(
+			slipsOutOfPeriod(commitLead, {
+				forecast_category: 'pipeline',
+				expectedCloseDate: '2026-07-15',
+			}),
+		).toBe(false)
+		expect(
+			slipsOutOfPeriod(
+				{ ...commitLead, forecast_category: 'pipeline' },
+				{ forecast_category: 'commit', expectedCloseDate: '2026-07-15' },
+			),
+		).toBe(true)
 	})
 
 	it('a closed deal, or a missing date, does not slip', () => {
-		expect(slipsOutOfPeriod({ ...commitLead, status: 'won' }, { expectedCloseDate: '2026-07-15' })).toBe(false)
-		expect(slipsOutOfPeriod({ ...commitLead, expectedCloseDate: null }, { expectedCloseDate: '2026-07-15' })).toBe(false)
+		expect(
+			slipsOutOfPeriod(
+				{ ...commitLead, status: 'won' },
+				{ expectedCloseDate: '2026-07-15' },
+			),
+		).toBe(false)
+		expect(
+			slipsOutOfPeriod(
+				{ ...commitLead, expectedCloseDate: null },
+				{ expectedCloseDate: '2026-07-15' },
+			),
+		).toBe(false)
 		expect(slipsOutOfPeriod(commitLead, { expectedCloseDate: '' })).toBe(false)
 		expect(slipsOutOfPeriod(null, null)).toBe(false)
 	})
@@ -136,14 +212,24 @@ describe('forecastSlipCheck', () => {
 	it('a reason needs ten characters, and a valid one ends the need', () => {
 		expect(isSlipReasonValid('too short')).toBe(false)
 		expect(isSlipReasonValid('  Board meets in July  ')).toBe(true)
-		expect(needsSlipReason(commitLead, { expectedCloseDate: '2026-07-15' })).toBe(true)
-		expect(needsSlipReason(commitLead, { expectedCloseDate: '2026-07-15', slip_reason: 'Customer moved the board decision to July' })).toBe(false)
+		expect(
+			needsSlipReason(commitLead, { expectedCloseDate: '2026-07-15' }),
+		).toBe(true)
+		expect(
+			needsSlipReason(commitLead, {
+				expectedCloseDate: '2026-07-15',
+				slip_reason: 'Customer moved the board decision to July',
+			}),
+		).toBe(false)
 	})
 })
 
 describe('SlipReasonModal', () => {
 	it('keeps Save disabled until the reason has ten characters, then hands it back trimmed', async () => {
-		const wrapper = mount(SlipReasonModal, { props: { fromDate: '2026-06-20', toDate: '2026-07-15' }, global: GLOBAL })
+		const wrapper = mount(SlipReasonModal, {
+			props: { fromDate: '2026-06-20', toDate: '2026-07-15' },
+			global: GLOBAL,
+		})
 		expect(wrapper.text()).toContain('from 2026-06-20 to 2026-07-15')
 		const save = wrapper.find('[data-testid="slip-reason-save"]')
 		expect(save.attributes('disabled')).toBeDefined()
@@ -153,10 +239,14 @@ describe('SlipReasonModal', () => {
 		wrapper.vm.save()
 		expect(wrapper.emitted('confirm')).toBeUndefined()
 
-		await wrapper.find('textarea').setValue('  Customer moved the board decision to July  ')
+		await wrapper
+			.find('textarea')
+			.setValue('  Customer moved the board decision to July  ')
 		expect(save.attributes('disabled')).toBeUndefined()
 		await save.trigger('click')
-		expect(wrapper.emitted('confirm')[0]).toEqual(['Customer moved the board decision to July'])
+		expect(wrapper.emitted('confirm')[0]).toEqual([
+			'Customer moved the board decision to July',
+		])
 	})
 
 	it('Cancel closes without a reason', async () => {
@@ -177,7 +267,14 @@ describe('LeadEditDialog', () => {
 		const confirm = vi.fn().mockResolvedValue({ success: true, data: {} })
 		const close = vi.fn()
 		const wrapper = mount(LeadEditDialog, {
-			props: { show: true, item: commitLead, schema: { title: 'Lead' }, confirm, close, ...overrides },
+			props: {
+				show: true,
+				item: commitLead,
+				schema: { title: 'Lead' },
+				confirm,
+				close,
+				...overrides,
+			},
 			global: GLOBAL,
 		})
 		return { wrapper, confirm, close }
@@ -190,7 +287,9 @@ describe('LeadEditDialog', () => {
 
 	it('saves a move inside the quarter straight through the page', async () => {
 		const { wrapper, confirm } = mountDialog()
-		wrapper.findComponent({ name: 'CnFormDialog' }).vm.$emit('confirm', { expectedCloseDate: '2026-06-25' })
+		wrapper
+			.findComponent({ name: 'CnFormDialog' })
+			.vm.$emit('confirm', { expectedCloseDate: '2026-06-25' })
 		await flushPromises()
 		expect(confirm).toHaveBeenCalledWith({ expectedCloseDate: '2026-06-25' })
 		expect(setResult).toHaveBeenCalledWith({ success: true, data: {} })
@@ -199,7 +298,9 @@ describe('LeadEditDialog', () => {
 
 	it('stops a slip for a reason, then saves it with the reason', async () => {
 		const { wrapper, confirm } = mountDialog()
-		wrapper.findComponent({ name: 'CnFormDialog' }).vm.$emit('confirm', { title: 'Solar', expectedCloseDate: '2026-07-15' })
+		wrapper
+			.findComponent({ name: 'CnFormDialog' })
+			.vm.$emit('confirm', { title: 'Solar', expectedCloseDate: '2026-07-15' })
 		await flushPromises()
 		expect(confirm).not.toHaveBeenCalled()
 		const modal = wrapper.findComponent(SlipReasonModal)
@@ -220,27 +321,41 @@ describe('LeadEditDialog', () => {
 
 	it('a cancelled reason saves nothing and tells the form why', async () => {
 		const { wrapper, confirm } = mountDialog()
-		wrapper.findComponent({ name: 'CnFormDialog' }).vm.$emit('confirm', { expectedCloseDate: '2026-07-15' })
+		wrapper
+			.findComponent({ name: 'CnFormDialog' })
+			.vm.$emit('confirm', { expectedCloseDate: '2026-07-15' })
 		await flushPromises()
 		wrapper.findComponent(SlipReasonModal).vm.$emit('close')
 		await flushPromises()
 		expect(confirm).not.toHaveBeenCalled()
-		expect(setResult).toHaveBeenCalledWith({ error: 'Not saved: a deal that slips out of its forecast period needs a slip reason.' })
+		expect(setResult).toHaveBeenCalledWith({
+			error: 'Not saved: a deal that slips out of its forecast period needs a slip reason.',
+		})
 	})
 
 	it('a refused save hands the server message to the form', async () => {
 		const { wrapper, confirm } = mountDialog()
-		confirm.mockRejectedValueOnce({ response: { data: { message: 'forecast.error.slip_reason_required' } } })
-		wrapper.findComponent({ name: 'CnFormDialog' }).vm.$emit('confirm', { expectedCloseDate: '2026-06-25' })
+		confirm.mockRejectedValueOnce({
+			response: { data: { message: 'forecast.error.slip_reason_required' } },
+		})
+		wrapper
+			.findComponent({ name: 'CnFormDialog' })
+			.vm.$emit('confirm', { expectedCloseDate: '2026-06-25' })
 		await flushPromises()
-		expect(setResult).toHaveBeenCalledWith({ error: 'forecast.error.slip_reason_required' })
+		expect(setResult).toHaveBeenCalledWith({
+			error: 'forecast.error.slip_reason_required',
+		})
 	})
 
 	it('without the page confirm it refuses instead of pretending to save', async () => {
 		const { wrapper } = mountDialog({ confirm: null })
-		wrapper.findComponent({ name: 'CnFormDialog' }).vm.$emit('confirm', { expectedCloseDate: '2026-06-25' })
+		wrapper
+			.findComponent({ name: 'CnFormDialog' })
+			.vm.$emit('confirm', { expectedCloseDate: '2026-06-25' })
 		await flushPromises()
-		expect(setResult).toHaveBeenCalledWith({ error: 'The lead could not be saved.' })
+		expect(setResult).toHaveBeenCalledWith({
+			error: 'The lead could not be saved.',
+		})
 	})
 
 	it('Close goes through the page', async () => {
@@ -252,10 +367,17 @@ describe('LeadEditDialog', () => {
 
 describe('wiring', () => {
 	it('LeadDetail mounts LeadEditDialog in its form-dialog slot, and the registry knows it', () => {
-		const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'))
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
+		)
 		const page = manifest.pages.find((p) => p.id === 'LeadDetail')
 		expect(page.slots['form-dialog']).toBe('LeadEditDialog')
-		const registrySource = readFileSync(resolve(__dirname, '../../src/registry.js'), 'utf8')
-		expect(registrySource).toMatch(/LeadEditDialog: \{\s*kind: 'modal',\s*component: LeadEditDialog,/)
+		const registrySource = readFileSync(
+			resolve(__dirname, '../../src/registry.js'),
+			'utf8',
+		)
+		expect(registrySource).toMatch(
+			/LeadEditDialog: \{\s*kind: 'modal',\s*component: LeadEditDialog,/,
+		)
 	})
 })
