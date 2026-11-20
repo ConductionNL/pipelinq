@@ -95,6 +95,7 @@ describe('the declared admin sections', () => {
 			exportConfiguration: 'isAdmin',
 			shillinq: 'isAdmin && shillinqInstalled',
 			marketingIntel: 'isAdmin',
+			posRefunds: 'isAdmin',
 		}
 		expect(Object.keys(guards).sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {

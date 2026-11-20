@@ -4,7 +4,7 @@
 
 - [ ] 1.1 Add `tests/e2e/backoffice-axe.spec.ts`: inject `axe-core/axe.min.js`, run it with the `wcag2a`, `wcag2aa`, `wcag21a` and `wcag21aa` tags on each sample page from design D2, scoped to the app content root
   - Verify: the spec runs green locally against a seeded instance; a deliberately removed `aria-label` on a sample control makes it fail
-- [ ] 1.2 Add the known-issues allow list `tests/e2e/a11y-known-issues.json` with the four controls of `keyboard-accessible-click-toggles`; the spec fails on a new violation and on a listed one that no longer occurs
+- [x] 1.2 Add the known-issues allow list `tests/e2e/a11y-known-issues.json` with the four controls of `keyboard-accessible-click-toggles`; the spec fails on a new violation and on a listed one that no longer occurs
   - Verify: Vitest or a unit check over the list format; removing one entry makes the axe spec fail
 - [ ] 1.3 Add `tests/e2e/backoffice-keyboard.spec.ts`: on each sample page, Tab reaches every interactive control, the focused control has a visible outline, and Escape closes an open dialog
   - Verify: the spec runs green locally; `npm run check:e2e-nav` exit 0
@@ -29,5 +29,5 @@
 
 ## 4. Admin page
 
-- [ ] 4.1 Add an Accessibility `NcSettingsSection` to `src/views/settings/Settings.vue` with the two links and the date of the last manual audit
+- [x] 4.1 Add an Accessibility `NcSettingsSection` to `src/views/settings/Settings.vue` with the two links and the date of the last manual audit
   - Verify: Vitest mounts the section and finds both links; `npm run test:l10n` exit 0

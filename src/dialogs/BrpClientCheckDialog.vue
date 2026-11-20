@@ -114,7 +114,7 @@ export default {
 		reasons() {
 			return [
 				{ value: 'Reguliere verzoekbehandeling', label: t('pipelinq', 'Regular request handling') },
-				{ value: 'Behandeling AVG-inzageverzoek art. 15', label: t('pipelinq', 'Behandeling AVG-inzageverzoek art. 15') },
+				{ value: 'Behandeling AVG-inzageverzoek art. 15', label: t('pipelinq', 'Handling GDPR access request art. 15') },
 				{ value: 'Overig', label: t('pipelinq', 'Other') },
 			]
 		},
@@ -126,8 +126,8 @@ export default {
 		 */
 		bindings() {
 			return [
-				{ value: 'Publieke taak — Wet BRP art. 3.3', label: t('pipelinq', 'Publieke taak — Wet BRP art. 3.3') },
-				{ value: 'AVG art. 6 lid 1 sub e', label: t('pipelinq', 'AVG art. 6 lid 1 sub e (publieke taak)') },
+				{ value: 'Publieke taak — Wet BRP art. 3.3', label: t('pipelinq', 'Public task — Wet BRP art. 3.3') },
+				{ value: 'AVG art. 6 lid 1 sub e', label: t('pipelinq', 'GDPR art. 6(1)(e) (public task)') },
 				{ value: 'Overig', label: t('pipelinq', 'Other') },
 			]
 		},
