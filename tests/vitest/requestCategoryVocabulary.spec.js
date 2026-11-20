@@ -42,6 +42,9 @@ vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
 vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
 	default: { name: 'ContactCreateDialog', render: () => null },
 }))
+vi.mock('../../src/dialogs/ClientBrpLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/dialogs/ClientKvkLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/services/clientLookupsApi.js', () => ({ createLookedUpClient: async () => null, fetchBrpAccess: async () => false, lookupFailed: () => {} }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnResourceSelect: { name: 'CnResourceSelect', render: () => null },
 	CnSearchSelect: { name: 'CnSearchSelect', render: () => null },

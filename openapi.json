@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Pipelinq",
-        "version": "0.5.7-unstable.20261014170000",
+        "version": "0.5.23-unstable.20261120141425",
         "description": "The JSON API of Pipelinq, the customer relations app for Nextcloud: contacts and organisations, contact moments, tickets and callbacks, campaigns and mailings, the point of sale, loyalty, social publishing and the settings behind them. The records themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Pipelinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -522,6 +522,10 @@
         {
             "name": "background-service-account",
             "description": "Reads and picks the background service account."
+        },
+        {
+            "name": "quote",
+            "description": "Controller that sends a quote from a lead's lines: filinq renders the PDF, pipelinq mails it and logs the contact moment."
         }
     ],
     "paths": {
@@ -2075,6 +2079,34 @@
                 }
             }
         },
+        "/brp/access": {
+            "get": {
+                "operationId": "brp-access",
+                "summary": "GET /api/brp/access — whether the session user may look a person up in the BRP",
+                "description": "GET /api/brp/access — whether the session user may look a person up in the BRP. The same privilege and group checks POST /api/brp/lookup runs; nothing is looked up or audited. Answers `{ allowed: bool }`. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "brp"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/brp/lookup": {
             "post": {
                 "operationId": "brp-lookup",
@@ -2774,6 +2806,100 @@
                     },
                     "502": {
                         "$ref": "#/components/responses/Problem502"
+                    }
+                }
+            }
+        },
+        "/campaigns/{id}/events": {
+            "post": {
+                "operationId": "campaign-event-create",
+                "summary": "Create the event of a campaign",
+                "description": "Create the event of a campaign from the campaign page's Create event dialog. A time without a zone is read in the caller's own time zone; an online event takes a join link, an event on site a venue. The event is written as the caller, so OpenRegister's access rules decide whether the write may happen. Needs a signed-in Nextcloud user who can read the campaign.",
+                "tags": [
+                    "campaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The campaign id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "title",
+                                    "startAt"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "description": "The event's title."
+                                    },
+                                    "startAt": {
+                                        "type": "string",
+                                        "description": "When it starts: an ISO 8601 date and time, with or without a zone."
+                                    },
+                                    "endAt": {
+                                        "type": "string",
+                                        "description": "When it ends, after the start; optional."
+                                    },
+                                    "online": {
+                                        "type": "boolean",
+                                        "description": "True for an online event."
+                                    },
+                                    "joinUrl": {
+                                        "type": "string",
+                                        "description": "The join link of an online event, starting with https://."
+                                    },
+                                    "venue": {
+                                        "type": "string",
+                                        "description": "The venue of an event on site."
+                                    },
+                                    "capacity": {
+                                        "type": "string",
+                                        "description": "The number of seats, a whole number from 1; empty for no limit."
+                                    },
+                                    "openNow": {
+                                        "type": "boolean",
+                                        "description": "True (the default) opens registration at once; false keeps the event a draft."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     }
                 }
             }
@@ -9130,6 +9256,89 @@
                                 "properties": {
                                     "userId": {
                                         "description": "The user id."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/admin/mail-intake/accounts": {
+            "get": {
+                "operationId": "mail-intake-admin-accounts",
+                "summary": "Every Mail account with its address and owner, and which are ticket mailboxes",
+                "description": "Every Mail account with its address and owner, and which are ticket mailboxes. Needs a Nextcloud administrator.",
+                "tags": [
+                    "mail-intake-admin"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "mail-intake-admin-save-accounts",
+                "summary": "Store which Mail accounts are ticket mailboxes",
+                "description": "Store which Mail accounts are ticket mailboxes. Ids that name no Mail account are dropped. Needs a Nextcloud administrator.",
+                "tags": [
+                    "mail-intake-admin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "accounts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "description": "The Mail account ids."
                                     }
                                 },
                                 "additionalProperties": false
@@ -18391,6 +18600,127 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/leads/{id}/quotes": {
+            "post": {
+                "operationId": "quote-send",
+                "summary": "POST /api/leads/{id}/quotes: send a quote from this lead's lines",
+                "description": "POST /api/leads/{id}/quotes: send a quote from this lead's lines. Body: `templateId`, and optionally `validUntil` (Y-m-d, today or later; thirty days from today when absent). filinq renders the PDF and files a copy in the caller's Files, pipelinq mails it to the lead's contact (else the client) and logs an outbound contact moment on the lead. Refuses, in this order: no user (401), no template id or a bad date (400), no filinq (503), a lead the caller may not read (404), an unknown template (404), no recipient (422), a render or mail that failed (502). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lead id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "templateId"
+                                ],
+                                "properties": {
+                                    "templateId": {
+                                        "type": "string",
+                                        "description": "The filinq template id."
+                                    },
+                                    "validUntil": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "description": "The last day the quote holds."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/Problem502"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/leads/{id}/quotes/recipient": {
+            "get": {
+                "operationId": "quote-recipient",
+                "summary": "GET /api/leads/{id}/quotes/recipient: who a quote for this lead would go to",
+                "description": "GET /api/leads/{id}/quotes/recipient: who a quote for this lead would go to. The dialog shows it before sending. `recipient` is null when neither the contact nor the client has an email address. A lead the caller may not read answers 404. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lead id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     }
                 }
             }

@@ -1,0 +1,180 @@
+{
+	"_note": "products-price-lists task 1.5 (D5): the Price lists index and detail pages, next to Products. A list's prices live inside it (D1), so the detail page shows them as a table read from the list itself, product names worded from the catalogue; they are changed through the list's Edit form.",
+	"menu": [
+		{
+			"id": "PriceLists",
+			"label": "Price lists",
+			"icon": "TagOutline",
+			"route": "PriceLists",
+			"order": 91
+		}
+	],
+	"pages": [
+		{
+			"id": "PriceLists",
+			"route": "/price-lists",
+			"type": "index",
+			"title": "Price lists",
+			"config": {
+				"register": "pipelinq",
+				"schema": "priceList",
+				"columns": [
+					{
+						"key": "title",
+						"label": "Name",
+						"link": true
+					},
+					{
+						"key": "currency",
+						"label": "Currency"
+					},
+					{
+						"key": "segments",
+						"label": "Segments"
+					},
+					{
+						"key": "countries",
+						"label": "Countries"
+					},
+					{
+						"key": "priority",
+						"label": "Priority"
+					},
+					{
+						"key": "validUntil",
+						"label": "Valid until"
+					},
+					{
+						"key": "isActive",
+						"label": "Active"
+					}
+				],
+				"filters": [
+					"currency",
+					"isActive"
+				],
+				"showTitle": true,
+				"showTitleIcon": false,
+				"countText": "{shown} of {total} price lists",
+				"sortKey": "priority",
+				"sortOrder": "desc",
+				"headerButtons": [
+					{
+						"action": "add",
+						"variant": "primary",
+						"icon": "Plus",
+						"label": "New price list"
+					}
+				],
+				"footerNote": "A quote line takes its price from the client's own list, else the highest-priority active list for the client's segment, else for its country, in the lead's currency. Without a match it takes the product's own price."
+			}
+		},
+		{
+			"id": "PriceListDetail",
+			"route": "/price-lists/:id",
+			"type": "detail",
+			"title": "Price list",
+			"config": {
+				"register": "pipelinq",
+				"schema": "priceList",
+				"widgets": [
+					{
+						"id": "price-list-terms",
+						"type": "data",
+						"title": "Price list",
+						"icon": "TagOutline",
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"entries"
+							]
+						}
+					},
+					{
+						"id": "price-list-entries",
+						"type": "field-list",
+						"title": "Prices",
+						"icon": "CurrencyEur",
+						"content": {
+							"field": "entries",
+							"variant": "table",
+							"readOnly": true,
+							"emptyText": "This list holds no prices yet. Add them through Edit.",
+							"add": {
+								"fields": [
+									{
+										"key": "product",
+										"label": "Product",
+										"type": "select",
+										"optionsSource": {
+											"url": "/apps/openregister/api/objects/pipelinq/product?_limit=500",
+											"path": "results",
+											"valuePath": "id",
+											"labelPath": "name"
+										}
+									}
+								]
+							},
+							"columns": [
+								{
+									"header": "Product",
+									"path": "product",
+									"labelsFrom": "product",
+									"strong": true
+								},
+								{
+									"header": "Variant",
+									"path": "variantSku"
+								},
+								{
+									"header": "From quantity",
+									"path": "minQuantity"
+								},
+								{
+									"header": "Unit price",
+									"path": "unitPrice"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "price-list-terms",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5,
+						"showTitle": true
+					},
+					{
+						"id": "2",
+						"widgetId": "price-list-entries",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 12,
+						"gridHeight": 6,
+						"showTitle": true
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				}
+			}
+		}
+	]
+}

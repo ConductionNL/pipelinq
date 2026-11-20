@@ -14,6 +14,7 @@ vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() 
 vi.mock('@conduction/nextcloud-vue', () => ({ CnDataTable: {}, CnDetailCard: {}, CnDetailGrid: {}, CnDetailPage: {} }))
 vi.mock('@nextcloud/vue', () => ({ NcButton: {}, NcCheckboxRadioSwitch: {}, NcInputField: {}, NcSelect: {}, NcTextArea: {} }))
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => ({}) }))
+vi.mock('../../src/store/modules/settings.js', () => ({ useSettingsStore: () => ({ getConfig: {}, fetchSettings: async () => {} }) }))
 
 let form
 

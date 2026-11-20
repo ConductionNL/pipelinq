@@ -45,6 +45,9 @@ vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
 vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
 	default: { name: 'ContactCreateDialog', render: () => null },
 }))
+vi.mock('../../src/dialogs/ClientBrpLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/dialogs/ClientKvkLookupDialog.vue', () => ({ default: {} }))
+vi.mock('../../src/services/clientLookupsApi.js', () => ({ createLookedUpClient: async () => null, fetchBrpAccess: async () => false, lookupFailed: () => {} }))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnResourceSelect: { name: 'CnResourceSelect', render: () => null },
 	CnSearchSelect: {
@@ -144,8 +147,8 @@ describe('RequestForm client search', () => {
 
 		expect(storeMock.fetchCollectionForOptions).toHaveBeenCalledWith('client', { _search: 'dorp', _limit: 20 })
 		expect(wrapper.vm.clientOptions).toEqual([
-			{ id: 'c1', label: 'Gemeente Dorp', secondary: 'Organisation · Markt 1', avatar: true },
-			{ id: 'c2', label: '', secondary: 'Resident', avatar: true },
+			{ id: 'c1', label: 'Gemeente Dorp', secondary: 'Organisation · Markt 1 · Known', avatar: true },
+			{ id: 'c2', label: '', secondary: 'Resident · Known', avatar: true },
 		])
 		expect(wrapper.vm.clientSearching).toBe(false)
 	})
@@ -218,7 +221,7 @@ describe('RequestForm opening on a client', () => {
 
 		expect(wrapper.vm.form.client).toBe('c9')
 		expect(storeMock.fetchObject).toHaveBeenCalledWith('client', 'c9')
-		expect(wrapper.vm.clientOptions).toEqual([{ id: 'c9', label: 'Jansen', secondary: 'Resident', avatar: true }])
+		expect(wrapper.vm.clientOptions).toEqual([{ id: 'c9', label: 'Jansen', secondary: 'Resident · Known', avatar: true }])
 	})
 
 	it('sets the pre-linked client without reading it outside the board', async () => {
@@ -271,7 +274,7 @@ describe('RequestForm.newClient', () => {
 		await creating
 
 		expect(wrapper.vm.clientOptions).toEqual([
-			{ id: 'c5', label: 'Nieuw BV', secondary: 'Organisation', avatar: true },
+			{ id: 'c5', label: 'Nieuw BV', secondary: 'Organisation · Known', avatar: true },
 			{ id: 'c1' },
 		])
 		expect(wrapper.vm.form.client).toBe('c5')

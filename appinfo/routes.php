@@ -161,6 +161,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         ['name' => 'letter#preview', 'url' => '/api/clients/{id}/letters/preview', 'verb' => 'POST'],
+        // Send a quote from a lead's lines (filinq renders, pipelinq mails and logs).
+        ['name' => 'quote#send', 'url' => '/api/leads/{id}/quotes', 'verb' => 'POST'],
+        ['name' => 'quote#recipient', 'url' => '/api/leads/{id}/quotes/recipient', 'verb' => 'GET'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -627,6 +630,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // The account the SMS and WhatsApp webhooks write as (admin only).
         ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
         ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
+        // The ticket mailboxes: Mail accounts whose inbox opens tickets in the Queue (admin only).
+        ['name' => 'mailIntakeAdmin#accounts',     'url' => '/api/admin/mail-intake/accounts', 'verb' => 'GET'],
+        ['name' => 'mailIntakeAdmin#saveAccounts', 'url' => '/api/admin/mail-intake/accounts', 'verb' => 'PUT'],
         // The account background work (the call mirror) writes as (admin only).
         ['name' => 'backgroundServiceAccount#show', 'url' => '/api/background/service-account', 'verb' => 'GET'],
         ['name' => 'backgroundServiceAccount#save', 'url' => '/api/background/service-account', 'verb' => 'PUT'],
@@ -765,6 +771,8 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
         ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
         ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        // marketing-events REQ-MEV-001: the campaign page's Create event.
+        ['name' => 'campaignEvent#create',       'url' => '/api/campaigns/{id}/events',       'verb' => 'POST'],
         ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
 
         // Marketing — Journeys (marketing-integrated-campaigns). A journey is
@@ -801,6 +809,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // BRP / BSN — Haalcentraal Personen integration (bsn-validatie-en-brp-lookup).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'brp#lookup',           'url' => '/api/brp/lookup',                    'verb' => 'POST'],
+        ['name' => 'brp#access',           'url' => '/api/brp/access',                    'verb' => 'GET'],
         ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
         ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
         ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],

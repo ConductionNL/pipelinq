@@ -239,6 +239,34 @@ class EmailMatchService implements EmailMatchServiceInterface {
 	}//end isPublicDomain()
 
 	/**
+	 * Link one Mail message to one object through the email leaf.
+	 *
+	 * The ticket mailbox intake (requests-inbound-to-queue D4) links the mail
+	 * that opened or continued a ticket to that ticket, the way
+	 * {@see self::matchAndLinkMessage()} links a message to the client it
+	 * matched. A failure is logged, never thrown.
+	 *
+	 * @param MailMessageKey $message   The Mail message.
+	 * @param string         $uid       The message's IMAP uid.
+	 * @param string         $objectId  The object's uuid.
+	 * @param string         $schemaKey The app config key naming the object's schema (`ticket_schema`).
+	 *
+	 * @return int 1 when the leaf held no link for the message on that object before, else 0.
+	 *
+	 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-an-administrator-names-the-ticket-mailboxes-req-itq-003
+	 */
+	public function linkMessageTo(MailMessageKey $message, string $uid, string $objectId, string $schemaKey): int {
+		$leaf = $this->emailLeaf();
+		if ($leaf === null || trim($objectId) === '') {
+			return 0;
+		}
+
+		$run = new MessageLinkRun(leaf: $leaf, message: new FetchedMailMessage(key: $message, uid: $uid));
+
+		return $this->linkEntity(entity: ['entityType' => str_replace('_schema', '', $schemaKey), 'entityId' => $objectId], run: $run);
+	}//end linkMessageTo()
+
+	/**
 	 * Match a single Mail message to CRM entities and link via the leaf.
 	 *
 	 * Pulls the message's sender + recipients, matches each address, and

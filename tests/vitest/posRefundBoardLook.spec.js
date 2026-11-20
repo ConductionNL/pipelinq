@@ -68,6 +68,9 @@ const store = {
 	saveObject: vi.fn(),
 }
 vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => store }))
+// The refund limit the "After saving" card reads (pos-refund-limit); empty by default.
+const settings = { getConfig: { 'pos.refund_limit': '' }, fetchSettings: vi.fn(async () => null) }
+vi.mock('../../src/store/modules/settings.js', () => ({ useSettingsStore: () => settings }))
 
 globalThis.t = (app, text, vars = {}) => String(text).replace(/\{(\w+)\}/g, (whole, key) => vars[key] ?? whole)
 
@@ -122,6 +125,21 @@ describe('the new refund page (PqKassaRetour)', () => {
 		expect(totals.map((i) => i.label)).toEqual(['Excl. VAT', 'VAT 21%', 'Total refund', 'Refunded to'])
 		expect(totals[2].value).toMatch(/12,50/)
 		expect(totals[3].value).toBe('Card, the original payment method')
+	})
+
+	it('says who confirms the refund, by the refund limit', async () => {
+		const wrapper = await mountNew()
+		expect(wrapper.vm.approvalText).toBe('The refund waits for confirmation. A manager confirms or rejects it.')
+
+		settings.getConfig = { 'pos.refund_limit': '20' }
+		wrapper.vm.setSelected(0, true)
+		await flushPromises()
+		expect(wrapper.vm.approvalText).toMatch(/^The refund waits for confirmation\. It is at or below the refund limit of €\s20,00, so you can confirm it yourself\.$/)
+
+		wrapper.vm.setSelected(1, true)
+		await flushPromises()
+		expect(wrapper.vm.approvalText).toMatch(/^The refund waits for confirmation\. It is above the refund limit of €\s20,00, so a manager confirms or rejects it\.$/)
+		settings.getConfig = { 'pos.refund_limit': '' }
 	})
 
 	it('takes back every item at once', async () => {
