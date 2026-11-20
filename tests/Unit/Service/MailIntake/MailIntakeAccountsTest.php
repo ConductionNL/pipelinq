@@ -29,51 +29,95 @@ use RuntimeException;
  */
 final class MailIntakeAccountsTest extends TestCase {
 
+	/**
+	 * Every mail account is listed with its owner.
+	 *
+	 * @return void
+	 */
 	public function testEveryMailAccountIsListedWithItsOwner(): void {
-		$service = new MailIntakeAccounts($this->db(rows: self::rows()), $this->createMock(IAppConfig::class), $this->createMock(LoggerInterface::class));
+		$service = new MailIntakeAccounts(
+			db: $this->db(rows: self::rows()),
+			appConfig: $this->createMock(originalClassName: IAppConfig::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 
 		$this->assertSame(
-			[
+			expected: [
 				['id' => 3, 'address' => 'service@gemeente.nl', 'name' => 'Service', 'owner' => 'functional'],
 				['id' => 9, 'address' => 'bob@gemeente.nl', 'name' => 'Bob', 'owner' => 'bob'],
 			],
-			$service->all()
+			actual: $service->all()
 		);
 	}
 
+	/**
+	 * An unreadable mail table is no accounts and a logged warning.
+	 *
+	 * @return void
+	 */
 	public function testAnUnreadableMailTableIsNoAccountsAndALoggedWarning(): void {
-		$db = $this->createMock(IDBConnection::class);
+		$db = $this->createMock(originalClassName: IDBConnection::class);
 		$db->method('getQueryBuilder')->willThrowException(new RuntimeException('no such table'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
 
-		$this->assertSame([], (new MailIntakeAccounts($db, $this->createMock(IAppConfig::class), $logger))->all());
+		$this->assertSame(
+			expected: [],
+			actual: (new MailIntakeAccounts(db: $db, appConfig: $this->createMock(originalClassName: IAppConfig::class), logger: $logger))->all()
+		);
 	}
 
+	/**
+	 * Only ids that name a mail account are stored each once.
+	 *
+	 * @return void
+	 */
 	public function testOnlyIdsThatNameAMailAccountAreStoredEachOnce(): void {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->expects($this->once())->method('setValueString')->with('pipelinq', 'inboundMail.accounts', '[3,9]');
-		$service = new MailIntakeAccounts($this->db(rows: self::rows()), $config, $this->createMock(LoggerInterface::class));
+		$service = new MailIntakeAccounts(
+			db: $this->db(rows: self::rows()),
+			appConfig: $config,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 
-		$this->assertSame([3, 9], $service->select(values: [3, '9', 3, 42, 'x', -1, 0, ['9']]));
+		$this->assertSame(expected: [3, 9], actual: $service->select(values: [3, '9', 3, 42, 'x', -1, 0, ['9']]));
 	}
 
+	/**
+	 * The selection is read back and junk ignored.
+	 *
+	 * @return void
+	 */
 	public function testTheSelectionIsReadBackAndJunkIgnored(): void {
 		foreach (['[3,"9",0,"x"]' => [3, 9], 'not json' => [], '{"a":3}' => [3]] as $stored => $expected) {
-			$config = $this->createMock(IAppConfig::class);
+			$config = $this->createMock(originalClassName: IAppConfig::class);
 			$config->method('getValueString')->with('pipelinq', 'inboundMail.accounts', '[]')->willReturn($stored);
-			$service = new MailIntakeAccounts($this->createMock(IDBConnection::class), $config, $this->createMock(LoggerInterface::class));
+			$service = new MailIntakeAccounts(
+				db: $this->createMock(originalClassName: IDBConnection::class),
+				appConfig: $config,
+				logger: $this->createMock(originalClassName: LoggerInterface::class)
+			);
 
-			$this->assertSame($expected, $service->selected(), $stored);
+			$this->assertSame(expected: $expected, actual: $service->selected(), message: $stored);
 		}
 	}
 
+	/**
+	 * The mailboxes are the selected accounts that still exist.
+	 *
+	 * @return void
+	 */
 	public function testTheMailboxesAreTheSelectedAccountsThatStillExist(): void {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturn('[9,77]');
-		$service = new MailIntakeAccounts($this->db(rows: self::rows()), $config, $this->createMock(LoggerInterface::class));
+		$service = new MailIntakeAccounts(
+			db: $this->db(rows: self::rows()),
+			appConfig: $config,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 
-		$this->assertSame([['id' => 9, 'address' => 'bob@gemeente.nl', 'name' => 'Bob', 'owner' => 'bob']], $service->mailboxes());
+		$this->assertSame(expected: [['id' => 9, 'address' => 'bob@gemeente.nl', 'name' => 'Bob', 'owner' => 'bob']], actual: $service->mailboxes());
 	}
 
 	/**
@@ -96,14 +140,14 @@ final class MailIntakeAccountsTest extends TestCase {
 	 * @return IDBConnection The connection.
 	 */
 	private function db(array $rows): IDBConnection {
-		$db = $this->createMock(IDBConnection::class);
+		$db = $this->createMock(originalClassName: IDBConnection::class);
 		$db->method('getQueryBuilder')->willReturnCallback(function () use ($rows): IQueryBuilder {
 			$pending = array_merge($rows, [false]);
-			$result = $this->createMock(IResult::class);
+			$result = $this->createMock(originalClassName: IResult::class);
 			$result->method('fetch')->willReturnCallback(static function () use (&$pending) {
 				return array_shift($pending);
 			});
-			$qb = $this->createMock(IQueryBuilder::class);
+			$qb = $this->createMock(originalClassName: IQueryBuilder::class);
 			$qb->method('select')->willReturnSelf();
 			$qb->expects($this->once())->method('from')->with('mail_accounts')->willReturnSelf();
 			$qb->method('orderBy')->willReturnSelf();

@@ -49,13 +49,18 @@ final class MailIntakeServiceTest extends TestCase {
 	/** @var list<array<string, mixed>> */
 	private array $received = [];
 
+	/**
+	 * Build the subject and its collaborators.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->accounts = $this->createMock(MailIntakeAccounts::class);
-		$this->reader = $this->createMock(MailIntakeReader::class);
-		$this->matcher = $this->createMock(EmailMatchService::class);
-		$this->intake = $this->createMock(InboundTicketService::class);
-		$this->config = $this->createMock(IAppConfig::class);
+		$this->accounts = $this->createMock(originalClassName: MailIntakeAccounts::class);
+		$this->reader = $this->createMock(originalClassName: MailIntakeReader::class);
+		$this->matcher = $this->createMock(originalClassName: EmailMatchService::class);
+		$this->intake = $this->createMock(originalClassName: InboundTicketService::class);
+		$this->config = $this->createMock(originalClassName: IAppConfig::class);
 		$this->accounts->method('mailboxes')->willReturn([
 			['id' => 3, 'address' => 'Service@Gemeente.nl', 'name' => 'Service', 'owner' => 'functional'],
 		]);
@@ -66,6 +71,11 @@ final class MailIntakeServiceTest extends TestCase {
 		});
 	}
 
+	/**
+	 * Two messages in one thread go to the intake on one thread key.
+	 *
+	 * @return void
+	 */
 	public function testTwoMessagesInOneThreadGoToTheIntakeOnOneThreadKey(): void {
 		$this->reader->expects($this->once())->method('inboxSince')->with(3, 10)->willReturn([
 			self::row(id: 11, thread: 'root-a', subject: 'Bestelling'),
@@ -81,20 +91,25 @@ final class MailIntakeServiceTest extends TestCase {
 
 		$totals = $this->service()->run();
 
-		$this->assertSame(['mailboxes' => 1, 'scanned' => 2, 'tickets' => 2, 'skipped' => 0], $totals);
-		$this->assertSame(['mail:3:root-a', 'mail:3:root-a'], array_column($this->received, 'threadKey'));
+		$this->assertSame(expected: ['mailboxes' => 1, 'scanned' => 2, 'tickets' => 2, 'skipped' => 0], actual: $totals);
+		$this->assertSame(expected: ['mail:3:root-a', 'mail:3:root-a'], actual: array_column($this->received, 'threadKey'));
 		$first = $this->received[0];
-		$this->assertSame('email', $first['channel']);
-		$this->assertSame('Bestelling', $first['title']);
-		$this->assertSame('preview 11', $first['text']);
-		$this->assertSame('info@bakkerij.nl', $first['fromAddress']);
-		$this->assertSame('bakkerij.nl', $first['fromDomain']);
-		$this->assertSame('Service@Gemeente.nl', $first['mailbox']);
-		$this->assertSame('client-1', $first['client']);
-		$this->assertSame('contact-1', $first['contact']);
-		$this->assertArrayNotHasKey('lead', $first);
+		$this->assertSame(expected: 'email', actual: $first['channel']);
+		$this->assertSame(expected: 'Bestelling', actual: $first['title']);
+		$this->assertSame(expected: 'preview 11', actual: $first['text']);
+		$this->assertSame(expected: 'info@bakkerij.nl', actual: $first['fromAddress']);
+		$this->assertSame(expected: 'bakkerij.nl', actual: $first['fromDomain']);
+		$this->assertSame(expected: 'Service@Gemeente.nl', actual: $first['mailbox']);
+		$this->assertSame(expected: 'client-1', actual: $first['client']);
+		$this->assertSame(expected: 'contact-1', actual: $first['contact']);
+		$this->assertArrayNotHasKey(key: 'lead', array: $first);
 	}
 
+	/**
+	 * Mail from a mailboxs own address opens no ticket but the cursor still advances.
+	 *
+	 * @return void
+	 */
 	public function testMailFromAMailboxsOwnAddressOpensNoTicketButTheCursorStillAdvances(): void {
 		$this->reader->method('inboxSince')->willReturn([self::row(id: 15, thread: 'root-b', subject: 'Antwoord')]);
 		$this->reader->method('senderOf')->with(15)->willReturn('service@gemeente.nl');
@@ -102,16 +117,28 @@ final class MailIntakeServiceTest extends TestCase {
 		$this->matcher->expects($this->never())->method('linkMessageTo');
 		$this->config->expects($this->once())->method('setValueString')->with('pipelinq', 'inboundMail.cursor.3', '15');
 
-		$this->assertSame(['scanned' => 1, 'tickets' => 0, 'skipped' => 1], $this->service()->runMailbox(mailbox: $this->accounts->mailboxes()[0], ownAddresses: ['service@gemeente.nl']));
+		$this->assertSame(
+			expected: ['scanned' => 1, 'tickets' => 0, 'skipped' => 1],
+			actual: $this->service()->runMailbox(mailbox: $this->accounts->mailboxes()[0], ownAddresses: ['service@gemeente.nl'])
+		);
 	}
 
+	/**
+	 * The cursor advances to the newest message and the mail is linked to its ticket.
+	 *
+	 * @return void
+	 */
 	public function testTheCursorAdvancesToTheNewestMessageAndTheMailIsLinkedToItsTicket(): void {
-		$this->reader->method('inboxSince')->willReturn([self::row(id: 21, thread: '', subject: 'Vraag'), self::row(id: 23, thread: 'root-c', subject: 'Vraag 2')]);
+		$this->reader->method('inboxSince')->willReturn(
+			[self::row(id: 21, thread: '', subject: 'Vraag'), self::row(id: 23, thread: 'root-c', subject: 'Vraag 2')]
+		);
 		$this->reader->method('senderOf')->willReturn('piet@example.org');
 		$this->matcher->method('matchEmailToEntities')->willReturn([]);
 		$this->matcher->method('matchDomainToOrganization')->with('example.org')->willReturn(['entityType' => 'client', 'entityId' => 'org-1']);
 		$links = [];
-		$this->matcher->method('linkMessageTo')->willReturnCallback(static function (MailMessageKey $key, string $uid, string $objectId, string $schemaKey) use (&$links): int {
+		$this->matcher->method(
+			'linkMessageTo'
+		)->willReturnCallback(static function (MailMessageKey $key, string $uid, string $objectId, string $schemaKey) use (&$links): int {
 			$links[] = [$key->mailAccountId, $key->mailMessageId, $uid, $objectId, $schemaKey];
 			return 1;
 		});
@@ -119,38 +146,68 @@ final class MailIntakeServiceTest extends TestCase {
 
 		$this->service()->run();
 
-		$this->assertSame('mail:3:21', $this->received[0]['threadKey'], 'a message without a thread root is its own thread');
-		$this->assertSame('org-1', $this->received[0]['client'], 'the domain names the organisation when the address names nobody');
+		$this->assertSame(expected: 'mail:3:21', actual: $this->received[0]['threadKey'], message: 'a message without a thread root is its own thread');
 		$this->assertSame(
-			[[3, 21, 'uid-21', 'ticket-mail:3:21', 'ticket_schema'], [3, 23, 'uid-23', 'ticket-mail:3:root-c', 'ticket_schema']],
-			$links
+			expected: 'org-1',
+			actual: $this->received[0]['client'],
+			message: 'the domain names the organisation when the address names nobody'
+		);
+		$this->assertSame(
+			expected: [[3, 21, 'uid-21', 'ticket-mail:3:21', 'ticket_schema'], [3, 23, 'uid-23', 'ticket-mail:3:root-c', 'ticket_schema']],
+			actual: $links
 		);
 	}
 
+	/**
+	 * A failed intake links nothing and an empty inbox writes no cursor.
+	 *
+	 * @return void
+	 */
 	public function testAFailedIntakeLinksNothingAndAnEmptyInboxWritesNoCursor(): void {
-		$intake = $this->createMock(InboundTicketService::class);
+		$intake = $this->createMock(originalClassName: InboundTicketService::class);
 		$intake->method('tryReceive')->willReturn('');
 		$this->reader->method('inboxSince')->willReturnOnConsecutiveCalls([self::row(id: 31, thread: 'x', subject: 'S')], []);
 		$this->reader->method('senderOf')->willReturn('a@b.nl');
 		$this->matcher->method('matchEmailToEntities')->willReturn([]);
 		$this->matcher->expects($this->never())->method('linkMessageTo');
 		$this->config->expects($this->once())->method('setValueString');
-		$service = new MailIntakeService($this->accounts, $this->reader, $this->matcher, $intake, $this->config);
+		$service = new MailIntakeService(
+			accounts: $this->accounts,
+			reader: $this->reader,
+			matcher: $this->matcher,
+			intake: $intake,
+			appConfig: $this->config
+		);
 
-		$this->assertSame(['scanned' => 1, 'tickets' => 0, 'skipped' => 1], $service->runMailbox(mailbox: $this->accounts->mailboxes()[0], ownAddresses: []));
-		$this->assertSame(['scanned' => 0, 'tickets' => 0, 'skipped' => 0], $service->runMailbox(mailbox: $this->accounts->mailboxes()[0], ownAddresses: []));
+		$this->assertSame(
+			expected: ['scanned' => 1, 'tickets' => 0, 'skipped' => 1],
+			actual: $service->runMailbox(mailbox: $this->accounts->mailboxes()[0], ownAddresses: [])
+		);
+		$this->assertSame(
+			expected: ['scanned' => 0, 'tickets' => 0, 'skipped' => 0],
+			actual: $service->runMailbox(mailbox: $this->accounts->mailboxes()[0], ownAddresses: [])
+		);
 	}
 
+	/**
+	 * A message without a sender is skipped.
+	 *
+	 * @return void
+	 */
 	public function testAMessageWithoutASenderIsSkipped(): void {
 		$this->reader->method('inboxSince')->willReturn([self::row(id: 41, thread: 'y', subject: 'S')]);
 		$this->reader->method('senderOf')->willReturn('');
 		$this->intake->expects($this->never())->method('tryReceive');
 
-		$this->assertSame(1, $this->service()->run()['skipped']);
+		$this->assertSame(expected: 1, actual: $this->service()->run()['skipped']);
 	}
 
 	/**
 	 * One INBOX row.
+	 *
+	 * @param int    $id      The message id.
+	 * @param string $thread  The thread root id.
+	 * @param string $subject The subject.
 	 *
 	 * @return array{id: int, uid: string, subject: string, preview: string, threadRootId: string}
 	 */
@@ -158,7 +215,18 @@ final class MailIntakeServiceTest extends TestCase {
 		return ['id' => $id, 'uid' => 'uid-' . $id, 'subject' => $subject, 'preview' => 'preview ' . $id, 'threadRootId' => $thread];
 	}
 
+	/**
+	 * Stand-in for service().
+	 *
+	 * @return MailIntakeService
+	 */
 	private function service(): MailIntakeService {
-		return new MailIntakeService($this->accounts, $this->reader, $this->matcher, $this->intake, $this->config);
+		return new MailIntakeService(
+			accounts: $this->accounts,
+			reader: $this->reader,
+			matcher: $this->matcher,
+			intake: $this->intake,
+			appConfig: $this->config
+		);
 	}
 }

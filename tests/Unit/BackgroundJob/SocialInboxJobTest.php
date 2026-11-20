@@ -28,37 +28,59 @@ use RuntimeException;
  */
 final class SocialInboxJobTest extends TestCase {
 
+	/**
+	 * A run logs what the intake did.
+	 *
+	 * @return void
+	 */
 	public function testARunLogsWhatTheIntakeDid(): void {
-		$intake = $this->createMock(SocialInboxService::class);
+		$intake = $this->createMock(originalClassName: SocialInboxService::class);
 		$totals = ['accounts' => 2, 'messages' => 3, 'tickets' => 3, 'refused' => 1];
 		$intake->expects($this->once())->method('run')->willReturn($totals);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('info')->with('Pipelinq: social inbox intake complete', $totals);
 
-		$job = new SocialInboxJob($this->createMock(ITimeFactory::class), $intake, $logger);
-		self::runJob($job);
+		$job = new SocialInboxJob(time: $this->createMock(originalClassName: ITimeFactory::class), inbox: $intake, logger: $logger);
+		self::runJob(job: $job);
 
-		$this->assertSame(300, $job->getInterval());
+		$this->assertSame(expected: 300, actual: $job->getInterval());
 	}
 
+	/**
+	 * No connected accounts logs nothing.
+	 *
+	 * @return void
+	 */
 	public function testNoConnectedAccountsLogsNothing(): void {
-		$intake = $this->createMock(SocialInboxService::class);
+		$intake = $this->createMock(originalClassName: SocialInboxService::class);
 		$intake->method('run')->willReturn(['accounts' => 0, 'messages' => 0, 'tickets' => 0, 'refused' => 0]);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->never())->method('info');
 
-		self::runJob(new SocialInboxJob($this->createMock(ITimeFactory::class), $intake, $logger));
+		self::runJob(job: new SocialInboxJob(time: $this->createMock(originalClassName: ITimeFactory::class), inbox: $intake, logger: $logger));
 	}
 
+	/**
+	 * A failing intake is logged not thrown.
+	 *
+	 * @return void
+	 */
 	public function testAFailingIntakeIsLoggedNotThrown(): void {
-		$intake = $this->createMock(SocialInboxService::class);
+		$intake = $this->createMock(originalClassName: SocialInboxService::class);
 		$intake->method('run')->willThrowException(new RuntimeException('broker unreachable'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('error')->with('Pipelinq: the social inbox intake failed', ['exception' => 'broker unreachable']);
 
-		self::runJob(new SocialInboxJob($this->createMock(ITimeFactory::class), $intake, $logger));
+		self::runJob(job: new SocialInboxJob(time: $this->createMock(originalClassName: ITimeFactory::class), inbox: $intake, logger: $logger));
 	}
 
+	/**
+	 * Stand-in for runJob().
+	 *
+	 * @param SocialInboxJob $job The job.
+	 *
+	 * @return void
+	 */
 	private static function runJob(SocialInboxJob $job): void {
 		$method = new ReflectionMethod($job, 'run');
 		$method->invoke($job, null);

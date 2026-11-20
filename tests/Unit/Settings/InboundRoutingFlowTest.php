@@ -48,7 +48,7 @@ class InboundRoutingFlowTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$path = (__DIR__ . '/../../../lib/Settings/register.d/99-inbound-ticket-intake.json');
-		$this->assertFileExists($path);
+		$this->assertFileExists(filename: $path);
 		$this->fragment = (array) json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 	}//end setUp()
 
@@ -59,7 +59,7 @@ class InboundRoutingFlowTest extends TestCase {
 	 */
 	private function flow(): array {
 		$flows = $this->fragment['components']['schemas']['ticket']['configuration']['x-openregister-flows'];
-		$this->assertCount(1, $flows);
+		$this->assertCount(expectedCount: 1, haystack: $flows);
 
 		return (array) $flows[0];
 	}//end flow()
@@ -87,7 +87,7 @@ class InboundRoutingFlowTest extends TestCase {
 	 */
 	private function nodeOfType(string $type): array {
 		$found = array_values(array_filter($this->flow()['nodes'], static fn (array $node): bool => $node['type'] === $type));
-		$this->assertCount(1, $found, 'exactly one ' . $type . ' node');
+		$this->assertCount(expectedCount: 1, haystack: $found, message: 'exactly one ' . $type . ' node');
 
 		return $found[0];
 	}//end nodeOfType()
@@ -103,10 +103,10 @@ class InboundRoutingFlowTest extends TestCase {
 	public function testTheFlowShipsDisabledUnderItsName(): void {
 		$flow = $this->flow();
 
-		$this->assertSame('Route incoming tickets', $flow['name']);
-		$this->assertSame('pipelinq', $flow['app']);
-		$this->assertFalse($flow['enabled']);
-		$this->assertArrayNotHasKey('owner', $flow);
+		$this->assertSame(expected: 'Route incoming tickets', actual: $flow['name']);
+		$this->assertSame(expected: 'pipelinq', actual: $flow['app']);
+		$this->assertFalse(condition: $flow['enabled']);
+		$this->assertArrayNotHasKey(key: 'owner', array: $flow);
 	}//end testTheFlowShipsDisabledUnderItsName()
 
 	/**
@@ -119,27 +119,27 @@ class InboundRoutingFlowTest extends TestCase {
 		$nodes = $this->nodes();
 		$next = [];
 		foreach ($this->flow()['edges'] as $edge) {
-			$this->assertArrayHasKey($edge['from'], $nodes, 'edge from an unknown node');
-			$this->assertArrayHasKey($edge['to'], $nodes, 'edge to an unknown node');
+			$this->assertArrayHasKey(key: $edge['from'], array: $nodes, message: 'edge from an unknown node');
+			$this->assertArrayHasKey(key: $edge['to'], array: $nodes, message: 'edge to an unknown node');
 			$next[$edge['from']] = $edge['to'];
 		}
 
 		$types = [];
-		$at = $this->nodeOfType('openregister.trigger-object')['id'];
+		$at = $this->nodeOfType(type: 'openregister.trigger-object')['id'];
 		while ($at !== null) {
 			$types[] = $nodes[$at]['type'];
 			$at = ($next[$at] ?? null);
 		}
 
 		$this->assertSame(
-			[
+			expected: [
 				'openregister.trigger-object',
 				'openregister.filter',
 				'openregister.decision-table',
 				'openregister.object-write',
 				'openregister.end',
 			],
-			$types
+			actual: $types
 		);
 	}//end testTheStepsRunInOrder()
 
@@ -150,15 +150,15 @@ class InboundRoutingFlowTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheTriggerIsATicketBeingCreated(): void {
-		$trigger = $this->nodeOfType('openregister.trigger-object');
+		$trigger = $this->nodeOfType(type: 'openregister.trigger-object');
 		$flow = $this->flow();
 
 		$this->assertSame(
-			['event' => 'object.created', 'register' => 'pipelinq', 'schema' => 'ticket'],
-			$trigger['config']
+			expected: ['event' => 'object.created', 'register' => 'pipelinq', 'schema' => 'ticket'],
+			actual: $trigger['config']
 		);
-		$this->assertSame('object.created', $flow['trigger']);
-		$this->assertSame('pipelinq', $flow['triggerRegister']);
+		$this->assertSame(expected: 'object.created', actual: $flow['trigger']);
+		$this->assertSame(expected: 'pipelinq', actual: $flow['triggerRegister']);
 	}//end testTheTriggerIsATicketBeingCreated()
 
 	/**
@@ -168,16 +168,16 @@ class InboundRoutingFlowTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheFilterKeepsInboundTicketsWithoutACategory(): void {
-		$condition = $this->nodeOfType('openregister.filter')['config']['condition'];
+		$condition = $this->nodeOfType(type: 'openregister.filter')['config']['condition'];
 
 		$this->assertSame(
-			[
+			expected: [
 				'and' => [
 					['in' => [['var' => 'json.channel'], ['email', 'whatsapp', 'sms', 'facebook', 'instagram']]],
 					['!' => ['var' => 'json.category']],
 				],
 			],
-			$condition
+			actual: $condition
 		);
 	}//end testTheFilterKeepsInboundTicketsWithoutACategory()
 
@@ -188,27 +188,27 @@ class InboundRoutingFlowTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheTableReadsTheRoutingFactsAndRecordsTheMatch(): void {
-		$config = $this->nodeOfType('openregister.decision-table')['config'];
+		$config = $this->nodeOfType(type: 'openregister.decision-table')['config'];
 		$table = $config['table'];
 
-		$this->assertSame('FIRST', $table['hitPolicy']);
+		$this->assertSame(expected: 'FIRST', actual: $table['hitPolicy']);
 		$this->assertSame(
-			['channel', 'fromAddress', 'fromDomain', 'mailbox', 'clientSegment'],
-			array_column($table['inputs'], 'name')
+			expected: ['channel', 'fromAddress', 'fromDomain', 'mailbox', 'clientSegment'],
+			actual: array_column($table['inputs'], 'name')
 		);
-		$this->assertSame(['category', 'priority'], array_column($table['outputs'], 'name'));
+		$this->assertSame(expected: ['category', 'priority'], actual: array_column($table['outputs'], 'name'));
 		$this->assertSame(
-			[
+			expected: [
 				'channel'       => 'channel',
 				'fromAddress'   => 'channelMetadata.fromAddress',
 				'fromDomain'    => 'channelMetadata.fromDomain',
 				'mailbox'       => 'channelMetadata.mailbox',
 				'clientSegment' => 'channelMetadata.clientSegment',
 			],
-			$config['inputMapping']
+			actual: $config['inputMapping']
 		);
-		$this->assertSame(['category' => '', 'priority' => 'normal'], $config['defaultOutputs']);
-		$this->assertSame('channelMetadata.routing', $config['resultKey']);
+		$this->assertSame(expected: ['category' => '', 'priority' => 'normal'], actual: $config['defaultOutputs']);
+		$this->assertSame(expected: 'channelMetadata.routing', actual: $config['resultKey']);
 	}//end testTheTableReadsTheRoutingFactsAndRecordsTheMatch()
 
 	/**
@@ -219,13 +219,13 @@ class InboundRoutingFlowTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheShippedTableHoldsOnlyTheCatchAll(): void {
-		$table = $this->nodeOfType('openregister.decision-table')['config']['table'];
+		$table = $this->nodeOfType(type: 'openregister.decision-table')['config']['table'];
 
-		$this->assertCount(1, $table['rules']);
+		$this->assertCount(expectedCount: 1, haystack: $table['rules']);
 		$rule = $table['rules'][0];
-		$this->assertSame('everything-else', $rule['id']);
-		$this->assertSame(['-', '-', '-', '-', '-'], $rule['inputEntries']);
-		$this->assertSame(['', 'normal'], $rule['outputEntries']);
+		$this->assertSame(expected: 'everything-else', actual: $rule['id']);
+		$this->assertSame(expected: ['-', '-', '-', '-', '-'], actual: $rule['inputEntries']);
+		$this->assertSame(expected: ['', 'normal'], actual: $rule['outputEntries']);
 	}//end testTheShippedTableHoldsOnlyTheCatchAll()
 
 	/**
@@ -236,7 +236,7 @@ class InboundRoutingFlowTest extends TestCase {
 	 */
 	public function testEveryMappedFactIsOneTheIntakeWrites(): void {
 		$source = (string) file_get_contents(__DIR__ . '/../../../lib/Service/InboundTicketService.php');
-		$mapping = $this->nodeOfType('openregister.decision-table')['config']['inputMapping'];
+		$mapping = $this->nodeOfType(type: 'openregister.decision-table')['config']['inputMapping'];
 
 		foreach ($mapping as $path) {
 			if (str_starts_with($path, 'channelMetadata.') === false) {
@@ -244,7 +244,7 @@ class InboundRoutingFlowTest extends TestCase {
 			}
 
 			$key = substr($path, strlen('channelMetadata.'));
-			$this->assertStringContainsString("'" . $key . "'", $source, $key . ' is not written by the intake');
+			$this->assertStringContainsString(needle: "'" . $key . "'", haystack: $source, message: $key . ' is not written by the intake');
 		}
 	}//end testEveryMappedFactIsOneTheIntakeWrites()
 
@@ -255,13 +255,13 @@ class InboundRoutingFlowTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheWriteUpdatesTheSameTicket(): void {
-		$config = $this->nodeOfType('openregister.object-write')['config'];
+		$config = $this->nodeOfType(type: 'openregister.object-write')['config'];
 
-		$this->assertSame('pipelinq', $config['register']);
-		$this->assertSame('ticket', $config['schema']);
-		$this->assertSame('update', $config['operation']);
-		$this->assertSame(['uuid' => '{{ id }}'], $config['match']);
-		$this->assertSame(['category', 'priority', 'channelMetadata'], array_keys($config['fields']));
-		$this->assertArrayNotHasKey('replace', $config);
+		$this->assertSame(expected: 'pipelinq', actual: $config['register']);
+		$this->assertSame(expected: 'ticket', actual: $config['schema']);
+		$this->assertSame(expected: 'update', actual: $config['operation']);
+		$this->assertSame(expected: ['uuid' => '{{ id }}'], actual: $config['match']);
+		$this->assertSame(expected: ['category', 'priority', 'channelMetadata'], actual: array_keys($config['fields']));
+		$this->assertArrayNotHasKey(key: 'replace', array: $config);
 	}//end testTheWriteUpdatesTheSameTicket()
 }//end class

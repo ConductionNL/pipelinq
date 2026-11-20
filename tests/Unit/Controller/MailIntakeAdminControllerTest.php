@@ -42,29 +42,49 @@ final class MailIntakeAdminControllerTest extends TestCase {
 	/** @var IGroupManager&MockObject */
 	private IGroupManager $groups;
 
+	/**
+	 * Build the subject and its collaborators.
+	 *
+	 * @return void
+	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->request = $this->createMock(IRequest::class);
-		$this->accounts = $this->createMock(MailIntakeAccounts::class);
-		$this->session = $this->createMock(IUserSession::class);
-		$this->groups = $this->createMock(IGroupManager::class);
+		$this->request = $this->createMock(originalClassName: IRequest::class);
+		$this->accounts = $this->createMock(originalClassName: MailIntakeAccounts::class);
+		$this->session = $this->createMock(originalClassName: IUserSession::class);
+		$this->groups = $this->createMock(originalClassName: IGroupManager::class);
 	}
 
+	/**
+	 * A non admin is refused both calls.
+	 *
+	 * @return void
+	 */
 	public function testANonAdminIsRefusedBothCalls(): void {
 		$this->signIn(admin: false);
 		$this->accounts->expects($this->never())->method('all');
 		$this->accounts->expects($this->never())->method('select');
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller()->accounts()->getStatus());
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller()->saveAccounts()->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller()->accounts()->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller()->saveAccounts()->getStatus());
 	}
 
+	/**
+	 * Nobody signed in is refused.
+	 *
+	 * @return void
+	 */
 	public function testNobodySignedInIsRefused(): void {
 		$this->session->method('getUser')->willReturn(null);
 
-		$this->assertSame(['errorCode' => 'forbidden'], $this->controller()->accounts()->getData());
+		$this->assertSame(expected: ['errorCode' => 'forbidden'], actual: $this->controller()->accounts()->getData());
 	}
 
+	/**
+	 * An admin reads the accounts and the selection.
+	 *
+	 * @return void
+	 */
 	public function testAnAdminReadsTheAccountsAndTheSelection(): void {
 		$this->signIn(admin: true);
 		$list = [['id' => 3, 'address' => 'service@gemeente.nl', 'name' => 'Service', 'owner' => 'functional']];
@@ -73,10 +93,15 @@ final class MailIntakeAdminControllerTest extends TestCase {
 
 		$response = $this->controller()->accounts();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['accounts' => $list, 'selected' => [3]], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['accounts' => $list, 'selected' => [3]], actual: $response->getData());
 	}
 
+	/**
+	 * An admin stores the selection.
+	 *
+	 * @return void
+	 */
 	public function testAnAdminStoresTheSelection(): void {
 		$this->signIn(admin: true);
 		$this->request->method('getParam')->with('accounts')->willReturn([3, '9']);
@@ -84,25 +109,42 @@ final class MailIntakeAdminControllerTest extends TestCase {
 
 		$response = $this->controller()->saveAccounts();
 
-		$this->assertSame(['selected' => [3]], $response->getData());
+		$this->assertSame(expected: ['selected' => [3]], actual: $response->getData());
 	}
 
+	/**
+	 * A save without a list is a bad request.
+	 *
+	 * @return void
+	 */
 	public function testASaveWithoutAListIsABadRequest(): void {
 		$this->signIn(admin: true);
 		$this->request->method('getParam')->willReturn('3');
 		$this->accounts->expects($this->never())->method('select');
 
-		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller()->saveAccounts()->getStatus());
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $this->controller()->saveAccounts()->getStatus());
 	}
 
+	/**
+	 * Stand-in for signIn().
+	 *
+	 * @param bool $admin The admin.
+	 *
+	 * @return void
+	 */
 	private function signIn(bool $admin): void {
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('u1');
 		$this->session->method('getUser')->willReturn($user);
 		$this->groups->method('isAdmin')->with('u1')->willReturn($admin);
 	}
 
+	/**
+	 * Stand-in for controller().
+	 *
+	 * @return MailIntakeAdminController
+	 */
 	private function controller(): MailIntakeAdminController {
-		return new MailIntakeAdminController($this->request, $this->accounts, $this->session, $this->groups);
+		return new MailIntakeAdminController(request: $this->request, accounts: $this->accounts, userSession: $this->session, groupManager: $this->groups);
 	}
 }

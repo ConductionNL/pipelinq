@@ -28,37 +28,59 @@ use RuntimeException;
  */
 final class MailIntakeJobTest extends TestCase {
 
+	/**
+	 * A run logs what the intake did.
+	 *
+	 * @return void
+	 */
 	public function testARunLogsWhatTheIntakeDid(): void {
-		$intake = $this->createMock(MailIntakeService::class);
+		$intake = $this->createMock(originalClassName: MailIntakeService::class);
 		$totals = ['mailboxes' => 1, 'scanned' => 2, 'tickets' => 1, 'skipped' => 1];
 		$intake->expects($this->once())->method('run')->willReturn($totals);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('info')->with('Pipelinq: ticket mailbox intake complete', $totals);
 
-		$job = new MailIntakeJob($this->createMock(ITimeFactory::class), $intake, $logger);
-		self::runJob($job);
+		$job = new MailIntakeJob(time: $this->createMock(originalClassName: ITimeFactory::class), intake: $intake, logger: $logger);
+		self::runJob(job: $job);
 
-		$this->assertSame(300, $job->getInterval());
+		$this->assertSame(expected: 300, actual: $job->getInterval());
 	}
 
+	/**
+	 * No mailboxes logs nothing.
+	 *
+	 * @return void
+	 */
 	public function testNoMailboxesLogsNothing(): void {
-		$intake = $this->createMock(MailIntakeService::class);
+		$intake = $this->createMock(originalClassName: MailIntakeService::class);
 		$intake->method('run')->willReturn(['mailboxes' => 0, 'scanned' => 0, 'tickets' => 0, 'skipped' => 0]);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->never())->method('info');
 
-		self::runJob(new MailIntakeJob($this->createMock(ITimeFactory::class), $intake, $logger));
+		self::runJob(job: new MailIntakeJob(time: $this->createMock(originalClassName: ITimeFactory::class), intake: $intake, logger: $logger));
 	}
 
+	/**
+	 * A failing intake is logged not thrown.
+	 *
+	 * @return void
+	 */
 	public function testAFailingIntakeIsLoggedNotThrown(): void {
-		$intake = $this->createMock(MailIntakeService::class);
+		$intake = $this->createMock(originalClassName: MailIntakeService::class);
 		$intake->method('run')->willThrowException(new RuntimeException('mail table gone'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('error')->with('Pipelinq: the ticket mailbox intake failed', ['exception' => 'mail table gone']);
 
-		self::runJob(new MailIntakeJob($this->createMock(ITimeFactory::class), $intake, $logger));
+		self::runJob(job: new MailIntakeJob(time: $this->createMock(originalClassName: ITimeFactory::class), intake: $intake, logger: $logger));
 	}
 
+	/**
+	 * Stand-in for runJob().
+	 *
+	 * @param MailIntakeJob $job The job.
+	 *
+	 * @return void
+	 */
 	private static function runJob(MailIntakeJob $job): void {
 		$method = new ReflectionMethod($job, 'run');
 		$method->invoke($job, null);

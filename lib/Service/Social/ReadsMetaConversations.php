@@ -134,8 +134,8 @@ trait ReadsMetaConversations {
 		}
 
 		$text = trim((string) ($message['message'] ?? ''));
-		$at   = strtotime((string) ($message['created_time'] ?? ''));
-		if ($fromId === '' || $fromId === $pageId || $text === '' || $at === false) {
+		$sentAt = strtotime((string) ($message['created_time'] ?? ''));
+		if ($fromId === '' || $fromId === $pageId || $text === '' || $sentAt === false) {
 			return null;
 		}
 
@@ -145,7 +145,7 @@ trait ReadsMetaConversations {
 			'text' => $text,
 			'fromId' => $fromId,
 			'fromName' => $name,
-			'createdAt' => $at,
+			'createdAt' => $sentAt,
 		];
 	}//end visitorMessage()
 
