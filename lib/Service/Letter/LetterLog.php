@@ -27,7 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Letter;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LetterLogInterface;
 use OCA\Pipelinq\Service\TicketService;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -37,7 +38,7 @@ use Throwable;
  *
  * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
  */
-class LetterLog
+class LetterLog implements LetterLogInterface
 {
 
     /**
@@ -46,7 +47,6 @@ class LetterLog
      * @var string
      */
     public const LETTER_CHANNEL = 'brief';
-
 
     /**
      * Constructor.
@@ -60,7 +60,6 @@ class LetterLog
     ) {
 
     }//end __construct()
-
 
     /**
      * Log the letter as an outgoing contact moment on the client.
@@ -81,25 +80,63 @@ class LetterLog
      */
     public function log(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string
     {
-        $letter  = new LoggedLetter(
-            clientId: $clientId,
-            contactId: $contactId,
-            ticketId: $ticketId,
-            templateName: $templateName,
-            path: $path,
-        );
+        $letter = new LoggedLetter(clientId: $clientId, contactId: $contactId, ticketId: $ticketId, templateName: $templateName, path: $path);
+        return $this->logLetter(letter: $letter);
+
+    }//end log()
+
+    /**
+     * Save the letter's contact moment, stamped now.
+     *
+     * @param LoggedLetter $letter The letter.
+     *
+     * @return string|null The contact moment id, or null when it could not be saved.
+     */
+    private function logLetter(LoggedLetter $letter): ?string
+    {
         $payload = self::contactMomentPayload(letter: $letter, occurredAt: new DateTimeImmutable());
 
+        return $this->saveContactMoment(payload: $payload, clientId: $letter->clientId);
+
+    }//end logLetter()
+
+    /**
+     * Save the letter's contact moment.
+     *
+     * @param array<string, string> $payload  The contact moment payload.
+     * @param string                $clientId The client id, for the log.
+     *
+     * @return string|null The contact moment id, or null when it could not be saved.
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+     */
+    private function saveContactMoment(array $payload, string $clientId): string|null
+    {
         try {
             $saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
         } catch (Throwable $e) {
             $this->logger->error(
                 'Pipelinq: the letter is made but its contact moment was not saved',
-                ['app' => Application::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
+                ['app' => AppIdentity::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
             );
             return null;
         }
 
+        return self::savedId(saved: $saved);
+
+    }//end saveContactMoment()
+
+    /**
+     * The id of a saved contact moment, or null when it carries none.
+     *
+     * @param mixed $saved The saved contact moment.
+     *
+     * @return string|null
+     *
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+     */
+    private static function savedId($saved): string|null
+    {
         $data = (array) $saved;
         if (method_exists($saved, 'jsonSerialize') === true) {
             $data = (array) $saved->jsonSerialize();
@@ -113,8 +150,7 @@ class LetterLog
 
         return $id;
 
-    }//end log()
-
+    }//end savedId()
 
     /**
      * The contact moment a letter is logged as, before `ticketType` is forced.
@@ -142,7 +178,6 @@ class LetterLog
 
     }//end contactMomentPayload()
 
-
     /**
      * The contact moment description: the template, and where the copy is filed.
      *
@@ -160,7 +195,6 @@ class LetterLog
         return $description;
 
     }//end description()
-
 
     /**
      * Add the contact person and the parent ticket, when the letter has them.
@@ -183,6 +217,5 @@ class LetterLog
         return $payload;
 
     }//end withLinks()
-
 
 }//end class

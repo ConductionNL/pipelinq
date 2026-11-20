@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\SettingsService;
-use OCA\Pipelinq\Service\SystemTagService;
+use OCA\Pipelinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -134,7 +134,7 @@ class InitializeSettings implements IRepairStep {
 	 */
 	private function loadConfiguration(IOutput $output): void {
 		try {
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$result = $settingsService->loadSettings(force: false);
 
 			$registerCount = count($result['registers'] ?? []);
@@ -160,7 +160,7 @@ class InitializeSettings implements IRepairStep {
 	private function createDefaultPipelines(IOutput $output): void {
 		$output->info('Checking default pipelines...');
 		try {
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$settingsService->createDefaultPipelines();
 			$output->info('Default pipelines checked/created');
 		} catch (\Exception $e) {
@@ -197,7 +197,7 @@ class InitializeSettings implements IRepairStep {
 	 * @return void
 	 */
 	private function ensureDefaultTags(): void {
-		$systemTagService = $this->container->get(SystemTagService::class);
+		$systemTagService = $this->container->get(SystemTagServiceInterface::class);
 		$systemTagService->ensureDefaults(
 			objectType: 'pipelinq_lead_source',
 			defaults: self::DEFAULT_LEAD_SOURCES
@@ -218,7 +218,7 @@ class InitializeSettings implements IRepairStep {
 	private function createDefaultSkills(IOutput $output): void {
 		$output->info('Checking default skills...');
 		try {
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$settingsService->createDefaultSkills();
 			$output->info('Default skills checked/created');
 		} catch (\Exception $e) {

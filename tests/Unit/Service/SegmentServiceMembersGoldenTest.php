@@ -121,12 +121,14 @@ class SegmentServiceMembersGoldenTest extends TestCase {
 	 */
 	public function testExtractRules(): void {
 		$cases = [
-			[['rules' => '{"field":"a"}'], ['field' => 'a']],
+			// A stored rule that is no group reads as an AND group around it (segment-groups-its-rules D3).
+			[['rules' => '{"field":"a"}'], ['type' => 'AND', 'children' => [['field' => 'a']]]],
 			[['rules' => '"text"'], null],
 			[['rules' => 'not json'], null],
 			[['rules' => ''], null],
-			[['rules' => ['field' => 'b']], ['field' => 'b']],
-			[['rules' => []], []],
+			[['rules' => ['field' => 'b']], ['type' => 'AND', 'children' => [['field' => 'b']]]],
+			[['rules' => ['type' => 'or', 'children' => [['field' => 'c']]]], ['type' => 'OR', 'children' => [['field' => 'c']]]],
+			[['rules' => []], ['type' => 'AND', 'children' => []]],
 			[['rules' => 5], null],
 			[[], null],
 		];

@@ -30,7 +30,7 @@
  * @e2e contract-renewal-tracking::silent-expiry-churns-the-contract exclude nightly cron silent-expiry — covered by RenewalEngineServiceTest::testSilentExpiryChurns
  * @e2e contract-renewal-tracking::owner-notified-when-the-window-opens exclude ADR-031 declarative schema-rule notification fired by OpenRegister — no app-code dispatch, no browser surface
  * @e2e contract-renewal-tracking::notice-deadline-lands-in-my-work exclude nightly cron My Work entry — covered by RenewalEngineServiceTest::testNoticeDeadlineMyWorkEntry
- * @e2e contract-renewal-tracking::interval-normalization exclude pure MRR math — covered by RecurringRevenueServiceTest + recurringRevenue.spec.js
+ * @e2e contract-renewal-tracking::interval-normalization exclude pure MRR math — covered by RecurringRevenueServiceTest
  * @e2e contract-renewal-tracking::renewal-rate-per-period exclude pure period math — covered by RecurringRevenueServiceTest::testRenewalMetricsPerPeriod
  * @e2e contract-renewal-tracking::per-client-recurring-value exclude pure per-client math — covered by RecurringRevenueServiceTest::testClientMrr
  * @e2e contract-renewal-tracking::renewals-widget-empty-state exclude empty-state rendering verified by the RenewalsDueWidget template + RenewalsDueWidget unit behaviour; no seeded fixture in the e2e env

@@ -32,7 +32,7 @@
                 ]
             },
             {
-                "AnalyticsService::getOverview": []
+                "AnalyticsServiceInterface::getOverview": []
             }
         ]
     },
@@ -69,7 +69,7 @@
                 ]
             },
             {
-                "AnalyticsService::getCommercialOverview": []
+                "AnalyticsServiceInterface::getCommercialOverview": []
             }
         ]
     },
@@ -106,7 +106,7 @@
                 ]
             },
             {
-                "AnalyticsService::getTrends": [
+                "AnalyticsServiceInterface::getTrends": [
                     ""
                 ]
             }
@@ -145,7 +145,7 @@
                 ]
             },
             {
-                "AnalyticsService::getFunnels": []
+                "AnalyticsServiceInterface::getFunnels": []
             }
         ]
     }

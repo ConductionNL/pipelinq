@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\Contracts\NoteEventServiceInterface;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -34,7 +36,7 @@ use Throwable;
  *
  * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
-class NoteEventService {
+class NoteEventService implements NoteEventServiceInterface {
 	use OptionalPayloadToArray;
 
 	private const TYPE_MAP = [
@@ -95,9 +97,8 @@ class NoteEventService {
 			}
 
 			$this->publishNoteActivity(
-				entityType: $entityType,
-				entityData: $entityData,
-				objectId: $objectId
+				about: new NoticedObject(objectType: $entityType, objectId: $objectId),
+				entityData: $entityData
 			);
 		} catch (\Exception $e) {
 			$this->logger->warning(
@@ -140,8 +141,7 @@ class NoteEventService {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find(
 				id: $objectId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -161,40 +161,33 @@ class NoteEventService {
 	/**
 	 * Publish activity and notification for a note addition.
 	 *
-	 * @param string $entityType The entity type.
-	 * @param array $entityData The entity data from OpenRegister.
-	 * @param string $objectId The object ID.
+	 * @param NoticedObject $about      The entity type and object id.
+	 * @param array         $entityData The entity data from OpenRegister.
 	 *
 	 * @return void
 	 */
-	private function publishNoteActivity(string $entityType, array $entityData, string $objectId): void {
-		$entityTitle = $entityData['title'] ?? $entityType . ' ' . $objectId;
+	private function publishNoteActivity(NoticedObject $about, array $entityData): void {
+		$entityTitle = $entityData['title'] ?? $about->objectType . ' ' . $about->objectId;
 		$assignee = $entityData['assignee'] ?? '';
-
-		$currentUser = $this->userSession->getUser();
-		$author = '';
-		if ($currentUser !== null) {
-			$author = $currentUser->getUID();
-		}
-
+		$author = ($this->userSession->getUser()?->getUID() ?? '');
 		$assigneeOrNull = null;
 		if ($assignee !== '') {
 			$assigneeOrNull = $assignee;
 		}
 
 		$this->activityService->publishNoteAdded(
-			entityType: $entityType,
+			entityType: $about->objectType,
 			entityTitle: $entityTitle,
-			objectId: $objectId,
+			objectId: $about->objectId,
 			affectedUser: $assigneeOrNull
 		);
 
 		if ($assignee !== '') {
 			$this->notificationService->notifyNoteAdded(
-				entityType: $entityType,
+				entityType: $about->objectType,
 				entityTitle: $entityTitle,
 				assigneeUserId: $assignee,
-				objectId: $objectId,
+				objectId: $about->objectId,
 				author: $author
 			);
 		}

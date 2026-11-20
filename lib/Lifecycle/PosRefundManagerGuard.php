@@ -37,9 +37,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -239,8 +240,8 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function fetchTransaction(string $id): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -248,8 +249,7 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 		try {
 			$object = $this->container->get('OCA\OpenRegister\Service\ObjectService')->find(
 				id: $id,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -277,31 +277,56 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
 	 */
 	private function sumCompletedRefunds(string $transactionId, string $excludeRefundId): float {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'posRefund_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posRefund_schema', '');
 		if ($register === '' || $schema === '') {
 			return PHP_FLOAT_MAX;
 		}
 
-		try {
-			$results = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'originalTransaction' => $transactionId,
-						'status' => 'completed',
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: refund guard could not sum completed refunds (fail closed)',
-				['exception' => $e->getMessage(), 'transaction' => $transactionId]
-			);
+		$found = $this->completedRefunds(filters: ['register' => $register, 'schema' => $schema, 'originalTransaction' => $transactionId]);
+		if ($found === []) {
 			return PHP_FLOAT_MAX;
 		}
 
+		return $this->sumExcluding(results: $found[0], excludeRefundId: $excludeRefundId);
+	}//end sumCompletedRefunds()
+
+	/**
+	 * Find the completed refunds of a transaction.
+	 *
+	 * @param array<string, string> $filters The register id, the refund schema id and the original transaction UUID (`originalTransaction`).
+	 *
+	 * @return array<int, mixed> The findAll result as a one-element list, or an empty list when the lookup fails.
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
+	 */
+	private function completedRefunds(array $filters): array {
+		try {
+			return [$this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
+				config: [
+					'filters' => $filters + ['status' => 'completed'],
+				]
+			)];
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: refund guard could not sum completed refunds (fail closed)',
+				['exception' => $e->getMessage(), 'transaction' => $filters['originalTransaction']]
+			);
+			return [];
+		}
+	}//end completedRefunds()
+
+	/**
+	 * The gross amount of the refunds, leaving out the one being completed.
+	 *
+	 * @param mixed $results The completed refunds.
+	 * @param string $excludeRefundId The refund being completed (excluded).
+	 *
+	 * @return float
+	 *
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.5
+	 */
+	private function sumExcluding($results, string $excludeRefundId): float {
 		$sum = 0.0;
 		foreach (($results ?? []) as $result) {
 			$sibling = $this->toArray(object: $result);
@@ -314,5 +339,5 @@ class PosRefundManagerGuard implements LifecycleGuardInterface {
 		}
 
 		return round($sum, 2);
-	}//end sumCompletedRefunds()
+	}//end sumExcluding()
 }//end class

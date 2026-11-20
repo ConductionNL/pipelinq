@@ -25,6 +25,7 @@ use OCP\IURLGenerator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 
 /**
  * The node runs the configured journey once per item, or once for its
@@ -121,7 +122,7 @@ class JourneyActionNodeTest extends TestCase {
 		$this->runner->expects($this->never())->method('run');
 
 		$this->expectException(UnexpectedValueException::class);
-		$this->node->execute([['json' => ['id' => 1]]], [], []);
+		$this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 1]]], config: [], context: []));
 	}//end testExecuteRefusesAMissingJourney()
 
 	/**
@@ -132,7 +133,7 @@ class JourneyActionNodeTest extends TestCase {
 	public function testExecuteWithoutItemsRunsTheAudience(): void {
 		$this->runner->expects($this->once())->method('run')->with('j-1', [], 'run-9')->willReturn([]);
 
-		$this->assertSame([], $this->node->execute([], ['journey' => ' j-1 '], ['runUuid' => 'run-9', 'uuid' => 'other']));
+		$this->assertSame([], $this->node->execute(new FlowNodeCall(items: [], config: ['journey' => ' j-1 '], context: ['runUuid' => 'run-9', 'uuid' => 'other'])));
 	}//end testExecuteWithoutItemsRunsTheAudience()
 
 	/**
@@ -150,7 +151,7 @@ class JourneyActionNodeTest extends TestCase {
 		);
 		$items = [['json' => ['id' => 1]], ['json' => 'text'], ['binary' => 'x']];
 
-		$this->assertSame($items, $this->node->execute($items, ['journey' => 'j-1'], ['uuid' => 'flow-uuid']));
+		$this->assertSame($items, $this->node->execute(new FlowNodeCall(items: $items, config: ['journey' => 'j-1'], context: ['uuid' => 'flow-uuid'])));
 		$this->assertSame([['j-1', ['id' => 1], 'flow-uuid'], ['j-1', [], 'flow-uuid'], ['j-1', [], 'flow-uuid']], $calls);
 	}//end testExecuteRunsEachItem()
 
@@ -162,6 +163,6 @@ class JourneyActionNodeTest extends TestCase {
 	public function testExecuteWithoutRunUuid(): void {
 		$this->runner->expects($this->once())->method('run')->with('j-1', ['id' => 2], '')->willReturn([]);
 
-		$this->node->execute([['json' => ['id' => 2]]], ['journey' => 'j-1'], []);
+		$this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 2]]], config: ['journey' => 'j-1'], context: []));
 	}//end testExecuteWithoutRunUuid()
 }//end class

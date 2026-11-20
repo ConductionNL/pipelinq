@@ -25,7 +25,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\PosCart;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -111,8 +114,10 @@ class PosCartObjects {
 		if (trim($transactionId) !== '') {
 			$found = $this->objects->find(
 				id: $transactionId,
-				register: $this->registerId(),
-				schema: $this->schemaId(slug: 'posTransaction'),
+				options: new ObjectFindOptions(
+					register: $this->registerId(),
+					schema: $this->schemaId(slug: 'posTransaction')
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -158,9 +163,13 @@ class PosCartObjects {
 		unset($line['@self']);
 		$this->objects->saveObject(
 			object: $line,
-			register: $this->registerId(),
-			schema: $this->schemaId(slug: 'posTransactionLine'),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $this->registerId(),
+						schema: $this->schemaId(slug: 'posTransactionLine')
+					),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -172,7 +181,7 @@ class PosCartObjects {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function registerId(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 	}//end registerId()
 
 	/**
@@ -183,6 +192,6 @@ class PosCartObjects {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function schemaId(string $slug): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $slug.'_schema', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $slug.'_schema', '');
 	}//end schemaId()
 }//end class

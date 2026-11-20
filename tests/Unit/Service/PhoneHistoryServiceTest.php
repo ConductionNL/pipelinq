@@ -38,6 +38,9 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Service\TicketPhoneNumber
  * @uses   \OCA\Pipelinq\Service\TicketService
  * @uses   \OCA\Pipelinq\Mcp\McpAnswer
+ * @uses   \OCA\Pipelinq\Util\PayloadToArray
+ * @uses   \OCA\Pipelinq\Util\EntityPayload
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  *
  * @spec openspec/changes/contact-moments-phone-lookup/tasks.md#task-1.4
  */

@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The invoice sentence reads shillinq with the caller's rights.
@@ -92,13 +93,14 @@ class ClientBusinessInvoiceRightsTest extends TestCase {
 			 */
 			public function find(
 				int|string $id,
-				?array $_extend=[],
-				bool $files=false,
-				mixed $register=null,
-				mixed $schema=null,
-				bool $_rbac=true,
-				bool $_multitenancy=true
+				?ObjectFindOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true
 			): array {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ['type' => 'person', 'shillinqOrganisationRef' => 'deb-1'];
 			}
 

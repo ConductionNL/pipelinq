@@ -21,8 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\NotificationServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -62,13 +62,13 @@ class CallbackOverdueJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param NotificationService $notificationService The notification service.
+	 * @param NotificationServiceInterface $notificationService The notification service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
-		private NotificationService $notificationService,
+		private NotificationServiceInterface $notificationService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -84,8 +84,8 @@ class CallbackOverdueJob extends TimedJob {
 	 * @spec   openspec/changes/archive/2026-05-31-reverse-2026-05-26-be-background-jobs/tasks.md#task-1
 	 */
 	protected function run(mixed $argument): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'task_schema', '');
 
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('CallbackOverdueJob: no register or task schema configured, skipping');
@@ -114,7 +114,7 @@ class CallbackOverdueJob extends TimedJob {
 	 */
 	public function wasRecentlyNotified(string $taskId): bool {
 		$key = self::NOTIFIED_KEY_PREFIX . $taskId;
-		$lastNotified = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$lastNotified = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 
 		if ($lastNotified === '') {
 			return false;
@@ -140,7 +140,7 @@ class CallbackOverdueJob extends TimedJob {
 	 */
 	public function markNotified(string $taskId): void {
 		$key = self::NOTIFIED_KEY_PREFIX . $taskId;
-		$this->appConfig->setValueString(Application::APP_ID, $key, (string)time());
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)time());
 		$this->pruneStaleNotifications();
 	}//end markNotified()
 
@@ -153,7 +153,7 @@ class CallbackOverdueJob extends TimedJob {
 	 */
 	private function pruneStaleNotifications(): void {
 		try {
-			$keys = $this->appConfig->getKeys(Application::APP_ID);
+			$keys = $this->appConfig->getKeys(AppIdentity::APP_ID);
 			$cutoff = time() - (self::NOTIFICATION_COOLDOWN * 2);
 			$prefix = self::NOTIFIED_KEY_PREFIX;
 			$prefixLen = strlen($prefix);
@@ -163,9 +163,9 @@ class CallbackOverdueJob extends TimedJob {
 					continue;
 				}
 
-				$timestamp = (int)$this->appConfig->getValueString(Application::APP_ID, $key, '0');
+				$timestamp = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, $key, '0');
 				if ($timestamp > 0 && $timestamp < $cutoff) {
-					$this->appConfig->deleteKey(Application::APP_ID, $key);
+					$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 				}
 			}
 		} catch (\Exception $e) {

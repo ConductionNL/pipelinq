@@ -811,13 +811,13 @@ export default {
 }
 
 .relationship-status--active {
-	background: #dcfce7;
-	color: #166534;
+	background: var(--color-success-light, #dcfce7);
+	color: var(--color-success-text, #166534);
 }
 
 .relationship-status--ended {
-	background: #fee2e2;
-	color: #991b1b;
+	background: var(--color-error-light, #fee2e2);
+	color: var(--color-error-text, #991b1b);
 }
 
 .relationship-actions {

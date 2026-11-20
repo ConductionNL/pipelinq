@@ -1650,8 +1650,11 @@ export default {
 
 			try {
 				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
+				// A lead's win chance is a `materialise: false` calculation, served
+				// only on `_extend[]=calculations` (lead-win-probability-recency).
+				const extend = objectType === 'lead' ? '_extend[]=calculations&' : ''
 				const url = generateUrl(
-					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}${extend}pipeline=${this.selectedPipelineId}&_limit=200`,
 				)
 				const response = await fetch(url, {
 					headers: jsonRequestHeaders(),
@@ -2553,15 +2556,15 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1d4ed8);
+	border: 1px solid var(--color-primary-element, #93c5fd);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning-light, #ffedd5);
+	color: var(--color-warning-text, #c2410c);
+	border: 1px solid var(--color-warning, #fdba74);
 }
 
 .overdue-date {
@@ -2579,9 +2582,9 @@ export default {
 	border-radius: 4px;
 	font-size: 10px;
 	font-weight: 700;
-	background: #fff7ed;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning-light, #fff7ed);
+	color: var(--color-warning-text, #c2410c);
+	border: 1px solid var(--color-warning, #fdba74);
 	margin-inline-start: 6px;
 	vertical-align: middle;
 }
@@ -2597,13 +2600,13 @@ export default {
 }
 
 .aging-badge.aging-warning {
-	color: #92400e;
-	background: #fef3c7;
+	color: var(--color-warning-text, #92400e);
+	background: var(--color-warning-light, #fef3c7);
 }
 
 .aging-badge.aging-alert {
-	color: #991b1b;
-	background: #fee2e2;
+	color: var(--color-error-text, #991b1b);
+	background: var(--color-error-light, #fee2e2);
 }
 
 .list-empty {

@@ -104,6 +104,13 @@ describe('channelRows', () => {
 		expect(social.replies).toBe(0)
 	})
 
+	it('counts the attend touchpoints as attended, zero when none', () => {
+		const [email, social] = channelRows({ channels: [{ channel: 'email', attend: 32 }, { channel: 'social' }] })
+
+		expect(email.attended).toBe(32)
+		expect(social.attended).toBe(0)
+	})
+
 	it('carries the leads per channel, zero when the server sent none', () => {
 		const rows = channelRows({
 			channels: [

@@ -29,20 +29,26 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyAccountServiceInterface;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * CustomerLoyaltyAccount lifecycle service.
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-002
  */
-class LoyaltyAccountService {
+class LoyaltyAccountService implements LoyaltyAccountServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use ConfiguredObjectSave;
 
 	/**
 	 * Constructor.
@@ -126,8 +132,7 @@ class LoyaltyAccountService {
 		try {
 			$object = $this->getObjectService()->find(
 				id: $accountId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug('Pipelinq: account lookup failed', ['exception' => $e->getMessage()]);
@@ -190,15 +195,33 @@ class LoyaltyAccountService {
 			return null;
 		}
 
+		$row = $this->firstAccountRow(
+			filters: [
+				'customerId' => $customerId,
+				'programmeId' => $programmeId,
+				'register' => $register,
+				'schema' => $schema,
+			]
+		);
+		if ($row === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $row['row']);
+	}//end findAccountByKlantAndProgramme()
+
+	/**
+	 * The first account row matching the filters, wrapped as `row`, or null when there is none.
+	 *
+	 * @param array<string, string> $filters The account filters.
+	 *
+	 * @return array{row: mixed}|null
+	 */
+	private function firstAccountRow(array $filters): array|null {
 		try {
 			$result = $this->getObjectService()->findAll(
 				config: [
-					'filters' => [
-						'customerId' => $customerId,
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
+					'filters' => $filters,
 					'limit' => 1,
 				]
 			);
@@ -211,8 +234,8 @@ class LoyaltyAccountService {
 			return null;
 		}
 
-		return $this->toArray(value: reset($result));
-	}//end findAccountByKlantAndProgramme()
+		return ['row' => reset($result)];
+	}//end firstAccountRow()
 
 	/**
 	 * Disable an account (e.g. fraud, dispute).
@@ -365,20 +388,7 @@ class LoyaltyAccountService {
 	 * @return array<string, mixed> The saved account.
 	 */
 	private function persist(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config();
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('CustomerLoyaltyAccount schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(), payload: $payload, uuid: $uuid, label: 'CustomerLoyaltyAccount');
 	}//end persist()
 
 	/**
@@ -395,8 +405,8 @@ class LoyaltyAccountService {
 	 *                                     when unconfigured.
 	 */
 	private function config(): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'klantLoyaltyAccount_schema', '');
 
 		// Spelled as in_array() rather than `$a === '' || $b === ''` to keep
 		// this class under the PHPMD complexity ceiling; the check is identical.
@@ -408,15 +418,4 @@ class LoyaltyAccountService {
 
 		return [$registerId, $schemaId];
 	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

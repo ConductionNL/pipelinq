@@ -251,7 +251,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .social-variants {
 	display: flex;
 	flex-direction: column;
@@ -333,12 +335,7 @@ export default {
 }
 
 .social-variants__approvals-list {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	margin: 0;
-	padding: 0;
-	list-style: none;
+	@include plain-stacked-list;
 }
 
 .social-variants__approval {

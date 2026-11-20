@@ -41,6 +41,8 @@ use RuntimeException;
  * @uses \OCA\Pipelinq\Util\EntityPayload
  * @uses \OCA\Pipelinq\Util\PayloadToArray
  * @uses \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses \OCA\Pipelinq\Service\BlastDeliveryCollection
  */
 final class ComplianceQueuedDeliveryTransitionTest extends TestCase {
 

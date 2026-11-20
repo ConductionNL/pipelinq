@@ -40,13 +40,11 @@
 </template>
 
 <script>
-import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
-import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
-import { useObjectStore } from '../../store/modules/object.js'
-import exportListMixin from './exportListMixin.js'
+import exportListMixin, { exportListView } from './exportListMixin.js'
 
 export default {
 	name: 'ExportRuns',
@@ -58,11 +56,7 @@ export default {
 	mixins: [exportListMixin],
 
 	setup() {
-		const sidebarState = inject('sidebarState', null)
-		const objectStore = useObjectStore()
-		return useListView('exportRun', {
-			sidebarState,
-			objectStore,
+		return exportListView('exportRun', {
 			defaultSort: { key: 'startedAt', order: 'desc' },
 		})
 	},

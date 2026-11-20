@@ -36,8 +36,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing\Transport;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
+use OCA\Pipelinq\Service\Support\CastSerialisedToArray;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -53,6 +56,9 @@ use Throwable;
  *  "shape a request for this provider" concern across several files.
  */
 final class ConnectorSourceTransport implements TransportInterface {
+	use CastSerialisedToArray;
+	use ContainerObjectServiceLookup;
+
 	/**
 	 * OpenConnector's Source schema slug.
 	 *
@@ -114,14 +120,23 @@ final class ConnectorSourceTransport implements TransportInterface {
 		// is not in it, which is a configuration problem on the transport row. Before
 		// this branch existed the first case read as the second, because a read
 		// against a slug nothing answers to returns no source.
-		$registerSlug = $this->connectorRegister->slugOrNull(
-			operation: 'ConnectorSourceTransport.send',
-			sourceId: $this->connectorSourceId
-		);
+		$registerSlug = $this->connectorRegister->slugOrNull(operation: 'ConnectorSourceTransport.send', sourceId: $this->connectorSourceId);
 		if ($registerSlug === null) {
 			return new SendResult(accepted: false, error: 'connector-register-absent');
 		}
 
+		return $this->sendToSource(mail: $mail, registerSlug: $registerSlug);
+	}//end send()
+
+	/**
+	 * Resolve the source and call service, then send the mail through them.
+	 *
+	 * @param RenderedMail $mail         The rendered mail to send.
+	 * @param string       $registerSlug The slug this instance's Source register answers to.
+	 *
+	 * @return SendResult The outcome.
+	 */
+	private function sendToSource(RenderedMail $mail, string $registerSlug): SendResult {
 		$source = $this->resolveSource(registerSlug: $registerSlug);
 		if ($source === null) {
 			return new SendResult(accepted: false, error: 'connector-source-not-found');
@@ -133,14 +148,19 @@ final class ConnectorSourceTransport implements TransportInterface {
 		}
 
 		$body = $this->buildRequestBody(mail: $mail);
+		return $this->callSource(call: static fn (): mixed => $callService->call(source: $source, endpoint: '', method: 'POST', config: ['json' => $body]));
+	}//end sendToSource()
 
+	/**
+	 * POST the request body to the source, logging a failed call.
+	 *
+	 * @param callable(): mixed $call OpenConnector's call of the source with the request body.
+	 *
+	 * @return SendResult The outcome.
+	 */
+	private function callSource(callable $call): SendResult {
 		try {
-			$callLog = $callService->call(
-				source: $source,
-				endpoint: '',
-				method: 'POST',
-				config: ['json' => $body],
-			);
+			$callLog = $call();
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'ConnectorSourceTransport.send: connector call failed',
@@ -149,6 +169,17 @@ final class ConnectorSourceTransport implements TransportInterface {
 			return new SendResult(accepted: false, error: 'connector-call-failed');
 		}
 
+		return $this->callResult(callLog: $callLog);
+	}//end callSource()
+
+	/**
+	 * Read the outcome off the call log: accepted on a 2xx status, with the provider's id.
+	 *
+	 * @param mixed $callLog The call log the call service returned.
+	 *
+	 * @return SendResult The outcome.
+	 */
+	private function callResult(mixed $callLog): SendResult {
 		$callLogData = $this->toArray(value: $callLog);
 		$statusCode = (int)($callLogData['statusCode'] ?? 0);
 		if ($statusCode < 200 || $statusCode >= 300) {
@@ -163,7 +194,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 			result: $this->decodeCallLogResponseBody(callLogData: $callLogData),
 		);
 		return new SendResult(accepted: true, providerId: $providerId);
-	}//end send()
+	}//end callResult()
 
 	/**
 	 * Resolve the OpenConnector Source object addressed by `connectorSourceId`.
@@ -180,11 +211,22 @@ final class ConnectorSourceTransport implements TransportInterface {
 			return null;
 		}
 
+		return $this->findSource(objectService: $objectService, registerSlug: $registerSlug);
+	}//end resolveSource()
+
+	/**
+	 * Look the source up, logging a failed lookup.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $registerSlug  The slug the Source register answers to.
+	 *
+	 * @return array<string, mixed>|object|null The source, or null when unavailable/not found.
+	 */
+	private function findSource(object $objectService, string $registerSlug): array|object|null {
 		try {
 			$source = $objectService->find(
 				id: $this->connectorSourceId,
-				register: $registerSlug,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+				options: new ObjectFindOptions(register: $registerSlug, schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -194,6 +236,17 @@ final class ConnectorSourceTransport implements TransportInterface {
 			return null;
 		}
 
+		return $this->usableSource(source: $source);
+	}//end findSource()
+
+	/**
+	 * The source when it is an array or object, otherwise null with a not-found warning.
+	 *
+	 * @param mixed $source The found source.
+	 *
+	 * @return array<string, mixed>|object|null
+	 */
+	private function usableSource(mixed $source): array|object|null {
 		if ($source === null || (is_array($source) === false && is_object($source) === false)) {
 			$this->logger->warning(
 				'ConnectorSourceTransport.resolveSource: connector source not found',
@@ -203,7 +256,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 		}
 
 		return $source;
-	}//end resolveSource()
+	}//end usableSource()
 
 	/**
 	 * Build the outbound JSON body for the configured provider.
@@ -397,15 +450,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 	 * @return object|null
 	 */
 	private function resolveObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'ConnectorSourceTransport.resolveObjectService: unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'ConnectorSourceTransport.resolveObjectService: unavailable', errorKey: 'exception');
 	}//end resolveObjectService()
 
 	/**
@@ -502,29 +547,4 @@ final class ConnectorSourceTransport implements TransportInterface {
 
 		return null;
 	}//end extractProviderId()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) into a plain array.
-	 *
-	 * @param mixed $value The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $value): array {
-		if (is_array($value) === true) {
-			return $value;
-		}
-
-		if (is_object($value) === true) {
-			if (method_exists($value, 'jsonSerialize') === true) {
-				return (array)$value->jsonSerialize();
-			}
-
-			if (method_exists($value, 'getObject') === true) {
-				return (array)$value->getObject();
-			}
-		}
-
-		return [];
-	}//end toArray()
 }//end class

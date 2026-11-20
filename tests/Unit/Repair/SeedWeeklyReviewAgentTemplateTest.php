@@ -28,6 +28,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for the agent template seed: what it grants, when it is a no-op,
@@ -80,13 +81,14 @@ class SeedWeeklyReviewAgentTemplateTest extends TestCase {
 			 */
 			public function saveObject(
 				array $object,
-				array $extend = [],
-				?string $register = null,
-				?string $schema = null,
-				?string $uuid = null,
+				ObjectSaveOptions $options = new ObjectSaveOptions(),
 				bool $_rbac = true,
-				bool $_multitenancy = true,
+				bool $_multitenancy = true
 			): array {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->written[] = ['register' => $register, 'schema' => $schema, 'object' => $object];
 				$this->rows[] = $object;
 				return $object;

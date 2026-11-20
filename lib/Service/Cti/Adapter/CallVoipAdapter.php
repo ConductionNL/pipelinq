@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti\Adapter;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
@@ -170,8 +170,8 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * @return CtiCallResult The outcome.
 	 */
 	private function dial(array $call): CtiCallResult {
-		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_api_base_url', '');
-		$apiKey = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_api_key', '');
+		$baseUrl = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_callvoip_api_base_url', '');
+		$apiKey = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_callvoip_api_key', '');
 		if ($baseUrl === '') {
 			return $this->platform()->refused(error: 'CallVoip API base URL not configured.');
 		}
@@ -214,7 +214,7 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
-		$secret = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_webhook_secret', '');
+		$secret = $this->appConfig->getValueString(AppIdentity::APP_ID, 'cti_callvoip_webhook_secret', '');
 		if ($secret === '' || $signature === '') {
 			return false;
 		}

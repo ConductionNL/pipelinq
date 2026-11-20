@@ -1150,7 +1150,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .performance-dashboard {
 	box-sizing: border-box;
 	width: 100%;
@@ -1241,10 +1243,7 @@ export default {
 
 .performance-dashboard__table th,
 .performance-dashboard__table td {
-	padding: 12px;
-	text-align: start;
-	vertical-align: middle;
-	border-bottom: 1px solid var(--color-border);
+	@include table-body-cell;
 }
 
 .performance-dashboard__table th {

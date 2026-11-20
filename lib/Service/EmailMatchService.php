@@ -29,7 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Service\EmailMessageRef;
 use OCA\OpenRegister\Service\LinkTarget;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\EmailMatchServiceInterface;
 use OCA\Pipelinq\Util\AnyPayloadToArray;
 use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
@@ -56,11 +57,12 @@ use Throwable;
  *     by the number of matching strategies; each method stays individually simple.
  *
  * @spec openspec/specs/email-calendar-sync/spec.md
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class EmailMatchService {
+class EmailMatchService implements EmailMatchServiceInterface {
 	use AnyPayloadToArray;
 	use RowIdOf;
-
 
 	/**
 	 * Public email-provider domains that should never trigger a
@@ -443,25 +445,63 @@ class EmailMatchService {
 	 */
 	public function runForUser(string $userId): array {
 		$settings = $this->getSettings(userId: $userId);
-		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
+		if ($this->mayRun(userId: $userId, settings: $settings) === false) {
 			return ['linked' => 0, 'scanned' => 0];
 		}
 
-		if ($this->ownsAccount(userId: $userId, accountId: $settings['account']) === false) {
-			return ['linked' => 0, 'scanned' => 0];
-		}
-
-		$scanned = 0;
-		$linked = 0;
 		$lastId = (int)$settings['cursor'];
-		$maxId = $lastId;
 
 		$messages = (new MailMessageReader(db: $this->db, logger: $this->logger))->listInbound(accountId: $settings['account'], sinceId: $lastId);
+		$run = $this->scanMessages(messages: $messages, scan: ['accountId' => $settings['account'], 'userId' => $userId, 'lastId' => $lastId]);
+		$scanned = $run['scanned'];
+		$linked = $run['linked'];
+		$maxId = $run['maxId'];
+
+		$this->writeStatus(userId: $userId, linked: $linked, scanned: $scanned, error: null);
+		if ($maxId > $lastId) {
+			$settings['cursor'] = $maxId;
+			$this->writeSettings(userId: $userId, settings: $settings);
+		}
+
+		return ['linked' => $linked, 'scanned' => $scanned];
+	}//end runForUser()
+
+	/**
+	 * Whether matching is enabled for the user on an account they own.
+	 *
+	 * @param string               $userId   The user id.
+	 * @param array<string, mixed> $settings The user's matching settings.
+	 *
+	 * @return bool
+	 */
+	private function mayRun(string $userId, array $settings): bool {
+		if ($settings['enabled'] !== true || $settings['account'] <= 0) {
+			return false;
+		}
+
+		return $this->ownsAccount(userId: $userId, accountId: $settings['account']);
+	}//end mayRun()
+
+	/**
+	 * Match and link each inbound message; a per-message failure does not abort the scan.
+	 *
+	 * @param iterable<array<string, mixed>>                      $messages The inbound messages since the cursor.
+	 * @param array{accountId: int, userId: string, lastId: int} $scan     The Mail account id, the user id and the cursor the scan starts after.
+	 *
+	 * @return array{linked: int, scanned: int, maxId: int}
+	 */
+	private function scanMessages(iterable $messages, array $scan): array {
+		$accountId = $scan['accountId'];
+		$userId = $scan['userId'];
+		$scanned = 0;
+		$linked = 0;
+		$maxId = $scan['lastId'];
+
 		foreach ($messages as $msg) {
 			$scanned++;
 			try {
 				$linked += $this->matchAndLinkMessage(
-					message: new MailMessageKey(mailAccountId: $settings['account'], mailMessageId: $msg['id']),
+					message: new MailMessageKey(mailAccountId: $accountId, mailMessageId: $msg['id']),
 					userId: $userId
 				);
 				if ($msg['id'] > $maxId) {
@@ -475,14 +515,8 @@ class EmailMatchService {
 			}
 		}
 
-		$this->writeStatus(userId: $userId, linked: $linked, scanned: $scanned, error: null);
-		if ($maxId > $lastId) {
-			$settings['cursor'] = $maxId;
-			$this->writeSettings(userId: $userId, settings: $settings);
-		}
-
-		return ['linked' => $linked, 'scanned' => $scanned];
-	}//end runForUser()
+		return ['linked' => $linked, 'scanned' => $scanned, 'maxId' => $maxId];
+	}//end scanMessages()
 
 	/**
 	 * Read the matching settings for a user.
@@ -495,7 +529,7 @@ class EmailMatchService {
 	 */
 	public function getSettings(string $userId): array {
 		$json = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->settingsKeyFor(userId: $userId),
 			''
 		);
@@ -606,7 +640,7 @@ class EmailMatchService {
 		];
 
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->settingsKeyFor(userId: $userId),
 			json_encode($payload, JSON_UNESCAPED_UNICODE)
 		);
@@ -624,7 +658,7 @@ class EmailMatchService {
 	 */
 	public function getStatus(string $userId): array {
 		$json = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->statusKeyFor(userId: $userId),
 			''
 		);
@@ -670,20 +704,28 @@ class EmailMatchService {
 	 * @spec openspec/specs/email-calendar-sync/spec.md
 	 */
 	public function writeStatus(string $userId, int $linked, int $scanned, ?string $error = null): void {
-		$payload = [
-			'lastRunAt' => gmdate('c'),
-			'linked' => $linked,
-			'scanned' => $scanned,
-			'error' => $error,
-		];
+		$payload = ['lastRunAt' => gmdate('c'), 'linked' => $linked, 'scanned' => $scanned, 'error' => $error];
 
+		$this->storeStatus(userId: $userId, payload: $payload);
+
+	}//end writeStatus()
+
+	/**
+	 * Store a user's last-run status as JSON in the app config.
+	 *
+	 * @param string               $userId  The user id.
+	 * @param array<string, mixed> $payload The status: lastRunAt, linked, scanned, error.
+	 *
+	 * @return void
+	 */
+	private function storeStatus(string $userId, array $payload): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$this->statusKeyFor(userId: $userId),
 			json_encode($payload, JSON_UNESCAPED_UNICODE)
 		);
 
-	}//end writeStatus()
+	}//end storeStatus()
 
 	/**
 	 * Extract the addresses to match from a Mail message metadata row.
@@ -876,7 +918,7 @@ class EmailMatchService {
 	 * @return string The configured register slug, or '' when unconfigured.
 	 */
 	private function registerSlug(): string {
-		$registerSlug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerSlug = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerSlug === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
@@ -894,7 +936,7 @@ class EmailMatchService {
 	 * @return string
 	 */
 	private function schemaSlug(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 	}//end schemaSlug()
 
 	/**

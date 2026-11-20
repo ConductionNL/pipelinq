@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosCart\PosCartRepricer;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosCartRepricerInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,15 +54,15 @@ class PosCartController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest        $request  The request.
-	 * @param PosCartRepricer $repricer Prices the sale.
+	 * @param PosCartRepricerInterface $repricer Prices the sale.
 	 *
 	 * @spec openspec/changes/archive/2026-11-12-till-server-priced-lines/tasks.md#task-2
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PosCartRepricer $repricer,
+		private readonly PosCartRepricerInterface $repricer,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

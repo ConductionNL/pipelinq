@@ -35,7 +35,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
+use OCA\Pipelinq\Repair\Support\ContactMomentRows;
+use OCA\Pipelinq\Util\FirstAdminUser;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
+use OCA\Pipelinq\Repair\Support\SystemRowSaver;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Migration\IOutput;
@@ -49,6 +53,11 @@ use Throwable;
  * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
  */
 class MigrateContactMomentDirection implements IRepairStep {
+	use JsonSerializableToArray;
+	use FirstAdminUser;
+	use ContactMomentRows;
+	use SystemRowSaver;
+
 	/**
 	 * Upper bound on rows fetched in one pass.
 	 *
@@ -79,12 +88,12 @@ class MigrateContactMomentDirection implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param TicketServiceInterface $ticketService Resolver for the unified `ticket` supertype.
 	 * @param IGroupManager $groupManager Group manager, used to resolve an acting admin.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
-		private TicketService $ticketService,
+		private TicketServiceInterface $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 	) {
@@ -114,10 +123,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function directionFor(array $data): ?string {
-		$existing = ($data['direction'] ?? null);
-		if (is_string($existing) === true
-			&& in_array($existing, TicketService::DIRECTIONS, true) === true
-		) {
+		if ($this->hasKnownDirection(data: $data) === true) {
 			return null;
 		}
 
@@ -130,6 +136,30 @@ class MigrateContactMomentDirection implements IRepairStep {
 			return 'internal';
 		}
 
+		return $this->directionFromMetadata(metadata: $metadata);
+	}//end directionFor()
+
+	/**
+	 * Whether the row already carries one of the known directions.
+	 *
+	 * @param array<string, mixed> $data The contact moment data.
+	 *
+	 * @return bool True when the direction is already set to a known value.
+	 */
+	private function hasKnownDirection(array $data): bool {
+		$existing = ($data['direction'] ?? null);
+		return is_string($existing) === true
+			&& in_array($existing, TicketServiceInterface::DIRECTIONS, true) === true;
+	}//end hasKnownDirection()
+
+	/**
+	 * Map the first recognised `direction`/`richting` metadata value, else `internal`.
+	 *
+	 * @param array<string, mixed> $metadata The channel metadata.
+	 *
+	 * @return string The mapped direction.
+	 */
+	private function directionFromMetadata(array $metadata): string {
 		foreach (['direction', 'richting'] as $key) {
 			$value = ($metadata[$key] ?? null);
 			if (is_string($value) === false) {
@@ -143,7 +173,7 @@ class MigrateContactMomentDirection implements IRepairStep {
 		}
 
 		return 'internal';
-	}//end directionFor()
+	}//end directionFromMetadata()
 
 	/**
 	 * Run the repair.
@@ -165,25 +195,25 @@ class MigrateContactMomentDirection implements IRepairStep {
 		$schema = $this->ticketService->getSchemaId();
 		$actingAdmin = $this->actingAdmin();
 
+		$rows = $this->contactMomentRows(objectService: $objectService, register: $register, schema: $schema);
+		[$filled, $untouched] = $this->migrateRows(rows: $rows, target: [$objectService, $register, $schema, $actingAdmin]);
+
+		$output->info(
+			sprintf('Contact moment directions: %d filled, %d already set.', $filled, $untouched)
+		);
+	}//end run()
+
+	/**
+	 * Fill the direction on every row that lacks one.
+	 *
+	 * @param iterable<mixed> $rows The contact moment rows.
+	 * @param array{0: mixed, 1: mixed, 2: mixed, 3: IUser|null} $target The ObjectService, register, schema and acting admin.
+	 *
+	 * @return array{0: int, 1: int} The filled and already-set counts.
+	 */
+	private function migrateRows(iterable $rows, array $target): array {
 		$filled = 0;
 		$untouched = 0;
-
-		// Read with RBAC off for the same reason NormaliseTicketTitle does: a
-		// repair step has no session, so an RBAC-filtered read would migrate
-		// only the rows 'Anonymous' may see and call that a complete run.
-		$rows = $objectService->findAll(
-			config: [
-				'filters' => [
-					'register' => $register,
-					'schema' => $schema,
-					'ticketType' => TicketService::TYPE_CONTACTMOMENT,
-				],
-				'limit' => self::BATCH_LIMIT,
-			],
-			_rbac: false,
-			_multitenancy: false,
-		);
-
 		foreach ($rows as $row) {
 			$data = $this->toArray(row: $row);
 			if ($data === null) {
@@ -198,65 +228,32 @@ class MigrateContactMomentDirection implements IRepairStep {
 
 			$data['direction'] = $direction;
 			$data = $this->ticketService->sanitizeForSave(payload: $data);
-
-			try {
-				$objectService->saveObject(
-					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
-					uuid: (string)($data['id'] ?? ''),
-					_rbac: false,
-					_multitenancy: false,
-					currentUser: $actingAdmin,
-				);
-				$filled++;
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'MigrateContactMomentDirection: failed to save contact moment',
-					['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
-
-		$output->info(
-			sprintf('Contact moment directions: %d filled, %d already set.', $filled, $untouched)
-		);
-	}//end run()
-
-	/**
-	 * Resolve an admin to act as while saving.
-	 *
-	 * A repair step has no session, so OpenRegister's folder ACL check has no
-	 * acting user and denies the write for any ticket that owns a file folder.
-	 *
-	 * @return IUser|null The first admin, or null when none exists.
-	 */
-	private function actingAdmin(): ?IUser {
-		$admins = $this->groupManager->get('admin')?->getUsers() ?? [];
-
-		return (array_values($admins)[0] ?? null);
-	}//end actingAdmin()
-
-	/**
-	 * Coerce an OpenRegister row into a plain array.
-	 *
-	 * @param mixed $row The row as returned by the object service.
-	 *
-	 * @return array<string, mixed>|null The row data, or null when unusable.
-	 */
-	private function toArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
+			$filled += $this->saveMigrated(target: $target, data: $data);
 		}
 
-		if (($row instanceof \JsonSerializable) === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
+		return [$filled, $untouched];
+	}//end migrateRows()
 
-		return null;
-	}//end toArray()
+	/**
+	 * Save one migrated contact moment as the acting admin; 1 when saved, 0 when it failed (logged).
+	 *
+	 * @param array{0: mixed, 1: mixed, 2: mixed, 3: IUser|null} $target The ObjectService, register, schema and acting admin.
+	 * @param array<string, mixed> $data The migrated contact moment.
+	 *
+	 * @return int The number saved.
+	 */
+	private function saveMigrated(array $target, array $data): int {
+		[$objectService, $register, $schema, $actingAdmin] = $target;
+		try {
+			$save = $this->rowSaver(objectService: $objectService, register: $register, schema: $schema, actingAdmin: $actingAdmin);
+			$save($data);
+			return 1;
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'MigrateContactMomentDirection: failed to save contact moment',
+				['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
+			);
+			return 0;
+		}//end try
+	}//end saveMigrated()
 }//end class

@@ -36,6 +36,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * ActivityTimelineController contract coverage.
@@ -99,7 +100,9 @@ class ActivityTimelineControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false): ?array {
+			public function find(int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
 				return ($this->store[(string)$id] ?? null);
 			}//end find()
 		};
@@ -248,7 +251,9 @@ class ActivityTimelineControllerTest extends TestCase {
 			 *
 			 * @throws \RuntimeException Always.
 			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false): ?array {
+			public function find(int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
 				throw new \RuntimeException('object service unavailable');
 			}//end find()
 		};

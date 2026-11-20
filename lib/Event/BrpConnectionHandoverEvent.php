@@ -141,6 +141,21 @@ class BrpConnectionHandoverEvent extends Event {
 	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-the-brp-connection-settings-move-to-integriq-once
 	 */
 	public function answer(string $part, string $outcome, string $detail=''): void {
+		$this->assertAnswerable(part: $part, outcome: $outcome);
+		$this->answers[$part] = ['outcome' => $outcome, 'detail' => $detail];
+	}//end answer()
+
+	/**
+	 * Refuse an answer for a part that was not handed over or with an unknown outcome.
+	 *
+	 * @param string $part    The part answered.
+	 * @param string $outcome The outcome given.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the part was not handed over or the outcome is unknown.
+	 */
+	private function assertAnswerable(string $part, string $outcome): void {
 		if (in_array($part, $this->getParts(), true) === false) {
 			throw new InvalidArgumentException('Part '.$part.' was not handed over');
 		}
@@ -148,9 +163,7 @@ class BrpConnectionHandoverEvent extends Event {
 		if (in_array($outcome, [self::TAKEN, self::KEPT, self::FAILED], true) === false) {
 			throw new InvalidArgumentException('Unknown outcome '.$outcome);
 		}
-
-		$this->answers[$part] = ['outcome' => $outcome, 'detail' => $detail];
-	}//end answer()
+	}//end assertAnswerable()
 
 	/**
 	 * The answer for one part, or null when integriq gave none.

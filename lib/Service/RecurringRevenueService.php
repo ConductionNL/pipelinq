@@ -34,7 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RecurringRevenueServiceInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
-class RecurringRevenueService {
+class RecurringRevenueService implements RecurringRevenueServiceInterface {
 	/**
 	 * Statuses that contribute to live recurring revenue.
 	 *
@@ -270,8 +271,8 @@ class RecurringRevenueService {
 	 * @return array{register: string, schema: string}|null
 	 */
 	private function contractScope(): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'contract_schema', '');
 		if ($registerId === '' || $schemaId === '') {
 			return null;
 		}

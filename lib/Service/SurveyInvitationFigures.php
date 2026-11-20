@@ -117,9 +117,21 @@ class SurveyInvitationFigures {
 			return array_values($invitations);
 		}
 
-		$now   = ($now ?? new DateTimeImmutable());
-		$since = $now->modify("-{$days} days");
-		$kept  = [];
+		$now = ($now ?? new DateTimeImmutable());
+		return $this->dueBetween(invitations: $invitations, period: [$now->modify("-{$days} days"), $now]);
+	}//end withinDays()
+
+	/**
+	 * The invitations that fell due inside a period, both ends included.
+	 *
+	 * @param array<int, array<string, mixed>>                   $invitations The invitations.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $period      Its start and its end.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations inside the period.
+	 */
+	private function dueBetween(array $invitations, array $period): array {
+		[$since, $now] = $period;
+		$kept = [];
 		foreach ($invitations as $invitation) {
 			$dueAt = $this->dueAt(invitation: $invitation);
 			if ($dueAt !== null && $dueAt >= $since && $dueAt <= $now) {
@@ -128,7 +140,7 @@ class SurveyInvitationFigures {
 		}
 
 		return $kept;
-	}//end withinDays()
+	}//end dueBetween()
 
 	/**
 	 * When an invitation fell due, or null when it does not say.

@@ -59,6 +59,9 @@
       "client": {
         "x-schema-org": "schema:Organization",
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
           "implements": [
             "https://openregister.app/ns#Customer",
             "https://schema.org/Organization"
@@ -82,7 +85,7 @@
         "slug": "client",
         "title": "Client",
         "icon": "AccountStarOutline",
-        "version": "1.2.0",
+        "version": "1.2.1",
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity: either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
@@ -92,7 +95,8 @@
           "email",
           "calendar",
           "forms",
-          "planninq-projects"
+          "planninq-projects",
+          "talk"
         ],
         "required": [
           "name",
@@ -187,6 +191,22 @@
       "contact": {
         "x-schema-org": "schema:Person",
         "slug": "contact",
+        "archive": {
+          "enabled": true,
+          "afleidingswijze": "gerelateerde_zaak",
+          "sourceRelation": "client",
+          "sourceRelationProperty": "relationshipEndedAt",
+          "defaultBewaartermijn": "P2Y",
+          "defaultNominatie": "vernietigen",
+          "anonymisation": {
+            "name": {"treatment": "fixed", "value": "Anonymised contact person"},
+            "email": "remove",
+            "emails": "remove",
+            "phone": "remove",
+            "phones": "remove",
+            "brpPersonId": "remove"
+          }
+        },
         "x-openregister-notifications": {
           "newContact": {
             "trigger": {
@@ -377,7 +397,7 @@
         },
         "title": "Lead",
         "icon": "CashMultiple",
-        "version": "1.5.0",
+        "version": "1.5.1",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead: a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
@@ -387,9 +407,13 @@
           "xwiki",
           "email",
           "calendar",
-          "forms"
+          "forms",
+          "talk"
         ],
         "configuration": {
+          "x-openregister-archive": {
+            "enabled": true
+          },
           "linkedTypes": [
             "mail"
           ],
@@ -449,6 +473,31 @@
             }
           },
           "x-openregister-calculations": {
+            "isFinished": {
+              "type": "boolean",
+              "materialise": false,
+              "description": "Whether the lead is in a final lifecycle state (won or lost). Not materialised, so it is always fresh on read; the Lock action on LeadDetail shows only when it is true (platform-record-lock D3).",
+              "expression": {
+                "or": [
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "won"
+                    ]
+                  },
+                  {
+                    "eq": [
+                      {
+                        "prop": "status"
+                      },
+                      "lost"
+                    ]
+                  }
+                ]
+              }
+            },
             "daysSinceActivity": {
               "type": "integer",
               "materialise": false,
@@ -1663,6 +1712,20 @@
             "$ref": "ticket",
             "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
+          },
+          "leadId": {
+            "type": "string",
+            "description": "The lead this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Lead"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "The contact person this task follows up, if any.",
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "Contact"
           },
           "contactMomentSummary": {
             "type": "string",

@@ -69,20 +69,32 @@ class CurlHttpTransport implements HttpTransport {
 	 * @spec openspec/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
 	 */
 	public function request(string $method, string $url, array $headers = [], ?string $body = null): array {
-		if ($this->carriesBrokerPlaceholder(headers: $headers) === true || $this->curlMissing() === true) {
+		return $this->send(target: ['method' => $method, 'url' => $url], message: ['headers' => $headers, 'body' => $body]);
+	}//end request()
+
+	/**
+	 * Execute an HTTP request, or answer no response when it cannot be sent.
+	 *
+	 * @param array{method: string, url: string}                          $target  The HTTP method and the URL.
+	 * @param array{headers: array<string, string>, body: string|null} $message The headers and the raw body.
+	 *
+	 * @return array{status: int, body: array<string, mixed>, raw: string}
+	 */
+	private function send(array $target, array $message): array {
+		if ($this->carriesBrokerPlaceholder(headers: $message['headers']) === true || $this->curlMissing() === true) {
 			return self::NO_RESPONSE;
 		}
 
-		$handle = curl_init($url);
+		$handle = curl_init($target['url']);
 		if ($handle === false) {
 			return self::NO_RESPONSE;
 		}
 
-		$this->setRequestOptions(handle: $handle, method: $method);
-		curl_setopt($handle, CURLOPT_HTTPHEADER, $this->headerLines(headers: $headers));
-		$this->setBody(handle: $handle, body: $body);
+		$this->setRequestOptions(handle: $handle, method: $target['method']);
+		curl_setopt($handle, CURLOPT_HTTPHEADER, $this->headerLines(headers: $message['headers']));
+		$this->setBody(handle: $handle, body: $message['body']);
 		return $this->execute(handle: $handle);
-	}//end request()
+	}//end send()
 
 	/**
 	 * The tripwire: whether a header carries the broker-managed placeholder (logged as an error).

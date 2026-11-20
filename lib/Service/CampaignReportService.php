@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\CampaignReportServiceInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 
@@ -47,7 +48,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
  */
-class CampaignReportService {
+class CampaignReportService implements CampaignReportServiceInterface {
 
 	/**
 	 * The blast schema slug.
@@ -91,31 +92,57 @@ class CampaignReportService {
 			return null;
 		}
 
-		$window = $this->window(campaign: $campaign, from: $from, to: $to);
+		$window = $this->window(
+			start: $this->startDay(campaign: $campaign, from: $from),
+			end: $this->endDay(campaign: $campaign, to: $to)
+		);
+		$head = ['campaign' => $this->summary(campaignId: $campaignId, campaign: $campaign), 'window' => $window];
+
+		return ($head + $this->figures(campaignId: $campaignId, window: $window) + ['cost' => $this->cost(campaign: $campaign)]);
+	}//end forCampaign()
+
+	/**
+	 * The channel, engagement, lead and attribution figures of a campaign in a window.
+	 *
+	 * @param string                          $campaignId The campaign.
+	 * @param array{from: string, to: string} $window     The report window.
+	 *
+	 * @return array<string, mixed> Keys: channels, engagement, leads, totals, models.
+	 */
+	private function figures(string $campaignId, array $window): array {
 		$blasts = $this->store->findAll(schemaSlug: self::BLAST_SCHEMA_SLUG, filters: ['campaignId' => $campaignId]);
 		$attribution = $this->attribution->forCampaign(campaignId: $campaignId, from: $window['from'], to: $window['to']);
 
 		return [
-			'campaign' => [
-				'id' => $campaignId,
-				'name' => (string)($campaign['name'] ?? ''),
-				'goal' => (string)($campaign['goal'] ?? ''),
-				'status' => (string)($campaign['status'] ?? ''),
-				'utmCampaign' => (string)($campaign['utmCampaign'] ?? ''),
-				'utmSource' => (string)($campaign['utmSource'] ?? ''),
-				'utmMedium' => (string)($campaign['utmMedium'] ?? ''),
-				'landingPage' => (array)($campaign['landingPage'] ?? []),
-				'defaultModel' => (string)($campaign['attribution']['model'] ?? 'last'),
-			],
-			'window' => $window,
 			'channels' => $this->channels(blasts: $blasts, touchpoints: $attribution['touchpoints']),
 			'engagement' => $this->engagement(touchpoints: $attribution['touchpoints']),
 			'leads' => $attribution['leads'],
 			'totals' => $attribution['totals'],
 			'models' => $attribution['models'],
-			'cost' => $this->cost(campaign: $campaign),
 		];
-	}//end forCampaign()
+	}//end figures()
+
+	/**
+	 * The campaign's own fields the report shows.
+	 *
+	 * @param string               $campaignId The campaign id.
+	 * @param array<string, mixed> $campaign   The campaign.
+	 *
+	 * @return array<string, mixed> The summary.
+	 */
+	private function summary(string $campaignId, array $campaign): array {
+		return [
+			'id' => $campaignId,
+			'name' => (string)($campaign['name'] ?? ''),
+			'goal' => (string)($campaign['goal'] ?? ''),
+			'status' => (string)($campaign['status'] ?? ''),
+			'utmCampaign' => (string)($campaign['utmCampaign'] ?? ''),
+			'utmSource' => (string)($campaign['utmSource'] ?? ''),
+			'utmMedium' => (string)($campaign['utmMedium'] ?? ''),
+			'landingPage' => (array)($campaign['landingPage'] ?? []),
+			'defaultModel' => (string)($campaign['attribution']['model'] ?? 'last'),
+		];
+	}//end summary()
 
 	/**
 	 * Reach, clicks and leads per channel.
@@ -293,23 +320,21 @@ class CampaignReportService {
 			'visit' => 0,
 			'submit' => 0,
 			'reply' => 0,
+			'attend' => 0,
 			'reported' => false,
 		];
 	}//end emptyChannel()
 
 	/**
-	 * The report window: what was asked for, else the campaign's own
-	 * dates, else the last ninety days.
+	 * The report start: what was asked for, else the campaign's own start,
+	 * else ninety days ago.
 	 *
 	 * @param array<string, mixed> $campaign The campaign.
-	 * @param string|null $from Requested start.
-	 * @param string|null $to Requested end.
+	 * @param string|null          $from     Requested start.
 	 *
-	 * @return array{from: string, to: string} Both `YYYY-MM-DD`.
+	 * @return string The start, `YYYY-MM-DD`.
 	 */
-	private function window(array $campaign, ?string $from, ?string $to): array {
-		$today = gmdate('Y-m-d', $this->time->getTime());
-
+	private function startDay(array $campaign, ?string $from): string {
 		$start = $this->day(value: $from);
 		if ($start === '') {
 			$start = $this->day(value: (string)($campaign['startsAt'] ?? ''));
@@ -319,11 +344,36 @@ class CampaignReportService {
 			$start = gmdate('Y-m-d', ($this->time->getTime() - (90 * 86400)));
 		}
 
+		return $start;
+	}//end startDay()
+
+	/**
+	 * The requested report end, else the campaign's own end; '' when neither names one.
+	 *
+	 * @param array<string, mixed> $campaign The campaign.
+	 * @param string|null          $to       Requested end.
+	 *
+	 * @return string The end, `YYYY-MM-DD`, or ''.
+	 */
+	private function endDay(array $campaign, ?string $to): string {
 		$end = $this->day(value: $to);
 		if ($end === '') {
 			$end = $this->day(value: (string)($campaign['endsAt'] ?? ''));
 		}
 
+		return $end;
+	}//end endDay()
+
+	/**
+	 * The report window, its end closed at today at the latest and its start not after its end.
+	 *
+	 * @param string $start The start, `YYYY-MM-DD`.
+	 * @param string $end   The end, `YYYY-MM-DD`, or '' for today.
+	 *
+	 * @return array{from: string, to: string} Both `YYYY-MM-DD`.
+	 */
+	private function window(string $start, string $end): array {
+		$today = gmdate('Y-m-d', $this->time->getTime());
 		if ($end === '' || $end > $today) {
 			$end = $today;
 		}

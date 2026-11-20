@@ -30,13 +30,15 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Adapter;
 
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\ExportSinkRegistryInterface;
 
 /**
  * Registry / factory for export sink adapters keyed by destination type.
  *
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-001
  */
-class ExportSinkRegistry {
+class ExportSinkRegistry implements ExportSinkRegistryInterface {
 
 	/**
 	 * Map of destination type slug to its adapter.

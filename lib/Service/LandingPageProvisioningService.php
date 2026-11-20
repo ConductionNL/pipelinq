@@ -37,7 +37,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LandingPageProvisioningServiceInterface;
 use OCA\Pipelinq\Service\Marketing\CampaignFormDestination;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
  */
-class LandingPageProvisioningService {
+class LandingPageProvisioningService implements LandingPageProvisioningServiceInterface {
 
 	/**
 	 * Portaliq's request event. A string, never a `use`: importing it
@@ -123,26 +124,53 @@ class LandingPageProvisioningService {
 			return $this->failure(error: 'not_found');
 		}
 
-		$targetPortal = trim($portal);
-		if ($targetPortal === '') {
-			$targetPortal = $this->configuredPortal();
-		}
+		return $this->placedFor(
+			order: new LandingPageOrder(campaignId: $campaignId, campaign: $campaign),
+			requested: ['portal' => $portal, 'route' => $route]
+		);
+	}//end createFor()
 
+	/**
+	 * Place the campaign's landing page on the requested portal and route.
+	 *
+	 * @param LandingPageOrder                     $order     The campaign.
+	 * @param array{portal: string, route: string} $requested The portal and route asked for; empty picks the default.
+	 *
+	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
+	 */
+	private function placedFor(LandingPageOrder $order, array $requested): array {
+		$targetPortal = $this->portalFor(requested: $requested['portal']);
 		if ($targetPortal === '') {
 			return $this->failure(error: 'unknown_portal');
 		}
 
-		$targetRoute = $this->routeFor(campaign: $campaign, requested: $route);
+		$targetRoute = $this->routeFor(campaign: $order->campaign, requested: $requested['route']);
 
 		if ($this->isPortaliqInstalled() === false) {
 			return $this->failure(error: self::ERROR_PORTALIQ_MISSING);
 		}
 
 		return $this->dispatchAndRecord(
-			order: new LandingPageOrder(campaignId: $campaignId, campaign: $campaign),
+			order: $order,
 			placement: new LandingPlacement(portal: $targetPortal, route: $targetRoute)
 		);
-	}//end createFor()
+	}//end placedFor()
+
+	/**
+	 * The requested portal, trimmed, else the configured one; '' when neither is set.
+	 *
+	 * @param string $requested The portal the caller asked for, or ''.
+	 *
+	 * @return string The portal.
+	 */
+	private function portalFor(string $requested): string {
+		$portal = trim($requested);
+		if ($portal === '') {
+			return $this->configuredPortal();
+		}
+
+		return $portal;
+	}//end portalFor()
 
 	/**
 	 * Whether Portaliq's request event exists. Protected so a test can
@@ -261,7 +289,7 @@ class LandingPageProvisioningService {
 
 		$error = self::refusalOf(event: $event);
 		if ($error !== '') {
-			return $this->failure(error: $error, portal: $placement->portal, route: $placement->route);
+			return $this->failure(error: $error, placement: $placement);
 		}
 
 		$landingPage = $this->landingPageOf(placement: $placement, event: $event);
@@ -412,28 +440,27 @@ class LandingPageProvisioningService {
 	 * @return string The slug, or an empty string when none is configured.
 	 */
 	private function configuredPortal(): string {
-		$portal = trim($this->appConfig->getValueString(Application::APP_ID, self::PORTAL_CONFIG_KEY, ''));
+		$portal = trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_CONFIG_KEY, ''));
 		if ($portal !== '') {
 			return $portal;
 		}
 
-		return trim($this->appConfig->getValueString(Application::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
+		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, TrafficEventEmitter::PORTAL_CONFIG_KEY, ''));
 	}//end configuredPortal()
 
 	/**
 	 * A refusal, shaped like a success so the caller reads one envelope.
 	 *
-	 * @param string $error The machine-readable code.
-	 * @param string $portal The portal that was tried.
-	 * @param string $route The route that was tried.
+	 * @param string                $error     The machine-readable code.
+	 * @param LandingPlacement|null $placement The portal and route that were tried, or null before either is known.
 	 *
 	 * @return array{error: string, portal: string, route: string, pageId: string, publicUrl: string, formId: string}
 	 */
-	private function failure(string $error, string $portal = '', string $route = ''): array {
+	private function failure(string $error, ?LandingPlacement $placement = null): array {
 		return [
 			'error' => $error,
-			'portal' => $portal,
-			'route' => $route,
+			'portal' => ($placement->portal ?? ''),
+			'route' => ($placement->route ?? ''),
 			'pageId' => '',
 			'publicUrl' => '',
 			'formId' => '',

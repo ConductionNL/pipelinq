@@ -21,8 +21,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
-use OCA\Pipelinq\Service\ArticleService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
@@ -32,6 +30,8 @@ use OCP\Mail\IMessage;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for MailTransportService — transport resolution, rate-limit
@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
  */
 class MailTransportServiceTest extends TestCase {
+	use \OCA\Pipelinq\Tests\Unit\Support\PortaliqArticleFixture;
+
 	private ContainerInterface $container;
 	private IAppConfig $appConfig;
 	private IMailer $mailer;
@@ -65,7 +67,9 @@ class MailTransportServiceTest extends TestCase {
 			/** @var array<int, array<string, mixed>> */
 			public array $saved = [];
 
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				return ($this->store[$id] ?? null);
 			}//end find()
 
@@ -95,7 +99,10 @@ class MailTransportServiceTest extends TestCase {
 				return $out;
 			}//end findAll()
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('saved-' . count($this->saved));
 				}
@@ -130,7 +137,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->container,
 			$this->appConfig,
 			$this->mailer,
-			new ArticleService($this->makeArticleStore()),
+			$this->portaliqArticleService(),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 			new PhysicalAddressRenderer(),
@@ -427,7 +434,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->container,
 			$this->appConfig,
 			$this->mailer,
-			new ArticleService($this->makeArticleStore()),
+			$this->portaliqArticleService(),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 			new PhysicalAddressRenderer(),
@@ -489,16 +496,17 @@ class MailTransportServiceTest extends TestCase {
 			}
 		};
 
-		$articleStore = $this->makeArticleStore();
-		$articleStore->save(
-			schemaSlug: 'article',
-			payload: [
+		$articles = new \OCA\Pipelinq\Tests\Unit\Support\InMemoryRegisters();
+		$articles->put(
+			register: 'portaliq',
+			schema: 'article',
+			row: [
+				'uuid' => 'article-1',
 				'title' => 'OpenRegister 3.0 is uit',
 				'summary' => 'Wat er verandert en wat je moet doen.',
 				'language' => 'nl',
 				'portalPageRef' => 'https://example.org/nieuws/openregister-3-0',
 			],
-			id: 'article-1',
 		);
 
 		$objectService = $this->objectService;
@@ -520,7 +528,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->container,
 			$this->appConfig,
 			$this->mailer,
-			new ArticleService($articleStore),
+			$this->portaliqArticleService($articles),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 			new PhysicalAddressRenderer(),
@@ -657,7 +665,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->container,
 			$appConfig,
 			$this->mailer,
-			new ArticleService($this->makeArticleStore()),
+			$this->portaliqArticleService(),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 			new PhysicalAddressRenderer(),
@@ -728,66 +736,4 @@ class MailTransportServiceTest extends TestCase {
 		$this->assertSame('<p>Beste ,</p>', $sent[2]['html']);
 	}//end testSendOneDeliveryGreetsTheRecipientByTheirPreferredName()
 
-	/**
-	 * Build an in-memory {@see ListObjectStore} double for {@see ArticleService}.
-	 *
-	 * @return ListObjectStore
-	 */
-	private function makeArticleStore(): ListObjectStore {
-		return new class(
-			$this->createMock(ContainerInterface::class),
-			$this->createMock(IAppConfig::class),
-			$this->createMock(LoggerInterface::class),
-		) extends ListObjectStore {
-			/** @var array<string, array<string, array<string, mixed>>> */
-			public array $rows = [];
-
-			/**
-			 * @param string $configKey Ignored.
-			 * @param string $default The slug.
-			 * @return string The slug.
-			 */
-			public function schemaSlug(string $configKey, string $default): string {
-				return $default;
-			}
-
-			/**
-			 * @param string $schemaSlug The schema.
-			 * @param string $id The id.
-			 * @return array<string, mixed>|null The row.
-			 */
-			public function find(string $schemaSlug, string $id): ?array {
-				return ($this->rows[$schemaSlug][$id] ?? null);
-			}
-
-			/**
-			 * @param string $schemaSlug The schema.
-			 * @param array<string, string> $filters Field-value pairs.
-			 * @return array<int, array<string, mixed>> The rows.
-			 */
-			public function findAll(string $schemaSlug, array $filters = []): array {
-				return array_values(($this->rows[$schemaSlug] ?? []));
-			}
-
-			/**
-			 * @param string $schemaSlug The schema.
-			 * @param array<string, mixed> $payload The payload.
-			 * @param string|null $id Existing id.
-			 * @return array<string, mixed>|null The saved row.
-			 */
-			public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
-				$payload['id'] = (string)$id;
-				$this->rows[$schemaSlug][(string)$id] = $payload;
-				return $payload;
-			}
-
-			/**
-			 * @param array<string, mixed>|null $payload The row.
-			 * @return string The id.
-			 */
-			public function idOf(?array $payload): string {
-				return (string)($payload['id'] ?? '');
-			}
-		};
-	}//end makeArticleStore()
 }//end class

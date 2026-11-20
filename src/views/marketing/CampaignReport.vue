@@ -118,6 +118,9 @@
 							<th v-if="!embedded" scope="col" class="campaign-report__num">
 								{{ t('pipelinq', 'Submissions') }}
 							</th>
+							<th v-if="!embedded" scope="col" class="campaign-report__num">
+								{{ t('pipelinq', 'Attended') }}
+							</th>
 							<th scope="col" class="campaign-report__num">
 								{{ t('pipelinq', 'Leads') }}
 							</th>
@@ -136,6 +139,9 @@
 							<td class="campaign-report__num">{{ row.visits }}</td>
 							<td v-if="!embedded" class="campaign-report__num">
 								{{ row.submissions }}
+							</td>
+							<td v-if="!embedded" class="campaign-report__num">
+								{{ row.attended }}
 							</td>
 							<td class="campaign-report__num">{{ row.leads }}</td>
 						</tr>

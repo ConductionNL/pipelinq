@@ -19,6 +19,10 @@ const axiosMock = vi.hoisted(() => ({ get: vi.fn() }))
 
 vi.mock('@nextcloud/axios', () => ({ default: axiosMock }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => '/index.php' + path }))
+const dialogsMock = vi.hoisted(() => ({ showError: vi.fn() }))
+vi.mock('@nextcloud/dialogs', () => dialogsMock)
+const csvExportMock = vi.hoisted(() => ({ downloadBlob: vi.fn() }))
+vi.mock('../../src/services/csvExport.js', () => csvExportMock)
 vi.mock('@nextcloud/vue', () => ({
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('div', { class: 'loading-stub' }) },
 	NcButton: {
@@ -39,6 +43,7 @@ const { default: AgentPerformanceSection } = await import('../../src/components/
 const CHANNELS = '/index.php/apps/pipelinq/api/rapportage/channels'
 const SLA = '/index.php/apps/pipelinq/api/rapportage/sla'
 const AGENTS = '/index.php/apps/pipelinq/api/rapportage/agents'
+const EXPORT = '/index.php/apps/pipelinq/api/rapportage/export'
 
 /**
  * Answer each GET by URL.
@@ -55,6 +60,8 @@ function serve(byUrl) {
 
 beforeEach(() => {
 	axiosMock.get.mockReset()
+	dialogsMock.showError.mockReset()
+	csvExportMock.downloadBlob.mockReset()
 })
 
 describe('ChannelComparisonSection', () => {
@@ -156,17 +163,32 @@ describe('ChannelDistributionSection', () => {
 		expect(wrapper.find('.channel-distribution__empty').text()).toBe('No contact moments registered for this period')
 	})
 
-	it('sends the browser to the CSV export', async () => {
-		serve({ [CHANNELS]: {} })
-		const location = { href: '' }
-		vi.stubGlobal('location', location)
+	it('fetches the CSV export for its period and hands the file to the browser', async () => {
+		const file = new Blob(['Section;Item;Metric;Value'])
+		axiosMock.get.mockImplementation((url) => Promise.resolve(url === EXPORT
+			? { data: file, headers: { 'content-disposition': 'attachment; filename="rapportage-2026-11-09-2026-11-16.csv"' } }
+			: { data: {} }))
+		const wrapper = mount(ChannelDistributionSection, mountOptions({ period: 'week' }))
+		await flushPromises()
+
+		await wrapper.find('button').trigger('click')
+		await flushPromises()
+
+		expect(axiosMock.get).toHaveBeenCalledWith(EXPORT, { params: { period: 'week' }, responseType: 'blob' })
+		expect(csvExportMock.downloadBlob).toHaveBeenCalledWith('rapportage-2026-11-09-2026-11-16.csv', file)
+		expect(dialogsMock.showError).not.toHaveBeenCalled()
+	})
+
+	it('says so when the export is refused, and downloads nothing', async () => {
+		axiosMock.get.mockImplementation((url) => (url === EXPORT ? Promise.reject(new Error('412')) : Promise.resolve({ data: {} })))
 		const wrapper = mount(ChannelDistributionSection, mountOptions())
 		await flushPromises()
 
 		await wrapper.find('button').trigger('click')
+		await flushPromises()
 
-		expect(window.location.href).toBe('/index.php/apps/pipelinq/api/rapportage/export')
-		vi.unstubAllGlobals()
+		expect(csvExportMock.downloadBlob).not.toHaveBeenCalled()
+		expect(dialogsMock.showError).toHaveBeenCalledWith('The report could not be exported.')
 	})
 })
 

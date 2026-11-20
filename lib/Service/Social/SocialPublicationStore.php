@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Kernel\Contracts\SocialPublicationStoreInterface;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 
 /**
@@ -44,7 +45,7 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  *
  * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
-class SocialPublicationStore {
+class SocialPublicationStore implements SocialPublicationStoreInterface {
 	/**
 	 * The publication schema slug, matching the register fragment.
 	 *
@@ -65,6 +66,20 @@ class SocialPublicationStore {
 	 * @var string
 	 */
 	public const PENDING = 'pending';
+
+	/**
+	 * The fields of a new row past its post, account and network.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const NEW_ROW = [
+		'status' => self::PENDING,
+		'metrics' => ['views' => 0, 'likes' => 0, 'comments' => 0, 'shares' => 0, 'clicks' => 0],
+		'cost' => 0,
+		'attempts' => 0,
+		'failureCode' => '',
+		'failureReason' => '',
+	];
 
 	/**
 	 * The network accepted it.
@@ -170,27 +185,29 @@ class SocialPublicationStore {
 	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 	 */
 	public function open(string $postId, string $accountId, string $network): ?array {
+		return ($this->rowFor(postId: $postId, accountId: $accountId) ?? $this->store->save(
+			schemaSlug: $this->schema(),
+			payload: ['postId' => $postId, 'accountId' => $accountId, 'network' => $network] + self::NEW_ROW,
+		));
+	}//end open()
+
+	/**
+	 * The existing row for one post and one account, or null.
+	 *
+	 * @param string $postId    The post.
+	 * @param string $accountId The account.
+	 *
+	 * @return array<string, mixed>|null The row, or null.
+	 */
+	private function rowFor(string $postId, string $accountId): ?array {
 		foreach ($this->forPost(postId: $postId) as $row) {
 			if ((string)($row['accountId'] ?? '') === $accountId) {
 				return $row;
 			}
 		}
 
-		return $this->store->save(
-			schemaSlug: $this->schema(),
-			payload: [
-				'postId' => $postId,
-				'accountId' => $accountId,
-				'network' => $network,
-				'status' => self::PENDING,
-				'metrics' => ['views' => 0, 'likes' => 0, 'comments' => 0, 'shares' => 0, 'clicks' => 0],
-				'cost' => 0,
-				'attempts' => 0,
-				'failureCode' => '',
-				'failureReason' => '',
-			],
-		);
-	}//end open()
+		return null;
+	}//end rowFor()
 
 	/**
 	 * Persist a changed publication row.

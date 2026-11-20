@@ -44,7 +44,18 @@ function csvCell(value) {
  * @spec openspec/specs/pipeline/spec.md
  */
 export function downloadCsv(filename, rows, keys) {
-	const blob = new Blob(['﻿' + toCsv(rows, keys)], { type: 'text/csv;charset=utf-8' })
+	downloadBlob(filename, new Blob(['﻿' + toCsv(rows, keys)], { type: 'text/csv;charset=utf-8' }))
+}
+
+/**
+ * Hand a file the app already holds to the browser as a download.
+ *
+ * @param {string} filename The file name.
+ * @param {Blob} blob The file.
+ * @return {void}
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+ */
+export function downloadBlob(filename, blob) {
 	const link = document.createElement('a')
 	link.href = URL.createObjectURL(blob)
 	link.download = filename

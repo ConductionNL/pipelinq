@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * The portal documents dashboard (tabs, keyboard moves, downloads), the
- * social post composer, the article editor and the contract invoicing
+ * social post composer and the contract invoicing
  * section, each run against a plain component context with their services
  * doubled.
  *
@@ -45,14 +45,12 @@ const portalApi = vi.hoisted(() => ({ invoices: vi.fn(), contracts: vi.fn(), ord
 vi.mock('../../src/portal/portalApi.js', () => ({ portalApi }))
 const socialApi = vi.hoisted(() => ({ createPost: vi.fn(), fetchAccounts: vi.fn(), movePost: vi.fn(), updatePost: vi.fn() }))
 vi.mock('../../src/services/socialApi.js', () => socialApi)
-const articlesApi = vi.hoisted(() => ({ createArticle: vi.fn(), updateArticle: vi.fn() }))
-vi.mock('../../src/services/articlesApi.js', () => articlesApi)
+const portaliqApi = vi.hoisted(() => ({ fetchPortaliqArticles: vi.fn() }))
+vi.mock('../../src/services/portaliqArticles.js', () => portaliqApi)
 
 const { default: PortalDashboard } = await import('../../src/portal/views/PortalDashboard.vue')
 const { default: SocialPostComposeModal } = await import('../../src/modals/SocialPostComposeModal.vue')
-const { default: ArticleEditModal } = await import('../../src/modals/ArticleEditModal.vue')
 const { default: ContractInvoicingSection } = await import('../../src/views/contracts/ContractInvoicingSection.vue')
-const { FilePickerClosed } = await import('@nextcloud/dialogs')
 
 /**
  * A component context: props and extras, methods bound, data, and computed
@@ -81,7 +79,7 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 beforeEach(() => {
 	toasts.length = 0
 	picker.pickNodes.mockReset()
-	for (const fn of [http.get, http.post, ...Object.values(portalApi), ...Object.values(socialApi), ...Object.values(articlesApi)]) {
+	for (const fn of [http.get, http.post, ...Object.values(portalApi), ...Object.values(socialApi), ...Object.values(portaliqApi)]) {
 		fn.mockReset()
 	}
 	vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -218,60 +216,6 @@ describe('SocialPostComposeModal', () => {
 		socialApi.createPost.mockRejectedValueOnce({})
 		await n.save(false)
 		expect([m.error, n.error, n.saving, n.$emit.mock.calls.length]).toEqual(['Too long', 'The post could not be saved.', false, 0])
-	})
-})
-
-describe('ArticleEditModal', () => {
-	it('starts a Dutch article, or copies the one being edited', () => {
-		const fresh = context(ArticleEditModal, { article: null })
-		expect([fresh.isEditing, fresh.modalTitle, fresh.model.language, fresh.canSave, fresh.languageOptions.length]).toEqual([false, 'New article', 'nl', false, 2])
-		const links = [{ url: 'https://x' }]
-		const edit = context(ArticleEditModal, { article: { id: 'a1', title: 'News', tags: ['x'], links, language: 'en' } })
-		expect([edit.isEditing, edit.modalTitle, edit.languageOption, edit.tags, edit.canSave]).toEqual([true, 'Edit article', 'en', ['x'], true])
-		edit.links[0].url = 'changed'
-		expect(links[0].url).toBe('https://x')
-		edit.languageOption = null
-		expect(edit.model.language).toBe('nl')
-		edit.saving = true
-		expect(edit.canSave).toBe(false)
-	})
-
-	it('creates or updates the article with its tags and links', async () => {
-		const fresh = context(ArticleEditModal, { article: null })
-		await fresh.save()
-		expect(articlesApi.createArticle).not.toHaveBeenCalled()
-		fresh.model.title = 'Spring'
-		fresh.tags = ['t']
-		articlesApi.createArticle.mockResolvedValueOnce({ id: 'new' })
-		await fresh.save()
-		expect([articlesApi.createArticle.mock.calls[0][0].tags, articlesApi.createArticle.mock.calls[0][0].title, fresh.$emit.mock.calls[0]]).toEqual([['t'], 'Spring', ['saved', { id: 'new' }]])
-		const edit = context(ArticleEditModal, { article: { '@self': { id: 'self1' }, title: 'Old' } })
-		await edit.save()
-		expect(articlesApi.updateArticle.mock.calls[0][0]).toBe('self1')
-		articlesApi.updateArticle.mockRejectedValueOnce({ response: { data: { error: 'Slug taken' } } })
-		await edit.save()
-		articlesApi.updateArticle.mockRejectedValueOnce({})
-		const other = context(ArticleEditModal, { article: { uuid: 'u1', title: 'X' } })
-		await other.save()
-		expect([edit.error, other.error, articlesApi.updateArticle.mock.calls[2][0], other.saving]).toEqual(['Slug taken', 'This article could not be saved.', 'u1', false])
-	})
-
-	it('takes the hero image from the file picker, ignoring a closed picker', async () => {
-		const m = context(ArticleEditModal, { article: null })
-		picker.pickNodes.mockResolvedValueOnce([{ path: '/Photos/hero.jpg' }])
-		await m.openHeroPicker()
-		expect(m.model.heroImage).toBe('/Photos/hero.jpg')
-		picker.pickNodes.mockResolvedValueOnce({ path: '/Photos/two.jpg' })
-		await m.openHeroPicker()
-		picker.pickNodes.mockResolvedValueOnce([])
-		await m.openHeroPicker()
-		expect(m.model.heroImage).toBe('/Photos/two.jpg')
-		picker.pickNodes.mockRejectedValueOnce(new FilePickerClosed())
-		await m.openHeroPicker()
-		expect(m.error).toBe('')
-		picker.pickNodes.mockRejectedValueOnce(new Error('boom'))
-		await m.openHeroPicker()
-		expect(m.error).toBe('The file picker could not be opened.')
 	})
 })
 

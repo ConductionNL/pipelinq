@@ -42,6 +42,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 // The ADR-078 deferral doubles live in the Tests namespace, which has no PSR-4
 // mapping, and PHPUnit only auto-loads files whose name ends in `Test.php`. Load
@@ -74,7 +76,11 @@ class ApFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
 		$this->saved[(string)$uuid] = (array)$object;
 		$this->stored[(string)$uuid] = (array)$object;
 		return (array)$object;
@@ -96,7 +102,9 @@ class ApFakeObjectService {
 	 *
 	 * @return ObjectEntity|null
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): ?ObjectEntity {
+	public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntity {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
 		if (isset($this->stored[$id]) === false) {
 			return null;
 		}
@@ -161,8 +169,12 @@ class ReDispatchingApFakeObjectService extends ApFakeObjectService {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
-		$saved = parent::saveObject($object, $extend, $register, $schema, $uuid);
+	public function saveObject($object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$saved = parent::saveObject($object, $options);
 
 		if ($this->listener === null || $this->entityFactory === null) {
 			return $saved;

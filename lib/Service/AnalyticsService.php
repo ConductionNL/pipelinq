@@ -38,8 +38,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AnalyticsServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Service\Support\WinChanceWeightedValue;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -59,8 +62,10 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.TooManyMethods)           One private helper per KPI figure keeps each figure testable on its own.
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Reads the stores and the forecast target of every KPI it aggregates.
  */
-class AnalyticsService {
+class AnalyticsService implements AnalyticsServiceInterface {
 	use PayloadToArray;
+	use InjectedObjectService;
+	use WinChanceWeightedValue;
 
 	/**
 	 * Allowed period selectors (ADR-018, REQ-KB360-021).
@@ -68,13 +73,6 @@ class AnalyticsService {
 	 * @var array<int, string>
 	 */
 	public const ALLOWED_PERIODS = ['week', 'month', 'quarter'];
-
-	/**
-	 * Default period when caller supplies none.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_PERIOD = 'month';
 
 	/**
 	 * Allowed trend metric identifiers.
@@ -187,8 +185,8 @@ class AnalyticsService {
 	 * @throws RuntimeException When OpenRegister is unreachable mid-query.
 	 */
 	private function findObjects(string $schemaKey): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->info(
 				message: '[AnalyticsService] register or schema not configured',
@@ -219,17 +217,6 @@ class AnalyticsService {
 	}//end findObjects()
 
 	/**
-	 * Resolve the OpenRegister ObjectService via DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
-
-	/**
 	 * Cross-module KPI overview for the unified analytics widget.
 	 *
 	 * Computes:
@@ -257,6 +244,7 @@ class AnalyticsService {
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	public function getOverview(string $period = self::DEFAULT_PERIOD): array {
 		if (in_array($period, self::ALLOWED_OVERVIEW_PERIODS, true) === false) {
@@ -306,6 +294,8 @@ class AnalyticsService {
 	 * @param array<string, array<int, array<string, mixed>>> $rows Rows under leads, requests, cms (contactmoment tickets) and responses (survey).
 	 *
 	 * @return array<string, float|int|null>
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	private function aggregateOverviewWindow(array $window, array $rows): array {
 		return [
@@ -499,7 +489,7 @@ class AnalyticsService {
 		$buckets = [];
 		foreach ($leads as $lead) {
 			$timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-			$key = $this->bucketKey(timestamp: $timestamp, startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			$key = $this->bucketKey(timestamp: $timestamp, window: [$startTs, $nowTs, $bucketSize]);
 			if ($key === null) {
 				continue;
 			}
@@ -957,7 +947,7 @@ class AnalyticsService {
 	 * @spec openspec/specs/commercial-dashboard/spec.md#requirement-the-commercial-overview-gives-the-pipeline-cover
 	 */
 	private function pipelineCover(float $openValue, float $wonValue): array {
-		$target = $this->appConfig->getValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
+		$target = $this->appConfig->getValueInt(AppIdentity::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0);
 		if ($target <= 0) {
 			return ['targetRemaining' => null, 'pipelineCover' => null];
 		}
@@ -1004,13 +994,7 @@ class AnalyticsService {
 	 * @spec openspec/specs/leads-list-board-line/spec.md#requirement-the-weighted-forecast-follows-the-list
 	 */
 	private function leadsMatching(array $leads, array $filter): array {
-		$fields = [];
-		foreach ($filter as $key => $expected) {
-			if (is_string($key) === true && preg_match('/^[A-Za-z0-9_]+$/', $key) === 1) {
-				$fields[$key] = array_map('strval', (array)$expected);
-			}
-		}
-
+		$fields = $this->filterFields(filter: $filter);
 		if ($fields === []) {
 			return $leads;
 		}
@@ -1032,28 +1016,22 @@ class AnalyticsService {
 	}//end leadsMatching()
 
 	/**
-	 * A lead's value weighted by its win chance.
+	 * The filter's safe field names mapped to their accepted values as strings.
 	 *
-	 * The win chance is the lead's qualification score read as a percentage,
-	 * clamped to 0-100; a lead without a score counts as 0 (decided by Ruben,
-	 * 2026-10-06). The `probability` field is hidden on the lead form and
-	 * empty on real installs, so it never feeds a forecast. RapportageService
-	 * applies the same rule; keep the two in step.
+	 * @param array<mixed, mixed> $filter The requested filter.
 	 *
-	 * @param array<string, mixed> $lead The lead row.
-	 *
-	 * @return float The weighted value.
-	 *
-	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 * @return array<string, array<int, string>> Field name to accepted values.
 	 */
-	private function winChanceWeightedValue(array $lead): float {
-		$score = ($lead['qualificationScore'] ?? null);
-		if (is_numeric($score) === false) {
-			return 0.0;
+	private function filterFields(array $filter): array {
+		$fields = [];
+		foreach ($filter as $key => $expected) {
+			if (is_string($key) === true && preg_match('/^[A-Za-z0-9_]+$/', $key) === 1) {
+				$fields[$key] = array_map('strval', (array)$expected);
+			}
 		}
 
-		return ((float)($lead['value'] ?? 0) * (max(0.0, min(100.0, (float)$score)) / 100.0));
-	}//end winChanceWeightedValue()
+		return $fields;
+	}//end filterFields()
 
 	/**
 	 * Time-bucketed revenue series: settled-POS turnover + won-deal value.
@@ -1073,32 +1051,63 @@ class AnalyticsService {
 		$startTs = $now->modify(sprintf('-%d days', $days))->getTimestamp();
 		$nowTs = $now->getTimestamp();
 		$bucketSize = $this->bucketSizeForPeriod(period: $period);
+		$window = [$startTs, $nowTs, $bucketSize];
 
-		$buckets = [];
-		foreach ($pos as $txn) {
+		$buckets = $this->addPosRevenue(buckets: [], source: ['rows' => $pos, 'window' => $window]);
+		$buckets = $this->addWonLeadRevenue(buckets: $buckets, source: ['rows' => $leads, 'window' => $window]);
+
+		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
+	}//end buildRevenueSeries()
+
+	/**
+	 * Add each revenue POS transaction's total to its time bucket.
+	 *
+	 * @param array<string, float> $buckets The buckets so far.
+	 * @param array{rows: array<int, array<string, mixed>>, window: array{0: int, 1: int, 2: int}} $source The POS
+	 *   transactions, and the start timestamp, now timestamp and bucket size.
+	 *
+	 * @return array<string, float> The buckets.
+	 */
+	private function addPosRevenue(array $buckets, array $source): array {
+		$window = $source['window'];
+		foreach ($source['rows'] as $txn) {
 			if ($this->isRevenueTransaction(txn: $txn) === false) {
 				continue;
 			}
 
-			$key = $this->bucketKey(timestamp: $this->posRevenueTimestamp(txn: $txn), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			$key = $this->bucketKey(timestamp: $this->posRevenueTimestamp(txn: $txn), window: $window);
 			if ($key !== null) {
 				$buckets[$key] = (($buckets[$key] ?? 0.0) + (float)($txn['total'] ?? 0));
 			}
 		}
 
-		foreach ($leads as $lead) {
+		return $buckets;
+	}//end addPosRevenue()
+
+	/**
+	 * Add each won lead's value to the bucket of its close date.
+	 *
+	 * @param array<string, float> $buckets The buckets so far.
+	 * @param array{rows: array<int, array<string, mixed>>, window: array{0: int, 1: int, 2: int}} $source The leads,
+	 *   and the start timestamp, now timestamp and bucket size.
+	 *
+	 * @return array<string, float> The buckets.
+	 */
+	private function addWonLeadRevenue(array $buckets, array $source): array {
+		$window = $source['window'];
+		foreach ($source['rows'] as $lead) {
 			if (((string)($lead['status'] ?? '')) !== 'won') {
 				continue;
 			}
 
-			$key = $this->bucketKey(timestamp: $this->leadCloseTimestamp(lead: $lead), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+			$key = $this->bucketKey(timestamp: $this->leadCloseTimestamp(lead: $lead), window: $window);
 			if ($key !== null) {
 				$buckets[$key] = (($buckets[$key] ?? 0.0) + (float)($lead['value'] ?? 0));
 			}
 		}
 
-		return ['metric' => 'revenue', 'period' => $period, 'series' => self::bucketSeries(buckets: $buckets, metric: 'revenue')];
-	}//end buildRevenueSeries()
+		return $buckets;
+	}//end addWonLeadRevenue()
 
 	/**
 	 * Open-lead value summed per pipeline stage, ordered by stage order.
@@ -1416,13 +1425,12 @@ class AnalyticsService {
 	 * Bucket key (`Y-m-d`) for a timestamp, or null when out of range.
 	 *
 	 * @param int|null $timestamp Unix timestamp.
-	 * @param int $startTs Window start.
-	 * @param int $nowTs Window end.
-	 * @param int $bucketSize Bucket width in seconds.
+	 * @param array{0: int, 1: int, 2: int} $window The window start, window end and bucket width in seconds.
 	 *
 	 * @return string|null
 	 */
-	private function bucketKey(?int $timestamp, int $startTs, int $nowTs, int $bucketSize): ?string {
+	private function bucketKey(?int $timestamp, array $window): ?string {
+		[$startTs, $nowTs, $bucketSize] = $window;
 		if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
 			return null;
 		}

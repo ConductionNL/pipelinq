@@ -102,7 +102,19 @@ class SitemapWatchReader {
 			return WatchOutcome::failed(outcome: $current->outcome, reason: $current->reason);
 		}
 
-		$diff = $this->diff(previous: $previous, current: $current);
+		$items = self::items(diff: $this->diff(previous: $previous, current: $current));
+
+		return WatchOutcome::seen(items: $items, state: ['locations' => $current]);
+	}//end read()
+
+	/**
+	 * One item per new location, then one per changed location.
+	 *
+	 * @param array{new: array<string, string>, changed: array<string, string>} $diff The new and changed locations.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private static function items(array $diff): array {
 		$items = [];
 		foreach ($diff['new'] as $loc => $stamp) {
 			$items[] = ['url' => (string)$loc, 'title' => (string)$loc, 'summary' => 'New in the sitemap.', 'stamp' => (string)$stamp];
@@ -112,8 +124,8 @@ class SitemapWatchReader {
 			$items[] = ['url' => (string)$loc, 'title' => (string)$loc, 'summary' => 'Changed in the sitemap.', 'stamp' => (string)$stamp];
 		}
 
-		return WatchOutcome::seen(items: $items, state: ['locations' => $current]);
-	}//end read()
+		return $items;
+	}//end items()
 
 	/**
 	 * What is new and what changed between two sitemap states.

@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebForm;
 
+use OCA\Pipelinq\Kernel\Contracts\WebFormBindingCheckInterface;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/website-forms-submit-into-tickets/specs/public-intake-forms/spec.md#requirement-a-public-pipelinq-form-names-its-destination-and-is-checked-when-published
  */
-class WebFormBindingCheck {
+class WebFormBindingCheck implements WebFormBindingCheckInterface {
 
 	/**
 	 * A published form names no destination.

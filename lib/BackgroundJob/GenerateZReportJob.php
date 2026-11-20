@@ -40,8 +40,8 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosBookkeepingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosBookkeepingServiceInterface;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -80,14 +80,14 @@ class GenerateZReportJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time The time factory.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param PosBookkeepingService $service The bookkeeping service.
+	 * @param PosBookkeepingServiceInterface $service The bookkeeping service.
 	 * @param ContainerInterface $container The DI container (for OR ObjectService).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
-		private PosBookkeepingService $service,
+		private PosBookkeepingServiceInterface $service,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
@@ -108,7 +108,7 @@ class GenerateZReportJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		$configured = trim(
-			$this->appConfig->getValueString(Application::APP_ID, 'pos_eod.z_report_time', '23:59')
+			$this->appConfig->getValueString(AppIdentity::APP_ID, 'pos_eod.z_report_time', '23:59')
 		);
 
 		if ($this->isDueNow(configured: $configured) === false) {

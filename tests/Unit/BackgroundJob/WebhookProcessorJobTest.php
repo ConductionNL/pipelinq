@@ -32,6 +32,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The webhook queue drain.
@@ -134,7 +135,10 @@ class WebhookProcessorJobTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, string $register, string $schema, ?string $uuid): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->saveFail !== null) {
 					throw $this->saveFail;
@@ -309,4 +313,20 @@ class WebhookProcessorJobTest extends TestCase {
 
 		$this->drain();
 	}//end testWithoutOpenRegisterNothingRuns()
+
+	/**
+	 * An empty queue processes nothing and saves nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyQueueProcessesNothing(): void {
+		$service = $this->objectService([]);
+		$this->whatsApp->expects($this->never())->method('handleInboundWebhook');
+		$this->sms->expects($this->never())->method('handleInboundWebhook');
+
+		$this->drain();
+
+		$this->assertCount(1, $service->findConfigs);
+		$this->assertSame([], $service->saved);
+	}//end testAnEmptyQueueProcessesNothing()
 }//end class

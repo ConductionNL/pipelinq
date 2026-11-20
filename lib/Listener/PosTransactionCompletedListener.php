@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\LoyaltyEngineService;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyEngineServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -50,14 +50,14 @@ class PosTransactionCompletedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LoyaltyEngineService $loyaltyEngineService The loyalty engine.
-	 * @param SchemaMapService $schemaMapService The schema map service.
+	 * @param LoyaltyEngineServiceInterface $loyaltyEngineService The loyalty engine.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private LoyaltyEngineService $loyaltyEngineService,
-		private SchemaMapService $schemaMapService,
+		private LoyaltyEngineServiceInterface $loyaltyEngineService,
+		private SchemaMapServiceInterface $schemaMapService,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {
@@ -218,7 +218,7 @@ class PosTransactionCompletedListener implements IEventListener {
 		}
 
 		// Fallback: direct compare against app-config posTransaction_schema.
-		$posSchema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+		$posSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'posTransaction_schema', '');
 		return $posSchema !== '' && $schemaId === $posSchema;
 	}//end isPosTransaction()
 

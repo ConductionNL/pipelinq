@@ -8,7 +8,7 @@
  * + #[NoCSRFRequired] because openconnector cannot present a Nextcloud
  * session cookie or CSRF token; authenticity is enforced via HMAC-SHA256
  * over the raw body using the per-instance shared secret stored at
- * {@see AppointmentDepositService::WEBHOOK_SECRET_KEY}.
+ * {@see AppointmentDepositServiceInterface::WEBHOOK_SECRET_KEY}.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentDepositService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentDepositServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -54,6 +54,7 @@ use Throwable;
  * authentication boundary.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class AppointmentPaymentWebhookController extends Controller {
 	/**
@@ -61,7 +62,7 @@ class AppointmentPaymentWebhookController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig App configuration (webhook secret).
-	 * @param AppointmentDepositService $deposit The deposit service (callback handler).
+	 * @param AppointmentDepositServiceInterface $deposit The deposit service (callback handler).
 	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
@@ -69,10 +70,10 @@ class AppointmentPaymentWebhookController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
-		private AppointmentDepositService $deposit,
+		private AppointmentDepositServiceInterface $deposit,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -232,8 +233,8 @@ class AppointmentPaymentWebhookController extends Controller {
 		}
 
 		$secret = $this->appConfig->getValueString(
-			Application::APP_ID,
-			AppointmentDepositService::WEBHOOK_SECRET_KEY,
+			AppIdentity::APP_ID,
+			AppointmentDepositServiceInterface::WEBHOOK_SECRET_KEY,
 			''
 		);
 		if ($secret === '') {

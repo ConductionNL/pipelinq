@@ -34,10 +34,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
-use OCA\Pipelinq\Service\Export\ExportJobService;
-use OCA\Pipelinq\Service\Export\ExportRunService;
+use OCA\Pipelinq\Controller\Support\ExportAdminAction;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -56,27 +57,29 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011
  */
 class ExportRunController extends Controller {
+	use ExportAdminAction;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ExportRunService $runs The run service.
-	 * @param ExportJobService $jobs The job service (retry).
-	 * @param ExportAccessPolicy $policy The export access policy.
+	 * @param ExportRunServiceInterface $runs The run service.
+	 * @param ExportJobServiceInterface $jobs The job service (retry).
+	 * @param ExportAccessPolicyInterface $policy The export access policy.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ExportRunService $runs,
-		private ExportJobService $jobs,
-		private ExportAccessPolicy $policy,
+		private ExportRunServiceInterface $runs,
+		private ExportJobServiceInterface $jobs,
+		private ExportAccessPolicyInterface $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -172,34 +175,4 @@ class ExportRunController extends Controller {
 			label: 'retryRun'
 		);
 	}//end retryRun()
-
-	/**
-	 * Run an action behind the export-admin gate with shared error handling.
-	 *
-	 * Returns 401 unauthenticated, 403 when not an export admin/analyst, 404 /
-	 * 422 from the service's OCS exceptions, 500 otherwise (generic message).
-	 *
-	 * @param callable $action The action.
-	 * @param string $label Log label.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function requireExportAdmin(callable $action, string $label): JSONResponse {
-		$refusal = $this->exportGate()->refusal(l10n: $this->l10n);
-		if ($refusal !== null) {
-			return $refusal;
-		}
-
-		$response = new ExportActionResponse(l10n: $this->l10n, logger: $this->logger);
-		return $response->respond(action: $action, label: 'ExportRunController::' . $label);
-	}//end requireExportAdmin()
-
-	/**
-	 * The export-admin gate over this request's session.
-	 *
-	 * @return ExportAdminGate The gate.
-	 */
-	private function exportGate(): ExportAdminGate {
-		return new ExportAdminGate(userSession: $this->userSession, policy: $this->policy);
-	}//end exportGate()
 }//end class

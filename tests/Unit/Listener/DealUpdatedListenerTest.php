@@ -41,6 +41,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 require_once __DIR__.'/RecordingDeferralService.php';
 
@@ -49,6 +51,10 @@ require_once __DIR__.'/RecordingDeferralService.php';
  *
  * @covers \OCA\Pipelinq\Listener\DealUpdatedListener
  * @uses   \OCA\Pipelinq\Listener\DeferredWorkGuard
+ * @uses   \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead
+ * @uses   \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectFind
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class DealUpdatedListenerTest extends TestCase {
 
@@ -217,7 +223,9 @@ class DealUpdatedListenerTest extends TestCase {
 			 *
 			 * @return ObjectEntity|null
 			 */
-			public function find(string $id, string $register, string $schema): ?ObjectEntity {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntity {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->finds[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
 				if ($this->found instanceof \Throwable) {
 					throw $this->found;
@@ -237,7 +245,11 @@ class DealUpdatedListenerTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function saveObject(array $object, array $extend, string $register, string $schema, ?string $uuid): void {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): void {
+				$extend = $options->extend;
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->saves[] = ['object' => $object, 'extend' => $extend, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
 				if ($this->onSave !== null) {
 					throw $this->onSave;
@@ -468,4 +480,43 @@ class DealUpdatedListenerTest extends TestCase {
 
 		$this->listener->runDeferredWork(entry: ['uuid' => 'lead-1', 'oldData' => []]);
 	}//end testAFailingSaveIsLogged()
+	/**
+	 * A slip without a reason is undone by restoring the old close date, not the category.
+	 *
+	 * @return void
+	 */
+	public function testDeferredWorkRevertsASlipWithoutAReason(): void {
+		$objects = $this->objects(found: $this->entity(schema: 'lead-schema', uuid: 'lead-1', data: ['forecast_category' => 'commit', 'expectedCloseDate' => '2026-07-15']));
+		$this->deals->method('validateTransition')->willReturn(value: 'forecast.error.slip_reason_required');
+		$this->deals->expects($this->never())->method('applySlip');
+
+		$this->listener->runDeferredWork(entry: ['uuid' => 'lead-1', 'oldData' => ['forecast_category' => 'best_case', 'expectedCloseDate' => '2026-06-30']]);
+
+		self::assertSame(
+			expected: [['id' => 'lead-1', 'forecast_category' => 'commit', 'expectedCloseDate' => '2026-06-30']],
+			actual: array_column(array: $objects->saves, column_key: 'object')
+		);
+	}//end testDeferredWorkRevertsASlipWithoutAReason()
+
+	/**
+	 * A valid slip is deferred and its record saved.
+	 *
+	 * @return void
+	 */
+	public function testAValidSlipIsDeferredAndSaved(): void {
+		$this->deals->method('validateTransition')->willReturn(value: null);
+		$this->deals->method('applyReopenReset')->willReturn(value: null);
+		$this->deals->method('applySlip')->willReturn(value: ['expectedCloseDate' => '2026-07-15', 'slipped_from' => '2026-06-30']);
+
+		$this->listener->handle(event: $this->update(old: ['expectedCloseDate' => '2026-06-30'], new: ['expectedCloseDate' => '2026-07-15']));
+		self::assertCount(expectedCount: 1, haystack: $this->deferral->entries);
+
+		$objects = $this->objects(found: $this->entity(schema: 'lead-schema', uuid: 'lead-1', data: ['expectedCloseDate' => '2026-07-15']));
+		$this->listener->runDeferredWork(entry: ['uuid' => 'lead-1', 'oldData' => ['expectedCloseDate' => '2026-06-30']]);
+
+		self::assertSame(
+			expected: [['expectedCloseDate' => '2026-07-15', 'slipped_from' => '2026-06-30']],
+			actual: array_column(array: $objects->saves, column_key: 'object')
+		);
+	}//end testAValidSlipIsDeferredAndSaved()
 }//end class

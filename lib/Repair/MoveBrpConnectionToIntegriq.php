@@ -32,8 +32,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\BrpConnectionHandoverEvent;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -114,13 +114,7 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		$values = $this->readKeys();
-		if (array_filter($values, static fn (string $value): bool => $value !== '') === []) {
-			return;
-		}
-
-		if (FleetAppId::isInstalled(appManager: $this->appManager, canonical: 'integriq') === false) {
-			$this->logger->info('MoveBrpConnectionToIntegriq: integriq is not installed; the BRP connection settings stay in pipelinq');
-			$output->warning('integriq is not installed: the BRP connection settings stay in pipelinq until it is.');
+		if ($this->shouldHandOver(values: $values, output: $output) === false) {
 			return;
 		}
 
@@ -130,28 +124,78 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 			secrets: $this->secrets(values: $values, problems: $problems)
 		);
 
+		if ($this->dispatchHandover(event: $event, output: $output) === false) {
+			return;
+		}
+
+		$handover = new BrpHandover(event: $event, values: $values, problems: $problems);
+		$this->report(handover: $handover, output: $output);
+		$this->clearWhenConfirmed(handover: $handover, output: $output);
+	}//end run()
+
+	/**
+	 * Whether there is anything to hand over and integriq is here to take it.
+	 *
+	 * @param array<string, string> $values The stored values, by key.
+	 * @param IOutput               $output The output.
+	 *
+	 * @return bool
+	 */
+	private function shouldHandOver(array $values, IOutput $output): bool {
+		if (array_filter($values, static fn (string $value): bool => $value !== '') === []) {
+			return false;
+		}
+
+		if (FleetAppId::isInstalled(appManager: $this->appManager, canonical: 'integriq') === false) {
+			$this->logger->info('MoveBrpConnectionToIntegriq: integriq is not installed; the BRP connection settings stay in pipelinq');
+			$output->warning('integriq is not installed: the BRP connection settings stay in pipelinq until it is.');
+			return false;
+		}
+
+		return true;
+	}//end shouldHandOver()
+
+	/**
+	 * Dispatch the handover event, reporting a failed dispatch.
+	 *
+	 * @param BrpConnectionHandoverEvent $event  The handover.
+	 * @param IOutput                    $output The output.
+	 *
+	 * @return bool Whether the event was dispatched.
+	 */
+	private function dispatchHandover(BrpConnectionHandoverEvent $event, IOutput $output): bool {
 		try {
 			$this->dispatcher->dispatchTyped($event);
 		} catch (Throwable $e) {
 			$this->logger->error('MoveBrpConnectionToIntegriq: the handover to integriq failed: '.$e::class);
 			$output->warning('The handover to integriq failed; the BRP connection settings stay in pipelinq.');
-			return;
+			return false;
 		}
 
-		$this->report(event: $event, values: $values, problems: $problems, output: $output);
+		return true;
+	}//end dispatchHandover()
 
-		if ($problems !== [] || $event->isConfirmed() === false) {
+	/**
+	 * Clear the keys once integriq confirmed every part; keep them otherwise.
+	 *
+	 * @param BrpHandover $handover The answered handover, the stored values and the problems.
+	 * @param IOutput     $output   The output.
+	 *
+	 * @return void
+	 */
+	private function clearWhenConfirmed(BrpHandover $handover, IOutput $output): void {
+		if ($handover->problems !== [] || $handover->event->isConfirmed() === false) {
 			$output->warning('The BRP connection keys stay in pipelinq until integriq confirms every part.');
 			return;
 		}
 
-		foreach (array_keys($values) as $key) {
-			$this->appConfig->deleteKey(Application::APP_ID, $key);
+		foreach (array_keys($handover->values) as $key) {
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 		}
 
 		$this->logger->info('MoveBrpConnectionToIntegriq: integriq confirmed every part; the BRP connection keys are cleared');
 		$output->info('integriq confirmed every part; the BRP connection keys are cleared from pipelinq.');
-	}//end run()
+	}//end clearWhenConfirmed()
 
 	/**
 	 * Every BRP connection key and its stored value.
@@ -162,7 +206,7 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 		$keys   = array_merge(array_keys(self::SETTING_KEYS), [self::SECRET_KEY], array_keys(self::FILE_KEYS));
 		$values = [];
 		foreach ($keys as $key) {
-			$values[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+			$values[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		}
 
 		return $values;
@@ -245,44 +289,66 @@ class MoveBrpConnectionToIntegriq implements IRepairStep {
 	/**
 	 * Report the outcome per key that is set, naming parts but never values.
 	 *
-	 * @param BrpConnectionHandoverEvent $event    The answered handover.
-	 * @param array<string, string>      $values   The stored values, by key.
-	 * @param array<string, string>      $problems Why a key could not be handed over, by key.
-	 * @param IOutput                    $output   The output.
+	 * @param BrpHandover $handover The answered handover, the stored values and the problems.
+	 * @param IOutput     $output   The output.
 	 *
 	 * @return void
 	 */
-	private function report(BrpConnectionHandoverEvent $event, array $values, array $problems, IOutput $output): void {
+	private function report(BrpHandover $handover, IOutput $output): void {
 		$parts = array_merge(self::SETTING_KEYS, [self::SECRET_KEY => 'clientSecret'], self::FILE_KEYS);
 		foreach ($parts as $key => $part) {
-			if ($values[$key] === '') {
+			if ($handover->values[$key] === '') {
 				continue;
 			}
 
-			if (isset($problems[$key]) === true) {
-				$output->warning($key.': not handed over, '.$problems[$key]);
+			$outcome = $this->partOutcome(handover: $handover, setting: [$key, $part]);
+			if ($outcome['warning'] === true) {
+				$output->warning($outcome['line']);
 				continue;
 			}
 
-			$answer = $event->getAnswer($part);
-			if ($answer === null) {
-				$output->warning($key.': integriq did not answer');
-				continue;
-			}
-
-			$line = $key.': '.$this->describe(outcome: $answer['outcome']);
-			if ($answer['detail'] !== '') {
-				$line .= ' ('.$answer['detail'].')';
-			}
-
-			if ($answer['outcome'] === BrpConnectionHandoverEvent::TAKEN) {
-				$output->info($line);
-				continue;
-			}
-
-			$output->warning($line);
+			$output->info($outcome['line']);
 		}//end foreach
 	}//end report()
+
+	/**
+	 * The report line of one part, and whether it is a warning.
+	 *
+	 * @param BrpHandover                 $handover The answered handover and why a key could not be handed over.
+	 * @param array{0: string, 1: string} $setting  The app-config key and the handover part it maps to.
+	 *
+	 * @return array{warning: bool, line: string}
+	 */
+	private function partOutcome(BrpHandover $handover, array $setting): array {
+		[$key, $part] = $setting;
+		if (isset($handover->problems[$key]) === true) {
+			return ['warning' => true, 'line' => $key.': not handed over, '.$handover->problems[$key]];
+		}
+
+		$answer = $handover->event->getAnswer($part);
+		if ($answer === null) {
+			return ['warning' => true, 'line' => $key.': integriq did not answer'];
+		}
+
+		return $this->answerOutcome(key: $key, answer: $answer);
+	}//end partOutcome()
+
+	/**
+	 * The report line of integriq's answer for one part, and whether it is a warning.
+	 *
+	 * @param string                                $key    The app-config key.
+	 * @param array{outcome: string, detail: string} $answer Integriq's answer.
+	 *
+	 * @return array{warning: bool, line: string}
+	 */
+	private function answerOutcome(string $key, array $answer): array {
+		$line = $key.': '.$this->describe(outcome: $answer['outcome']);
+		if ($answer['detail'] !== '') {
+			$line .= ' ('.$answer['detail'].')';
+		}
+
+		return ['warning' => ($answer['outcome'] !== BrpConnectionHandoverEvent::TAKEN), 'line' => $line];
+	}//end answerOutcome()
 
 	/**
 	 * How an outcome reads in the report.

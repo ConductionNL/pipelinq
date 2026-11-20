@@ -104,12 +104,6 @@
 			appId="pipelinq" />
 
 
-		<!-- BRP lookups and the mTLS certificate (bsn-validatie-en-brp-lookup). -->
-		<CnSettingsFieldsSection
-			v-if="isAdmin"
-			v-bind="sections.brpMonitor"
-			appId="pipelinq" />
-
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -143,6 +137,7 @@
 				class="cn-settings-section--wide" />
 
 			<MessagingSettings v-if="isAdmin && isConfigured" />
+			<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />
 
 			<!-- xWiki Integration (xwiki-integration) -->
 			<NcSettingsSection
@@ -245,6 +240,14 @@
 
 			<!-- Shillinq and XWiki, detected rather than typed. -->
 			<DetectedIntegrations v-if="isAdmin" />
+
+			<!-- Call transcription and the call review scorecards (contact-moments-call-review). -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.callReview"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
+			<ScorecardManager v-if="isAdmin && isConfigured" />
 
 			<!-- The CTI webhook log: not on the board, kept after its sections. -->
 			<CtiEventLog v-if="isAdmin && isConfigured" />
@@ -382,6 +385,7 @@ import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import PosCustomerSettings from '../admin/PosCustomerSettings.vue'
+import BackgroundServiceAccountSettings from './BackgroundServiceAccountSettings.vue'
 import CtiEventLog from './CtiEventLog.vue'
 import CtiSettings from './CtiSettings.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
@@ -400,6 +404,7 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
@@ -506,6 +511,7 @@ export default {
 	components: {
 		CnConnectionsPanel,
 		MessagingSettings,
+		BackgroundServiceAccountSettings,
 		DeliverabilitySettings,
 		CtiEventLog,
 		CtiSettings,
@@ -527,6 +533,7 @@ export default {
 		PipelineManager,
 		ProductCategoryManager,
 		ProspectSettings,
+		ScorecardManager,
 		TagManager,
 		SkillSettings,
 		AgentProfileSettings,
