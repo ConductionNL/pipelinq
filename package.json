@@ -54,7 +54,7 @@
     "@nextcloud/password-confirmation": "^6.2.1",
     "@nextcloud/router": "^3.1.0",
     "@nextcloud/vue": "^9.14.1",
-    "@vueuse/core": "^14.3.0",
+    "@vueuse/core": "^15.0.0",
     "dexie": "^4.4.6",
     "dompurify": "^3.4.18",
     "gridstack": "^14.1.0",
