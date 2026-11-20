@@ -40,6 +40,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Call Review | Transcripts and summaries of recorded calls, scorecards and coaching points | In progress | — | [call-review.md](call-review.md) |
 | Product & Service Catalog | Product/service catalogue with pricing for linking to leads | Implemented | TEC 1.8; Schema.org Product | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | Line items linking leads to products/services with quantity and value | Implemented | TEC 1.8 | [lead-product-link.md](lead-product-link.md) |
+| Price lists | Price lists per customer segment, country or client that price a lead line on the server | Implemented | | [price-lists.md](price-lists.md) |
 | Prospect Discovery | ICP-based prospect search using KVK/NHR data for lead generation | Implemented | TEC 1.3 | [prospect-discovery.md](prospect-discovery.md) |
 | OpenRegister Integration | Foundational integration: all data stored as register objects in OpenRegister | Implemented | n/a | [openregister-integration.md](openregister-integration.md) |
 | Register i18n | Multilingual register/schema labels (Dutch + English) | Implemented | n/a | [register-i18n.md](register-i18n.md) |
@@ -89,6 +90,7 @@ The foundational sales and relationship management layer. These features are liv
 | Call Review | [call-review.md](call-review.md) |
 | Product & Service Catalog | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | [lead-product-link.md](lead-product-link.md) |
+| Price lists | [price-lists.md](price-lists.md) |
 | Prospect Discovery | [prospect-discovery.md](prospect-discovery.md) |
 
 ### KCC / Government (V1)

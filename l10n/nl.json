@@ -1,5 +1,18 @@
 {
     "translations": {
+        "Price lists": "Prijslijsten",
+        "Price from": "Prijs uit",
+        "Product price": "Productprijs",
+        "Quantity price": "Staffelprijs",
+        "Variant price": "Variantprijs",
+        "{shown} of {total} price lists": "{shown} van {total} prijslijsten",
+        "New price list": "Nieuwe prijslijst",
+        "A quote line takes its price from the client's own list, else the highest-priority active list for the client's segment, else for its country, in the lead's currency. Without a match it takes the product's own price.": "Een offerteregel krijgt de prijs uit de eigen prijslijst van de klant, anders uit de actieve lijst met de hoogste prioriteit voor het segment van de klant, anders voor het land, in de valuta van de lead. Zonder passende lijst geldt de eigen prijs van het product.",
+        "This list holds no prices yet. Add them through Edit.": "Deze lijst bevat nog geen prijzen. Voeg ze toe via Bewerken.",
+        "Variant": "Variant",
+        "Leave empty to take the price from the client's price list or the product. A price you type is kept and marked as set by hand.": "Laat leeg om de prijs uit de prijslijst van de klant of van het product te nemen. Een prijs die u typt blijft staan en wordt gemarkeerd als handmatig ingesteld.",
+        "Where the unit price came from: the client's price list, the product's base price, a quantity tier or variant, or typed by hand.": "Waar de stukprijs vandaan komt: de prijslijst van de klant, de basisprijs van het product, een staffel of variant, of met de hand getypt.",
+        "The price list that priced the line, when one did.": "De prijslijst die de regel heeft geprijsd, als dat zo is.",
         "{schedule} to {recipients}": "{schedule} aan {recipients}",
         "A mailed report goes to the recipients chosen on its export job.": "Een gemaild rapport gaat naar de ontvangers die bij de exporttaak zijn gekozen.",
         "Choose at least one recipient": "Kies ten minste één ontvanger",
