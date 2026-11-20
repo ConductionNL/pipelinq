@@ -110,6 +110,10 @@
 				{{ message }}
 			</NcNoteCard>
 		</div>
+		<!-- Accessibility: the last audit, the conformance report and the
+		     draft statement (platform-accessibility-statement). -->
+		<AccessibilitySettings v-if="isAdmin" />
+
 		<!-- The support lines, as the last card across the page. -->
 		<NcSettingsSection
 			class="cn-settings-section--wide"
@@ -387,6 +391,7 @@ import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import PosCustomerSettings from '../admin/PosCustomerSettings.vue'
+import AccessibilitySettings from './AccessibilitySettings.vue'
 import BackgroundServiceAccountSettings from './BackgroundServiceAccountSettings.vue'
 import CtiEventLog from './CtiEventLog.vue'
 import CtiSettings from './CtiSettings.vue'
@@ -513,6 +518,7 @@ function openTabFromAddress() {
 export default {
 	name: 'PipelinqAdminSettings',
 	components: {
+		AccessibilitySettings,
 		CnConnectionsPanel,
 		MessagingSettings,
 		BackgroundServiceAccountSettings,
