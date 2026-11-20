@@ -212,7 +212,7 @@ describe('fetching', () => {
 		const b = board({ selectedPipelineId: 'p1' })
 		await b.fetchPipelineItems()
 		expect(b.items.map((i) => [i.id, i._schemaSlug])).toEqual([['L', 'lead'], ['T', 'request']])
-		expect(fetchSpy.mock.calls[0][0]).toContain('/objects/r/lead-s?pipeline=p1&_limit=200')
+		expect(fetchSpy.mock.calls[0][0]).toContain('/objects/r/lead-s?_extend[]=calculations&pipeline=p1&_limit=200')
 		expect(fetchSpy.mock.calls[1][0]).toContain('/objects/r/ticket-s?ticketType=request&pipeline=p1&_limit=200')
 		expect(fetchSpy.mock.calls[0][1].headers.requesttoken).toBe('tok')
 		expect(b.loading).toBe(false)

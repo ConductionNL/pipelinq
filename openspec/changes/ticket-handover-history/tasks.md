@@ -1,7 +1,8 @@
 # Tasks: ticket-handover-history
 
 ## 1. Widget
-- [ ] 1.1 Check nextcloud-vue's `audit-trail` widget for `{from}` and `{to}` placeholders in `changeLabels` and for a `note` field shown under an entry; if missing, add them in nextcloud-vue with tests (one PR there), and bump pipelinq to the release that has them (V1)
+- [x] 1.1 Check nextcloud-vue's `audit-trail` widget for `{from}` and `{to}` placeholders in `changeLabels` and for a `note` field shown under an entry; if missing, add them in nextcloud-vue with tests (one PR there), and bump pipelinq to the release that has them (V1)
+  - Result: nextcloud-vue 2.181.0 (the version pipelinq resolves) fills `{from}`/`{to}` from the matched rule, names users with `values: "user"`, and shows a rule's `note` under its entry; nothing to add there. The handover rule now reads `Passed to {to} by {actor}` with `values: "user"`, so the new assignee shows by display name.
 - [ ] 1.2 Check that the widget hides values of fields the reader may not read (REQ-THH-002); if it does not, fix it in nextcloud-vue, where the audit entry's field-level RBAC is known (V1)
 
 ## 2. Ticket page
