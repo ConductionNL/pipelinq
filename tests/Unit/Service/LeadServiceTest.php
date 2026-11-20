@@ -510,7 +510,12 @@ class LeadServiceTest extends TestCase {
 			public function transition(string $objectId, string $action): ObjectEntity {
 				$this->calls[] = [$objectId, $action];
 				$moved = new ObjectEntity();
-				$moved->setObject(['status' => $action === 'win' ? 'won' : 'lost']);
+				$status = 'lost';
+				if ($action === 'win') {
+					$status = 'won';
+				}
+
+				$moved->setObject(['status' => $status]);
 				return $moved;
 			}
 		};

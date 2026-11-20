@@ -181,7 +181,12 @@ class McpSurfaceConformanceTest extends TestCase {
 				// mcp-reach-annotation) none is declared; once one is, it must
 				// follow the same split as the curated tools.
 				if (isset($tool['reach']) === true) {
-					$this->assertSame(expected: $scope === 'read' ? 'user' : 'instance', actual: $tool['reach'], message: "$label reach");
+					$expectedReach = 'instance';
+					if ($scope === 'read') {
+						$expectedReach = 'user';
+					}
+
+					$this->assertSame(expected: $expectedReach, actual: $tool['reach'], message: "$label reach");
 				}
 			}
 		}
@@ -226,9 +231,9 @@ class McpSurfaceConformanceTest extends TestCase {
 		$expected = self::CURATED;
 		foreach ($expected as $class => $names) {
 			sort($names);
-			$names_found = ($found[$class] ?? []);
-			sort($names_found);
-			$this->assertSame(expected: $names, actual: $names_found, message: $class);
+			$namesFound = ($found[$class] ?? []);
+			sort($namesFound);
+			$this->assertSame(expected: $names, actual: $namesFound, message: $class);
 		}
 
 		$this->assertSame(expected: 14, actual: count($found, COUNT_RECURSIVE) - count($found));
