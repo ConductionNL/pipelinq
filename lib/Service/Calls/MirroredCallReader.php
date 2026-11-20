@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service\Calls;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BackgroundServiceAccount;
+use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,6 +46,8 @@ use Throwable;
  * @spec openspec/changes/kcc-agent-panel/specs/kcc-agent-panel/spec.md#requirement-the-incoming-call-card-also-shows-a-mirrored-call
  */
 class MirroredCallReader {
+	use SerialisedToArray;
+
 	/**
 	 * How long after it started a call can still be incoming, in seconds.
 	 */
@@ -184,7 +187,7 @@ class MirroredCallReader {
 	private function eventsPerCall(array $rows, string $agentId): array {
 		$calls = [];
 		foreach ($rows as $row) {
-			$data = $this->toArray(row: $row);
+			$data = $this->toArray(value: $row);
 			// Compared again: a store that ignored the filter must not hand an agent a colleague's call.
 			if (($data['agentId'] ?? null) !== $agentId) {
 				continue;
@@ -200,23 +203,4 @@ class MirroredCallReader {
 			static fn (array $events): bool => isset($events['ringing']) === true && array_intersect(self::CLOSING, array_keys($events)) === []
 		);
 	}//end eventsPerCall()
-
-	/**
-	 * A row as a plain array.
-	 *
-	 * @param mixed $row An OpenRegister entity or an array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $row): array {
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$row = $row->jsonSerialize();
-		}
-
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		return [];
-	}//end toArray()
 }//end class
