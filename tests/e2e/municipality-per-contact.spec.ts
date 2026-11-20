@@ -58,7 +58,10 @@ const made: Array<{ schema: string; id: string }> = []
  */
 async function seed(schema: string, data: Record<string, unknown>): Promise<string> {
 	const res = await api.post(`${OBJECTS}/${schema}`, { data })
-	expect(res.ok(), `seeding ${schema}: ${res.status()} ${(await res.text()).slice(0, 300)}`).toBeTruthy()
+	expect(
+		res.ok(),
+		`seeding ${schema}: ${res.status()} ${(await res.text()).slice(0, 300)}`,
+	).toBeTruthy()
 	const body = await res.json()
 	const id = String(body.id ?? body['@self']?.id ?? body.uuid)
 	made.push({ schema, id })
@@ -92,7 +95,10 @@ async function showMunicipalityColumn(page: Page): Promise<void> {
 		await toggle.click()
 	}
 	await page.getByRole('tab', { name: /columns/i }).click()
-	await page.locator('.cn-sidebar-columns__group-content').getByText('Municipality', { exact: true }).click()
+	await page
+		.locator('.cn-sidebar-columns__group-content')
+		.getByText('Municipality', { exact: true })
+		.click()
 	await expect(header).toBeVisible({ timeout: 10_000 })
 }
 
@@ -103,12 +109,32 @@ test.describe('One desk, several municipalities', () => {
 	const ids: Record<string, string> = {}
 
 	test.beforeAll(async () => {
-		api = await request.newContext({ baseURL: BASE_URL, httpCredentials: ADMIN, extraHTTPHeaders: OCS })
+		api = await request.newContext({
+			baseURL: BASE_URL,
+			httpCredentials: ADMIN,
+			extraHTTPHeaders: OCS,
+		})
 		ids.goes = await seed('servedMunicipality', { name: GOES, code: '0664' })
-		ids.borsele = await seed('servedMunicipality', { name: BORSELE, code: '0654' })
-		ids.reimerswaal = await seed('servedMunicipality', { name: REIMERSWAAL, code: '0703' })
-		ids.client = await seed('client', { name: `E2E-RMC-${RUN} resident`, type: 'person', municipality: ids.borsele })
-		ids.ticketGoes = await seed('ticket', { title: `E2E-RMC-${RUN} Goes question`, ticketType: 'request', status: 'new', channel: 'phone', municipality: ids.goes })
+		ids.borsele = await seed('servedMunicipality', {
+			name: BORSELE,
+			code: '0654',
+		})
+		ids.reimerswaal = await seed('servedMunicipality', {
+			name: REIMERSWAAL,
+			code: '0703',
+		})
+		ids.client = await seed('client', {
+			name: `E2E-RMC-${RUN} resident`,
+			type: 'person',
+			municipality: ids.borsele,
+		})
+		ids.ticketGoes = await seed('ticket', {
+			title: `E2E-RMC-${RUN} Goes question`,
+			ticketType: 'request',
+			status: 'new',
+			channel: 'phone',
+			municipality: ids.goes,
+		})
 		ids.ticketBorsele = await seed('ticket', {
 			title: `E2E-RMC-${RUN} Borsele question`,
 			ticketType: 'request',
@@ -126,9 +152,16 @@ test.describe('One desk, several municipalities', () => {
 		await api.dispose()
 	})
 
-	test('the Clients list names the resident\'s municipality, not its uuid', async ({ page }) => {
-		await gotoAppRoute(page, `/clients?_search=${encodeURIComponent(`E2E-RMC-${RUN}`)}`)
-		const row = page.getByRole('row').filter({ hasText: `E2E-RMC-${RUN} resident` })
+	test("the Clients list names the resident's municipality, not its uuid", async ({
+		page,
+	}) => {
+		await gotoAppRoute(
+			page,
+			`/clients?_search=${encodeURIComponent(`E2E-RMC-${RUN}`)}`,
+		)
+		const row = page
+			.getByRole('row')
+			.filter({ hasText: `E2E-RMC-${RUN} resident` })
 		await expect(row).toBeVisible({ timeout: 20_000 })
 		await showMunicipalityColumn(page)
 		await expect(row).toContainText(BORSELE)
@@ -136,14 +169,29 @@ test.describe('One desk, several municipalities', () => {
 	})
 
 	for (const route of ['/tickets', '/queue']) {
-		test(`filtering ${route} on one municipality lists only its tickets`, async ({ page }) => {
-			await gotoAppRoute(page, `${route}?municipality=${ids.goes}&_search=${encodeURIComponent(`E2E-RMC-${RUN}`)}`)
-			await expect(page.getByRole('row').filter({ hasText: `E2E-RMC-${RUN} Goes question` })).toBeVisible({ timeout: 20_000 })
-			await expect(page.getByRole('row').filter({ hasText: `E2E-RMC-${RUN} Borsele question` })).toHaveCount(0)
+		test(`filtering ${route} on one municipality lists only its tickets`, async ({
+			page,
+		}) => {
+			await gotoAppRoute(
+				page,
+				`${route}?municipality=${ids.goes}&_search=${encodeURIComponent(`E2E-RMC-${RUN}`)}`,
+			)
+			await expect(
+				page
+					.getByRole('row')
+					.filter({ hasText: `E2E-RMC-${RUN} Goes question` }),
+			).toBeVisible({ timeout: 20_000 })
+			await expect(
+				page
+					.getByRole('row')
+					.filter({ hasText: `E2E-RMC-${RUN} Borsele question` }),
+			).toHaveCount(0)
 		})
 	}
 
-	test('a handler corrects the ticket\'s municipality; the client keeps its own', async ({ page }) => {
+	test("a handler corrects the ticket's municipality; the client keeps its own", async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, `/tickets/${ids.ticketBorsele}`)
 		const edit = page.getByTestId('cn-detail-page-edit')
 		await expect(edit).toBeVisible({ timeout: 20_000 })
@@ -157,12 +205,16 @@ test.describe('One desk, several municipalities', () => {
 		await form.getByRole('button', { name: 'Save', exact: true }).click()
 		await expect(form).toBeHidden({ timeout: 20_000 })
 
-		await expect(page.getByTestId('cn-detail-page')).toContainText(REIMERSWAAL, { timeout: 20_000 })
-		expect((await read('ticket', ids.ticketBorsele)).municipality).toBe(ids.reimerswaal)
+		await expect(page.getByTestId('cn-detail-page')).toContainText(REIMERSWAAL, {
+			timeout: 20_000,
+		})
+		expect((await read('ticket', ids.ticketBorsele)).municipality).toBe(
+			ids.reimerswaal,
+		)
 		expect((await read('client', ids.client)).municipality).toBe(ids.borsele)
 	})
 
-	test.fixme('a new request for a client takes the client\'s municipality', async () => {
+	test.fixme("a new request for a client takes the client's municipality", async () => {
 		// TicketService::save() copies it; that path is reached by the internal
 		// create flows (CTI, intake), not by the OpenRegister object API this
 		// suite seeds through. Covered by TicketServiceTest until a browser

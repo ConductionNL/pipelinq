@@ -39,7 +39,8 @@ const ADMIN = {
 	password: process.env.ADMIN_PASSWORD ?? process.env.NC_ADMIN_PASS ?? 'admin',
 }
 const HEADERS = { 'OCS-APIRequest': 'true', Accept: 'application/json' }
-const SOURCE_LABEL = /Typed in Forecast settings|Ingevoerd in de prognose-instellingen/
+const SOURCE_LABEL =
+	/Typed in Forecast settings|Ingevoerd in de prognose-instellingen/
 
 let admin: APIRequestContext
 let previousRates: Record<string, number> = {}
@@ -58,20 +59,34 @@ function closeDateThisQuarter(): string {
 }
 
 test.beforeAll(async () => {
-	admin = await request.newContext({ baseURL: BASE_URL, httpCredentials: ADMIN, extraHTTPHeaders: HEADERS })
+	admin = await request.newContext({
+		baseURL: BASE_URL,
+		httpCredentials: ADMIN,
+		extraHTTPHeaders: HEADERS,
+	})
 
 	const settings = await admin.get(FORECAST_SETTINGS)
-	expect(settings.ok(), `reading forecast settings: ${settings.status()}`).toBeTruthy()
+	expect(
+		settings.ok(),
+		`reading forecast settings: ${settings.status()}`,
+	).toBeTruthy()
 	const body = await settings.json()
 	previousRates = { ...(body.exchange_rates ?? body.config?.exchange_rates ?? {}) }
 
-	const probe = await (await admin.get(CONVERT, { params: { currency: 'GBP', amount: '1' } })).json()
+	const probe = await (
+		await admin.get(CONVERT, { params: { currency: 'GBP', amount: '1' } })
+	).json()
 	if (String(probe.reportingCurrency ?? '').toUpperCase() === 'GBP') {
 		currency = 'CHF'
 	}
 
-	const saved = await admin.put(FORECAST_SETTINGS, { data: { exchange_rates: { ...previousRates, [currency]: 1.1734 } } })
-	expect(saved.ok(), `typing a ${currency} rate: ${saved.status()} ${(await saved.text()).slice(0, 300)}`).toBeTruthy()
+	const saved = await admin.put(FORECAST_SETTINGS, {
+		data: { exchange_rates: { ...previousRates, [currency]: 1.1734 } },
+	})
+	expect(
+		saved.ok(),
+		`typing a ${currency} rate: ${saved.status()} ${(await saved.text()).slice(0, 300)}`,
+	).toBeTruthy()
 	typedRateSaved = true
 })
 
@@ -80,15 +95,21 @@ test.afterAll(async () => {
 		await admin.delete(`${OR}/lead/${leadId}`).catch(() => undefined)
 	}
 	if (typedRateSaved) {
-		await admin.put(FORECAST_SETTINGS, { data: { exchange_rates: previousRates } }).catch(() => undefined)
+		await admin
+			.put(FORECAST_SETTINGS, { data: { exchange_rates: previousRates } })
+			.catch(() => undefined)
 	}
 	await admin.dispose()
 })
 
-test('without a rate store a foreign deal shows the typed rate, source manual and its date', async ({ page }) => {
+test('without a rate store a foreign deal shows the typed rate, source manual and its date', async ({
+	page,
+}) => {
 	test.setTimeout(150_000)
 
-	const answer = await admin.get(CONVERT, { params: { currency, amount: '10000' } })
+	const answer = await admin.get(CONVERT, {
+		params: { currency, amount: '10000' },
+	})
 	expect(answer.ok(), `converting ${currency}: ${answer.status()}`).toBeTruthy()
 	const converted = await answer.json()
 	test.skip(
@@ -96,9 +117,14 @@ test('without a rate store a foreign deal shows the typed rate, source manual an
 		`the instance answers source "${converted.source}" for ${currency}: a rate store (shillinq, integriq ECB) or an override is in front of the typed table, so the no-rate-store scenario cannot be shown here`,
 	)
 	expect(Number(converted.rate)).toBeCloseTo(1.1734, 4)
-	expect(String(converted.rateDate ?? ''), 'the typed rate carries the date it was typed').not.toBe('')
+	expect(
+		String(converted.rateDate ?? ''),
+		'the typed rate carries the date it was typed',
+	).not.toBe('')
 
-	const pipelines = await (await admin.get(`${OR}/pipeline`, { params: { _limit: '1' } })).json()
+	const pipelines = await (
+		await admin.get(`${OR}/pipeline`, { params: { _limit: '1' } })
+	).json()
 	const pipeline = (pipelines.results ?? [])[0]
 	expect(pipeline, 'the instance has a pipeline to put the deal on').toBeTruthy()
 	const created = await admin.post(`${OR}/lead`, {
@@ -114,7 +140,10 @@ test('without a rate store a foreign deal shows the typed rate, source manual an
 			assignee: ADMIN.username,
 		},
 	})
-	expect(created.ok(), `creating the deal: ${created.status()} ${(await created.text()).slice(0, 300)}`).toBeTruthy()
+	expect(
+		created.ok(),
+		`creating the deal: ${created.status()} ${(await created.text()).slice(0, 300)}`,
+	).toBeTruthy()
 	const lead = await created.json()
 	leadId = String(lead.id ?? lead['@self']?.id ?? lead.uuid)
 
@@ -130,7 +159,9 @@ test('without a rate store a foreign deal shows the typed rate, source manual an
 
 	await test.step('the forecast shows the same rate line for the currency', async () => {
 		await gotoAppRoute(page, '/forecast')
-		const line = page.getByTestId('forecast-rate-line').filter({ hasText: `1 ${currency} =` })
+		const line = page
+			.getByTestId('forecast-rate-line')
+			.filter({ hasText: `1 ${currency} =` })
 		await expect(line).toBeVisible({ timeout: 30_000 })
 		await expect(line).toContainText(SOURCE_LABEL)
 	})

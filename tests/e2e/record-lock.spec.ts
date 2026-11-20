@@ -27,7 +27,11 @@ import type { APIRequestContext, Page } from '@playwright/test'
 
 import { expect, request, test } from '@playwright/test'
 import { resolveBaseUrl } from './base-url.ts'
-import { clickHeaderAction, gotoAppRoute, openActionsOverflow } from './helpers/pipelinq.ts'
+import {
+	clickHeaderAction,
+	gotoAppRoute,
+	openActionsOverflow,
+} from './helpers/pipelinq.ts'
 
 const BASE_URL = resolveBaseUrl()
 const RUN = Date.now().toString(36)
@@ -51,7 +55,10 @@ const made: Array<{ schema: string; id: string }> = []
  */
 async function seed(schema: string, data: Record<string, unknown>): Promise<string> {
 	const res = await api.post(`${OBJECTS}/${schema}`, { data })
-	expect(res.ok(), `seeding ${schema}: ${res.status()} ${(await res.text()).slice(0, 300)}`).toBeTruthy()
+	expect(
+		res.ok(),
+		`seeding ${schema}: ${res.status()} ${(await res.text()).slice(0, 300)}`,
+	).toBeTruthy()
 	const body = await res.json()
 	const id = String(body.id ?? body['@self']?.id ?? body.uuid)
 	made.push({ schema, id })
@@ -79,11 +86,22 @@ async function read(schema: string, id: string): Promise<Record<string, unknown>
  * @param id The object.
  * @param patch The fields to change.
  */
-async function update(schema: string, id: string, patch: Record<string, unknown>): Promise<void> {
-	const body: Record<string, unknown> = { ...(await read(schema, id)), ...patch, id }
+async function update(
+	schema: string,
+	id: string,
+	patch: Record<string, unknown>,
+): Promise<void> {
+	const body: Record<string, unknown> = {
+		...(await read(schema, id)),
+		...patch,
+		id,
+	}
 	delete body['@self']
 	const res = await api.put(`${OBJECTS}/${schema}/${id}`, { data: body })
-	expect(res.ok(), `updating ${schema} ${id}: ${res.status()} ${(await res.text()).slice(0, 300)}`).toBeTruthy()
+	expect(
+		res.ok(),
+		`updating ${schema} ${id}: ${res.status()} ${(await res.text()).slice(0, 300)}`,
+	).toBeTruthy()
 }
 
 /**
@@ -106,10 +124,15 @@ async function openEdit(page: Page): Promise<void> {
  * @param schema The pipelinq schema.
  * @param id The object.
  */
-async function frozen(schema: string, id: string): Promise<Record<string, unknown> | null> {
+async function frozen(
+	schema: string,
+	id: string,
+): Promise<Record<string, unknown> | null> {
 	const body = await read(schema, id)
 	const marker = (body['@self'] as Record<string, unknown> | undefined)?.frozen
-	return marker && typeof marker === 'object' ? (marker as Record<string, unknown>) : null
+	return marker && typeof marker === 'object'
+		? (marker as Record<string, unknown>)
+		: null
 }
 
 /**
@@ -151,8 +174,14 @@ test.describe('Lock and unlock a record', () => {
 	let pipelineId = ''
 
 	test.beforeAll(async () => {
-		api = await request.newContext({ baseURL: BASE_URL, httpCredentials: ADMIN, extraHTTPHeaders: OCS })
-		const pipelines = await api.get(`${OBJECTS}/pipeline`, { params: { _limit: 1 } })
+		api = await request.newContext({
+			baseURL: BASE_URL,
+			httpCredentials: ADMIN,
+			extraHTTPHeaders: OCS,
+		})
+		const pipelines = await api.get(`${OBJECTS}/pipeline`, {
+			params: { _limit: 1 },
+		})
 		if (pipelines.ok()) {
 			const first = ((await pipelines.json()).results ?? [])[0]
 			pipelineId = first ? String(first.id ?? first['@self']?.id) : ''
@@ -167,8 +196,14 @@ test.describe('Lock and unlock a record', () => {
 		await api.dispose()
 	})
 
-	test('a locked client offers Unlock; unlocked, Edit saves a new phone number', async ({ page }) => {
-		const clientId = await seed('client', { name: `E2E-PRL-${RUN} client`, type: 'organization', phone: OLD_PHONE })
+	test('a locked client offers Unlock; unlocked, Edit saves a new phone number', async ({
+		page,
+	}) => {
+		const clientId = await seed('client', {
+			name: `E2E-PRL-${RUN} client`,
+			type: 'organization',
+			phone: OLD_PHONE,
+		})
 
 		await gotoAppRoute(page, `/clients/${clientId}`)
 		await lockFromMenu(page, 'Lock this client?')
@@ -192,14 +227,29 @@ test.describe('Lock and unlock a record', () => {
 		expect((await read('client', clientId)).phone).toBe(NEW_PHONE)
 	})
 
-	test('a won lead shows who locked it; an unlocked won lead shows no banner', async ({ page }) => {
-		test.skip(pipelineId === '', 'No pipeline on this instance to put a lead on.')
+	test('a won lead shows who locked it; an unlocked won lead shows no banner', async ({
+		page,
+	}) => {
+		test.skip(
+			pipelineId === '',
+			'No pipeline on this instance to put a lead on.',
+		)
 
 		const leadIds: string[] = []
 		for (const suffix of ['locked', 'open']) {
-			const id = await seed('lead', { title: `E2E-PRL-${RUN} lead ${suffix}`, pipeline: pipelineId, status: 'open' })
-			const won = await api.post(`/index.php/apps/openregister/api/objects/${id}/transition`, { data: { action: 'win' } })
-			expect(won.ok(), `winning lead ${suffix}: ${won.status()} ${(await won.text()).slice(0, 300)}`).toBeTruthy()
+			const id = await seed('lead', {
+				title: `E2E-PRL-${RUN} lead ${suffix}`,
+				pipeline: pipelineId,
+				status: 'open',
+			})
+			const won = await api.post(
+				`/index.php/apps/openregister/api/objects/${id}/transition`,
+				{ data: { action: 'win' } },
+			)
+			expect(
+				won.ok(),
+				`winning lead ${suffix}: ${won.status()} ${(await won.text()).slice(0, 300)}`,
+			).toBeTruthy()
 			leadIds.push(id)
 		}
 
@@ -219,7 +269,12 @@ test.describe('Lock and unlock a record', () => {
 	})
 
 	test('an open ticket offers no Lock', async ({ page }) => {
-		const ticketId = await seed('ticket', { title: `E2E-PRL-${RUN} open ticket`, ticketType: 'request', status: 'new', channel: 'phone' })
+		const ticketId = await seed('ticket', {
+			title: `E2E-PRL-${RUN} open ticket`,
+			ticketType: 'request',
+			status: 'new',
+			channel: 'phone',
+		})
 		await update('ticket', ticketId, { status: 'in_progress' })
 
 		await gotoAppRoute(page, `/tickets/${ticketId}`)
@@ -229,32 +284,55 @@ test.describe('Lock and unlock a record', () => {
 		await expect(menuEntry(page, 'Lock')).toHaveCount(0)
 	})
 
-	test('an edit to a locked ticket is refused, names who locked it, and changes nothing', async ({ page }) => {
+	test('an edit to a locked ticket is refused, names who locked it, and changes nothing', async ({
+		page,
+	}) => {
 		const oldTitle = `E2E-PRL-${RUN} resolved ticket`
-		const ticketId = await seed('ticket', { title: oldTitle, ticketType: 'request', status: 'new', channel: 'phone' })
+		const ticketId = await seed('ticket', {
+			title: oldTitle,
+			ticketType: 'request',
+			status: 'new',
+			channel: 'phone',
+		})
 		await update('ticket', ticketId, { status: 'resolved' })
 		const locked = await api.post(`${OBJECTS}/ticket/${ticketId}/freeze`)
-		expect(locked.ok(), `locking the ticket: ${locked.status()} ${(await locked.text()).slice(0, 300)}`).toBeTruthy()
+		expect(
+			locked.ok(),
+			`locking the ticket: ${locked.status()} ${(await locked.text()).slice(0, 300)}`,
+		).toBeTruthy()
 		const marker = await frozen('ticket', ticketId)
-		expect(marker, 'the ticket carries no @self.frozen after freeze').not.toBeNull()
+		expect(
+			marker,
+			'the ticket carries no @self.frozen after freeze',
+		).not.toBeNull()
 
 		await gotoAppRoute(page, `/tickets/${ticketId}`)
 		await expect(lockBanner(page)).toBeVisible({ timeout: 20_000 })
 		await openEdit(page)
 		const form = page.locator('[data-testid-modal="cn-form-dialog"]')
 		await expect(form).toBeVisible()
-		await form.locator('[data-cn-field="title"] input').fill(`${oldTitle} changed`)
+		await form
+			.locator('[data-cn-field="title"] input')
+			.fill(`${oldTitle} changed`)
 		await form.getByRole('button', { name: 'Save', exact: true }).click()
 
-		await expect(form.getByTestId('cn-form-dialog-error')).toBeVisible({ timeout: 20_000 })
-		await expect(form.getByTestId('cn-form-dialog-error')).toContainText(String(marker?.by))
+		await expect(form.getByTestId('cn-form-dialog-error')).toBeVisible({
+			timeout: 20_000,
+		})
+		await expect(form.getByTestId('cn-form-dialog-error')).toContainText(
+			String(marker?.by),
+		)
 
 		await page.reload()
-		await expect(page.getByTestId('cn-detail-page-header')).toContainText(oldTitle)
+		await expect(page.getByTestId('cn-detail-page-header')).toContainText(
+			oldTitle,
+		)
 		expect((await read('ticket', ticketId)).title).toBe(oldTitle)
 	})
 
-	test.fixme('a locked client cannot be deleted from the Clients list', async ({ page }) => {
+	test.fixme('a locked client cannot be deleted from the Clients list', async ({
+		page,
+	}) => {
 		// Waits on OpenRegister refusing deletion of a frozen object (guard on
 		// ObjectDeletingEvent, the issue opened under task 3.1). Until it ships,
 		// OpenRegister deletes a frozen client and this test would fail for that
@@ -271,9 +349,13 @@ test.describe('Lock and unlock a record', () => {
 		await page.getByRole('menuitem', { name: 'Delete' }).click()
 		await page.getByTestId('cn-confirm-dialog-confirm').click()
 
-		await expect(page.getByText(/locked/i).first()).toBeVisible({ timeout: 20_000 })
+		await expect(page.getByText(/locked/i).first()).toBeVisible({
+			timeout: 20_000,
+		})
 		await page.reload()
-		await expect(page.getByRole('row').filter({ hasText: name })).toBeVisible({ timeout: 20_000 })
+		await expect(page.getByRole('row').filter({ hasText: name })).toBeVisible({
+			timeout: 20_000,
+		})
 		expect((await api.get(`${OBJECTS}/client/${clientId}`)).ok()).toBeTruthy()
 	})
 })

@@ -52,7 +52,11 @@ test.describe('Retention review: approve a destruction list of clients', () => {
 	let skipReason = ''
 
 	test.beforeAll(async () => {
-		api = await request.newContext({ baseURL: BASE_URL, httpCredentials: ADMIN, extraHTTPHeaders: OCS })
+		api = await request.newContext({
+			baseURL: BASE_URL,
+			httpCredentials: ADMIN,
+			extraHTTPHeaders: OCS,
+		})
 
 		for (const suffix of ['A', 'B', 'C']) {
 			const name = `E2E-PCR-${RUN} ${suffix}`
@@ -64,18 +68,28 @@ test.describe('Retention review: approve a destruction list of clients', () => {
 					relationshipEndedAt: '2020-01-15T00:00:00+00:00',
 				},
 			})
-			expect(made.ok(), `seeding client ${suffix}: ${made.status()} ${(await made.text()).slice(0, 300)}`).toBeTruthy()
+			expect(
+				made.ok(),
+				`seeding client ${suffix}: ${made.status()} ${(await made.text()).slice(0, 300)}`,
+			).toBeTruthy()
 			const body = await made.json()
 			clientIds.push(String(body.id ?? body['@self']?.id ?? body.uuid))
 			names.push(name)
 		}
 
 		const drawn = await api.post(LISTS, { data: { objects: clientIds } })
-		if (drawn.status() === 409 || drawn.status() === 422 || drawn.status() === 404) {
+		if (
+			drawn.status() === 409
+			|| drawn.status() === 422
+			|| drawn.status() === 404
+		) {
 			skipReason = `OpenRegister drew up no destruction list (${drawn.status()}): ${(await drawn.text()).slice(0, 300)}`
 			return
 		}
-		expect(drawn.ok(), `drawing up the list: ${drawn.status()} ${(await drawn.text()).slice(0, 300)}`).toBeTruthy()
+		expect(
+			drawn.ok(),
+			`drawing up the list: ${drawn.status()} ${(await drawn.text()).slice(0, 300)}`,
+		).toBeTruthy()
 		const list = await drawn.json()
 		listId = String(list.uuid ?? list.id)
 		if (Number(list.entryCount ?? clientIds.length) < clientIds.length) {
@@ -90,13 +104,19 @@ test.describe('Retention review: approve a destruction list of clients', () => {
 		await api.dispose()
 	})
 
-	test('the list shows the clients, Approve confirms, and OpenRegister records the approval', async ({ page }) => {
+	test('the list shows the clients, Approve confirms, and OpenRegister records the approval', async ({
+		page,
+	}) => {
 		test.skip(skipReason !== '', skipReason)
 
 		await gotoAppRoute(page, '/retention-review')
-		await expect(page.getByRole('heading', { name: 'Retention review' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Retention review' }),
+		).toBeVisible()
 
-		const list = page.locator(`section.retention-review__list[data-list="${listId}"]`)
+		const list = page.locator(
+			`section.retention-review__list[data-list="${listId}"]`,
+		)
 		await expect(list).toBeVisible({ timeout: 30_000 })
 		for (const [index, id] of clientIds.entries()) {
 			const row = list.locator(`tr[data-entry="${id}"]`)
@@ -108,29 +128,47 @@ test.describe('Retention review: approve a destruction list of clients', () => {
 		}
 
 		await list.getByRole('button', { name: 'Approve', exact: true }).click()
-		const confirm = page.getByRole('dialog', { name: 'Approve destruction list' })
+		const confirm = page.getByRole('dialog', {
+			name: 'Approve destruction list',
+		})
 		await expect(confirm).toBeVisible()
 		await confirm.getByRole('button', { name: 'Approve', exact: true }).click()
-		await expect(page.getByText('Destruction list approved')).toBeVisible({ timeout: 20_000 })
+		await expect(page.getByText('Destruction list approved')).toBeVisible({
+			timeout: 20_000,
+		})
 		await expect(confirm).toBeHidden()
 
 		// No longer open: the Approve and Reject buttons are gone from this list.
-		await expect(list.getByRole('button', { name: 'Approve', exact: true })).toHaveCount(0, { timeout: 20_000 })
+		await expect(
+			list.getByRole('button', { name: 'Approve', exact: true }),
+		).toHaveCount(0, { timeout: 20_000 })
 
 		const after = await api.get(`${LISTS}/${listId}`)
 		expect(after.ok(), `reading the list: ${after.status()}`).toBeTruthy()
-		expect(['approved', 'awaiting_second_approval', 'completed']).toContain((await after.json()).status)
+		expect(['approved', 'awaiting_second_approval', 'completed']).toContain(
+			(await after.json()).status,
+		)
 	})
 
 	test('after the execution job, the approved clients are gone', async () => {
 		test.skip(skipReason !== '', skipReason)
-		test.skip(JOB_WAIT_MS <= 0, 'Destruction runs in OpenRegister\'s execution job; set E2E_DESTRUCTION_JOB_WAIT_MS where that job runs on cron.')
+		test.skip(
+			JOB_WAIT_MS <= 0,
+			"Destruction runs in OpenRegister's execution job; set E2E_DESTRUCTION_JOB_WAIT_MS where that job runs on cron.",
+		)
 
 		await expect
-			.poll(async () => {
-				const statuses = await Promise.all(clientIds.map(async (id) => (await api.get(`${CLIENTS}/${id}`)).status()))
-				return statuses.every((status) => status === 404)
-			}, { timeout: JOB_WAIT_MS, intervals: [10_000] })
+			.poll(
+				async () => {
+					const statuses = await Promise.all(
+						clientIds.map(async (id) =>
+							(await api.get(`${CLIENTS}/${id}`)).status(),
+						),
+					)
+					return statuses.every((status) => status === 404)
+				},
+				{ timeout: JOB_WAIT_MS, intervals: [10_000] },
+			)
 			.toBe(true)
 	})
 })

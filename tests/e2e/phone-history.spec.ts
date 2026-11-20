@@ -41,7 +41,9 @@ const HEADERS = { 'OCS-APIRequest': 'true', Accept: 'application/json' }
 const DIGITS = String(Date.now()).slice(-8)
 const E164 = `+316${DIGITS}`
 const TYPED = `06 ${DIGITS.slice(0, 4)} ${DIGITS.slice(4)}`
-const UNKNOWN = `+316${String(Number(DIGITS) + 1).padStart(8, '0').slice(-8)}`
+const UNKNOWN = `+316${String(Number(DIGITS) + 1)
+	.padStart(8, '0')
+	.slice(-8)}`
 
 const seeded: string[] = []
 let admin: APIRequestContext
@@ -65,15 +67,28 @@ async function seedContactMoment(title: string, occurredAt: string): Promise<voi
 			phoneE164: E164,
 		},
 	})
-	expect(created.ok(), `seeding "${title}": ${created.status()} ${(await created.text()).slice(0, 300)}`).toBeTruthy()
+	expect(
+		created.ok(),
+		`seeding "${title}": ${created.status()} ${(await created.text()).slice(0, 300)}`,
+	).toBeTruthy()
 	const body = await created.json()
 	seeded.push(String(body.id ?? body['@self']?.id ?? body.uuid))
 }
 
 test.beforeAll(async () => {
-	admin = await request.newContext({ baseURL: BASE_URL, httpCredentials: ADMIN, extraHTTPHeaders: HEADERS })
-	await seedContactMoment(`E2E-CHP-${RUN} question about a permit`, '2026-01-10T09:00:00+01:00')
-	await seedContactMoment(`E2E-CHP-${RUN} callback about the permit`, '2026-02-12T14:30:00+01:00')
+	admin = await request.newContext({
+		baseURL: BASE_URL,
+		httpCredentials: ADMIN,
+		extraHTTPHeaders: HEADERS,
+	})
+	await seedContactMoment(
+		`E2E-CHP-${RUN} question about a permit`,
+		'2026-01-10T09:00:00+01:00',
+	)
+	await seedContactMoment(
+		`E2E-CHP-${RUN} callback about the permit`,
+		'2026-02-12T14:30:00+01:00',
+	)
 })
 
 test.afterAll(async () => {
@@ -87,47 +102,88 @@ test.describe('history by phone number', () => {
 	test.setTimeout(120_000)
 
 	test('the server finds the tickets whatever way the number is typed', async () => {
-		for (const typed of [TYPED, `06-${DIGITS}`, `+31 6 ${DIGITS}`, `00316${DIGITS}`]) {
-			const answer = await admin.get('/index.php/apps/pipelinq/api/tickets/by-phone', { params: { number: typed } })
+		for (const typed of [
+			TYPED,
+			`06-${DIGITS}`,
+			`+31 6 ${DIGITS}`,
+			`00316${DIGITS}`,
+		]) {
+			const answer = await admin.get(
+				'/index.php/apps/pipelinq/api/tickets/by-phone',
+				{ params: { number: typed } },
+			)
 			expect(answer.ok(), `by-phone ${typed}: ${answer.status()}`).toBeTruthy()
 			const body = await answer.json()
 			expect(body.number, typed).toBe(E164)
-			const ids = (body.results as Array<{ id?: string, '@self'?: { id?: string } }>).map((r) => String(r.id ?? r['@self']?.id))
+			const ids = (
+				body.results as Array<{ id?: string; '@self'?: { id?: string } }>
+			).map((r) => String(r.id ?? r['@self']?.id))
 			for (const id of seeded) {
 				expect(ids, `by-phone ${typed} lists ${id}`).toContain(id)
 			}
 		}
 	})
 
-	test('an unknown caller with two earlier contacts sees both in the intake form (REQ-CHP-001)', async ({ page }) => {
-		await gotoAppRoute(page, `/?callPreview=${encodeURIComponent(E164)}&callPreviewOpen=intake`)
+	test('an unknown caller with two earlier contacts sees both in the intake form (REQ-CHP-001)', async ({
+		page,
+	}) => {
+		await gotoAppRoute(
+			page,
+			`/?callPreview=${encodeURIComponent(E164)}&callPreviewOpen=intake`,
+		)
 
 		const intake = page.getByTestId('cti-intake-dialog')
 		await expect(intake).toBeVisible({ timeout: 30_000 })
 		const history = intake.getByTestId('cti-intake-history')
 		await expect(history).toBeVisible()
-		await expect(history.getByTestId('cti-intake-history-item')).toHaveCount(2, { timeout: 15_000 })
-		await expect(history.getByText(`E2E-CHP-${RUN} question about a permit`)).toBeVisible()
-		await expect(history.getByText(`E2E-CHP-${RUN} callback about the permit`)).toBeVisible()
+		await expect(history.getByTestId('cti-intake-history-item')).toHaveCount(2, {
+			timeout: 15_000,
+		})
+		await expect(
+			history.getByText(`E2E-CHP-${RUN} question about a permit`),
+		).toBeVisible()
+		await expect(
+			history.getByText(`E2E-CHP-${RUN} callback about the permit`),
+		).toBeVisible()
 		await expect(intake.getByTestId('cti-intake-history-failed')).toHaveCount(0)
 	})
 
-	test('a first-time caller is told there are no earlier contacts', async ({ page }) => {
-		await gotoAppRoute(page, `/?callPreview=${encodeURIComponent(UNKNOWN)}&callPreviewOpen=intake`)
+	test('a first-time caller is told there are no earlier contacts', async ({
+		page,
+	}) => {
+		await gotoAppRoute(
+			page,
+			`/?callPreview=${encodeURIComponent(UNKNOWN)}&callPreviewOpen=intake`,
+		)
 
 		const intake = page.getByTestId('cti-intake-dialog')
 		await expect(intake).toBeVisible({ timeout: 30_000 })
-		await expect(intake.getByTestId('cti-intake-history-empty')).toBeVisible({ timeout: 15_000 })
+		await expect(intake.getByTestId('cti-intake-history-empty')).toBeVisible({
+			timeout: 15_000,
+		})
 	})
 
-	test('the Tickets list searches a typed number as a phone number (REQ-CHP-002)', async ({ page }) => {
+	test('the Tickets list searches a typed number as a phone number (REQ-CHP-002)', async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, '/tickets')
 
 		const search = await openIndexSearch(page)
 		await search.fill(TYPED)
 
-		await expect(page.getByTestId('cn-index-search-note')).toHaveText(/Searching by phone number|Zoeken op telefoonnummer/, { timeout: 15_000 })
-		await expect(page.locator('#content-vue').getByText(`E2E-CHP-${RUN} question about a permit`)).toBeVisible({ timeout: 15_000 })
-		await expect(page.locator('#content-vue').getByText(`E2E-CHP-${RUN} callback about the permit`)).toBeVisible()
+		await expect(page.getByTestId('cn-index-search-note')).toHaveText(
+			/Searching by phone number|Zoeken op telefoonnummer/,
+			{ timeout: 15_000 },
+		)
+		await expect(
+			page
+				.locator('#content-vue')
+				.getByText(`E2E-CHP-${RUN} question about a permit`),
+		).toBeVisible({ timeout: 15_000 })
+		await expect(
+			page
+				.locator('#content-vue')
+				.getByText(`E2E-CHP-${RUN} callback about the permit`),
+		).toBeVisible()
 	})
 })

@@ -52,10 +52,16 @@ const OCS = { 'OCS-APIRequest': 'true', Accept: 'application/json' }
  * @param api The admin context.
  * @param schema `contact` or `client`.
  */
-async function stampedCount(api: APIRequestContext, schema: string): Promise<number> {
-	const res = await api.get(`/index.php/apps/openregister/api/objects/pipelinq/${schema}`, {
-		params: { _search: RUN, _limit: 50 },
-	})
+async function stampedCount(
+	api: APIRequestContext,
+	schema: string,
+): Promise<number> {
+	const res = await api.get(
+		`/index.php/apps/openregister/api/objects/pipelinq/${schema}`,
+		{
+			params: { _search: RUN, _limit: 50 },
+		},
+	)
 	expect(res.ok(), `searching ${schema}: ${res.status()}`).toBeTruthy()
 	const body = await res.json()
 	return Number(body.total ?? (body.results ?? []).length)
@@ -70,9 +76,14 @@ async function pasteSignature(page: Page): Promise<ReturnType<Page['getByTestId'
 	await clickHeaderAction(page, 'Paste or scan')
 	const modal = page.getByTestId('contact-capture-modal')
 	await expect(modal).toBeVisible()
-	await modal.getByTestId('contact-capture-text').locator('textarea').fill(SIGNATURE)
+	await modal
+		.getByTestId('contact-capture-text')
+		.locator('textarea')
+		.fill(SIGNATURE)
 	await modal.getByTestId('contact-capture-read').click()
-	await expect(modal.getByTestId('contact-capture-field-email').locator('input')).toHaveValue(EMAIL, { timeout: 20_000 })
+	await expect(
+		modal.getByTestId('contact-capture-field-email').locator('input'),
+	).toHaveValue(EMAIL, { timeout: 20_000 })
 	return modal
 }
 
@@ -83,13 +94,21 @@ async function pasteSignature(page: Page): Promise<ReturnType<Page['getByTestId'
  * @param page The page.
  * @param modal The Paste or scan dialog.
  */
-async function placeName(page: Page, modal: ReturnType<Page['getByTestId']>): Promise<void> {
-	const nameInput = modal.getByTestId('contact-capture-field-name').locator('input')
+async function placeName(
+	page: Page,
+	modal: ReturnType<Page['getByTestId']>,
+): Promise<void> {
+	const nameInput = modal
+		.getByTestId('contact-capture-field-name')
+		.locator('input')
 	if ((await nameInput.inputValue()) === NAME) {
 		return
 	}
 	const line = modal.getByTestId('contact-capture-line').filter({ hasText: NAME })
-	await expect(line, 'the name line is neither placed nor listed as unassigned').toBeVisible()
+	await expect(
+		line,
+		'the name line is neither placed nor listed as unassigned',
+	).toBeVisible()
 	await line.locator('input').click()
 	await page.getByRole('option', { name: 'Name', exact: true }).click()
 	await expect(nameInput).toHaveValue(NAME)
@@ -101,28 +120,43 @@ test.describe('Paste or scan turns a signature into a prefilled create form', ()
 	let api: APIRequestContext
 
 	test.beforeAll(async () => {
-		api = await request.newContext({ baseURL: BASE_URL, httpCredentials: ADMIN, extraHTTPHeaders: OCS })
+		api = await request.newContext({
+			baseURL: BASE_URL,
+			httpCredentials: ADMIN,
+			extraHTTPHeaders: OCS,
+		})
 	})
 
 	test.afterAll(async () => {
 		// Nothing should have been saved; remove it anyway if a run did save.
 		for (const schema of ['contact', 'client']) {
-			const res = await api.get(`/index.php/apps/openregister/api/objects/pipelinq/${schema}`, { params: { _search: RUN, _limit: 50 } })
+			const res = await api.get(
+				`/index.php/apps/openregister/api/objects/pipelinq/${schema}`,
+				{ params: { _search: RUN, _limit: 50 } },
+			)
 			if (res.ok()) {
-				for (const row of ((await res.json()).results ?? []) as Array<Record<string, unknown>>) {
-					await api.delete(`/index.php/apps/openregister/api/objects/pipelinq/${schema}/${String(row.id)}`)
+				for (const row of ((await res.json()).results ?? []) as Array<
+					Record<string, unknown>
+				>) {
+					await api.delete(
+						`/index.php/apps/openregister/api/objects/pipelinq/${schema}/${String(row.id)}`,
+					)
 				}
 			}
 		}
 		await api.dispose()
 	})
 
-	test('on Contacts: the fields land in the New contact form, and nothing is saved before Save', async ({ page }) => {
+	test('on Contacts: the fields land in the New contact form, and nothing is saved before Save', async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, '/contacts')
 		const modal = await pasteSignature(page)
 
 		// The phone comes back in international format.
-		await expect(modal.getByTestId('contact-capture-field-phone').locator('input')).toHaveValue(/^\+31\s?6/)
+		await expect(
+			modal.getByTestId('contact-capture-field-phone').locator('input'),
+		).toHaveValue(/^\+31\s?6/)
 		await placeName(page, modal)
 
 		await modal.getByTestId('contact-capture-use').click()
@@ -130,7 +164,9 @@ test.describe('Paste or scan turns a signature into a prefilled create form', ()
 		await expect(create).toBeVisible({ timeout: 15_000 })
 		await expect(create.getByLabel('Name', { exact: true })).toHaveValue(NAME)
 		await expect(create.getByLabel('Email', { exact: true })).toHaveValue(EMAIL)
-		await expect(create.getByLabel('Phone', { exact: true })).toHaveValue(/6\s?1234\s?5678|612345678/)
+		await expect(create.getByLabel('Phone', { exact: true })).toHaveValue(
+			/6\s?1234\s?5678|612345678/,
+		)
 
 		// Nothing is in the register until Save.
 		expect(await stampedCount(api, 'contact')).toBe(0)
@@ -139,7 +175,9 @@ test.describe('Paste or scan turns a signature into a prefilled create form', ()
 		expect(await stampedCount(api, 'contact')).toBe(0)
 	})
 
-	test('on Clients: Use these fields opens New client prefilled, and nothing is saved before Save', async ({ page }) => {
+	test('on Clients: Use these fields opens New client prefilled, and nothing is saved before Save', async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, '/clients')
 		const modal = await pasteSignature(page)
 		await placeName(page, modal)
@@ -148,9 +186,15 @@ test.describe('Paste or scan turns a signature into a prefilled create form', ()
 		const create = page.getByTestId('client-create-dialog')
 		await expect(create).toBeVisible({ timeout: 15_000 })
 		// ClientForm draws Name, Email and Phone once per layout; the visible one counts.
-		await expect(create.getByLabel('Name', { exact: true }).first()).toHaveValue(NAME)
-		await expect(create.getByLabel('Email', { exact: true }).first()).toHaveValue(EMAIL)
-		await expect(create.getByLabel('Phone', { exact: true }).first()).toHaveValue(/6\s?1234\s?5678|612345678/)
+		await expect(create.getByLabel('Name', { exact: true }).first()).toHaveValue(
+			NAME,
+		)
+		await expect(
+			create.getByLabel('Email', { exact: true }).first(),
+		).toHaveValue(EMAIL)
+		await expect(
+			create.getByLabel('Phone', { exact: true }).first(),
+		).toHaveValue(/6\s?1234\s?5678|612345678/)
 
 		expect(await stampedCount(api, 'client')).toBe(0)
 		await create.getByTestId('client-create-cancel').click()
@@ -158,16 +202,25 @@ test.describe('Paste or scan turns a signature into a prefilled create form', ()
 		expect(await stampedCount(api, 'client')).toBe(0)
 	})
 
-	test('without an OCR provider the dialog says photos cannot be read, and paste stays', async ({ page }) => {
-		const status = await api.get('/index.php/apps/pipelinq/api/contact-capture/status')
+	test('without an OCR provider the dialog says photos cannot be read, and paste stays', async ({
+		page,
+	}) => {
+		const status = await api.get(
+			'/index.php/apps/pipelinq/api/contact-capture/status',
+		)
 		expect(status.ok(), `capture status: ${status.status()}`).toBeTruthy()
-		test.skip((await status.json()).photo === true, 'This instance has a recognition provider; the provider-less wording does not show.')
+		test.skip(
+			(await status.json()).photo === true,
+			'This instance has a recognition provider; the provider-less wording does not show.',
+		)
 
 		await gotoAppRoute(page, '/contacts')
 		await clickHeaderAction(page, 'Paste or scan')
 		const modal = page.getByTestId('contact-capture-modal')
 		await expect(modal.getByTestId('contact-capture-no-photo')).toBeVisible()
 		await expect(modal.getByTestId('contact-capture-photo')).toHaveCount(0)
-		await expect(modal.getByTestId('contact-capture-text').locator('textarea')).toBeEditable()
+		await expect(
+			modal.getByTestId('contact-capture-text').locator('textarea'),
+		).toBeEditable()
 	})
 })
