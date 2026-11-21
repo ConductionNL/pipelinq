@@ -2579,6 +2579,8 @@ OC.L10N.register(
         "No deals closed yet.": "Nog geen deals gesloten.",
         "No destinations yet": "Nog geen bestemmingen",
         "No due date": "Geen deadline",
+        "Recent activity": "Recente activiteit",
+        "No recent activity on your items": "Er is niets veranderd aan jouw werk",
         "Follow-up today": "Vandaag opvolgen",
         "Tomorrow": "Morgen",
         "In {count} days": "Over {count} dagen",

@@ -2625,6 +2625,8 @@ OC.L10N.register(
         "No deals closed yet.": "No deals closed yet.",
         "No destinations yet": "No destinations yet",
         "No due date": "No due date",
+        "Recent activity": "Recent activity",
+        "No recent activity on your items": "No recent activity on your items",
         "Follow-up today": "Follow-up today",
         "Tomorrow": "Tomorrow",
         "In {count} days": "In {count} days",
