@@ -46,16 +46,16 @@ class AgentPresenceReader {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig $appConfig Reads which register and schema hold the presence rows.
-	 * @param ContainerInterface $container Finds OpenRegister's object service at run time.
 	 * @param BackgroundServiceAccount $account The account the read runs as.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IAppConfig $appConfig Reads which register and schema hold the presence rows.
+	 * @param ContainerInterface $container Finds OpenRegister's object service at run time.
 	 */
 	public function __construct(
-		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private BackgroundServiceAccount $account,
 		private LoggerInterface $logger,
+		private IAppConfig $appConfig,
+		private ContainerInterface $container,
 	) {
 	}//end __construct()
 

@@ -125,6 +125,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Read the agent's own dial line when no extension is given.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-36.1
+	 */
 	async created() {
 		if (this.enabled && !this.extension) {
 			this.line = await loadDialLine()
