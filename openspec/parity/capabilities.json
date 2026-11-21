@@ -4451,7 +4451,7 @@
 			"id": "work-my-week-stats",
 			"area": "work",
 			"name": "See how your own week is going: answered, within the deadline, answer time",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4462,8 +4462,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has no tiles; REQ-MW-090",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WeekStats.php (GET /api/my-work/week-stats), the my-week stats-block on the MyWork page in src/manifest.json",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: KPI summary tiles on My work (REQ-MW-090)"
@@ -4478,7 +4478,7 @@
 			"id": "work-quick-create",
 			"area": "work",
 			"name": "Create a ticket or contact from your work list without leaving it; New lead is not offered there",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4489,8 +4489,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has no create buttons; REQ-MW-100",
+				"state": "built",
+				"evidence": "src/manifest.json MyWork headerActions my-work-new-ticket and my-work-new-contact",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Quick actions on My work (REQ-MW-100)"
@@ -4508,7 +4508,7 @@
 			"id": "work-upcoming-meetings",
 			"area": "work",
 			"name": "See your meetings with clients this week next to your work",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4519,8 +4519,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "no calendar read in src/views/MyWork.vue or lib/Service/WorklistService.php; REQ-MW-130",
+				"state": "built",
+				"evidence": "lib/Service/MyWork/MyWorkCalendarService.php (GET /api/my-work/meetings), the my-meetings record list on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": [
 					"my-work-roadmap",
@@ -4565,7 +4565,7 @@
 			"id": "work-team-view",
 			"area": "work",
 			"name": "Look at your team's open work as a manager, and at one member's",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4576,8 +4576,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/WorklistService.php:209 getMine() reads one user only; REQ-MW-180",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WorkScope.php, lib/Controller/MyWorkTeamController.php (GET /api/my-work/team), the my-scope and my-team widgets on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Role-based content (REQ-MW-180)"
