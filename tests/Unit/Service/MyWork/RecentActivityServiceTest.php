@@ -25,6 +25,7 @@ use DateTime;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Service\MyWork\ActivityTrail;
 use OCA\Pipelinq\Service\MyWork\RecentActivityService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -37,6 +38,7 @@ use RuntimeException;
  * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 #[CoversClass(RecentActivityService::class)]
+#[CoversClass(ActivityTrail::class)]
 class RecentActivityServiceTest extends TestCase {
 
 	/**
@@ -181,9 +183,9 @@ class RecentActivityServiceTest extends TestCase {
 		$read = [];
 		$entries = $this->service(items: $items, trails: $trails, read: $read)->forUser(userId: 'daan');
 
-		$this->assertCount(expectedCount: RecentActivityService::LIMIT, haystack: $entries);
+		$this->assertCount(expectedCount: ActivityTrail::LIMIT, haystack: $entries);
 		$this->assertSame(expected: 'at25', actual: $entries[0]['id']);
-		$this->assertCount(expectedCount: RecentActivityService::ITEMS_READ, haystack: $read);
+		$this->assertCount(expectedCount: ActivityTrail::ITEMS_READ, haystack: $read);
 		$this->assertNotContains(needle: 't01', haystack: $read);
 	}//end testTenEntriesFromTheTwentyLatestItems()
 
@@ -246,4 +248,24 @@ class RecentActivityServiceTest extends TestCase {
 		$this->assertSame(expected: [], actual: $this->service(items: [], trails: [], read: $read)->forUser(userId: 'daan'));
 		$this->assertSame(expected: [], actual: $read);
 	}//end testNoWorkNoActivity()
+
+	/**
+	 * Work that cannot be read answers no entries instead of an error.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableWorkIsNoActivity(): void {
+		$worklist = $this->createMock(originalClassName: WorklistService::class);
+		$worklist->method('items')->willThrowException(exception: new RuntimeException('register down'));
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objects->expects($this->never())->method('getLogs');
+
+		$service = new RecentActivityService(
+			worklist: $worklist,
+			objectService: $objects,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+		);
+
+		$this->assertSame(expected: [], actual: $service->forUser(userId: 'daan'));
+	}//end testUnreadableWorkIsNoActivity()
 }//end class

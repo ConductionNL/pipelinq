@@ -29,7 +29,6 @@ namespace OCA\Pipelinq\Controller;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
-use OCA\Pipelinq\Service\MyWork\RecentActivityService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,14 +51,12 @@ class MyWorkController extends Controller {
 	 * @param WorklistServiceInterface $worklistService The worklist service.
 	 * @param IUserSession             $userSession     The session.
 	 * @param LoggerInterface          $logger          The logger.
-	 * @param RecentActivityService    $activity        The recent activity of the user's work.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly WorklistServiceInterface $worklistService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly RecentActivityService $activity,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -94,35 +91,4 @@ class MyWorkController extends Controller {
 			return new JSONResponse(['message' => 'Week figures unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end weekStats()
-
-	/**
-	 * GET /api/my-work/recent-activity: the latest audit-trail entries of the
-	 * work assigned to the session user, as `{items: [...]}`. Always the
-	 * session user's own work, read as that user. Work that cannot be read
-	 * answers an empty list, so My work shows its empty text instead of an
-	 * error.
-	 *
-	 * @return JSONResponse The entries, or 401 without a user.
-	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
-	 */
-	#[NoAdminRequired]
-	public function recentActivity(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$items = $this->activity->forUser(userId: $user->getUID());
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				message: '[MyWorkController] recentActivity read nothing',
-				context: ['error' => $e->getMessage()]
-			);
-			$items = [];
-		}
-
-		return new JSONResponse(['items' => $items]);
-	}//end recentActivity()
 }//end class
