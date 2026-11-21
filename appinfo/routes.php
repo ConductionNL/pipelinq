@@ -121,6 +121,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
         ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
         ['name' => 'myWork#weekStats', 'url' => '/api/my-work/week-stats', 'verb' => 'GET'],
+        ['name' => 'myWorkTeam#show', 'url' => '/api/my-work/team', 'verb' => 'GET'],
         ['name' => 'myWorkMeetings#upcoming', 'url' => '/api/my-work/meetings', 'verb' => 'GET'],
         ['name' => 'myWorkActivity#index', 'url' => '/api/my-work/recent-activity', 'verb' => 'GET'],
         ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],

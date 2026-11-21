@@ -62,6 +62,31 @@ class WorkBuckets {
 	private const WAITING_ON_CUSTOMER = 'awaiting_customer';
 
 	/**
+	 * The work rows decorated with their bucket, kept to one list and lens, and sorted.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The open work rows.
+	 * @param array{now: DateTimeImmutable, bucket: string, lens: string, sort: string} $list The moment to judge on, the
+	 *   bucket ('' for all), the lens ('' or `all` for all) and the sort.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	public function listed(array $rows, array $list): array {
+		$items = [];
+		foreach ($rows as $row) {
+			$row = $this->decorate(row: $row, now: $list['now']);
+			if (($list['bucket'] === '' || $row['bucket'] === $list['bucket']) && $this->inLens(kind: $row['kind'], lens: $list['lens']) === true) {
+				$items[] = $row;
+			}
+		}
+
+		usort($items, $this->comparator(sort: $list['sort']));
+
+		return $items;
+	}//end listed()
+
+	/**
 	 * The row with `dueAt`, `bucket` and `dueGroup` added, from its `kind`
 	 * and its raw `record`.
 	 *

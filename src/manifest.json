@@ -10831,7 +10831,7 @@
 						"id": "my-work-download",
 						"label": "Download",
 						"icon": "Download",
-						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone"
+						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member"
 					}
 				],
 				"gridSideColumn": {
@@ -10988,7 +10988,7 @@
 						"viewport": "narrow",
 						"content": {
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
 								"responsePath": "items"
 							},
 							"presentation": "rows",
@@ -11041,13 +11041,56 @@
 						}
 					},
 					{
+						"id": "my-scope",
+						"type": "workspace-filter",
+						"viewport": "wide",
+						"titleTone": "side",
+						"title": "Whose work",
+						"showTitle": true,
+						"_note": "REQ-MW-180: My items, Team (a member of a team manager group, named in the admin settings) and Organisation (an administrator), as GET /api/my-work/team lists them for the user. Hidden when the user has only their own work. The lists, the download and the week tiles pass the scope on; every read stays under the user's own OpenRegister permissions. Not yet: the lens chip counts and the My leads and My follow-ups lists still count the user's own work.",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/my-work/team", "field": "scopes", "op": "notEmpty" },
+						"content": {
+							"style": "chips",
+							"label": "Whose work",
+							"writes": "@workspace.scope",
+							"urlKey": "scope",
+							"default": "mine",
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/my-work/team",
+								"responsePath": "scopes"
+							}
+						}
+					},
+					{
+						"id": "my-team",
+						"type": "workspace-filter",
+						"viewport": "wide",
+						"titleTone": "side",
+						"title": "Your team",
+						"showTitle": true,
+						"_note": "REQ-MW-180: on Team, every member of the manager's team with their open items; a member narrows the lists to that member, Back to team returns to the whole team.",
+						"visibleWhen": { "workspace": "scope", "op": "eq", "value": "team" },
+						"content": {
+							"style": "radio",
+							"label": "Team member",
+							"writes": "@workspace.member",
+							"urlKey": "member",
+							"allLabel": "Back to team",
+							"showCounts": true,
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/my-work/team",
+								"responsePath": "members"
+							}
+						}
+					},
+					{
 						"id": "my-week",
 						"viewport": "wide",
 						"titleTone": "side",
 						"type": "stats-block",
 						"title": "Your week so far",
 						"showTitle": true,
-						"_note": "REQ-MW-090: the four figures of the user's own tickets this calendar week, computed server side (GET /api/my-work/week-stats). No visibleWhen: a lens describes the list, not the week, so the tiles stay when the list narrows. A figure without data reads as a dash, never 0. The team figure under Within the deadline comes with the team scope (REQ-MW-180).",
+						"_note": "REQ-MW-090: the four figures of the user's own tickets this calendar week, computed server side (GET /api/my-work/week-stats). No visibleWhen: a lens describes the list, not the week, so the tiles stay when the list narrows. A figure without data reads as a dash, never 0. With the Team or Organisation scope (REQ-MW-180) the figures count the tickets of that scope.",
 						"content": {
 							"layout": "grid",
 							"columns": 2,
@@ -11060,7 +11103,7 @@
 										"decimals": 0
 									},
 									"endpointSource": {
-										"url": "/apps/pipelinq/api/my-work/week-stats"
+										"url": "/apps/pipelinq/api/my-work/week-stats?scope=@workspace.scope"
 									},
 									"valueField": "answered"
 								},
@@ -11073,7 +11116,7 @@
 										"suffix": "%"
 									},
 									"endpointSource": {
-										"url": "/apps/pipelinq/api/my-work/week-stats"
+										"url": "/apps/pipelinq/api/my-work/week-stats?scope=@workspace.scope"
 									},
 									"valueField": "withinDeadline",
 									"emptyText": "–"
@@ -11087,7 +11130,7 @@
 										"suffix": " days"
 									},
 									"endpointSource": {
-										"url": "/apps/pipelinq/api/my-work/week-stats"
+										"url": "/apps/pipelinq/api/my-work/week-stats?scope=@workspace.scope"
 									},
 									"valueField": "averageAnswerDays",
 									"emptyText": "–"
@@ -11100,7 +11143,7 @@
 										"decimals": 0
 									},
 									"endpointSource": {
-										"url": "/apps/pipelinq/api/my-work/week-stats"
+										"url": "/apps/pipelinq/api/my-work/week-stats?scope=@workspace.scope"
 									},
 									"valueField": "converted"
 								}
@@ -11153,7 +11196,7 @@
 					{
 						"id": "my-answer-today",
 						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
-						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=answer-today", "field": "items", "op": "notEmpty" },
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=answer-today&scope=@workspace.scope&member=@workspace.member", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Answer today",
 						"viewport": "wide",
@@ -11162,7 +11205,7 @@
 							"chevron": true,
 							"headerNote": "deadline is today or has passed",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11241,7 +11284,7 @@
 					{
 						"id": "my-waiting-on-me",
 						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
-						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me", "field": "items", "op": "notEmpty" },
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&scope=@workspace.scope&member=@workspace.member", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Waiting on me",
 						"viewport": "wide",
@@ -11250,7 +11293,7 @@
 							"chevron": true,
 							"headerNote": "the customer has replied",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11329,7 +11372,7 @@
 					{
 						"id": "my-waiting-on-customer",
 						"_visibleWhenNote": "Empty groups are hidden (specs/my-work, Grouping by what to do): the group shows only when the bucket holds an open item of yours. The page reads it once on load, so a group you empty while working keeps its empty line until the next visit.",
-						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer", "field": "items", "op": "notEmpty" },
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&scope=@workspace.scope&member=@workspace.member", "field": "items", "op": "notEmpty" },
 						"type": "record-list",
 						"title": "Waiting on the customer",
 						"viewport": "wide",
@@ -11338,7 +11381,7 @@
 							"chevron": true,
 							"headerNote": "nothing to do until they reply",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11706,7 +11749,7 @@
 						"id": "8",
 						"widgetId": "my-items-phone",
 						"gridX": 0,
-						"gridY": 19,
+						"gridY": 24,
 						"gridWidth": 12,
 						"gridHeight": 4,
 						"sizeToContent": true,
@@ -11723,10 +11766,30 @@
 						"sizeToContent": true
 					},
 					{
+						"id": "12",
+						"widgetId": "my-scope",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 1,
+						"track": "side",
+						"sizeToContent": true
+					},
+					{
+						"id": "13",
+						"widgetId": "my-team",
+						"gridX": 8,
+						"gridY": 1,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"track": "side",
+						"sizeToContent": true
+					},
+					{
 						"id": "1",
 						"widgetId": "my-week",
 						"gridX": 8,
-						"gridY": 0,
+						"gridY": 5,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"track": "side",
@@ -11746,7 +11809,7 @@
 						"id": "3",
 						"widgetId": "my-start-here",
 						"gridX": 8,
-						"gridY": 3,
+						"gridY": 8,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"track": "side",
@@ -11756,7 +11819,7 @@
 						"id": "4",
 						"widgetId": "my-saved-views",
 						"gridX": 8,
-						"gridY": 6,
+						"gridY": 11,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"track": "side",
@@ -11776,7 +11839,7 @@
 						"id": "6",
 						"widgetId": "my-leads",
 						"gridX": 0,
-						"gridY": 12,
+						"gridY": 17,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -11785,7 +11848,7 @@
 						"id": "7",
 						"widgetId": "my-follow-ups",
 						"gridX": 6,
-						"gridY": 12,
+						"gridY": 17,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -11794,7 +11857,7 @@
 						"id": "9",
 						"widgetId": "my-call-reviews",
 						"gridX": 8,
-						"gridY": 9,
+						"gridY": 14,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"track": "side",
@@ -11804,7 +11867,7 @@
 						"id": "10",
 						"widgetId": "my-meetings",
 						"gridX": 0,
-						"gridY": 16,
+						"gridY": 21,
 						"gridWidth": 12,
 						"gridHeight": 3,
 						"sizeToContent": true
@@ -11813,7 +11876,7 @@
 						"id": "11",
 						"widgetId": "my-activity",
 						"gridX": 8,
-						"gridY": 12,
+						"gridY": 17,
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"track": "side",

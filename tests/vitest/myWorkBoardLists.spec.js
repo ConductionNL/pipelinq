@@ -46,7 +46,7 @@ describe('Mijn werk lists as the board draws them', () => {
 	it('hides a group without items: each bucket list shows only when its bucket holds one', () => {
 		BUCKETS.forEach((id) => {
 			const bucket = id.replace(/^my-/, '')
-			expect(widget(id).visibleWhen).toEqual({ endpoint: `/apps/pipelinq/api/worklist/items?bucket=${bucket}`, field: 'items', op: 'notEmpty' })
+			expect(widget(id).visibleWhen).toEqual({ endpoint: `/apps/pipelinq/api/worklist/items?bucket=${bucket}&scope=@workspace.scope&member=@workspace.member`, field: 'items', op: 'notEmpty' })
 		})
 	})
 

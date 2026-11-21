@@ -164,22 +164,33 @@ class WorklistController extends Controller {
 	}//end items()
 
 	/**
-	 * Read the user's items for a bucket with the requested lens, sort and scope.
+	 * Read the items of a bucket with the requested lens, sort, finished work
+	 * and scope (`?scope=mine|team|organisation`, `?member=`, REQ-MW-180).
 	 *
 	 * @param IUser $user The signed-in user.
 	 * @param string $bucket The validated bucket.
 	 *
-	 * @return array<string, mixed>|JSONResponse The worklist result, or a 500 envelope when it is unavailable.
+	 * @return array<string, mixed>|JSONResponse The worklist result, a 400 for a scope the user may not
+	 *   ask for, or a 500 envelope when it is unavailable.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	private function fetchItems(IUser $user, string $bucket): array|JSONResponse {
-		$lens = (string)$this->request->getParam('lens', '');
-		$sort = (string)$this->request->getParam('sort', 'deadline');
-		$scope = $this->scopeParam();
+		[$scope, $member] = $this->workScopeParams();
+		$view = [
+			'bucket' => $bucket,
+			'lens'   => (string)$this->request->getParam('lens', ''),
+			'sort'   => (string)$this->request->getParam('sort', 'deadline'),
+			'done'   => $this->doneParam(),
+			'scope'  => $scope,
+			'member' => $member,
+		];
 
 		try {
-			return $this->worklistService->items(userId: $user->getUID(), bucket: $bucket, lens: $lens, sort: $sort, scope: $scope);
+			return $this->worklistService->items(userId: $user->getUID(), view: $view);
+		} catch (\InvalidArgumentException $e) {
+			return new JSONResponse(['message' => 'Invalid scope'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[WorklistController] items failed',
@@ -190,20 +201,15 @@ class WorklistController extends Controller {
 	}//end fetchItems()
 
 	/**
-	 * The requested scope: all items when done ones are asked for, else the open ones.
+	 * Whether finished work is asked for too (`?done=1` or `?done=true`).
 	 *
-	 * @return string
+	 * @return bool
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 */
-	private function scopeParam(): string {
-		$scope = 'open';
-		if (in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true) === true) {
-			$scope = 'all';
-		}
-
-		return $scope;
-	}//end scopeParam()
+	private function doneParam(): bool {
+		return in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true);
+	}//end doneParam()
 
 	/**
 	 * The worklist result as JSON, or as a CSV download when asked for.

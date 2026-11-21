@@ -79,19 +79,23 @@ interface WorklistServiceInterface {
 	 * bucket, dueGroup }`; `kind` is the ticket type, `lead` or `task`, and
 	 * `record` the object as stored, for the list's templates.
 	 *
-	 * @param string $userId The Nextcloud UID whose work to list.
-	 * @param string $bucket Keep one list (`answer-today`, `waiting-on-me`, `waiting-on-customer`); '' for all.
-	 * @param string $lens   Keep one kind of work (`tickets`, `leads`, `tasks`); '' or `all` for all.
-	 * @param string $sort   `deadline` (default), `waiting` (oldest first), `newest` or `priority`.
-	 * @param string $scope  `open` (default), or `all` to list finished work too (the page's "Toon afgerond").
+	 * The view, every key optional: `bucket` (one list, '' for all), `lens`
+	 * (one kind of work), `sort` (`deadline` by default), `done` (true lists
+	 * finished work too), `scope` (`mine` by default, `team` or
+	 * `organisation`, REQ-MW-180) and `member` (one member of the team).
+	 *
+	 * @param string $userId The Nextcloud UID asking.
+	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string} $view The view.
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, total: int}
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
+	 * @throws \InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
-	public function items(string $userId, string $bucket='', string $lens='', string $sort='deadline', string $scope='open'): array;
+	public function items(string $userId, array $view=[]): array;
 
 	/**
 	 * One sentence on the user's open work, for My work's header: how many
@@ -109,15 +113,16 @@ interface WorklistServiceInterface {
 	public function summary(string $userId): string;
 
 	/**
-	 * The figures of My work's "Your week so far" tiles for the user's own
-	 * tickets over the current calendar week; only the `mine` scope exists.
+	 * The figures of My work's "Your week so far" tiles over the current
+	 * calendar week, for the tickets of the scope: the user's own (`mine`),
+	 * their team's (`team`) or everyone's (`organisation`).
 	 *
 	 * @param string $userId The Nextcloud UID.
-	 * @param string $scope  The scope; only `mine`.
+	 * @param string $scope  `mine`, `team` or `organisation`.
 	 *
 	 * @return array<string, mixed> The figures and the scope.
 	 *
-	 * @throws InvalidArgumentException For a scope other than `mine`.
+	 * @throws InvalidArgumentException For a scope the user may not choose.
 	 *
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
 	 */
