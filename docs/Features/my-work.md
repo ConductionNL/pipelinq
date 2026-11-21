@@ -44,6 +44,10 @@ Items past their due date are visually distinct with red color indicators and ov
 
 A follow-up row says when it is planned. A follow-up planned today reads "planned 14:00" and is marked "Follow-up today". One still to come reads "Tomorrow" or "In 3 days". One past its deadline reads "2 days overdue" in red and, on the phone, sits in the Overdue group.
 
+### Recent activity (V1)
+
+The side column lists the ten latest changes to the work assigned to you, from OpenRegister's audit trail: what kind of item it is, its title, how long ago, who made the change and which fields changed. Click an entry to open the item. You only see changes to items you may read.
+
 ### Item Navigation (MVP)
 
 Clicking any item navigates to its detail view (lead-detail or request-detail) for full context and actions.

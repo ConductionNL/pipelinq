@@ -17,7 +17,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 3. Recent activity (REQ-MW-110)
 
-- [ ] 3.1 `src/components/myWork/RecentActivity.vue`: the 10 latest audit-trail entries of the user's assigned objects through OpenRegister's audit trail API.
+- [x] 3.1 `src/components/myWork/RecentActivity.vue`: the 10 latest audit-trail entries of the user's assigned objects through OpenRegister's audit trail API.
+  - Built as a manifest record list, not a Vue file: `my-activity` on the MyWork page (side column) reads `GET /api/my-work/recent-activity` (`MyWorkActivityController`), which `RecentActivityService` and `ActivityTrail` answer from OpenRegister's audit trail (`ObjectServiceInterface::getLogs()`) of the 20 most recently changed items the worklist reads as the user, newest 10 first, with kind, title, who, when and the changed fields. PHPUnit `RecentActivityServiceTest`, `MyWorkActivityControllerTest`; Vitest `tests/vitest/myWorkRecentActivity.spec.js`.
 - [ ] 3.2 Collapsed state per user through `/api/settings/user`; empty text "No recent activity on your items".
 
 ## 4. Follow-up rows (REQ-MW-120)

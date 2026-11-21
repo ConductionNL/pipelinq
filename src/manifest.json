@@ -11474,6 +11474,34 @@
 						}
 					},
 					{
+						"id": "my-activity",
+						"viewport": "wide",
+						"titleTone": "side",
+						"type": "record-list",
+						"title": "Recent activity",
+						"_note": "my-work-roadmap REQ-MW-110: the 10 latest audit-trail entries of the work assigned to the user (GET /api/my-work/recent-activity, read as the user), newest first: the item's kind, its title, how long ago and the fields the entry names as changed. An entry opens its item. No board draws this section yet; it sits in the side column under the call reviews. Not here yet: the collapsed state per user (task 3.2).",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/my-work/recent-activity",
+								"responsePath": "items"
+							},
+							"limit": 10,
+							"presentation": "rows",
+							"title": "{title}",
+							"pill": {
+								"field": "kind",
+								"labels": { "request": "Request", "complaint": "Complaint", "melding": "Report", "interaction": "Contact moment", "lead": "Lead", "task": "Follow-up" },
+								"colorMap": { "request": "info", "complaint": "error", "melding": "warning", "interaction": "default", "lead": "teal", "task": "purple" }
+							},
+							"meta": {
+								"parts": ["{created|ago}", "{userName}", "{changes}"]
+							},
+							"rowRouteField": "routeName",
+							"rowIdField": "recordId",
+							"emptyText": "No recent activity on your items"
+						}
+					},
+					{
 						"id": "my-saved-views",
 						"viewport": "wide",
 						"titleTone": "side",
@@ -11779,6 +11807,16 @@
 						"gridY": 16,
 						"gridWidth": 12,
 						"gridHeight": 3,
+						"sizeToContent": true
+					},
+					{
+						"id": "11",
+						"widgetId": "my-activity",
+						"gridX": 8,
+						"gridY": 12,
+						"gridWidth": 4,
+						"gridHeight": 3,
+						"track": "side",
 						"sizeToContent": true
 					}
 				]
