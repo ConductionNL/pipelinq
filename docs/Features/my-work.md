@@ -40,6 +40,10 @@ Filter tabs to focus on specific entity types:
 
 Items past their due date are visually distinct with red color indicators and overdue badges, ensuring nothing falls through the cracks.
 
+### When a follow-up is planned (V1)
+
+A follow-up row says when it is planned. A follow-up planned today reads "planned 14:00" and is marked "Follow-up today". One still to come reads "Tomorrow" or "In 3 days". One past its deadline reads "2 days overdue" in red and, on the phone, sits in the Overdue group.
+
 ### Item Navigation (MVP)
 
 Clicking any item navigates to its detail view (lead-detail or request-detail) for full context and actions.

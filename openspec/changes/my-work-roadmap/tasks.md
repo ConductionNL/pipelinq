@@ -22,7 +22,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 4. Follow-up rows (REQ-MW-120)
 
-- [ ] 4.1 In `MyWork.vue` (task rows): "planned HH:MM" for today, "Tomorrow" or "In N days" otherwise, "Follow-up today" marker. Put the date logic in `src/services/myWorkGroups.js` with Vitest cases.
+- [x] 4.1 In `MyWork.vue` (task rows): "planned HH:MM" for today, "Tomorrow" or "In N days" otherwise, "Follow-up today" marker. Put the date logic in `src/services/myWorkGroups.js` with Vitest cases.
+  - Built as manifest config, not a Vue file: My work is a manifest page. The `my-follow-ups` record list reads `meta.cases` (a deadline from `@today` to `@today+1d` adds "planned {deadline|time}") and its `due` config (`todayLabel` "Follow-up today", `upcomingLabel` "Tomorrow" / "In {count} days", the library's "{count} days overdue" in the danger tone). The date logic is the library's own, so no `myWorkGroups.js`. Vitest `tests/vitest/myWorkFollowUpRows.spec.js` reads the config through the library's due text, row condition and template.
 
 ## 5. Meetings (REQ-MW-130)
 
