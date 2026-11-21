@@ -74,11 +74,14 @@ class WorklistController extends Controller {
 	 * the returned rows (the dashboard widget uses 5) while `total`,
 	 * `leadCount` and `requestCount` always reflect the full union.
 	 * Invalid limit -> 400. OpenRegister outage -> 500 with a static
-	 * message.
+	 * message. `?scope=team|organisation` widens whose work is listed when
+	 * the user may (REQ-MW-180), `?member=` narrows the team to one member;
+	 * a scope or member the user may not ask for -> 400.
 	 *
 	 * @return JSONResponse The worklist payload, or an error envelope.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	#[NoAdminRequired]
 	public function mine(): JSONResponse {
@@ -97,8 +100,12 @@ class WorklistController extends Controller {
 			$limit = (int)$limitParam;
 		}
 
+		[$scope, $member] = $this->workScopeParams();
+
 		try {
-			return new JSONResponse($this->worklistService->getMine(userId: $user->getUID(), limit: $limit));
+			return new JSONResponse($this->worklistService->getMine(userId: $user->getUID(), limit: $limit, scope: $scope, member: $member));
+		} catch (\InvalidArgumentException $e) {
+			return new JSONResponse(['message' => 'Invalid scope'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[WorklistController] mine failed',
@@ -107,6 +114,22 @@ class WorklistController extends Controller {
 			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
 	}//end mine()
+
+	/**
+	 * Whose work `mine` asks for: `?scope=` (default `mine`) and `?member=`.
+	 *
+	 * @return array{0: string, 1: string} The scope and the member ('' for none).
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 */
+	private function workScopeParams(): array {
+		$scope = (string)$this->request->getParam('scope', '');
+		if ($scope === '') {
+			$scope = 'mine';
+		}
+
+		return [$scope, (string)$this->request->getParam('member', '')];
+	}//end workScopeParams()
 
 	/**
 	 * GET /api/worklist/items: every open item of the session user's work

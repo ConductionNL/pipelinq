@@ -10160,7 +10160,11 @@ OC.L10N.register(
         "New ticket": "Nieuw ticket",
         "%n recipient has no value for {variable}": ["%n ontvanger heeft geen waarde voor {variable}","%n ontvangers hebben geen waarde voor {variable}"],
         "%n recipients have no value for {variable}": "%n ontvangers hebben geen waarde voor {variable}",
-        "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.": "BRP-opvragingen lopen via integriq. Vraag uw beheerder de BRP-koppeling daar in te richten."
+        "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.": "BRP-opvragingen lopen via integriq. Vraag uw beheerder de BRP-koppeling daar in te richten.",
+        "Who sees the work of a whole team on My work.": "Wie op Mijn werk het werk van een heel team ziet.",
+        "Save My work settings": "Instellingen van Mijn werk opslaan",
+        "Team manager groups": "Groepen van teamleiders",
+        "Group IDs, separated by commas. A member of one of these groups can switch My work to Team and see the open work of everyone in that group. Leave empty to show everyone only their own work.": "Groeps-ID's, gescheiden door komma's. Een lid van een van deze groepen kan Mijn werk op Team zetten en ziet dan het open werk van iedereen in die groep. Laat leeg om iedereen alleen het eigen werk te tonen."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -49,8 +49,10 @@ interface WorklistServiceInterface {
 	 *   - leadCount:    leads in the full union
 	 *   - requestCount: requests in the full union
 	 *
-	 * @param string $userId The Nextcloud UID whose work to list (assignee scoping).
-	 * @param int|null $limit Optional cap on returned rows (widget uses 5); null = all.
+	 * @param string   $userId The Nextcloud UID asking (assignee scoping).
+	 * @param int|null $limit  Optional cap on returned rows (widget uses 5); null = all.
+	 * @param string   $scope  `mine` (default), `team` or `organisation` (REQ-MW-180).
+	 * @param string   $member With `team`: one member of the team; '' for the whole team.
 	 *
 	 * @return array{
 	 *   items: array<int, array<string, mixed>>,
@@ -60,11 +62,13 @@ interface WorklistServiceInterface {
 	 * }
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
+	 * @throws \InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 	 * @spec openspec/specs/my-work/spec.md
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
-	public function getMine(string $userId, ?int $limit = null): array;
+	public function getMine(string $userId, ?int $limit=null, string $scope='mine', string $member=''): array;
 
 	/**
 	 * Every open item of the user's work, tickets, leads and follow-up tasks,

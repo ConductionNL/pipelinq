@@ -10145,7 +10145,11 @@ OC.L10N.register(
         "New ticket": "New ticket",
         "%n recipient has no value for {variable}": ["%n recipient has no value for {variable}","%n recipients have no value for {variable}"],
         "%n recipients have no value for {variable}": "%n recipients have no value for {variable}",
-        "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.": "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there."
+        "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.": "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.",
+        "Who sees the work of a whole team on My work.": "Who sees the work of a whole team on My work.",
+        "Save My work settings": "Save My work settings",
+        "Team manager groups": "Team manager groups",
+        "Group IDs, separated by commas. A member of one of these groups can switch My work to Team and see the open work of everyone in that group. Leave empty to show everyone only their own work.": "Group IDs, separated by commas. A member of one of these groups can switch My work to Team and see the open work of everyone in that group. Leave empty to show everyone only their own work."
     },
     "nplurals=2; plural=(n != 1);"
 )

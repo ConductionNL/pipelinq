@@ -48,6 +48,10 @@ A follow-up row says when it is planned. A follow-up planned today reads "planne
 
 The side column lists the ten latest changes to the work assigned to you, from OpenRegister's audit trail: what kind of item it is, its title, how long ago, who made the change and which fields changed. Click an entry to open the item. You only see changes to items you may read.
 
+### The work of a team (V1)
+
+An administrator names the team manager groups under Pipelinq settings, My work, "Team manager groups" (group IDs, separated by commas). A member of such a group can ask for the open work of everyone in that group, or of one member of it. A Nextcloud administrator can ask for everyone's work. Every item is still read with your own permissions, so a wider scope never shows an item you may not open. The scope switch on the page itself is still to come. Until then the worklist API takes it as `?scope=team` or `?scope=organisation`, with `&member=` for one colleague.
+
 ### Item Navigation (MVP)
 
 Clicking any item navigates to its detail view (lead-detail or request-detail) for full context and actions.
