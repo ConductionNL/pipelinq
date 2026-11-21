@@ -10143,7 +10143,13 @@ OC.L10N.register(
         "Fill in from KvK": "Aanvullen uit KvK",
         "Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.": "Elke geselecteerde organisatie met een KvK-nummer wordt opgezocht in de KvK. Alleen lege velden worden ingevuld: plaats, rechtsvorm en branche. Een veld met een waarde wordt nooit overschreven.",
         "%n is skipped: it already has these values or has no KvK number": ["%n wordt overgeslagen: deze heeft deze waarden al of heeft geen KvK-nummer","%n worden overgeslagen: ze hebben deze waarden al of hebben geen KvK-nummer"],
-        "%n are skipped: they already have these values or have no KvK number": "%n worden overgeslagen: ze hebben deze waarden al of hebben geen KvK-nummer"
+        "%n are skipped: they already have these values or have no KvK number": "%n worden overgeslagen: ze hebben deze waarden al of hebben geen KvK-nummer",
+        "Why does this deal slip?": "Waarom schuift deze deal op?",
+        "The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.": "De sluitdatum schuift van {from} naar {to}, buiten de periode waarin deze deal in de prognose stond. Geef aan waarom, zodat uw manager het in het prognoseverloop kan lezen.",
+        "At least {count} characters.": "Minstens {count} tekens.",
+        "Save with reason": "Opslaan met reden",
+        "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Niet opgeslagen: een deal die buiten zijn prognoseperiode schuift, heeft een reden nodig.",
+        "The lead could not be saved.": "De lead kon niet worden opgeslagen."
     },
     "nplurals=2; plural=(n != 1);"
 )

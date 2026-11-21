@@ -166,6 +166,7 @@ import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
+import LeadEditDialog from './dialogs/LeadEditDialog.vue'
 import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
@@ -1440,6 +1441,12 @@ const registry = {
 		component: CampaignFormDialog,
 		propsSchema: null,
 		_note: "Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant's vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
+	},
+	LeadEditDialog: {
+		kind: 'modal',
+		component: LeadEditDialog,
+		propsSchema: null,
+		_note: "Lead edit, mounted in LeadDetail's form-dialog slot (forecast-slip-reason). The library's own schema form saved through the page's own confirm, with one step between: a save that moves a commit or best-case close date out of its forecast period first opens SlipReasonModal and goes through only with the reason.",
 	},
 	JourneyFormDialog: {
 		kind: 'modal',

@@ -11,7 +11,8 @@
   - done: `ForecastDealService::applySlip()`, saved by `DealUpdatedListener`'s deferred pass; recorded once per slip.
 
 ## 3. Interface
-- [ ] 3.1 On the lead detail (PqLead), saving a slipped close date opens a reason dialog in its own file under `src/modals/`; the save does not finish without a reason.
+- [x] 3.1 On the lead detail (PqLead), saving a slipped close date opens a reason dialog in its own file under `src/modals/`; the save does not finish without a reason.
+  - done: `src/modals/SlipReasonModal.vue`, opened by `src/dialogs/LeadEditDialog.vue` in LeadDetail's `form-dialog` slot (the library's own schema form saved through the page's `confirm`). `src/services/forecastSlipCheck.js` mirrors `ForecastSlipRule` (calendar quarter of the old close date, open `commit` or `best_case` deals). A cancelled reason saves nothing and says why. `tests/vitest/forecastSlipReasonDialog.spec.js`. Owed: the same check in a live browser.
 - [x] 3.2 In the forecast trend (PqForecast), the list of deals that moved out of commit or best case shows each deal's slip reason.
   - done: the trend's card "Deals that slipped out of this quarter" lists each lead whose `slipped_from` lies in the quarter, with where it slipped from, its close date now and the slip reason (`src/services/forecastSlips.js`, `ForecastTrend.vue`). The week-over-week movements stay per seller, read from the snapshots, which carry no deals.
 

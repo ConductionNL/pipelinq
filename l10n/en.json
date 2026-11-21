@@ -10235,6 +10235,12 @@
         "Fill in from KvK": "Fill in from KvK",
         "Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.": "Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.",
         "%n is skipped: it already has these values or has no KvK number": "%n is skipped: it already has these values or has no KvK number",
-        "%n are skipped: they already have these values or have no KvK number": "%n are skipped: they already have these values or have no KvK number"
+        "%n are skipped: they already have these values or have no KvK number": "%n are skipped: they already have these values or have no KvK number",
+        "Why does this deal slip?": "Why does this deal slip?",
+        "The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.": "The close date moves from {from} to {to}, out of the period this deal was forecast in. Say why, so your manager can read it in the forecast trend.",
+        "At least {count} characters.": "At least {count} characters.",
+        "Save with reason": "Save with reason",
+        "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Not saved: a deal that slips out of its forecast period needs a slip reason.",
+        "The lead could not be saved.": "The lead could not be saved."
     }
 }
