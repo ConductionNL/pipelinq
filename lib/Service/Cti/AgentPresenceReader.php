@@ -29,7 +29,6 @@ use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * One agent's own `ctiAgentPresence` row.
@@ -86,7 +85,7 @@ class AgentPresenceReader {
 					_multitenancy: false,
 				)
 			);
-		} catch (Throwable $e) {
+		} catch (\Throwable $e) {
 			$this->logger->warning('DialLineReader: the agent presence could not be read', ['exception' => $e->getMessage()]);
 			return [];
 		}
