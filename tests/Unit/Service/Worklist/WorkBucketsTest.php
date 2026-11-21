@@ -130,4 +130,26 @@ class WorkBucketsTest extends TestCase {
 		usort($byPriority, (new WorkBuckets())->comparator(sort: 'priority'));
 		self::assertSame(['b', 'c', 'a'], array_column($byPriority, 'id'));
 	}//end testSortsByDeadlineOrPriority()
+
+	/**
+	 * Listing keeps one bucket and lens and sorts what is left.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testListedKeepsOneBucketAndLensAndSorts(): void {
+		$rows = [
+			['kind' => 'request', 'id' => 'late', 'priority' => 'normal', 'record' => ['status' => 'in_progress', 'slaDeadline' => '2026-10-05T09:00:00+00:00']],
+			['kind' => 'request', 'id' => 'later', 'priority' => 'normal', 'record' => ['status' => 'new', 'slaDeadline' => '2026-10-20T09:00:00+00:00']],
+			['kind' => 'lead', 'id' => 'lead', 'priority' => 'normal', 'record' => ['expectedCloseDate' => '2026-10-04']],
+			['kind' => 'request', 'id' => 'soon', 'priority' => 'normal', 'record' => ['status' => 'new', 'slaDeadline' => '2026-10-09T09:00:00+00:00']],
+		];
+		$list = ['now' => new DateTimeImmutable(datetime: '2026-10-06T10:00:00+00:00'), 'bucket' => 'waiting-on-me', 'lens' => 'tickets', 'sort' => 'deadline'];
+
+		$listed = (new WorkBuckets())->listed(rows: $rows, list: $list);
+
+		self::assertSame(expected: ['soon', 'later'], actual: array_column(array: $listed, column_key: 'id'));
+		self::assertSame(expected: 'waiting-on-me', actual: $listed[0]['bucket']);
+	}//end testListedKeepsOneBucketAndLensAndSorts()
 }//end class

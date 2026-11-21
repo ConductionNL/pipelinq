@@ -9436,7 +9436,7 @@
             "get": {
                 "operationId": "my-work-week-stats",
                 "summary": "This week's figures for the signed-in user's work",
-                "description": "This week's figures for the signed-in user's work, for the My Work page. Only the `mine` scope exists; any other scope is refused. Needs a signed-in Nextcloud user.",
+                "description": "This week's figures for the signed-in user's work, for the My Work page. `team` counts the team of a manager, `organisation` everyone's work for an administrator; a scope the user may not ask for is refused. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "my-work"
                 ],
@@ -9445,11 +9445,13 @@
                         "name": "scope",
                         "in": "query",
                         "required": false,
-                        "description": "The scope of the figures; only `mine`.",
+                        "description": "Whose tickets count: mine (default), team or organisation.",
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "mine"
+                                "mine",
+                                "team",
+                                "organisation"
                             ],
                             "default": "mine"
                         }
@@ -9473,6 +9475,40 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/my-work/team": {
+            "get": {
+                "operationId": "my-work-team",
+                "summary": "The scopes and the team of the signed-in user",
+                "description": "The scopes My work can switch between for the signed-in user (empty when they have only their own work) and, for a team manager, the members of their team with their open items. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
@@ -18125,6 +18161,29 @@
                         "in": "query",
                         "required": false,
                         "description": "The format.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whose work: mine (default), team (a member of a team manager group) or organisation (an administrator).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine",
+                                "team",
+                                "organisation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "query",
+                        "required": false,
+                        "description": "With scope team: one member of the team.",
                         "schema": {
                             "type": "string"
                         }

@@ -182,18 +182,30 @@ class WorkScope {
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function teamMembers(string $userId): array {
+		return array_map(static fn (int|string $uid): string => (string)$uid, array_keys($this->team(userId: $userId)));
+	}//end teamMembers()
+
+	/**
+	 * The members of the user's team with their display names, sorted by UID.
+	 *
+	 * @param string $userId The Nextcloud UID.
+	 *
+	 * @return array<string, string> Display name per UID; empty when the user manages no team.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 */
+	public function team(string $userId): array {
 		$members = [];
 		foreach ($this->managedGroups(userId: $userId) as $group) {
 			foreach ($group->getUsers() as $user) {
-				$members[] = $user->getUID();
+				$members[$user->getUID()] = $user->getDisplayName();
 			}
 		}
 
-		$members = array_values(array_unique($members));
-		sort($members, SORT_STRING);
+		ksort($members, SORT_STRING);
 
 		return $members;
-	}//end teamMembers()
+	}//end team()
 
 	/**
 	 * The configured team manager groups that hold the user.

@@ -70,6 +70,7 @@ class WorkScopeTest extends TestCase {
 						function (string $uid): IUser {
 							$user = $this->createMock(originalClassName: IUser::class);
 							$user->method('getUID')->willReturn($uid);
+							$user->method('getDisplayName')->willReturn(ucfirst($uid));
 							return $user;
 						},
 						$groups[$gid]
@@ -125,6 +126,21 @@ class WorkScopeTest extends TestCase {
 		$this->assertSame(expected: [WorkScope::MINE, WorkScope::TEAM], actual: $scope->available(userId: 'manager'));
 		$this->assertSame(expected: ['bob', 'carol', 'dave', 'manager'], actual: $scope->assignees(userId: 'manager', scope: WorkScope::TEAM));
 		$this->assertSame(expected: ['dave'], actual: $scope->assignees(userId: 'manager', scope: WorkScope::TEAM, member: 'dave'));
+	}
+
+	/**
+	 * The team carries each member's display name, sorted by UID.
+	 *
+	 * @return void
+	 */
+	public function testTheTeamCarriesDisplayNames(): void {
+		$scope = $this->scope(setting: 'leads', groups: ['leads' => ['manager', 'carol', 'bob']]);
+
+		$this->assertSame(
+			expected: ['bob' => 'Bob', 'carol' => 'Carol', 'manager' => 'Manager'],
+			actual: $scope->team(userId: 'manager')
+		);
+		$this->assertSame(expected: [], actual: $scope->team(userId: 'erin'));
 	}
 
 	/**

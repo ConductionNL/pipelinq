@@ -774,14 +774,14 @@ class WorklistServiceTest extends TestCase {
 			'task_schema' => [['id' => 'k1', 'subject' => 'Terugbellen', 'deadline' => self::iso('+3 days'), 'status' => 'open']],
 		]);
 
-		$today = $service->items(userId: 'pieter', bucket: 'answer-today');
+		$today = $service->items(userId: 'pieter', view: ['bucket' => 'answer-today']);
 		self::assertSame(['l1', 't1'], array_column($today['items'], 'id'));
 		self::assertSame(['lead', 'request'], array_column($today['items'], 'kind'));
 
-		self::assertSame(['k1'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-me')['items'], 'id'));
-		self::assertSame('Terugbellen', $service->items(userId: 'pieter', bucket: 'waiting-on-me')['items'][0]['title']);
-		self::assertSame(['t3'], array_column($service->items(userId: 'pieter', bucket: 'waiting-on-customer')['items'], 'id'));
-		self::assertSame(['t1', 't3'], array_column($service->items(userId: 'pieter', lens: 'tickets')['items'], 'id'));
+		self::assertSame(['k1'], array_column($service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'], 'id'));
+		self::assertSame('Terugbellen', $service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'][0]['title']);
+		self::assertSame(['t3'], array_column($service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-customer'])['items'], 'id'));
+		self::assertSame(['t1', 't3'], array_column($service->items(userId: 'pieter', view: ['lens' => 'tickets'])['items'], 'id'));
 	}//end testItemsMixTicketsLeadsAndTasksPerList()
 
 	/**
@@ -880,7 +880,68 @@ class WorklistServiceTest extends TestCase {
 	}//end testWeekStatsCountTheUsersAnswersOfThisWeek()
 
 	/**
-	 * A scope other than the user's own is refused until team scopes exist.
+	 * The team scope of the items reads each member's leads, tickets and
+	 * follow-ups (a follow-up names its assignee `assigneeUserId`).
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testItemsInTheTeamScopeReadEveryMember(): void {
+		$service = $this->buildService(workScope: $this->workScope(members: ['manager', 'bob']));
+
+		$service->items(userId: 'manager', view: ['scope' => 'team']);
+
+		$this->assertSame(expected: ['bob', 'manager'], actual: $this->leadQueryAssignees());
+		$taskAssignees = [];
+		foreach ($this->objectService->calls as $config) {
+			if (($config['filters']['schema'] ?? '') === 'task_schema') {
+				$taskAssignees[] = $config['filters']['assigneeUserId'];
+			}
+		}
+
+		$this->assertSame(expected: ['bob', 'manager'], actual: $taskAssignees);
+	}//end testItemsInTheTeamScopeReadEveryMember()
+
+	/**
+	 * The organisation scope of the items asks for every follow-up, not only one assignee's.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testItemsInTheOrganisationScopeDropTheAssignee(): void {
+		$service = $this->buildService();
+
+		$service->items(userId: 'admin', view: ['scope' => 'organisation']);
+
+		foreach ($this->objectService->calls as $config) {
+			$this->assertArrayNotHasKey(key: 'assignee', array: $config['filters']);
+			$this->assertArrayNotHasKey(key: 'assigneeUserId', array: $config['filters']);
+		}
+	}//end testItemsInTheOrganisationScopeDropTheAssignee()
+
+	/**
+	 * The week figures of the team scope count the tickets of every member.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testWeekStatsInTheTeamScopeReadEveryMember(): void {
+		$service = $this->buildService(workScope: $this->workScope(members: ['manager', 'bob']));
+
+		$stats = $service->getWeekStats(userId: 'manager', scope: 'team');
+
+		$assignees = array_values(array_unique(array_map(static fn (array $call): string => $call['filters']['assignee'], $this->ticketCalls)));
+		$this->assertSame(expected: ['bob', 'manager'], actual: $assignees);
+		$this->assertSame(expected: 'team', actual: $stats['scope']);
+	}//end testWeekStatsInTheTeamScopeReadEveryMember()
+
+	/**
+	 * A scope the user may not choose is refused before anything is read.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */

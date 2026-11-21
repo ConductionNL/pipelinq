@@ -50,7 +50,7 @@ The side column lists the ten latest changes to the work assigned to you, from O
 
 ### The work of a team (V1)
 
-An administrator names the team manager groups under Pipelinq settings, My work, "Team manager groups" (group IDs, separated by commas). A member of such a group can ask for the open work of everyone in that group, or of one member of it. A Nextcloud administrator can ask for everyone's work. Every item is still read with your own permissions, so a wider scope never shows an item you may not open. The scope switch on the page itself is still to come. Until then the worklist API takes it as `?scope=team` or `?scope=organisation`, with `&member=` for one colleague.
+An administrator names the team manager groups under Pipelinq settings, My work, "Team manager groups" (group IDs, separated by commas). A member of such a group can ask for the open work of everyone in that group, or of one member of it. A Nextcloud administrator can ask for everyone's work. Every item is still read with your own permissions, so a wider scope never shows an item you may not open. On My work, "Whose work" at the top of the side column switches between My items, Team and Organisation; it only shows when you have more than your own work. On Team, "Your team" lists every member with their open items: pick one to see only theirs, and "Back to team" to see the whole team again. The lists, the download and the "Your week so far" figures follow the switch. The worklist API takes the same choice as `?scope=team` or `?scope=organisation`, with `&member=` for one colleague.
 
 ### Item Navigation (MVP)
 
