@@ -26,7 +26,12 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Service\ClientIdentifierChecks;
+use OCA\Pipelinq\Service\ClientIdentifierFormat;
 use OCA\Pipelinq\Service\ClientIdentifierService;
+use OCA\Pipelinq\Service\ClientIdentifierStore;
+use OCA\Pipelinq\Service\KvkCompanyLookup;
+use OCA\Pipelinq\Service\ViesVatLookup;
 use OCA\Pipelinq\Service\CompanyRegistryHttp;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -82,6 +87,11 @@ class FakeViesService {
  * @spec openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers/spec.md
  */
 #[CoversClass(ClientIdentifierService::class)]
+#[CoversClass(ClientIdentifierFormat::class)]
+#[CoversClass(ClientIdentifierChecks::class)]
+#[CoversClass(ClientIdentifierStore::class)]
+#[CoversClass(KvkCompanyLookup::class)]
+#[CoversClass(ViesVatLookup::class)]
 #[UsesClass(CompanyRegistryHttp::class)]
 class ClientIdentifierServiceTest extends TestCase {
 
@@ -107,6 +117,20 @@ class ClientIdentifierServiceTest extends TestCase {
 	private array $saved = [];
 
 	/**
+	 * The register and schema the app config answers; empty while unconfigured.
+	 *
+	 * @var string
+	 */
+	private string $configured = '5';
+
+	/**
+	 * What saving a client throws, or null when it saves.
+	 *
+	 * @var \Throwable|null
+	 */
+	private ?\Throwable $saveFails = null;
+
+	/**
 	 * A service over the given HTTP answer, clients and VIES service.
 	 *
 	 * @param int|RuntimeException                $http     The leaf's status, or the exception it throws.
@@ -124,10 +148,15 @@ class ClientIdentifierServiceTest extends TestCase {
 		?object $vies = null,
 		bool $mayRead = true,
 	): ClientIdentifierService {
-		$response = $this->createMock(IResponse::class);
-		$response->method('getStatusCode')->willReturn(is_int($http) === true ? $http : 0);
+		$response = $this->createMock(originalClassName: IResponse::class);
+		$status = 0;
+		if (is_int($http) === true) {
+			$status = $http;
+		}
+
+		$response->method('getStatusCode')->willReturn($status);
 		$response->method('getBody')->willReturn((string)json_encode(['results' => $rows]));
-		$client = $this->createMock(IClient::class);
+		$client = $this->createMock(originalClassName: IClient::class);
 		$client->method('get')->willReturnCallback(
 			function (string $url) use ($http, $response) {
 				$this->urls[] = $url;
@@ -138,12 +167,12 @@ class ClientIdentifierServiceTest extends TestCase {
 				return $response;
 			}
 		);
-		$clientService = $this->createConfiguredMock(IClientService::class, ['newClient' => $client]);
+		$clientService = $this->createConfiguredMock(originalClassName: IClientService::class, configuration: ['newClient' => $client]);
 
-		$urls = $this->createMock(IURLGenerator::class);
+		$urls = $this->createMock(originalClassName: IURLGenerator::class);
 		$urls->method('getAbsoluteURL')->willReturnCallback(static fn (string $path): string => 'https://nc.example' . $path);
 
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (int|string $id) use ($clients, $mayRead) {
 				if ($mayRead === false) {
@@ -154,36 +183,44 @@ class ClientIdentifierServiceTest extends TestCase {
 					return null;
 				}
 
-				return $this->createConfiguredMock(ObjectEntityInterface::class, ['getObject' => $clients[$id]]);
+				return $this->createConfiguredMock(originalClassName: ObjectEntityInterface::class, configuration: ['getObject' => $clients[$id]]);
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				if ($this->saveFails !== null) {
+					throw $this->saveFails;
+				}
+
 				$this->saved[] = [$object, $options->uuid];
-				return $this->createMock(ObjectEntityInterface::class);
+				return $this->createMock(originalClassName: ObjectEntityInterface::class);
 			}
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(static fn (): ?object => $vies);
-		$apps = $this->createMock(IAppManager::class);
+		$apps = $this->createMock(originalClassName: IAppManager::class);
 		$apps->method('isEnabledForAnyone')->willReturnCallback(static fn (string $app): bool => $app === 'shillinq' && $vies !== null);
 
-		$l10n = $this->createMock(IL10N::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $text, array $params = []): string => vsprintf($text, $params));
 
-		return new ClientIdentifierService(
-			$objects,
-			$clientService,
-			$urls,
-			$container,
-			$apps,
-			$this->createConfiguredMock(IAppConfig::class, ['getValueString' => '5']),
-			$this->createConfiguredMock(ITimeFactory::class, ['getTime' => self::NOW]),
-			$l10n,
-			$this->createMock(LoggerInterface::class),
-			FakeViesService::class,
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$format = new ClientIdentifierFormat(l10n: $l10n);
+		$checks = new ClientIdentifierChecks(
+			format: $format,
+			kvk: new KvkCompanyLookup(clientService: $clientService, urlGenerator: $urls, logger: $logger),
+			vies: new ViesVatLookup(container: $container, appManager: $apps, logger: $logger, viesClass: FakeViesService::class),
+			time: $this->createConfiguredMock(originalClassName: ITimeFactory::class, configuration: ['getTime' => self::NOW]),
 		);
+		$store = new ClientIdentifierStore(
+			objectService: $objects,
+			appConfig: $this->createConfiguredMock(originalClassName: IAppConfig::class, configuration: ['getValueString' => $this->configured]),
+			l10n: $l10n,
+			logger: $logger,
+		);
+
+		return new ClientIdentifierService(format: $format, checks: $checks, store: $store, l10n: $l10n);
 	}//end service()
 
 	/**
@@ -194,14 +231,14 @@ class ClientIdentifierServiceTest extends TestCase {
 	public function testValidNumbersPassPerScheme(): void {
 		$service = $this->service();
 
-		$this->assertNull($service->validateFormat(scheme: 'kvk', value: '12345678'));
-		$this->assertNull($service->validateFormat(scheme: 'kvk', value: '1234 5678'));
-		$this->assertNull($service->validateFormat(scheme: 'rsin', value: '111222333'));
-		$this->assertNull($service->validateFormat(scheme: 'vat', value: 'NL123456789B01'));
-		$this->assertNull($service->validateFormat(scheme: 'vat', value: 'de123456789'));
-		$this->assertNull($service->validateFormat(scheme: 'vat', value: 'ATU12345678'));
-		$this->assertNull($service->validateFormat(scheme: 'duns', value: '150483782'));
-		$this->assertNull($service->validateFormat(scheme: 'oin', value: '00000001001234567000'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'kvk', value: '12345678'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'kvk', value: '1234 5678'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'rsin', value: '111222333'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'vat', value: 'NL123456789B01'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'vat', value: 'de123456789'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'vat', value: 'ATU12345678'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'duns', value: '150483782'));
+		$this->assertNull(actual: $service->validateFormat(scheme: 'oin', value: '00000001001234567000'));
 	}//end testValidNumbersPassPerScheme()
 
 	/**
@@ -212,14 +249,26 @@ class ClientIdentifierServiceTest extends TestCase {
 	public function testInvalidNumbersAreRefusedPerScheme(): void {
 		$service = $this->service();
 
-		$this->assertSame('A KvK number has 8 digits.', $service->validateFormat(scheme: 'kvk', value: '1234'));
-		$this->assertSame('An RSIN has 9 digits.', $service->validateFormat(scheme: 'rsin', value: '12345678'));
-		$this->assertSame('The RSIN 123456789 is not valid: it fails the eleven test.', $service->validateFormat(scheme: 'rsin', value: '123456789'));
-		$this->assertSame('NL123456789 is not a valid VAT number for country NL.', $service->validateFormat(scheme: 'vat', value: 'NL123456789'));
-		$this->assertSame('A VAT number starts with the two letters of an EU country, such as NL or DE.', $service->validateFormat(scheme: 'vat', value: 'US123456789'));
-		$this->assertSame('A DUNS number has 9 digits.', $service->validateFormat(scheme: 'duns', value: '15048378A'));
-		$this->assertSame('An OIN has 20 digits.', $service->validateFormat(scheme: 'oin', value: '123'));
-		$this->assertSame('"iban" is not a kind of number pipelinq keeps.', $service->validateFormat(scheme: 'iban', value: 'NL91ABNA0417164300'));
+		$this->assertSame(expected: 'A KvK number has 8 digits.', actual: $service->validateFormat(scheme: 'kvk', value: '1234'));
+		$this->assertSame(expected: 'An RSIN has 9 digits.', actual: $service->validateFormat(scheme: 'rsin', value: '12345678'));
+		$this->assertSame(
+			expected: 'The RSIN 123456789 is not valid: it fails the eleven test.',
+			actual: $service->validateFormat(scheme: 'rsin', value: '123456789')
+		);
+		$this->assertSame(
+			expected: 'NL123456789 is not a valid VAT number for country NL.',
+			actual: $service->validateFormat(scheme: 'vat', value: 'NL123456789')
+		);
+		$this->assertSame(
+			expected: 'A VAT number starts with the two letters of an EU country, such as NL or DE.',
+			actual: $service->validateFormat(scheme: 'vat', value: 'US123456789')
+		);
+		$this->assertSame(expected: 'A DUNS number has 9 digits.', actual: $service->validateFormat(scheme: 'duns', value: '15048378A'));
+		$this->assertSame(expected: 'An OIN has 20 digits.', actual: $service->validateFormat(scheme: 'oin', value: '123'));
+		$this->assertSame(
+			expected: '"iban" is not a kind of number pipelinq keeps.',
+			actual: $service->validateFormat(scheme: 'iban', value: 'NL91ABNA0417164300')
+		);
 	}//end testInvalidNumbersAreRefusedPerScheme()
 
 	/**
@@ -228,10 +277,11 @@ class ClientIdentifierServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheElevenTest(): void {
-		$this->assertTrue(ClientIdentifierService::passesElevenTest(digits: '111222333'));
-		$this->assertTrue(ClientIdentifierService::passesElevenTest(digits: '123456782'));
-		$this->assertFalse(ClientIdentifierService::passesElevenTest(digits: '123456789'));
-		$this->assertFalse(ClientIdentifierService::passesElevenTest(digits: '12345678'));
+		$format = new ClientIdentifierFormat(l10n: $this->createMock(originalClassName: IL10N::class));
+		$this->assertTrue(condition: $format->passesElevenTest(digits: '111222333'));
+		$this->assertTrue(condition: $format->passesElevenTest(digits: '123456782'));
+		$this->assertFalse(condition: $format->passesElevenTest(digits: '123456789'));
+		$this->assertFalse(condition: $format->passesElevenTest(digits: '12345678'));
 	}//end testTheElevenTest()
 
 	/**
@@ -242,13 +292,13 @@ class ClientIdentifierServiceTest extends TestCase {
 	public function testProblemsInAListAreCollected(): void {
 		$service = $this->service();
 
-		$this->assertSame([], $service->problemsIn(identifiers: null));
-		$this->assertSame([], $service->problemsIn(identifiers: [['scheme' => 'kvk', 'value' => '12345678']]));
+		$this->assertSame(expected: [], actual: $service->problemsIn(identifiers: null));
+		$this->assertSame(expected: [], actual: $service->problemsIn(identifiers: [['scheme' => 'kvk', 'value' => '12345678']]));
 		$this->assertSame(
-			['A KvK number has 8 digits.', 'Each identifier needs a kind of number and a number.'],
-			$service->problemsIn(identifiers: [['scheme' => 'kvk', 'value' => '1'], ['scheme' => 'kvk', 'value' => '2'], 'kvk'])
+			expected: ['A KvK number has 8 digits.', 'Each identifier needs a kind of number and a number.'],
+			actual: $service->problemsIn(identifiers: [['scheme' => 'kvk', 'value' => '1'], ['scheme' => 'kvk', 'value' => '2'], 'kvk'])
 		);
-		$this->assertSame(['The identifiers must be a list.'], $service->problemsIn(identifiers: ['a' => ['scheme' => 'kvk']]));
+		$this->assertSame(expected: ['The identifiers must be a list.'], actual: $service->problemsIn(identifiers: ['a' => ['scheme' => 'kvk']]));
 	}//end testProblemsInAListAreCollected()
 
 	/**
@@ -260,10 +310,10 @@ class ClientIdentifierServiceTest extends TestCase {
 		$service = $this->service(http: 200, rows: [['kvkNummer' => '12345678', 'naam' => 'Bakkerij de Korenschoof']]);
 
 		$this->assertSame(
-			['checkStatus' => 'valid', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'KvK'],
-			$service->checkKvk(value: '1234 5678')
+			expected: ['checkStatus' => 'valid', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'KvK'],
+			actual: $service->checkKvk(value: '1234 5678')
 		);
-		$this->assertSame(['https://nc.example/apps/openregister/api/integrations/kvk/company?kvkNumber=12345678'], $this->urls);
+		$this->assertSame(expected: ['https://nc.example/apps/openregister/api/integrations/kvk/company?kvkNumber=12345678'], actual: $this->urls);
 	}//end testAKvkNumberTheRegisterKnowsIsValid()
 
 	/**
@@ -272,8 +322,11 @@ class ClientIdentifierServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAKvkNumberTheRegisterDoesNotKnowIsInvalid(): void {
-		$this->assertSame('invalid', $this->service(http: 404)->checkKvk(value: '12345678')['checkStatus']);
-		$this->assertSame('invalid', $this->service(http: 200, rows: [['kvkNummer' => '87654321']])->checkKvk(value: '12345678')['checkStatus']);
+		$this->assertSame(expected: 'invalid', actual: $this->service(http: 404)->checkKvk(value: '12345678')['checkStatus']);
+		$this->assertSame(
+			expected: 'invalid',
+			actual: $this->service(http: 200, rows: [['kvkNummer' => '87654321']])->checkKvk(value: '12345678')['checkStatus']
+		);
 	}//end testAKvkNumberTheRegisterDoesNotKnowIsInvalid()
 
 	/**
@@ -282,8 +335,11 @@ class ClientIdentifierServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnreachableKvkRegisterIsUnavailable(): void {
-		$this->assertSame('unavailable', $this->service(http: 503)->checkKvk(value: '12345678')['checkStatus']);
-		$this->assertSame('unavailable', $this->service(http: new RuntimeException('connection refused'))->checkKvk(value: '12345678')['checkStatus']);
+		$this->assertSame(expected: 'unavailable', actual: $this->service(http: 503)->checkKvk(value: '12345678')['checkStatus']);
+		$this->assertSame(
+			expected: 'unavailable',
+			actual: $this->service(http: new RuntimeException('connection refused'))->checkKvk(value: '12345678')['checkStatus']
+		);
 	}//end testAnUnreachableKvkRegisterIsUnavailable()
 
 	/**
@@ -304,7 +360,7 @@ class ClientIdentifierServiceTest extends TestCase {
 		];
 
 		$this->assertSame(
-			[
+			expected: [
 				'checkStatus' => 'valid',
 				'facts' => [
 					'place' => 'Zuiddrecht',
@@ -312,7 +368,7 @@ class ClientIdentifierServiceTest extends TestCase {
 					'industry' => ['Brood- en banketbakkerijen', 'Winkels in brood en banket'],
 				],
 			],
-			$this->service(http: 200, rows: [$row])->kvkFacts(value: '12345678')
+			actual: $this->service(http: 200, rows: [$row])->kvkFacts(value: '12345678')
 		);
 	}//end testKvkFactsAreClientFields()
 
@@ -323,11 +379,17 @@ class ClientIdentifierServiceTest extends TestCase {
 	 */
 	public function testKvkFactsLeaveOutWhatTheRegisterDoesNotGive(): void {
 		$this->assertSame(
-			['checkStatus' => 'valid', 'facts' => ['place' => 'Zuiddrecht']],
-			$this->service(http: 200, rows: [['kvkNummer' => '12345678', 'rechtsvorm' => 'Onbekend', 'adres' => ['plaats' => 'Zuiddrecht']]])->kvkFacts(value: '12345678')
+			expected: ['checkStatus' => 'valid', 'facts' => ['place' => 'Zuiddrecht']],
+			actual: $this->service(
+				http: 200,
+				rows: [['kvkNummer' => '12345678', 'rechtsvorm' => 'Onbekend', 'adres' => ['plaats' => 'Zuiddrecht']]]
+			)->kvkFacts(value: '12345678')
 		);
-		$this->assertSame(['checkStatus' => 'invalid', 'facts' => null], $this->service(http: 404)->kvkFacts(value: '12345678'));
-		$this->assertSame(['checkStatus' => 'unavailable', 'facts' => null], $this->service(http: 503)->kvkFacts(value: '12345678'));
+		$this->assertSame(expected: ['checkStatus' => 'invalid', 'facts' => null], actual: $this->service(http: 404)->kvkFacts(value: '12345678'));
+		$this->assertSame(
+			expected: ['checkStatus' => 'unavailable', 'facts' => null],
+			actual: $this->service(http: 503)->kvkFacts(value: '12345678')
+		);
 	}//end testKvkFactsLeaveOutWhatTheRegisterDoesNotGive()
 
 	/**
@@ -337,8 +399,8 @@ class ClientIdentifierServiceTest extends TestCase {
 	 */
 	public function testWithoutShillinqAVatNumberStaysUnchecked(): void {
 		$this->assertSame(
-			['checkStatus' => 'unchecked', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'shillinq not installed'],
-			$this->service(vies: null)->checkVat(value: 'DE123456789')
+			expected: ['checkStatus' => 'unchecked', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'shillinq not installed'],
+			actual: $this->service(vies: null)->checkVat(value: 'DE123456789')
 		);
 	}//end testWithoutShillinqAVatNumberStaysUnchecked()
 
@@ -350,13 +412,24 @@ class ClientIdentifierServiceTest extends TestCase {
 	public function testWithShillinqViesDecides(): void {
 		$vies = new FakeViesService(['valid' => true, 'outage' => false, 'validUntil' => '2026-11-18T09:00:00+00:00']);
 		$this->assertSame(
-			['checkStatus' => 'valid', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'VIES', 'validUntil' => '2026-11-18T09:00:00+00:00'],
-			$this->service(vies: $vies)->checkVat(value: 'de 123456789')
+			expected: [
+				'checkStatus' => 'valid',
+				'checkedAt' => '2026-11-17T09:00:00+00:00',
+				'checkSource' => 'VIES',
+				'validUntil' => '2026-11-18T09:00:00+00:00',
+			],
+			actual: $this->service(vies: $vies)->checkVat(value: 'de 123456789')
 		);
-		$this->assertSame(['DE123456789'], $vies->asked);
+		$this->assertSame(expected: ['DE123456789'], actual: $vies->asked);
 
-		$this->assertSame('invalid', $this->service(vies: new FakeViesService(['valid' => false, 'outage' => false]))->checkVat(value: 'DE123456789')['checkStatus']);
-		$this->assertSame('unavailable', $this->service(vies: new FakeViesService(['valid' => false, 'outage' => true]))->checkVat(value: 'DE123456789')['checkStatus']);
+		$this->assertSame(
+			expected: 'invalid',
+			actual: $this->service(vies: new FakeViesService(['valid' => false, 'outage' => false]))->checkVat(value: 'DE123456789')['checkStatus']
+		);
+		$this->assertSame(
+			expected: 'unavailable',
+			actual: $this->service(vies: new FakeViesService(['valid' => false, 'outage' => true]))->checkVat(value: 'DE123456789')['checkStatus']
+		);
 	}//end testWithShillinqViesDecides()
 
 	/**
@@ -377,16 +450,16 @@ class ClientIdentifierServiceTest extends TestCase {
 
 		$result = $service->check(clientId: 'c1', scheme: 'kvk', value: '12345678');
 
-		$this->assertSame(200, $result['status']);
+		$this->assertSame(expected: 200, actual: $result['status']);
 		$this->assertSame(
-			['scheme' => 'kvk', 'value' => '12345678', 'checkStatus' => 'valid', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'KvK'],
-			$result['identifier']
+			expected: ['scheme' => 'kvk', 'value' => '12345678', 'checkStatus' => 'valid', 'checkedAt' => '2026-11-17T09:00:00+00:00', 'checkSource' => 'KvK'],
+			actual: $result['identifier']
 		);
-		$this->assertCount(1, $this->saved);
-		$this->assertSame('c1', $this->saved[0][1]);
-		$this->assertSame($client['identifiers'][0], $this->saved[0][0]['identifiers'][0]);
-		$this->assertSame('valid', $this->saved[0][0]['identifiers'][1]['checkStatus']);
-		$this->assertSame('Bakkerij de Korenschoof', $this->saved[0][0]['name']);
+		$this->assertCount(expectedCount: 1, haystack: $this->saved);
+		$this->assertSame(expected: 'c1', actual: $this->saved[0][1]);
+		$this->assertSame(expected: $client['identifiers'][0], actual: $this->saved[0][0]['identifiers'][0]);
+		$this->assertSame(expected: 'valid', actual: $this->saved[0][0]['identifiers'][1]['checkStatus']);
+		$this->assertSame(expected: 'Bakkerij de Korenschoof', actual: $this->saved[0][0]['name']);
 	}//end testACheckStoresItsOutcomeOnTheIdentifier()
 
 	/**
@@ -398,9 +471,9 @@ class ClientIdentifierServiceTest extends TestCase {
 		$result = $this->service(clients: ['c1' => ['identifiers' => [['scheme' => 'kvk', 'value' => '12345678']]]], mayRead: false)
 			->check(clientId: 'c1', scheme: 'kvk', value: '12345678');
 
-		$this->assertSame(403, $result['status']);
-		$this->assertSame([], $this->urls);
-		$this->assertSame([], $this->saved);
+		$this->assertSame(expected: 403, actual: $result['status']);
+		$this->assertSame(expected: [], actual: $this->urls);
+		$this->assertSame(expected: [], actual: $this->saved);
 	}//end testAClientTheUserMayNotReadIsRefused()
 
 	/**
@@ -409,9 +482,9 @@ class ClientIdentifierServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCanAccessClientReadsWithTheCallersRights(): void {
-		$this->assertTrue($this->service(clients: ['c1' => ['name' => 'Bakkerij']])->canAccessClient(clientId: 'c1'));
-		$this->assertFalse($this->service(clients: ['c1' => ['name' => 'Bakkerij']])->canAccessClient(clientId: 'c2'));
-		$this->assertFalse($this->service(clients: ['c1' => ['name' => 'Bakkerij']], mayRead: false)->canAccessClient(clientId: 'c1'));
+		$this->assertTrue(condition: $this->service(clients: ['c1' => ['name' => 'Bakkerij']])->canAccessClient(clientId: 'c1'));
+		$this->assertFalse(condition: $this->service(clients: ['c1' => ['name' => 'Bakkerij']])->canAccessClient(clientId: 'c2'));
+		$this->assertFalse(condition: $this->service(clients: ['c1' => ['name' => 'Bakkerij']], mayRead: false)->canAccessClient(clientId: 'c1'));
 	}//end testCanAccessClientReadsWithTheCallersRights()
 
 	/**
@@ -422,9 +495,42 @@ class ClientIdentifierServiceTest extends TestCase {
 	public function testUnknownClientsNumbersAndSchemesAreRefused(): void {
 		$service = $this->service(clients: ['c1' => ['identifiers' => [['scheme' => 'kvk', 'value' => '12345678']]]]);
 
-		$this->assertSame(404, $service->check(clientId: 'nope', scheme: 'kvk', value: '12345678')['status']);
-		$this->assertSame(404, $service->check(clientId: 'c1', scheme: 'kvk', value: '87654321')['status']);
-		$this->assertSame(400, $service->check(clientId: 'c1', scheme: 'duns', value: '150483782')['status']);
-		$this->assertSame([], $this->saved);
+		$this->assertSame(expected: 404, actual: $service->check(clientId: 'nope', scheme: 'kvk', value: '12345678')['status']);
+		$this->assertSame(expected: 404, actual: $service->check(clientId: 'c1', scheme: 'kvk', value: '87654321')['status']);
+		$this->assertSame(expected: 400, actual: $service->check(clientId: 'c1', scheme: 'duns', value: '150483782')['status']);
+		$this->assertSame(expected: [], actual: $this->saved);
 	}//end testUnknownClientsNumbersAndSchemesAreRefused()
+	/**
+	 * Without a client register and schema nothing is read: the check answers 404.
+	 *
+	 * @return void
+	 */
+	public function testAnUnconfiguredAppFindsNoClient(): void {
+		$this->configured = '';
+		$service = $this->service(clients: ['c1' => ['identifiers' => [['scheme' => 'kvk', 'value' => '12345678']]]]);
+
+		$this->assertSame(expected: 404, actual: $service->check(clientId: 'c1', scheme: 'kvk', value: '12345678')['status']);
+		$this->assertFalse(condition: $service->canAccessClient(clientId: 'c1'));
+		$this->assertSame(expected: [], actual: $this->urls);
+	}//end testAnUnconfiguredAppFindsNoClient()
+
+	/**
+	 * A refused write answers 403, a failed write 500; neither claims the check was stored.
+	 *
+	 * @return void
+	 */
+	public function testARefusedOrFailedWriteIsReported(): void {
+		$client = ['identifiers' => [['scheme' => 'kvk', 'value' => '12345678']]];
+
+		$this->saveFails = new NotAuthorizedException('no');
+		$refused = $this->service(http: 200, rows: [['kvkNummer' => '12345678']], clients: ['c1' => $client])
+			->check(clientId: 'c1', scheme: 'kvk', value: '12345678');
+		$this->assertSame(expected: ['status' => 403, 'message' => 'You may not change this client.'], actual: $refused);
+
+		$this->saveFails = new RuntimeException('disk full');
+		$failed = $this->service(http: 200, rows: [['kvkNummer' => '12345678']], clients: ['c1' => $client])
+			->check(clientId: 'c1', scheme: 'kvk', value: '12345678');
+		$this->assertSame(expected: ['status' => 500, 'message' => 'The outcome of the check could not be saved.'], actual: $failed);
+		$this->assertSame(expected: [], actual: $this->saved);
+	}//end testARefusedOrFailedWriteIsReported()
 }//end class

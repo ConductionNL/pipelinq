@@ -79,14 +79,14 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return FillFromKvkAction The action.
 	 */
 	private function action(array $answer, bool $writeFails = false): FillFromKvkAction {
-		$identifiers = $this->createMock(ClientIdentifierServiceInterface::class);
+		$identifiers = $this->createMock(originalClassName: ClientIdentifierServiceInterface::class);
 		$identifiers->method('kvkFacts')->willReturnCallback(
 			function (string $value) use ($answer): array {
 				$this->lookedUp[] = $value;
 				return $answer;
 			}
 		);
-		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('patchObject')->willReturnCallback(
 			function (ObjectPatch $patch) use ($writeFails) {
 				if ($writeFails === true) {
@@ -94,11 +94,15 @@ class FillFromKvkActionTest extends TestCase {
 				}
 
 				$this->patches[] = $patch;
-				return $this->createMock(ObjectEntityInterface::class);
+				return $this->createMock(originalClassName: ObjectEntityInterface::class);
 			}
 		);
 
-		return new FillFromKvkAction($identifiers, $objects, $this->createMock(\Psr\Log\LoggerInterface::class));
+		return new FillFromKvkAction(
+			identifiers: $identifiers,
+			objectService: $objects,
+			logger: $this->createMock(originalClassName: \Psr\Log\LoggerInterface::class)
+		);
 	}//end action()
 
 	/**
@@ -133,21 +137,24 @@ class FillFromKvkActionTest extends TestCase {
 			'legalForm' => 'eenmanszaak',
 			'identifiers' => [['scheme' => 'kvk', 'value' => '1234 5678']],
 		]);
-		$actor = $this->createMock(IUser::class);
+		$actor = $this->createMock(originalClassName: IUser::class);
 
 		$preview = $action->apply(new BulkStep(object: $object, parameters: [], commit: false, actor: $actor));
-		$this->assertTrue($preview->isApplied());
-		$this->assertSame([], $this->patches);
+		$this->assertTrue(condition: $preview->isApplied());
+		$this->assertSame(expected: [], actual: $this->patches);
 
 		$commit = $action->apply(new BulkStep(object: $object, parameters: [], commit: true, actor: $actor));
-		$this->assertTrue($commit->isApplied());
-		$this->assertCount(1, $this->patches);
-		$this->assertSame('c1', $this->patches[0]->objectId);
-		$this->assertSame(['place' => 'Zuiddrecht', 'industry' => ['Brood- en banketbakkerijen', 'Winkels in brood en banket']], $this->patches[0]->data);
-		$this->assertSame('5', $this->patches[0]->target->register);
-		$this->assertSame('7', $this->patches[0]->target->schema);
-		$this->assertSame($actor, $this->patches[0]->currentUser);
-		$this->assertSame(['12345678'], $this->lookedUp, 'The rehearsal and the commit ask the KvK once.');
+		$this->assertTrue(condition: $commit->isApplied());
+		$this->assertCount(expectedCount: 1, haystack: $this->patches);
+		$this->assertSame(expected: 'c1', actual: $this->patches[0]->objectId);
+		$this->assertSame(
+			expected: ['place' => 'Zuiddrecht', 'industry' => ['Brood- en banketbakkerijen', 'Winkels in brood en banket']],
+			actual: $this->patches[0]->data
+		);
+		$this->assertSame(expected: '5', actual: $this->patches[0]->target->register);
+		$this->assertSame(expected: '7', actual: $this->patches[0]->target->schema);
+		$this->assertSame(expected: $actor, actual: $this->patches[0]->currentUser);
+		$this->assertSame(expected: ['12345678'], actual: $this->lookedUp, message: 'The rehearsal and the commit ask the KvK once.');
 	}//end testApplyRehearsesThenWritesTheEmptyFieldsOnly()
 
 	/**
@@ -160,13 +167,13 @@ class FillFromKvkActionTest extends TestCase {
 		$object = $this->client(data: ['type' => 'organization', 'industry' => [], 'kvkNumber' => '12345678']);
 
 		$this->assertSame(
-			[
+			expected: [
 				'prior' => ['place' => null, 'legalForm' => null, 'industry' => []],
 				'applied' => ['place' => 'Zuiddrecht', 'legalForm' => 'bv', 'industry' => ['Brood- en banketbakkerijen', 'Winkels in brood en banket']],
 			],
-			$action->reversalPlanFor($object, [])
+			actual: $action->reversalPlanFor($object, [])
 		);
-		$this->assertSame(604800, $action->getReversalWindow());
+		$this->assertSame(expected: 604800, actual: $action->getReversalWindow());
 	}//end testTheReversalPlanRecordsThePriorValues()
 
 	/**
@@ -177,13 +184,18 @@ class FillFromKvkActionTest extends TestCase {
 	public function testAClientWithoutAKvkNumberIsSkipped(): void {
 		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$result = $action->apply(
-			new BulkStep(object: $this->client(data: ['type' => 'organization', 'identifiers' => [['scheme' => 'vat', 'value' => 'NL123456789B01']]]), parameters: [], commit: true, actor: null)
+			new BulkStep(
+				object: $this->client(data: ['type' => 'organization', 'identifiers' => [['scheme' => 'vat', 'value' => 'NL123456789B01']]]),
+				parameters: [],
+				commit: true,
+				actor: null
+			)
 		);
 
-		$this->assertFalse($result->isApplied());
-		$this->assertSame('no KvK number', $result->getReason());
-		$this->assertSame([], $this->lookedUp);
-		$this->assertSame([], $this->patches);
+		$this->assertFalse(condition: $result->isApplied());
+		$this->assertSame(expected: 'no KvK number', actual: $result->getReason());
+		$this->assertSame(expected: [], actual: $this->lookedUp);
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testAClientWithoutAKvkNumberIsSkipped()
 
 	/**
@@ -198,9 +210,9 @@ class FillFromKvkActionTest extends TestCase {
 		$unknown = $this->action(answer: ['checkStatus' => 'invalid', 'facts' => null])
 			->apply(new BulkStep(object: $this->client(data: $client, uuid: 'c2'), parameters: [], commit: true, actor: null));
 
-		$this->assertSame('KvK unavailable', $unavailable->getReason());
-		$this->assertSame('KvK number not found in the KvK', $unknown->getReason());
-		$this->assertSame([], $this->patches);
+		$this->assertSame(expected: 'KvK unavailable', actual: $unavailable->getReason());
+		$this->assertSame(expected: 'KvK number not found in the KvK', actual: $unknown->getReason());
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testAnUnreachableOrUnknownKvkSkips()
 
 	/**
@@ -212,20 +224,27 @@ class FillFromKvkActionTest extends TestCase {
 		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
 		$filled = $action->apply(
 			new BulkStep(
-				object: $this->client(data: ['type' => 'organization', 'kvkNumber' => '12345678', 'place' => 'Dordrecht', 'legalForm' => 'nv', 'industry' => ['Retail']]),
+				object: $this->client(
+					data: ['type' => 'organization', 'kvkNumber' => '12345678', 'place' => 'Dordrecht', 'legalForm' => 'nv', 'industry' => ['Retail']]
+				),
 				parameters: [],
 				commit: true,
 				actor: null
 			)
 		);
 		$person = $action->apply(
-			new BulkStep(object: $this->client(data: ['type' => 'person', 'kvkNumber' => '12345678'], uuid: 'p1'), parameters: [], commit: true, actor: null)
+			new BulkStep(
+				object: $this->client(data: ['type' => 'person', 'kvkNumber' => '12345678'], uuid: 'p1'),
+				parameters: [],
+				commit: true,
+				actor: null
+			)
 		);
 
-		$this->assertSame('already has these values', $filled->getReason());
-		$this->assertSame('not an organisation', $person->getReason());
-		$this->assertSame(['12345678'], $this->lookedUp);
-		$this->assertSame([], $this->patches);
+		$this->assertSame(expected: 'already has these values', actual: $filled->getReason());
+		$this->assertSame(expected: 'not an organisation', actual: $person->getReason());
+		$this->assertSame(expected: ['12345678'], actual: $this->lookedUp);
+		$this->assertSame(expected: [], actual: $this->patches);
 	}//end testFilledClientsAndPersonsAreSkipped()
 
 	/**
@@ -235,10 +254,15 @@ class FillFromKvkActionTest extends TestCase {
 	 */
 	public function testARefusedWriteFailsTheMember(): void {
 		$result = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS], writeFails: true)
-			->apply(new BulkStep(object: $this->client(data: ['type' => 'organization', 'kvkNumber' => '12345678']), parameters: [], commit: true, actor: null));
+			->apply(new BulkStep(
+				object: $this->client(data: ['type' => 'organization', 'kvkNumber' => '12345678']),
+				parameters: [],
+				commit: true,
+				actor: null
+			));
 
-		$this->assertFalse($result->isApplied());
-		$this->assertSame('register refused the write', $result->getReason());
+		$this->assertFalse(condition: $result->isApplied());
+		$this->assertSame(expected: 'register refused the write', actual: $result->getReason());
 	}//end testARefusedWriteFailsTheMember()
 
 	/**
@@ -247,9 +271,12 @@ class FillFromKvkActionTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheKvkIdentifierWinsOverTheKvkNumberField(): void {
-		$this->assertSame('87654321', FillFromKvkAction::kvkNumberOf(client: ['kvkNumber' => '12345678', 'identifiers' => [['scheme' => 'kvk', 'value' => '8765 4321']]]));
-		$this->assertSame('12345678', FillFromKvkAction::kvkNumberOf(client: ['kvkNumber' => '12345678']));
-		$this->assertSame('', FillFromKvkAction::kvkNumberOf(client: []));
+		$this->assertSame(
+			expected: '87654321',
+			actual: FillFromKvkAction::kvkNumberOf(client: ['kvkNumber' => '12345678', 'identifiers' => [['scheme' => 'kvk', 'value' => '8765 4321']]])
+		);
+		$this->assertSame(expected: '12345678', actual: FillFromKvkAction::kvkNumberOf(client: ['kvkNumber' => '12345678']));
+		$this->assertSame(expected: '', actual: FillFromKvkAction::kvkNumberOf(client: []));
 	}//end testTheKvkIdentifierWinsOverTheKvkNumberField()
 
 	/**
@@ -259,13 +286,13 @@ class FillFromKvkActionTest extends TestCase {
 	 */
 	public function testTheActionIsRegisteredWithOpenRegister(): void {
 		$action = $this->action(answer: ['checkStatus' => 'valid', 'facts' => self::FACTS]);
-		$this->assertSame('pipelinq:fill-from-kvk', $action->getId());
-		$this->assertSame('Fill in from KvK', $action->getLabel());
-		$this->assertFalse($action->requiresJustification());
-		$this->assertSame(['homogeneity'], $action->getGuards());
+		$this->assertSame(expected: 'pipelinq:fill-from-kvk', actual: $action->getId());
+		$this->assertSame(expected: 'Fill in from KvK', actual: $action->getLabel());
+		$this->assertFalse(condition: $action->requiresJustification());
+		$this->assertSame(expected: ['homogeneity'], actual: $action->getGuards());
 
-		$event = $this->createMock(BulkActionRegistrationEvent::class);
+		$event = $this->createMock(originalClassName: BulkActionRegistrationEvent::class);
 		$event->expects($this->once())->method('registerAction')->with($action);
-		(new FillFromKvkRegistrationListener($action))->handle($event);
+		(new FillFromKvkRegistrationListener(action: $action))->handle($event);
 	}//end testTheActionIsRegisteredWithOpenRegister()
 }//end class

@@ -39,44 +39,27 @@
 		</div>
 
 		<template #actions>
-			<NcButton :disabled="committing" @click="$emit('close')">
-				{{ t('pipelinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				v-if="!preview || refusal"
-				variant="primary"
-				:disabled="selectedIds.length === 0 || previewing"
-				data-testid="bulk-fill-kvk-preview"
-				@click="runPreview">
-				<template #icon>
-					<NcLoadingIcon v-if="previewing" :size="18" />
-				</template>
-				{{ t('pipelinq', 'Preview') }}
-			</NcButton>
-			<NcButton
-				v-else
-				variant="primary"
-				:disabled="committing || summary.changed === 0"
-				data-testid="bulk-fill-kvk-confirm"
-				@click="confirm">
-				<template #icon>
-					<Check :size="18" />
-				</template>
-				{{ t('pipelinq', 'Confirm') }}
-			</NcButton>
+			<BulkPreviewActions
+				:previewed="Boolean(preview) && !refusal"
+				:canPreview="selectedIds.length > 0"
+				:previewing="previewing"
+				:committing="committing"
+				:changed="summary.changed"
+				testidPrefix="bulk-fill-kvk"
+				@close="$emit('close')"
+				@preview="runPreview"
+				@confirm="confirm" />
 		</template>
 	</CnDialog>
 </template>
 
 <script>
 import { CnDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
-import { showSuccess } from '@nextcloud/dialogs'
-import { emit } from '@nextcloud/event-bus'
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import Check from 'vue-material-design-icons/Check.vue'
+import { NcNoteCard } from '@nextcloud/vue'
+import BulkPreviewActions from '../components/BulkPreviewActions.vue'
+import bulkJobConfirmMixin from '../mixins/bulkJobConfirmMixin.js'
 import {
 	changeSummary,
-	commitJob,
 	createActionJob,
 	FILL_FROM_KVK_ACTION,
 	refusalReason,
@@ -86,13 +69,13 @@ import {
 export default {
 	name: 'BulkFillFromKvkModal',
 	components: {
-		Check,
+		BulkPreviewActions,
 		CnDialog,
 		CnStatusBadge,
-		NcButton,
-		NcLoadingIcon,
 		NcNoteCard,
 	},
+
+	mixins: [bulkJobConfirmMixin],
 
 	props: {
 		/** The selected records, merged in by the bulk action. */
@@ -149,28 +132,6 @@ export default {
 				this.refusal = refusalReason(error, this.t('pipelinq', 'OpenRegister refused this change.'))
 			} finally {
 				this.previewing = false
-			}
-		},
-
-		/**
-		 * Commit the previewed fill, then let the list read the new values.
-		 *
-		 * @return {Promise<void>}
-		 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.2
-		 */
-		async confirm() {
-			if (!this.preview || this.preview.id === undefined) return
-			this.committing = true
-			try {
-				await commitJob(this.preview.id)
-				showSuccess(this.n('pipelinq', '%n record changed.', '%n records changed.', this.summary.changed))
-				emit('cn:page:refresh', {})
-				this.$emit('close')
-			} catch (error) {
-				this.refusal = refusalReason(error, this.t('pipelinq', 'The change could not be saved.'))
-				this.preview = null
-			} finally {
-				this.committing = false
 			}
 		},
 	},

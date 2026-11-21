@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IResponse;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -96,16 +97,7 @@ final class CompanyRegistryHttp {
 	 */
 	public function leafRows(string $url, string $unavailable): ?array {
 		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 15,
-					'connect_timeout' => 3,
-					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
-					'nextcloud' => ['allow_local_address' => true],
-				]
-			);
+			$response = $this->leafGet(url: $url, options: []);
 		} catch (Throwable $e) {
 			$this->logger->debug($unavailable, ['exception' => $e]);
 			return null;
@@ -134,17 +126,7 @@ final class CompanyRegistryHttp {
 	 */
 	public function leafAnswer(string $url): array {
 		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 15,
-					'connect_timeout' => 3,
-					'http_errors' => false,
-					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
-					'nextcloud' => ['allow_local_address' => true],
-				]
-			);
+			$response = $this->leafGet(url: $url, options: ['http_errors' => false]);
 		} catch (Throwable $e) {
 			$this->logger->debug('Registry leaf did not answer', ['exception' => $e]);
 			return ['status' => self::statusOf(exception: $e), 'rows' => null];
@@ -152,6 +134,33 @@ final class CompanyRegistryHttp {
 
 		return ['status' => $response->getStatusCode(), 'rows' => $this->resultRows(body: (string)$response->getBody())];
 	}//end leafAnswer()
+
+	/**
+	 * GET an OpenRegister integration leaf: internal, OCS-APIREQUEST, allow_local_address.
+	 *
+	 * @param string               $url     The absolute leaf URL.
+	 * @param array<string, mixed> $options Request options on top of the leaf's own.
+	 *
+	 * @return IResponse The answer.
+	 *
+	 * @throws Throwable When the leaf does not answer.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.2
+	 */
+	private function leafGet(string $url, array $options): IResponse {
+		return $this->clientService->newClient()->get(
+			$url,
+			array_merge(
+				[
+					'timeout' => 15,
+					'connect_timeout' => 3,
+					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+					'nextcloud' => ['allow_local_address' => true],
+				],
+				$options
+			)
+		);
+	}//end leafGet()
 
 	/**
 	 * The HTTP status a transport exception carries, or 0 when it carries none.

@@ -194,6 +194,8 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The bulk-action contract hands every action its parameters; this one takes none.
+	 *
 	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
 	 */
 	public function validateParameters(array $parameters): void {
@@ -205,6 +207,8 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 	 * @param BulkStep $step The member, rehearsal or commit, and the job's user.
 	 *
 	 * @return BulkActionResult Applied, or skipped with its reason.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BulkActionResult's named constructors are the only way the OpenRegister bulk contract offers to build one.
 	 *
 	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
 	 */
@@ -256,6 +260,8 @@ class FillFromKvkAction implements StepBulkActionInterface, ReversibleBulkAction
 	 * @param array<string, mixed> $parameters The job's parameters.
 	 *
 	 * @return array{prior: array<string, mixed>, applied: array<string, mixed>} The plan.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The reversible-action contract hands the job's parameters; this fill needs none.
 	 *
 	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.1
 	 */

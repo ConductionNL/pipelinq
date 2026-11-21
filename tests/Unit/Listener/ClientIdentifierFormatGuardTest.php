@@ -54,7 +54,7 @@ class ClientIdentifierFormatGuardTest extends TestCase {
 	 * @return ClientIdentifierFormatGuard The guard.
 	 */
 	private function guard(array $problems): ClientIdentifierFormatGuard {
-		$rules = $this->createMock(ClientIdentifierServiceInterface::class);
+		$rules = $this->createMock(originalClassName: ClientIdentifierServiceInterface::class);
 		$rules->method('problemsIn')->willReturnCallback(
 			function (mixed $identifiers) use ($problems): array {
 				$this->asked[] = $identifiers;
@@ -62,7 +62,10 @@ class ClientIdentifierFormatGuardTest extends TestCase {
 			}
 		);
 
-		return new ClientIdentifierFormatGuard($rules, $this->createConfiguredMock(IAppConfig::class, ['getValueString' => '7']));
+		return new ClientIdentifierFormatGuard(
+			identifiers: $rules,
+			appConfig: $this->createConfiguredMock(originalClassName: IAppConfig::class, configuration: ['getValueString' => '7'])
+		);
 	}//end guard()
 
 	/**
@@ -91,9 +94,9 @@ class ClientIdentifierFormatGuardTest extends TestCase {
 
 		$this->guard(problems: ['The RSIN 123456789 is not valid: it fails the eleven test.'])->handle($event);
 
-		$this->assertTrue($event->isPropagationStopped());
-		$this->assertSame('The RSIN 123456789 is not valid: it fails the eleven test.', $event->getErrors()['message']);
-		$this->assertSame([$identifiers], $this->asked);
+		$this->assertTrue(condition: $event->isPropagationStopped());
+		$this->assertSame(expected: 'The RSIN 123456789 is not valid: it fails the eleven test.', actual: $event->getErrors()['message']);
+		$this->assertSame(expected: [$identifiers], actual: $this->asked);
 	}//end testAMalformedIdentifierOnAnUpdateIsRefused()
 
 	/**
@@ -107,9 +110,9 @@ class ClientIdentifierFormatGuardTest extends TestCase {
 
 		$this->guard(problems: ['A KvK number has 8 digits.'])->handle($event);
 
-		$this->assertTrue($event->isPropagationStopped());
-		$this->assertSame(['A KvK number has 8 digits.'], $event->getErrors()['identifiers']);
-		$this->assertSame([[['scheme' => 'kvk', 'value' => '1234']]], $this->asked);
+		$this->assertTrue(condition: $event->isPropagationStopped());
+		$this->assertSame(expected: ['A KvK number has 8 digits.'], actual: $event->getErrors()['identifiers']);
+		$this->assertSame(expected: [[['scheme' => 'kvk', 'value' => '1234']]], actual: $this->asked);
 	}//end testACreateIsCheckedOnItsModifiedData()
 
 	/**
@@ -118,12 +121,15 @@ class ClientIdentifierFormatGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testValidIdentifiersPass(): void {
-		$event = new ObjectUpdatingEvent(newObject: $this->object(schema: '7', data: ['identifiers' => [['scheme' => 'kvk', 'value' => '12345678']]]));
+		$event = new ObjectUpdatingEvent(newObject: $this->object(
+			schema: '7',
+			data: ['identifiers' => [['scheme' => 'kvk', 'value' => '12345678']]]
+		));
 
 		$this->guard(problems: [])->handle($event);
 
-		$this->assertFalse($event->isPropagationStopped());
-		$this->assertSame([], $event->getErrors());
+		$this->assertFalse(condition: $event->isPropagationStopped());
+		$this->assertSame(expected: [], actual: $event->getErrors());
 	}//end testValidIdentifiersPass()
 
 	/**
@@ -139,8 +145,8 @@ class ClientIdentifierFormatGuardTest extends TestCase {
 		$guard->handle($lead);
 		$guard->handle($client);
 
-		$this->assertFalse($lead->isPropagationStopped());
-		$this->assertFalse($client->isPropagationStopped());
-		$this->assertSame([], $this->asked);
+		$this->assertFalse(condition: $lead->isPropagationStopped());
+		$this->assertFalse(condition: $client->isPropagationStopped());
+		$this->assertSame(expected: [], actual: $this->asked);
 	}//end testOtherObjectsAreNotLookedAt()
 }//end class

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
@@ -83,11 +83,11 @@ class ClientIdentifierFormatGuard implements IEventListener {
 	 * Set the refusal on the event when the client's identifiers have a problem.
 	 *
 	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event  The event.
-	 * @param ObjectEntity                            $object The object being written.
+	 * @param ObjectEntityInterface                   $object The object being written.
 	 *
 	 * @return void
 	 */
-	private function refuseWhenMalformed(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntity $object): void {
+	private function refuseWhenMalformed(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntityInterface $object): void {
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($schema === '' || (string)$object->getSchema() !== $schema) {
 			return;

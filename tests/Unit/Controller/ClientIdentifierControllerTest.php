@@ -49,9 +49,9 @@ class ClientIdentifierControllerTest extends TestCase {
 	 * @return ClientIdentifierController The controller.
 	 */
 	private function controller(array $params, array $answer, array &$calls, bool $mayOpen = true): ClientIdentifierController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default));
-		$service = $this->createMock(ClientIdentifierServiceInterface::class);
+		$service = $this->createMock(originalClassName: ClientIdentifierServiceInterface::class);
 		$service->method('canAccessClient')->willReturn($mayOpen);
 		$service->method('check')->willReturnCallback(
 			static function (string $clientId, string $scheme, string $value) use ($answer, &$calls): array {
@@ -60,7 +60,7 @@ class ClientIdentifierControllerTest extends TestCase {
 			}
 		);
 
-		return new ClientIdentifierController($request, $service);
+		return new ClientIdentifierController(request: $request, identifiers: $service);
 	}//end controller()
 
 	/**
@@ -71,12 +71,16 @@ class ClientIdentifierControllerTest extends TestCase {
 	public function testACheckAnswersTheCheckedIdentifier(): void {
 		$calls = [];
 		$identifier = ['scheme' => 'kvk', 'value' => '12345678', 'checkStatus' => 'valid'];
-		$response = $this->controller(params: ['scheme' => ' kvk ', 'value' => '12345678'], answer: ['status' => 200, 'identifier' => $identifier], calls: $calls)
+		$response = $this->controller(
+			params: ['scheme' => ' kvk ', 'value' => '12345678'],
+			answer: ['status' => 200, 'identifier' => $identifier],
+			calls: $calls
+		)
 			->check(id: 'c1');
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['identifier' => $identifier], $response->getData());
-		$this->assertSame([['clientId' => 'c1', 'scheme' => 'kvk', 'value' => '12345678']], $calls);
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: ['identifier' => $identifier], actual: $response->getData());
+		$this->assertSame(expected: [['clientId' => 'c1', 'scheme' => 'kvk', 'value' => '12345678']], actual: $calls);
 	}//end testACheckAnswersTheCheckedIdentifier()
 
 	/**
@@ -88,9 +92,9 @@ class ClientIdentifierControllerTest extends TestCase {
 		$calls = [];
 		$response = $this->controller(params: [], answer: ['status' => 403, 'message' => 'You may not open this client.'], calls: $calls)->check(id: 'c1');
 
-		$this->assertSame(403, $response->getStatus());
-		$this->assertSame(['message' => 'You may not open this client.'], $response->getData());
-		$this->assertSame([['clientId' => 'c1', 'scheme' => '', 'value' => '']], $calls);
+		$this->assertSame(expected: 403, actual: $response->getStatus());
+		$this->assertSame(expected: ['message' => 'You may not open this client.'], actual: $response->getData());
+		$this->assertSame(expected: [['clientId' => 'c1', 'scheme' => '', 'value' => '']], actual: $calls);
 	}//end testARefusalKeepsItsStatus()
 
 	/**
@@ -103,8 +107,8 @@ class ClientIdentifierControllerTest extends TestCase {
 		$response = $this->controller(params: ['scheme' => 'kvk', 'value' => '12345678'], answer: ['status' => 200], calls: $calls, mayOpen: false)
 			->check(id: 'someone-elses');
 
-		$this->assertSame(403, $response->getStatus());
-		$this->assertSame([], $calls);
+		$this->assertSame(expected: 403, actual: $response->getStatus());
+		$this->assertSame(expected: [], actual: $calls);
 	}//end testAClientTheCallerMayNotOpenIsNotChecked()
 
 	/**
@@ -114,6 +118,6 @@ class ClientIdentifierControllerTest extends TestCase {
 	 */
 	public function testTheRouteIsOpenToNonAdmins(): void {
 		$attributes = (new ReflectionMethod(ClientIdentifierController::class, 'check'))->getAttributes(NoAdminRequired::class);
-		$this->assertCount(1, $attributes);
+		$this->assertCount(expectedCount: 1, haystack: $attributes);
 	}//end testTheRouteIsOpenToNonAdmins()
 }//end class

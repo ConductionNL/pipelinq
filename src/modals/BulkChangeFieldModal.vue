@@ -72,44 +72,28 @@
 		</div>
 
 		<template #actions>
-			<NcButton :disabled="committing" @click="$emit('close')">
-				{{ t('pipelinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				v-if="!preview || refusal"
-				variant="primary"
-				:disabled="!canPreview || previewing"
-				data-testid="bulk-change-preview"
-				@click="runPreview">
-				<template #icon>
-					<NcLoadingIcon v-if="previewing" :size="18" />
-				</template>
-				{{ t('pipelinq', 'Preview') }}
-			</NcButton>
-			<NcButton
-				v-else
-				variant="primary"
-				:disabled="committing || summary.changed === 0"
-				data-testid="bulk-change-confirm"
-				@click="confirm">
-				<template #icon>
-					<Check :size="18" />
-				</template>
-				{{ t('pipelinq', 'Confirm') }}
-			</NcButton>
+			<BulkPreviewActions
+				:previewed="Boolean(preview) && !refusal"
+				:canPreview="canPreview"
+				:previewing="previewing"
+				:committing="committing"
+				:changed="summary.changed"
+				testidPrefix="bulk-change"
+				@close="$emit('close')"
+				@preview="runPreview"
+				@confirm="confirm" />
 		</template>
 	</CnDialog>
 </template>
 
 <script>
 import { CnDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { emit } from '@nextcloud/event-bus'
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
-import Check from 'vue-material-design-icons/Check.vue'
+import { showError } from '@nextcloud/dialogs'
+import { NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import BulkPreviewActions from '../components/BulkPreviewActions.vue'
+import bulkJobConfirmMixin from '../mixins/bulkJobConfirmMixin.js'
 import {
 	changeSummary,
-	commitJob,
 	createSetPropertiesJob,
 	refusalReason,
 	resolveScope,
@@ -120,16 +104,17 @@ import { getSchemaProperties } from '../services/viewService.js'
 export default {
 	name: 'BulkChangeFieldModal',
 	components: {
-		Check,
+		BulkPreviewActions,
 		CnDialog,
 		CnStatusBadge,
-		NcButton,
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		NcTextField,
 	},
+
+	mixins: [bulkJobConfirmMixin],
 
 	props: {
 		/** The selected records, merged in by the bulk action. */
@@ -290,27 +275,6 @@ export default {
 				this.refusal = refusalReason(error, this.t('pipelinq', 'OpenRegister refused this change.'))
 			} finally {
 				this.previewing = false
-			}
-		},
-
-		/**
-		 * Commit the previewed job, then let the list read the new values.
-		 *
-		 * @return {Promise<void>}
-		 */
-		async confirm() {
-			if (!this.preview || this.preview.id === undefined) return
-			this.committing = true
-			try {
-				await commitJob(this.preview.id)
-				showSuccess(this.n('pipelinq', '%n record changed.', '%n records changed.', this.summary.changed))
-				emit('cn:page:refresh', {})
-				this.$emit('close')
-			} catch (error) {
-				this.refusal = refusalReason(error, this.t('pipelinq', 'The change could not be saved.'))
-				this.preview = null
-			} finally {
-				this.committing = false
 			}
 		},
 	},

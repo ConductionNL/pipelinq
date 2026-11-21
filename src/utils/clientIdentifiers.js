@@ -51,13 +51,18 @@ export function normaliseNumber(scheme, value) {
  * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-3.1
  */
 export function refusalMessage(error, fallback) {
-	const data = error && error.response ? error.response.data : null
-	if (data && typeof data === 'object') {
-		if (data.errors && typeof data.errors === 'object' && typeof data.errors.message === 'string' && data.errors.message !== '') {
-			return data.errors.message
-		}
-		if (typeof data.message === 'string' && data.message !== '') return data.message
-		if (typeof data.error === 'string' && data.error !== '') return data.error
-	}
-	return fallback
+	const data = error?.response?.data
+	if (!data || typeof data !== 'object') return fallback
+	const candidates = [data.errors?.message, data.message, data.error]
+	return candidates.find(isSentence) ?? fallback
+}
+
+/**
+ * Whether a value is a non-empty string.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean}
+ */
+function isSentence(value) {
+	return typeof value === 'string' && value !== ''
 }

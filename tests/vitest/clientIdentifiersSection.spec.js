@@ -203,5 +203,8 @@ describe('clientIdentifiers helpers', () => {
 		expect(refusalMessage({ response: { data: { errors: { message: 'A KvK number has 8 digits.' }, message: 'Validation failed' } } }, 'x')).toBe('A KvK number has 8 digits.')
 		expect(refusalMessage({ response: { data: { error: 'Nope' } } }, 'x')).toBe('Nope')
 		expect(refusalMessage(new Error('network'), 'The number could not be saved.')).toBe('The number could not be saved.')
+		expect(refusalMessage({ response: { data: { message: '', error: '' } } }, 'x')).toBe('x')
+		expect(refusalMessage({ response: { data: 'Bad gateway' } }, 'x')).toBe('x')
+		expect(refusalMessage({ response: { data: { message: 'Validation failed' } } }, 'x')).toBe('Validation failed')
 	})
 })
