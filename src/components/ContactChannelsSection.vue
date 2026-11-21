@@ -93,6 +93,10 @@
 							class="contact-channels-section__value"
 							>{{ entry.value }}</a
 						>
+						<CtiClickToDialButton
+							v-if="group.type === 'phone' && dialNumber(entry.value)"
+							:targetNumber="dialNumber(entry.value)"
+							:showNumber="false" />
 						<Star
 							v-if="entry.primary"
 							:size="16"
@@ -235,9 +239,11 @@ import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import CtiClickToDialButton from './CtiClickToDialButton.vue'
 import ContactEmailPhoneModal from '../modals/ContactEmailPhoneModal.vue'
 import ContactSocialProfileModal from '../modals/ContactSocialProfileModal.vue'
 import WriteEmailModal from '../modals/WriteEmailModal.vue'
+import { telHref } from '../services/contactLinks.js'
 import { writeBack } from '../services/contactSyncApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 import { sectionValues } from '../utils/sectionContext.js'
@@ -291,6 +297,7 @@ export default {
 		Delete,
 		Star,
 		CheckCircle,
+		CtiClickToDialButton,
 	},
 
 	inject: {
@@ -466,6 +473,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The number a phone entry is dialled at: the typed value without
+		 * spaces and dashes, or '' when it holds no digits.
+		 *
+		 * @param {string} value The number as typed.
+		 * @return {string}
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-36.1
+		 */
+		dialNumber(value) {
+			const tel = telHref(value)
+			return tel ? tel.slice('tel:'.length) : ''
+		},
+
 		/**
 		 * Fetch the full client/contact object.
 		 *

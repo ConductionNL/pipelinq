@@ -1,12 +1,13 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
 <!-- @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001 -->
+<!-- @spec openspec/changes/specify-capability-rows/tasks.md#task-36.1 -->
 <template>
 	<ul v-if="links.length"
 		class="contact-links"
 		:class="{ 'contact-links--buttons': variant === 'buttons' }"
 		data-testid="contact-links">
-		<li v-for="link in links" :key="link.kind">
+		<li v-for="link in links" :key="link.kind" class="contact-links__item">
 			<a
 				class="contact-links__link"
 				:class="{ button: variant === 'buttons' }"
@@ -20,6 +21,10 @@
 					<span class="contact-links__value">{{ link.value }}</span>
 				</span>
 			</a>
+			<CtiClickToDialButton
+				v-if="link.kind === 'phone'"
+				:targetNumber="link.href.slice('tel:'.length)"
+				:showNumber="false" />
 		</li>
 	</ul>
 </template>
@@ -29,17 +34,22 @@ import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import { mailtoHref, mapHref, telHref } from '../services/contactLinks.js'
+import CtiClickToDialButton from './CtiClickToDialButton.vue'
 
 /**
  * Call, mail and directions links for a client or contact, shown at the
  * top of the detail page so they are one tap away on a phone. Each link
  * keeps the value as the user typed it; only the target is normalised.
  * A value that cannot be a link (no digits, not an address) is left out.
+ * Beside the number sits the click-to-dial button, shown only when the
+ * agent can place a call through the telephony platform.
  *
  * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 export default {
 	name: 'ContactLinks',
+
+	components: { CtiClickToDialButton },
 
 	props: {
 		/** Phone number as typed. */
@@ -118,6 +128,12 @@ export default {
 </script>
 
 <style scoped>
+.contact-links__item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
 .contact-links--buttons {
 	display: flex;
 	flex-wrap: wrap;
