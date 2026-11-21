@@ -61,6 +61,13 @@ use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\UnlockRequest;
 use OCA\OpenRegister\Kernel\Contracts\Value\LockRequest;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\OpenRegister\Contract\BulkSaveOptions as PublishedBulkSaveOptions;
+use OCA\OpenRegister\Contract\LockRequest as PublishedLockRequest;
+use OCA\OpenRegister\Contract\ObjectDeletion as PublishedObjectDeletion;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectPatch as PublishedObjectPatch;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
+use OCA\OpenRegister\Contract\UnlockRequest as PublishedUnlockRequest;
 
 if (class_exists(ObjectService::class) === false) {
 	/**
@@ -117,7 +124,7 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function saveObject(
 			array|ObjectEntity $object,
-			ObjectSaveOptions $options = new ObjectSaveOptions(),
+			ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 			bool $_rbac = true,
 			bool $_multitenancy = true
 		): ObjectEntityInterface {
@@ -164,7 +171,7 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function find(
 			int|string $id,
-			?ObjectFindOptions $options = null,
+			ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true
 		): ?ObjectEntityInterface {
@@ -245,7 +252,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return boolean
 		 */
 		public function deleteObject(
-			ObjectDeletion $deletion,
+			ObjectDeletion|PublishedObjectDeletion $deletion,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
 			bool $_retentionSweep = false
@@ -349,7 +356,7 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function saveObjects(
 			array $objects,
-			BulkSaveOptions $options = new BulkSaveOptions(),
+			BulkSaveOptions|PublishedBulkSaveOptions $options = new BulkSaveOptions(),
 			bool $_rbac = true,
 			bool $_multitenancy = true
 		): array {
@@ -486,7 +493,7 @@ if (class_exists(ObjectService::class) === false) {
 		 *
 		 * @return boolean
 		 */
-		public function unlockObject(UnlockRequest $request): bool {
+		public function unlockObject(UnlockRequest|PublishedUnlockRequest $request): bool {
 			$identifier = $request->identifier;
 			$advisory = $request->advisory ?? false;
 			$runUuid = $request->runUuid;
@@ -506,7 +513,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return array<string, mixed>
 		 */
 		public function lockObject(
-			LockRequest $request,
+			LockRequest|PublishedLockRequest $request,
 			bool $advisory = false
 		): array {
 			$identifier = $request->identifier;
@@ -598,7 +605,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return ObjectEntityInterface
 		 */
 		public function patchObject(
-			ObjectPatch $patch,
+			ObjectPatch|PublishedObjectPatch $patch,
 			bool $_rbac = true,
 			bool $_multitenancy = true
 		): ObjectEntityInterface {
@@ -675,7 +682,7 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function findSilent(
 			string $id,
-			?ObjectFindOptions $options = null,
+			ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 			bool $_rbac = true,
 			bool $_multitenancy = true
 		): ObjectEntityInterface {

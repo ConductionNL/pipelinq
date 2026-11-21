@@ -50,6 +50,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 // There is no PSR-4 mapping for `OCA\Pipelinq\Tests\`, and PHPUnit only loads
 // files matching its `*Test.php` suffix — so this helper is NOT autoloadable.
@@ -93,7 +95,7 @@ class CashFakeObjectService extends ObjectService {
 	 */
 	public function find(
 		int|string $id,
-		?ObjectFindOptions $options = null,
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	): ?ObjectEntityInterface {
@@ -163,7 +165,7 @@ class CashFakeObjectService extends ObjectService {
 	 */
 	public function saveObject(
 		array|ObjectEntity $object,
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	): ObjectEntityInterface {
