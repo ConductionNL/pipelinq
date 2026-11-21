@@ -10103,7 +10103,8 @@ OC.L10N.register(
         "At least {count} characters.": "Minstens {count} tekens.",
         "Save with reason": "Opslaan met reden",
         "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Niet opgeslagen: een deal die buiten zijn prognoseperiode schuift, heeft een reden nodig.",
-        "The lead could not be saved.": "De lead kon niet worden opgeslagen."
+        "The lead could not be saved.": "De lead kon niet worden opgeslagen.",
+        "New ticket": "Nieuw ticket"
     },
     "nplurals=2; plural=(n != 1);"
 )
