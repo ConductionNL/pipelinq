@@ -39,6 +39,9 @@ use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectDeletion as PublishedObjectDeletion;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * In-memory object service stub for the staff + role tests.
@@ -75,7 +78,7 @@ class StaffFakeObjectService extends ObjectService {
 	 */
 	public function find(
 		int|string $id,
-		?ObjectFindOptions $options = null,
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	): ?ObjectEntityInterface {
@@ -166,7 +169,7 @@ class StaffFakeObjectService extends ObjectService {
 	 */
 	public function saveObject(
 		array|ObjectEntity $object,
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	): ObjectEntityInterface {
@@ -207,7 +210,7 @@ class StaffFakeObjectService extends ObjectService {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
 	public function deleteObject(
-		ObjectDeletion $deletion,
+		ObjectDeletion|PublishedObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false
