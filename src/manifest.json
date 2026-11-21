@@ -11445,6 +11445,35 @@
 						}
 					},
 					{
+						"id": "my-meetings",
+						"viewport": "wide",
+						"type": "record-list",
+						"title": "Upcoming meetings",
+						"_note": "my-work-roadmap REQ-MW-130: the user's own calendar events of the next 7 days whose description or location links a client, contact or lead page. Hidden when there are none, or without the Calendar app (the endpoint answers an empty list). No board draws this section yet; it is the full-width row under the leads and follow-ups.",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/my-work/meetings",
+							"field": "items",
+							"op": "notEmpty"
+						},
+						"content": {
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/my-work/meetings",
+								"responsePath": "items"
+							},
+							"limit": 5,
+							"presentation": "rows",
+							"title": "{title}",
+							"meta": {
+								"parts": [
+									"{startsAt|datetime}",
+									"{recordName}"
+								]
+							},
+							"rowRouteField": "routeName",
+							"rowIdField": "recordId"
+						}
+					},
+					{
 						"id": "my-saved-views",
 						"viewport": "wide",
 						"titleTone": "side",
@@ -11638,7 +11667,7 @@
 						"id": "8",
 						"widgetId": "my-items-phone",
 						"gridX": 0,
-						"gridY": 16,
+						"gridY": 19,
 						"gridWidth": 12,
 						"gridHeight": 4,
 						"sizeToContent": true,
@@ -11730,6 +11759,15 @@
 						"gridWidth": 4,
 						"gridHeight": 3,
 						"track": "side",
+						"sizeToContent": true
+					},
+					{
+						"id": "10",
+						"widgetId": "my-meetings",
+						"gridX": 0,
+						"gridY": 16,
+						"gridWidth": 12,
+						"gridHeight": 3,
 						"sizeToContent": true
 					}
 				]

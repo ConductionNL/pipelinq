@@ -26,8 +26,10 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 5. Meetings (REQ-MW-130)
 
-- [ ] 5.1 `lib/Service/MyWorkCalendarService.php`: events of the next 7 days from the user's calendars through `OCP\Calendar\IManager`, kept when the description or location links a Pipelinq client, contact or lead; empty when the Calendar app is absent.
-- [ ] 5.2 Route `GET /api/my-work/meetings`; `src/components/myWork/UpcomingMeetings.vue`, hidden when empty.
+- [x] 5.1 `lib/Service/MyWorkCalendarService.php`: events of the next 7 days from the user's calendars through `OCP\Calendar\IManager`, kept when the description or location links a Pipelinq client, contact or lead; empty when the Calendar app is absent.
+  - Built as `lib/Service/MyWork/MyWorkCalendarService.php` with `MeetingRecordLink` (the first `/apps/pipelinq/{clients|contacts|leads}/<uuid>` link in the description, then the location). Shared calendars are skipped; the linked record is read through OpenRegister and an unreadable one lists nothing. PHPUnit `tests/Unit/Service/MyWork/MyWorkCalendarServiceTest.php`
+- [x] 5.2 Route `GET /api/my-work/meetings`; `src/components/myWork/UpcomingMeetings.vue`, hidden when empty.
+  - Built as `MyWorkMeetingsController::index()` (a failed calendar read answers an empty list) and, as manifest configuration rather than a hand-built component, the `my-meetings` record-list on My work, hidden by `visibleWhen` when the route has no meetings. PHPUnit `MyWorkMeetingsControllerTest`, Vitest `tests/vitest/myWorkMeetings.spec.js`; Playwright `tests/e2e/spec-coverage/my-work-roadmap/upcoming-meetings.spec.ts` is written, not yet run (needs a seeded instance)
 
 ## 6. Notification summary (REQ-MW-140)
 
