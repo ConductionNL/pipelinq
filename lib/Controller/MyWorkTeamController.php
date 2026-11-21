@@ -84,12 +84,11 @@ class MyWorkTeamController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null) {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$userId = $user->getUID();
 		$scopes = $this->workScope->available(userId: $userId);
 		$options = [];
 		if (count($scopes) > 1) {

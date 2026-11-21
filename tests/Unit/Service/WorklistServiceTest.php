@@ -778,10 +778,11 @@ class WorklistServiceTest extends TestCase {
 		self::assertSame(['l1', 't1'], array_column($today['items'], 'id'));
 		self::assertSame(['lead', 'request'], array_column($today['items'], 'kind'));
 
-		self::assertSame(['k1'], array_column($service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'], 'id'));
-		self::assertSame('Terugbellen', $service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'][0]['title']);
-		self::assertSame(['t3'], array_column($service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-customer'])['items'], 'id'));
-		self::assertSame(['t1', 't3'], array_column($service->items(userId: 'pieter', view: ['lens' => 'tickets'])['items'], 'id'));
+		self::assertSame(expected: ['k1'], actual: array_column($service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'], 'id'));
+		self::assertSame(expected: 'Terugbellen', actual: $service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'][0]['title']);
+		$waiting = $service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-customer']);
+		self::assertSame(expected: ['t3'], actual: array_column($waiting['items'], 'id'));
+		self::assertSame(expected: ['t1', 't3'], actual: array_column($service->items(userId: 'pieter', view: ['lens' => 'tickets'])['items'], 'id'));
 	}//end testItemsMixTicketsLeadsAndTasksPerList()
 
 	/**

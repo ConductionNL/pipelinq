@@ -167,8 +167,8 @@ class WorklistControllerItemsTest extends TestCase {
 			}
 		);
 
-		$this->controller(['scope' => 'team', 'member' => 'bob'])->items();
-		$refused = $this->controller(['scope' => 'organisation'])->items();
+		$this->controller(params: ['scope' => 'team', 'member' => 'bob'])->items();
+		$refused = $this->controller(params: ['scope' => 'organisation'])->items();
 
 		$this->assertSame(expected: [['team', 'bob'], ['organisation', '']], actual: $views);
 		$this->assertSame(expected: 400, actual: $refused->getStatus());

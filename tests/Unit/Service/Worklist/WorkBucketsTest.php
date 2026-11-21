@@ -140,12 +140,17 @@ class WorkBucketsTest extends TestCase {
 	 */
 	public function testListedKeepsOneBucketAndLensAndSorts(): void {
 		$rows = [
-			['kind' => 'request', 'id' => 'late', 'priority' => 'normal', 'record' => ['status' => 'in_progress', 'slaDeadline' => '2026-10-05T09:00:00+00:00']],
-			['kind' => 'request', 'id' => 'later', 'priority' => 'normal', 'record' => ['status' => 'new', 'slaDeadline' => '2026-10-20T09:00:00+00:00']],
+			['kind' => 'request', 'id' => 'late', 'priority' => 'normal', 'record' => ['status' => 'in_progress', 'slaDeadline' => '2026-10-05']],
+			['kind' => 'request', 'id' => 'later', 'priority' => 'normal', 'record' => ['status' => 'new', 'slaDeadline' => '2026-10-20']],
 			['kind' => 'lead', 'id' => 'lead', 'priority' => 'normal', 'record' => ['expectedCloseDate' => '2026-10-04']],
-			['kind' => 'request', 'id' => 'soon', 'priority' => 'normal', 'record' => ['status' => 'new', 'slaDeadline' => '2026-10-09T09:00:00+00:00']],
+			['kind' => 'request', 'id' => 'soon', 'priority' => 'normal', 'record' => ['status' => 'new', 'slaDeadline' => '2026-10-09']],
 		];
-		$list = ['now' => new DateTimeImmutable(datetime: '2026-10-06T10:00:00+00:00'), 'bucket' => 'waiting-on-me', 'lens' => 'tickets', 'sort' => 'deadline'];
+		$list = [
+			'now'    => new DateTimeImmutable(datetime: '2026-10-06T10:00:00+00:00'),
+			'bucket' => 'waiting-on-me',
+			'lens'   => 'tickets',
+			'sort'   => 'deadline',
+		];
 
 		$listed = (new WorkBuckets())->listed(rows: $rows, list: $list);
 
